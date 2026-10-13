@@ -6,7 +6,7 @@ import { fieldAnchors, fieldPlan, homeAnchors, homePlan, siteAnchors, sitePlan }
 import { smartSpaceSpaces, smartSpaceDevices } from "@/examples/iot/scenarios/smart-space";
 import { agritechSpaces, agritechDevices } from "@/examples/iot/scenarios/agritech";
 import { operationsSpaces, operationsDevices } from "@/examples/iot/scenarios/operations";
-import { SpaceCanvas, hotspotName, phonePlanLayout, roomCaptionWidth, selectedLabelAlign, type PlanHotspot } from "./space-canvas";
+import { SpaceCanvas, hotspotName, markerEmphasis, phonePlanLayout, planDensity, roomCaptionWidth, selectedLabelAlign, type PlanHotspot } from "./space-canvas";
 
 const hotspots: PlanHotspot[] = [
   { id: "thermostat", roomId: "room-hall", x: 32, y: 40, category: "thermostat", state: "pending", label: "Hallway thermostat", value: "20.5 °C", requested: "22 °C" },
@@ -272,5 +272,75 @@ describe("source discipline", () => {
       expect(src, file).not.toMatch(/\b(bg|text|p|m|w|h|gap|size|max-w|max-h)-\[/);
       if (/animate-pulse/.test(src)) expect(src).toContain("motion-reduce:animate-none");
     }
+  });
+});
+
+describe("SpaceCanvas semantic zoom (M5B)", () => {
+  const home: PlanHotspot[] = [
+    { id: "thermostat", roomId: "room-hall", x: 32, y: 40, category: "thermostat", state: "confirmed", label: "Hallway thermostat", value: "20.5 °C" },
+    { id: "lock", roomId: "room-hall", x: 40, y: 45, category: "lock", state: "warning", label: "Front door lock", value: "Locked" },
+    { id: "lamp", roomId: "room-living", x: 20, y: 30, category: "light", state: "confirmed", label: "Living room lamp", value: "60%" },
+    { id: "air", roomId: "room-living", x: 40, y: 20, category: "sensor", state: "critical", label: "Air quality sensor", value: "AQI 180" },
+  ];
+  const marker = (name: RegExp) => screen.getByRole("button", { name });
+
+  it("derives overview, zone and device density from the selection alone", () => {
+    expect(planDensity(null, null)).toBe("overview");
+    expect(planDensity("room-hall", null)).toBe("zone");
+    expect(planDensity("room-hall", "lock")).toBe("device");
+  });
+
+  it("overview: no device names on the plan, healthy markers recede, exceptions keep a full marker", () => {
+    const { container } = render(<SpaceCanvas plan={homePlan} hotspots={home} />);
+    expect(container.querySelector("[data-plan-density]")!.getAttribute("data-plan-density")).toBe("overview");
+    for (const label of container.querySelectorAll("[data-marker-label]")) expect(label.className).toMatch(/opacity-0/);
+    expect(marker(/^Hallway thermostat/).getAttribute("data-emphasis")).toBe("recede");
+    expect(marker(/^Front door lock/).getAttribute("data-emphasis")).toBe("normal");
+    expect(marker(/^Air quality sensor/).getAttribute("data-emphasis")).toBe("normal");
+    // every room carries a compact device summary and its exception count, counted from the markers
+    const hall = container.querySelector('[data-room-label="room-hall"] [data-room-summary]')!;
+    expect(hall.textContent).toMatch(/1.*2 devices/);
+    expect(screen.getByRole("list", { name: /rooms and readings/ }).textContent).toMatch(/Hallway.*2 devices, 1 needs attention/);
+  });
+
+  it("zone: the selected zone's markers are full, the rest recede (a critical one never does), readings stay only in the zone", () => {
+    const { container } = render(<SpaceCanvas plan={homePlan} hotspots={home} selectedRoomId="room-hall" ambient={{ "room-hall": ["19.6 °C"], "room-living": ["21.4 °C", "48 %"] }} />);
+    expect(marker(/^Hallway thermostat/).getAttribute("data-emphasis")).toBe("normal");
+    expect(marker(/^Living room lamp/).getAttribute("data-emphasis")).toBe("recede");
+    expect(marker(/^Air quality sensor/).getAttribute("data-emphasis")).toBe("normal");
+    expect(container.querySelectorAll('[data-room-label="room-hall"] [data-ambient-chip]')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-room-label="room-living"] [data-ambient-chip]')).toHaveLength(0);
+    expect(container.querySelector('rect[data-room="room-living"]')!.getAttribute("class")).toMatch(/fill-muted/);
+  });
+
+  it("device: the selected marker is the focus and is named", () => {
+    render(<SpaceCanvas plan={homePlan} hotspots={home} selectedRoomId="room-hall" selectedHotspotId="thermostat" />);
+    const selected = marker(/^Hallway thermostat/);
+    expect(selected.getAttribute("data-emphasis")).toBe("focus");
+    expect(selected.querySelector("[data-marker-label]")!.className).toMatch(/opacity-100/);
+    expect(markerEmphasis(home[2]!, "device", "room-hall", "thermostat")).toBe("recede");
+  });
+
+  it("keeps healthy markers quiet: no state badge on a confirmed device, a glyph on every exception", () => {
+    render(<SpaceCanvas plan={homePlan} hotspots={home} selectedRoomId="room-hall" />);
+    const badge = (b: HTMLElement) => b.querySelector(":scope > span > span.absolute svg");
+    expect(badge(marker(/^Hallway thermostat/))).toBeNull();
+    expect(badge(marker(/^Front door lock/))).not.toBeNull();
+  });
+
+  it("names its marker group, so an ancestor `.group` (the page's details) cannot reveal every name on hover", () => {
+    render(<SpaceCanvas plan={homePlan} hotspots={home} />);
+    const label = marker(/^Hallway thermostat/).querySelector("[data-marker-label]")!;
+    expect(label.className).toMatch(/group-hover\/marker:opacity-100/);
+    expect(label.className).not.toMatch(/(^|\s)group-hover:opacity-100/);
+  });
+
+  it("ranks a pending request above an offline device on a crowded phone plan", () => {
+    const crowded: PlanHotspot[] = [
+      { id: "offline", roomId: "room-living", x: 50, y: 50, category: "light", state: "offline", label: "Lamp" },
+      { id: "pending", roomId: "room-living", x: 51, y: 51, category: "plug", state: "pending", label: "Plug", requested: "On" },
+    ];
+    const layout = phonePlanLayout({ hotspots: crowded, viewBox: homePlan.viewBox });
+    expect([...layout.shown]).toEqual(["pending"]);
   });
 });

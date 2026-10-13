@@ -108,7 +108,7 @@
     "Flutter": "FL"
   },
   "coverage": {
-    "React": 98,
+    "React": 109,
     "Angular": 80,
     "SwiftUI": 90,
     "Compose": 90,
@@ -121,6 +121,9 @@
       "SwiftUI",
       "Compose",
       "Flutter"
+    ],
+    "address-fields": [
+      "React"
     ],
     "alert": [
       "React",
@@ -135,6 +138,9 @@
       "SwiftUI",
       "Compose",
       "Flutter"
+    ],
+    "amount-display": [
+      "React"
     ],
     "app-bar": [
       "React",
@@ -287,6 +293,9 @@
       "Compose",
       "Flutter"
     ],
+    "country-select": [
+      "React"
+    ],
     "data-grid": [
       "React",
       "SwiftUI",
@@ -304,6 +313,9 @@
       "SwiftUI",
       "Compose",
       "Flutter"
+    ],
+    "date-range-input": [
+      "React"
     ],
     "description-list": [
       "React",
@@ -377,6 +389,9 @@
       "Flutter"
     ],
     "form": [
+      "React"
+    ],
+    "guest-picker": [
       "React"
     ],
     "hover-card": [
@@ -541,6 +556,9 @@
       "Compose",
       "Flutter"
     ],
+    "pass-card": [
+      "React"
+    ],
     "password-input": [
       "React",
       "Angular",
@@ -548,12 +566,18 @@
       "Compose",
       "Flutter"
     ],
+    "phone-input": [
+      "React"
+    ],
     "popover": [
       "React",
       "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
+    ],
+    "price-breakdown": [
+      "React"
     ],
     "progress": [
       "React",
@@ -583,12 +607,18 @@
       "Compose",
       "Flutter"
     ],
+    "reference-code": [
+      "React"
+    ],
     "resizable": [
       "React",
       "Angular",
       "SwiftUI",
       "Compose",
       "Flutter"
+    ],
+    "result-state": [
+      "React"
     ],
     "scroll-area": [
       "React",
@@ -715,6 +745,9 @@
       "Compose",
       "Flutter"
     ],
+    "time-slot-picker": [
+      "React"
+    ],
     "timeline": [
       "React",
       "Angular",
@@ -761,17 +794,64 @@
     ]
   },
   "notes": {
+    "address-fields": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+    "amount-display": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
     "avatar-group": "standing non-port — the React component re-wraps its children, which no native layout system does; compose an Avatar row directly. Its cap and +N marker would port to a data-driven native API, so this is a scope decision rather than an impossibility",
     "combobox": "not a component — a documented composition of Command (CommandInput/CommandList/CommandItem) in a Popover. There is no Combobox export on any platform; the recipe exists on React and Angular, the two platforms with Command.",
+    "country-select": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+    "date-range-input": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
     "direction-provider": "React-only by design: the web needs a provider to thread direction through Radix, while SwiftUI (environment .layoutDirection), Compose (LocalLayoutDirection) and Flutter (Directionality) already carry layout direction in the framework itself. Nothing to port.",
     "form": "standing non-port",
+    "guest-picker": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
     "kanban-board": "standing non-port — built on @dnd-kit; each native platform would need its own from-scratch accessible multi-container drag-and-drop implementation (no equivalent dependency exists in this repo's native packages)",
     "native-select": "standing non-port — KinetixSelect already wraps each platform's own native picker",
     "navigation-menu": "standing non-port",
+    "pass-card": "React-first business foundation (business capability roadmap, Phase 1 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+    "phone-input": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+    "price-breakdown": "React-first business foundation (business capability roadmap, Phase 1 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+    "reference-code": "React-first business foundation (business capability roadmap, Phase 1 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+    "result-state": "React-first business foundation (business capability roadmap, Phase 1 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
+    "time-slot-picker": "React-first business foundation (business capability roadmap, Phase 2 — docs/BUSINESS-CAPABILITY-ROADMAP.md). Roadmap target: Cross-platform Core. Native ports are an open roadmap decision, not a standing non-port: until one is made, each native tab shows the composition of existing Kinetix primitives that delivers the same outcome.",
     "tour": "standing non-port — targeting an arbitrary already-rendered element needs a CSS-selector-equivalent live-tree query, which no native platform has"
   },
   "platformNotes": {},
   "guidance": {
+    "address-fields": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native AddressFields yet. A Form Section of KinetixField + KinetixInput pairs in the product's own order, each with the matching .textContentType (.streetAddressLine1, .addressCity, .postalCode, …) for AutoFill."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native AddressFields yet. A Column of KinetixField + KinetixInput pairs in the product's own order, one per address part, with keyboardType = KeyboardType.Number on numeric parts. Autofill content types need a field that exposes semantics, which KinetixInput does not yet."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native AddressFields yet. An AutofillGroup of TextField widgets in the product's own order, each with the matching AutofillHints (streetAddressLine1, addressCity, postalCode, …); KinetixInput has no autofill-hints parameter yet, so it cannot carry them."
+      }
+    },
+    "amount-display": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native AmountDisplay yet. Format with the product's FormatStyle (.currency(code:)), render Text with .monospacedDigit(), write the sign into the string, and give the Text an .accessibilityLabel with the full spoken amount."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native AmountDisplay yet. Format with the product's NumberFormat, render Text with fontFeatureSettings = \"tnum\", write the sign into the string, and give it a semantics contentDescription with the full spoken amount."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native AmountDisplay yet. Format with the product's NumberFormat (intl), render Text with FontFeature.tabularFigures(), write the sign into the string, and wrap it in Semantics(label:) with the full spoken amount."
+      }
+    },
     "audio-player": {
       "Angular": {
         "type": "planned",
@@ -824,6 +904,24 @@
         "reason": "Combobox is a recipe over Command on the web, not a component anywhere — compose a popover with a filtered list, or use KinetixSelect for a fixed set."
       }
     },
+    "country-select": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native CountrySelect yet. KinetixSelect over the product's country list for a short set, or a searchable List in a sheet (.searchable) for the full list; names from Locale.current.localizedString(forRegionCode:)."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native CountrySelect yet. KinetixSelectTrigger with KinetixSelectItem rows over the product's country list for a short set, or a filtered LazyColumn in a bottom sheet for the full list; names from Locale(\"\", code).displayCountry."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native CountrySelect yet. KinetixSelect over the product's country list for a short set, or a filtered ListView in a bottom sheet for the full list; names supplied in the reader's language."
+      }
+    },
     "data-grid": {
       "Angular": {
         "type": "planned",
@@ -840,6 +938,24 @@
       "Angular": {
         "type": "planned",
         "wave": "advanced"
+      }
+    },
+    "date-range-input": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native DateRangeInput yet. Two DatePicker(displayedComponents: .date) fields (start, end) with the end's range starting at the chosen start, storing calendar dates as DateComponents, not Date instants."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native DateRangeInput yet. Material3's DateRangePicker in a dialog, opened from a KinetixButton that shows the range; convert its UTC-midnight millis to LocalDate before storing."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native DateRangeInput yet. Flutter's showDateRangePicker opened from a KinetixButton that shows the range; store DateUtils.dateOnly values (calendar dates), not instants."
       }
     },
     "diff-viewer": {
@@ -888,6 +1004,24 @@
       "Flutter": {
         "type": "composition",
         "reason": "Form is react-hook-form glue with no native analogue. KinetixField and the platform's own state hold the same job."
+      }
+    },
+    "guest-picker": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native GuestPicker yet. One KinetixNumberInput per category, each with an accessibilityLabel naming the category, in a KinetixPopover (or a sheet on iPhone) opened from a button that shows the summary."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native GuestPicker yet. One KinetixNumberInput per category, each with a contentDescription naming the category, in a KinetixPopover or bottom sheet opened from a button that shows the summary."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native GuestPicker yet. One KinetixNumberInput per category, each wrapped in Semantics(label:) naming the category, in a KinetixPopover or bottom sheet opened from a button that shows the summary."
       }
     },
     "json-viewer": {
@@ -954,10 +1088,118 @@
         "reason": "NavigationMenu is a hover-triggered desktop mega-menu with no touch idiom — compose KinetixTabBar or a KinetixDropdownMenu for the same navigation."
       }
     },
+    "pass-card": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native PassCard yet. KinetixCard with a KinetixCardHeader, a KinetixDescriptionList of the pass fields and the supplied code Image (with an accessibilityLabel) composes the same pass; Apple Wallet passes are a separate PassKit concern."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native PassCard yet. KinetixCard with a KinetixCardHeader, a KinetixDescriptionList of the pass fields and the supplied code Image (with a contentDescription) composes the same pass; Google Wallet passes are a separate API."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native PassCard yet. KinetixCard with a KinetixCardHeader, a KinetixDescriptionList of the pass fields and the supplied code Image (with a semanticLabel) composes the same pass."
+      }
+    },
+    "phone-input": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native PhoneInput yet. HStack of a KinetixSelect for the calling code and a KinetixInput with .keyboardType(.phonePad) and .textContentType(.telephoneNumber), with .environment(\\.layoutDirection, .leftToRight) so the number reads left to right in an RTL layout."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native PhoneInput yet. Row of a KinetixSelectTrigger with KinetixSelectItem rows for the calling code and a KinetixInput with keyboardType = KeyboardType.Phone, inside CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) so the number reads left to right in an RTL layout."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native PhoneInput yet. Row of a KinetixSelect for the calling code and a TextField with keyboardType: TextInputType.phone and autofillHints: [AutofillHints.telephoneNumberNational] (KinetixInput has no keyboard-type parameter yet), inside Directionality(textDirection: TextDirection.ltr) so the number reads left to right in an RTL layout."
+      }
+    },
+    "price-breakdown": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native PriceBreakdown yet. KinetixDescriptionList is already a term/value list; one KinetixDescriptionListItem per line with a monospaced-digit amount, and a KinetixSeparator before the total, is the same structure."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native PriceBreakdown yet. KinetixDescriptionList is already a term/value list; one KinetixDescriptionListItem per line with tabular-figure amounts, and a KinetixSeparator before the total, is the same structure."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native PriceBreakdown yet. KinetixDescriptionList is already a term/value list; one KinetixDescriptionListItem per line with tabular-figure amounts, and a KinetixSeparator before the total, is the same structure."
+      }
+    },
+    "reference-code": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native ReferenceCode yet. A Text with .textSelection(.enabled) plus a KinetixButton that writes to UIPasteboard and posts an accessibility announcement gives the same selectable, copyable, announced result."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native ReferenceCode yet. A SelectionContainer around the code plus a KinetixButton that writes through LocalClipboardManager gives the same selectable, copyable result; Android 13+ shows its own copy confirmation."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native ReferenceCode yet. A SelectableText plus a KinetixButton that calls Clipboard.setData and SemanticsService.announce gives the same selectable, copyable, announced result."
+      }
+    },
+    "result-state": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native ResultState yet. KinetixEmpty already carries the media / title / description / actions anatomy; put a status glyph with an accessibilityLabel in KinetixEmptyMedia and state the outcome in the title."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native ResultState yet. KinetixEmpty already carries the media / title / description / actions anatomy; put a status icon with a contentDescription in KinetixEmptyMedia and state the outcome in the title."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native ResultState yet. KinetixEmpty already carries the media / title / description / actions anatomy; put a status icon with a semanticLabel in KinetixEmptyMedia and state the outcome in the title."
+      }
+    },
     "table": {
       "Angular": {
         "type": "planned",
         "wave": "layout"
+      }
+    },
+    "time-slot-picker": {
+      "Angular": {
+        "type": "planned",
+        "wave": "data"
+      },
+      "SwiftUI": {
+        "type": "composition",
+        "reason": "No native TimeSlotPicker yet. A LazyVGrid(columns: [GridItem(.adaptive(minimum:))]) of slot buttons with .accessibilityAddTraits(.isSelected) on the chosen one and .disabled plus an accessibilityValue for unavailable slots."
+      },
+      "Compose": {
+        "type": "composition",
+        "reason": "No native TimeSlotPicker yet. A FlowRow of slot chips in a Modifier.selectableGroup(), each Modifier.selectable(role = Role.RadioButton); unavailable chips enabled = false with a stateDescription."
+      },
+      "Flutter": {
+        "type": "composition",
+        "reason": "No native TimeSlotPicker yet. A Wrap of ChoiceChip slots under one Semantics(container: true) group, each with Semantics(inMutuallyExclusiveGroup: true, checked:); unavailable chips have onSelected null and a semantic hint."
       }
     },
     "tour": {
@@ -1019,6 +1261,9 @@
       "Compose": "experimental",
       "Flutter": "experimental"
     },
+    "address-fields": {
+      "React": "beta"
+    },
     "alert": {
       "React": "beta",
       "Angular": "preview",
@@ -1032,6 +1277,9 @@
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
+    },
+    "amount-display": {
+      "React": "beta"
     },
     "app-bar": {
       "React": "beta",
@@ -1184,6 +1432,9 @@
       "Compose": "experimental",
       "Flutter": "experimental"
     },
+    "country-select": {
+      "React": "beta"
+    },
     "data-grid": {
       "React": "beta",
       "SwiftUI": "experimental",
@@ -1201,6 +1452,9 @@
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
+    },
+    "date-range-input": {
+      "React": "beta"
     },
     "description-list": {
       "React": "beta",
@@ -1274,6 +1528,9 @@
       "Flutter": "experimental"
     },
     "form": {
+      "React": "beta"
+    },
+    "guest-picker": {
       "React": "beta"
     },
     "hover-card": {
@@ -1438,6 +1695,9 @@
       "Compose": "experimental",
       "Flutter": "experimental"
     },
+    "pass-card": {
+      "React": "beta"
+    },
     "password-input": {
       "React": "beta",
       "Angular": "preview",
@@ -1445,12 +1705,18 @@
       "Compose": "experimental",
       "Flutter": "experimental"
     },
+    "phone-input": {
+      "React": "beta"
+    },
     "popover": {
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
+    },
+    "price-breakdown": {
+      "React": "beta"
     },
     "progress": {
       "React": "beta",
@@ -1480,12 +1746,18 @@
       "Compose": "experimental",
       "Flutter": "experimental"
     },
+    "reference-code": {
+      "React": "beta"
+    },
     "resizable": {
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
       "Flutter": "experimental"
+    },
+    "result-state": {
+      "React": "beta"
     },
     "scroll-area": {
       "React": "beta",
@@ -1612,6 +1884,9 @@
       "Compose": "experimental",
       "Flutter": "experimental"
     },
+    "time-slot-picker": {
+      "React": "beta"
+    },
     "timeline": {
       "React": "beta",
       "Angular": "preview",
@@ -1659,7 +1934,7 @@
   },
   "verificationCounts": {
     "React": {
-      "beta": 98
+      "beta": 109
     },
     "Angular": {
       "preview": 80
@@ -1717,6 +1992,16 @@
         "rtl"
       ]
     },
+    "address-fields": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
+      ]
+    },
     "alert": {
       "React": [
         "accessibility",
@@ -1768,6 +2053,15 @@
       "Flutter": [
         "build",
         "largeText",
+        "rtl"
+      ]
+    },
+    "amount-display": {
+      "React": [
+        "accessibility",
+        "build",
+        "largeText",
+        "published",
         "rtl"
       ]
     },
@@ -2006,7 +2300,8 @@
       "React": [
         "accessibility",
         "build",
-        "published"
+        "published",
+        "rtl"
       ],
       "SwiftUI": [
         "build"
@@ -2307,6 +2602,16 @@
         "build"
       ]
     },
+    "country-select": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
+      ]
+    },
     "data-grid": {
       "React": [
         "accessibility",
@@ -2357,6 +2662,16 @@
       ],
       "Flutter": [
         "build"
+      ]
+    },
+    "date-range-input": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
       ]
     },
     "description-list": {
@@ -2618,6 +2933,16 @@
         "interaction",
         "largeText",
         "published"
+      ]
+    },
+    "guest-picker": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
       ]
     },
     "hover-card": {
@@ -3131,6 +3456,7 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
         "largeText",
         "published"
       ],
@@ -3202,6 +3528,15 @@
         "rtl"
       ]
     },
+    "pass-card": {
+      "React": [
+        "accessibility",
+        "build",
+        "largeText",
+        "published",
+        "rtl"
+      ]
+    },
     "password-input": {
       "React": [
         "accessibility",
@@ -3225,6 +3560,16 @@
       "Flutter": [
         "build",
         "largeText",
+        "rtl"
+      ]
+    },
+    "phone-input": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
         "rtl"
       ]
     },
@@ -3254,6 +3599,15 @@
       ],
       "Flutter": [
         "build"
+      ]
+    },
+    "price-breakdown": {
+      "React": [
+        "accessibility",
+        "build",
+        "largeText",
+        "published",
+        "rtl"
       ]
     },
     "progress": {
@@ -3359,6 +3713,16 @@
         "rtl"
       ]
     },
+    "reference-code": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
+      ]
+    },
     "resizable": {
       "React": [
         "accessibility",
@@ -3382,6 +3746,16 @@
       "Flutter": [
         "build",
         "largeText",
+        "rtl"
+      ]
+    },
+    "result-state": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
         "rtl"
       ]
     },
@@ -3876,11 +4250,23 @@
         "rtl"
       ]
     },
+    "time-slot-picker": {
+      "React": [
+        "accessibility",
+        "build",
+        "interaction",
+        "largeText",
+        "published",
+        "rtl"
+      ]
+    },
     "timeline": {
       "React": [
         "accessibility",
         "build",
-        "published"
+        "largeText",
+        "published",
+        "rtl"
       ],
       "Angular": [
         "accessibility",
@@ -4038,14 +4424,14 @@
   },
   "evidenceCounts": {
     "React": {
-      "build": 98,
-      "interaction": 38,
-      "accessibility": 98,
-      "rtl": 22,
-      "largeText": 27,
+      "build": 109,
+      "interaction": 47,
+      "accessibility": 109,
+      "rtl": 35,
+      "largeText": 39,
       "reducedMotion": 3,
       "visual": 0,
-      "published": 98
+      "published": 109
     },
     "Angular": {
       "build": 80,
@@ -4087,5 +4473,13 @@
       "visual": 0,
       "published": 0
     }
-  }
+  },
+  "claimableEvidence": [
+    "interaction",
+    "accessibility",
+    "rtl",
+    "largeText",
+    "reducedMotion",
+    "visual"
+  ]
 }

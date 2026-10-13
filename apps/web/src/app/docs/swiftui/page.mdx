@@ -313,6 +313,30 @@ are placed in an `.overlay { }` or a top-level `ZStack` and driven by an
   drag-and-drop; hand-rolling that from scratch is a much bigger lift
   than porting the component. Use `.draggable` / `.dropDestination`
   directly for the specific board.
+- **`ResultState`** — a React-first beta (business capability roadmap,
+  Phase 1); a native port is an open roadmap decision, not a refusal.
+  Compose `KinetixEmpty` with a status icon, title and actions.
+- **`ReferenceCode`** — React-first beta, same decision. Compose
+  `Text(…).textSelection(.enabled)` with a `KinetixButton` that copies.
+- **`PriceBreakdown`** — React-first beta, same decision. Compose
+  `KinetixDescriptionList` rows with the total after a `KinetixSeparator`.
+- **`PassCard`** — React-first beta, same decision. Compose `KinetixCard`,
+  `KinetixDescriptionList` and the supplied code as an `Image`.
+- **`AmountDisplay`** — a React-first beta (business capability roadmap,
+  Phase 2); same open decision. Compose a tabular-figure `Text` with the
+  sign in the string and a full accessibility label.
+- **`GuestPicker`** — React-first beta, same decision. Compose one
+  `KinetixNumberInput` per category, named after it, in a `KinetixPopover`.
+- **`CountrySelect`** — React-first beta, same decision. Compose
+  `KinetixSelect` over your own country list.
+- **`PhoneInput`** — React-first beta, same decision. Compose
+  a calling-code `KinetixSelect` and a `KinetixInput` with `.keyboardType(.phonePad)` in a left-to-right row.
+- **`DateRangeInput`** — React-first beta, same decision. Compose
+  two date-only `DatePicker`s, the end bounded by the start.
+- **`TimeSlotPicker`** — React-first beta, same decision. Compose
+  `KinetixToggle` tiles in an adaptive `LazyVGrid`.
+- **`AddressFields`** — React-first beta, same decision. Compose a
+  `KinetixField` per address field with the platform's autofill hints.
 
 ## Known gaps
 

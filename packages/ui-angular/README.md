@@ -4,7 +4,7 @@ KinetixUI for Angular — standalone directives and components built on the same
 contract as the other KinetixUI implementations.
 
 > **Preview.** This package is published so it can be used and reported on, and publication is
-> distribution, not maturity. It carries **80 of the 98 entries in the KinetixUI catalogue** and is
+> distribution, not maturity. It carries **80 of the 109 entries in the KinetixUI catalogue** and is
 > rolling out in waves. Expect gaps, and expect APIs to move within `0.x`. If you need the full
 > catalogue today, that is the React implementation (`@kinetixui/ui`).
 
@@ -91,7 +91,7 @@ in your editor if you are unsure: `KxButton` is a directive, `KxCard` is a compo
 ## Environment
 
 - **Angular 21** — `@angular/core` and `@angular/forms` are peers at `^21.0.0`
-- **`@kinetixui/tokens`** is a peer at `>=0.24.0 <0.25.0`; install it alongside this package. 0.25.0 reads
+- **`@kinetixui/tokens`** is a peer at `>=0.24.0 <0.26.0`; install it alongside this package. It reads
   `--surface-grouped` and `--on-info-container`, which tokens 0.23.x does not define
 - Standalone APIs only — no NgModules are exported
 - Built with ng-packagr; ships `fesm2022` plus types, and is compiled and strict-template-typechecked in
@@ -139,7 +139,7 @@ The per-component, per-kind evidence table is at
 
 ## Limitations
 
-- **Preview, and 80 of 98 entries.** Do not plan around a component that is not in the list above.
+- **Preview, and 80 of 109 entries.** Do not plan around a component that is not in the list above.
 - Versioned independently of `@kinetixui/{ui,tokens,cli}` — its version number does not track theirs.
 - The token peer range is a deliberate compatibility claim, widened only after the package is verified
   against a new token version. It will not silently follow the token package.

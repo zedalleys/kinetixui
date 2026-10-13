@@ -1,0 +1,55 @@
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("date-range-input", "A start and end calendar date in one field, from Calendar in range mode in a Popover, with ISO date strings instead of Date instants so no time zone can move a booking.");
+
+# Date Range Input
+
+<ComponentMeta />
+
+A start and end calendar date in one field, from Calendar in range mode in a Popover, with ISO date strings instead of Date instants so no time zone can move a booking.
+
+<ComponentPreview name="date-range-input-demo" />
+
+## React installation
+
+```bash
+npx @kinetixui/cli add date-range-input
+```
+
+## React usage
+
+```tsx
+import { DateRangeInput } from "@kinetixui/ui";
+
+const [stay, setStay] = React.useState({ start: "2026-03-12", end: "2026-03-15" });
+
+<DateRangeInput
+  label="Dates"
+  value={stay}
+  onValueChange={setStay}
+  min="2026-03-01"
+  isDateDisabled={(iso) => soldOut.has(iso)}
+  locale="en-GB"
+/>
+```
+
+**Calendar dates, not instants.** The value is ISO `YYYY-MM-DD` strings, so a check-in date stays the same day in
+every time zone: nothing is converted. If your API needs a timestamp, build it on the server with the property's own
+time zone.
+
+- The first click sets the start and leaves the end open; the second sets the end; the panel closes when the range is
+  complete. Clicking the start again makes a one-day range.
+- `min`, `max` and `isDateDisabled` bound what can be chosen. `formatDate` and `locale` control how the trigger
+  writes dates.
+- Built on [Calendar](/docs/components/calendar) in range mode inside a [Popover](/docs/components/popover). It is
+  not a second calendar.
+
+## Accessibility and RTL
+
+- The trigger's name is the label plus the chosen range; each date is its own `<bdi>` run so mixed-direction dates
+  keep their order.
+- Inside the panel, Calendar's grid keyboard model applies. Under RTL (inside `KinetixDirectionProvider`), the
+  previous/next chevrons and arrow keys mirror.
+- Checked in jsdom and Chromium; no screen reader run.
+
+<ComponentApi slug="date-range-input" />

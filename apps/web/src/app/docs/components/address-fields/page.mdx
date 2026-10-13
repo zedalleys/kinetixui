@@ -1,0 +1,58 @@
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("address-fields", "The fields of a postal address in the order, wording and requiredness the app decides, inside a named fieldset, with the right autofill token on each.");
+
+# Address Fields
+
+<ComponentMeta />
+
+The fields of a postal address in the order, wording and requiredness the app decides, inside a named fieldset, with the right autofill token on each.
+
+<ComponentPreview name="address-fields-demo" />
+
+## React installation
+
+```bash
+npx @kinetixui/cli add address-fields
+```
+
+## React usage
+
+```tsx
+import { AddressFields } from "@kinetixui/ui";
+
+<AddressFields
+  legend="Delivery address"
+  section="shipping"
+  fields={[
+    { name: "building", label: "Building number", required: true, width: "half", inputMode: "numeric" },
+    { name: "street", label: "Street", required: true, width: "half" },
+    { name: "district", label: "District", required: true },
+    { name: "locality", label: "City", required: true, width: "half" },
+    { name: "postalCode", label: "Postal code", required: true, width: "half", inputMode: "numeric" },
+    { name: "additional", label: "Additional number" },
+  ]}
+  value={address}
+  onValueChange={setAddress}
+  errors={errors}
+/>
+```
+
+This is the roadmap's AddressForm, delivered as fields rather than a `<form>`: it goes inside your checkout, profile or
+booking form. There is no universal address, so it owns **no address model and no postal database**. You pass the
+fields in the order, wording and requiredness each country needs; the example above is a Saudi national address.
+
+- Each known field name gets its HTML `autocomplete` token, prefixed by `section` ("shipping address-line1") so a
+  browser can fill a shipping and a billing address on one page. Any field can override it.
+- `render` swaps the default Input for your own control, such as a [CountrySelect](/docs/components/country-select).
+- Optional fields show `optionalLabel` ("(optional)") beside the label instead of marking required ones with a bare
+  asterisk.
+
+## Accessibility and RTL
+
+- A `<fieldset>` named by its `<legend>`. Every field has a visible label; descriptions and errors are linked with
+  `aria-describedby`, and an error marks its field invalid.
+- Two columns from the `sm` breakpoint, one below, all logical, so it mirrors under RTL and reflows at 200% text.
+- Checked in jsdom and Chromium; no screen reader run.
+
+<ComponentApi slug="address-fields" />

@@ -21,7 +21,7 @@ afterEach(() => {
 });
 
 const openCode = async (user: ReturnType<typeof userEvent.setup>, index = 0) =>
-  user.click(screen.getAllByRole("tab", { name: "code" })[index]!);
+  user.click(screen.getAllByRole("radio", { name: "code" })[index]!);
 const selected = () => screen.getAllByRole("tab", { selected: true }).map((t) => t.textContent);
 
 describe("parsePlatform", () => {

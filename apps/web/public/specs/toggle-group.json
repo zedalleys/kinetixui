@@ -18,7 +18,7 @@
       "props": [
         {
           "name": "variant",
-          "type": "\"default\" | \"outline\" | null",
+          "type": "\"default\" | \"outline\" | \"pill\" | null",
           "required": false
         },
         {
@@ -33,7 +33,7 @@
       "props": [
         {
           "name": "variant",
-          "type": "\"default\" | \"outline\" | null",
+          "type": "\"default\" | \"outline\" | \"pill\" | null",
           "required": false
         },
         {

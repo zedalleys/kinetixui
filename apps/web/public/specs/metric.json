@@ -28,7 +28,7 @@
         },
         {
           "name": "trend",
-          "type": "\"up\" | \"down\" | \"neutral\"",
+          "type": "\"neutral\" | \"up\" | \"down\"",
           "required": false
         },
         {

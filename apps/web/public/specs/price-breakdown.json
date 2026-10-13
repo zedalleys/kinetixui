@@ -1,0 +1,70 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "price-breakdown",
+  "title": "Price Breakdown",
+  "status": "beta",
+  "since": "0.25.0",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "PriceBreakdown",
+      "props": []
+    },
+    {
+      "name": "PriceBreakdownLine",
+      "props": [
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "What the amount is — \"Subtotal\", \"Service fee\", \"Discount\"."
+        },
+        {
+          "name": "value",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "The formatted amount, including its sign."
+        },
+        {
+          "name": "description",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A qualifier under the label — \"VAT 20%\", \"Code SPRING10\", \"2 nights × €80\"."
+        },
+        {
+          "name": "kind",
+          "type": "\"default\" | \"deduction\"",
+          "required": false,
+          "description": "`deduction` for a line that reduces the total (discount, credit, refund). The value must still carry its minus sign."
+        }
+      ]
+    },
+    {
+      "name": "PriceBreakdownTotal",
+      "props": [
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "What the amount is — \"Subtotal\", \"Service fee\", \"Discount\"."
+        },
+        {
+          "name": "value",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "The formatted amount, including its sign."
+        },
+        {
+          "name": "description",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A qualifier under the label — \"VAT 20%\", \"Code SPRING10\", \"2 nights × €80\"."
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/price-breakdown.tsx"
+}

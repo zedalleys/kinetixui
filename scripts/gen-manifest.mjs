@@ -269,6 +269,13 @@ const parity = {
   ),
   /** How many components hold each kind, per platform. Printed as "21 / 98", never as a tick. */
   evidenceCounts: verification.totals,
+  /**
+   * The kinds a test passage may claim (`// kx-verify: <kind>`), copied from verification.json. The others,
+   * `build` and `published`, are facts the manifest declares. The split is what lets a page read a zero
+   * truthfully: a claimable kind at 0 means no test records that evidence yet (the generator records only
+   * positive evidence and has no N/A), while `published` at 0 means the package is not on a registry.
+   */
+  claimableEvidence: verification.claimableKinds,
 };
 
 let stale = false;

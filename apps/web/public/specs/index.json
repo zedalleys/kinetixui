@@ -3,8 +3,10 @@
   "generated": "scripts/gen-component-specs.mjs",
   "components": [
     "accordion",
+    "address-fields",
     "alert",
     "alert-dialog",
+    "amount-display",
     "app-bar",
     "aspect-ratio",
     "audio-player",
@@ -26,9 +28,11 @@
     "command",
     "comparison-slider",
     "context-menu",
+    "country-select",
     "data-grid",
     "data-table",
     "date-picker",
+    "date-range-input",
     "description-list",
     "dialog",
     "diff-viewer",
@@ -41,6 +45,7 @@
     "file-upload",
     "footer",
     "form",
+    "guest-picker",
     "hover-card",
     "image",
     "inform",
@@ -66,13 +71,18 @@
     "number-input",
     "page-header",
     "pagination",
+    "pass-card",
     "password-input",
+    "phone-input",
     "popover",
+    "price-breakdown",
     "progress",
     "quote",
     "radio-group",
     "rating",
+    "reference-code",
     "resizable",
+    "result-state",
     "scroll-area",
     "segmented-control",
     "select",
@@ -91,6 +101,7 @@
     "tabs",
     "tag",
     "textarea",
+    "time-slot-picker",
     "timeline",
     "toggle",
     "toggle-group",
@@ -104,7 +115,7 @@
     "combobox"
   ],
   "coverage": {
-    "covered": 96,
-    "total": 96
+    "covered": 107,
+    "total": 107
   }
 }

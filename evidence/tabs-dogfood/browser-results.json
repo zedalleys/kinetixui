@@ -1,0 +1,130 @@
+[
+  {
+    "case": "desktop-light",
+    "pass": true,
+    "focusGeometry": {
+      "left": 420.875,
+      "right": -730.125
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgb(5, 11, 16)"
+    }
+  },
+  {
+    "case": "desktop-dark-rtl",
+    "pass": true,
+    "focusGeometry": {
+      "left": 730.125,
+      "right": -420.875
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgb(5, 11, 16)"
+    }
+  },
+  {
+    "case": "phone",
+    "pass": true,
+    "focusGeometry": {
+      "left": 222.875,
+      "right": -0.125
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgb(5, 11, 16)"
+    }
+  },
+  {
+    "case": "phone-rtl",
+    "pass": true,
+    "focusGeometry": {
+      "left": -0.875,
+      "right": -293.875
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgb(5, 11, 16)"
+    }
+  },
+  {
+    "case": "phone-large",
+    "pass": true,
+    "focusGeometry": {
+      "left": 126.90625,
+      "right": 0.296875
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgb(5, 11, 16)"
+    }
+  },
+  {
+    "case": "phone-large-rtl",
+    "pass": true,
+    "focusGeometry": {
+      "left": -0.296875,
+      "right": -196.90625
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgb(5, 11, 16)"
+    }
+  },
+  {
+    "case": "tablet-large",
+    "pass": true,
+    "focusGeometry": {
+      "left": 542.90625,
+      "right": 0.296875
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgb(5, 11, 16)"
+    }
+  },
+  {
+    "case": "forced-colors",
+    "pass": true,
+    "focusGeometry": {
+      "left": 730.125,
+      "right": -420.875
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(255, 255, 255, 0)",
+      "border": "2px",
+      "shadow": "none",
+      "color": "rgb(0, 0, 0)",
+      "borderColor": "rgba(5, 0, 73, 0.8)"
+    }
+  }
+]

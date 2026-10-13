@@ -1,16 +1,12 @@
 "use client";
 
-import * as Tabs from "@radix-ui/react-tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@kinetixui/ui";
 import { cn } from "@/lib/utils";
 import { CopyButton } from "./copy-button";
 import { useDocumentDirection } from "@/lib/use-document-direction";
 import { PLATFORM_TABS } from "@/lib/platform-tabs";
 import { usageExamples } from "@/registry/usage-examples.generated";
 
-const tabTrigger = cn(
-  "-mb-px border-b-2 border-transparent px-2.5 py-1.5 font-mono text-label-md uppercase tracking-[0.1em] text-muted-foreground transition-colors coarse:min-h-10",
-  "hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground",
-);
 
 /**
  * One compiled usage example per platform, as tabs — for a guide page that is not about one component
@@ -27,28 +23,28 @@ export function UsageExampleTabs({ name, className }: { name: string; className?
 
   return (
     <div data-usage-example={name} className={cn("my-6 overflow-hidden rounded-xl border border-border bg-muted/40", className)}>
-      <Tabs.Root dir={dir} defaultValue={tabs[0].tab}>
-        <Tabs.List aria-label="Platform" className="flex flex-wrap items-center gap-1 border-b border-border px-2">
+      <Tabs dir={dir} defaultValue={tabs[0].tab}>
+        <TabsList aria-label="Platform" className="px-2">
           {tabs.map((t) => (
-            <Tabs.Trigger key={t.tab} value={t.tab} className={tabTrigger}>
+            <TabsTrigger key={t.tab} value={t.tab} >
               {t.label}
               {t.maturity !== "stable" && (
                 <span className="ml-1.5 normal-case tracking-normal text-muted-foreground">· {t.maturity}</span>
               )}
-            </Tabs.Trigger>
+            </TabsTrigger>
           ))}
-        </Tabs.List>
+        </TabsList>
         {tabs.map((t) => (
-          <Tabs.Content key={t.tab} value={t.tab}>
+          <TabsContent key={t.tab} value={t.tab}>
             <div className="relative">
               <CopyButton value={byTab[t.tab]!} className="absolute right-3 top-3 z-10" />
               <pre dir="ltr" className="overflow-x-auto p-4 font-mono text-code leading-relaxed">
                 <code>{byTab[t.tab]}</code>
               </pre>
             </div>
-          </Tabs.Content>
+          </TabsContent>
         ))}
-      </Tabs.Root>
+      </Tabs>
     </div>
   );
 }

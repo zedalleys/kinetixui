@@ -21,14 +21,14 @@
   ],
   "totals": {
     "React": {
-      "build": 98,
-      "interaction": 38,
-      "accessibility": 98,
-      "rtl": 22,
-      "largeText": 27,
+      "build": 109,
+      "interaction": 47,
+      "accessibility": 109,
+      "rtl": 35,
+      "largeText": 39,
       "reducedMotion": 3,
       "visual": 0,
-      "published": 98
+      "published": 109
     },
     "Angular": {
       "build": 80,
@@ -80,8 +80,10 @@
         ],
         "components": [
           "accordion",
+          "address-fields",
           "alert",
           "alert-dialog",
+          "amount-display",
           "app-bar",
           "aspect-ratio",
           "audio-player",
@@ -105,9 +107,11 @@
           "command",
           "comparison-slider",
           "context-menu",
+          "country-select",
           "data-grid",
           "data-table",
           "date-picker",
+          "date-range-input",
           "description-list",
           "dialog",
           "diff-viewer",
@@ -120,6 +124,7 @@
           "file-upload",
           "footer",
           "form",
+          "guest-picker",
           "hover-card",
           "image",
           "inform",
@@ -145,13 +150,18 @@
           "number-input",
           "page-header",
           "pagination",
+          "pass-card",
           "password-input",
+          "phone-input",
           "popover",
+          "price-breakdown",
           "progress",
           "quote",
           "radio-group",
           "rating",
+          "reference-code",
           "resizable",
+          "result-state",
           "scroll-area",
           "segmented-control",
           "select",
@@ -170,6 +180,7 @@
           "tabs",
           "tag",
           "textarea",
+          "time-slot-picker",
           "timeline",
           "toggle",
           "toggle-group",
@@ -191,6 +202,27 @@
           "collapsible",
           "input",
           "tag"
+        ]
+      },
+      {
+        "file": "packages/ui/src/components-business.test.tsx",
+        "kinds": [
+          "accessibility",
+          "interaction",
+          "rtl"
+        ],
+        "components": [
+          "address-fields",
+          "amount-display",
+          "calendar",
+          "country-select",
+          "date-range-input",
+          "direction-provider",
+          "guest-picker",
+          "number-input",
+          "phone-input",
+          "time-slot-picker",
+          "timeline"
         ]
       },
       {
@@ -328,14 +360,31 @@
         ]
       },
       {
+        "file": "packages/ui/src/components-transactional.test.tsx",
+        "kinds": [
+          "accessibility",
+          "interaction",
+          "rtl"
+        ],
+        "components": [
+          "direction-provider",
+          "pass-card",
+          "price-breakdown",
+          "reference-code",
+          "result-state"
+        ]
+      },
+      {
         "file": "scripts/a11y-browser.mjs",
         "kinds": [
           "accessibility"
         ],
         "components": [
           "accordion",
+          "address-fields",
           "alert",
           "alert-dialog",
+          "amount-display",
           "app-bar",
           "aspect-ratio",
           "audio-player",
@@ -359,9 +408,11 @@
           "command",
           "comparison-slider",
           "context-menu",
+          "country-select",
           "data-grid",
           "data-table",
           "date-picker",
+          "date-range-input",
           "description-list",
           "dialog",
           "diff-viewer",
@@ -374,6 +425,7 @@
           "file-upload",
           "footer",
           "form",
+          "guest-picker",
           "hover-card",
           "image",
           "inform",
@@ -399,13 +451,18 @@
           "number-input",
           "page-header",
           "pagination",
+          "pass-card",
           "password-input",
+          "phone-input",
           "popover",
+          "price-breakdown",
           "progress",
           "quote",
           "radio-group",
           "rating",
+          "reference-code",
           "resizable",
+          "result-state",
           "scroll-area",
           "segmented-control",
           "select",
@@ -424,6 +481,7 @@
           "tabs",
           "tag",
           "textarea",
+          "time-slot-picker",
           "timeline",
           "toggle",
           "toggle-group",
@@ -439,13 +497,18 @@
           "largeText"
         ],
         "components": [
+          "address-fields",
           "alert-dialog",
+          "amount-display",
           "checkbox",
           "context-menu",
+          "country-select",
+          "date-range-input",
           "dialog",
           "drawer",
           "dropdown-menu",
           "form",
+          "guest-picker",
           "input",
           "input-group",
           "input-otp",
@@ -455,14 +518,21 @@
           "multi-select",
           "native-select",
           "number-input",
+          "pass-card",
+          "phone-input",
           "popover",
+          "price-breakdown",
           "radio-group",
+          "reference-code",
+          "result-state",
           "select",
           "sheet",
           "slider",
           "switch",
           "tabs",
           "textarea",
+          "time-slot-picker",
+          "timeline",
           "toggle",
           "toggle-group",
           "tooltip"
@@ -1059,6 +1129,29 @@
         ]
       }
     },
+    "address-fields": {
+      "React": {
+        "build": [
+          "packages/ui (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui/src/components-business.test.tsx:61-357"
+        ],
+        "accessibility": [
+          "packages/ui/src/components-a11y.test.tsx:17-74",
+          "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-business.test.tsx:461-543"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:99-738"
+        ],
+        "published": [
+          "npm: @kinetixui/ui"
+        ]
+      }
+    },
     "alert": {
       "React": {
         "build": [
@@ -1126,7 +1219,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1175,6 +1268,27 @@
         ],
         "largeText": [
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
+        ]
+      }
+    },
+    "amount-display": {
+      "React": {
+        "build": [
+          "packages/ui (compiled by CI)"
+        ],
+        "accessibility": [
+          "packages/ui/src/components-a11y.test.tsx:17-74",
+          "packages/ui/src/components-business.test.tsx:358-460",
+          "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-business.test.tsx:461-543"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:99-738"
+        ],
+        "published": [
+          "npm: @kinetixui/ui"
         ]
       }
     },
@@ -1685,6 +1799,9 @@
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
         ],
+        "rtl": [
+          "packages/ui/src/components-business.test.tsx:461-543"
+        ],
         "published": [
           "npm: @kinetixui/ui"
         ]
@@ -1865,7 +1982,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2294,7 +2411,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2337,6 +2454,30 @@
       "Flutter": {
         "build": [
           "packages/ui-flutter (compiled by CI)"
+        ]
+      }
+    },
+    "country-select": {
+      "React": {
+        "build": [
+          "packages/ui (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui/src/components-business.test.tsx:61-357"
+        ],
+        "accessibility": [
+          "packages/ui/src/components-a11y.test.tsx:17-74",
+          "packages/ui/src/components-business.test.tsx:358-460",
+          "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-business.test.tsx:461-543"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:99-738"
+        ],
+        "published": [
+          "npm: @kinetixui/ui"
         ]
       }
     },
@@ -2439,6 +2580,30 @@
         ]
       }
     },
+    "date-range-input": {
+      "React": {
+        "build": [
+          "packages/ui (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui/src/components-business.test.tsx:61-357"
+        ],
+        "accessibility": [
+          "packages/ui/src/components-a11y.test.tsx:17-74",
+          "packages/ui/src/components-business.test.tsx:358-460",
+          "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-business.test.tsx:461-543"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:99-738"
+        ],
+        "published": [
+          "npm: @kinetixui/ui"
+        ]
+      }
+    },
     "description-list": {
       "React": {
         "build": [
@@ -2500,7 +2665,7 @@
           "packages/ui/src/components-direction-portal.test.tsx:48-483"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2597,12 +2762,14 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
+          "packages/ui/src/components-business.test.tsx:461-543",
           "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-form.test.tsx:311-436",
           "packages/ui/src/components-keyboard.test.tsx:259-314",
           "packages/ui/src/components-overlay.test.tsx:324-382",
           "packages/ui/src/components-rtl.test.tsx:60-259",
-          "packages/ui/src/components-selection.test.tsx:138-208"
+          "packages/ui/src/components-selection.test.tsx:138-208",
+          "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2625,7 +2792,7 @@
           "packages/ui/src/components-direction-portal.test.tsx:48-483"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2695,7 +2862,7 @@
           "packages/ui/src/components-overlay.test.tsx:324-382"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3004,7 +3171,31 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
+        ],
+        "published": [
+          "npm: @kinetixui/ui"
+        ]
+      }
+    },
+    "guest-picker": {
+      "React": {
+        "build": [
+          "packages/ui (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui/src/components-business.test.tsx:61-357"
+        ],
+        "accessibility": [
+          "packages/ui/src/components-a11y.test.tsx:17-74",
+          "packages/ui/src/components-business.test.tsx:358-460",
+          "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-business.test.tsx:461-543"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3173,7 +3364,7 @@
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3240,7 +3431,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3309,7 +3500,7 @@
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3463,7 +3654,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3668,7 +3859,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3816,7 +4007,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3887,7 +4078,7 @@
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3943,7 +4134,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4127,12 +4318,15 @@
         "build": [
           "packages/ui (compiled by CI)"
         ],
+        "interaction": [
+          "packages/ui/src/components-business.test.tsx:61-357"
+        ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4287,6 +4481,27 @@
         ]
       }
     },
+    "pass-card": {
+      "React": {
+        "build": [
+          "packages/ui (compiled by CI)"
+        ],
+        "accessibility": [
+          "packages/ui/src/components-a11y.test.tsx:17-74",
+          "packages/ui/src/components-transactional.test.tsx:147-254",
+          "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-transactional.test.tsx:255-317"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:99-738"
+        ],
+        "published": [
+          "npm: @kinetixui/ui"
+        ]
+      }
+    },
     "password-input": {
       "React": {
         "build": [
@@ -4345,6 +4560,30 @@
         ]
       }
     },
+    "phone-input": {
+      "React": {
+        "build": [
+          "packages/ui (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui/src/components-business.test.tsx:61-357"
+        ],
+        "accessibility": [
+          "packages/ui/src/components-a11y.test.tsx:17-74",
+          "packages/ui/src/components-business.test.tsx:358-460",
+          "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-business.test.tsx:461-543"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:99-738"
+        ],
+        "published": [
+          "npm: @kinetixui/ui"
+        ]
+      }
+    },
     "popover": {
       "React": {
         "build": [
@@ -4365,7 +4604,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4408,6 +4647,27 @@
       "Flutter": {
         "build": [
           "packages/ui-flutter (compiled by CI)"
+        ]
+      }
+    },
+    "price-breakdown": {
+      "React": {
+        "build": [
+          "packages/ui (compiled by CI)"
+        ],
+        "accessibility": [
+          "packages/ui/src/components-a11y.test.tsx:17-74",
+          "packages/ui/src/components-transactional.test.tsx:147-254",
+          "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-transactional.test.tsx:255-317"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:99-738"
+        ],
+        "published": [
+          "npm: @kinetixui/ui"
         ]
       }
     },
@@ -4529,7 +4789,7 @@
           "packages/ui/src/components-selection.test.tsx:138-208"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4638,6 +4898,30 @@
         ]
       }
     },
+    "reference-code": {
+      "React": {
+        "build": [
+          "packages/ui (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui/src/components-transactional.test.tsx:35-146"
+        ],
+        "accessibility": [
+          "packages/ui/src/components-a11y.test.tsx:17-74",
+          "packages/ui/src/components-transactional.test.tsx:147-254",
+          "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-transactional.test.tsx:255-317"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:99-738"
+        ],
+        "published": [
+          "npm: @kinetixui/ui"
+        ]
+      }
+    },
     "resizable": {
       "React": {
         "build": [
@@ -4691,6 +4975,30 @@
         ],
         "largeText": [
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
+        ]
+      }
+    },
+    "result-state": {
+      "React": {
+        "build": [
+          "packages/ui (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui/src/components-transactional.test.tsx:35-146"
+        ],
+        "accessibility": [
+          "packages/ui/src/components-a11y.test.tsx:17-74",
+          "packages/ui/src/components-transactional.test.tsx:147-254",
+          "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-transactional.test.tsx:255-317"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:99-738"
+        ],
+        "published": [
+          "npm: @kinetixui/ui"
         ]
       }
     },
@@ -4821,7 +5129,7 @@
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4940,7 +5248,7 @@
           "packages/ui/src/components-direction-portal.test.tsx:48-483"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5127,7 +5435,7 @@
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5370,7 +5678,7 @@
           "packages/ui/src/components-selection.test.tsx:138-208"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-300"
@@ -5611,7 +5919,7 @@
           "packages/ui/src/components-keyboard.test.tsx:259-314"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5751,7 +6059,7 @@
           "packages/ui/src/components-form.test.tsx:311-436"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5802,6 +6110,30 @@
         ]
       }
     },
+    "time-slot-picker": {
+      "React": {
+        "build": [
+          "packages/ui (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui/src/components-business.test.tsx:61-357"
+        ],
+        "accessibility": [
+          "packages/ui/src/components-a11y.test.tsx:17-74",
+          "packages/ui/src/components-business.test.tsx:358-460",
+          "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-business.test.tsx:461-543"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:99-738"
+        ],
+        "published": [
+          "npm: @kinetixui/ui"
+        ]
+      }
+    },
     "timeline": {
       "React": {
         "build": [
@@ -5809,7 +6141,14 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
+          "packages/ui/src/components-business.test.tsx:358-460",
           "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-business.test.tsx:461-543"
+        ],
+        "largeText": [
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5860,7 +6199,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5931,7 +6270,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6000,7 +6339,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-619"
+          "scripts/large-text.mjs:99-738"
         ],
         "published": [
           "npm: @kinetixui/ui"

@@ -122,6 +122,11 @@ jobs:
       - name: Component manifest check (status, platforms, guidance, maturity)
         run: pnpm check:manifest
 
+      # The business capability roadmap may only call something existing if the manifest, the IoT package,
+      # the blocks manifest or a file says so; its tables are generated from docs/business-capabilities.json.
+      - name: Business capability roadmap is truthful and current
+        run: pnpm check:capabilities
+
       # Keyboard documentation is derived from the keyboard tests, so a behaviour that stops being tested
       # stops being documented. This fails if the two have drifted apart.
       - name: Keyboard documentation is current with the keyboard tests

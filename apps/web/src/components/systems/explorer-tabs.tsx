@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as Tabs from "@radix-ui/react-tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@kinetixui/ui";
 import { ExplorerPanel, type PanelData } from "./explorer-panel";
 import { PlatformMark } from "./platform-marks";
 import { analytics } from "@/lib/analytics";
@@ -10,7 +10,6 @@ import type { Platform } from "@/lib/platform-parity";
 import { codeTabFor, platformIdForCodeTab, setPreferredPlatform, usePreferredPlatform } from "@/lib/platform-preference";
 import type { CodeTab } from "@/lib/platform-tabs";
 import { useDocumentDirection } from "@/lib/use-document-direction";
-import { cn } from "@/lib/utils";
 
 /**
  * The implementation explorer's interactive part, and only that: which platform is showing.
@@ -24,11 +23,6 @@ import { cn } from "@/lib/utils";
  */
 export type ExplorerTab = { tab: CodeTab; platform: Platform; label: string; maturity: string };
 
-const tabTrigger = cn(
-  "relative inline-flex min-h-11 items-center gap-2 border-b-2 border-transparent px-3 font-display text-sm text-muted-foreground transition-colors duration-fast",
-  "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-  "data-[state=active]:border-primary data-[state=active]:text-foreground",
-);
 
 export function ExplorerTabs({
   component,
@@ -62,28 +56,28 @@ export function ExplorerTabs({
   };
 
   return (
-    <Tabs.Root
+    <Tabs
       value={value}
       onValueChange={onChange}
       dir={dir}
       data-implementation-explorer=""
       className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/10"
     >
-      <Tabs.List aria-label="Implementation platform" className="flex flex-wrap items-stretch gap-x-1 border-b border-border px-2 sm:px-3">
+      <TabsList aria-label="Implementation platform" className="px-2 sm:px-3">
         {tabs.map((t) => (
-          <Tabs.Trigger key={t.tab} value={t.tab} data-platform={t.platform} className={tabTrigger}>
+          <TabsTrigger key={t.tab} value={t.tab} data-platform={t.platform} >
             <PlatformMark platform={t.platform} className="size-4 shrink-0" />
             {t.label}
             {t.maturity !== "stable" ? <span className="font-mono text-label-md text-primary">{t.maturity}</span> : null}
-          </Tabs.Trigger>
+          </TabsTrigger>
         ))}
-      </Tabs.List>
+      </TabsList>
       {tabs.map((t) => (
-        <Tabs.Content key={t.tab} value={t.tab} className="focus-visible:outline-none">
+        <TabsContent key={t.tab} value={t.tab} >
           {t.tab === tabs[0]!.tab ? initial : <ExplorerPanel component={component} data={later[t.tab]!} />}
-        </Tabs.Content>
+        </TabsContent>
       ))}
       {footer}
-    </Tabs.Root>
+    </Tabs>
   );
 }

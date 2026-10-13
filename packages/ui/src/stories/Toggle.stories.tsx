@@ -16,7 +16,7 @@ const meta = {
   component: Toggle,
   args: { variant: "default", size: "default" },
   argTypes: {
-    variant: { control: "inline-radio", options: ["default", "outline"] },
+    variant: { control: "inline-radio", options: ["default", "outline", "pill"] },
     size: { control: "inline-radio", options: ["default", "sm", "lg"] },
   },
   parameters: {

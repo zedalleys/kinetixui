@@ -4,7 +4,6 @@ import { DocsPager } from "@/components/docs-pager";
 import { DocsBreadcrumb } from "@/components/docs-breadcrumb";
 import { DocsPageActions } from "@/components/docs-page-actions";
 import { RelatedComponents } from "@/components/related-components";
-
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto flex max-w-screen-2xl gap-8 px-4 sm:px-6 lg:px-8">

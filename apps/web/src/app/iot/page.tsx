@@ -106,8 +106,8 @@ function CategoryPanel({
     .map((layer) => ({ layer, names: parts.filter((name) => (IOT_PART_LAYER[name] ?? "pattern") === layer) }))
     .filter((group) => group.names.length > 0);
   return (
-    <div className="grid gap-10">
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:gap-16">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-10">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:gap-16">
         <div className="min-w-0">
           <p className="eyebrow">{label}</p>
           <h3 className="mt-3 max-w-2xl text-balance font-display text-2xl font-semibold tracking-[-0.02em] md:text-3xl">

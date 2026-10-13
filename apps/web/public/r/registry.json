@@ -22,6 +22,16 @@
       ]
     },
     {
+      "name": "address-fields",
+      "type": "registry:ui",
+      "title": "Address Fields",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
+    },
+    {
       "name": "alert-dialog",
       "type": "registry:ui",
       "title": "Alert Dialog",
@@ -46,6 +56,16 @@
         "Compose",
         "Flutter"
       ]
+    },
+    {
+      "name": "amount-display",
+      "type": "registry:ui",
+      "title": "Amount Display",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
     },
     {
       "name": "app-bar",
@@ -317,6 +337,16 @@
       ]
     },
     {
+      "name": "country-select",
+      "type": "registry:ui",
+      "title": "Country Select",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
+    },
+    {
       "name": "data-grid",
       "type": "registry:ui",
       "title": "Data Grid",
@@ -351,6 +381,16 @@
         "Compose",
         "Flutter"
       ]
+    },
+    {
+      "name": "date-range-input",
+      "type": "registry:ui",
+      "title": "Date Range Input",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
     },
     {
       "name": "description-list",
@@ -497,6 +537,16 @@
       "platforms": [
         "React"
       ]
+    },
+    {
+      "name": "guest-picker",
+      "type": "registry:ui",
+      "title": "Guest Picker",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
     },
     {
       "name": "hover-card",
@@ -812,6 +862,16 @@
       ]
     },
     {
+      "name": "pass-card",
+      "type": "registry:ui",
+      "title": "Pass Card",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
+    },
+    {
       "name": "password-input",
       "type": "registry:ui",
       "title": "Password Input",
@@ -825,6 +885,16 @@
       ]
     },
     {
+      "name": "phone-input",
+      "type": "registry:ui",
+      "title": "Phone Input",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
+    },
+    {
       "name": "popover",
       "type": "registry:ui",
       "title": "Popover",
@@ -836,6 +906,16 @@
         "Compose",
         "Flutter"
       ]
+    },
+    {
+      "name": "price-breakdown",
+      "type": "registry:ui",
+      "title": "Price Breakdown",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
     },
     {
       "name": "progress",
@@ -890,6 +970,16 @@
       ]
     },
     {
+      "name": "reference-code",
+      "type": "registry:ui",
+      "title": "Reference Code",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
+    },
+    {
       "name": "resizable",
       "type": "registry:ui",
       "title": "Resizable",
@@ -901,6 +991,16 @@
         "Compose",
         "Flutter"
       ]
+    },
+    {
+      "name": "result-state",
+      "type": "registry:ui",
+      "title": "Result State",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
     },
     {
       "name": "scroll-area",
@@ -1134,6 +1234,16 @@
         "Compose",
         "Flutter"
       ]
+    },
+    {
+      "name": "time-slot-picker",
+      "type": "registry:ui",
+      "title": "Time Slot Picker",
+      "description": "Ported onto the KinetixUI token contract.",
+      "platforms": [
+        "React"
+      ],
+      "status": "beta"
     },
     {
       "name": "timeline",
