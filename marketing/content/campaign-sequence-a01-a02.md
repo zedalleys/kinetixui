@@ -1,7 +1,7 @@
 ---
 type: campaign sequence
 campaigns: [a01, a02]
-status: neither published, neither scheduled
+status: a01 published 2026-10-13 (ART-001); a02 not scheduled
 ---
 
 # a01 → a02 — operator sequence
@@ -20,7 +20,7 @@ still holds on the day.
 | Format | DEV article + LinkedIn + X thread | LinkedIn + X thread (**no article**) |
 | Campaign id | `kx_parity_proof` | `kx_count_isnt_coverage` |
 | CTA | `/docs/platforms` | `/docs/platforms` |
-| Status | `drafted` | `drafted` |
+| Status | `published` (ART-001, 2026-10-13); LI-001 and X-001 `ready` | `drafted` |
 | Package | `drafts/a01/` (10 files) | `drafts/a02/` (7 files) |
 
 ## Why this order, and why it cannot be reversed
