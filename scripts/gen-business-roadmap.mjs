@@ -96,7 +96,7 @@ const shown = (row) => {
   if (row.status === "planned" && row.delivery !== "component") return `planned (${row.delivery})`;
   return row.status;
 };
-const cell = (s) => String(s).replace(/\|/g, "\\|").replace(/\n/g, " ");
+const cell = (s) => String(s).replace(/\\/g, "\\\\").replace(/\|/g, "\\|").replace(/\n/g, " ");
 const evidence = (row) =>
   row.evidence
     .map((r) => {
