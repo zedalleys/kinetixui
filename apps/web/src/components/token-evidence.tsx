@@ -38,10 +38,10 @@ export function TokenAcrossPlatforms({ token = EVIDENCE_TOKEN }: { token?: strin
           <tbody>
             {evidence.source.map((row) => (
               <tr key={`${row.file}:${row.path}`} className="border-b border-border/60 last:border-0">
-                <td className="whitespace-nowrap px-4 py-2 font-mono text-[13px]">{row.path}</td>
+                <td className="whitespace-nowrap px-4 py-2 font-mono text-code">{row.path}</td>
                 <td className="px-4 py-2">{row.theme === "both" ? "primitive" : row.theme}</td>
-                <td className="whitespace-nowrap px-4 py-2 font-mono text-[13px]">{row.value}</td>
-                <td className="whitespace-nowrap px-4 py-2 font-mono text-[13px] text-muted-foreground">
+                <td className="whitespace-nowrap px-4 py-2 font-mono text-code">{row.value}</td>
+                <td className="whitespace-nowrap px-4 py-2 font-mono text-code text-muted-foreground">
                   {row.file.replace(/^tokens\//, "")}
                 </td>
               </tr>

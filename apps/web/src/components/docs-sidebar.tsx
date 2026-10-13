@@ -34,7 +34,7 @@ export function DocsSidebar() {
             onKeyDown={(e) => e.key === "Escape" && setQuery("")}
             placeholder="Filter…"
             aria-label="Filter documentation"
-            className="h-8 w-full rounded-md border border-input bg-muted/40 pl-8 pr-7 font-mono text-[12px] outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-8 w-full rounded-md border border-input bg-muted/40 pl-8 pr-7 font-mono text-body-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
           />
           {query && (
             <button
@@ -80,7 +80,7 @@ export function DocsSidebar() {
                         )}
                       >
                         {item.title}
-                        {item.badge && <span className="ml-2 rounded-[3px] border border-border px-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">{item.badge}</span>}
+                        {item.badge && <span className="ml-2 rounded-[3px] border border-border px-1 font-mono text-label-md uppercase tracking-wider text-muted-foreground">{item.badge}</span>}
                       </Link>
                     </li>
                   );

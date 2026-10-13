@@ -163,11 +163,35 @@
   /* uppercase mono eyebrow label */
   .eyebrow {
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    /* 0.75rem: the compact-label floor the site holds every readable label to (check:typography, web-quality-browser) */
+    font-size: 0.75rem;
+    line-height: 1rem;
     font-weight: 500;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: hsl(var(--muted-foreground));
+  }
+
+  /*
+   * A touch-sized hit area for a control whose visible box is deliberately compact (an icon button over a code
+   * block, a header tool). On a coarse pointer, or a phone-width window, an empty ::before grows the tappable box
+   * to 44px on each axis the control is shorter on — centred, so it is the same in LTR and RTL — and leaves the
+   * drawn button, its focus ring and the desktop layout exactly as they were. A box already 44px or larger on an
+   * axis is not extended on it: `min(0px, 50% - 1.375rem)` is a negative inset only while half the box is under 22px.
+   *
+   * Spacing is the caller's job: two of these closer than 44px apart centre to centre would overlap, and the browser
+   * would give the overlap to whichever paints last. web-quality-browser fails when one control's hit area covers
+   * another control's centre.
+   */
+  .kx-hit {
+    position: relative;
+  }
+  @media (pointer: coarse), (max-width: 639px) {
+    .kx-hit::before {
+      content: "";
+      position: absolute;
+      inset: min(0px, calc(50% - 1.375rem));
+    }
   }
 
   /* the kinetic underline under an accented word in headings */
@@ -828,7 +852,8 @@
   }
   .kx-pipe-chip {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 0.75rem;
+    line-height: 1rem;
     padding: 2px 6px;
     border: 1px solid hsl(var(--border));
     border-radius: 3px;
@@ -1062,7 +1087,8 @@
     padding: 0.15rem 0.35rem;
     border-radius: var(--radius-sm);
     font-family: var(--font-mono);
-    font-size: 0.85em;
+    /* 0.875em, not 0.85em: inside 14px prose 0.85em computed to 11.9px, under the 12px compact-text floor */
+    font-size: 0.875em;
   }
 }
 

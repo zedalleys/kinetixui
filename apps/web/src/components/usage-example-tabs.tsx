@@ -8,7 +8,7 @@ import { PLATFORM_TABS } from "@/lib/platform-tabs";
 import { usageExamples } from "@/registry/usage-examples.generated";
 
 const tabTrigger = cn(
-  "-mb-px border-b-2 border-transparent px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground transition-colors",
+  "-mb-px border-b-2 border-transparent px-2.5 py-1.5 font-mono text-label-md uppercase tracking-[0.1em] text-muted-foreground transition-colors coarse:min-h-10",
   "hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground",
 );
 
@@ -42,7 +42,7 @@ export function UsageExampleTabs({ name, className }: { name: string; className?
           <Tabs.Content key={t.tab} value={t.tab}>
             <div className="relative">
               <CopyButton value={byTab[t.tab]!} className="absolute right-3 top-3 z-10" />
-              <pre dir="ltr" className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed">
+              <pre dir="ltr" className="overflow-x-auto p-4 font-mono text-code leading-relaxed">
                 <code>{byTab[t.tab]}</code>
               </pre>
             </div>

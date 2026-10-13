@@ -25,7 +25,7 @@ function useModKey() {
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex min-w-[1.5rem] items-center justify-center rounded border border-border bg-background px-1.5 py-0.5 font-mono text-[11px] font-medium leading-none text-muted-foreground">
+    <kbd className="inline-flex min-w-[1.5rem] items-center justify-center rounded border border-border bg-background px-1.5 py-0.5 font-mono text-label-md font-medium leading-none text-muted-foreground">
       {children}
     </kbd>
   );
@@ -70,7 +70,7 @@ export function CommandMenu() {
         second global ⌘K listener, which toggles the dialog twice. The visible text becomes `sr-only` instead of
         being removed, so the accessible name is the same "Search…" at every width.
       */}
-      <Dialog.Trigger className="inline-flex size-9 items-center justify-center gap-2 rounded-md border border-input bg-muted/50 text-[13px] text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-9 sm:w-56 sm:justify-start sm:px-3">
+      <Dialog.Trigger className="kx-hit inline-flex size-9 items-center justify-center gap-2 rounded-md border border-input bg-muted/50 text-body-md text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-9 sm:w-56 sm:justify-start sm:px-3">
         <Search aria-hidden className="size-4 shrink-0" />
         <span className="sr-only sm:not-sr-only sm:flex-1 sm:text-left">Search…</span>
         <span className="pointer-events-none hidden items-center gap-1 sm:flex">
@@ -140,7 +140,7 @@ export function CommandMenu() {
               </Command.Group>
             </Command.List>
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border px-3 py-2 text-[11px] text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border px-3 py-2 text-body-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Kbd>↑</Kbd>
                 <Kbd>↓</Kbd>

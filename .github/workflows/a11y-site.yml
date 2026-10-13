@@ -23,6 +23,7 @@ on:
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
+      - "scripts/web-quality-browser.mjs"
       # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
       - "components.manifest.json"
       - "platform-parity.json"
@@ -45,6 +46,7 @@ on:
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
+      - "scripts/web-quality-browser.mjs"
       # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
       - "components.manifest.json"
       - "platform-parity.json"
@@ -134,3 +136,9 @@ jobs:
       # running through an output it does not belong to.
       - name: Homepage systems visuals (tabs, type floor, headline, map)
         run: pnpm check:home-systems
+
+      # The website's own compact text, measured rather than read from source: no readable label under 12px, the
+      # touched labels at 4.5:1 in light and dark, touch-sized hit areas on a coarse pointer with no overlaps, and
+      # gallery thumbnails that stay decorative and in their frame in LTR and RTL (check:typography covers source).
+      - name: Web type floor, contrast, touch targets and thumbnails
+        run: pnpm check:web-quality

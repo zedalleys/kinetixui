@@ -83,7 +83,7 @@ export function ModuleBoundary({ className }: { className?: string }) {
               )}
             >
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span aria-hidden className="font-mono text-[11px] text-muted-foreground">
+                <span aria-hidden className="font-mono text-body-sm text-muted-foreground">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <span
@@ -98,7 +98,7 @@ export function ModuleBoundary({ className }: { className?: string }) {
                 </span>
                 <span
                   className={cn(
-                    "ms-auto rounded-full px-2 py-0.5 text-[11px] font-medium",
+                    "ms-auto rounded-full px-2 py-0.5 text-label-md font-medium",
                     layer.owner === "kinetixui" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
                   )}
                 >
@@ -109,7 +109,7 @@ export function ModuleBoundary({ className }: { className?: string }) {
               {layer.chips ? (
                 <ul aria-label="Examples of transports and providers your application might use" className="mt-3 flex flex-wrap gap-1.5">
                   {PROVIDERS.map((name) => (
-                    <li key={name} className="rounded-full border border-border bg-background px-2 py-0.5 font-mono text-[11px] text-muted-foreground" dir="ltr">
+                    <li key={name} className="rounded-full border border-border bg-background px-2 py-0.5 font-mono text-label-md text-muted-foreground" dir="ltr">
                       {name}
                     </li>
                   ))}

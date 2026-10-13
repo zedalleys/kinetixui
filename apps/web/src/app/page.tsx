@@ -230,7 +230,7 @@ export default function HomePage() {
 
               <div className="mt-7 w-full max-w-xl">
                 <HeroCommand />
-                <p className="mt-2 text-[13px] text-muted-foreground sm:whitespace-nowrap">
+                <p className="mt-2 text-body-md text-muted-foreground sm:whitespace-nowrap">
                   Example — adds one component.{" "}
                   <Link
                     href="/docs/installation"
@@ -261,7 +261,7 @@ export default function HomePage() {
         {/* targets ticker — a hard structural band, unchanged */}
         <div className="relative border-t border-border">
           <div className="mx-auto flex max-w-screen-2xl items-stretch">
-            <span className="hidden shrink-0 items-center border-e border-border px-4 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground sm:flex sm:px-6 lg:px-8">
+            <span className="hidden shrink-0 items-center border-e border-border px-4 font-mono text-label-md uppercase tracking-[0.18em] text-muted-foreground sm:flex sm:px-6 lg:px-8">
               Targets&nbsp;→
             </span>
             <PlatformTicker />

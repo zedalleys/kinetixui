@@ -10,7 +10,7 @@ export default function ComponentsPage() {
     <div className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">
       <p className="eyebrow">Registry</p>
       <h1 className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] md:text-4xl">Components</h1>
-      <Suspense fallback={<p className="mt-6 font-mono text-[11px] text-muted-foreground">Loading…</p>}>
+      <Suspense fallback={<p className="mt-6 font-mono text-body-sm text-muted-foreground">Loading…</p>}>
         <ComponentGallery />
       </Suspense>
     </div>

@@ -141,7 +141,7 @@ export function LabTabs({
               data-simulation-disclosure=""
               className="mt-4 flex max-w-2xl items-start gap-2 rounded-lg border border-dashed border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
             >
-              <span className="mt-0.5 shrink-0 rounded-full border border-border px-2 py-px text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground">
+              <span className="mt-0.5 shrink-0 rounded-full border border-border px-2 py-px text-label-md font-semibold uppercase tracking-[0.14em] text-foreground">
                 Simulation
               </span>
               <span>{disclosure}</span>

@@ -72,9 +72,10 @@ export function PlatformBadges({ slug, className }: { slug: string; className?: 
           <span
             key={platform}
             aria-hidden
+            data-platform-badge={implemented ? "on" : "off"}
             title={title}
             className={cn(
-              "rounded border px-1 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em]",
+              "rounded border px-1 py-0.5 font-mono text-label-md uppercase tracking-[0.1em]",
               // every state stays legible (AA): available = foreground text in a bordered tag; the rest are
               // muted, which is still 4.5:1. Not faded with opacity, which pushed the text far below it.
               implemented && "border-border text-foreground",

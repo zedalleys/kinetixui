@@ -343,7 +343,7 @@ export default function IotPage() {
           <ol aria-label="The questions every environment asks" className={ENVIRONMENT_GRID}>
             {ENVIRONMENT_QUESTIONS.map((q, i) => (
               <li key={q.question} className="min-w-0 rounded-xl border border-border bg-card p-4">
-                <span aria-hidden className="font-mono text-[11px] text-muted-foreground">
+                <span aria-hidden className="font-mono text-body-sm text-muted-foreground">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <p className="mt-1 font-display text-base font-semibold">{q.question}</p>
@@ -393,7 +393,7 @@ export default function IotPage() {
             className="flex min-w-0 flex-col gap-4 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0">
-              <p className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Full-page demo · simulated</p>
+              <p className="font-mono text-label-md uppercase tracking-wide text-muted-foreground">Full-page demo · simulated</p>
               <h3 id="iot-building-demo" className="mt-1 font-display text-lg font-semibold">
                 Building operations
               </h3>
@@ -456,7 +456,7 @@ export default function IotPage() {
                       <ol aria-label="One command, told honestly" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                         {COMMAND_STORY.map((step, i) => (
                           <li key={step.word} className="rounded-xl border border-border bg-card p-4">
-                            <span aria-hidden className="font-mono text-[11px] text-muted-foreground">
+                            <span aria-hidden className="font-mono text-body-sm text-muted-foreground">
                               {String(i + 1).padStart(2, "0")}
                             </span>
                             <p className="mt-1 font-display text-base font-semibold">{step.word}</p>
@@ -979,8 +979,8 @@ import { SensorReading, formatLastSeen } from "${IOT_PACKAGE}";`}
                 <span
                   className={
                     column.state === "shipped"
-                      ? "rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
-                      : "rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+                      ? "rounded-full bg-primary/10 px-2 py-0.5 text-label-md font-medium text-primary"
+                      : "rounded-full bg-muted px-2 py-0.5 text-label-md font-medium text-muted-foreground"
                   }
                 >
                   {column.state === "shipped" ? "In the module" : column.state === "excluded" ? "Excluded" : "Deferred"}

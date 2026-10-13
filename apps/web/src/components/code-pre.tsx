@@ -40,7 +40,7 @@ export function CodePre({ className, children, ...props }: React.ComponentPropsW
         onClick={copy}
         aria-label="Copy code"
         className={cn(
-          "absolute right-2.5 top-2.5 z-10 inline-flex size-7 items-center justify-center rounded-md border border-border bg-background/80 text-muted-foreground opacity-100 md:opacity-0 backdrop-blur transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100",
+          "kx-hit absolute right-2.5 top-2.5 z-10 inline-flex size-7 items-center justify-center rounded-md border border-border bg-background/80 text-muted-foreground opacity-100 md:opacity-0 backdrop-blur transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100",
         )}
       >
         {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
@@ -54,7 +54,7 @@ export function CodePre({ className, children, ...props }: React.ComponentPropsW
         aria-label={isTextDiagram ? "Scrollable text diagram" : undefined}
         // a code block scrolls sideways when a line is long, so the keyboard must be able to reach it
         tabIndex={0}
-        className={cn("my-4 overflow-x-auto rounded-lg border border-border bg-muted/40 text-[13px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}
+        className={cn("my-4 overflow-x-auto rounded-lg border border-border bg-muted/40 text-code focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}
         {...props}
       >
         {children}
