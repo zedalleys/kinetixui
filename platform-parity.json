@@ -4087,5 +4087,13 @@
       "visual": 0,
       "published": 0
     }
-  }
+  },
+  "claimableEvidence": [
+    "interaction",
+    "accessibility",
+    "rtl",
+    "largeText",
+    "reducedMotion",
+    "visual"
+  ]
 }

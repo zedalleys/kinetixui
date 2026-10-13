@@ -140,5 +140,114 @@ export const CATALOGUE_VERIFICATION = parityData.catalogueVerification as Record
 /** How many components hold each evidence kind, per platform. Shown as "21 / 98", never as a tick. */
 export const EVIDENCE_COUNTS = parityData.evidenceCounts as Record<Platform, Record<EvidenceKind, number>>;
 
+/**
+ * The kinds a test passage may claim. `build` and `published` are not among them: the manifest declares those.
+ * Generated (`claimableEvidence`), so this split cannot drift from the generator's own.
+ */
+const CLAIMABLE_EVIDENCE = new Set(parityData.claimableEvidence as string[]);
+
+/**
+ * What a platform's count for one evidence kind means, read off the contract that produced it. These states
+ * describe EVIDENCE MATURITY: how much a test has recorded. None of them is a statement about whether the
+ * platform can do the thing — a SwiftUI control with no accessibility test still uses SwiftUI's own semantics.
+ *
+ *   verified          every entry on the platform holds the kind.
+ *   partial           a substantial share does. The fraction is the claim, and a meter draws it.
+ *   limited           a test records the kind for a handful of entries (below {@link LIMITED_EVIDENCE_SHARE}).
+ *                     Evidence exists and is named, but a near-empty meter would read as a failing score, so the
+ *                     state is said in words and the count is secondary.
+ *   not-yet-verified  none do, and the kind is one a test claims. `gen:verification` records only positive
+ *                     evidence and deliberately has no N/A, so this zero says no test records the kind yet. It
+ *                     is not a failed check, and it must not be drawn as an empty score.
+ *   none              none do, and the kind is a declared fact rather than a test result: `published` at 0 is a
+ *                     package that is not on a registry, which is a real zero.
+ *
+ * There is no "not applicable": the generator has no N/A escape (see its header), so nothing could truthfully
+ * produce one. Nor is there a "failed" state: the generator never records a failing check, so nothing here may
+ * be styled as an error.
+ */
+export type EvidenceState = "verified" | "partial" | "limited" | "not-yet-verified" | "none";
+
+/**
+ * The one presentation threshold: a claimable kind held by fewer than this share of a platform's entries reads
+ * as "Limited evidence" instead of a fraction over a meter. It changes wording only; every count, every
+ * verification rung and every gate is computed without it.
+ *
+ * The repository has no finer classification to borrow (evidence is one bit per component, and the ladder in
+ * `verificationRequires` is per component, not per catalogue), so this is the single place the UI draws the
+ * line. One in ten is not on a boundary of today's data: the largest count below it is 7 of 90 (7.8%) and the
+ * smallest above it 22 of 98 (22.4%), so a small change to either does not flip a card.
+ */
+export const LIMITED_EVIDENCE_SHARE = 0.1;
+
+export interface EvidenceStatus {
+  state: EvidenceState;
+  count: number;
+  of: number;
+  /** The state in words ("Limited evidence"): what a reader sees first, before any number. */
+  label: string;
+  /** Whether a meter helps: only where the fraction is substantial. Never for a zero or a handful. */
+  meter: boolean;
+  /**
+   * The reading in a sentence, with the platform in it: the note under a row that has no fraction worth reading,
+   * and what assistive technology hears after the state. The row's own label names the kind, so the short
+   * sentences ("No SwiftUI test records this yet.") lean on it.
+   */
+  summary: string;
+}
+
+const STATE_LABEL: Record<EvidenceState, string> = {
+  verified: "Verified",
+  partial: "Partial",
+  limited: "Limited evidence",
+  "not-yet-verified": "Not yet verified",
+  none: "Not published",
+};
+
+/** Evidence kinds as a sentence names them ("have right-to-left evidence"). */
+const EVIDENCE_NOUN: Record<EvidenceKind | "reducedMotion", string> = {
+  build: "build",
+  interaction: "interaction",
+  accessibility: "accessibility",
+  rtl: "right-to-left",
+  largeText: "large-text",
+  reducedMotion: "reduced-motion",
+  visual: "visual-regression",
+  published: "published",
+};
+
+/** The state, and the sentence, behind `platform`'s count for `kind`, out of the platform's own entries. */
+export function evidenceStatus(platform: Platform, kind: EvidenceKind | "reducedMotion"): EvidenceStatus {
+  const count = (EVIDENCE_COUNTS[platform] as Record<string, number>)[kind] ?? 0;
+  const of = (parityData.coverage as Record<Platform, number>)[platform];
+  const def = PLATFORM_DEFINITIONS[platform];
+  const noun = EVIDENCE_NOUN[kind];
+  const status = (state: EvidenceState, summary: string): EvidenceStatus => ({
+    state,
+    count,
+    of,
+    label: STATE_LABEL[state],
+    meter: state === "verified" || state === "partial",
+    summary,
+  });
+  // "catalogue entries", not "components": the total includes a documented recipe (CLAIMS.md B2)
+  const entries = (n: number) => `${n} ${def.label} ${n === 1 ? "entry" : "entries"}`;
+  if (count > of) throw new Error(`platform-parity: ${platform} claims ${kind} evidence for ${count} of ${of} entries`);
+  if (kind === "published") {
+    if (count === 0) return status("none", `${def.label} is not on ${def.distribution.channel} yet.`);
+    return status(count === of ? "verified" : "partial", `${count} of ${of} ${def.label} catalogue entries are on ${def.distribution.channel}.`);
+  }
+  if (count === 0) {
+    // `build` is derived from the manifest's own declaration, so a declared platform at 0 is a generator fault.
+    if (!CLAIMABLE_EVIDENCE.has(kind)) throw new Error(`platform-parity: ${platform} has 0 ${kind} evidence, which the manifest cannot produce`);
+    return status("not-yet-verified", `No ${def.label} test records this yet.`);
+  }
+  if (count === of) return status("verified", `All ${of} ${def.label} catalogue entries have ${noun} evidence.`);
+  if (CLAIMABLE_EVIDENCE.has(kind) && count < of * LIMITED_EVIDENCE_SHARE) {
+    return status("limited", `Tests record it for ${entries(count)} so far.`);
+  }
+  return status("partial", `${count} of ${of} ${def.label} catalogue entries have ${noun} evidence.`);
+}
+
 /** How many components sit on each verification rung, per platform. */
 export const VERIFICATION_COUNTS = parityData.verificationCounts as Record<Platform, Partial<Record<VerificationLevel, number>>>;
