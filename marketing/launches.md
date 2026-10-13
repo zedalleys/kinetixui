@@ -75,7 +75,7 @@ The `distribution/outreach.md` T1 and T2 templates exist for exactly this, and a
 
 | Entry criterion | State, verified 2026-09-29 |
 | --- | --- |
-| 2 long-form articles **published** | **NOT MET** — two are finished drafts (ART-001, ART-002). Finished is not published |
+| 2 long-form articles **published** | **MET** 2026-10-13 — ART-002 published 2026-10-06 and ART-001 2026-10-13, both on dev.to (`distribution/register.json`) |
 | `/docs/platforms` reads clearly to someone with no context | **UNVERIFIED** — a judgement nobody outside has made. Stage 1 is how it gets made |
 | A 30-second demo exists | **NOT MET** — three motion shot lists are written and **none is produced** (`content/motion-briefs.md`) |
 | The homepage CTA path works on mobile | **NEEDS RE-CHECK** on the current hero. Phase 5's screenshot was captured at 1440×900 and says nothing about 390px |

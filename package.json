@@ -83,7 +83,7 @@
     "test": "turbo run test && pnpm test:release",
     "typecheck": "turbo run typecheck",
     "changeset": "changeset",
-    "version-packages": "changeset version",
+    "version-packages": "changeset version && node scripts/version-release-meta.mjs",
     "release": "node scripts/release-publish.mjs",
     "check:platform-completeness": "node scripts/check-platform-completeness.mjs",
     "check:platform-source": "node scripts/check-platform-source.mjs",
