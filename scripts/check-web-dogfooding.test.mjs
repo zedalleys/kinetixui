@@ -59,6 +59,16 @@ test('a stale or oversized approval fails, so resolved debt cannot stay as a per
   assert.match(check(result, baseline).join('\n'), /gone\.tsx::select: approved 1 but 0 remain\. .*delete the entry/);
 }));
 
+test('an approval without a positive integer maxCount fails instead of approving unlimited sites', () => withTree({
+  'view.tsx': 'export const V = () => <div><button type="button" onClick={() => {}}>One</button><button type="button" onClick={() => {}}>Two</button></div>',
+}, (result) => {
+  for (const maxCount of [undefined, '2', Number.NaN, 0, 1.5]) {
+    const baseline = approve(result);
+    for (const entry of baseline.entries) entry.maxCount = maxCount;
+    assert.match(check(result, baseline).join('\n'), /maxCount must be a positive integer/, `maxCount ${String(maxCount)} must fail`);
+  }
+}));
+
 test('documented D exceptions pass; classifications come from the ledger', () => withTree({
   'disclosure.tsx': 'export const V = () => <details><summary>More</summary><p>Body</p></details>',
 }, (result) => {

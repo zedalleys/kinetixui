@@ -78,7 +78,9 @@ export function check(result, baseline) {
   }
   for (const [key, entry] of approved) {
     const count = counts.get(key) ?? 0;
-    if (count < entry.maxCount) failures.push(`${key}: approved ${entry.maxCount} but ${count} remain. Debt was removed: ${count ? `shrink maxCount to ${count}` : 'delete the entry'} so it cannot be reused.`);
+    // a missing or non-numeric maxCount would make both comparisons false and approve unlimited sites
+    if (!Number.isInteger(entry.maxCount) || entry.maxCount < 1) failures.push(`${key}: maxCount must be a positive integer (the number of approved sites).`);
+    else if (count < entry.maxCount) failures.push(`${key}: approved ${entry.maxCount} but ${count} remain. Debt was removed: ${count ? `shrink maxCount to ${count}` : 'delete the entry'} so it cannot be reused.`);
   }
   return failures;
 }
