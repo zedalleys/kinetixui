@@ -1,78 +1,78 @@
 {
   "version": 1,
-  "auditedBase": "ae9cc44a1f2529da77f7ac0df2e3e25ae07128aa",
+  "auditedBase": "acfe95af62befb4d11b3527a529bfd635c825fb8",
   "scope": "apps/web/src excluding tests; AST JSX sites (not rendered instances)",
-  "policy": "Counts may shrink. New patterns/files or growth require component use or an explicit reviewed exception. B is migration debt, not a permanent exemption.",
+  "policy": "Counts must match the source exactly: new patterns, new files or growth require component use or a reviewed entry; removed debt must be removed here too (the guard fails on stale approvals). Read-only <table> is semantic HTML (E) and needs no entry. B is migration debt, not a permanent exemption.",
   "entries": [
+    {
+      "file": "apps/web/src/app/capabilities/page.tsx",
+      "pattern": "details",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "Native disclosure for planned capability rows on a server-rendered page (#377): opens without JavaScript and keeps rows in the document for search and Markdown copy. Same exception family as the other native disclosures."
+    },
+    {
+      "file": "apps/web/src/app/capabilities/page.tsx",
+      "pattern": "summary",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "Native disclosure for planned capability rows on a server-rendered page (#377): opens without JavaScript and keeps rows in the document for search and Markdown copy. Same exception family as the other native disclosures."
+    },
     {
       "file": "apps/web/src/app/charts/charts-content.tsx",
       "pattern": "button[type=button]",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
-    },
-    {
-      "file": "apps/web/src/app/docs/colors/colors-content.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/app/docs/colors/colors-content.tsx",
       "pattern": "button",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button. Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
-      "file": "apps/web/src/app/infographic/page.tsx",
-      "pattern": "table",
+      "file": "apps/web/src/app/docs/colors/colors-content.tsx",
+      "pattern": "button[type=button]",
       "maxCount": 2,
-      "classification": "E",
-      "reason": "Read-only reference data table: semantic HTML; no selection, sorting or pagination. Keep headings/captions and overflow access."
-    },
-    {
-      "file": "apps/web/src/app/iot/page.tsx",
-      "pattern": "table",
-      "maxCount": 1,
-      "classification": "E",
-      "reason": "Read-only reference data table: semantic HTML; no selection, sorting or pagination. Keep headings/captions and overflow access."
+      "classification": "B",
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/building-ops/building-ops-demo.tsx",
-      "pattern": "div[role=radiogroup]",
+      "pattern": "button[type=button]",
       "maxCount": 1,
-      "classification": "C",
-      "reason": "Pill-shaped exclusive floor selector needs the same icon/count RadioGroup variant as PillSelector; preserve one selected floor and RTL roving focus."
+      "classification": "B",
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/building-ops/building-ops-demo.tsx",
       "pattern": "button[type=button][role=radio]",
       "maxCount": 1,
       "classification": "C",
-      "reason": "Pill-shaped exclusive floor selector needs the same icon/count RadioGroup variant as PillSelector; preserve one selected floor and RTL roving focus."
+      "reason": "Multi-line selectable floor tile (code, alert count, occupancy, cameras) with one selected floor and RTL roving focus. Not a pill: the library has no exclusive selectable-tile/card item variant; restyling the pill toggle into a tile locally would recreate library visuals. Library variant first (Wave 3)."
     },
     {
       "file": "apps/web/src/components/building-ops/building-ops-demo.tsx",
-      "pattern": "table",
+      "pattern": "div[role=radiogroup]",
       "maxCount": 1,
-      "classification": "E",
-      "reason": "Read-only reference data table: semantic HTML; no selection, sorting or pagination. Keep headings/captions and overflow access."
-    },
-    {
-      "file": "apps/web/src/components/building-ops/building-ops-demo.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "classification": "C",
+      "reason": "Multi-line selectable floor tile (code, alert count, occupancy, cameras) with one selected floor and RTL roving focus. Not a pill: the library has no exclusive selectable-tile/card item variant; restyling the pill toggle into a tile locally would recreate library visuals. Library variant first (Wave 3)."
     },
     {
       "file": "apps/web/src/components/building-ops/camera-panel.tsx",
       "pattern": "button[type=button]",
       "maxCount": 2,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
+    },
+    {
+      "file": "apps/web/src/components/building-ops/floor-plan.tsx",
+      "pattern": "button[type=button]",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "Spatial selection is a website composition with coordinate positioning and selection announcements. Keep geometry and focus model local; compose a library button/asChild trigger without changing hit testing in a later wave."
     },
     {
       "file": "apps/web/src/components/building-ops/floor-plan.tsx",
@@ -82,11 +82,11 @@
       "reason": "Spatial selection is a website composition with coordinate positioning and selection announcements. Keep geometry and focus model local; compose a library button/asChild trigger without changing hit testing in a later wave."
     },
     {
-      "file": "apps/web/src/components/building-ops/floor-plan.tsx",
+      "file": "apps/web/src/components/changelog-view.tsx",
       "pattern": "button[type=button]",
-      "maxCount": 1,
-      "classification": "D",
-      "reason": "Spatial selection is a website composition with coordinate positioning and selection announcements. Keep geometry and focus model local; compose a library button/asChild trigger without changing hit testing in a later wave."
+      "maxCount": 2,
+      "classification": "B",
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/changelog-view.tsx",
@@ -97,42 +97,21 @@
     },
     {
       "file": "apps/web/src/components/changelog-view.tsx",
+      "pattern": "input[type=search]",
+      "maxCount": 1,
+      "classification": "B",
+      "reason": "Existing equivalent: Input type=\"search\". Preserve names, handlers, URLs and analytics. Wave 2."
+    },
+    {
+      "file": "apps/web/src/components/changelog-view.tsx",
       "pattern": "summary",
       "maxCount": 1,
       "classification": "D",
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
     },
     {
-      "file": "apps/web/src/components/changelog-view.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
-    },
-    {
-      "file": "apps/web/src/components/changelog-view.tsx",
-      "pattern": "input[type=search]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
-    },
-    {
       "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Root",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Trigger",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Portal",
+      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Content",
       "maxCount": 1,
       "classification": "B",
       "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
@@ -146,7 +125,14 @@
     },
     {
       "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Content",
+      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Portal",
+      "maxCount": 1,
+      "classification": "B",
+      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
+    },
+    {
+      "file": "apps/web/src/components/command-menu.tsx",
+      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Root",
       "maxCount": 1,
       "classification": "B",
       "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
@@ -160,21 +146,14 @@
     },
     {
       "file": "apps/web/src/components/command-menu.tsx",
+      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Trigger",
+      "maxCount": 1,
+      "classification": "B",
+      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
+    },
+    {
+      "file": "apps/web/src/components/command-menu.tsx",
       "pattern": "vendor:cmdk:Command",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:cmdk:Command.Input",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:cmdk:Command.List",
       "maxCount": 1,
       "classification": "B",
       "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
@@ -195,59 +174,45 @@
     },
     {
       "file": "apps/web/src/components/command-menu.tsx",
+      "pattern": "vendor:cmdk:Command.Input",
+      "maxCount": 1,
+      "classification": "B",
+      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
+    },
+    {
+      "file": "apps/web/src/components/command-menu.tsx",
       "pattern": "vendor:cmdk:Command.Item",
       "maxCount": 1,
       "classification": "B",
       "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
     },
     {
-      "file": "apps/web/src/components/component-api.tsx",
-      "pattern": "table",
+      "file": "apps/web/src/components/command-menu.tsx",
+      "pattern": "vendor:cmdk:Command.List",
       "maxCount": 1,
-      "classification": "E",
-      "reason": "Read-only reference data table: semantic HTML; no selection, sorting or pagination. Keep headings/captions and overflow access."
+      "classification": "B",
+      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
     },
     {
       "file": "apps/web/src/components/component-gallery.tsx",
       "pattern": "button[type=button]",
-      "maxCount": 10,
+      "maxCount": 9,
       "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/component-preview.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Root",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/component-preview.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.List",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/component-preview.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Trigger",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/component-preview.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Content",
-      "maxCount": 3,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
+      "reason": "Platform filters already use library Toggle (#380). Remaining: business capability/domain/layer filter chips with aria-pressed (from #377; use Toggle variant=\"pill\" like the platform chips), clear-search, Filters sheet open/close, three clear-all actions (Button), removable active-filter chips (Tag onRemove), and the business-filters disclosure trigger (Button/Collapsible). Preserve URL state, counts and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/create/create-advanced.tsx",
       "pattern": "input",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Input. Preserve names, handlers, URLs and analytics. Wave 2."
+    },
+    {
+      "file": "apps/web/src/components/create/create-color-picker.tsx",
+      "pattern": "input",
+      "maxCount": 1,
+      "classification": "B",
+      "reason": "Existing equivalent: Input. Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/create/create-color-picker.tsx",
@@ -257,25 +222,11 @@
       "reason": "Native color-channel range explicitly relies on OS touch/keyboard behavior and continuous draft updates; gradient track is color data. Retain pending a tested color-picker composition."
     },
     {
-      "file": "apps/web/src/components/create/create-color-picker.tsx",
-      "pattern": "input",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
-    },
-    {
-      "file": "apps/web/src/components/create/create-sidebar.tsx",
-      "pattern": "input[type=radio]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
-    },
-    {
       "file": "apps/web/src/components/create/create-sidebar.tsx",
       "pattern": "button[type=button]",
       "maxCount": 2,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/create/create-sidebar.tsx",
@@ -283,6 +234,13 @@
       "maxCount": 1,
       "classification": "D",
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
+    },
+    {
+      "file": "apps/web/src/components/create/create-sidebar.tsx",
+      "pattern": "input[type=radio]",
+      "maxCount": 1,
+      "classification": "B",
+      "reason": "Existing equivalent: RadioGroup/RadioGroupItem. Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/create/create-sidebar.tsx",
@@ -296,70 +254,42 @@
       "pattern": "button[type=button]",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
-      "file": "apps/web/src/components/cross-platform-flagship.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Root",
+      "file": "apps/web/src/components/docs-sidebar.tsx",
+      "pattern": "button[type=button]",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/cross-platform-flagship.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.List",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/cross-platform-flagship.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Trigger",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/cross-platform-flagship.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Content",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/docs-sidebar.tsx",
       "pattern": "input[type=text]",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
-    },
-    {
-      "file": "apps/web/src/components/docs-sidebar.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
-    },
-    {
-      "file": "apps/web/src/components/foundations-tables.tsx",
-      "pattern": "table",
-      "maxCount": 2,
-      "classification": "E",
-      "reason": "Read-only reference data table: semantic HTML; no selection, sorting or pagination. Keep headings/captions and overflow access."
+      "reason": "Existing equivalent: Input. Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/hero-command.tsx",
       "pattern": "button[type=button]",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/infographic/world-map.tsx",
       "pattern": "g[role=button]",
       "maxCount": 1,
+      "classification": "D",
+      "reason": "Interactive SVG map region (<g role=\"button\">): a <button> cannot live inside SVG. Keep the geometry, hit area and explicit focus/keyboard model local, as with the floor plan and system map."
+    },
+    {
+      "file": "apps/web/src/components/iot/device-showcase.tsx",
+      "pattern": "input[type=checkbox]",
+      "maxCount": 2,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Checkbox (with Label). Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/iot/device-showcase.tsx",
@@ -367,13 +297,6 @@
       "maxCount": 4,
       "classification": "B",
       "reason": "Slider exists; migrate separately with scalar/array event adaptation, labelled values and touch/keyboard proof."
-    },
-    {
-      "file": "apps/web/src/components/iot/device-showcase.tsx",
-      "pattern": "input[type=checkbox]",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
     },
     {
       "file": "apps/web/src/components/iot/example-showcase.tsx",
@@ -388,62 +311,6 @@
       "maxCount": 1,
       "classification": "D",
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
-    },
-    {
-      "file": "apps/web/src/components/iot/example-showcase.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Root",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/iot/example-showcase.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.List",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/iot/example-showcase.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Trigger",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/iot/example-showcase.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Content",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/iot/lab/category-explorer.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Root",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/iot/lab/category-explorer.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.List",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/iot/lab/category-explorer.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Trigger",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/iot/lab/category-explorer.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Content",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
     },
     {
       "file": "apps/web/src/components/iot/lab/category-explorer.tsx",
@@ -464,7 +331,7 @@
       "pattern": "input[type=checkbox]",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Checkbox (with Label). Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/iot/lab/iot-hero-art.tsx",
@@ -474,60 +341,46 @@
       "reason": "Decorative animation pause/resume control is a local composition required for motion accessibility. Keep animation logic local; compose Button in Wave 2."
     },
     {
-      "file": "apps/web/src/components/iot/lab/lab-tabs.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Root",
+      "file": "apps/web/src/components/iot/showcase/date-strip.tsx",
+      "pattern": "button[type=button][role=radio]",
       "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/iot/lab/lab-tabs.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.List",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/iot/lab/lab-tabs.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Trigger",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/iot/lab/lab-tabs.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Content",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
+      "classification": "C",
+      "reason": "Seven-day strip of multi-line date tiles with today/event cues, locale/UTC formatting and roving focus. Needs the same exclusive selectable-tile variant as the floor selector; ToggleGroup pill is single-line pill styling. Library variant first (Wave 3)."
     },
     {
       "file": "apps/web/src/components/iot/showcase/date-strip.tsx",
       "pattern": "div[role=radiogroup]",
       "maxCount": 1,
       "classification": "C",
-      "reason": "Need an exclusive multi-line date-strip RadioGroup variant with event/today cues, locale/UTC and roving focus. Extend radio composition before migration."
+      "reason": "Seven-day strip of multi-line date tiles with today/event cues, locale/UTC formatting and roving focus. Needs the same exclusive selectable-tile variant as the floor selector; ToggleGroup pill is single-line pill styling. Library variant first (Wave 3)."
     },
     {
-      "file": "apps/web/src/components/iot/showcase/date-strip.tsx",
+      "file": "apps/web/src/components/iot/showcase/pending-command.tsx",
+      "pattern": "button[type=button]",
+      "maxCount": 2,
+      "classification": "B",
+      "reason": "Retry and Cancel/Dismiss for a pending device command (from #375) use a local SMALL_BUTTON recipe: compose Button size=\"sm\". Their names already contain the visible word (Retry …, Cancel the … request). Wave 2."
+    },
+    {
+      "file": "apps/web/src/components/iot/showcase/pill-selector.tsx",
       "pattern": "button[type=button][role=radio]",
       "maxCount": 1,
-      "classification": "C",
-      "reason": "Need an exclusive multi-line date-strip RadioGroup variant with event/today cues, locale/UTC and roving focus. Extend radio composition before migration."
+      "classification": "B",
+      "reason": "Equivalent now exists: ToggleGroup type=\"single\" variant=\"pill\" (#380) gives an exclusive, roving-focus, direction-aware pill group; icon and count go in as children (aria-hidden icon, sr-only unit). Guard against deselection (ignore an empty value) to keep one mode selected. Wave 2."
     },
     {
       "file": "apps/web/src/components/iot/showcase/pill-selector.tsx",
       "pattern": "div[role=radiogroup]",
       "maxCount": 1,
-      "classification": "C",
-      "reason": "Need a pill-shaped exclusive RadioGroup item with leading icon/count and roving focus. RadioGroupItem is a circular indicator; Toggle is independently deselectable. Add library variant before migration."
+      "classification": "B",
+      "reason": "Equivalent now exists: ToggleGroup type=\"single\" variant=\"pill\" (#380) gives an exclusive, roving-focus, direction-aware pill group; icon and count go in as children (aria-hidden icon, sr-only unit). Guard against deselection (ignore an empty value) to keep one mode selected. Wave 2."
     },
     {
-      "file": "apps/web/src/components/iot/showcase/pill-selector.tsx",
-      "pattern": "button[type=button][role=radio]",
-      "maxCount": 1,
-      "classification": "C",
-      "reason": "Need a pill-shaped exclusive RadioGroup item with leading icon/count and roving focus. RadioGroupItem is a circular indicator; Toggle is independently deselectable. Add library variant before migration."
+      "file": "apps/web/src/components/iot/showcase/primitives.tsx",
+      "pattern": "button[type=button]",
+      "maxCount": 4,
+      "classification": "D",
+      "reason": "Website spatial/room/device composition; keep domain layout and state vocabulary local, replace inner icon/action triggers with Button and counters with Badge in Wave 3. Never nest action buttons."
     },
     {
       "file": "apps/web/src/components/iot/showcase/primitives.tsx",
@@ -544,13 +397,6 @@
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
     },
     {
-      "file": "apps/web/src/components/iot/showcase/primitives.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 4,
-      "classification": "D",
-      "reason": "Website spatial/room/device composition; keep domain layout and state vocabulary local, replace inner icon/action triggers with Button and counters with Badge in Wave 3. Never nest action buttons."
-    },
-    {
       "file": "apps/web/src/components/iot/showcase/space-canvas.tsx",
       "pattern": "button[type=button]",
       "maxCount": 2,
@@ -559,21 +405,7 @@
     },
     {
       "file": "apps/web/src/components/mobile-nav.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Root",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/mobile-nav.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Trigger",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/mobile-nav.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Portal",
+      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Close",
       "maxCount": 1,
       "classification": "B",
       "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
@@ -587,6 +419,20 @@
     },
     {
       "file": "apps/web/src/components/mobile-nav.tsx",
+      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Portal",
+      "maxCount": 1,
+      "classification": "B",
+      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
+    },
+    {
+      "file": "apps/web/src/components/mobile-nav.tsx",
+      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Root",
+      "maxCount": 1,
+      "classification": "B",
+      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
+    },
+    {
+      "file": "apps/web/src/components/mobile-nav.tsx",
       "pattern": "vendor:@radix-ui/react-dialog:Dialog.Title",
       "maxCount": 1,
       "classification": "B",
@@ -594,7 +440,7 @@
     },
     {
       "file": "apps/web/src/components/mobile-nav.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Close",
+      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Trigger",
       "maxCount": 1,
       "classification": "B",
       "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
@@ -625,91 +471,7 @@
       "pattern": "button[type=button]",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/showcase.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Root",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/showcase.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.List",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/showcase.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Trigger",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/showcase.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Content",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/systems/explorer-tabs.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Root",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/systems/explorer-tabs.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.List",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/systems/explorer-tabs.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Trigger",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/systems/explorer-tabs.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Content",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/systems/hero-system-map.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Trigger",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Spatial hero still uses direct Radix Tabs. Keep the diagram local, compose canonical Tabs primitives in coordination with the active Tabs work; preserve focus, lazy mount and hash links."
-    },
-    {
-      "file": "apps/web/src/components/systems/hero-system-map.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Root",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Spatial hero still uses direct Radix Tabs. Keep the diagram local, compose canonical Tabs primitives in coordination with the active Tabs work; preserve focus, lazy mount and hash links."
-    },
-    {
-      "file": "apps/web/src/components/systems/hero-system-map.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.List",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Spatial hero still uses direct Radix Tabs. Keep the diagram local, compose canonical Tabs primitives in coordination with the active Tabs work; preserve focus, lazy mount and hash links."
-    },
-    {
-      "file": "apps/web/src/components/systems/hero-system-map.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Content",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Spatial hero still uses direct Radix Tabs. Keep the diagram local, compose canonical Tabs primitives in coordination with the active Tabs work; preserve focus, lazy mount and hash links."
+      "reason": "LTR/RTL preview direction is an exclusive local mode rendered as aria-pressed buttons: compose SegmentedControl (canonical local-mode control after #380). Keep the scoped KinetixDirectionProvider contract and the sr-only expansion. Wave 2."
     },
     {
       "file": "apps/web/src/components/systems/hero-system-map.tsx",
@@ -719,158 +481,151 @@
       "reason": "Spatial selection is a website composition with coordinate positioning and selection announcements. Keep geometry and focus model local; compose a library button/asChild trigger without changing hit testing in a later wave."
     },
     {
-      "file": "apps/web/src/components/token-evidence.tsx",
-      "pattern": "table",
-      "maxCount": 1,
-      "classification": "E",
-      "reason": "Read-only reference data table: semantic HTML; no selection, sorting or pagination. Keep headings/captions and overflow access."
-    },
-    {
-      "file": "apps/web/src/components/token-table.tsx",
-      "pattern": "table",
-      "maxCount": 1,
-      "classification": "E",
-      "reason": "Read-only reference data table: semantic HTML; no selection, sorting or pagination. Keep headings/captions and overflow access."
-    },
-    {
-      "file": "apps/web/src/components/usage-example-tabs.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Root",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/usage-example-tabs.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.List",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/usage-example-tabs.tsx",
-      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Trigger",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
-    },
-    {
-      "file": "apps/web/src/components/usage-example-tabs.tsx",
+      "file": "apps/web/src/components/systems/hero-system-map.tsx",
       "pattern": "vendor:@radix-ui/react-tabs:Tabs.Content",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Tabs/platform-filter work is already in flight. Canonical Tabs for content navigation, SegmentedControl for modes, Toggle for independent filters. Reserve this file; follow-up clears remaining gallery action buttons."
+      "reason": "Home hero system map still renders Radix Tabs directly (not migrated by #380). Its tabs are real peer panels: compose library Tabs/TabsList/TabsTrigger/TabsContent while keeping the diagram, tour, pulse and orientation switch local. Wave 2."
     },
     {
-      "file": "apps/web/src/examples/iot/alert-center.tsx",
-      "pattern": "input[type=checkbox]",
+      "file": "apps/web/src/components/systems/hero-system-map.tsx",
+      "pattern": "vendor:@radix-ui/react-tabs:Tabs.List",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Home hero system map still renders Radix Tabs directly (not migrated by #380). Its tabs are real peer panels: compose library Tabs/TabsList/TabsTrigger/TabsContent while keeping the diagram, tour, pulse and orientation switch local. Wave 2."
+    },
+    {
+      "file": "apps/web/src/components/systems/hero-system-map.tsx",
+      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Root",
+      "maxCount": 1,
+      "classification": "B",
+      "reason": "Home hero system map still renders Radix Tabs directly (not migrated by #380). Its tabs are real peer panels: compose library Tabs/TabsList/TabsTrigger/TabsContent while keeping the diagram, tour, pulse and orientation switch local. Wave 2."
+    },
+    {
+      "file": "apps/web/src/components/systems/hero-system-map.tsx",
+      "pattern": "vendor:@radix-ui/react-tabs:Tabs.Trigger",
+      "maxCount": 1,
+      "classification": "B",
+      "reason": "Home hero system map still renders Radix Tabs directly (not migrated by #380). Its tabs are real peer panels: compose library Tabs/TabsList/TabsTrigger/TabsContent while keeping the diagram, tour, pulse and orientation switch local. Wave 2."
     },
     {
       "file": "apps/web/src/examples/iot/alert-center.tsx",
       "pattern": "button[type=button]",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
     },
     {
-      "file": "apps/web/src/examples/iot/alert-inbox.tsx",
+      "file": "apps/web/src/examples/iot/alert-center.tsx",
       "pattern": "input[type=checkbox]",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Checkbox (with Label). Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
     },
     {
       "file": "apps/web/src/examples/iot/alert-inbox.tsx",
       "pattern": "button[type=button]",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
+    },
+    {
+      "file": "apps/web/src/examples/iot/alert-inbox.tsx",
+      "pattern": "input[type=checkbox]",
+      "maxCount": 1,
+      "classification": "B",
+      "reason": "Existing equivalent: Checkbox (with Label). Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
     },
     {
       "file": "apps/web/src/examples/iot/automation-builder.tsx",
       "pattern": "button[type=button]",
       "maxCount": 2,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
+    },
+    {
+      "file": "apps/web/src/examples/iot/command-card.tsx",
+      "pattern": "button[type=button]",
+      "maxCount": 1,
+      "classification": "B",
+      "reason": "Copyable IoT example action buttons (from #375) with a local button recipe: compose Button and regenerate the published IoT snippet in the same change. Wave 2."
     },
     {
       "file": "apps/web/src/examples/iot/device-dashboard.tsx",
-      "pattern": "div[role=tablist]",
-      "maxCount": 1,
+      "pattern": "button[type=button]",
+      "maxCount": 2,
       "classification": "B",
-      "reason": "Group selector filters one fleet, rather than navigating linked tabpanels. Use canonical exclusive selector; coordinate with active Tabs work. Preserve group and selected-device state."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
     },
     {
       "file": "apps/web/src/examples/iot/device-dashboard.tsx",
       "pattern": "button[type=button][role=tab]",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Group selector filters one fleet, rather than navigating linked tabpanels. Use canonical exclusive selector; coordinate with active Tabs work. Preserve group and selected-device state."
+      "reason": "Group selector filters one fleet; raw role=tab buttons have no tabpanels (incomplete tab semantics, P1). Use ToggleGroup type=\"single\" variant=\"pill\" (an exclusive selector), not Tabs; keep selected-device state across groups and regenerate the copyable snippet. Wave 2."
     },
     {
       "file": "apps/web/src/examples/iot/device-dashboard.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 2,
+      "pattern": "div[role=tablist]",
+      "maxCount": 1,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Group selector filters one fleet; raw role=tab buttons have no tabpanels (incomplete tab semantics, P1). Use ToggleGroup type=\"single\" variant=\"pill\" (an exclusive selector), not Tabs; keep selected-device state across groups and regenerate the copyable snippet. Wave 2."
     },
     {
       "file": "apps/web/src/examples/iot/operations-environment.tsx",
       "pattern": "button[type=button]",
       "maxCount": 1,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
-    },
-    {
-      "file": "apps/web/src/examples/iot/pairing-flow.tsx",
-      "pattern": "select",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
     },
     {
       "file": "apps/web/src/examples/iot/pairing-flow.tsx",
       "pattern": "button[type=button]",
       "maxCount": 8,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
-    },
-    {
-      "file": "apps/web/src/examples/iot/pairing-flow.tsx",
-      "pattern": "input[type=radio]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
-    },
-    {
-      "file": "apps/web/src/examples/iot/pairing-flow.tsx",
-      "pattern": "input",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
     },
     {
       "file": "apps/web/src/examples/iot/pairing-flow.tsx",
       "pattern": "button[type=submit]",
       "maxCount": 3,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button type=\"submit\". Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
+    },
+    {
+      "file": "apps/web/src/examples/iot/pairing-flow.tsx",
+      "pattern": "input",
+      "maxCount": 2,
+      "classification": "B",
+      "reason": "Existing equivalent: Input. Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
+    },
+    {
+      "file": "apps/web/src/examples/iot/pairing-flow.tsx",
+      "pattern": "input[type=radio]",
+      "maxCount": 1,
+      "classification": "B",
+      "reason": "Existing equivalent: RadioGroup/RadioGroupItem. Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
+    },
+    {
+      "file": "apps/web/src/examples/iot/pairing-flow.tsx",
+      "pattern": "select",
+      "maxCount": 2,
+      "classification": "B",
+      "reason": "Existing equivalent: NativeSelect/NativeSelectOption (keeps the OS picker). Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
     },
     {
       "file": "apps/web/src/examples/iot/state-honesty.tsx",
       "pattern": "button[type=button]",
       "maxCount": 2,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
     },
     {
       "file": "apps/web/src/registry/demos.tsx",
       "pattern": "button[type=button]",
       "maxCount": 2,
       "classification": "B",
-      "reason": "Existing KinetixUI equivalent: Button/Toggle for actions and filters; Input/Checkbox/RadioGroup/NativeSelect for fields. Preserve names, event handlers, URLs and source snippets; migrate in Wave 2."
+      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
     }
   ]
 }

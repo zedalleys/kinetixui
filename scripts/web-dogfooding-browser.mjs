@@ -39,7 +39,8 @@ try {
   await page.evaluate(dir=>{document.documentElement.dir=dir},dir);
   await page.waitForFunction(theme=>document.documentElement.classList.contains('dark')===(theme==='dark'),theme);
   assert.equal(await page.locator('html').getAttribute('dir'),dir);
-  const markdown=page.getByRole('button',{name:'Copy this page as Markdown'});await markdown.focus();await page.keyboard.press('Enter');await page.getByText('Copied',{exact:true}).first().waitFor();
+  const markdown=page.getByRole('button',{name:'Copy as Markdown',exact:true});assert.equal(await markdown.evaluate(el=>el.textContent.trim()),'Copy as Markdown');assert.equal(await markdown.getAttribute('aria-label'),null); // WCAG 2.5.3: named by its visible text
+  await markdown.focus();await page.keyboard.press('Enter');await page.getByText('Copied',{exact:true}).first().waitFor();
   const clipboard=await page.evaluate(()=>navigator.clipboard.readText());assert(clipboard.includes('#'));
   await page.getByRole('button',{name:'Copy code',exact:true}).first().focus();await page.keyboard.press('Enter');
   await page.screenshot({path:`${out}/docs-copy-${dir}-${theme}.png`});
@@ -48,7 +49,7 @@ try {
  }
  const context=await browser.newContext({viewport:{width:320,height:900},forcedColors:'active',reducedMotion:'reduce'});const p=await context.newPage();
  await p.goto(`${base}/docs/installation?kx_traffic=diagnostic`,{waitUntil:'domcontentloaded'});
- const copy=p.getByRole('button',{name:'Copy this page as Markdown'});await copy.focus();
+ const copy=p.getByRole('button',{name:'Copy as Markdown',exact:true});await copy.focus();
  const focus=await copy.evaluate(el=>({outline:getComputedStyle(el).outlineStyle,width:getComputedStyle(el).outlineWidth}));assert(focus.outline!=='none' && focus.width!=='0px');
  rows.push({forcedColors:focus});await context.close();
  fs.writeFileSync(`${out}/wave1-browser.json`,JSON.stringify(rows,null,2)+'\n');console.log('Wave 1 behavior checks passed');

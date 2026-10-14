@@ -29,7 +29,7 @@ export function UsageExampleTabs({ name, className }: { name: string; className?
             <TabsTrigger key={t.tab} value={t.tab} >
               {t.label}
               {t.maturity !== "stable" && (
-                <span className="ml-1.5 normal-case tracking-normal text-muted-foreground">· {t.maturity}</span>
+                <span className="ms-1.5 normal-case tracking-normal text-muted-foreground">· {t.maturity}</span>
               )}
             </TabsTrigger>
           ))}
