@@ -158,7 +158,6 @@ export function ColorsContent() {
                     <button
                       key={step}
                       type="button"
-                      aria-label={`Copy ${ramp} ${step}${tokenName ? ` (--${tokenName})` : ""} — ${value}`}
                       onClick={() => copy(value)}
                       onMouseEnter={() => setHoverStep(step)}
                       onMouseLeave={() => setHoverStep(null)}
@@ -168,6 +167,13 @@ export function ColorsContent() {
                         active ? "border-primary ring-1 ring-primary" : "border-border",
                       )}
                     >
+                      {/*
+                        Named by its own content, with only the verb and the ramp added out of sight: "Copy azure 50 AA
+                        --azure-50 #eff6ff". A separate aria-label reworded and reordered what the swatch shows, so the
+                        visible "50 AA --azure-50 #eff6ff" was not in the name and a speech-input user could not say it
+                        (WCAG 2.5.3).
+                      */}
+                      <span className="sr-only">Copy {ramp} </span>
                       <span
                         className="relative flex h-24 w-full flex-col justify-between p-2"
                         style={{ background: hex, color: textHex }}

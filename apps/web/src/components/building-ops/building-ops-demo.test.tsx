@@ -128,7 +128,7 @@ describe("Building Operations demo", () => {
     expect(total("floor-cameras")).toHaveTextContent("0 of 6 online");
     expect(row("l3-cam-1")).toHaveTextContent("Unreachable");
 
-    const advance = screen.getByRole("button", { name: "Advance simulated time by 15 seconds" });
+    const advance = screen.getByRole("button", { name: "+15 s, advance simulated time by 15 seconds" });
     fireEvent.click(advance);
     fireEvent.click(advance); // 0:30 — link restored
     expect(row("l3-cam-1")).toHaveTextContent("Online");
@@ -166,7 +166,7 @@ describe("Building Operations demo", () => {
     fireEvent.change(screen.getByLabelText("Scenario"), { target: { value: "crowded" } });
     expect(document.querySelector("[data-building-ops]")).toHaveAttribute("data-scenario", "crowded");
     expect(inspector().dataset.inspector).toBe("gf-cam-5");
-    fireEvent.click(screen.getByRole("button", { name: "Advance simulated time by 15 seconds" }));
+    fireEvent.click(screen.getByRole("button", { name: "+15 s, advance simulated time by 15 seconds" }));
     fireEvent.click(screen.getByRole("button", { name: "Restart scenario" }));
     expect(document.querySelector("[data-sim-clock]")).toHaveTextContent("09:30:00 UTC");
   });

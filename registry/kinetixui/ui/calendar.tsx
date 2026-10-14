@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, formatDay as defaultFormatDay, labelDayButton as defaultLabelDayButton } from "react-day-picker";
 import { useDirection } from "@radix-ui/react-direction";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -17,12 +17,23 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>;
  * direction is only known from the DOM, so `dir` is left unset rather than forced to "ltr" — the library's
  * RTL rule (RTL.md) is to wrap the app in the provider.
  */
-function Calendar({ className, classNames, showOutsideDays = true, dir, ...props }: CalendarProps) {
+function Calendar({ className, classNames, showOutsideDays = true, dir, labels, ...props }: CalendarProps) {
   const contextDir = useDirection();
   const resolvedDir = dir ?? (contextDir === "rtl" ? "rtl" : undefined);
+  /**
+   * A day button's name starts with the number it shows (WCAG 2.5.3, Label in Name). react-day-picker's
+   * default name is the long date alone — "Sunday, March 1st, 2026" — which never contains the visible "1"
+   * as a word, so a speech-input user saying "click 1" matches nothing. The visible text comes from the same
+   * `formatDay` that renders the button, so the two cannot disagree in any locale; the long date, "Today" and
+   * "selected" stay after it. A `labels.labelDayButton` the consumer passes wins unchanged.
+   */
+  const formatDay = props.formatters?.formatDay ?? defaultFormatDay;
+  const labelDayButton: typeof defaultLabelDayButton = (date, modifiers, options, dateLib) =>
+    `${formatDay(date, options, dateLib)}, ${defaultLabelDayButton(date, modifiers, options, dateLib)}`;
   return (
     <DayPicker
       dir={resolvedDir}
+      labels={{ labelDayButton, ...labels }}
       showOutsideDays={showOutsideDays}
       className={cn("p-3 font-sans", className)}
       classNames={{
