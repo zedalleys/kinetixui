@@ -1,48 +1,52 @@
-# Website dogfooding — Wave 1 evidence
+# Website dogfooding — evidence
 
-Baseline main: `ae9cc44a1f2529da77f7ac0df2e3e25ae07128aa`. Audited 13 October 2026, Asia/Riyadh. Production build is static Next.js 15.5.27. Browser engine: local desktop Chromium (Google Chrome), Playwright 1.63.0. Diagnostic traffic uses `kx_traffic=diagnostic`.
+Refreshed 14 October 2026 against main `acfe95af62befb4d11b3527a529bfd635c825fb8` (#357, #358, #375, #377, #378 and #380 included). Production build: static Next.js 15.5.27. Browser: Chromium 141 through Playwright 1.64.0. Diagnostic traffic uses `kx_traffic=diagnostic`. The original Wave 1 evidence (13 October, `ae9cc44`) is superseded by this file.
 
 ## Checks
 
 | Check | Result / scope |
 |---|---|
-| `pnpm lint` | PASS, 3 workspace tasks; 2 existing unused-variable warnings in marketing-claims tests, plus upstream JSX AST parser diagnostic |
-| `pnpm typecheck` | PASS, 9 workspace tasks after building package declarations |
-| `pnpm --filter @kinetixui/web test` | PASS, 95 files / 2,033 tests; includes clipboard success/denial, payload privacy, analytics and URL state |
-| `pnpm --filter @kinetixui/ui --filter @kinetixui/iot test` | PASS, UI 432 tests / 15 files; IoT 1,165 tests / 45 files |
-| `pnpm check:web-dogfooding` | PASS; 1 negative-control test plus AST scan of 241 files; catches new vendor/native sites and growth, accepts shrinking debt |
-| `node scripts/check-rtl.mjs` | PASS; no new physical classes in its converted scope; 18 library files remain on the repository's existing pending list |
-| `node scripts/gen-iot-examples.mjs --check` | PASS, 15 example snippets current; Wave 1 changes no copyable source region |
-| `pnpm build:tokens` and UI/IoT/theme/preset package builds | PASS; no tracked generated-token changes |
-| `pnpm build:web` | PASS, 139 generated static pages |
-| `scripts/web-dogfooding-browser.mjs` | PASS; LTR/RTL × light/dark on 390px, reduced-motion preference; selects update values; opened select panel measured at 200% root text; pause/resume pressed state and step/reset callbacks; Enter copies Markdown/code; forced-colors outline remains 2px solid |
-| `scripts/a11y-site.mjs --page /docs/installation --page /iot --page /components` | PASS, 48 page views: 3 pages × light/dark × 320/390/768/1280 × normal/200% text; no axe findings or page overflow; navigation and layout contract held |
-| `scripts/web-quality-browser.mjs` | PASS; full type/contrast/coarse-pointer hit-target/inert-thumbnail/layout sweep, zero failures; quantitative report in `web-quality.json` |
+| `pnpm install --frozen-lockfile` | PASS. No dependency or lockfile change |
+| `pnpm lint` | PASS, 3 workspace tasks |
+| `pnpm typecheck` | PASS, 9 workspace tasks |
+| `@kinetixui/web` tests | PASS, 100 files / 2,129 tests. Covers clipboard success/denial, payload privacy, analytics and URL state |
+| `pnpm check:web-dogfooding` | PASS. 5 guard tests, then a scan of 252 files: A 1,196 · B 96 · C 4 · D 27 · E 9, with B/C debt in 30 files. The ledger matches the source exactly |
+| Guard negative controls (live, on the real tree, then restored) | FAIL as intended on each: a raw `<button type="button">` injected into `docs-pager.tsx`, a raw `<select>` and a direct `@radix-ui/react-dialog` `Dialog.Root` in a new file. After restoring, the tree is clean and the guard passes |
+| `check:rtl`, `check:keyboard`, `check:a11y-coverage` | PASS |
+| `check:content`, `check:capabilities`, `check:manifest`, IoT example snippets (15, current) | PASS |
+| Production web build | PASS |
+| `check:a11y-site` (axe-core 4.14, Label in Name on) | PASS. 36 pages × light/dark × 320/390/768/1280 × 100%/200% text = 576 views, no axe findings, no horizontal overflow |
+| `check:web-quality` | PASS. Type floor, contrast, coarse-pointer hit targets; thumbnails 109 LTR + 109 RTL, 0 problems; layout 220 views, 0 overflowing |
+| `scripts/web-dogfooding-browser.mjs` (Wave 1) | PASS in LTR/RTL × light/dark at 390px with reduced motion. IoT `NativeSelect`s update their values and keep focus, and still fit at 200% root text. Simulation clock: `aria-pressed` toggles, step and reset work. "Copy as Markdown" is named by its visible text (no `aria-label`), copies via the keyboard and shows "Copied". Code copy works via the keyboard. Forced colors: 2px solid focus outline |
+| `check:tabs-dogfood` (#380 surfaces) | PASS, 8 cases: keyboard, active state, focus, RTL, reduced motion, 200% text, local overflow, icons, axe, forced colors |
+| `check:large-text`, `check:motion` (Storybook) | PASS. Library code is unchanged by this PR; run for completeness |
+| `check:a11y-browser` (Storybook, 270 stories × 2 themes) | PASS, nothing new. The only 4 findings are those already accepted on main |
 | `git diff --check` | PASS |
+| PR CI | build (includes the guard), site axe, actionlint, CodeQL: all green on the pushed head |
 
-The 19px IoT overflow first observed was introduced by Button's default non-shrinking layout, reproduced against unchanged main (which passed), then fixed by explicitly restoring shrink behavior on the copy composition. The final sweep passes. The small Markdown Button size initially violated the site's 12px text floor; final `md` is canonical and clears that finding. These are resolved regressions, not accepted baseline exceptions.
+## Bundle
 
-The browser sweeps were run against the production build on port 3124. An unchanged source archive with the same locked dependencies was separately built on port 3125 for the baseline comparison. The public site was not changed. Screenshots are saved locally alongside this report: `iot-selects-{ltr,rtl}-{light,dark}.png` and `docs-copy-{ltr,rtl}-{light,dark}.png`. Light and RTL/dark captures were visually inspected. Screenshots are local evidence rather than permanent repository assets.
+`bundle.json` compares, per route, the distinct JavaScript chunks Next lists in its app-build manifest, each gzipped on its own. It compares this branch with main built from the same lockfile. These are sums over shared chunks, not a network waterfall.
 
-## Bundle comparison
+| Route | Chunks | Raw JS delta | Sum of per-chunk gzip delta |
+|---|---:|---:|---:|
+| `/iot` | 13 → 13 | −269 B | −17 B |
+| `/docs/installation` | 17 → 17 | −154 B | +5 B |
+| `/components` | 14 → 14 | 0 | +1 B |
+| `/create` | 11 → 11 | 0 | +1 B |
+| `/docs/colors` | 8 → 8 | 0 | 0 |
+| `/capabilities` | 6 → 6 | 0 | +1 B |
 
-`bundle.json` compares the distinct JavaScript chunks listed for each route in Next's app-build manifest. Each chunk is gzip-compressed independently; counts include shared dependencies and are not a measured network waterfall or a performance claim. Different build roots can affect chunk splitting/IDs, so small reductions should not be read as an optimization result.
+The site already ships the library `Button` and `NativeSelect`, so Wave 1 removes local markup and adds no code. Differences of a few bytes are within build noise.
 
-| Route | Raw JS delta | Sum of per-chunk gzip delta |
-|---|---:|---:|
-| `/iot` | -2,690 bytes | -1,537 bytes |
-| `/docs/installation` | -2,542 bytes | -1,347 bytes |
-| `/components` | -330 bytes | -430 bytes |
-| `/create` | -2,327 bytes | -1,128 bytes |
+## What changed in this refresh
 
-No new dependency or lockfile change. Next's rounded first-load summary is about 499kB for `/iot`, 521kB for installation and 489kB for `/components`; no sampled route bundle increase was observed.
+- Merged current main. The only conflict was `docs-page-actions.tsx`: it keeps Wave 1's library `Button` and #357's Label-in-Name fix (no `aria-label`; the name is the visible "Copy as Markdown").
+- Regenerated the inventory from the scan. The ledger dropped #380's 34 resolved Tabs entries (42 sites) and the table entries (tables are now E automatically). It added the four post-audit findings (#375, #377), reclassified the IoT pill selector C → B and the world map B → D, and every B entry now names its equivalent and wave.
+- The guard now fails on stale approvals. Its tests went from 1 to 5.
+- The Wave 1 browser check uses #357's button name and asserts the name equals the visible text.
+- Platform-tab maturity suffix: `ml-1.5` → `ms-1.5`, correct under RTL.
 
-## Files changed
+## Limits
 
-Five website source files: `copy-button.tsx`, `code-pre.tsx`, `docs-page-actions.tsx`, `iot/device-showcase.tsx`, and `examples/iot/harness.tsx`. Infrastructure: root package script and CI workflow. Audit: canonical Markdown report, grouped inventory, per-site JSON inventory and exception/debt ledger. Verification: AST guard, its negative-control test, focused browser runner, this results report and compact JSON evidence. No library implementation, URL contract, analytics callback, device state machine, generated snippet or dependency changed.
-
-## Limits and merge recommendation
-
-Local checks are focused on this consumer-only Wave 1. No component-library implementation changed, so full Storybook browser/visual suites and the Storybook-only large-text runner were not rebuilt; real site browser checks above provide the relevant reflow/a11y evidence. No claim is made about every route, every overlay state, all input methods, physical devices or all remaining B/C debt. The full source audit and source ratchet cover more files than the behavioral sweep.
-
-**Recommendation:** keep this PR draft until the active Tabs/platform-filter work is finalized and ordering is agreed. Once that work lands, rebase, shrink the native-pattern ledger and refresh the descriptive inventory; run PR CI and the focused browser checks on the combined result. Wave 1 is locally validated and reviewable; do not merge automatically.
+These checks cover Wave 1 and the audited surfaces, not every route, state, input method or physical device. The guard is a source ratchet: it does not inspect CSS overrides, local wrappers around vendor primitives or styled links. No manual screen-reader pass was done. Screenshots were inspected locally and are not committed.
