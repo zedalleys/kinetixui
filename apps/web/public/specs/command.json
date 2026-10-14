@@ -34,7 +34,7 @@
         },
         {
           "name": "trigger",
-          "type": "React.ReactNode",
+          "type": "React.ReactElement<unknown, string | React.JSXElementConstructor<any>>",
           "required": false,
           "description": "The control that opens it, rendered as the dialog's trigger (one element; it becomes the button). Pass it here rather than beside the dialog: Radix returns focus to the trigger on close, and a palett…"
         },

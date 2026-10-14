@@ -35,9 +35,10 @@ interface CommandDialogProps extends React.ComponentProps<typeof Dialog> {
   /**
    * The control that opens it, rendered as the dialog's trigger (one element; it becomes the button).
    * Pass it here rather than beside the dialog: Radix returns focus to the trigger on close, and a
-   * palette opened by a separate button would drop focus to the page instead.
+   * palette opened by a separate button would drop focus to the page instead. It must be one element that
+   * accepts props and a ref, since the trigger's handlers are merged onto it; text or a list cannot be.
    */
-  trigger?: React.ReactNode;
+  trigger?: React.ReactElement;
   /** Props for the inner `Command` (filtering, `label`, `loop`, …). */
   commandProps?: CommandProps;
 }
