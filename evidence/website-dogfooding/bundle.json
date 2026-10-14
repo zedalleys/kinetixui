@@ -1,0 +1,92 @@
+[
+  {
+    "route": "/iot/page",
+    "baseline": {
+      "files": 13,
+      "bytes": 1825960,
+      "gzipBytes": 523401
+    },
+    "wave1": {
+      "files": 13,
+      "bytes": 1825691,
+      "gzipBytes": 523384
+    },
+    "deltaBytes": -269,
+    "deltaGzipBytes": -17
+  },
+  {
+    "route": "/docs/installation/page",
+    "baseline": {
+      "files": 17,
+      "bytes": 1914742,
+      "gzipBytes": 546777
+    },
+    "wave1": {
+      "files": 17,
+      "bytes": 1914588,
+      "gzipBytes": 546782
+    },
+    "deltaBytes": -154,
+    "deltaGzipBytes": 5
+  },
+  {
+    "route": "/components/page",
+    "baseline": {
+      "files": 14,
+      "bytes": 1805991,
+      "gzipBytes": 517367
+    },
+    "wave1": {
+      "files": 14,
+      "bytes": 1805991,
+      "gzipBytes": 517368
+    },
+    "deltaBytes": 0,
+    "deltaGzipBytes": 1
+  },
+  {
+    "route": "/create/page",
+    "baseline": {
+      "files": 11,
+      "bytes": 1612177,
+      "gzipBytes": 470490
+    },
+    "wave1": {
+      "files": 11,
+      "bytes": 1612177,
+      "gzipBytes": 470491
+    },
+    "deltaBytes": 0,
+    "deltaGzipBytes": 1
+  },
+  {
+    "route": "/docs/colors/page",
+    "baseline": {
+      "files": 8,
+      "bytes": 444643,
+      "gzipBytes": 133675
+    },
+    "wave1": {
+      "files": 8,
+      "bytes": 444643,
+      "gzipBytes": 133675
+    },
+    "deltaBytes": 0,
+    "deltaGzipBytes": 0
+  },
+  {
+    "route": "/capabilities/page",
+    "baseline": {
+      "files": 6,
+      "bytes": 363178,
+      "gzipBytes": 107429
+    },
+    "wave1": {
+      "files": 6,
+      "bytes": 363178,
+      "gzipBytes": 107430
+    },
+    "deltaBytes": 0,
+    "deltaGzipBytes": 1
+  }
+]

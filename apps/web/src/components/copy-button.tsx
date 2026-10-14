@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Check, Copy } from "lucide-react";
+import { Button } from "@kinetixui/ui";
 import { cn } from "@/lib/utils";
 
 /**
@@ -25,7 +26,9 @@ export function CopyButton({
   // The icon swap is visual only; the live region is what tells a screen reader the copy happened.
   return (
     <>
-      <button
+      <Button
+        variant="Ghost"
+        size="icon"
         type="button"
         aria-label={label}
         onClick={() => {
@@ -40,13 +43,14 @@ export function CopyButton({
           );
         }}
         className={cn(
-          // kx-hit: 28px drawn, 44px tappable on a touch screen (globals.css)
-          "kx-hit inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+          // kx-hit preserves the coarse-pointer hit-area contract (globals.css)
+          // Keep toolbar shrink behavior at 200% text; callers retain the coarse hit area.
+          "kx-hit size-11 shrink p-0 text-muted-foreground",
           className,
         )}
       >
         {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-      </button>
+      </Button>
       <span aria-live="polite" className="sr-only">{copied ? "Copied" : ""}</span>
     </>
   );

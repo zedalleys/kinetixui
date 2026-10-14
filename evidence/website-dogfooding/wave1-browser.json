@@ -1,0 +1,104 @@
+[
+  {
+    "dir": "ltr",
+    "theme": "light",
+    "largeTextSelect": {
+      "font": 28,
+      "height": 90,
+      "width": 275.890625,
+      "right": 340.890625,
+      "left": 65,
+      "line": 40,
+      "scrollWidth": 390,
+      "viewport": 390
+    }
+  },
+  {
+    "dir": "ltr",
+    "theme": "light",
+    "selects": "controlled status and quality updated; labelled native picker; keyboard focus retained"
+  },
+  {
+    "dir": "ltr",
+    "theme": "light",
+    "buttons": "clock pressed state, step/reset; keyboard Markdown and code copy succeeded"
+  },
+  {
+    "dir": "ltr",
+    "theme": "dark",
+    "largeTextSelect": {
+      "font": 28,
+      "height": 90,
+      "width": 275.890625,
+      "right": 340.890625,
+      "left": 65,
+      "line": 40,
+      "scrollWidth": 390,
+      "viewport": 390
+    }
+  },
+  {
+    "dir": "ltr",
+    "theme": "dark",
+    "selects": "controlled status and quality updated; labelled native picker; keyboard focus retained"
+  },
+  {
+    "dir": "ltr",
+    "theme": "dark",
+    "buttons": "clock pressed state, step/reset; keyboard Markdown and code copy succeeded"
+  },
+  {
+    "dir": "rtl",
+    "theme": "light",
+    "largeTextSelect": {
+      "font": 28,
+      "height": 90,
+      "width": 275.890625,
+      "right": 325,
+      "left": 49.109375,
+      "line": 40,
+      "scrollWidth": 390,
+      "viewport": 390
+    }
+  },
+  {
+    "dir": "rtl",
+    "theme": "light",
+    "selects": "controlled status and quality updated; labelled native picker; keyboard focus retained"
+  },
+  {
+    "dir": "rtl",
+    "theme": "light",
+    "buttons": "clock pressed state, step/reset; keyboard Markdown and code copy succeeded"
+  },
+  {
+    "dir": "rtl",
+    "theme": "dark",
+    "largeTextSelect": {
+      "font": 28,
+      "height": 90,
+      "width": 275.890625,
+      "right": 325,
+      "left": 49.109375,
+      "line": 40,
+      "scrollWidth": 390,
+      "viewport": 390
+    }
+  },
+  {
+    "dir": "rtl",
+    "theme": "dark",
+    "selects": "controlled status and quality updated; labelled native picker; keyboard focus retained"
+  },
+  {
+    "dir": "rtl",
+    "theme": "dark",
+    "buttons": "clock pressed state, step/reset; keyboard Markdown and code copy succeeded"
+  },
+  {
+    "forcedColors": {
+      "outline": "solid",
+      "width": "2px"
+    }
+  }
+]

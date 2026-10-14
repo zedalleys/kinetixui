@@ -12,6 +12,7 @@
  * Nothing here talks to a device. The simulation is scripted in the browser; see `SimNotice`.
  */
 import * as React from "react";
+import { Button } from "@kinetixui/ui";
 import {
   describePowerState,
   resolveControlState,
@@ -62,15 +63,15 @@ export function SimNotice({ scenario, text, children, className }: { scenario?: 
 export function SimTransport({ iot, className }: { iot: UseIotSimulation; className?: string }) {
   return (
     <div role="group" aria-label="Simulation clock" className={cn("flex flex-wrap items-center gap-2", className)}>
-      <button type="button" className={BUTTON} onClick={iot.togglePaused} aria-pressed={iot.paused}>
+      <Button type="button" variant="Outline" size="sm" className="min-h-11" onClick={iot.togglePaused} aria-pressed={iot.paused}>
         {iot.paused ? "Resume clock" : "Pause clock"}
-      </button>
-      <button type="button" className={BUTTON} onClick={() => iot.step(1000)}>
+      </Button>
+      <Button type="button" variant="Outline" size="sm" className="min-h-11" onClick={() => iot.step(1000)}>
         Step 1 s
-      </button>
-      <button type="button" className={BUTTON} onClick={iot.reset}>
+      </Button>
+      <Button type="button" variant="Outline" size="sm" className="min-h-11" onClick={iot.reset}>
         Reset demo
-      </button>
+      </Button>
       {iot.reducedMotion ? <span className="text-label-sm text-muted-foreground">Reduced motion: ambient drift is off.</span> : null}
     </div>
   );

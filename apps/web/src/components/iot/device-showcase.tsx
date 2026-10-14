@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { NativeSelect, NativeSelectOption } from "@kinetixui/ui";
 import {
   BatteryIndicator,
   DeviceStatusBadge,
@@ -85,10 +86,6 @@ function Row({ name, children }: { name: string; children: React.ReactNode }) {
   );
 }
 
-const selectClass =
-  "h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground " +
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
-
 const rangeClass =
   "h-9 w-full accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
   "focus-visible:ring-offset-2 focus-visible:ring-offset-background";
@@ -141,18 +138,17 @@ export function DeviceShowcase() {
       {/* ── controls ────────────────────────────────────────────── */}
       <div className="grid content-start gap-5">
         <Control id="iot-demo-status" label="Status">
-          <select
+          <NativeSelect
             id="iot-demo-status"
-            className={selectClass}
             value={status}
             onChange={(e) => setStatus(e.target.value as KinetixDeviceStatus)}
           >
             {STATUSES.map((s) => (
-              <option key={s} value={s}>
+              <NativeSelectOption key={s} value={s}>
                 {s}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </Control>
 
         <Control id="iot-demo-battery" label={batteryReported ? `Battery — ${battery}%` : "Battery — not reported"}>
@@ -228,18 +224,17 @@ export function DeviceShowcase() {
         </Control>
 
         <Control id="iot-demo-quality" label="Reading quality">
-          <select
+          <NativeSelect
             id="iot-demo-quality"
-            className={selectClass}
             value={quality}
             onChange={(e) => setQuality(e.target.value as KinetixTelemetryQuality)}
           >
             {QUALITIES.map((q) => (
-              <option key={q.value} value={q.value}>
+              <NativeSelectOption key={q.value} value={q.value}>
                 {q.label}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </Control>
 
         <p className="text-xs leading-relaxed text-muted-foreground">

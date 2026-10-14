@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Check, Copy } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Button } from "@kinetixui/ui";
 
 /* ---- DOM → Markdown (best-effort, for pasting a page into an LLM) ---- */
 
@@ -139,20 +139,17 @@ export function DocsPageActions() {
   // reliably spoken, so the live region still announces the copy.
   return (
     <>
-      <button
+      <Button
+        variant="Outline"
+        size="md"
         type="button"
         onClick={copy}
-        className={cn(
-          // No `shrink-0`: this is a button with a four-word label, and forbidding it to shrink made it push
-          // /docs/* sideways at the reader's doubled text size. `text-start` so the label reads correctly if it
-          // does wrap rather than being centred over two ragged lines.
-          "inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-start font-mono text-label-md uppercase tracking-[0.1em] transition-colors coarse:min-h-10",
-          copied ? "border-primary/50 text-foreground" : "text-muted-foreground hover:text-foreground",
-        )}
+        // This long label must wrap at doubled text size.
+        className="min-h-11 min-w-0 shrink whitespace-normal text-start"
       >
         {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
         {copied ? "Copied" : "Copy as Markdown"}
-      </button>
+      </Button>
       <span aria-live="polite" className="sr-only">{copied ? "Copied" : ""}</span>
     </>
   );
