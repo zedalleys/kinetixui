@@ -10,7 +10,7 @@ Refreshed 14 October 2026 against main `acfe95af62befb4d11b3527a529bfd635c825fb8
 | `pnpm lint` | PASS, 3 workspace tasks |
 | `pnpm typecheck` | PASS, 9 workspace tasks |
 | `@kinetixui/web` tests | PASS, 100 files / 2,129 tests. Covers clipboard success/denial, payload privacy, analytics and URL state |
-| `pnpm check:web-dogfooding` | PASS. 5 guard tests, then a scan of 252 files: A 1,196 · B 96 · C 4 · D 27 · E 9, with B/C debt in 30 files. The ledger matches the source exactly |
+| `pnpm check:web-dogfooding` | PASS. 6 guard tests, then a scan of 252 files: A 1,196 · B 96 · C 4 · D 27 · E 9, with B/C debt in 30 files. The ledger matches the source exactly |
 | Guard negative controls (live, on the real tree, then restored) | FAIL as intended on each: a raw `<button type="button">` injected into `docs-pager.tsx`, a raw `<select>` and a direct `@radix-ui/react-dialog` `Dialog.Root` in a new file. After restoring, the tree is clean and the guard passes |
 | `check:rtl`, `check:keyboard`, `check:a11y-coverage` | PASS |
 | `check:content`, `check:capabilities`, `check:manifest`, IoT example snippets (15, current) | PASS |
@@ -43,7 +43,7 @@ The site already ships the library `Button` and `NativeSelect`, so Wave 1 remove
 
 - Merged current main. The only conflict was `docs-page-actions.tsx`: it keeps Wave 1's library `Button` and #357's Label-in-Name fix (no `aria-label`; the name is the visible "Copy as Markdown").
 - Regenerated the inventory from the scan. The ledger dropped #380's 34 resolved Tabs entries (42 sites) and the table entries (tables are now E automatically). It added the four post-audit findings (#375, #377), reclassified the IoT pill selector C → B and the world map B → D, and every B entry now names its equivalent and wave.
-- The guard now fails on stale approvals. Its tests went from 1 to 5.
+- The guard now fails on stale approvals and on approvals without a positive integer `maxCount`. Its tests went from 1 to 6.
 - The Wave 1 browser check uses #357's button name and asserts the name equals the visible text.
 - Platform-tab maturity suffix: `ml-1.5` → `ms-1.5`, correct under RTL.
 

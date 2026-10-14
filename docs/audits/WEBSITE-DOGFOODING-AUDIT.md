@@ -104,10 +104,10 @@ This refresh also fixes the maturity suffix inside platform tabs (`component-pre
 `pnpm check:web-dogfooding` runs its unit tests, then scans the site; CI runs it before lint. The ledger (`website-dogfooding-exceptions.json`) must match the source **exactly**:
 - a new pattern, a new file or growth fails;
 - **an approval with fewer remaining sites fails**, and the message says to shrink or delete it, so resolved debt cannot stay as a permission;
-- an entry needs a non-empty reason and class B, C or D;
+- an entry needs a non-empty reason, class B, C or D, and a positive integer `maxCount`;
 - a read-only `<table>` is E automatically; library JSX and structural HTML are always allowed.
 
-The tests prove it fails on a new raw `<button>`, a raw `<select>`, direct Radix `Tabs` and direct `cmdk`, and on a stale approval. They also prove it passes structural HTML, library components, tables, quoted snippets, test files, MDX and documented D exceptions. Live negative controls on the real tree also failed as expected (see RESULTS.md).
+The tests prove it fails on a new raw `<button>`, a raw `<select>`, direct Radix `Tabs` and direct `cmdk`, on a stale approval, and on an approval without a positive integer `maxCount`. They also prove it passes structural HTML, library components, tables, quoted snippets, test files, MDX and documented D exceptions. Live negative controls on the real tree also failed as expected (see RESULTS.md).
 
 **Limits:** it is a source ratchet, not proof of equivalence. It does not inspect CSS overrides, dynamic tags, local wrappers that re-export vendor primitives, or styled links, and a swap at the same pattern count can evade it. Reviewers still assess those edits.
 
