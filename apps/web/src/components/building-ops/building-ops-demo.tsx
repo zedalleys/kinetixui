@@ -214,7 +214,7 @@ export function BuildingOpsDemo({ initialScenario = DEFAULT_SCENARIO, seed = DEF
               {clock.playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
               <span aria-hidden="true">{clock.playing ? "Pause" : "Play"}</span>
             </Button>
-            <Button variant="Outline" size="sm" onClick={() => clock.step(STEP_MS)} aria-label="Advance simulated time by 15 seconds">
+            <Button variant="Outline" size="sm" onClick={() => clock.step(STEP_MS)} aria-label="+15 s, advance simulated time by 15 seconds">
               <FastForward aria-hidden="true" />
               <span aria-hidden="true">+15 s</span>
             </Button>

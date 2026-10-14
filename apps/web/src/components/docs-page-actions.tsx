@@ -134,7 +134,9 @@ export function DocsPageActions() {
     }
   };
 
-  // The fixed aria-label hides the visible "Copied", so the live region is what announces it.
+  // Named by what it shows, "Copy as Markdown" then "Copied" (WCAG 2.5.3). It used to carry the fixed name "Copy this
+  // page as Markdown", which did not contain the visible words in order. A focused button's name change is not
+  // reliably spoken, so the live region still announces the copy.
   return (
     <>
       <button
@@ -147,7 +149,6 @@ export function DocsPageActions() {
           "inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-start font-mono text-label-md uppercase tracking-[0.1em] transition-colors coarse:min-h-10",
           copied ? "border-primary/50 text-foreground" : "text-muted-foreground hover:text-foreground",
         )}
-        aria-label="Copy this page as Markdown"
       >
         {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
         {copied ? "Copied" : "Copy as Markdown"}

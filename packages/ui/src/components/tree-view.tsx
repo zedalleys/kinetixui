@@ -168,6 +168,7 @@ const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
      * `aria-labelledby` at the label span does.
      */
     const labelId = React.useId();
+    const groupId = React.useId();
     const hasChildren = React.Children.count(children) > 0;
     const expanded = ctx.isExpanded(value);
     const isChecked = ctx.isChecked(value);
@@ -220,8 +221,9 @@ const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
           e.preventDefault();
           if (hasChildren && expanded) ctx.toggleExpanded(value);
           else {
-            const parent = localRef.current?.parentElement?.closest<HTMLElement>('[role="treeitem"]');
-            parent?.focus();
+            // the parent item is the sibling just before the group this item sits in (see the markup below)
+            const parent = localRef.current?.closest('[role="group"]')?.previousElementSibling;
+            if (parent instanceof HTMLElement && parent.getAttribute("role") === "treeitem") parent.focus();
           }
           break;
         case "Enter":
@@ -232,60 +234,72 @@ const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
       }
     };
 
+    const showGroup = hasChildren && expanded;
+
+    /**
+     * The treeitem holds only its own row; its children's group is the next sibling, owned through `aria-owns`
+     * (the APG navigation-treeview structure, with a `role="none"` wrapper in place of its `<li>`). Nested
+     * inside the treeitem, an expanded item's visible text was its whole subtree while its name is its own
+     * label, so the name never contained what the item showed (WCAG 2.5.3). The wrapper carries the classes
+     * the treeitem used to, so a disabled or styled item still dims and lays out its subtree as before.
+     */
     return (
-      <div
-        ref={setRefs}
-        role="treeitem"
-        aria-labelledby={labelId}
-        aria-expanded={hasChildren ? expanded : undefined}
-        aria-selected={ctx.selected === value}
-        aria-disabled={disabled || undefined}
-        tabIndex={disabled ? undefined : isTabbable ? 0 : -1}
-        onFocus={() => ctx.setTabbableValue(value)}
-        onKeyDown={handleKeyDown}
-        onClick={(e) => {
-          onClick?.(e);
-          if (e.defaultPrevented || disabled) return;
-          activate();
-        }}
-        className={cn("outline-none", disabled && "pointer-events-none opacity-disabled", className)}
-        {...props}
-      >
+      <div role="none" className={cn(disabled && "pointer-events-none opacity-disabled", className)}>
         <div
-          style={{ paddingLeft: level * 20 + 8 }}
-          className={cn(
-            "flex items-center gap-1.5 rounded-sm py-1.5 pr-2 text-body-sm text-foreground",
-            "hover:bg-accent",
-            ctx.selected === value && "bg-accent",
-            "focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
-          )}
+          ref={setRefs}
+          role="treeitem"
+          aria-labelledby={labelId}
+          aria-expanded={hasChildren ? expanded : undefined}
+          aria-owns={showGroup ? groupId : undefined}
+          aria-selected={ctx.selected === value}
+          aria-disabled={disabled || undefined}
+          tabIndex={disabled ? undefined : isTabbable ? 0 : -1}
+          onFocus={() => ctx.setTabbableValue(value)}
+          onKeyDown={handleKeyDown}
+          onClick={(e) => {
+            onClick?.(e);
+            if (e.defaultPrevented || disabled) return;
+            activate();
+          }}
+          className="outline-none"
+          {...props}
         >
-          {hasChildren ? (
-            <ChevronRight
-              className={cn("size-4 shrink-0 text-muted-foreground transition-transform", expanded ? "rotate-90" : "rtl:-scale-x-100")}
-              onClick={(e) => {
-                e.stopPropagation();
-                ctx.toggleExpanded(value);
-              }}
-            />
-          ) : (
-            <span className="size-4 shrink-0" />
-          )}
-          {ctx.checkable && (
-            <Checkbox
-              checked={isChecked}
-              onCheckedChange={() => ctx.toggleChecked(value)}
-              onClick={(e) => e.stopPropagation()}
-              tabIndex={-1}
-            />
-          )}
-          {icon}
-          <span id={labelId} className="truncate">
-            {label}
-          </span>
+          <div
+            style={{ paddingLeft: level * 20 + 8 }}
+            className={cn(
+              "flex items-center gap-1.5 rounded-sm py-1.5 pr-2 text-body-sm text-foreground",
+              "hover:bg-accent",
+              ctx.selected === value && "bg-accent",
+              "focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
+            )}
+          >
+            {hasChildren ? (
+              <ChevronRight
+                className={cn("size-4 shrink-0 text-muted-foreground transition-transform", expanded ? "rotate-90" : "rtl:-scale-x-100")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  ctx.toggleExpanded(value);
+                }}
+              />
+            ) : (
+              <span className="size-4 shrink-0" />
+            )}
+            {ctx.checkable && (
+              <Checkbox
+                checked={isChecked}
+                onCheckedChange={() => ctx.toggleChecked(value)}
+                onClick={(e) => e.stopPropagation()}
+                tabIndex={-1}
+              />
+            )}
+            {icon}
+            <span id={labelId} className="truncate">
+              {label}
+            </span>
+          </div>
         </div>
-        {hasChildren && expanded && (
-          <div role="group">
+        {showGroup && (
+          <div role="group" id={groupId}>
             <TreeLevelContext.Provider value={level + 1}>{children}</TreeLevelContext.Provider>
           </div>
         )}
