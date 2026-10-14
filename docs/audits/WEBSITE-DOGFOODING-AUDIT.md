@@ -16,7 +16,7 @@ Text, comments, quoted snippet strings and test files are not scanned. Neither i
 
 | Class | Meaning | Original (`ae9cc44`, after Wave 1) | #379 (`d155db1`) | **After Wave 2a** | Δ 2a |
 |---|---|---:|---:|---:|---:|
-| A | KinetixUI component JSX sites | 1,037 | 1,196 | **1,226** | +30 |
+| A | KinetixUI component JSX sites | 1,037 | 1,196 | **1,218** | +22 |
 | B | KinetixUI equivalent exists; site authors a native/vendor primitive | 135 | 96 | **76** | −20 |
 | C | Needs a missing library variant first | 6 | 4 | **4** | 0 |
 | D | Valid site composition or deliberate native behaviour | 24 | 27 | **27** | 0 |
@@ -101,13 +101,13 @@ This refresh also fixes the maturity suffix inside platform tabs (`component-pre
 
 ## Wave 2a: the command menu and the mobile menu
 
-Both were direct `@radix-ui/react-dialog` (and, for the command menu, direct `cmdk`) compositions that re-implemented what the library's `Dialog`, `Command` and `Sheet` already ship: the overlay, the panel, the item and group styles, the close button. 20 B sites in 2 files; both files are now all library JSX (+30 A).
+Both were direct `@radix-ui/react-dialog` (and, for the command menu, direct `cmdk`) compositions that re-implemented what the library's `Dialog`, `Command` and `Sheet` already ship: the overlay, the panel, the item and group styles, the close button. 20 B sites in 2 files; both files now use only library JSX (+22 A sites; A counts syntax sites, and the nine shortcut keys render through one local `Key` wrapper of the library `Kbd`).
 
 **Library first, where the site needed something the library lacked** (`@kinetixui/ui`, patch changeset, tests in `components-overlay.test.tsx`, documented on the Sheet and Command pages and in the generated API tables):
 - `Sheet`: `side="start"` / `side="end"`, which follow the reading direction (`inset-inline-start/end`, the slide flipped with `rtl:`). The physical sides stay for panels that belong to a screen edge. Side panels now scroll when their content is taller than the viewport (the mobile menu is 1,281px tall at 390×844). `closeLabel` names the built-in close button.
 - `CommandDialog`: a `title` (it rendered an **unnamed** dialog before), an optional `description` (otherwise no dangling `aria-describedby`), a `trigger` (Radix returns focus to the dialog's own trigger; a palette opened by state had none, and focus fell to `<body>`), `commandProps`, and top anchoring so the field does not move while filtering re-sizes the list. `CommandProps` is exported.
 
-**Command menu** (`components/command-menu.tsx`): `CommandDialog` with `title="Search the docs"`, `commandProps={{ label: "Command menu" }}` and the header trigger as `trigger` — a library `Button variant="Outline"` keeping the collapse to an icon below `sm`. `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, and library `Kbd`/`KbdGroup` for the shortcut hints. Kept: ⌘K/Ctrl+K and `/` (ignored in fields), focus in the search field on open, filtering, arrow keys, Enter, Escape, route and theme actions closing the dialog first, focus returning to the trigger, the scroll lock, the page behind hidden from AT, the trigger's accessible name ("Search…", plus the shortcut keys where they are visible). No analytics before or after.
+**Command menu** (`components/command-menu.tsx`): `CommandDialog` with `title="Search the docs"`, `commandProps={{ label: "Command menu" }}` and the header trigger as `trigger` — a library `Button variant="Outline"` keeping the collapse to an icon below `sm`. `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, and library `Kbd`/`KbdGroup` for the shortcut hints, at the site's 12px floor for chrome text (`text-label-md`, the next step of the library scale; the library `Kbd` is the 11px label step, which `check:web-quality` rejects on site chrome). Kept: ⌘K/Ctrl+K and `/` (ignored in fields), focus in the search field on open, filtering, arrow keys, Enter, Escape, route and theme actions closing the dialog first, focus returning to the trigger, the scroll lock, the page behind hidden from AT, the trigger's accessible name ("Search…", plus the shortcut keys where they are visible). No analytics before or after.
 
 **Mobile menu** (`components/mobile-nav.tsx`): `Sheet` with `SheetTrigger asChild` on a library Ghost icon `Button` ("Menu"), `SheetContent side="start" closeLabel="Close menu"`, `SheetTitle`. Kept: the page-dependent breakpoint, focus on open (the close button, as before), the focus trap, Escape, the named close button, focus back on the trigger, the scroll lock, closing on navigation, `aria-current`, the guide groups.
 

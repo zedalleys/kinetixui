@@ -31,6 +31,15 @@ function useModKey() {
   return mod;
 }
 
+/**
+ * The library Kbd, at the site's 12px floor for readable compact text (`check:web-quality`'s type check). Kbd's
+ * own size is the library's 11px label step, which is right inside a component preview but below what this
+ * site holds its chrome to; `text-label-md` is the next step of the same scale.
+ */
+function Key(props: React.ComponentProps<typeof Kbd>) {
+  return <Kbd {...props} className="text-label-md" />;
+}
+
 export function CommandMenu() {
   const router = useRouter();
   const { setTheme } = useTheme();
@@ -91,8 +100,8 @@ export function CommandMenu() {
           <Search aria-hidden />
           <span className="sr-only sm:not-sr-only sm:flex-1 sm:text-start">Search…</span>
           <KbdGroup className="pointer-events-none hidden sm:inline-flex">
-            <Kbd>{mod}</Kbd>
-            <Kbd>K</Kbd>
+            <Key>{mod}</Key>
+            <Key>K</Key>
           </KbdGroup>
         </Button>
       }
@@ -137,26 +146,26 @@ export function CommandMenu() {
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border px-3 py-2 text-body-sm text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <KbdGroup>
-            <Kbd>↑</Kbd>
-            <Kbd>↓</Kbd>
+            <Key>↑</Key>
+            <Key>↓</Key>
           </KbdGroup>
           to navigate
         </span>
         <span className="flex items-center gap-1.5">
-          <Kbd>↵</Kbd>
+          <Key>↵</Key>
           to select
         </span>
         <span className="flex items-center gap-1.5">
-          <Kbd>Esc</Kbd>
+          <Key>Esc</Key>
           to close
         </span>
         <span className="ms-auto flex items-center gap-1.5">
           <KbdGroup>
-            <Kbd>{mod}</Kbd>
-            <Kbd>K</Kbd>
+            <Key>{mod}</Key>
+            <Key>K</Key>
           </KbdGroup>
           or
-          <Kbd>/</Kbd>
+          <Key>/</Key>
         </span>
       </div>
     </CommandDialog>
