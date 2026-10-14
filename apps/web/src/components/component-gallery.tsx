@@ -6,7 +6,7 @@ import { PlatformLogo } from "./platform-logo";
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import {
   InputGroup,
   InputGroupAddon,
@@ -36,6 +36,7 @@ import { PlatformBadges } from "@/components/platform-badges";
 import { SectionHead } from "@/components/section-head";
 import { demoRegistry } from "@/registry/demos";
 import { THUMBNAIL_MOCKS } from "@/components/component-thumbnails";
+import type { CatalogueFacets, FacetOption } from "@/lib/business-discovery";
 
 const slugOf = (href: string) => href.split("/").pop() ?? "";
 
@@ -232,16 +233,71 @@ function Card({ item }: { item: Item }) {
   );
 }
 
-export function ComponentGallery() {
+const catButton = (active: boolean) =>
+  cn(
+    // coarse:min-h-10 — a 26px pill under a mouse, 40px under a finger; the groups' gap grows with it so the
+    // taller rows never touch
+    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-label-md uppercase tracking-[0.12em] transition-colors coarse:min-h-10",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    active
+      ? "border-primary bg-primary text-primary-foreground"
+      : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+  );
+
+/** `?capability=` / `?domain=` / `?layer=`, resolved against the options the facets offer; anything else is no filter. */
+export function resolveFacetParam(value: string | null, options: FacetOption[]): FacetOption | null {
+  return options.find((o) => o.id === value) ?? null;
+}
+
+type BusinessKey = "capability" | "domain" | "layer";
+
+/**
+ * The /components catalogue.
+ *
+ * `facets` is the business-discovery projection the server page passes in (`catalogueFacets()`): which capability
+ * groups, business domains and layers each entry belongs to, derived from docs/business-capabilities.json. It is a
+ * prop rather than an import so the ~90 KB discovery index never ships to the browser.
+ *
+ * Filtering is progressive. Search, category, platform and status are always in view; capability, domain and layer
+ * sit behind "Business filters", which opens by itself when a link arrives with one of them set. Every filter is a
+ * query parameter on /components, whose canonical stays `/components` (check:seo `canonical-query`), so no filtered
+ * view becomes a page of its own.
+ */
+export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
 
   const [query, setQuery] = React.useState(params.get("q") ?? "");
+  const BUSINESS_COUNT = React.useMemo(() => {
+    const count = (pick: (b: CatalogueFacets["bySlug"][string]) => string[]) =>
+      ITEMS.reduce(
+        (acc, it) => {
+          const b = facets.bySlug[it.slug];
+          if (b) for (const id of pick(b)) acc[id] = (acc[id] ?? 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+    return {
+      capability: count((b) => b.capabilities),
+      domain: count((b) => b.domains),
+      layer: count((b) => [b.layer]),
+    };
+  }, [facets]);
   const activeCat = params.get("cat");
   const activePlatform = resolvePlatformParam(params.get("platform"));
   const activePlatformLabel = activePlatform ? PLATFORM_DEFINITIONS[activePlatform].label : null;
   const activeStatus = params.get("status") === "beta" ? "beta" : null;
+  const activeCapability = resolveFacetParam(params.get("capability"), facets.capabilities);
+  const activeDomain = resolveFacetParam(params.get("domain"), facets.domains);
+  const activeLayer = resolveFacetParam(params.get("layer"), facets.layers);
+  const businessActive = Boolean(activeCapability || activeDomain || activeLayer);
+  const [businessOpen, setBusinessOpen] = React.useState(businessActive);
+  // a link or Back/Forward that lands with a business filter set opens the group, so the active chip is in view
+  React.useEffect(() => {
+    if (businessActive) setBusinessOpen(true);
+  }, [businessActive]);
 
   // debounce the search term into the URL so a filtered view is shareable and
   // Back/Forward restore it, without a history entry per keystroke.
@@ -280,6 +336,7 @@ export function ComponentGallery() {
   const setCat = (cat: string | null) => setParam("cat", cat);
   const setPlatform = (p: string | null) => setParam("platform", p);
   const setStatus = (s: "beta" | null) => setParam("status", s);
+  const setBusiness = (key: BusinessKey, value: string | null) => setParam(key, value);
 
   const clearAll = () => {
     setQuery("");
@@ -288,22 +345,65 @@ export function ComponentGallery() {
 
   const q = query.trim().toLowerCase();
   const filtered = ITEMS.filter((it) => {
+    const biz = facets.bySlug[it.slug];
     if (activeCat && it.category !== activeCat) return false;
     if (activePlatform && !isOnPlatform(it.slug, activePlatform)) return false;
     if (activeStatus && it.status !== activeStatus) return false;
+    if (activeCapability && !biz?.capabilities.includes(activeCapability.id)) return false;
+    if (activeDomain && !biz?.domains.includes(activeDomain.id)) return false;
+    if (activeLayer && biz?.layer !== activeLayer.id) return false;
     if (!q) return true;
     return (
       it.title.toLowerCase().includes(q) ||
       it.slug.includes(q) ||
       (it.primitive?.toLowerCase().includes(q) ?? false) ||
-      it.category.toLowerCase().includes(q)
+      it.category.toLowerCase().includes(q) ||
+      // a reader who searches for the job ("checkout", "booking") rather than the part finds the parts
+      (biz?.terms.includes(q) ?? false)
     );
   });
 
-  const grouped = !q && !activeCat && !activePlatform && !activeStatus;
-  const isFiltered = Boolean(q || activeCat || activePlatform || activeStatus);
+  const grouped = !q && !activeCat && !activePlatform && !activeStatus && !businessActive;
+  const isFiltered = Boolean(q || activeCat || activePlatform || activeStatus || businessActive);
   // The chip filters (not the search box) are what fold into the phone sheet, so that is what the badge counts.
-  const facetCount = [activeCat, activePlatform, activeStatus].filter(Boolean).length;
+  const facetCount = [activeCat, activePlatform, activeStatus, activeCapability, activeDomain, activeLayer].filter(Boolean).length;
+
+  /** The active filters, each with its own remove button, so the state is readable and undoable one at a time. */
+  const activeChips: { key: string; group: string; label: string; clear: () => void }[] = [
+    ...(activeCat ? [{ key: "cat", group: "Category", label: activeCat, clear: () => setCat(null) }] : []),
+    ...(activePlatform
+      ? [{ key: "platform", group: "Platform", label: activePlatformLabel!, clear: () => setPlatform(null) }]
+      : []),
+    ...(activeStatus ? [{ key: "status", group: "Status", label: "Beta", clear: () => setStatus(null) }] : []),
+    ...(activeCapability
+      ? [{ key: "capability", group: "Capability", label: activeCapability.label, clear: () => setBusiness("capability", null) }]
+      : []),
+    ...(activeDomain
+      ? [{ key: "domain", group: "Business domain", label: activeDomain.label, clear: () => setBusiness("domain", null) }]
+      : []),
+    ...(activeLayer ? [{ key: "layer", group: "Layer", label: activeLayer.label, clear: () => setBusiness("layer", null) }] : []),
+  ];
+
+  const businessGroup = (key: BusinessKey, label: string, options: FacetOption[], active: FacetOption | null) => (
+    <div role="group" aria-label={`Filter by ${label.toLowerCase()}`} className="flex flex-wrap items-center gap-1.5 coarse:gap-2">
+      <span className="me-0.5 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">{label}</span>
+      {options.map((o) => {
+        const on = active?.id === o.id;
+        return (
+          <button key={o.id} type="button" aria-pressed={on} onClick={() => setBusiness(key, on ? null : o.id)} className={catButton(on)}>
+            {o.label} <span className="tabular-nums">{BUSINESS_COUNT[key][o.id] ?? 0}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+  const businessGroups = (
+    <>
+      {businessGroup("capability", "Capability", facets.capabilities, activeCapability)}
+      {businessGroup("domain", "Business domain", facets.domains, activeDomain)}
+      {businessGroup("layer", "Layer", facets.layers, activeLayer)}
+    </>
+  );
   const [sheetOpen, setSheetOpen] = React.useState(false);
 
   // One set of chips, rendered inline from md up and inside the sheet below it. The sheet's content only mounts
@@ -379,6 +479,13 @@ export function ComponentGallery() {
         The <span className="font-mono text-label-md uppercase tracking-[0.1em]">{ABBR_ROW}</span> tags on each card
         mark which libraries carry it today.
       </p>
+      <p className="mt-3 max-w-2xl text-muted-foreground">
+        Looking for a job rather than a part? Search for it (“checkout”, “booking”) or{" "}
+        <Link href="/capabilities" className="text-foreground underline underline-offset-4 hover:text-primary">
+          browse by business need
+        </Link>
+        .
+      </p>
 
       {/* filter bar */}
       <div
@@ -447,8 +554,12 @@ export function ComponentGallery() {
               </SheetTrigger>
               <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-xl md:hidden">
                 <SheetTitle>Filters</SheetTitle>
-                <SheetDescription>Category, platform and status. Results update as you choose.</SheetDescription>
+                <SheetDescription>
+                  Category, platform and status, then capability, business domain and layer. Results update as you choose.
+                </SheetDescription>
                 <div className="mt-4 flex flex-col gap-4">{facetGroups}</div>
+                <h3 className="mt-6 font-mono text-label-md uppercase tracking-[0.12em] text-foreground">Business filters</h3>
+                <div className="mt-3 flex flex-col gap-4">{businessGroups}</div>
                 <div className="mt-6 flex items-center gap-2">
                   <button
                     type="button"
@@ -488,11 +599,61 @@ export function ComponentGallery() {
         </div>
       </div>
 
+      {/* Below the sticky bar, not in it: opened, the three business groups are several rows of chips, and a sticky
+          bar that tall would cover the results it filters. They scroll away with the intro; the active-filter chips
+          and the status line below always say what is applied. */}
+      <div className="mt-3 hidden md:block">
+        <button
+          type="button"
+          aria-expanded={businessOpen}
+          aria-controls="business-filters"
+          onClick={() => setBusinessOpen((o) => !o)}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-md py-1 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground",
+            "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          )}
+        >
+          <ChevronDown aria-hidden className={cn("size-3.5 motion-safe:transition-transform", businessOpen && "rotate-180")} />
+          Business filters
+          {businessActive && (
+            <span className="normal-case tracking-normal text-foreground">
+              ({[activeCapability, activeDomain, activeLayer].filter(Boolean).length} active)
+            </span>
+          )}
+        </button>
+        <div id="business-filters" hidden={!businessOpen} className="mt-2 flex flex-col gap-3">
+          {businessGroups}
+        </div>
+      </div>
+      {activeChips.length > 0 && (
+        <ul aria-label="Active filters" className="mt-3 flex flex-wrap gap-1.5">
+          {activeChips.map((c) => (
+            <li key={c.key}>
+              <button
+                type="button"
+                onClick={c.clear}
+                aria-label={`Remove filter ${c.group}: ${c.label}`}
+                className={cn(
+                  "inline-flex min-h-7 max-w-full flex-wrap items-center gap-x-1 rounded-md border border-border bg-muted/40 px-2 text-start text-body-sm coarse:min-h-10",
+                  "hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                )}
+              >
+                <span className="text-muted-foreground">{c.group}:</span> {c.label}
+                <X aria-hidden className="size-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <p role="status" aria-live="polite" className="mt-4 font-mono text-body-sm text-muted-foreground">
         {filtered.length === ITEMS.length ? `${ITEMS.length} entries` : `${filtered.length} of ${ITEMS.length} entries`}
         {activeCat ? ` · ${activeCat}` : ""}
         {activePlatformLabel ? ` · ${activePlatformLabel}` : ""}
         {activeStatus ? ` · ${activeStatus}` : ""}
+        {activeCapability ? ` · ${activeCapability.label}` : ""}
+        {activeDomain ? ` · ${activeDomain.label}` : ""}
+        {activeLayer ? ` · ${activeLayer.label}` : ""}
         {q ? ` · “${query.trim()}”` : ""}
       </p>
 
@@ -501,7 +662,10 @@ export function ComponentGallery() {
           <p className="text-sm text-muted-foreground">
             No components match{q ? ` “${query.trim()}”` : ""}
             {activeCat ? ` in ${activeCat}` : ""}
-            {activePlatformLabel ? ` on ${activePlatformLabel}` : ""}.
+            {activePlatformLabel ? ` on ${activePlatformLabel}` : ""}
+            {activeCapability ? ` for ${activeCapability.label}` : ""}
+            {activeDomain ? ` in ${activeDomain.label}` : ""}
+            {activeLayer ? ` at the ${activeLayer.label} layer` : ""}.
           </p>
           <button
             type="button"
