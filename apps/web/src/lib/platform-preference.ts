@@ -131,8 +131,16 @@ function subscribe(listener: () => void) {
   };
 }
 
-/** Record an explicit choice: every switcher on the page follows it, and the next page opens on it. */
-export function setPreferredPlatform(id: PlatformId): void {
+/**
+ * Record an explicit choice: every switcher on the page follows it, and the next page opens on it.
+ *
+ * Returns whether the platform actually changed, and a switcher reports `platform_selected` only when it did.
+ * The switcher's own `next === rendered` check is not enough: Radix Tabs 1.1.22 focuses the trigger inside its
+ * mousedown handler, so one click calls `onValueChange` twice with the same value before React re-renders, and
+ * both calls see the old rendered value. `current` is updated synchronously here, so the second call is a no-op.
+ */
+export function setPreferredPlatform(id: PlatformId): boolean {
+  const changed = resolve() !== id;
   current = chosen = id;
   try {
     window.localStorage.setItem(PLATFORM_STORAGE_KEY, id);
@@ -140,6 +148,7 @@ export function setPreferredPlatform(id: PlatformId): void {
     // storage unavailable: the choice still holds for this page
   }
   notify();
+  return changed;
 }
 
 /** The reader's platform. React on the server and on the first client render; the stored choice right after. */

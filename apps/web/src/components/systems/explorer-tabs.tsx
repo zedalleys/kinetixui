@@ -46,7 +46,7 @@ export function ExplorerTabs({
   const onChange = (next: string) => {
     if (next === value) return; // a real choice only; the default tab rendering is not a selection
     const tab = next as CodeTab;
-    setPreferredPlatform(platformIdForCodeTab(tab));
+    if (!setPreferredPlatform(platformIdForCodeTab(tab))) return; // a repeated callback for the same click
     analytics.track("platform_selected", {
       platform: PLATFORM_FROM_CODE_TAB[tab],
       component: component.toLowerCase(),

@@ -221,7 +221,8 @@ export function ComponentPreview({
                     const next = v as CodeTab;
                     // only an explicit change of platform; the default React tab rendering is not a selection
                     if (next === platform) return;
-                    setPreferredPlatform(platformIdForCodeTab(next));
+                    // a repeated callback for the same click changes nothing, so it reports nothing
+                    if (!setPreferredPlatform(platformIdForCodeTab(next))) return;
                     if (component) {
                       analytics.track("platform_selected", {
                         platform: PLATFORM_FROM_CODE_TAB[next],
