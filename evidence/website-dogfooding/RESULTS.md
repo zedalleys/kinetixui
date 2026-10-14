@@ -1,5 +1,46 @@
 # Website dogfooding — evidence
 
+## Wave 2a: command menu and mobile menu (14 October 2026)
+
+Against main `d155db19228d208cc73a00875c2c70edf863b4ea` (#379 merged). Production build: static Next.js 15.5.27, Chromium 141 through Playwright 1.64.0. Details in `docs/audits/WEBSITE-DOGFOODING-AUDIT.md`, "Wave 2a".
+
+| Check | Result / scope |
+|---|---|
+| `pnpm install --frozen-lockfile` | PASS. No dependency or lockfile change |
+| `pnpm lint` / `pnpm typecheck` | PASS, 3 / 9 workspace tasks |
+| `@kinetixui/web` tests | PASS, 101 files / 2,148 tests. New `command-menu.test.tsx` (11) and 8 new Sheet cases in `mobile-nav.test.tsx`. The command-menu tests also pass against main's component (the behaviour they pin is unchanged); against main's mobile menu the outside-press and logical-side cases fail, which are the intended changes |
+| `@kinetixui/ui` tests | PASS, 19 files / 514 tests. 9 new cases in `components-overlay.test.tsx` (Sheet `start`/`end`, scroll, `closeLabel`; CommandDialog name, description, focus return, anchoring); all 9 fail against main's `sheet.tsx`/`command.tsx` |
+| `pnpm check:web-dogfooding` | PASS. A 1,218 · B 76 · C 4 · D 27 · E 9; B/C debt in 28 files. The 18 command-menu/mobile-nav approvals are gone, so the guard fails if either returns |
+| Guard negative controls (live, then restored) | FAIL (exit 1) as intended on each: a direct Radix `Dialog` put back into `mobile-nav`, direct `cmdk` put back into `command-menu`, and a new file with a raw `role="dialog"` and a raw button. Clean again after restoring |
+| `scripts/web-dogfooding-wave2a.mjs` | PASS, 33 views (`wave2a-browser.json`). Command menu at 390 and 1280px, mobile menu at 390 and 900px (the docs-only band), each × LTR/RTL × light/dark × 100/200% text, reduced motion. Per view: named dialog, no `aria-describedby`, focus in, wheel scroll locked, no focusable element outside the dialog exposed to AT, no page overflow, **axe on the open dialog: 0 findings**. Command menu: anchored at 20vh, the field does not move while filtering, Escape and an Enter route both return focus to the trigger. Mobile menu: at the left edge in LTR and the right edge in RTL, 75% wide, scrolls vertically, never sideways, animation 0.01ms under reduced motion, Tab never leaves it, Escape / close button / outside press / route all close it and return focus to "Menu", and ⌘K over it no longer stacks the command menu. Forced colors: both triggers keep a 2px solid focus outline |
+| `check:a11y-site` | PASS. 576 views, no axe findings, no horizontal overflow, site search and docs navigation reachable at every width |
+| `check:web-quality` | PASS. Type floor, contrast, hit targets; 109 + 109 thumbnails; layout 220 views, 0 overflowing. (The first run flagged the library `Kbd` at 11px in the header; the keys now use `text-label-md`.) |
+| `check:tabs-dogfood`, Wave 1 browser check | PASS (8 cases; Wave 1 unchanged) |
+| `check:a11y-browser` (Storybook, 270 stories × 2 themes) | PASS, nothing new; the 4 findings already accepted on main |
+| `check:large-text`, `check:motion`, `check:overlay-visual` | PASS |
+| `check:rtl`, `check:keyboard`, `check:verification`, `check:manifest`, `check:stories`, `check:usage`, `check:content`, `check:capabilities`, `check:a11y-coverage`, `check:registry-deps`, IoT/blocks/flagship examples | PASS. CI's generated-output step (keyboard, verification, manifest, tokens, vendored natives, stories, registry) regenerates to no diff |
+| `git diff --check` | PASS |
+
+### Bundle (`bundle-wave2a.json`)
+
+Main `d155db1` and this branch, built from the same lockfile; distinct JS chunks per manifest entry, each gzipped on its own.
+
+| Entry | Chunks | Raw JS delta | Sum of per-chunk gzip delta |
+|---|---|---:|---:|
+| Root layout (site header: both menus) | 14 → 14 | −1,170 B | −148 B |
+| `/`, `/docs/installation`, `/components`, `/iot` | unchanged | +857 B | +173 to +187 B |
+| `/docs/colors`, `/capabilities` | unchanged | 0 | −1 to 0 B |
+
+The site's own overlay markup left the layout chunk; the shared `@kinetixui/ui` chunk grew by the new `CommandDialog`/`Sheet` code. Same chunk count everywhere.
+
+### Not covered
+
+No manual screen-reader pass. Touch gestures were exercised as pointer presses only. RTL is the document direction flipped on `<html>`, as the site's other RTL checks do; inside an LTR section of an RTL page the logical Sheet is placed correctly but slides from the other edge (documented in `sheet.tsx`).
+
+---
+
+## Wave 1 and the #379 audit refresh
+
 Refreshed 14 October 2026 against main `acfe95af62befb4d11b3527a529bfd635c825fb8` (#357, #358, #375, #377, #378 and #380 included). Production build: static Next.js 15.5.27. Browser: Chromium 141 through Playwright 1.64.0. Diagnostic traffic uses `kx_traffic=diagnostic`. The original Wave 1 evidence (13 October, `ae9cc44`) is superseded by this file.
 
 ## Checks
