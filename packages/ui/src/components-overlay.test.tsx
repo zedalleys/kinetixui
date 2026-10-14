@@ -17,6 +17,7 @@ import {
 } from "./components/dropdown-menu";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "./components/sheet";
 import { Modal } from "./components/modal";
+import { CommandDialog, CommandInput, CommandItem, CommandList } from "./components/command";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/tooltip";
 
 /**
@@ -377,5 +378,113 @@ describe("Overlay portals under RTL", () => {
     // The name has to survive the portal and the direction both, or an RTL app gets the unnamed dialog
     // back without anything saying so.
     expect(await screen.findByRole("dialog", { name: "Popover" })).toBeInTheDocument();
+  });
+});
+
+describe("Sheet's logical sides", () => {
+  const openSheet = async (side: "start" | "end", dir?: "ltr" | "rtl") => {
+    const user = userEvent.setup();
+    const sheet = (
+      <Sheet>
+        <SheetTrigger>Open</SheetTrigger>
+        <SheetContent side={side} closeLabel="Close menu" aria-describedby={undefined}>
+          <SheetTitle>Panel</SheetTitle>
+        </SheetContent>
+      </Sheet>
+    );
+    render(dir ? <KinetixDirectionProvider dir={dir}>{sheet}</KinetixDirectionProvider> : sheet);
+    await user.click(screen.getByRole("button", { name: "Open" }));
+    return { user, panel: await screen.findByRole("dialog", { name: "Panel" }) };
+  };
+
+  it("start sits at the inline start and end at the inline end, with no physical edge", async () => {
+    const { panel } = await openSheet("start");
+    expect(panel).toHaveClass("start-0", "border-e");
+    expect(panel.className).not.toMatch(/\b(left|right)-0\b|\bborder-[lr]\b/);
+  });
+
+  it("slides from the start edge of the reading direction, flipped for RTL", async () => {
+    const { panel } = await openSheet("start", "rtl");
+    // The panel portals into the provider's `dir="rtl"` host, which is what `start-0` and `rtl:` resolve against.
+    expect(panel.closest("[dir]")).toHaveAttribute("dir", "rtl");
+    expect(panel).toHaveClass("data-[state=open]:slide-in-from-left", "rtl:data-[state=open]:slide-in-from-right");
+  });
+
+  it("end mirrors start", async () => {
+    const { panel } = await openSheet("end");
+    expect(panel).toHaveClass("end-0", "border-s", "rtl:data-[state=open]:slide-in-from-left");
+  });
+
+  it("scrolls a side panel taller than the viewport instead of clipping it", async () => {
+    const { panel } = await openSheet("start");
+    expect(panel).toHaveClass("overflow-y-auto", "h-full");
+  });
+
+  it("names its close button with closeLabel, which still closes and returns focus", async () => {
+    const { user, panel } = await openSheet("start");
+    await user.click(screen.getByRole("button", { name: "Close menu" }));
+    await waitFor(() => expect(panel).not.toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Open" })).toHaveFocus();
+  });
+});
+
+describe("CommandDialog", () => {
+  const palette = (props: Partial<React.ComponentProps<typeof CommandDialog>> = {}) => (
+    <CommandDialog trigger={<button type="button">Search</button>} commandProps={{ label: "Commands" }} {...props}>
+      <CommandInput placeholder="Type" />
+      <CommandList>
+        <CommandItem>Alpha</CommandItem>
+        <CommandItem>Beta</CommandItem>
+      </CommandList>
+    </CommandDialog>
+  );
+
+  it("is a named dialog, defaulting to 'Command menu', with no dangling aria-describedby", async () => {
+    const user = userEvent.setup();
+    render(palette());
+    await user.click(screen.getByRole("button", { name: "Search" }));
+    const dialog = await screen.findByRole("dialog", { name: "Command menu" });
+    expect(dialog).not.toHaveAttribute("aria-describedby");
+    await waitFor(() => expect(screen.getByRole("combobox", { name: "Commands" })).toHaveFocus());
+  });
+
+  it("takes a title and an optional description", async () => {
+    const user = userEvent.setup();
+    render(palette({ title: "Search the docs", description: "Pages and settings" }));
+    await user.click(screen.getByRole("button", { name: "Search" }));
+    const dialog = await screen.findByRole("dialog", { name: "Search the docs" });
+    expect(dialog).toHaveAccessibleDescription("Pages and settings");
+  });
+
+  it("returns focus to its trigger on Escape, also when opened through `open`", async () => {
+    const user = userEvent.setup();
+    function Controlled() {
+      const [open, setOpen] = React.useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Elsewhere
+          </button>
+          {palette({ open, onOpenChange: setOpen })}
+        </>
+      );
+    }
+    render(<Controlled />);
+    await user.click(screen.getByRole("button", { name: "Elsewhere" }));
+    await screen.findByRole("dialog");
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    // Radix returns focus to the dialog's own trigger. Before `trigger`, a palette opened by state had none,
+    // and focus fell to <body>.
+    expect(screen.getByRole("button", { name: "Search" })).toHaveFocus();
+  });
+
+  it("anchors near the top, so filtering does not move the field being typed into", async () => {
+    const user = userEvent.setup();
+    render(palette());
+    await user.click(screen.getByRole("button", { name: "Search" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveClass("top-[20vh]", "translate-y-0");
+    expect(dialog).not.toHaveClass("top-1/2");
   });
 });

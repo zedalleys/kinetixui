@@ -4,7 +4,7 @@ import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
@@ -21,10 +21,55 @@ const Command = React.forwardRef<
 ));
 Command.displayName = CommandPrimitive.displayName;
 
-const CommandDialog = ({ children, ...props }: React.ComponentProps<typeof Dialog>) => (
+/** The props of the root `Command` (cmdk): `label`, `filter`, `shouldFilter`, `loop`, `value`, … */
+export interface CommandProps extends React.ComponentPropsWithoutRef<typeof CommandPrimitive> {}
+
+interface CommandDialogProps extends React.ComponentProps<typeof Dialog> {
+  /**
+   * The dialog's accessible name, read when it opens. Visually hidden: the search field is the visible
+   * heading of a command palette. Without one the dialog is announced as a bare "dialog".
+   */
+  title?: string;
+  /** Optional visually hidden description; without one the dialog has no `aria-describedby`. */
+  description?: string;
+  /**
+   * The control that opens it, rendered as the dialog's trigger (one element; it becomes the button).
+   * Pass it here rather than beside the dialog: Radix returns focus to the trigger on close, and a
+   * palette opened by a separate button would drop focus to the page instead.
+   */
+  trigger?: React.ReactNode;
+  /** Props for the inner `Command` (filtering, `label`, `loop`, …). */
+  commandProps?: CommandProps;
+}
+
+const CommandDialog = ({
+  children,
+  title = "Command menu",
+  description,
+  trigger,
+  commandProps,
+  ...props
+}: CommandDialogProps) => (
   <Dialog {...props}>
-    <DialogContent className="overflow-hidden p-0">
-      <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-input-wrapper]_svg]:size-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:size-5">
+    {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
+    {/*
+      Anchored near the top rather than centred: a centred dialog re-centres as filtering changes the
+      list's height, so the field being typed into jumps up and down under the caret. `pe-12` on the input
+      row keeps the field clear of the dialog's close button, which sits over that row.
+    */}
+    <DialogContent
+      className="top-[20vh] translate-y-0 overflow-hidden p-0"
+      {...(description ? {} : { "aria-describedby": undefined })}
+    >
+      <DialogTitle className="sr-only">{title}</DialogTitle>
+      {description ? <DialogDescription className="sr-only">{description}</DialogDescription> : null}
+      <Command
+        {...commandProps}
+        className={cn(
+          "[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-input-wrapper]]:pe-12 [&_[cmdk-input-wrapper]_svg]:size-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:size-5",
+          commandProps?.className,
+        )}
+      >
         {children}
       </Command>
     </DialogContent>

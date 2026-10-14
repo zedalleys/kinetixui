@@ -22,9 +22,9 @@
   "totals": {
     "React": {
       "build": 109,
-      "interaction": 47,
+      "interaction": 48,
       "accessibility": 109,
-      "rtl": 35,
+      "rtl": 36,
       "largeText": 39,
       "reducedMotion": 3,
       "visual": 0,
@@ -319,6 +319,7 @@
           "rtl"
         ],
         "components": [
+          "command",
           "dialog",
           "direction-provider",
           "drawer",
@@ -2299,9 +2300,15 @@
         "build": [
           "packages/ui (compiled by CI)"
         ],
+        "interaction": [
+          "packages/ui/src/components-overlay.test.tsx:325-491"
+        ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
+        ],
+        "rtl": [
+          "packages/ui/src/components-overlay.test.tsx:325-491"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2655,7 +2662,7 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:67-258",
-          "packages/ui/src/components-overlay.test.tsx:35-323"
+          "packages/ui/src/components-overlay.test.tsx:36-324"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -2754,7 +2761,7 @@
         "interaction": [
           "packages/ui/src/components-form.test.tsx:311-436",
           "packages/ui/src/components-keyboard.test.tsx:259-314",
-          "packages/ui/src/components-overlay.test.tsx:324-382",
+          "packages/ui/src/components-overlay.test.tsx:325-491",
           "packages/ui/src/components-selection.test.tsx:138-208"
         ],
         "accessibility": [
@@ -2766,7 +2773,7 @@
           "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-form.test.tsx:311-436",
           "packages/ui/src/components-keyboard.test.tsx:259-314",
-          "packages/ui/src/components-overlay.test.tsx:324-382",
+          "packages/ui/src/components-overlay.test.tsx:325-491",
           "packages/ui/src/components-rtl.test.tsx:60-259",
           "packages/ui/src/components-selection.test.tsx:138-208",
           "packages/ui/src/components-transactional.test.tsx:255-317"
@@ -2782,7 +2789,7 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-overlay.test.tsx:35-323"
+          "packages/ui/src/components-overlay.test.tsx:36-324"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -2851,7 +2858,7 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:67-258",
-          "packages/ui/src/components-overlay.test.tsx:324-382"
+          "packages/ui/src/components-overlay.test.tsx:325-491"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -2859,7 +2866,7 @@
         ],
         "rtl": [
           "packages/ui/src/components-direction-portal.test.tsx:48-483",
-          "packages/ui/src/components-overlay.test.tsx:324-382"
+          "packages/ui/src/components-overlay.test.tsx:325-491"
         ],
         "largeText": [
           "scripts/large-text.mjs:99-738"
@@ -4000,7 +4007,7 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:1242-1653",
-          "packages/ui/src/components-overlay.test.tsx:35-323"
+          "packages/ui/src/components-overlay.test.tsx:36-324"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -4591,8 +4598,8 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:67-258",
-          "packages/ui/src/components-overlay.test.tsx:324-382",
-          "packages/ui/src/components-overlay.test.tsx:35-323"
+          "packages/ui/src/components-overlay.test.tsx:325-491",
+          "packages/ui/src/components-overlay.test.tsx:36-324"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -4600,7 +4607,7 @@
         ],
         "rtl": [
           "packages/ui/src/components-direction-portal.test.tsx:48-483",
-          "packages/ui/src/components-overlay.test.tsx:324-382",
+          "packages/ui/src/components-overlay.test.tsx:325-491",
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
@@ -5238,14 +5245,16 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:1242-1653",
-          "packages/ui/src/components-overlay.test.tsx:35-323"
+          "packages/ui/src/components-overlay.test.tsx:325-491",
+          "packages/ui/src/components-overlay.test.tsx:36-324"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
-          "packages/ui/src/components-direction-portal.test.tsx:48-483"
+          "packages/ui/src/components-direction-portal.test.tsx:48-483",
+          "packages/ui/src/components-overlay.test.tsx:325-491"
         ],
         "largeText": [
           "scripts/large-text.mjs:99-738"
@@ -6328,7 +6337,7 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:1242-1653",
-          "packages/ui/src/components-overlay.test.tsx:35-323"
+          "packages/ui/src/components-overlay.test.tsx:36-324"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
