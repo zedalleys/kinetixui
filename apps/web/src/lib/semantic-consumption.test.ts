@@ -28,7 +28,6 @@ describe("scrim: every overlay's backdrop reads the one role", () => {
     "packages/ui/src/components/alert-dialog.tsx",
     "packages/ui/src/components/sheet.tsx",
     "packages/ui/src/components/drawer.tsx",
-    "apps/web/src/components/command-menu.tsx",
   ];
 
   it.each(web)("%s paints bg-scrim and not a foreground veil", (file) => {
@@ -36,6 +35,16 @@ describe("scrim: every overlay's backdrop reads the one role", () => {
     expect(src).toMatch(/\bbg-scrim\b/);
     // `bg-foreground/40` is the original defect: foreground is light in dark mode, so the "dim" lightened.
     expect(src).not.toMatch(/bg-foreground\/\d+/);
+  });
+
+  it("the site's overlays borrow the library backdrop instead of painting their own", () => {
+    // The command menu and the mobile menu used to render their own Radix overlay; they now open the library
+    // CommandDialog and Sheet, whose overlays are covered above. A local veil here would be a second backdrop.
+    for (const file of ["apps/web/src/components/command-menu.tsx", "apps/web/src/components/mobile-nav.tsx"]) {
+      const src = read(file);
+      expect(src, file).not.toMatch(/\bbg-scrim\b|bg-foreground\/\d+|@radix-ui\/react-dialog|from "cmdk"/);
+      expect(src, file).toMatch(/from "@kinetixui\/ui"/);
+    }
   });
 
   it("the Tour spotlight and backdrop read --scrim", () => {

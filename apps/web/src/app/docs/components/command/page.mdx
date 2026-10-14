@@ -31,4 +31,31 @@ component is built on a primitive; the hand-built widgets (DataGrid, TreeView,
 ColorPicker, MultiSelect, Tour, KanbanBoard) have their own documented interaction
 models — see [Accessibility](/docs/accessibility).
 
+### Command palette
+
+`CommandDialog` puts a `Command` in a modal `Dialog`. Give it a `title` (read when it opens; visually hidden,
+since the search field is the visible heading) and pass its opener as `trigger`: Radix returns focus to the
+dialog's own trigger on close, so a palette that is also opened by a keyboard shortcut still hands focus back
+to the button. The palette sits near the top of the viewport, so filtering never moves the field being typed into.
+
+```tsx
+const [open, setOpen] = React.useState(false);
+// open it from a shortcut as well: setOpen((o) => !o) on ⌘K
+
+<CommandDialog
+  open={open}
+  onOpenChange={setOpen}
+  title="Search the docs"
+  trigger={<Button variant="Outline">Search…</Button>}
+>
+  <CommandInput placeholder="Type a command or search…" />
+  <CommandList>
+    <CommandEmpty>No results found.</CommandEmpty>
+    <CommandGroup heading="Pages">
+      <CommandItem onSelect={() => go("/docs")}>Docs</CommandItem>
+    </CommandGroup>
+  </CommandList>
+</CommandDialog>
+```
+
 <ComponentApi slug="command" />

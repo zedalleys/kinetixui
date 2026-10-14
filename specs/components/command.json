@@ -19,7 +19,32 @@
     },
     {
       "name": "CommandDialog",
-      "props": []
+      "props": [
+        {
+          "name": "title",
+          "type": "string",
+          "required": false,
+          "description": "The dialog's accessible name, read when it opens. Visually hidden: the search field is the visible heading of a command palette. Without one the dialog is announced as a bare \"dialog\"."
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "Optional visually hidden description; without one the dialog has no `aria-describedby`."
+        },
+        {
+          "name": "trigger",
+          "type": "React.ReactElement<unknown, string | React.JSXElementConstructor<any>>",
+          "required": false,
+          "description": "The control that opens it, rendered as the dialog's trigger (one element; it becomes the button). Pass it here rather than beside the dialog: Radix returns focus to the trigger on close, and a palett…"
+        },
+        {
+          "name": "commandProps",
+          "type": "CommandProps",
+          "required": false,
+          "description": "Props for the inner `Command` (filtering, `label`, `loop`, …)."
+        }
+      ]
     },
     {
       "name": "CommandInput",

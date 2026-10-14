@@ -1,0 +1,124 @@
+{
+  "method": "Distinct JS chunks per route from .next/app-build-manifest.json, each gzipped (level 9) on its own; main d155db1 vs this branch, same lockfile.",
+  "routes": {
+    "/page": {
+      "main": {
+        "files": 13,
+        "bytes": 1576649,
+        "gzipBytes": 463010
+      },
+      "branch": {
+        "files": 13,
+        "bytes": 1577506,
+        "gzipBytes": 463189
+      },
+      "delta": {
+        "files": 0,
+        "bytes": 857,
+        "gzipBytes": 179
+      }
+    },
+    "/docs/installation/page": {
+      "main": {
+        "files": 17,
+        "bytes": 1914588,
+        "gzipBytes": 546775
+      },
+      "branch": {
+        "files": 17,
+        "bytes": 1915445,
+        "gzipBytes": 546962
+      },
+      "delta": {
+        "files": 0,
+        "bytes": 857,
+        "gzipBytes": 187
+      }
+    },
+    "/components/page": {
+      "main": {
+        "files": 14,
+        "bytes": 1805991,
+        "gzipBytes": 517368
+      },
+      "branch": {
+        "files": 14,
+        "bytes": 1806848,
+        "gzipBytes": 517548
+      },
+      "delta": {
+        "files": 0,
+        "bytes": 857,
+        "gzipBytes": 180
+      }
+    },
+    "/iot/page": {
+      "main": {
+        "files": 13,
+        "bytes": 1825691,
+        "gzipBytes": 523391
+      },
+      "branch": {
+        "files": 13,
+        "bytes": 1826548,
+        "gzipBytes": 523564
+      },
+      "delta": {
+        "files": 0,
+        "bytes": 857,
+        "gzipBytes": 173
+      }
+    },
+    "/docs/colors/page": {
+      "main": {
+        "files": 8,
+        "bytes": 444643,
+        "gzipBytes": 133676
+      },
+      "branch": {
+        "files": 8,
+        "bytes": 444643,
+        "gzipBytes": 133675
+      },
+      "delta": {
+        "files": 0,
+        "bytes": 0,
+        "gzipBytes": -1
+      }
+    },
+    "/capabilities/page": {
+      "main": {
+        "files": 6,
+        "bytes": 363178,
+        "gzipBytes": 107430
+      },
+      "branch": {
+        "files": 6,
+        "bytes": 363178,
+        "gzipBytes": 107430
+      },
+      "delta": {
+        "files": 0,
+        "bytes": 0,
+        "gzipBytes": 0
+      }
+    },
+    "/layout (site header: command menu and mobile menu)": {
+      "main": {
+        "files": 14,
+        "bytes": 1571416,
+        "gzipBytes": 461033
+      },
+      "branch": {
+        "files": 14,
+        "bytes": 1570246,
+        "gzipBytes": 460885
+      },
+      "delta": {
+        "files": 0,
+        "bytes": -1170,
+        "gzipBytes": -148
+      }
+    }
+  }
+}

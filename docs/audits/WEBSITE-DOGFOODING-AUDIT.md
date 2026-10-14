@@ -1,6 +1,6 @@
 # KinetixUI website dogfooding audit
 
-Refreshed 14 October 2026 against main `acfe95af62befb4d11b3527a529bfd635c825fb8`, after #375, #377, #378, #380, #358 and #357 landed. It was first audited on 13 October against `ae9cc44`. Scope: `apps/web` routes, components, registry demos, and block/usage/IoT examples. This is a consumer audit. It is not a library redesign, and it does not declare the whole site accessible.
+Refreshed 14 October 2026 against main `acfe95af62befb4d11b3527a529bfd635c825fb8`, after #375, #377, #378, #380, #358 and #357 landed, and merged as #379 (`d155db1`). It was first audited on 13 October against `ae9cc44`. **Wave 2a** (the command menu and the mobile menu, below) is measured against `d155db1`. Scope: `apps/web` routes, components, registry demos, and block/usage/IoT examples. This is a consumer audit. It is not a library redesign, and it does not declare the whole site accessible.
 
 Every interactive or styled product control should use KinetixUI, unless a documented exception explains why. Structural HTML, real content, illustrations, layout, route logic and application state belong to the website. Using a library component does not by itself prove visual consistency, so local class overrides remain reviewable.
 
@@ -14,16 +14,16 @@ Text, comments, quoted snippet strings and test files are not scanned. Neither i
 
 ## Snapshot: current versus the original audit
 
-| Class | Meaning | Original (`ae9cc44`, after Wave 1) | **Now (`acfe95a` + this PR)** | Δ |
-|---|---|---:|---:|---:|
-| A | KinetixUI component JSX sites | 1,037 | **1,196** | +159 |
-| B | KinetixUI equivalent exists; site authors a native/vendor primitive | 135 | **96** | −39 |
-| C | Needs a missing library variant first | 6 | **4** | −2 |
-| D | Valid site composition or deliberate native behaviour | 24 | **27** | +3 |
-| E | Read-only semantic HTML (tables) | 9 | **9** | 0 |
-| | Source files scanned | 241 | **252** | +11 |
-| | Native/vendor sites (B+C+D+E) | 174 | **136** | −38 |
-| | Files with B/C debt | — | **30** | |
+| Class | Meaning | Original (`ae9cc44`, after Wave 1) | #379 (`d155db1`) | **After Wave 2a** | Δ 2a |
+|---|---|---:|---:|---:|---:|
+| A | KinetixUI component JSX sites | 1,037 | 1,196 | **1,218** | +22 |
+| B | KinetixUI equivalent exists; site authors a native/vendor primitive | 135 | 96 | **76** | −20 |
+| C | Needs a missing library variant first | 6 | 4 | **4** | 0 |
+| D | Valid site composition or deliberate native behaviour | 24 | 27 | **27** | 0 |
+| E | Read-only semantic HTML (tables) | 9 | 9 | **9** | 0 |
+| | Source files scanned | 241 | 252 | **252** | 0 |
+| | Native/vendor sites (B+C+D+E) | 174 | 136 | **116** | −20 |
+| | Files with B/C debt | — | 30 | **28** | −2 |
 
 A grew mostly through new surfaces built on the library: business discovery (#377), the Phase 2 business components on component pages (#378), and #380's Tabs/Toggle migration.
 
@@ -57,11 +57,11 @@ Canonical semantics: **Tabs** are peer content/section navigation, **SegmentedCo
 | IoT device-dashboard group filter | raw `role="tab"` with no tabpanels (P1 semantics) | B → `ToggleGroup type="single" variant="pill"`, not Tabs |
 | Floor selector, date strip | multi-line tiles, `role="radiogroup"` | C (see below) |
 
-## Remaining debt (B, 96 sites in 30 files)
+## Remaining debt (B, 76 sites in 28 files)
 
 | Wave | Sites | Files and KinetixUI equivalent | Why it remains |
 |---|---:|---|---|
-| **2a Overlays** | 20 | `command-menu` (14: Radix Dialog + cmdk) → `Dialog` + `Command`; `mobile-nav` (6: Radix Dialog) → `Sheet` | Global navigation: needs focus trap/return, Escape, ⌘K, route-change close and RTL tests in its own PR |
+| ~~2a Overlays~~ | ~~20~~ → 0 | Done in Wave 2a (below): `command-menu` (14) → `CommandDialog` + `Command*`; `mobile-nav` (6) → `Sheet side="start"` | — |
 | **2b Selectors and modes** | 18 | `component-gallery` (9) → `Toggle` pill, `Button`, `Tag onRemove`; `iot/showcase/pill-selector` (2) and `examples/iot/device-dashboard` tablist (2) → `ToggleGroup` pill; `preview-environment` (1) → `SegmentedControl`; `systems/hero-system-map` (4) → `Tabs` | URL state, counts and analytics (gallery), scoped direction contract (preview), tour/pulse behaviour (hero) need their own tests |
 | **2c Site actions and fields** | 26 | `charts-content`, `docs/colors`, `building-ops-demo`, `camera-panel`, `changelog-view`, `create/*` (4 files), `docs-sidebar`, `hero-command`, `iot/device-showcase` checkboxes, `iot/lab/hero-command-strip`, `iot/showcase/pending-command`, `registry/demos` → `Button`, `Toggle`, `Input`, `Checkbox`, `RadioGroup` | Ordinary migrations, deferred to keep Wave 1 small and reviewable |
 | **2d Copyable IoT examples** | 28 | `examples/iot/` `pairing-flow` (16), `alert-center`, `alert-inbox`, `automation-builder`, `command-card`, `device-dashboard` actions, `operations-environment`, `state-honesty` → `Button`, `Input`, `Checkbox`, `RadioGroup`, `NativeSelect` | Each change must regenerate the published snippets (`gen-iot-examples`) in the same PR |
@@ -88,7 +88,7 @@ Rechecked after #380 and Phase 2. `ToggleGroup`'s `pill` variant is a single-lin
 | Native colour channel | 1 | `create/create-color-picker` range | OS touch/keyboard behaviour and continuous draft updates; the gradient track is colour data |
 | Read-only tables (E) | 9 | `infographic`, `iot` page, `building-ops-demo`, `component-api`, `foundations-tables`, `token-evidence`, `token-table` | Semantic `<table>` with headers/captions; no sort, select or page contract. The guard classes these E automatically |
 
-## Wave 1 (implemented in this PR)
+## Wave 1 (#379)
 
 Eight native sites across five files moved to library components. No component API, dependency or device logic changed.
 - **`copy-button.tsx`**: Ghost icon `Button`. Same clipboard promise, success-only callback, analytics without the payload, fixed `aria-label` and polite live region. **Visible change:** it is drawn at the library's 44px icon size instead of 28px. Callers that size it (component-meta, block-install) keep their size. It keeps `shrink` so preview toolbars do not overflow at 200% text.
@@ -99,6 +99,24 @@ Eight native sites across five files moved to library components. No component A
 
 This refresh also fixes the maturity suffix inside platform tabs (`component-preview`, `usage-example-tabs`), changing physical `ml-1.5` to logical `ms-1.5` so the gap sits on the correct side under RTL.
 
+## Wave 2a: the command menu and the mobile menu
+
+Both were direct `@radix-ui/react-dialog` (and, for the command menu, direct `cmdk`) compositions that re-implemented what the library's `Dialog`, `Command` and `Sheet` already ship: the overlay, the panel, the item and group styles, the close button. 20 B sites in 2 files; both files now use only library JSX (+22 A sites; A counts syntax sites, and the nine shortcut keys render through one local `Key` wrapper of the library `Kbd`).
+
+**Library first, where the site needed something the library lacked** (`@kinetixui/ui`, patch changeset, tests in `components-overlay.test.tsx`, documented on the Sheet and Command pages and in the generated API tables):
+- `Sheet`: `side="start"` / `side="end"`, which follow the reading direction (`inset-inline-start/end`, the slide flipped with `rtl:`). The physical sides stay for panels that belong to a screen edge. Side panels now scroll when their content is taller than the viewport (the mobile menu is 1,281px tall at 390×844). `closeLabel` names the built-in close button.
+- `CommandDialog`: a `title` (it rendered an **unnamed** dialog before), an optional `description` (otherwise no dangling `aria-describedby`), a `trigger` (Radix returns focus to the dialog's own trigger; a palette opened by state had none, and focus fell to `<body>`), `commandProps`, and top anchoring so the field does not move while filtering re-sizes the list. `CommandProps` is exported.
+
+**Command menu** (`components/command-menu.tsx`): `CommandDialog` with `title="Search the docs"`, `commandProps={{ label: "Command menu" }}` and the header trigger as `trigger` — a library `Button variant="Outline"` keeping the collapse to an icon below `sm`. `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, and library `Kbd`/`KbdGroup` for the shortcut hints, at the site's 12px floor for chrome text (`text-label-md`, the next step of the library scale; the library `Kbd` is the 11px label step, which `check:web-quality` rejects on site chrome). Kept: ⌘K/Ctrl+K and `/` (ignored in fields), focus in the search field on open, filtering, arrow keys, Enter, Escape, route and theme actions closing the dialog first, focus returning to the trigger, the scroll lock, the page behind hidden from AT, the trigger's accessible name ("Search…", plus the shortcut keys where they are visible). No analytics before or after.
+
+**Mobile menu** (`components/mobile-nav.tsx`): `Sheet` with `SheetTrigger asChild` on a library Ghost icon `Button` ("Menu"), `SheetContent side="start" closeLabel="Close menu"`, `SheetTitle`. Kept: the page-dependent breakpoint, focus on open (the close button, as before), the focus trap, Escape, the named close button, focus back on the trigger, the scroll lock, closing on navigation, `aria-current`, the guide groups.
+
+**Behaviour that changed, on purpose:**
+- The mobile menu is a side panel from the inline start (left in LTR, right in RTL; 75% wide, `max-w-sm`) over the library scrim, not a full-screen page, so a press outside it dismisses it.
+- The command palette is full-width below `sm` (the library Dialog's phone layout) instead of inset 16px, and has the library Dialog's close button.
+- The command trigger and the menu trigger are library Buttons, so they share the header's other tool buttons' hover and focus treatment.
+- ⌘K/`/` no longer open the command menu over another open dialog. On main, ⌘K over the open mobile menu stacked a second modal, and closing it sent focus to the search trigger behind the menu, which the menu hides from assistive technology (reproduced on a `d155db1` build).
+
 ## Guard
 
 `pnpm check:web-dogfooding` runs its unit tests, then scans the site; CI runs it before lint. The ledger (`website-dogfooding-exceptions.json`) must match the source **exactly**:
@@ -107,7 +125,7 @@ This refresh also fixes the maturity suffix inside platform tabs (`component-pre
 - an entry needs a non-empty reason, class B, C or D, and a positive integer `maxCount`;
 - a read-only `<table>` is E automatically; library JSX and structural HTML are always allowed.
 
-The tests prove it fails on a new raw `<button>`, a raw `<select>`, direct Radix `Tabs` and direct `cmdk`, on a stale approval, and on an approval without a positive integer `maxCount`. They also prove it passes structural HTML, library components, tables, quoted snippets, test files, MDX and documented D exceptions. Live negative controls on the real tree also failed as expected (see RESULTS.md).
+The tests prove it fails on a new raw `<button>`, a raw `<select>`, direct Radix `Tabs` and direct `cmdk`, on a stale approval, and on an approval without a positive integer `maxCount`. They also prove it passes structural HTML, library components, tables, quoted snippets, test files, MDX and documented D exceptions. Live negative controls on the real tree also failed as expected (see RESULTS.md); for Wave 2a, putting a direct Radix `Dialog` back into `mobile-nav`, direct `cmdk` back into `command-menu`, or a new file with a raw `role="dialog"` and a raw button each fails the guard (exit 1).
 
 **Limits:** it is a source ratchet, not proof of equivalence. It does not inspect CSS overrides, dynamic tags, local wrappers that re-export vendor primitives, or styled links, and a swap at the same pattern count can evade it. Reviewers still assess those edits.
 

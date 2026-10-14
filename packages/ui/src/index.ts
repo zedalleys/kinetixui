@@ -168,6 +168,7 @@ export {
   CommandItem,
   CommandShortcut,
   CommandSeparator,
+  type CommandProps,
 } from "./components/command";
 export {
   ContextMenu,

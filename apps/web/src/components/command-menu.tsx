@@ -2,11 +2,19 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import * as Dialog from "@radix-ui/react-dialog";
-import { Command } from "cmdk";
+import {
+  Button,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  Kbd,
+  KbdGroup,
+} from "@kinetixui/ui";
 import { Circle, FileText, Laptop, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
 import { docsNav, mainNav } from "@/lib/site";
 
 /** "⌘" on Apple platforms, "Ctrl" everywhere else. Resolves after mount to keep
@@ -23,18 +31,23 @@ function useModKey() {
   return mod;
 }
 
-function Kbd({ children }: { children: React.ReactNode }) {
-  return (
-    <kbd className="inline-flex min-w-[1.5rem] items-center justify-center rounded border border-border bg-background px-1.5 py-0.5 font-mono text-label-md font-medium leading-none text-muted-foreground">
-      {children}
-    </kbd>
-  );
+/**
+ * The library Kbd, at the site's 12px floor for readable compact text (`check:web-quality`'s type check). Kbd's
+ * own size is the library's 11px label step, which is right inside a component preview but below what this
+ * site holds its chrome to; `text-label-md` is the next step of the same scale.
+ */
+function Key(props: React.ComponentProps<typeof Kbd>) {
+  return <Kbd {...props} className="text-label-md" />;
 }
 
 export function CommandMenu() {
   const router = useRouter();
   const { setTheme } = useTheme();
   const [open, setOpen] = React.useState(false);
+  const openRef = React.useRef(open);
+  React.useEffect(() => {
+    openRef.current = open;
+  }, [open]);
   const mod = useModKey();
 
   React.useEffect(() => {
@@ -46,6 +59,9 @@ export function CommandMenu() {
           e.target instanceof HTMLTextAreaElement
         )
           return;
+        // Not over another open dialog, such as the mobile menu: two stacked modals fight over focus, and closing
+        // this one handed focus to its trigger in the header behind the other, which that dialog hides from AT.
+        if (!openRef.current && document.querySelector('[role="dialog"][data-state="open"]')) return;
         e.preventDefault();
         setOpen((o) => !o);
       }
@@ -59,125 +75,99 @@ export function CommandMenu() {
     fn();
   }, []);
 
-  // A Radix modal, as in MobileNav: it traps Tab inside, makes the page behind inert, closes on Esc (which
-  // the footer below promises), names the dialog, and returns focus to the trigger on close. The hand-rolled
-  // overlay it replaces did none of those.
+  // The library CommandDialog: a Radix modal that traps Tab, makes the page behind inert, closes on Esc (which the
+  // footer below promises), carries the dialog's name and returns focus to the trigger on close — the trigger is
+  // passed in so that it is the dialog's own, which is what focus returns to after ⌘K as well as after a click.
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      {/*
-        One trigger at every width. Below `sm` it collapses to a square icon button rather than being hidden: phones
-        had no site search at all, and a second trigger would have meant a second instance of this component and a
-        second global ⌘K listener, which toggles the dialog twice. The visible text becomes `sr-only` instead of
-        being removed, so the accessible name is the same "Search…" at every width.
-      */}
-      <Dialog.Trigger className="kx-hit inline-flex size-9 items-center justify-center gap-2 rounded-md border border-input bg-muted/50 text-body-md text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-9 sm:w-56 sm:justify-start sm:px-3">
-        <Search aria-hidden className="size-4 shrink-0" />
-        <span className="sr-only sm:not-sr-only sm:flex-1 sm:text-left">Search…</span>
-        <span className="pointer-events-none hidden items-center gap-1 sm:flex">
-          <Kbd>{mod}</Kbd>
-          <Kbd>K</Kbd>
-        </span>
-      </Dialog.Trigger>
-
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-scrim backdrop-blur-sm" />
-        <Dialog.Content
-          aria-describedby={undefined}
-          className="fixed inset-x-4 top-[20vh] z-50 mx-auto max-w-lg focus:outline-none"
+    <CommandDialog
+      open={open}
+      onOpenChange={setOpen}
+      title="Search the docs"
+      commandProps={{ label: "Command menu" }}
+      trigger={
+        /*
+          One trigger at every width. Below `sm` it collapses to a square icon button rather than being hidden: phones
+          had no site search at all, and a second trigger would have meant a second instance of this component and a
+          second global ⌘K listener, which toggles the dialog twice. The visible text becomes `sr-only` instead of
+          being removed, so the accessible name starts with the same "Search…" at every width (the shortcut keys join
+          it where they are shown, so the name always contains the visible label).
+        */
+        <Button
+          variant="Outline"
+          size="sm"
+          className="kx-hit size-9 p-0 text-body-md font-normal text-muted-foreground sm:h-9 sm:w-56 sm:justify-start sm:gap-2 sm:px-3"
         >
-          <Dialog.Title className="sr-only">Search the docs</Dialog.Title>
-          <Command
-            label="Command menu"
-            className="w-full overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl"
-          >
-            <div className="flex items-center gap-2 border-b border-border px-3">
-              <Search className="size-4 text-muted-foreground" />
-              <Command.Input
-                autoFocus
-                placeholder="Type a command or search…"
-                className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              />
-            </div>
-            <Command.List className="max-h-80 overflow-y-auto p-2">
-              <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
-                No results found.
-              </Command.Empty>
-
-              <Command.Group heading="Links" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground">
-                {mainNav.map((item) => (
-                  <Item key={item.href} onSelect={() => run(() => router.push(item.href))}>
-                    <Circle className="size-3" />
-                    {item.title}
-                  </Item>
-                ))}
-              </Command.Group>
-
-              {docsNav.map((group) => (
-                <Command.Group
-                  key={group.title}
-                  heading={group.title}
-                  className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground"
-                >
-                  {group.items.map((item) => (
-                    <Item key={item.href} onSelect={() => run(() => router.push(item.href))}>
-                      <FileText className="size-3" />
-                      {item.title}
-                    </Item>
-                  ))}
-                </Command.Group>
-              ))}
-
-              <Command.Group heading="Theme" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground">
-                <Item onSelect={() => run(() => setTheme("light"))}>
-                  <Sun className="size-3" /> Light
-                </Item>
-                <Item onSelect={() => run(() => setTheme("dark"))}>
-                  <Moon className="size-3" /> Dark
-                </Item>
-                <Item onSelect={() => run(() => setTheme("system"))}>
-                  <Laptop className="size-3" /> System
-                </Item>
-              </Command.Group>
-            </Command.List>
-
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border px-3 py-2 text-body-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Kbd>↑</Kbd>
-                <Kbd>↓</Kbd>
-                to navigate
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Kbd>↵</Kbd>
-                to select
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Kbd>Esc</Kbd>
-                to close
-              </span>
-              <span className="ml-auto flex items-center gap-1.5">
-                <Kbd>{mod}</Kbd>
-                <Kbd>K</Kbd>
-                or
-                <Kbd>/</Kbd>
-              </span>
-            </div>
-          </Command>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
-  );
-}
-
-function Item({ children, onSelect }: { children: React.ReactNode; onSelect: () => void }) {
-  return (
-    <Command.Item
-      onSelect={onSelect}
-      className={cn(
-        "flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm",
-        "aria-selected:bg-accent aria-selected:text-accent-foreground",
-      )}
+          <Search aria-hidden />
+          <span className="sr-only sm:not-sr-only sm:flex-1 sm:text-start">Search…</span>
+          <KbdGroup className="pointer-events-none hidden sm:inline-flex">
+            <Key>{mod}</Key>
+            <Key>K</Key>
+          </KbdGroup>
+        </Button>
+      }
     >
-      {children}
-    </Command.Item>
+      <CommandInput placeholder="Type a command or search…" />
+      <CommandList>
+        <CommandEmpty>No results found.</CommandEmpty>
+
+        <CommandGroup heading="Links">
+          {mainNav.map((item) => (
+            <CommandItem key={item.href} onSelect={() => run(() => router.push(item.href))}>
+              <Circle />
+              {item.title}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+
+        {docsNav.map((group) => (
+          <CommandGroup key={group.title} heading={group.title}>
+            {group.items.map((item) => (
+              <CommandItem key={item.href} onSelect={() => run(() => router.push(item.href))}>
+                <FileText />
+                {item.title}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        ))}
+
+        <CommandGroup heading="Theme">
+          <CommandItem onSelect={() => run(() => setTheme("light"))}>
+            <Sun /> Light
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => setTheme("dark"))}>
+            <Moon /> Dark
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => setTheme("system"))}>
+            <Laptop /> System
+          </CommandItem>
+        </CommandGroup>
+      </CommandList>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border px-3 py-2 text-body-sm text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <KbdGroup>
+            <Key>↑</Key>
+            <Key>↓</Key>
+          </KbdGroup>
+          to navigate
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Key>↵</Key>
+          to select
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Key>Esc</Key>
+          to close
+        </span>
+        <span className="ms-auto flex items-center gap-1.5">
+          <KbdGroup>
+            <Key>{mod}</Key>
+            <Key>K</Key>
+          </KbdGroup>
+          or
+          <Key>/</Key>
+        </span>
+      </div>
+    </CommandDialog>
   );
 }
