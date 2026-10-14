@@ -1,0 +1,49 @@
+{
+  "version": "0.25.0",
+  "summary": "KinetixUI 0.25.0 expands the React library with transactional and booking foundations, improves tabs, filters and overlay APIs, and includes accessibility and RTL fixes. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together on the 0.25.0 line; Angular remains Preview on its independent release line, and the IoT package releases independently.",
+  "breaking": [],
+  "changes": [
+    {
+      "kind": "new",
+      "area": "components",
+      "title": "Transactional foundations for business workflows",
+      "body": "React adds beta ResultState, ReferenceCode, PriceBreakdown and PassCard foundations for outcomes, references, totals and passes/tickets. They compose existing primitives, keep formatted values supplied by the application, and avoid inventing payment, barcode or document-generation behavior. Native platforms currently have composition guidance; Angular is planned."
+    },
+    {
+      "kind": "new",
+      "area": "components",
+      "title": "Money, status and booking fields",
+      "body": "React adds beta AmountDisplay, GuestPicker, CountrySelect, PhoneInput, DateRangeInput, TimeSlotPicker and AddressFields. Timeline gains optional per-item statuses, NumberInput gets localisable stepper labels and keeps bound steppers focusable with aria-disabled, and Calendar uses logical classes with mirrored navigation inside KinetixDirectionProvider. Native platforms currently have composition guidance; Angular is planned."
+    },
+    {
+      "kind": "accessibility",
+      "area": "components",
+      "title": "Calendar, DateRangeInput and TreeView say what they show",
+      "body": "Calendar day buttons now include the visible day number in their accessible name before the full date, so DateRangeInput inherits WCAG 2.5.3 Label in Name support. TreeItem now owns its child group as a sibling instead of including the whole subtree in its visible text; keyboard behavior is preserved and clicking a nested item no longer also selects its parent."
+    },
+    {
+      "kind": "improved",
+      "area": "components",
+      "title": "Tabs, filters and mode controls are easier to reuse",
+      "body": "Tabs use text-first line navigation with a base rail and active underline, SegmentedControl keeps its enclosed mode treatment and can reflow, and Toggle gains a pill variant plus a decorative leadingIcon slot for filter chips. Reduced-motion behavior is preserved."
+    },
+    {
+      "kind": "improved",
+      "area": "components",
+      "title": "Sheet and CommandDialog cover logical navigation and command-palette needs",
+      "body": "Sheet adds logical start/end sides, scrolling for tall side panels and closeLabel. CommandDialog adds a required title, optional description, a single-element trigger for focus return, commandProps for the inner Command and stable top anchoring while filtering; CommandProps is exported."
+    },
+    {
+      "kind": "improved",
+      "area": "release",
+      "title": "Core moves together on the 0.25.0 release line",
+      "body": "@kinetixui/ui carries the feature and accessibility changes. @kinetixui/tokens and @kinetixui/cli move with it because the three packages are one fixed Changesets cohort. Angular and IoT continue on their independent release lines."
+    }
+  ],
+  "limitations": [
+    "Angular remains Preview; this release does not graduate it.",
+    "The new business components are beta on React. Native platforms have composition guidance rather than ports for these additions, and Angular implementation is planned.",
+    "SwiftUI, Jetpack Compose and Flutter remain source-checkout distributions rather than packages published to their platform registries.",
+    "IoT remains a React-only module and is not a sixth core platform."
+  ]
+}
