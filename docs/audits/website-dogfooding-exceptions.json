@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "auditedBase": "acfe95af62befb4d11b3527a529bfd635c825fb8",
+  "auditedBase": "d155db19228d208cc73a00875c2c70edf863b4ea",
   "scope": "apps/web/src excluding tests; AST JSX sites (not rendered instances)",
   "policy": "Counts must match the source exactly: new patterns, new files or growth require component use or a reviewed entry; removed debt must be removed here too (the guard fails on stale approvals). Read-only <table> is semantic HTML (E) and needs no entry. B is migration debt, not a permanent exemption.",
   "entries": [
@@ -108,90 +108,6 @@
       "maxCount": 1,
       "classification": "D",
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Content",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Overlay",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Portal",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Root",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Title",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Trigger",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:cmdk:Command",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:cmdk:Command.Empty",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:cmdk:Command.Group",
-      "maxCount": 3,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:cmdk:Command.Input",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:cmdk:Command.Item",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/command-menu.tsx",
-      "pattern": "vendor:cmdk:Command.List",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
     },
     {
       "file": "apps/web/src/components/component-gallery.tsx",
@@ -402,48 +318,6 @@
       "maxCount": 2,
       "classification": "D",
       "reason": "Spatial selection is a website composition with coordinate positioning and selection announcements. Keep geometry and focus model local; compose a library button/asChild trigger without changing hit testing in a later wave."
-    },
-    {
-      "file": "apps/web/src/components/mobile-nav.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Close",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/mobile-nav.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Content",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/mobile-nav.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Portal",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/mobile-nav.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Root",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/mobile-nav.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Title",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
-    },
-    {
-      "file": "apps/web/src/components/mobile-nav.tsx",
-      "pattern": "vendor:@radix-ui/react-dialog:Dialog.Trigger",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Direct Radix/cmdk website primitive duplicates the existing KinetixUI Dialog/Sheet/Command abstraction. Migrate in Wave 2 with focus/portal/shortcut/route-close tests."
     },
     {
       "file": "apps/web/src/components/platform-ticker.tsx",
