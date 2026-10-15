@@ -371,8 +371,9 @@ try {
         const axe = await axeOn(page, '[aria-labelledby="bo-camera-list-title"]', `building ops ${tag}`);
         const ov = await overflow(page);
         assert(ov <= 0, `page overflows by ${ov}px`);
+        const cameras = await rows.count();
         await page.close();
-        return { cameras: await rows.count().catch(() => null), axe };
+        return { cameras, axe };
       });
 
     /* ── IoT checkboxes ── */
