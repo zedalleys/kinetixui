@@ -595,13 +595,14 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
       {activeChips.length > 0 && (
         <ul aria-label="Active filters" className="mt-3 flex flex-wrap gap-1.5">
           {activeChips.map((c) => (
-            <li key={c.key}>
-              {/* The whole chip is the remove button, as before: a Tag's separate dismiss icon is a far smaller target. */}
+            <li key={c.key} className="min-w-0 max-w-full">
+              {/* The whole chip is the remove button, as before: a Tag's separate dismiss icon is a far smaller target.
+                  It wraps inside the row at large text instead of pushing the page sideways. */}
               <Button
                 variant="Outline"
                 onClick={c.clear}
                 aria-label={`Remove filter ${c.group}: ${c.label}`}
-                className="h-auto max-w-full whitespace-normal text-start"
+                className="h-auto max-w-full flex-wrap justify-start whitespace-normal text-start"
               >
                 <span className="text-muted-foreground">{c.group}:</span> {c.label}
                 <X aria-hidden />
