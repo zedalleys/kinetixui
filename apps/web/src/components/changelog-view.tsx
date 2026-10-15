@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
+import { Button, Input, ToggleGroup, ToggleGroupItem } from "@kinetixui/ui";
+import { useDocumentDirection } from "@/lib/use-document-direction";
 import type { ChangeKind, ReleaseChange } from "@/lib/releases";
 import {
   FILTERS,
@@ -283,13 +285,9 @@ export function ReleaseList({
             {filter !== "all" && filterLabel ? <> in {filterLabel}</> : null}.
           </p>
           {onClear ? (
-            <button
-              type="button"
-              onClick={onClear}
-              className="mt-3 rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
+            <Button type="button" variant="Outline" size="md" onClick={onClear} className="mt-3 max-w-full whitespace-normal">
               Clear search and filters
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : null}
@@ -345,6 +343,7 @@ export function ChangelogView({ releases }: { releases: ViewRelease[] }) {
   const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const filterRef = React.useRef(filter);
   filterRef.current = filter;
+  const dir = useDocumentDirection();
 
   // URL → UI: Back/Forward, or arriving on a shared link, changes the search from outside
   React.useEffect(() => {
@@ -414,7 +413,7 @@ export function ChangelogView({ releases }: { releases: ViewRelease[] }) {
           <label htmlFor="changelog-search" className="mb-1.5 block font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">
             Search releases
           </label>
-          <input
+          <Input
             id="changelog-search"
             type="search"
             value={draft}
@@ -425,30 +424,40 @@ export function ChangelogView({ releases }: { releases: ViewRelease[] }) {
             placeholder="Version, component, keyword…"
             autoComplete="off"
             spellCheck={false}
-            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-action focus-visible:shadow-focus"
+            className="py-2"
           />
         </div>
 
-        <div role="group" aria-label="Filter releases" className="flex flex-wrap gap-2">
+        {/* A single-choice filter: the library ToggleGroup is a named radiogroup with one tab stop, arrow keys
+            between filters (mirrored under RTL) and Space or Enter to choose. A chosen filter cannot be un-chosen
+            into "no filter"; "All" is the way back. The check mark keeps selection from being colour alone. */}
+        <ToggleGroup
+          type="single"
+          variant="pill"
+          dir={dir}
+          aria-label="Filter releases"
+          value={filter}
+          onValueChange={(next) => {
+            if (next) selectFilter(next as FilterId);
+          }}
+          className="flex-wrap justify-start gap-2"
+        >
           {FILTERS.map((f) => {
             const active = filter === f.id;
             return (
-              <button
+              <ToggleGroupItem
                 key={f.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => selectFilter(f.id)}
-                className={`rounded-full border px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                  active ? "border-primary bg-primary font-medium text-primary-foreground" : "border-border text-foreground hover:bg-accent"
-                }`}
+                value={f.id}
+                // In a narrow column (200% text) the label and count wrap inside the pill instead of spilling out.
+                className="min-w-0 flex-wrap gap-x-1.5 gap-y-0 text-sm [overflow-wrap:anywhere]"
               >
-                {active ? <span aria-hidden>✓ </span> : null}
-                {f.label}{" "}
+                {active ? <span aria-hidden>✓</span> : null}
+                <span className="min-w-0">{f.label}</span>{" "}
                 <span className={active ? "opacity-80" : "text-muted-foreground"}>{filterReleases(releases, f.id, query).length}</span>
-              </button>
+              </ToggleGroupItem>
             );
           })}
-        </div>
+        </ToggleGroup>
 
         {/* announced politely after typing settles or a filter changes; empty when nothing is active */}
         <p role="status" aria-live="polite" aria-atomic="true" className="min-h-5 text-sm text-muted-foreground">

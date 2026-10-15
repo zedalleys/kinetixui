@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search, X } from "lucide-react";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@kinetixui/ui";
 import { cn } from "@/lib/utils";
 import { docsNav } from "@/lib/site";
 
@@ -24,33 +25,35 @@ export function DocsSidebar() {
   return (
     <aside className="hidden w-56 shrink-0 lg:block">
       <div className="sticky top-[5.5rem] -ml-2 flex h-[calc(100dvh-5.5rem)] flex-col py-10 pr-4">
-        <div className="relative mb-6 ml-2">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <input
+        {/* The library InputGroup: one field shell (edge, hover, focus and RTL-aware add-ons) around the input, its
+            search icon and the clear button. The clear button gets its own focus ring from InputGroupButton. */}
+        <InputGroup className="mb-6 ml-2 w-auto rounded-md bg-muted/40">
+          <InputGroupAddon className="ps-2.5">
+            <Search className="!size-3.5" aria-hidden />
+          </InputGroupAddon>
+          <InputGroupInput
             ref={inputRef}
-            type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Escape" && setQuery("")}
             placeholder="Filter…"
             aria-label="Filter documentation"
-            className="h-8 w-full rounded-md border border-input bg-muted/40 pl-8 pr-7 font-mono text-body-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-8 px-2 py-0 font-mono text-body-sm"
           />
           {query && (
-            <button
-              type="button"
+            <InputGroupButton
               // The button removes itself, so focus goes back to the field rather than falling to <body>.
               onClick={() => {
                 setQuery("");
                 inputRef.current?.focus();
               }}
               aria-label="Clear filter"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+              className="px-2 text-muted-foreground hover:text-foreground"
             >
-              <X className="size-3.5" />
-            </button>
+              <X className="!size-3.5" aria-hidden />
+            </InputGroupButton>
           )}
-        </div>
+        </InputGroup>
 
         {/* Sighted readers see the list shrink; this is the same news for a screen reader. */}
         <p role="status" className="sr-only">

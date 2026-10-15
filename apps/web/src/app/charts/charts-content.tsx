@@ -42,6 +42,7 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  Toggle,
   type ChartConfig,
 } from "@kinetixui/ui";
 import { Showcase } from "@/components/showcase";
@@ -1617,16 +1618,17 @@ function InteractiveLegendChart() {
   return (
     <Showcase
       title="Interactive legend"
-      description="Click a legend entry to mute or restore its series — state lives in the page, the legend is buttons."
+      description="Click a legend entry to mute or restore its series — state lives in the page, the legend is library Toggles (pressed = shown)."
       contentClassName="block p-4"
       code={`const [hidden, setHidden] = React.useState({})
 // …
 <div role="group" aria-label="Toggle series">
   {series.map((s) => (
-    <button key={s.key} type="button" aria-pressed={!hidden[s.key]}
-      onClick={() => setHidden((h) => ({ ...h, [s.key]: !h[s.key] }))}>
-      <span style={{ background: s.color }} /> {s.label}
-    </button>
+    <Toggle key={s.key} variant="outline" size="sm" pressed={!hidden[s.key]}
+      onPressedChange={(on) => setHidden((h) => ({ ...h, [s.key]: !on }))}
+      leadingIcon={<span style={{ background: s.color }} />}>
+      {s.label}
+    </Toggle>
   ))}
 </div>
 <BarChart data={months}>
@@ -1638,24 +1640,20 @@ function InteractiveLegendChart() {
           {series.map((s) => {
             const on = !hidden[s.key];
             return (
-              <button
+              <Toggle
                 key={s.key}
-                type="button"
-                aria-pressed={on}
-                onClick={() => setHidden((h) => ({ ...h, [s.key]: !h[s.key] }))}
+                variant="outline"
+                size="sm"
+                pressed={on}
+                onPressedChange={(next) => setHidden((h) => ({ ...h, [s.key]: !next }))}
+                leadingIcon={<span className="size-2 rounded-[2px]" style={{ background: s.color, opacity: on ? 1 : 0.3 }} />}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-label-md uppercase tracking-[0.1em] transition-colors",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  on ? "border-border text-foreground" : "border-border/50 text-muted-foreground line-through",
+                  "gap-1.5 rounded-full px-2.5 font-mono text-label-md uppercase tracking-[0.1em]",
+                  !on && "text-muted-foreground line-through",
                 )}
               >
-                <span
-                  aria-hidden
-                  className="size-2 rounded-[2px]"
-                  style={{ background: s.color, opacity: on ? 1 : 0.3 }}
-                />
                 {s.label}
-              </button>
+              </Toggle>
             );
           })}
         </div>

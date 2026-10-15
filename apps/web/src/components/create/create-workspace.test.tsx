@@ -208,7 +208,7 @@ describe("appearance", () => {
     render(<CreateWorkspace />);
 
     const light = varOf("--background");
-    await user.click(within(sidebar()).getByRole("button", { name: "Dark" }));
+    await user.click(within(sidebar()).getByRole("radio", { name: "Dark" }));
 
     expect(varOf("--background")).not.toBe(light);
     expect(previewRoot().className).toContain("dark");
@@ -221,7 +221,7 @@ describe("appearance", () => {
     render(<CreateWorkspace />);
 
     await user.click(within(sidebar()).getByRole("radio", { name: "Warm neutral" }));
-    await user.click(within(sidebar()).getByRole("button", { name: "Dark" }));
+    await user.click(within(sidebar()).getByRole("radio", { name: "Dark" }));
 
     expect(within(sidebar()).getByRole("radio", { name: "Warm neutral" })).toBeChecked();
     // The copied CSS carries both appearances regardless of which one is on screen.
@@ -358,7 +358,7 @@ describe("preview scenes", () => {
     render(<CreateWorkspace />);
 
     expect(within(previewRoot()).getByRole("table")).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Form" }));
+    await user.click(screen.getByRole("radio", { name: "Form" }));
 
     expect(within(previewRoot()).getByLabelText("Project name")).toBeTruthy();
     expect(within(sidebar()).getByRole("radio", { name: "Default style" })).toBeChecked();
@@ -376,7 +376,7 @@ describe("preview scenes", () => {
     expect(dash.getByRole("progressbar")).toBeTruthy();
     expect(dash.getByRole("img", { name: /data series/ })).toBeTruthy();
 
-    await user.click(screen.getByRole("button", { name: "Form" }));
+    await user.click(screen.getByRole("radio", { name: "Form" }));
     const form = within(previewRoot());
     expect(form.getByRole("checkbox")).toBeTruthy();
     expect(form.getByRole("switch")).toBeTruthy();
@@ -402,7 +402,7 @@ describe("reset", () => {
 
     await user.click(within(sidebar()).getByRole("radio", { name: "Warm neutral" }));
     await user.click(within(sidebar()).getByRole("radio", { name: "Sharp style" }));
-    await user.click(within(sidebar()).getByRole("button", { name: "Dark" }));
+    await user.click(within(sidebar()).getByRole("radio", { name: "Dark" }));
     await openAdvanced(user);
     const raw = within(sidebar()).getByLabelText("All overrides, as text");
     await user.click(raw);

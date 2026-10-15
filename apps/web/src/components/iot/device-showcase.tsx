@@ -10,7 +10,7 @@ import {
   SignalStrength,
 } from "@kinetixui/iot/react";
 import type { KinetixDeviceStatus, KinetixTelemetryQuality } from "@kinetixui/iot/functions";
-import { Label } from "@kinetixui/ui";
+import { Checkbox, Label } from "@kinetixui/ui";
 
 /**
  * The interactive half of /iot: the five shipped primitives, driven by a handful of controls.
@@ -163,15 +163,10 @@ export function DeviceShowcase() {
             onChange={(e) => setBattery(Number(e.target.value))}
             className={rangeClass}
           />
-          <label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-xs text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={!batteryReported}
-              onChange={(e) => setBatteryReported(!e.target.checked)}
-              className="size-4 accent-primary"
-            />
+          <Label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-xs font-normal leading-normal text-muted-foreground">
+            <Checkbox checked={!batteryReported} onCheckedChange={(checked) => setBatteryReported(checked !== true)} />
             Device reports no battery
-          </label>
+          </Label>
         </Control>
 
         <Control id="iot-demo-signal" label={signalReported ? `Signal — ${signal}` : "Signal — not reported"}>
@@ -186,15 +181,10 @@ export function DeviceShowcase() {
             onChange={(e) => setSignal(Number(e.target.value))}
             className={rangeClass}
           />
-          <label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-xs text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={!signalReported}
-              onChange={(e) => setSignalReported(!e.target.checked)}
-              className="size-4 accent-primary"
-            />
+          <Label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-xs font-normal leading-normal text-muted-foreground">
+            <Checkbox checked={!signalReported} onCheckedChange={(checked) => setSignalReported(checked !== true)} />
             Device reports no signal
-          </label>
+          </Label>
         </Control>
 
         <Control id="iot-demo-last-seen" label={`Last sync — ${step.label}`}>

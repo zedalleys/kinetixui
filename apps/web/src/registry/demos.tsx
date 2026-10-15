@@ -1351,9 +1351,9 @@ add(
       infoText="3 upcoming"
       onBack={() => {}}
       actions={
-        <button type="button" aria-label="Search" className="flex size-9 items-center justify-center rounded-full hover:bg-accent">
-          <Search className="size-5" />
-        </button>
+        <Button type="button" variant="Ghost" size="icon" aria-label="Search" className="size-9 rounded-full p-0">
+          <Search aria-hidden />
+        </Button>
       }
     />
   ),
@@ -1377,13 +1377,9 @@ add(
         <AppBarLink href="#">Team</AppBarLink>
       </AppBarNav>
       <AppBarActions>
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-        >
-          <Bell className="size-4" />
-        </button>
+        <Button type="button" variant="Ghost" size="icon" aria-label="Notifications" className="size-9 p-0 text-muted-foreground hover:text-foreground">
+          <Bell aria-hidden />
+        </Button>
         <span className="grid size-8 place-items-center rounded-full bg-muted text-xs font-medium">KZ</span>
       </AppBarActions>
     </AppBar>

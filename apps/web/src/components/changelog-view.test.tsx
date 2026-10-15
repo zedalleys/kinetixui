@@ -72,7 +72,7 @@ const releases: ViewRelease[] = [
 ];
 
 const sectionVersions = () => [...document.querySelectorAll("section[id]")].map((s) => s.id);
-const filterButton = (name: string) => screen.getByRole("button", { name: new RegExp(`^(✓ )?${name}`) });
+const filterButton = (name: string) => screen.getByRole("radio", { name: new RegExp(`^${name}`) });
 const searchBox = () => screen.getByRole("searchbox", { name: "Search releases" });
 
 beforeEach(() => {
@@ -190,7 +190,7 @@ describe("search", () => {
     await user.click(screen.getByRole("button", { name: "Clear search and filters" }));
     await waitFor(() => expect(sectionVersions()).toEqual(["0.18.0", "0.17.0", "0.16.1"]));
     expect(searchBox()).toHaveValue("");
-    expect(filterButton("All")).toHaveAttribute("aria-pressed", "true");
+    expect(filterButton("All")).toHaveAttribute("aria-checked", "true");
     expect(url()).toBe("/docs/changelog");
   });
 
@@ -237,16 +237,43 @@ describe("result feedback", () => {
 });
 
 describe("filter buttons", () => {
-  it("expose their state with aria-pressed and a non-colour marker", async () => {
+  it("expose their state with aria-checked and a non-colour marker", async () => {
     const user = userEvent.setup();
     open();
-    expect(filterButton("All")).toHaveAttribute("aria-pressed", "true");
-    expect(filterButton("CLI")).toHaveAttribute("aria-pressed", "false");
+    expect(filterButton("All")).toHaveAttribute("aria-checked", "true");
+    expect(filterButton("CLI")).toHaveAttribute("aria-checked", "false");
     await user.click(filterButton("CLI"));
-    await waitFor(() => expect(filterButton("CLI")).toHaveAttribute("aria-pressed", "true"));
-    expect(filterButton("All")).toHaveAttribute("aria-pressed", "false");
+    await waitFor(() => expect(filterButton("CLI")).toHaveAttribute("aria-checked", "true"));
+    expect(filterButton("All")).toHaveAttribute("aria-checked", "false");
     expect(filterButton("CLI")).toHaveTextContent("✓");
     expect(filterButton("All")).not.toHaveTextContent("✓");
+  });
+
+  it("are a named single-choice radiogroup: one tab stop, arrows move, Space chooses, Tab leaves", async () => {
+    const user = userEvent.setup();
+    open();
+    const group = screen.getByRole("radiogroup", { name: "Filter releases" });
+    searchBox().focus();
+    await user.tab();
+    expect(filterButton("All")).toHaveFocus();
+    await user.keyboard("{ArrowRight}");
+    const second = within(group).getAllByRole("radio")[1];
+    expect(second).toHaveFocus();
+    expect(filterButton("All")).toHaveAttribute("aria-checked", "true"); // moving focus does not filter
+    await user.keyboard(" ");
+    await waitFor(() => expect(second).toHaveAttribute("aria-checked", "true"));
+    await user.tab();
+    expect(group.contains(document.activeElement)).toBe(false);
+  });
+
+  it("cannot be un-chosen into an empty filter; All is the way back", async () => {
+    const user = userEvent.setup();
+    open();
+    await user.click(filterButton("CLI"));
+    await waitFor(() => expect(url()).toBe("/docs/changelog?filter=cli"));
+    await user.click(filterButton("CLI"));
+    expect(filterButton("CLI")).toHaveAttribute("aria-checked", "true");
+    expect(url()).toBe("/docs/changelog?filter=cli");
   });
 
   it("count releases for the current search", async () => {
@@ -262,7 +289,7 @@ describe("filter buttons", () => {
 describe("URL state", () => {
   it("loads the filter from ?filter=", () => {
     open("?filter=accessibility");
-    expect(filterButton("Accessibility")).toHaveAttribute("aria-pressed", "true");
+    expect(filterButton("Accessibility")).toHaveAttribute("aria-checked", "true");
     expect(sectionVersions()).toEqual(["0.18.0"]);
   });
 
@@ -277,7 +304,7 @@ describe("URL state", () => {
 
   it("loads both together", () => {
     open("?filter=components&q=grid");
-    expect(filterButton("Components")).toHaveAttribute("aria-pressed", "true");
+    expect(filterButton("Components")).toHaveAttribute("aria-checked", "true");
     expect(searchBox()).toHaveValue("grid");
     expect(sectionVersions()).toEqual(["0.18.0"]);
     expect(screen.getByRole("status")).toHaveTextContent("1 release matching “grid” in Components");
@@ -285,7 +312,7 @@ describe("URL state", () => {
 
   it("falls back to all for an invalid filter", () => {
     open("?filter=bogus");
-    expect(filterButton("All")).toHaveAttribute("aria-pressed", "true");
+    expect(filterButton("All")).toHaveAttribute("aria-checked", "true");
     expect(sectionVersions()).toEqual(["0.18.0", "0.17.0", "0.16.1"]);
   });
 
@@ -348,14 +375,14 @@ describe("URL state", () => {
     const user = userEvent.setup();
     open();
     await user.click(filterButton("CLI"));
-    await waitFor(() => expect(filterButton("CLI")).toHaveAttribute("aria-pressed", "true"));
+    await waitFor(() => expect(filterButton("CLI")).toHaveAttribute("aria-checked", "true"));
 
     window.history.back();
-    await waitFor(() => expect(filterButton("All")).toHaveAttribute("aria-pressed", "true"));
+    await waitFor(() => expect(filterButton("All")).toHaveAttribute("aria-checked", "true"));
     expect(sectionVersions()).toEqual(["0.18.0", "0.17.0", "0.16.1"]);
 
     window.history.forward();
-    await waitFor(() => expect(filterButton("CLI")).toHaveAttribute("aria-pressed", "true"));
+    await waitFor(() => expect(filterButton("CLI")).toHaveAttribute("aria-checked", "true"));
     expect(sectionVersions()).toEqual(["0.16.1"]);
   });
 
@@ -365,7 +392,7 @@ describe("URL state", () => {
     await user.click(filterButton("Components"));
     await waitFor(() => expect(url()).toBe("/docs/changelog?filter=components&q=cli"));
     window.history.back();
-    await waitFor(() => expect(filterButton("All")).toHaveAttribute("aria-pressed", "true"));
+    await waitFor(() => expect(filterButton("All")).toHaveAttribute("aria-checked", "true"));
     expect(searchBox()).toHaveValue("cli");
   });
 

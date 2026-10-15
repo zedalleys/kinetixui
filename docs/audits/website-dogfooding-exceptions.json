@@ -19,32 +19,11 @@
       "reason": "Native disclosure for planned capability rows on a server-rendered page (#377): opens without JavaScript and keeps rows in the document for search and Markdown copy. Same exception family as the other native disclosures."
     },
     {
-      "file": "apps/web/src/app/charts/charts-content.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
-    },
-    {
-      "file": "apps/web/src/app/docs/colors/colors-content.tsx",
-      "pattern": "button",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing equivalent: Button. Preserve names, handlers, URLs and analytics. Wave 2."
-    },
-    {
       "file": "apps/web/src/app/docs/colors/colors-content.tsx",
       "pattern": "button[type=button]",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
-    },
-    {
-      "file": "apps/web/src/components/building-ops/building-ops-demo.tsx",
-      "pattern": "button[type=button]",
       "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
+      "classification": "D",
+      "reason": "The library Card rendered as this button (`<Card asChild><button>`), the documented selectable/actionable card pattern: Card supplies hover, press, focus and the aria-pressed selected edge. The guard counts the native child of asChild; not debt. Wave 2c."
     },
     {
       "file": "apps/web/src/components/building-ops/building-ops-demo.tsx",
@@ -63,9 +42,9 @@
     {
       "file": "apps/web/src/components/building-ops/camera-panel.tsx",
       "pattern": "button[type=button]",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "The library Card rendered as this button (`<Card asChild><button>`), the documented selectable/actionable card pattern: Card supplies hover, press, focus and the aria-pressed selected edge. The guard counts the native child of asChild; not debt. Wave 2c."
     },
     {
       "file": "apps/web/src/components/building-ops/floor-plan.tsx",
@@ -83,24 +62,10 @@
     },
     {
       "file": "apps/web/src/components/changelog-view.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
-    },
-    {
-      "file": "apps/web/src/components/changelog-view.tsx",
       "pattern": "details",
       "maxCount": 1,
       "classification": "D",
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
-    },
-    {
-      "file": "apps/web/src/components/changelog-view.tsx",
-      "pattern": "input[type=search]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing equivalent: Input type=\"search\". Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/changelog-view.tsx",
@@ -110,32 +75,11 @@
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
     },
     {
-      "file": "apps/web/src/components/create/create-advanced.tsx",
-      "pattern": "input",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing equivalent: Input. Preserve names, handlers, URLs and analytics. Wave 2."
-    },
-    {
-      "file": "apps/web/src/components/create/create-color-picker.tsx",
-      "pattern": "input",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing equivalent: Input. Preserve names, handlers, URLs and analytics. Wave 2."
-    },
-    {
       "file": "apps/web/src/components/create/create-color-picker.tsx",
       "pattern": "input[type=range]",
       "maxCount": 1,
       "classification": "D",
       "reason": "Native color-channel range explicitly relies on OS touch/keyboard behavior and continuous draft updates; gradient track is color data. Retain pending a tested color-picker composition."
-    },
-    {
-      "file": "apps/web/src/components/create/create-sidebar.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/create/create-sidebar.tsx",
@@ -148,8 +92,8 @@
       "file": "apps/web/src/components/create/create-sidebar.tsx",
       "pattern": "input[type=radio]",
       "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing equivalent: RadioGroup/RadioGroupItem. Preserve names, handlers, URLs and analytics. Wave 2."
+      "classification": "C",
+      "reason": "Multi-line selectable option tile with a rendered sample (style, surface, radius, chart palette) inside a fieldset of native radios. RadioGroupItem is a bare radio circle and Card takes only links and buttons, so the library has no exclusive selectable-tile item; the same gap as the floor selector and date strip. Native radios keep the group semantics, arrow keys and form behaviour. Library variant first (Wave 3)."
     },
     {
       "file": "apps/web/src/components/create/create-sidebar.tsx",
@@ -159,46 +103,11 @@
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
     },
     {
-      "file": "apps/web/src/components/create/create-workspace.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
-    },
-    {
-      "file": "apps/web/src/components/docs-sidebar.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
-    },
-    {
-      "file": "apps/web/src/components/docs-sidebar.tsx",
-      "pattern": "input[type=text]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing equivalent: Input. Preserve names, handlers, URLs and analytics. Wave 2."
-    },
-    {
-      "file": "apps/web/src/components/hero-command.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
-    },
-    {
       "file": "apps/web/src/components/infographic/world-map.tsx",
       "pattern": "g[role=button]",
       "maxCount": 1,
       "classification": "D",
       "reason": "Interactive SVG map region (<g role=\"button\">): a <button> cannot live inside SVG. Keep the geometry, hit area and explicit focus/keyboard model local, as with the floor plan and system map."
-    },
-    {
-      "file": "apps/web/src/components/iot/device-showcase.tsx",
-      "pattern": "input[type=checkbox]",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Existing equivalent: Checkbox (with Label). Preserve names, handlers, URLs and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/iot/device-showcase.tsx",
@@ -236,13 +145,6 @@
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
     },
     {
-      "file": "apps/web/src/components/iot/lab/hero-command-strip.tsx",
-      "pattern": "input[type=checkbox]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Existing equivalent: Checkbox (with Label). Preserve names, handlers, URLs and analytics. Wave 2."
-    },
-    {
       "file": "apps/web/src/components/iot/lab/iot-hero-art.tsx",
       "pattern": "button[type=button]",
       "maxCount": 1,
@@ -262,13 +164,6 @@
       "maxCount": 1,
       "classification": "C",
       "reason": "Seven-day strip of multi-line date tiles with today/event cues, locale/UTC formatting and roving focus. Needs the same exclusive selectable-tile variant as the floor selector; ToggleGroup pill is single-line pill styling. Library variant first (Wave 3)."
-    },
-    {
-      "file": "apps/web/src/components/iot/showcase/pending-command.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Retry and Cancel/Dismiss for a pending device command (from #375) use a local SMALL_BUTTON recipe: compose Button size=\"sm\". Their names already contain the visible word (Retry …, Cancel the … request). Wave 2."
     },
     {
       "file": "apps/web/src/components/iot/showcase/primitives.tsx",
@@ -451,13 +346,6 @@
       "maxCount": 2,
       "classification": "B",
       "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
-    },
-    {
-      "file": "apps/web/src/registry/demos.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 2,
-      "classification": "B",
-      "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Wave 2."
     }
   ]
 }

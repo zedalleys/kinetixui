@@ -14,7 +14,7 @@ import * as React from "react";
 import Link from "next/link";
 import { AlertTriangle, Building2, Camera, CameraOff, FastForward, FlaskConical, Maximize2, Minimize2, Pause, Play, RotateCcw, Users } from "lucide-react";
 import { AlertList } from "@kinetixui/iot/react";
-import { Button, NativeSelect, NativeSelectOption, Switch, Label } from "@kinetixui/ui";
+import { Button, NativeSelect, NativeSelectOption, Switch, Label, Toggle } from "@kinetixui/ui";
 import {
   BUILDING,
   DEFAULT_SCENARIO,
@@ -529,14 +529,15 @@ function ZoneTable({
               return (
                 <tr key={zone.id} data-zone-row={zone.id} className={cn("border-b border-border/60 last:border-0", selected && "bg-accent")}>
                   <th scope="row" className="py-1.5 pe-3 text-start font-normal">
-                    <button
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => onSelect(selected ? null : zone.id)}
-                      className="rounded-md px-1 py-1 text-start text-label-lg font-medium text-foreground underline-offset-4 outline-none hover:underline focus-visible:shadow-focus"
+                    {/* The library Toggle: pressed selects the zone, pressing again clears the selection. */}
+                    <Toggle
+                      size="sm"
+                      pressed={selected}
+                      onPressedChange={(on) => onSelect(on ? zone.id : null)}
+                      className="h-auto min-h-8 justify-start px-1 py-1 text-start text-label-lg text-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:ring-2"
                     >
                       {zone.name}
-                    </button>
+                    </Toggle>
                   </th>
                   <td className="py-1.5 pe-3 text-end tabular-nums">
                     {z?.value === null || z === undefined ? (

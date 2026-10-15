@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { NavigationBar } from "@kinetixui/ui";
+import { Button, NavigationBar } from "@kinetixui/ui";
 import { Search } from "lucide-react";
 
 const Demo = () => (
@@ -12,9 +12,9 @@ const Demo = () => (
       infoText="3 upcoming"
       onBack={() => {}}
       actions={
-        <button type="button" aria-label="Search" className="flex size-9 items-center justify-center rounded-full hover:bg-accent">
-          <Search className="size-5" />
-        </button>
+        <Button type="button" variant="Ghost" size="icon" aria-label="Search" className="size-9 rounded-full p-0">
+          <Search aria-hidden />
+        </Button>
       }
     />
   );

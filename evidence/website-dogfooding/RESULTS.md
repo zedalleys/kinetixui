@@ -1,5 +1,47 @@
 # Website dogfooding — evidence
 
+## Wave 2c: site actions and fields (15 October 2026)
+
+Against main `4f465a43b947b4708f0a5860589853bbdeb38a9a` (#382 merged). Production build: static Next.js 15.5.27, Chromium through Playwright. Details in `docs/audits/WEBSITE-DOGFOODING-AUDIT.md`, "Wave 2c".
+
+| Check | Result / scope |
+|---|---|
+| `pnpm lint` / `pnpm typecheck` | PASS, 3 / 9 workspace tasks (2 existing warnings in `marketing-claims.test.ts`, untouched) |
+| `@kinetixui/web` tests | PASS, 104 files / 2,176 tests. New `website-wave2c.test.tsx` (14) and `docs-sidebar.test.tsx` (4); changelog filters now asserted as a radiogroup (+2 keyboard cases); create tests moved to radio roles |
+| `pnpm check:web-dogfooding` | PASS. A 1,273 · B 32 · C 5 · D 33 · E 9; B/C debt in 12 files. 23 approvals deleted, 2 shrunk to D (`Card asChild`), 1 reclassified C |
+| Guard negative controls (live, then restored) | FAIL (exit 1) as intended on each: a raw button back in `changelog-view`, a raw input back in `docs-sidebar`, a second raw button in `camera-panel` (over its D `maxCount` of 1). Clean again after restoring |
+| Generated output | `check:stories` (NavigationBar and AppBar stories regenerated from the demos), `check:verification`, `check:manifest`, `check:keyboard`, `check:usage`, `check:blocks`, `check:block-source`, `check:rtl`, `check:typography`, `check:type-scale`, `check:grid`, `check:iot-examples`, `check:flagship-examples`, `check:a11y-coverage`, `check:capabilities`, `check:icons`, `check:contrast`, `check:component-colors`, `check:token-contract`: PASS |
+| `scripts/web-dogfooding-wave2c.mjs` | PASS, 16 views (`wave2c-browser.json`): 390/1280px × LTR/RTL × light/dark × 100/200% text, reduced motion (the hero pause with motion allowed, since reduced motion hides it). Real keyboard and pointer on: changelog filters (radiogroup `dir`, Tab in, arrows, Space, no un-choose, search Enter, empty-state clear), docs filter (clear by Tab with a ring, refocus, Escape, icon at the start edge in RTL), create (appearance arrows + Space, scene, all-pairs disclosure, invalid hex; sidebar in the sheet below `lg-rem`, including 1280px at 200%), chart series toggles (line-through when off, Space/Enter), colors (format radios, Copy ramp, swatch Card: hover lift, focus ring), building ops (zone toggle by pointer and Space, clear zone, camera Card selected edge and focus ring), IoT checkboxes (label press, Space, range disabling), registry icon buttons (36px), hero pause. **axe on every control region: 0 findings. No page overflow** |
+| `check:a11y-site` | PASS. 576 views, no axe findings, no horizontal overflow |
+| `check:web-quality` | PASS. Type floor, contrast, hit targets; 109 + 109 thumbnails; layout 220 views, 0 overflowing |
+| `check:tabs-dogfood`, `check:home-systems`, `check:iot-state-spatial`, Wave 2a browser check | PASS (8 cases; home systems; 67 checks; 33 views) |
+| Wave 2b browser check | 15/16 views passed in the full run; `390px rtl dark 100%` timed out waiting for the lazy device-dashboard preview to mount (a component this wave does not touch) and passed on both reruns of that view |
+
+**Found and fixed during the browser pass.** At 1280px with 200% text the docs layout leaves the changelog article 128px wide (a pre-existing layout condition; 704px at 100%). The pill toggles kept label and count on one line and overflowed the pill; they now wrap inside it. The harness also applies direction and theme by init script, before hydration: applied after load, they raced hydration (next-themes could drop the `dark` class, and a Radix root could be read before it re-rendered with the page's direction); each view now asserts both held.
+
+### Bundle (`bundle-wave2c.json`)
+
+First-load JS per route on main `4f465a4` and this branch, same lockfile: the distinct chunks of the root layout, nested layouts and the page, each gzipped on its own and summed.
+
+| Route | Chunks | Raw JS delta | Sum of per-chunk gzip delta |
+|---|---|---:|---:|
+| `/` | 15 → 14 | −149 B | −50 B |
+| `/iot` | 16 → 15 | −53 B | −9 B |
+| `/charts` | 20 → 19 | −128 B | −74 B |
+| `/create` | 16 → 15 | −453 B | +82 B |
+| `/demos/building-operations` | 16 → 15 | −282 B | −27 B |
+| `/docs/changelog` | 16 → 15 | −363 B | +41 B |
+| `/docs/colors` | 17 → 16 | −8,906 B | −2,267 B |
+| `/docs/components/navigation-bar`, `/app-bar` | 21 → 20 | −279 B | −117 B |
+
+Flat: the controls moved onto components the shared `@kinetixui/ui` chunk already ships. Summed per manifest entry instead, the changelog and colors pages look ~320 KB gzip heavier, because their page entries now list that shared chunk, which the root layout already loads; the union above is what a browser downloads.
+
+### Not covered
+
+No manual screen-reader pass. Touch is exercised as pointer presses. The pending-command Retry/Cancel need a failed device request to appear and are proven in jsdom only.
+
+---
+
 ## Wave 2a: command menu and mobile menu (14 October 2026)
 
 Against main `d155db19228d208cc73a00875c2c70edf863b4ea` (#379 merged). Production build: static Next.js 15.5.27, Chromium 141 through Playwright 1.64.0. Details in `docs/audits/WEBSITE-DOGFOODING-AUDIT.md`, "Wave 2a".

@@ -3,6 +3,8 @@
 import * as React from "react";
 import {
   Button,
+  SegmentedControl,
+  SegmentedControlItem,
   Sheet,
   SheetContent,
   SheetDescription,
@@ -11,7 +13,6 @@ import {
   SheetTrigger,
 } from "@kinetixui/ui";
 import { AlertTriangle, SlidersHorizontal } from "lucide-react";
-import { cn } from "@/lib/utils";
 import {
   DEFAULT_CREATE_CONFIG,
   PREVIEW_SCENES,
@@ -19,7 +20,9 @@ import {
   createReducer,
   isDefaultConfig,
   type CreateConfig,
+  type PreviewScene,
 } from "@/lib/create/config";
+import { useDocumentDirection } from "@/lib/use-document-direction";
 import { resolveTheme } from "@/lib/create/theme-adapter";
 import { PRESET_PARAM, decodeIntoConfig, encodeConfig, randomizeConfig, type PresetError } from "@/lib/create/preset";
 import { analytics } from "@/lib/analytics";
@@ -76,6 +79,7 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
     initialConfig ?? fromUrl.config ?? DEFAULT_CREATE_CONFIG,
   );
   const [sheetOpen, setSheetOpen] = React.useState(false);
+  const dir = useDocumentDirection();
   const [dragging, setDragging] = React.useState(false);
 
   // Reported once, on the load that carried a preset — not on every render, and never with the payload.
@@ -210,24 +214,21 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
                 </h2>
               </div>
 
-              <div role="group" aria-label="Preview scene" className="flex flex-wrap gap-1">
+              {/* One scene at a time: the library SegmentedControl, a radiogroup with one tab stop. */}
+              <SegmentedControl
+                aria-label="Preview scene"
+                dir={dir}
+                value={config.previewScene}
+                onValueChange={(scene) => {
+                  if (scene) dispatch({ type: "set-scene", scene: scene as PreviewScene });
+                }}
+              >
                 {PREVIEW_SCENES.map((scene) => (
-                  <button
-                    key={scene}
-                    type="button"
-                    aria-pressed={config.previewScene === scene}
-                    onClick={() => dispatch({ type: "set-scene", scene })}
-                    className={cn(
-                      "rounded-md border px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      config.previewScene === scene
-                        ? "border-primary bg-accent font-medium text-accent-foreground"
-                        : "border-transparent text-muted-foreground hover:text-foreground",
-                    )}
-                  >
+                  <SegmentedControlItem key={scene} value={scene} className="text-sm">
                     {SCENE_LABELS[scene]}
-                  </button>
+                  </SegmentedControlItem>
                 ))}
-              </div>
+              </SegmentedControl>
             </div>
 
             <div className="mt-4 overflow-hidden rounded-xl border border-border shadow-sm">
