@@ -70,6 +70,7 @@ export function AlertInboxExample() {
                       type="button"
                       variant="Outline"
                       size="lg"
+                      className="max-w-full whitespace-normal"
                       onClick={() => setAcknowledged((prev) => ({ ...prev, [alert.id]: DEMO_NOW }))}
                     >
                       {/* Named, not an icon: "Acknowledge" beside a device name is what a screen

@@ -136,8 +136,8 @@ export function StateHonestyExample() {
             <Button
               type="button"
               variant="Outline"
-              size="lg"
-              className="max-w-full whitespace-normal"
+              size="md"
+              className="max-w-full whitespace-normal px-3"
               disabled={pumpGone || pumpBusy}
               onClick={() => {
                 pump.send(pump.confirmed === "on" ? "off" : "on");
@@ -146,7 +146,7 @@ export function StateHonestyExample() {
             >
               Request a change, then lose the pump
             </Button>
-            <Button type="button" variant="Outline" size="lg" disabled={!pumpGone} onClick={() => iot.setReachable("pump-01", true)}>
+            <Button type="button" variant="Outline" size="md" className="max-w-full whitespace-normal px-3" disabled={!pumpGone} onClick={() => iot.setReachable("pump-01", true)}>
               Pump answers again
             </Button>
           </div>

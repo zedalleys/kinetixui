@@ -266,7 +266,7 @@ export function PairingFlowExample() {
                 <Label
                   key={device.id}
                   htmlFor={`found-${device.id}`}
-                  className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl bg-muted/60 px-4 py-2 text-body-md font-normal leading-normal text-foreground has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:ring-2 has-[[data-state=checked]]:ring-primary"
+                  className="flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-xl bg-muted/60 px-4 py-2 text-body-md font-normal leading-normal text-foreground has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:ring-2 has-[[data-state=checked]]:ring-primary"
                 >
                   <RadioGroupItem id={`found-${device.id}`} value={device.id} />
                   <span className="min-w-0 break-words">
@@ -380,10 +380,10 @@ export function PairingFlowExample() {
 
       {started && flow.status !== "complete" && flow.status !== "cancelled" ? (
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="Outline" size="lg" disabled={!backAllowed} onClick={() => send({ type: "back" })}>
+          <Button type="button" variant="Outline" size="lg" className="max-w-full whitespace-normal" disabled={!backAllowed} onClick={() => send({ type: "back" })}>
             Back
           </Button>
-          <Button type="button" variant="Outline" size="lg" disabled={!cancelAllowed} onClick={() => send({ type: "cancel" })}>
+          <Button type="button" variant="Outline" size="lg" className="max-w-full whitespace-normal" disabled={!cancelAllowed} onClick={() => send({ type: "cancel" })}>
             Cancel setup
           </Button>
         </div>

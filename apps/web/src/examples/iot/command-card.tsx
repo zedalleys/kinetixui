@@ -81,7 +81,7 @@ export function NextAction({
           aria-label={`${verbs[value]} ${binding.device.name}`}
           disabled={!binding.control.interactive}
           onClick={() => binding.send(value)}
-          className="min-h-11 min-w-32 flex-1 rounded-xl px-5 py-0 font-semibold sm:flex-none"
+          className="min-h-11 min-w-32 max-w-full flex-1 whitespace-normal rounded-xl px-5 py-2 font-semibold sm:flex-none"
         >
           {labels?.[value] ?? verbs[value]}
         </Button>

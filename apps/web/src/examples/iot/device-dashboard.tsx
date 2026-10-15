@@ -142,7 +142,13 @@ export function DeviceDashboardExample() {
                 className={isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}
                 action={
                   // A library Toggle: pressed says which device the panel shows. Pressing the shown device again keeps it.
-                  <Toggle variant="pill" pressed={isSelected} onPressedChange={() => setSelectedId(device.id)} className="min-h-11 px-4 text-body-md md:min-h-9">
+                  // Start-aligned: centred, the visually hidden name is laid out beside the word and widens the page.
+                  <Toggle
+                    variant="pill"
+                    pressed={isSelected}
+                    onPressedChange={() => setSelectedId(device.id)}
+                    className="min-h-11 max-w-full justify-start px-4 text-body-md md:min-h-9"
+                  >
                     <span className="sr-only">Show details for {device.name}. </span>
                     Details
                   </Toggle>
@@ -217,7 +223,7 @@ export function DeviceDashboardExample() {
               <span className="text-title-md text-foreground">Simulate a state</span>
               <div className="flex flex-wrap gap-1.5">
                 {(["online", "syncing", "stale", "offline", "error"] as const).map((status) => (
-                  <Button key={status} type="button" variant="Outline" size="lg" onClick={() => setOverrides((prev) => ({ ...prev, [selected.id]: status }))}>
+                  <Button key={status} type="button" variant="Outline" size="lg" className="max-w-full whitespace-normal px-4" onClick={() => setOverrides((prev) => ({ ...prev, [selected.id]: status }))}>
                     {describeDeviceStatus(status)}
                   </Button>
                 ))}

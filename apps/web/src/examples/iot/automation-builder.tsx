@@ -47,10 +47,10 @@ export function AutomationBuilderExample() {
       <div className="flex flex-col gap-4">
         <p className="text-body-md text-muted-foreground">Edited as data. Nothing evaluates the rule and nothing is sent.</p>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="Outline" size="lg" onClick={() => setDraft(BLANK)}>
+          <Button type="button" variant="Outline" size="lg" className="max-w-full whitespace-normal" onClick={() => setDraft(BLANK)}>
             Start from a blank rule
           </Button>
-          <Button type="button" variant="Outline" size="lg" onClick={() => setDraft(agritechRule)}>
+          <Button type="button" variant="Outline" size="lg" className="max-w-full whitespace-normal" onClick={() => setDraft(agritechRule)}>
             Reset to the Zone 3 rule
           </Button>
         </div>
