@@ -29,6 +29,22 @@ const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_C
 const rows = [];
 const failures = [];
 
+/**
+ * A browser context for one view. Direction and theme are applied by an init script, before any page script runs,
+ * so hydration starts from them — as in an application that renders `<html dir="rtl">` — rather than racing it: set
+ * after load, next-themes could drop the `dark` class and a Radix root could be read before it re-rendered.
+ */
+async function newView(view, reducedMotion = "reduce") {
+  const context = await browser.newContext({ viewport: { width: view.width, height: 900 }, reducedMotion, colorScheme: view.theme });
+  await context.addInitScript(({ dir, theme }) => {
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {}
+    document.documentElement.setAttribute("dir", dir);
+  }, view);
+  return context;
+}
+
 async function open(context, path, { dir, theme, textScale }) {
   const page = await context.newPage();
   page.setDefaultTimeout(20000);
@@ -49,6 +65,8 @@ async function open(context, path, { dir, theme, textScale }) {
   );
   await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
   await page.waitForTimeout(300);
+  const applied = await page.evaluate(() => [document.documentElement.getAttribute("dir"), document.documentElement.classList.contains("dark")]);
+  assert.deepEqual(applied, [dir, theme === "dark"], `the view did not hold: ${JSON.stringify(applied)}`);
   return page;
 }
 
@@ -115,7 +133,7 @@ try {
   for (const view of MATRIX) {
     const { width, dir, theme, textScale } = view;
     const tag = `${width}px ${dir} ${theme} ${textScale * 100}%`;
-    const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
+    const context = await newView(view);
     const row = { ...view };
 
     /* ── changelog ── */
@@ -413,7 +431,7 @@ try {
 
     /* ── hero pause: reduced motion hides the control by design, so it is checked with motion allowed ── */
     if (only("hero")) {
-      const motion = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: "no-preference" });
+      const motion = await newView(view, "no-preference");
       await check("heroPause", tag, row, async () => {
         const page = await open(motion, "/", view);
         const pause = page.locator("[data-hero-command-pause]");
