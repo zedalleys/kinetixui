@@ -176,6 +176,8 @@ Both were direct `@radix-ui/react-dialog` (and, for the command menu, direct `cm
 
 **Visible changes, on purpose:** the changelog search, the hex fields and the docs filter take the library field edge and focus ring; the camera rows and swatches are Cards (edge, depth, hover lift); the series legend is outline toggles with an accent fill when shown; "Show all pairs" and the Retry/Cancel buttons take library button styling. Sizes were kept where layout depended on them: the hero pause stays 28px in a 28px toolbar, the registry icon buttons stay 36px, the pending-command buttons keep 44/36px.
 
+**Found in the browser pass.** At 1280px with 200% text the docs layout leaves the changelog article 128px wide (pre-existing; recorded, not changed here). The filter pills kept label and count on one line and overflowed; they now wrap inside the pill. Bundle: first-load JS is flat on every touched route (−2.3 KB gzip on `/docs/colors`, within ±120 B elsewhere); see RESULTS.md.
+
 ## Guard
 
 `pnpm check:web-dogfooding` runs its unit tests, then scans the site; CI runs it before lint. The ledger (`website-dogfooding-exceptions.json`) must match the source **exactly**:

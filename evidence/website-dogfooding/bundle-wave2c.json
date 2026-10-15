@@ -1,0 +1,158 @@
+{
+  "method": "First-load JS per route: the distinct JS chunks of the root layout, any nested layouts and the page (app-build-manifest), each gzipped (level 9) and summed; main 4f465a4 vs this branch, same lockfile. A per-entry sum is misleading here: a page entry can newly list the shared @kinetixui/ui chunk that its layout already loads.",
+  "routes": {
+    "/": {
+      "main": {
+        "files": 15,
+        "bytes": 1603235,
+        "gzipBytes": 472152
+      },
+      "branch": {
+        "files": 14,
+        "bytes": 1603086,
+        "gzipBytes": 472102
+      },
+      "delta": {
+        "files": -1,
+        "bytes": -149,
+        "gzipBytes": -50
+      }
+    },
+    "/iot": {
+      "main": {
+        "files": 16,
+        "bytes": 1858952,
+        "gzipBytes": 535210
+      },
+      "branch": {
+        "files": 15,
+        "bytes": 1858899,
+        "gzipBytes": 535201
+      },
+      "delta": {
+        "files": -1,
+        "bytes": -53,
+        "gzipBytes": -9
+      }
+    },
+    "/charts": {
+      "main": {
+        "files": 20,
+        "bytes": 1970409,
+        "gzipBytes": 562202
+      },
+      "branch": {
+        "files": 19,
+        "bytes": 1970281,
+        "gzipBytes": 562128
+      },
+      "delta": {
+        "files": -1,
+        "bytes": -128,
+        "gzipBytes": -74
+      }
+    },
+    "/create": {
+      "main": {
+        "files": 16,
+        "bytes": 1655230,
+        "gzipBytes": 486444
+      },
+      "branch": {
+        "files": 15,
+        "bytes": 1654777,
+        "gzipBytes": 486526
+      },
+      "delta": {
+        "files": -1,
+        "bytes": -453,
+        "gzipBytes": 82
+      }
+    },
+    "/demos/building-operations": {
+      "main": {
+        "files": 16,
+        "bytes": 1883283,
+        "gzipBytes": 542089
+      },
+      "branch": {
+        "files": 15,
+        "bytes": 1883001,
+        "gzipBytes": 542062
+      },
+      "delta": {
+        "files": -1,
+        "bytes": -282,
+        "gzipBytes": -27
+      }
+    },
+    "/docs/changelog": {
+      "main": {
+        "files": 16,
+        "bytes": 1599274,
+        "gzipBytes": 470224
+      },
+      "branch": {
+        "files": 15,
+        "bytes": 1598911,
+        "gzipBytes": 470265
+      },
+      "delta": {
+        "files": -1,
+        "bytes": -363,
+        "gzipBytes": 41
+      }
+    },
+    "/docs/colors": {
+      "main": {
+        "files": 17,
+        "bytes": 1637107,
+        "gzipBytes": 483128
+      },
+      "branch": {
+        "files": 16,
+        "bytes": 1628201,
+        "gzipBytes": 480861
+      },
+      "delta": {
+        "files": -1,
+        "bytes": -8906,
+        "gzipBytes": -2267
+      }
+    },
+    "/docs/components/navigation-bar": {
+      "main": {
+        "files": 21,
+        "bytes": 1959508,
+        "gzipBytes": 562255
+      },
+      "branch": {
+        "files": 20,
+        "bytes": 1959229,
+        "gzipBytes": 562138
+      },
+      "delta": {
+        "files": -1,
+        "bytes": -279,
+        "gzipBytes": -117
+      }
+    },
+    "/docs/components/app-bar": {
+      "main": {
+        "files": 21,
+        "bytes": 1959508,
+        "gzipBytes": 562255
+      },
+      "branch": {
+        "files": 20,
+        "bytes": 1959229,
+        "gzipBytes": 562138
+      },
+      "delta": {
+        "files": -1,
+        "bytes": -279,
+        "gzipBytes": -117
+      }
+    }
+  }
+}
