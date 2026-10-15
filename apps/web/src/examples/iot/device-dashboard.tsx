@@ -143,11 +143,12 @@ export function DeviceDashboardExample() {
                 action={
                   // A library Toggle: pressed says which device the panel shows. Pressing the shown device again keeps it.
                   // Start-aligned: centred, the visually hidden name is laid out beside the word and widens the page.
+                  // px-3.5 plus the pill's 1px border is the old button's 16px, so the card keeps its width.
                   <Toggle
                     variant="pill"
                     pressed={isSelected}
                     onPressedChange={() => setSelectedId(device.id)}
-                    className="min-h-11 max-w-full justify-start px-4 text-body-md md:min-h-9"
+                    className="min-h-11 max-w-full justify-start px-3.5 text-body-md md:min-h-9"
                   >
                     <span className="sr-only">Show details for {device.name}. </span>
                     Details
