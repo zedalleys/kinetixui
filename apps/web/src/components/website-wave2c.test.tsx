@@ -41,7 +41,8 @@ describe("charts: series legend is library Toggles", () => {
   });
 });
 
-describe("colors: value format, copy ramp and swatch cards", () => {
+// Rendering the whole colors page (8 ramps of swatches) in jsdom takes ~2s alone and passed 5s under a loaded full run.
+describe("colors: value format, copy ramp and swatch cards", { timeout: 20_000 }, () => {
   /** A swatch button, found by the visible text its name is built from ("Copy azure 50 AA …"). */
   const swatch = (ramp: string, step: string) =>
     screen.getAllByRole("button").find((b) => new RegExp(`^Copy ${ramp} ${step}(?!\\d)`).test(b.textContent ?? ""))!;

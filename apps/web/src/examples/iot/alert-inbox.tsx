@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { AlertCard } from "@kinetixui/iot/react";
+import { Button, Checkbox, Label } from "@kinetixui/ui";
 import { activeAlerts, highestAlertSeverity } from "@kinetixui/iot/functions";
 import { DEMO_ALERTS, DEMO_NOW, deviceById } from "./demo-fleet";
 
@@ -45,10 +46,10 @@ export function AlertInboxExample() {
           </p>
           {loudest ? <p className="text-body-md text-muted-foreground">Loudest is {loudest}</p> : null}
         </div>
-        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-full bg-muted/60 px-4 text-body-md text-foreground md:min-h-9">
-          <input type="checkbox" checked={showAcknowledged} onChange={(event) => setShowAcknowledged(event.target.checked)} className="size-5 rounded border-input" />
+        <Label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-full bg-muted/60 px-4 text-body-md font-normal leading-normal text-foreground md:min-h-9">
+          <Checkbox checked={showAcknowledged} onCheckedChange={(checked) => setShowAcknowledged(checked === true)} />
           Show acknowledged
-        </label>
+        </Label>
       </header>
 
       {visible.length === 0 ? (
@@ -65,16 +66,17 @@ export function AlertInboxExample() {
                 onAcknowledge={wide ? undefined : (target) => setAcknowledged((prev) => ({ ...prev, [target.id]: DEMO_NOW }))}
                 action={
                   alert.acknowledgedAt || !wide ? null : (
-                    <button
+                    <Button
                       type="button"
+                      variant="Outline"
+                      size="lg"
                       onClick={() => setAcknowledged((prev) => ({ ...prev, [alert.id]: DEMO_NOW }))}
-                      className="inline-flex min-h-11 items-center rounded-full bg-muted px-4 text-body-md text-foreground hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:min-h-9"
                     >
                       {/* Named, not an icon: "Acknowledge" beside a device name is what a screen
                           reader announces, and a bare tick is not. */}
                       <span className="sr-only">Acknowledge alert: {alert.message}. </span>
                       Acknowledge
-                    </button>
+                    </Button>
                   )
                 }
               />

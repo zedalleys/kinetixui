@@ -7,7 +7,8 @@ import { isLifecyclePending } from "@kinetixui/iot/functions";
 import { useIotSimulation } from "@/lib/iot-sim/use-simulation";
 import { agritech } from "./scenarios";
 import { StateBadge, StateGlyph, type ShowcaseState } from "@/components/iot/showcase";
-import { BUTTON, SimNotice, SimTransport, controlOf, type ControlBinding } from "./harness";
+import { Button } from "@kinetixui/ui";
+import { SimNotice, SimTransport, controlOf, type ControlBinding } from "./harness";
 import { cn } from "@/lib/utils";
 
 // kx-iot:start
@@ -132,9 +133,11 @@ export function StateHonestyExample() {
             onToggle={pump.send}
           />
           <div className="flex flex-wrap gap-2">
-            <button
+            <Button
               type="button"
-              className={BUTTON}
+              variant="Outline"
+              size="lg"
+              className="max-w-full whitespace-normal"
               disabled={pumpGone || pumpBusy}
               onClick={() => {
                 pump.send(pump.confirmed === "on" ? "off" : "on");
@@ -142,10 +145,10 @@ export function StateHonestyExample() {
               }}
             >
               Request a change, then lose the pump
-            </button>
-            <button type="button" className={BUTTON} disabled={!pumpGone} onClick={() => iot.setReachable("pump-01", true)}>
+            </Button>
+            <Button type="button" variant="Outline" size="lg" disabled={!pumpGone} onClick={() => iot.setReachable("pump-01", true)}>
               Pump answers again
-            </button>
+            </Button>
           </div>
         </Panel>
       </div>

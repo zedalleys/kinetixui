@@ -16,9 +16,9 @@ import {
   type KinetixPairingRecoveryKind,
   type KinetixPairingStage,
 } from "@kinetixui/iot/functions";
+import { Button, Input, Label, NativeSelect, NativeSelectOption, RadioGroup, RadioGroupItem } from "@kinetixui/ui";
 import { pairingDevices, pairingFailureScenarios, pairingHappyPath } from "./scenarios";
-import { BUTTON, SimNotice, useReducedMotion } from "./harness";
-import { cn } from "@/lib/utils";
+import { SimNotice, useReducedMotion } from "./harness";
 
 // kx-iot:start
 /**
@@ -38,10 +38,12 @@ import { cn } from "@/lib/utils";
 const UI_STEPS = ["Choose a method", "Searching", "Device found", "Identify", "Verify it is yours", "Configure", "Choose a place", "Check it works", "Done"] as const;
 const PLACES = ["Living room", "Hallway", "Kitchen", "Office", "Bedroom", "Zone 2", "Zone 3", "Utility yard"];
 const DEMO_CODE = "KX2468";
-/** The step's one primary action, a filled pill; everything else is quiet. */
-const ACTION =
-  "inline-flex min-h-11 items-center justify-center self-start rounded-full bg-primary px-6 text-body-md font-medium text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none";
-const QUIET = cn(BUTTON, "min-h-11 rounded-full bg-card px-5 text-body-md shadow-sm");
+/**
+ * Each step has one primary action, a library `Button` (Primary, `lg`); Back and Cancel are quiet Outline buttons.
+ * Every button that is not a form's submit says `type="button"`: the library `Button` sets no default type, so
+ * inside a form an unmarked one would submit it.
+ */
+const ACTION = "self-start max-w-full whitespace-normal";
 /** Stages that begin with a simulated wait; the others begin by asking the person for something. */
 const STARTS_WORKING: readonly KinetixPairingStage[] = ["discover", "identify", "verify"];
 const durationOf = (stage: KinetixPairingStage) => pairingHappyPath.find((step) => step.stage === stage)?.durationMs ?? 1000;
@@ -179,23 +181,30 @@ export function PairingFlowExample() {
     <section aria-label="Pairing flow" className="flex max-w-3xl flex-col gap-4 sm:gap-6">
       <SimNotice text="Simulated — no Bluetooth, Wi-Fi or network scanning happens. Devices, codes and delays are scripted fixtures in your browser." />
 
-      <label className="flex flex-col gap-1 text-body-md text-foreground">
-        Simulate a failure
-        <select
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="pairing-scenario" className="text-body-md font-normal text-foreground">
+          Simulate a failure
+        </Label>
+        <NativeSelect
+          id="pairing-scenario"
           value={scenarioId}
           disabled={started && flow.status !== "cancelled"}
           onChange={(event) => pickScenario(event.target.value)}
-          className="min-h-11 rounded-md border border-input bg-background px-2 text-label-md text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+          aria-describedby={scenario ? "pairing-scenario-outcome" : undefined}
         >
-          <option value="none">None: pair successfully</option>
+          <NativeSelectOption value="none">None: pair successfully</NativeSelectOption>
           {pairingFailureScenarios.map((s) => (
-            <option key={s.id} value={s.id}>
+            <NativeSelectOption key={s.id} value={s.id}>
               {s.title} ({describePairingMethod(s.method)}, {s.code})
-            </option>
+            </NativeSelectOption>
           ))}
-        </select>
-        {scenario ? <span className="text-body-sm text-muted-foreground">{scenario.recoveryOutcome}</span> : null}
-      </label>
+        </NativeSelect>
+        {scenario ? (
+          <span id="pairing-scenario-outcome" className="text-body-sm text-muted-foreground">
+            {scenario.recoveryOutcome}
+          </span>
+        ) : null}
+      </div>
 
       <PairingStepper flow={flow} horizontal />
 
@@ -211,9 +220,9 @@ export function PairingFlowExample() {
         {flow.status === "cancelled" ? (
           <>
             <p className="text-body-md text-muted-foreground">Nothing was set up, and nothing was stored.</p>
-            <button type="button" className={ACTION} onClick={startOver}>
+            <Button type="button" size="lg" className={ACTION} onClick={startOver}>
               Start again
-            </button>
+            </Button>
           </>
         ) : null}
 
@@ -227,9 +236,9 @@ export function PairingFlowExample() {
                 if (scenario && scenario.method !== next) setScenarioId("none");
               }}
             />
-            <button type="button" className={ACTION} onClick={() => send({ type: "start", method })}>
+            <Button type="button" size="lg" className={ACTION} onClick={() => send({ type: "start", method })}>
               Start setup
-            </button>
+            </Button>
           </>
         ) : null}
 
@@ -239,30 +248,37 @@ export function PairingFlowExample() {
               {pairingHappyPath.find((s) => s.stage === flow.stage)?.label}… (simulated, about {(durationOf(flow.stage) / 1000).toFixed(1)} s)
             </p>
             {reducedMotion ? (
-              <button type="button" className={ACTION} onClick={workDone}>
+              <Button type="button" size="lg" className={ACTION} onClick={workDone}>
                 Finish this step
-              </button>
+              </Button>
             ) : null}
           </>
         ) : null}
 
         {flow.status === "active" && !working && flow.stage === "discover" ? (
-          <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
-            <legend className="mb-1 text-title-md text-foreground">
+          <div className="flex min-w-0 flex-col gap-2">
+            <p id="pairing-found-devices" className="mb-1 text-title-md text-foreground">
               {pairingDevices[flow.method!].length} sample {pairingDevices[flow.method!].length === 1 ? "device" : "devices"} found (fixture data)
-            </legend>
-            {pairingDevices[flow.method!].map((device) => (
-              <label key={device.id} className="flex min-h-11 items-center gap-2 rounded-xl bg-muted/60 px-4 text-body-md text-foreground has-[:checked]:bg-primary/10 has-[:checked]:ring-2 has-[:checked]:ring-primary">
-                <input type="radio" name="found-device" className="size-5" checked={found.id === device.id} onChange={() => setFoundId(device.id)} />
-                <span className="min-w-0 break-words">
-                  {device.name} <span className="text-muted-foreground">· {device.hint}</span>
-                </span>
-              </label>
-            ))}
-            <button type="button" className={ACTION} onClick={() => send({ type: "next" })}>
+            </p>
+            {/* The library RadioGroup: one tab stop, arrow keys move and choose (mirrored under RTL), named by the line above. */}
+            <RadioGroup aria-labelledby="pairing-found-devices" value={found.id} onValueChange={setFoundId} className="gap-2">
+              {pairingDevices[flow.method!].map((device) => (
+                <Label
+                  key={device.id}
+                  htmlFor={`found-${device.id}`}
+                  className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl bg-muted/60 px-4 py-2 text-body-md font-normal leading-normal text-foreground has-[[data-state=checked]]:bg-primary/10 has-[[data-state=checked]]:ring-2 has-[[data-state=checked]]:ring-primary"
+                >
+                  <RadioGroupItem id={`found-${device.id}`} value={device.id} />
+                  <span className="min-w-0 break-words">
+                    {device.name} <span className="text-muted-foreground">· {device.hint}</span>
+                  </span>
+                </Label>
+              ))}
+            </RadioGroup>
+            <Button type="button" size="lg" className={ACTION} onClick={() => send({ type: "next" })}>
               Continue with {found.name}
-            </button>
-          </fieldset>
+            </Button>
+          </div>
         ) : null}
 
         {flow.status === "active" && !working && flow.stage === "identify" ? (
@@ -270,9 +286,9 @@ export function PairingFlowExample() {
             <p className="text-body-md text-foreground">
               Does <strong className="font-medium">{found.hint}</strong> match the label on your {found.name}?
             </p>
-            <button type="button" className={ACTION} onClick={() => send({ type: "next" })}>
+            <Button type="button" size="lg" className={ACTION} onClick={() => send({ type: "next" })}>
               Yes, that is my device
-            </button>
+            </Button>
           </>
         ) : null}
 
@@ -284,24 +300,24 @@ export function PairingFlowExample() {
               if (codeShapeOk) setWorking(true);
             }}
           >
-            <label htmlFor="pairing-code" className="text-body-md text-foreground">
+            <Label htmlFor="pairing-code" className="text-body-md font-normal text-foreground">
               Setup code
-            </label>
-            <input
+            </Label>
+            <Input
               id="pairing-code"
               value={code}
               onChange={(event) => setCode(event.target.value)}
               autoComplete="off"
               spellCheck={false}
               aria-describedby="pairing-code-hint"
-              className="min-h-11 max-w-xs rounded-md border border-input bg-background px-3 font-mono text-label-md text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="max-w-xs font-mono"
             />
             <p id="pairing-code-hint" className="text-body-sm text-muted-foreground">
               {codeLength} characters. Demo code: <span className="font-mono text-foreground">{acceptedCode}</span>. The shape is checked here; only the device can say whether it is the right code.
             </p>
-            <button type="submit" disabled={!codeShapeOk} className={ACTION}>
+            <Button type="submit" size="lg" disabled={!codeShapeOk} className={ACTION}>
               Verify code
-            </button>
+            </Button>
           </form>
         ) : null}
 
@@ -313,18 +329,13 @@ export function PairingFlowExample() {
               setWorking(true);
             }}
           >
-            <label htmlFor="pairing-name" className="text-body-md text-foreground">
+            <Label htmlFor="pairing-name" className="text-body-md font-normal text-foreground">
               Device name
-            </label>
-            <input
-              id="pairing-name"
-              value={name || found.name}
-              onChange={(event) => setName(event.target.value)}
-              className="min-h-11 max-w-xs rounded-md border border-input bg-background px-3 text-label-md text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-            <button type="submit" className={ACTION}>
+            </Label>
+            <Input id="pairing-name" value={name || found.name} onChange={(event) => setName(event.target.value)} className="max-w-xs" />
+            <Button type="submit" size="lg" className={ACTION}>
               Apply settings
-            </button>
+            </Button>
           </form>
         ) : null}
 
@@ -336,22 +347,19 @@ export function PairingFlowExample() {
               setWorking(true);
             }}
           >
-            <label htmlFor="pairing-place" className="text-body-md text-foreground">
+            <Label htmlFor="pairing-place" className="text-body-md font-normal text-foreground">
               Room or zone
-            </label>
-            <select
-              id="pairing-place"
-              value={place}
-              onChange={(event) => setPlace(event.target.value)}
-              className="min-h-11 max-w-xs rounded-md border border-input bg-background px-2 text-label-md text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {PLACES.map((p) => (
-                <option key={p}>{p}</option>
-              ))}
-            </select>
-            <button type="submit" className={ACTION}>
+            </Label>
+            <div className="max-w-xs">
+              <NativeSelect id="pairing-place" value={place} onChange={(event) => setPlace(event.target.value)}>
+                {PLACES.map((p) => (
+                  <NativeSelectOption key={p}>{p}</NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
+            <Button type="submit" size="lg" className={ACTION}>
               Place it here
-            </button>
+            </Button>
           </form>
         ) : null}
 
@@ -361,9 +369,9 @@ export function PairingFlowExample() {
               {name || found.name} is set up in {place}. It responded when checked.
             </p>
             <p className="text-body-sm text-muted-foreground">Simulated: no device was paired, connected to or stored.</p>
-            <button type="button" className={ACTION} onClick={startOver}>
+            <Button type="button" size="lg" className={ACTION} onClick={startOver}>
               Pair another device
-            </button>
+            </Button>
           </>
         ) : null}
 
@@ -372,12 +380,12 @@ export function PairingFlowExample() {
 
       {started && flow.status !== "complete" && flow.status !== "cancelled" ? (
         <div className="flex flex-wrap gap-2">
-          <button type="button" className={QUIET} disabled={!backAllowed} onClick={() => send({ type: "back" })}>
+          <Button type="button" variant="Outline" size="lg" disabled={!backAllowed} onClick={() => send({ type: "back" })}>
             Back
-          </button>
-          <button type="button" className={QUIET} disabled={!cancelAllowed} onClick={() => send({ type: "cancel" })}>
+          </Button>
+          <Button type="button" variant="Outline" size="lg" disabled={!cancelAllowed} onClick={() => send({ type: "cancel" })}>
             Cancel setup
-          </button>
+          </Button>
         </div>
       ) : null}
     </section>

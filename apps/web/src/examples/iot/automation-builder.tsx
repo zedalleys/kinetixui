@@ -5,8 +5,8 @@ import { AutomationBuilder, AutomationRuleView, type KinetixBuilderSubject, type
 import { summarizeAutomationRule, type KinetixAutomationRule } from "@kinetixui/iot/functions";
 import { agritech, agritechRule } from "./scenarios";
 import { StateBadge } from "@/components/iot/showcase";
-import { BUTTON, SimNotice } from "./harness";
-import { cn } from "@/lib/utils";
+import { Button } from "@kinetixui/ui";
+import { SimNotice } from "./harness";
 
 // kx-iot:start
 /**
@@ -47,12 +47,12 @@ export function AutomationBuilderExample() {
       <div className="flex flex-col gap-4">
         <p className="text-body-md text-muted-foreground">Edited as data. Nothing evaluates the rule and nothing is sent.</p>
         <div className="flex flex-wrap gap-2">
-          <button type="button" className={cn(BUTTON, "min-h-11 rounded-full px-4 text-body-md md:min-h-9")} onClick={() => setDraft(BLANK)}>
+          <Button type="button" variant="Outline" size="lg" onClick={() => setDraft(BLANK)}>
             Start from a blank rule
-          </button>
-          <button type="button" className={cn(BUTTON, "min-h-11 rounded-full px-4 text-body-md md:min-h-9")} onClick={() => setDraft(agritechRule)}>
+          </Button>
+          <Button type="button" variant="Outline" size="lg" onClick={() => setDraft(agritechRule)}>
             Reset to the Zone 3 rule
-          </button>
+          </Button>
         </div>
 
         <AutomationBuilder
