@@ -1,6 +1,6 @@
 # KinetixUI website dogfooding audit
 
-Refreshed 14 October 2026 against main `acfe95af62befb4d11b3527a529bfd635c825fb8`, after #375, #377, #378, #380, #358 and #357 landed, and merged as #379 (`d155db1`). It was first audited on 13 October against `ae9cc44`. **Wave 2a** (the command menu and the mobile menu, below) is measured against `d155db1`; **Wave 2b** (selectors and modes) against `bfddb67`, after #381. Scope: `apps/web` routes, components, registry demos, and block/usage/IoT examples. This is a consumer audit. It is not a library redesign, and it does not declare the whole site accessible.
+Refreshed 14 October 2026 against main `acfe95af62befb4d11b3527a529bfd635c825fb8`, after #375, #377, #378, #380, #358 and #357 landed, and merged as #379 (`d155db1`). It was first audited on 13 October against `ae9cc44`. **Wave 2a** (the command menu and the mobile menu, below) is measured against `d155db1`; **Wave 2b** (selectors and modes) against `bfddb67`, after #381; **Wave 2c** (site actions and fields) against `4f465a4`, after #382. Scope: `apps/web` routes, components, registry demos, and block/usage/IoT examples. This is a consumer audit. It is not a library redesign, and it does not declare the whole site accessible.
 
 Every interactive or styled product control should use KinetixUI, unless a documented exception explains why. Structural HTML, real content, illustrations, layout, route logic and application state belong to the website. Using a library component does not by itself prove visual consistency, so local class overrides remain reviewable.
 
@@ -14,16 +14,16 @@ Text, comments, quoted snippet strings and test files are not scanned. Neither i
 
 ## Snapshot: current versus the original audit
 
-| Class | Meaning | Original (`ae9cc44`, after Wave 1) | #379 (`d155db1`) | After Wave 2a (#381) | **After Wave 2b** | Δ 2b |
-|---|---|---:|---:|---:|---:|---:|
-| A | KinetixUI component JSX sites | 1,037 | 1,196 | 1,218 | **1,236** | +18 |
-| B | KinetixUI equivalent exists; site authors a native/vendor primitive | 135 | 96 | 76 | **58** | −18 |
-| C | Needs a missing library variant first | 6 | 4 | 4 | **4** | 0 |
-| D | Valid site composition or deliberate native behaviour | 24 | 27 | 27 | **31** | +4 |
-| E | Read-only semantic HTML (tables) | 9 | 9 | 9 | **9** | 0 |
-| | Source files scanned | 241 | 252 | 252 | **252** | 0 |
-| | Native/vendor sites (B+C+D+E) | 174 | 136 | 116 | **102** | −14 |
-| | Files with B/C debt | — | 30 | 28 | **24** | −4 |
+| Class | Meaning | Original (`ae9cc44`, after Wave 1) | #379 (`d155db1`) | After Wave 2a (#381) | After Wave 2b (#382) | **After Wave 2c** | Δ 2c |
+|---|---|---:|---:|---:|---:|---:|---:|
+| A | KinetixUI component JSX sites | 1,037 | 1,196 | 1,218 | 1,236 | **1,273** | +37 |
+| B | KinetixUI equivalent exists; site authors a native/vendor primitive | 135 | 96 | 76 | 58 | **32** | −26 |
+| C | Needs a missing library variant first | 6 | 4 | 4 | 4 | **5** | +1 |
+| D | Valid site composition or deliberate native behaviour | 24 | 27 | 27 | 31 | **33** | +2 |
+| E | Read-only semantic HTML (tables) | 9 | 9 | 9 | 9 | **9** | 0 |
+| | Source files scanned | 241 | 252 | 252 | 252 | **252** | 0 |
+| | Native/vendor sites (B+C+D+E) | 174 | 136 | 116 | 102 | **79** | −23 |
+| | Files with B/C debt | — | 30 | 28 | 24 | **12** | −12 |
 
 A grew mostly through new surfaces built on the library: business discovery (#377), the Phase 2 business components on component pages (#378), and #380's Tabs/Toggle migration.
 
@@ -57,27 +57,28 @@ Canonical semantics: **Tabs** are peer content/section navigation, **SegmentedCo
 | IoT device-dashboard group filter | library `ToggleGroup type="single" variant="pill"`; was `role="tab"` with no tabpanels (Wave 2b) | A |
 | Floor selector, date strip | multi-line tiles, `role="radiogroup"` | C (see below) |
 
-## Remaining debt (B, 58 sites in 24 files)
+## Remaining debt (B, 32 sites in 9 files)
 
 | Wave | Sites | Files and KinetixUI equivalent | Why it remains |
 |---|---:|---|---|
 | ~~2a Overlays~~ | ~~20~~ → 0 | Done in Wave 2a (below): `command-menu` (14) → `CommandDialog` + `Command*`; `mobile-nav` (6) → `Sheet side="start"` | — |
 | ~~2b Selectors and modes~~ | ~~18~~ → 0 | Done in Wave 2b (below): 14 migrated, 4 (`systems/hero-system-map` tabs) reclassified D | — |
-| **2c Site actions and fields** | 26 | `charts-content`, `docs/colors`, `building-ops-demo`, `camera-panel`, `changelog-view`, `create/*` (4 files), `docs-sidebar`, `hero-command`, `iot/device-showcase` checkboxes, `iot/lab/hero-command-strip`, `iot/showcase/pending-command`, `registry/demos` → `Button`, `Toggle`, `Input`, `Checkbox`, `RadioGroup` | Ordinary migrations, deferred to keep Wave 1 small and reviewable |
+| ~~2c Site actions and fields~~ | ~~26~~ → 0 | Done in Wave 2c (below): 23 migrated and removed from the ledger, 2 migrated onto `Card asChild` and kept as D (the guard counts the native child), 1 (`create-sidebar` option tiles) reclassified C | — |
 | **2d Copyable IoT examples** | 28 | `examples/iot/` `pairing-flow` (16), `alert-center`, `alert-inbox`, `automation-builder`, `command-card`, `device-dashboard` actions, `operations-environment`, `state-honesty` → `Button`, `Input`, `Checkbox`, `RadioGroup`, `NativeSelect` | Each change must regenerate the published snippets (`gen-iot-examples`) in the same PR |
 | **2e Sliders** | 4 | `iot/device-showcase` ranges → `Slider` | Needs scalar-to-array event adaptation, labelled values and touch/keyboard proof |
 
-B findings are mostly consistency debt (P2), not proven accessibility violations. The exception is the device-dashboard's incomplete tab semantics (P1), which should lead Wave 2b.
+B findings are mostly consistency debt (P2), not proven accessibility violations. The device-dashboard's incomplete tab semantics (P1) were fixed in Wave 2b. Of the 32 B sites left, 28 are Wave 2d (copyable IoT examples) and 4 are Wave 2e (sliders); `iot/device-showcase.tsx` is the one file in both 2c and 2e, and only its checkboxes moved here.
 
-## Library gaps (C, 4 sites)
+## Library gaps (C, 5 sites)
 
-Both remaining C surfaces need an **exclusive selectable tile/card item**: a radio-like single selection whose item is a multi-line tile (rounded-lg card, a primary line plus secondary rows, status badges) with roving focus and RTL support.
+All three C surfaces need an **exclusive selectable tile/card item**: a radio-like single selection whose item is a multi-line tile (rounded-lg card, a primary line plus secondary rows, status badges, or a rendered sample) with roving focus and RTL support.
 - `building-ops/building-ops-demo.tsx` floor selector (2 sites): floor code, alert count, occupancy, cameras.
 - `iot/showcase/date-strip.tsx` (2 sites): weekday, date, today and event cues; locale/UTC formatting.
+- `create/create-sidebar.tsx` option tiles (1 site, Wave 2c): a label tile holding a native radio and a rendered sample (style, surface, radius, chart palette), in a `fieldset` whose legend names the group. `RadioGroupItem` is a bare circle, and `Card asChild` takes only links and buttons, so neither carries a radio tile; the native radios already give the group semantics, arrow keys and form behaviour.
 
 Rechecked after #380 and Phase 2. `ToggleGroup`'s `pill` variant is a single-line rounded-full pill, and `RadioGroupItem` is a circular indicator. Neither is a tile, and restyling a pill into a tile in site code would recreate library visuals locally. Proposed library work (Wave 3): a `tile` variant on `ToggleGroupItem` (or a `SelectableCard` radio item), tested for keyboard, RTL, disabled, forced colors and 200% text, then migrate both surfaces. A small, non-blocking API asymmetry: `Toggle` has `leadingIcon` but `ToggleGroupItem` does not, so a pill group passes its icon as a child.
 
-## Deliberate exceptions (D 31, E 9)
+## Deliberate exceptions (D 33, E 9)
 
 | Family | Sites | Surfaces | Decision |
 |---|---:|---|---|
@@ -86,6 +87,7 @@ Rechecked after #380 and Phase 2. `ToggleGroup`'s `pill` variant is a single-lin
 | Domain compositions | 4 | `iot/showcase/primitives` room/device tiles | Keep grouping and pending/confirmed states; compose `Button`/`Badge` internally in Wave 3 |
 | Animation pause | 2 | `platform-ticker`, `iot/lab/iot-hero-art` | WCAG 2.2.2 pause belongs to the animation; compose `Button` later, never remove the control |
 | Native colour channel | 1 | `create/create-color-picker` range | OS touch/keyboard behaviour and continuous draft updates; the gradient track is colour data |
+| Library `Card asChild` | 2 | `docs/colors` swatch tiles, `building-ops/camera-panel` camera rows (Wave 2c) | **Library use, not debt.** `<Card asChild><button>` is the Card's documented actionable/selectable pattern: it supplies hover, press, the focus ring and the `aria-pressed` selected edge. The guard counts the native `<button>` child it renders through; D records that it was reviewed |
 | Read-only tables (E) | 9 | `infographic`, `iot` page, `building-ops-demo`, `component-api`, `foundations-tables`, `token-evidence`, `token-table` | Semantic `<table>` with headers/captions; no sort, select or page contract. The guard classes these E automatically |
 
 ## Wave 1 (#379)
@@ -139,6 +141,40 @@ Both were direct `@radix-ui/react-dialog` (and, for the command menu, direct `cm
 **Why the hero map is D, not migrated.** Its tab triggers are the nodes of a measured trace drawing, placed by the map's CSS subgrid and drawn as dashed cards the traces connect. The library `TabsList`/`TabsTrigger` would need their list display, gap, border, scroll, underline indicator, centring, nowrap, hover fill, inset focus ring and vertical borders overridden in site code to keep the drawing — the local restyling #380 rules out — or the homepage hero would be redesigned. Neither is a migration, and a "node" tab variant for one diagram is not a reusable library gap.
 
 **Direction for IoT previews.** Interactive IoT examples now mount inside a `KinetixDirectionProvider` with the page's direction (`lazy-preview.tsx`). Radix controls read direction from context and, with none, stamp `dir="ltr"` on their own roots, which on an RTL page laid the new pill rows out LTR with LTR arrow keys. The provider fixes that for every Radix control in those examples. The copyable dashboard snippet stays provider-free; an application wraps its root once, as the library documents.
+
+## Wave 2c: site actions and fields
+
+26 B sites in 15 files. Each was read before it was mapped. 25 now render library components; one is a C exception. No library API changed and no analytics call moved: the changelog's URL state, the `CopyButton`'s `cli_command_copied` event and the create page's events are untouched.
+
+| # | Site | Before | After | Behaviour | Accessibility | Tests | Status |
+|---:|---|---|---|---|---|---|---|
+| 1 | `app/charts/charts-content.tsx` series legend | raw `aria-pressed` pills with a swatch | `Toggle variant="outline" size="sm"`, swatch as `leadingIcon`; the published snippet now shows `Toggle` too | Same hide/restore per series; off is still struck through | `aria-pressed`, `type="button"`, focus ring | new `website-wave2c.test.tsx` | Complete |
+| 2 | `docs/colors` "Value format" | `role=group` of exclusive `aria-pressed` buttons | `SegmentedControl` (`dir` = page) | Same format switch. **Changed:** exposed as radios, one tab stop, arrows move, Space/Enter chooses | radiogroup "Value format" | new | Complete |
+| 3 | `docs/colors` "Copy ramp as CSS" | raw button **without `type`** | `Button variant="Outline" type="button"` | Same clipboard text | named by text | new | Complete |
+| 4 | `docs/colors` swatch tiles | raw button with mouse-enter/leave state for a hover ring | `<Card asChild><button>` (D, see exceptions) | Same copy and visible-text name (WCAG 2.5.3). **Changed:** hover is the Card's lift instead of a primary ring, so the `hoverStep` state is gone; the copy icon also shows on keyboard focus | Card focus ring | new | Complete |
+| 5 | `building-ops-demo` zone name | raw `aria-pressed` button in a row header | `Toggle size="sm"` | Same select / press-again-to-clear | `aria-pressed` | new + existing | Complete |
+| 6 | `camera-panel` "Clear zone filter" | raw button | `Button variant="Ghost" type="button"` | Same | named by text | existing + new | Complete |
+| 7 | `camera-panel` camera rows | raw `aria-pressed` button styled as a row | `<Card asChild><button aria-pressed>` (D) | Same selection and `data-camera-row`. **Changed:** selected is the Card's 2px primary edge instead of a foreground border and accent fill | Card selected, hover, press and focus states | existing + new | Complete |
+| 8 | `changelog-view` "Clear search and filters" | raw button | `Button variant="Outline" type="button"` | Same | named by text | existing | Complete |
+| 9 | `changelog-view` `#changelog-search` | raw `type=search` input | `Input type="search"` | Same id, label, Enter commit, debounce and URL | library field states | existing (31) | Complete |
+| 10 | `changelog-view` "Filter releases" | `role=group` of exclusive `aria-pressed` pills | `ToggleGroup type="single" variant="pill"` (`dir` = page) | Same URL state, counts and ✓ marker. **Changed:** a radiogroup with one tab stop; a chosen filter cannot be un-chosen ("All" is the way back) | radiogroup, `aria-checked` | updated + 2 new keyboard cases | Complete |
+| 11–12 | `create-advanced`, `create-color-picker` hex/OKLCH fields | raw inputs, invalid edge by class | `Input` | Same ids, labels, draft/commit, Enter and blur | invalid edge from `aria-invalid` | existing + new | Complete |
+| 13 | `create-sidebar` option tiles | native radios in label tiles with samples | unchanged, **reclassified C** | — | native radios in a named `fieldset` | existing | Exception (C) |
+| 14 | `create-sidebar` "Show/Hide all pairs" | raw `aria-expanded` button | `Collapsible` + `CollapsibleTrigger asChild` `Button variant="Ghost"` | Same; `aria-controls` now wired while open | `aria-expanded` | new | Complete |
+| 15 | `create-sidebar` "Preview appearance" | exclusive `aria-pressed` buttons | `SegmentedControl` | Same mode switch; radiogroup | one tab stop | updated + new | Complete |
+| 16 | `create-workspace` "Preview scene" | exclusive `aria-pressed` buttons | `SegmentedControl` | Same scene switch; radiogroup | one tab stop | updated + new | Complete |
+| 17–18 | `docs-sidebar` filter and clear | raw input with an absolutely positioned icon and clear button (physical `left`/`right`) | `InputGroup` + `InputGroupAddon` + `InputGroupInput` + `InputGroupButton` | Same name, Escape, refocus after clear, status message. **Changed:** the icon and clear button follow the reading direction; the clear button has a focus ring (it had none) | named field, focus ring | new `docs-sidebar.test.tsx` (4) | Complete |
+| 19 | `hero-command` pause | raw `aria-pressed` button | `Toggle` (same `aria-label`, `data-hero-command-pause`, `motion-reduce:hidden`) | Same persisted pause; `CopyButton` and its event untouched | `aria-pressed` | existing (6) | Complete |
+| 20–21 | `iot/device-showcase` "Device reports no battery/signal" | native checkboxes | `Checkbox` inside a library `Label` | Same state and range disabling; ranges untouched (Wave 2e) | role checkbox named by the label | new | Complete |
+| 22 | `iot/lab/hero-command-strip` "Make the device stop answering" | native checkbox | `Checkbox` inside a library `Label` | Same; the description stays in the name | role checkbox | existing + new | Complete |
+| 23–24 | `iot/showcase/pending-command` Retry, Cancel/Dismiss | raw buttons, local `SMALL_BUTTON` recipe | `Button` Primary / Outline, `size="lg"` at 44px (36px from `md`) | Same names and handlers | named as before | existing + new | Complete |
+| 25–26 | `registry/demos` navigation-bar Search, app-bar Notifications | raw icon buttons | `Button variant="Ghost" size="icon"` (36px, as before), matching the published snippets; stories regenerated | Same | named by `aria-label` | new (axe) | Complete |
+
+**Two migrations stay in the ledger as D.** `Card` is static unless it renders as a link or a button, and `<Card asChild><button>` is its documented way to be actionable or selectable: hover lift, pressed, focus ring, and the 2px primary edge on `aria-pressed="true"`. The guard reads JSX syntax, so it still sees the `<button>` that `Card` renders through. These two sites (colour swatches, camera rows) are library use, recorded as D so a reviewer can see why they remain; they are not counted as debt.
+
+**`Button` has no default `type`.** The library `Button` renders a `<button>` without `type`, so it submits a surrounding form. None of these sites is in a form, but each original had `type="button"` (except "Copy ramp", which had none), so every migrated `Button` passes `type="button"` explicitly. `Toggle`, `ToggleGroupItem`, `SegmentedControlItem`, `CollapsibleTrigger` and `InputGroupButton` set it themselves.
+
+**Visible changes, on purpose:** the changelog search, the hex fields and the docs filter take the library field edge and focus ring; the camera rows and swatches are Cards (edge, depth, hover lift); the series legend is outline toggles with an accent fill when shown; "Show all pairs" and the Retry/Cancel buttons take library button styling. Sizes were kept where layout depended on them: the hero pause stays 28px in a 28px toolbar, the registry icon buttons stay 36px, the pending-command buttons keep 44/36px.
 
 ## Guard
 
