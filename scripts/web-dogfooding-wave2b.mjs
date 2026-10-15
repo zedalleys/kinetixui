@@ -42,8 +42,18 @@ async function open(context, path, { dir, theme, textScale }) {
     },
     { dir, theme },
   );
+  // Hydration and the lazy IoT chunks: acting before they settle measures the server HTML, not the controls.
+  await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
   await page.waitForTimeout(300);
   return page;
+}
+
+/** Scroll a lazily mounted IoT example into view and wait until it has mounted and settled. */
+async function mountExample(page, slug) {
+  await page.locator(`[data-lazy-preview="${slug}"]`).scrollIntoViewIfNeeded();
+  await page.waitForSelector(`[data-lazy-preview="${slug}"][data-mounted]`);
+  await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+  await page.waitForTimeout(800);
 }
 
 async function axeOn(page, selector, label) {
@@ -64,11 +74,18 @@ const focusRing = (locator) =>
     const s = getComputedStyle(el);
     return s.outlineStyle !== "none" || (s.boxShadow && s.boxShadow !== "none");
   });
+/** Radix roving focus moves focus on the next tick (`setTimeout`), so read focus only after it has run. */
+async function press(page, key) {
+  await page.keyboard.press(key);
+  await page.waitForTimeout(80);
+}
 /** The arrow key that points to the next item on screen. */
 const forward = (dir) => (dir === "rtl" ? "ArrowLeft" : "ArrowRight");
 
-const MATRIX = [];
+let MATRIX = [];
 for (const width of [390, 1280]) for (const dir of ["ltr", "rtl"]) for (const theme of ["light", "dark"]) for (const textScale of [1, 2]) MATRIX.push({ width, dir, theme, textScale });
+// KX_ONLY="390:ltr:light:2" narrows the run while debugging one view.
+if (process.env.KX_ONLY) MATRIX = MATRIX.filter((v) => `${v.width}:${v.dir}:${v.theme}:${v.textScale}` === process.env.KX_ONLY);
 
 try {
   for (const view of MATRIX) {
@@ -80,7 +97,7 @@ try {
     /* ── device-dashboard group filter ── */
     try {
       const page = await open(context, "/iot#layout-dashboard", view);
-      await page.locator('[data-lazy-preview="device-dashboard"]').scrollIntoViewIfNeeded();
+      await mountExample(page, "device-dashboard");
       const group = page.getByRole("radiogroup", { name: "Device group" });
       await group.waitFor();
       await group.scrollIntoViewIfNeeded();
@@ -93,11 +110,11 @@ try {
       const all = await shown();
       await radios.nth(0).focus();
       assert(await focusRing(radios.nth(0)), "no visible focus indicator");
-      await page.keyboard.press(forward(dir));
+      await press(page, forward(dir));
       assert(await radios.nth(1).evaluate((el) => el === document.activeElement), "arrow did not move to the next group");
       assert.equal(await shown(), all, "moving focus filtered the list");
-      await page.keyboard.press(forward(dir));
-      await page.keyboard.press("Space");
+      await press(page, forward(dir));
+      await press(page, "Space");
       assert.equal(await radios.nth(2).getAttribute("aria-checked"), "true");
       const plant = await shown();
       assert(plant > 0 && plant < all, `Plant room shows ${plant} of ${all}`);
@@ -110,13 +127,13 @@ try {
       row.dashboard = { groups: 4, all, plantRoom: plant, axe: await axeOn(page, '[data-lazy-preview="device-dashboard"] [role="radiogroup"]', `dashboard ${tag}`) };
       await page.close();
     } catch (e) {
-      failures.push(`dashboard ${tag}: ${e.message.split("\n")[0]}`);
+      failures.push(`dashboard ${tag}: ${e.message.replace(/\s+/g, " ").slice(0, 300)}`);
     }
 
     /* ── PillSelector in device detail ── */
     try {
       const page = await open(context, "/iot", view);
-      await page.locator('[data-lazy-preview="device-detail"]').scrollIntoViewIfNeeded();
+      await mountExample(page, "device-detail");
       const group = page.getByRole("radiogroup", { name: "Chart metric" });
       await group.waitFor();
       await group.scrollIntoViewIfNeeded();
@@ -127,9 +144,9 @@ try {
       assert.equal(checked, 1);
       assert.equal(await group.locator('[aria-checked="true"] svg').count(), 1, "the chosen pill has no check");
       await radios.nth(0).click();
-      await page.keyboard.press(forward(dir));
+      await press(page, forward(dir));
       assert(await radios.nth(1).evaluate((el) => el === document.activeElement), "arrow did not move to the next metric");
-      await page.keyboard.press("Enter");
+      await press(page, "Enter");
       assert.equal(await radios.nth(1).getAttribute("aria-checked"), "true");
       assert(await focusRing(radios.nth(1)), "no visible focus indicator");
       const ov = await overflow(page);
@@ -137,7 +154,7 @@ try {
       row.pillSelector = { metrics: n, axe: await axeOn(page, '[data-lazy-preview="device-detail"] [role="radiogroup"]', `pill ${tag}`) };
       await page.close();
     } catch (e) {
-      failures.push(`pill selector ${tag}: ${e.message.split("\n")[0]}`);
+      failures.push(`pill selector ${tag}: ${e.message.replace(/\s+/g, " ").slice(0, 300)}`);
     }
 
     /* ── preview direction ── */
@@ -157,8 +174,8 @@ try {
       // Keyboard back to the page's direction. In LTR the start segment ("ltr") is to the left; in RTL the segments
       // run right to left and the start segment ("rtl") is again to the left. Either way ArrowLeft, then Space.
       await other.focus();
-      await page.keyboard.press("ArrowLeft");
-      await page.keyboard.press("Space");
+      await press(page, "ArrowLeft");
+      await press(page, "Space");
       const back = (await ltr.getAttribute("aria-checked")) === "true" ? "ltr" : "rtl";
       assert.equal(back, dir, "the arrow key did not follow the reading direction");
       assert.equal(await stage(), dir);
@@ -167,7 +184,7 @@ try {
       assert(ov <= 0, `page overflows by ${ov}px`);
       await page.close();
     } catch (e) {
-      failures.push(`preview direction ${tag}: ${e.message.split("\n")[0]}`);
+      failures.push(`preview direction ${tag}: ${e.message.replace(/\s+/g, " ").slice(0, 300)}`);
     }
 
     /* ── gallery ── */
@@ -185,8 +202,8 @@ try {
         await sheet.waitFor();
         const chip = sheet.getByRole("group", { name: "Filter by business domain" }).getByRole("button", { name: /^Commerce/ });
         await chip.click();
-        assert.equal(await chip.getAttribute("aria-pressed"), "true");
         await page.waitForURL(/domain=commerce/);
+        assert.equal(await chip.getAttribute("aria-pressed"), "true");
         row.galleryAxe = await axeOn(page, '[role="dialog"]', `gallery sheet ${tag}`);
         await sheet.getByRole("button", { name: /^Show \d+ component/ }).click();
         await sheet.waitFor({ state: "detached" });
@@ -196,10 +213,18 @@ try {
         await disclosure.click();
         assert.equal(await disclosure.getAttribute("aria-expanded"), "true");
         const region = page.locator(`#${await disclosure.getAttribute("aria-controls")}`);
+        // Keyboard into the groups: Tab from the disclosure reaches the first business chip, with a visible ring.
+        await press(page, "Tab");
+        const first = page.locator(":focus");
+        assert(region.locator(":focus").count !== undefined && (await region.locator(":focus").count()) === 1, "Tab did not enter the business groups");
+        assert(await focusRing(first), "no visible focus indicator on a chip");
+        await press(page, "Space");
+        await page.waitForURL(/capability=/);
+        assert.equal(await first.getAttribute("aria-pressed"), "true");
+        await press(page, "Space");
+        await page.waitForURL((u) => !u.search.includes("capability="));
         const chip = region.getByRole("group", { name: "Filter by business domain" }).getByRole("button", { name: /^Commerce/ });
-        await chip.focus();
-        assert(await focusRing(chip), "no visible focus indicator on a chip");
-        await page.keyboard.press("Space");
+        await chip.click();
         await page.waitForURL(/domain=commerce/);
         assert.equal(await chip.getAttribute("aria-pressed"), "true");
         row.galleryAxe = await axeOn(page, "#component-search", `gallery search ${tag}`);
@@ -214,7 +239,7 @@ try {
       row.gallery = "clear search, business chip on/off, active-filter removal";
       await page.close();
     } catch (e) {
-      failures.push(`gallery ${tag}: ${e.message.split("\n")[0]}`);
+      failures.push(`gallery ${tag}: ${e.message.replace(/\s+/g, " ").slice(0, 300)}`);
     }
 
     rows.push(row);
