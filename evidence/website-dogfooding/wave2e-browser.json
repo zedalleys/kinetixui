@@ -1,0 +1,246 @@
+{
+  "base": "http://127.0.0.1:3000",
+  "rows": [
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 1,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 36
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 0
+      }
+    },
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 2,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 72
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 14
+      }
+    },
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 1,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 36
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 0
+      }
+    },
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 2,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 72
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 14
+      }
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 1,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 36
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 0
+      }
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 2,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 72
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 14
+      }
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 1,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 36
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 0
+      }
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 2,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 72
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 14
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 1,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 36
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 2,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 72
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 1,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 36
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 2,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 72
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 1,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 36
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 2,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 72
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 1,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 36
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 2,
+      "sliders": {
+        "axe": 0,
+        "targetHeight": 72
+      },
+      "overflow": {
+        "pageOverflow": 0,
+        "mainPageOverflow": 0,
+        "baseline": 0
+      }
+    }
+  ],
+  "failures": []
+}
