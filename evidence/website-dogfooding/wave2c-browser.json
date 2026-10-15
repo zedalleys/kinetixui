@@ -1,0 +1,710 @@
+{
+  "base": "http://127.0.0.1:3000",
+  "rows": [
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 1,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 358,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": true,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 36
+        },
+        {
+          "slug": "app-bar",
+          "size": 36
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 2,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 326,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": true,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 72
+        },
+        {
+          "slug": "app-bar",
+          "size": 72
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 1,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 358,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": true,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 36
+        },
+        {
+          "slug": "app-bar",
+          "size": 36
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 2,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 326,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": true,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 72
+        },
+        {
+          "slug": "app-bar",
+          "size": 72
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 1,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 358,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": true,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 36
+        },
+        {
+          "slug": "app-bar",
+          "size": 36
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 2,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 326,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": true,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 72
+        },
+        {
+          "slug": "app-bar",
+          "size": 72
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 1,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 358,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": true,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 36
+        },
+        {
+          "slug": "app-bar",
+          "size": 36
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 2,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 326,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": true,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 72
+        },
+        {
+          "slug": "app-bar",
+          "size": 72
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 1,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 704,
+        "axe": 0
+      },
+      "docsFilter": {
+        "iconAtStart": true,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": false,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 36
+        },
+        {
+          "slug": "app-bar",
+          "size": 36
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 2,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 128,
+        "axe": 0
+      },
+      "docsFilter": {
+        "iconAtStart": true,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": true,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 72
+        },
+        {
+          "slug": "app-bar",
+          "size": 72
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 1,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 704,
+        "axe": 0
+      },
+      "docsFilter": {
+        "iconAtStart": true,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": false,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 36
+        },
+        {
+          "slug": "app-bar",
+          "size": 36
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 2,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 128,
+        "axe": 0
+      },
+      "docsFilter": {
+        "iconAtStart": true,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": true,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 72
+        },
+        {
+          "slug": "app-bar",
+          "size": 72
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 1,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 704,
+        "axe": 0
+      },
+      "docsFilter": {
+        "iconAtStart": true,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": false,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 36
+        },
+        {
+          "slug": "app-bar",
+          "size": 36
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 2,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 128,
+        "axe": 0
+      },
+      "docsFilter": {
+        "iconAtStart": true,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": true,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 72
+        },
+        {
+          "slug": "app-bar",
+          "size": 72
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 1,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 704,
+        "axe": 0
+      },
+      "docsFilter": {
+        "iconAtStart": true,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": false,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 36
+        },
+        {
+          "slug": "app-bar",
+          "size": 36
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 2,
+      "changelog": {
+        "filters": 7,
+        "articleWidth": 128,
+        "axe": 0
+      },
+      "docsFilter": {
+        "iconAtStart": true,
+        "axe": 0
+      },
+      "create": {
+        "sidebarInSheet": true,
+        "axe": 0
+      },
+      "charts": {
+        "axe": 0
+      },
+      "colors": {
+        "hoverChangesShadow": true,
+        "axe": 0
+      },
+      "buildingOps": {
+        "cameras": null,
+        "axe": 0
+      },
+      "iotCheckboxes": {
+        "axe": 0
+      },
+      "registry": [
+        {
+          "slug": "navigation-bar",
+          "size": 72
+        },
+        {
+          "slug": "app-bar",
+          "size": 72
+        }
+      ],
+      "heroPause": {
+        "axe": 0
+      }
+    }
+  ],
+  "failures": []
+}
