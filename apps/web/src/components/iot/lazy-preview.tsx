@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { KinetixDirectionProvider } from "@kinetixui/ui";
 import { iotPreviewLoaders } from "@/registry/iot-preview-loaders";
+import { useDocumentDirection } from "@/lib/use-document-direction";
 
 /**
  * Mounts an interactive IoT example only when it is about to be seen.
@@ -118,13 +120,18 @@ export function LazyPreview({
   }, [active, rootMargin]);
 
   const Preview = active ? componentFor(slug) : null;
+  // The examples' Radix controls (ToggleGroup, Select, Slider, …) read direction from context, not from `dir`, and
+  // with none default to "ltr" — stamping it on their own roots, so an RTL page got LTR pill rows with LTR arrow keys.
+  const dir = useDocumentDirection();
   const waiting = <Waiting>{fallback}</Waiting>;
   return (
     <div ref={ref} data-lazy-preview={slug} data-mounted={Preview ? "" : undefined}>
       {Preview ? (
         <ChunkBoundary>
           <React.Suspense fallback={waiting}>
-            <Preview />
+            <KinetixDirectionProvider dir={dir}>
+              <Preview />
+            </KinetixDirectionProvider>
           </React.Suspense>
         </ChunkBoundary>
       ) : (

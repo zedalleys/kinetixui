@@ -2,6 +2,8 @@ import type * as React from "react";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { KinetixDirectionProvider } from "@kinetixui/ui";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { KINETIX_DEVICE_CATEGORIES } from "@kinetixui/iot/functions";
 import { DateStrip, DeviceIllustration, HouseMark, IconButton, IconCluster, PillSelector, SpaceHeader, Tile } from "./index";
@@ -62,29 +64,59 @@ describe("PillSelector", () => {
     { id: "c", label: "Hall" },
   ];
 
-  it("is a named radiogroup with a roving tabindex and a check on the selected pill", () => {
-    const { container } = render(<PillSelector label="Rooms" options={options} value="b" onChange={() => {}} showAll allLabel="All rooms" />);
+  it("is a named radiogroup with one tab stop, on the chosen pill, which carries a check", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <>
+        <button>before</button>
+        <PillSelector label="Rooms" options={options} value="b" onChange={() => {}} showAll allLabel="All rooms" />
+      </>,
+    );
     expect(screen.getByRole("radiogroup", { name: "Rooms" })).toBeTruthy();
     const radios = screen.getAllByRole("radio");
     expect(radios.map((r) => r.textContent?.replace(/\s+/g, " ").trim())).toEqual(["All rooms", "Living2 devices", "Kitchen", "Hall"]);
     expect(screen.getByRole("radio", { name: "Kitchen" }).getAttribute("aria-checked")).toBe("true");
-    expect(radios.map((r) => r.tabIndex)).toEqual([-1, -1, 0, -1]);
     expect(screen.getByRole("radio", { name: "Kitchen" }).querySelector("svg")).toBeTruthy();
     expect(container.querySelector("[role=radiogroup]")!.className).toContain("flex-wrap");
+    await user.tab();
+    await user.tab();
+    expect(screen.getByRole("radio", { name: "Kitchen" })).toHaveFocus();
+    await user.tab();
+    expect(document.activeElement?.getAttribute("role")).not.toBe("radio");
   });
 
-  it("moves with arrow keys, reversed under RTL", () => {
+  it("moves focus with the arrow keys, reversed under RTL, and chooses with Space", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const { unmount } = render(<PillSelector label="Rooms" options={options} value="a" onChange={onChange} />);
+    screen.getByRole("radio", { name: /Living/ }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("radio", { name: "Kitchen" })).toHaveFocus();
+    expect(onChange).not.toHaveBeenCalled();
+    await user.keyboard(" ");
+    expect(onChange).toHaveBeenLastCalledWith("b");
+    await user.keyboard("{End}");
+    expect(screen.getByRole("radio", { name: "Hall" })).toHaveFocus();
+    unmount();
+
+    // Direction comes from the nearest KinetixDirectionProvider, as the IoT previews now provide.
+    render(
+      <KinetixDirectionProvider dir="rtl">
+        <PillSelector label="Rooms" options={options} value="a" onChange={onChange} />
+      </KinetixDirectionProvider>,
+    );
+    screen.getByRole("radio", { name: /Living/ }).focus();
+    await user.keyboard("{ArrowLeft}");
+    expect(screen.getByRole("radio", { name: "Kitchen" })).toHaveFocus();
+  });
+
+  it("cannot be un-chosen: pressing the chosen pill keeps it chosen", async () => {
+    const user = userEvent.setup();
     const onChange = vi.fn();
     render(<PillSelector label="Rooms" options={options} value="a" onChange={onChange} />);
-    fireEvent.keyDown(screen.getByRole("radio", { name: /Living/ }), { key: "ArrowRight" });
-    expect(onChange).toHaveBeenLastCalledWith("b");
-    document.documentElement.setAttribute("dir", "rtl");
-    fireEvent.keyDown(screen.getByRole("radio", { name: /Living/ }), { key: "ArrowRight" });
-    expect(onChange).toHaveBeenLastCalledWith("c");
-    fireEvent.keyDown(screen.getByRole("radio", { name: /Living/ }), { key: "ArrowLeft" });
-    expect(onChange).toHaveBeenLastCalledWith("b");
-    fireEvent.keyDown(screen.getByRole("radio", { name: /Living/ }), { key: "End" });
-    expect(onChange).toHaveBeenLastCalledWith("c");
+    await user.click(screen.getByRole("radio", { name: /Living/ }));
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("radio", { name: /Living/ })).toHaveAttribute("aria-checked", "true");
   });
 
   it("selects the All pill by its id", () => {

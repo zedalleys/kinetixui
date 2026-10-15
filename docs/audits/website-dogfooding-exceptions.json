@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "auditedBase": "d155db19228d208cc73a00875c2c70edf863b4ea",
+  "auditedBase": "bfddb67f7facb2d2be23e8babd2f88d10abdcd89",
   "scope": "apps/web/src excluding tests; AST JSX sites (not rendered instances)",
   "policy": "Counts must match the source exactly: new patterns, new files or growth require component use or a reviewed entry; removed debt must be removed here too (the guard fails on stale approvals). Read-only <table> is semantic HTML (E) and needs no entry. B is migration debt, not a permanent exemption.",
   "entries": [
@@ -108,13 +108,6 @@
       "maxCount": 1,
       "classification": "D",
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
-    },
-    {
-      "file": "apps/web/src/components/component-gallery.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 9,
-      "classification": "B",
-      "reason": "Platform filters already use library Toggle (#380). Remaining: business capability/domain/layer filter chips with aria-pressed (from #377; use Toggle variant=\"pill\" like the platform chips), clear-search, Filters sheet open/close, three clear-all actions (Button), removable active-filter chips (Tag onRemove), and the business-filters disclosure trigger (Button/Collapsible). Preserve URL state, counts and analytics. Wave 2."
     },
     {
       "file": "apps/web/src/components/create/create-advanced.tsx",
@@ -278,20 +271,6 @@
       "reason": "Retry and Cancel/Dismiss for a pending device command (from #375) use a local SMALL_BUTTON recipe: compose Button size=\"sm\". Their names already contain the visible word (Retry …, Cancel the … request). Wave 2."
     },
     {
-      "file": "apps/web/src/components/iot/showcase/pill-selector.tsx",
-      "pattern": "button[type=button][role=radio]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Equivalent now exists: ToggleGroup type=\"single\" variant=\"pill\" (#380) gives an exclusive, roving-focus, direction-aware pill group; icon and count go in as children (aria-hidden icon, sr-only unit). Guard against deselection (ignore an empty value) to keep one mode selected. Wave 2."
-    },
-    {
-      "file": "apps/web/src/components/iot/showcase/pill-selector.tsx",
-      "pattern": "div[role=radiogroup]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Equivalent now exists: ToggleGroup type=\"single\" variant=\"pill\" (#380) gives an exclusive, roving-focus, direction-aware pill group; icon and count go in as children (aria-hidden icon, sr-only unit). Guard against deselection (ignore an empty value) to keep one mode selected. Wave 2."
-    },
-    {
       "file": "apps/web/src/components/iot/showcase/primitives.tsx",
       "pattern": "button[type=button]",
       "maxCount": 4,
@@ -341,13 +320,6 @@
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
     },
     {
-      "file": "apps/web/src/components/preview-environment.tsx",
-      "pattern": "button[type=button]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "LTR/RTL preview direction is an exclusive local mode rendered as aria-pressed buttons: compose SegmentedControl (canonical local-mode control after #380). Keep the scoped KinetixDirectionProvider contract and the sr-only expansion. Wave 2."
-    },
-    {
       "file": "apps/web/src/components/systems/hero-system-map.tsx",
       "pattern": "button[type=button]",
       "maxCount": 1,
@@ -358,29 +330,29 @@
       "file": "apps/web/src/components/systems/hero-system-map.tsx",
       "pattern": "vendor:@radix-ui/react-tabs:Tabs.Content",
       "maxCount": 1,
-      "classification": "B",
-      "reason": "Home hero system map still renders Radix Tabs directly (not migrated by #380). Its tabs are real peer panels: compose library Tabs/TabsList/TabsTrigger/TabsContent while keeping the diagram, tour, pulse and orientation switch local. Wave 2."
+      "classification": "D",
+      "reason": "Spatial diagram composition (Wave 2b review): the platform tabs are nodes of the measured trace drawing, placed by the map's CSS subgrid and styled as dashed cards that the traces connect. Semantics are already correct (real tabs with real panels, automatic activation, dir from the page, the tour's pause control). Library TabsList/TabsTrigger would need their list display, gap, border, scroll, underline indicator, centring, nowrap, hover fill, inset focus ring and vertical borders overridden locally to keep the drawing, which is the local restyling #380 rules out; matching them instead redesigns the homepage hero. Same family as the world map, floor plan and space canvas."
     },
     {
       "file": "apps/web/src/components/systems/hero-system-map.tsx",
       "pattern": "vendor:@radix-ui/react-tabs:Tabs.List",
       "maxCount": 1,
-      "classification": "B",
-      "reason": "Home hero system map still renders Radix Tabs directly (not migrated by #380). Its tabs are real peer panels: compose library Tabs/TabsList/TabsTrigger/TabsContent while keeping the diagram, tour, pulse and orientation switch local. Wave 2."
+      "classification": "D",
+      "reason": "Spatial diagram composition (Wave 2b review): the platform tabs are nodes of the measured trace drawing, placed by the map's CSS subgrid and styled as dashed cards that the traces connect. Semantics are already correct (real tabs with real panels, automatic activation, dir from the page, the tour's pause control). Library TabsList/TabsTrigger would need their list display, gap, border, scroll, underline indicator, centring, nowrap, hover fill, inset focus ring and vertical borders overridden locally to keep the drawing, which is the local restyling #380 rules out; matching them instead redesigns the homepage hero. Same family as the world map, floor plan and space canvas."
     },
     {
       "file": "apps/web/src/components/systems/hero-system-map.tsx",
       "pattern": "vendor:@radix-ui/react-tabs:Tabs.Root",
       "maxCount": 1,
-      "classification": "B",
-      "reason": "Home hero system map still renders Radix Tabs directly (not migrated by #380). Its tabs are real peer panels: compose library Tabs/TabsList/TabsTrigger/TabsContent while keeping the diagram, tour, pulse and orientation switch local. Wave 2."
+      "classification": "D",
+      "reason": "Spatial diagram composition (Wave 2b review): the platform tabs are nodes of the measured trace drawing, placed by the map's CSS subgrid and styled as dashed cards that the traces connect. Semantics are already correct (real tabs with real panels, automatic activation, dir from the page, the tour's pause control). Library TabsList/TabsTrigger would need their list display, gap, border, scroll, underline indicator, centring, nowrap, hover fill, inset focus ring and vertical borders overridden locally to keep the drawing, which is the local restyling #380 rules out; matching them instead redesigns the homepage hero. Same family as the world map, floor plan and space canvas."
     },
     {
       "file": "apps/web/src/components/systems/hero-system-map.tsx",
       "pattern": "vendor:@radix-ui/react-tabs:Tabs.Trigger",
       "maxCount": 1,
-      "classification": "B",
-      "reason": "Home hero system map still renders Radix Tabs directly (not migrated by #380). Its tabs are real peer panels: compose library Tabs/TabsList/TabsTrigger/TabsContent while keeping the diagram, tour, pulse and orientation switch local. Wave 2."
+      "classification": "D",
+      "reason": "Spatial diagram composition (Wave 2b review): the platform tabs are nodes of the measured trace drawing, placed by the map's CSS subgrid and styled as dashed cards that the traces connect. Semantics are already correct (real tabs with real panels, automatic activation, dir from the page, the tour's pause control). Library TabsList/TabsTrigger would need their list display, gap, border, scroll, underline indicator, centring, nowrap, hover fill, inset focus ring and vertical borders overridden locally to keep the drawing, which is the local restyling #380 rules out; matching them instead redesigns the homepage hero. Same family as the world map, floor plan and space canvas."
     },
     {
       "file": "apps/web/src/examples/iot/alert-center.tsx",
@@ -430,20 +402,6 @@
       "maxCount": 2,
       "classification": "B",
       "reason": "Existing equivalent: Button (or Toggle where it carries aria-pressed). Preserve names, handlers, URLs and analytics. Copyable IoT example: regenerate the published snippet in the same change. Wave 2."
-    },
-    {
-      "file": "apps/web/src/examples/iot/device-dashboard.tsx",
-      "pattern": "button[type=button][role=tab]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Group selector filters one fleet; raw role=tab buttons have no tabpanels (incomplete tab semantics, P1). Use ToggleGroup type=\"single\" variant=\"pill\" (an exclusive selector), not Tabs; keep selected-device state across groups and regenerate the copyable snippet. Wave 2."
-    },
-    {
-      "file": "apps/web/src/examples/iot/device-dashboard.tsx",
-      "pattern": "div[role=tablist]",
-      "maxCount": 1,
-      "classification": "B",
-      "reason": "Group selector filters one fleet; raw role=tab buttons have no tabpanels (incomplete tab semantics, P1). Use ToggleGroup type=\"single\" variant=\"pill\" (an exclusive selector), not Tabs; keep selected-device state across groups and regenerate the copyable snippet. Wave 2."
     },
     {
       "file": "apps/web/src/examples/iot/operations-environment.tsx",

@@ -245,6 +245,43 @@ describe("ComponentGallery business filters", () => {
     expect(cards(container)).toEqual(expect.arrayContaining(["price-breakdown", "result-state", "reference-code"]));
   });
 
+  it("opens and closes the business groups as a disclosure, and chooses a chip as a toggle (Wave 2b)", async () => {
+    const user = userEvent.setup();
+    render(<ComponentGallery facets={FACETS} />);
+    // The desktop disclosure: the library Collapsible keeps aria-expanded/aria-controls on its trigger.
+    const toggle = screen.getAllByRole("button", { name: /^Business filters/ }).at(-1)!;
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    // Collapsed: nothing exposed and no `aria-controls` pointing at hidden content (Radix sets it only while open).
+    expect(toggle).not.toHaveAttribute("aria-controls");
+    expect(screen.queryByRole("group", { name: "Filter by business domain" })).toBeNull();
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    const region = () => document.getElementById(toggle.getAttribute("aria-controls")!)!;
+    expect(region()).toBeVisible();
+    expect(within(region()).getAllByRole("group").length).toBe(3);
+
+    // A business chip is the library Toggle: one press chooses it (aria-pressed), a second press clears it.
+    const chip = within(within(region()).getByRole("group", { name: "Filter by business domain" })).getByRole("button", { name: /^Commerce \d+$/ });
+    expect(chip).toHaveAttribute("aria-pressed", "false");
+    await user.click(chip);
+    expect(nav.replace).toHaveBeenLastCalledWith(expect.stringContaining("domain=commerce"), { scroll: false });
+
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("group", { name: "Filter by business domain" })).toBeNull();
+  });
+
+  it("clears the search from its button and puts focus back in the field", async () => {
+    const user = userEvent.setup();
+    render(<ComponentGallery facets={FACETS} />);
+    const field = screen.getByRole("searchbox");
+    await user.type(field, "but");
+    await user.click(screen.getByRole("button", { name: "Clear search" }));
+    expect(field).toHaveValue("");
+    expect(field).toHaveFocus();
+    expect(screen.queryByRole("button", { name: "Clear search" })).toBeNull();
+  });
+
   it("puts the business groups in the phone sheet and counts them on the trigger", async () => {
     nav.search = "domain=commerce";
     render(<ComponentGallery facets={FACETS} />);
