@@ -1,13 +1,14 @@
 "use client";
 
 /**
- * PillSelector: a room / floor selector as a wrapped row of pills. A radiogroup with roving focus (arrow keys reverse
- * under RTL), 44px tall below `md`, wrapping instead of scrolling. The selected pill is solid primary and also carries
- * a check, so selection is never colour alone.
+ * PillSelector: a room / floor / metric selector as a wrapped row of pills, on the library `ToggleGroup`
+ * (`type="single"`, the `pill` variant). It is a radiogroup with one tab stop: arrow keys move between pills
+ * (reversed under RTL, from the nearest `KinetixDirectionProvider`), Space or Enter chooses one, and a pill cannot
+ * be un-chosen. The selected pill is solid primary and also carries a check, so selection is never colour alone.
  */
 import * as React from "react";
+import { ToggleGroup, ToggleGroupItem } from "@kinetixui/ui";
 import { cn } from "@/lib/utils";
-import { rovingKeyDown } from "./roving";
 
 export type PillOption = { id: string; label: string; icon?: React.ReactNode; count?: number };
 
@@ -40,26 +41,20 @@ export function PillSelector({
   const selected = ids.includes(value) ? value : ids[0];
 
   return (
-    <div role="radiogroup" aria-label={label} className={cn("flex gap-2", wrap ? "flex-wrap" : "flex-nowrap", className)}>
+    <ToggleGroup
+      type="single"
+      variant="pill"
+      aria-label={label}
+      value={selected}
+      onValueChange={(next) => {
+        if (next) onChange(next);
+      }}
+      className={cn("gap-2", wrap ? "flex-wrap" : "flex-nowrap", className)}
+    >
       {all.map((option) => {
         const on = option.id === selected;
         return (
-          <button
-            key={option.id}
-            type="button"
-            role="radio"
-            aria-checked={on}
-            tabIndex={on ? 0 : -1}
-            data-radio-id={option.id}
-            onClick={() => onChange(option.id)}
-            onKeyDown={(event) => rovingKeyDown(event, ids, selected!, onChange)}
-            className={cn(
-              "inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-body-md md:min-h-10",
-              "transition-colors duration-fast motion-reduce:transition-none",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-              on ? "bg-primary font-semibold text-primary-foreground shadow-sm" : "bg-card text-foreground shadow-sm hover:bg-muted",
-            )}
-          >
+          <ToggleGroupItem key={option.id} value={option.id} className="gap-2">
             {on ? (
               <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
                 <path d="m5 12.5 4.5 4.5L19 7.5" />
@@ -76,9 +71,9 @@ export function PillSelector({
                 <span className="sr-only"> devices</span>
               </span>
             ) : null}
-          </button>
+          </ToggleGroupItem>
         );
       })}
-    </div>
+    </ToggleGroup>
   );
 }

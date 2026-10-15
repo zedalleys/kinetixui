@@ -1,6 +1,6 @@
 "use client";
 
-import { Toggle } from "@kinetixui/ui";
+import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Toggle } from "@kinetixui/ui";
 import { PlatformLogo } from "./platform-logo";
 
 import * as React from "react";
@@ -10,6 +10,7 @@ import { ArrowRight, ChevronDown, Search, SlidersHorizontal, X } from "lucide-re
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupInput,
   Sheet,
   SheetContent,
@@ -233,17 +234,6 @@ function Card({ item }: { item: Item }) {
   );
 }
 
-const catButton = (active: boolean) =>
-  cn(
-    // coarse:min-h-10 — a 26px pill under a mouse, 40px under a finger; the groups' gap grows with it so the
-    // taller rows never touch
-    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-label-md uppercase tracking-[0.12em] transition-colors coarse:min-h-10",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-    active
-      ? "border-primary bg-primary text-primary-foreground"
-      : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
-  );
-
 /** `?capability=` / `?domain=` / `?layer=`, resolved against the options the facets offer; anything else is no filter. */
 export function resolveFacetParam(value: string | null, options: FacetOption[]): FacetOption | null {
   return options.find((o) => o.id === value) ?? null;
@@ -390,9 +380,15 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
       {options.map((o) => {
         const on = active?.id === o.id;
         return (
-          <button key={o.id} type="button" aria-pressed={on} onClick={() => setBusiness(key, on ? null : o.id)} className={catButton(on)}>
+          <Toggle
+            key={o.id}
+            pressed={on}
+            onClick={() => setBusiness(key, on ? null : o.id)}
+            variant="pill"
+            className="font-mono uppercase tracking-[0.12em]"
+          >
             {o.label} <span className="tabular-nums">{BUSINESS_COUNT[key][o.id] ?? 0}</span>
-          </button>
+          </Toggle>
         );
       })}
     </div>
@@ -514,31 +510,24 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
                 className="py-0 text-sm [&::-webkit-search-cancel-button]:appearance-none"
               />
               {query && (
-                <InputGroupAddon align="end">
-                  <button
-                    type="button"
-                    aria-label="Clear search"
-                    onClick={() => {
-                      setQuery("");
-                      searchRef.current?.focus();
-                    }}
-                    className="kx-hit rounded-sm p-0.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <X aria-hidden className="size-3.5" />
-                  </button>
-                </InputGroupAddon>
+                <InputGroupButton
+                  aria-label="Clear search"
+                  onClick={() => {
+                    setQuery("");
+                    searchRef.current?.focus();
+                  }}
+                  className="kx-hit"
+                >
+                  <X aria-hidden />
+                </InputGroupButton>
               )}
             </InputGroup>
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
-                <button
-                  type="button"
+                <Button
+                  variant="Outline"
                   aria-label={facetCount > 0 ? `Filters, ${facetCount} active` : "Filters"}
-                  className={cn(
-                    "kx-hit relative inline-flex h-9 shrink-0 items-center coarse:h-11 gap-1.5 rounded-md border border-border px-3 text-sm md:hidden",
-                    facetCount > 0 ? "border-primary text-foreground" : "text-muted-foreground",
-                    "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  )}
+                  className={cn("kx-hit gap-1.5 md:hidden", facetCount > 0 && "border-primary")}
                 >
                   <SlidersHorizontal aria-hidden className="size-4" />
                   <span>Filters</span>
@@ -550,7 +539,7 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
                       {facetCount}
                     </span>
                   )}
-                </button>
+                </Button>
               </SheetTrigger>
               <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-xl md:hidden">
                 <SheetTitle>Filters</SheetTitle>
@@ -561,37 +550,22 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
                 <h3 className="mt-6 font-mono text-label-md uppercase tracking-[0.12em] text-foreground">Business filters</h3>
                 <div className="mt-3 flex flex-col gap-4">{businessGroups}</div>
                 <div className="mt-6 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSheetOpen(false)}
-                    className="inline-flex h-10 flex-1 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  >
+                  <Button onClick={() => setSheetOpen(false)} className="flex-1">
                     Show {filtered.length} {filtered.length === 1 ? "component" : "components"}
-                  </button>
+                  </Button>
                   {isFiltered && (
-                    <button
-                      type="button"
-                      onClick={clearAll}
-                      className="inline-flex h-10 items-center rounded-md px-3 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
+                    <Button variant="Ghost" onClick={clearAll}>
                       Clear all
-                    </button>
+                    </Button>
                   )}
                 </div>
               </SheetContent>
             </Sheet>
             {isFiltered && (
-              <button
-                type="button"
-                onClick={clearAll}
-                className={cn(
-                  "hidden h-9 shrink-0 items-center gap-1 rounded-md px-2.5 text-sm text-muted-foreground md:inline-flex",
-                  "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                )}
-              >
-                <X aria-hidden className="size-3.5" />
+              <Button variant="Ghost" onClick={clearAll} className="hidden md:inline-flex">
+                <X aria-hidden />
                 Clear all
-              </button>
+              </Button>
             )}
           </div>
 
@@ -602,45 +576,37 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
       {/* Below the sticky bar, not in it: opened, the three business groups are several rows of chips, and a sticky
           bar that tall would cover the results it filters. They scroll away with the intro; the active-filter chips
           and the status line below always say what is applied. */}
-      <div className="mt-3 hidden md:block">
-        <button
-          type="button"
-          aria-expanded={businessOpen}
-          aria-controls="business-filters"
-          onClick={() => setBusinessOpen((o) => !o)}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-md py-1 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground",
-            "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          )}
-        >
-          <ChevronDown aria-hidden className={cn("size-3.5 motion-safe:transition-transform", businessOpen && "rotate-180")} />
-          Business filters
-          {businessActive && (
-            <span className="normal-case tracking-normal text-foreground">
-              ({[activeCapability, activeDomain, activeLayer].filter(Boolean).length} active)
-            </span>
-          )}
-        </button>
-        <div id="business-filters" hidden={!businessOpen} className="mt-2 flex flex-col gap-3">
+      <Collapsible open={businessOpen} onOpenChange={setBusinessOpen} className="mt-3 hidden md:block">
+        <CollapsibleTrigger asChild>
+          <Button variant="Ghost" className="font-mono uppercase tracking-[0.12em]">
+            <ChevronDown aria-hidden className={cn("motion-safe:transition-transform", businessOpen && "rotate-180")} />
+            Business filters
+            {businessActive && (
+              <span className="normal-case tracking-normal">
+                ({[activeCapability, activeDomain, activeLayer].filter(Boolean).length} active)
+              </span>
+            )}
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2 flex flex-col gap-3">
           {businessGroups}
-        </div>
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
       {activeChips.length > 0 && (
         <ul aria-label="Active filters" className="mt-3 flex flex-wrap gap-1.5">
           {activeChips.map((c) => (
-            <li key={c.key}>
-              <button
-                type="button"
+            <li key={c.key} className="min-w-0 max-w-full">
+              {/* The whole chip is the remove button, as before: a Tag's separate dismiss icon is a far smaller target.
+                  It wraps inside the row at large text instead of pushing the page sideways. */}
+              <Button
+                variant="Outline"
                 onClick={c.clear}
                 aria-label={`Remove filter ${c.group}: ${c.label}`}
-                className={cn(
-                  "inline-flex min-h-7 max-w-full flex-wrap items-center gap-x-1 rounded-md border border-border bg-muted/40 px-2 text-start text-body-sm coarse:min-h-10",
-                  "hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                )}
+                className="h-auto max-w-full flex-wrap justify-start whitespace-normal text-start"
               >
                 <span className="text-muted-foreground">{c.group}:</span> {c.label}
-                <X aria-hidden className="size-3.5" />
-              </button>
+                <X aria-hidden />
+              </Button>
             </li>
           ))}
         </ul>
@@ -667,13 +633,9 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
             {activeDomain ? ` in ${activeDomain.label}` : ""}
             {activeLayer ? ` at the ${activeLayer.label} layer` : ""}.
           </p>
-          <button
-            type="button"
-            onClick={clearAll}
-            className="mt-3 font-mono text-label-md uppercase tracking-[0.12em] text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
+          <Button variant="Link" onClick={clearAll} className="mt-3 font-mono uppercase tracking-[0.12em]">
             Clear filters
-          </button>
+          </Button>
         </div>
       ) : grouped ? (
         <div className="mt-6 space-y-12">

@@ -121,7 +121,7 @@ describe("smart space: connected space", () => {
     expect(screen.queryByRole("radiogroup", { name: /Front door lock/ })).toBeNull();
   });
 
-  it("is reachable and operable by keyboard: rail item by Enter, device pills by arrow keys", async () => {
+  it("is reachable and operable by keyboard: rail item by Enter, device pills by arrow keys and Space", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<SmartSpaceEnvironmentExample />);
     const office = rail().getByRole("button", { name: /Office/ });
@@ -132,8 +132,13 @@ describe("smart space: connected space", () => {
     const group = screen.getByRole("radiogroup", { name: /Devices in Hallway/ });
     const whole = within(group).getByRole("radio", { name: "Whole room" });
     whole.focus();
+    // The library ToggleGroup: arrows move focus, Space chooses (the selection does not follow focus).
     await user.keyboard("{ArrowRight}");
-    expect(within(group).getByRole("radio", { name: /Hallway thermostat/ })).toBeChecked();
+    const thermostat = within(group).getByRole("radio", { name: /Hallway thermostat/ });
+    expect(thermostat).toHaveFocus();
+    expect(thermostat).not.toBeChecked();
+    await user.keyboard(" ");
+    expect(thermostat).toBeChecked();
   });
 
   it("keeps alerts visible, acknowledges without hiding them, and jumps to them from the header", () => {
