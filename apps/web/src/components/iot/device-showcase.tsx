@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { NativeSelect, NativeSelectOption } from "@kinetixui/ui";
+import { NativeSelect, NativeSelectOption, Slider } from "@kinetixui/ui";
 import {
   BatteryIndicator,
   DeviceStatusBadge,
@@ -11,6 +11,7 @@ import {
 } from "@kinetixui/iot/react";
 import type { KinetixDeviceStatus, KinetixTelemetryQuality } from "@kinetixui/iot/functions";
 import { Checkbox, Label } from "@kinetixui/ui";
+import { useDocumentDirection } from "@/lib/use-document-direction";
 
 /**
  * The interactive half of /iot: the five shipped primitives, driven by a handful of controls.
@@ -64,11 +65,19 @@ function instantFor(minutes: number | null): string | null {
   return new Date(Date.parse(NOW) - minutes * 60_000).toISOString();
 }
 
-/** A labelled row in the control column. `htmlFor`/`id` are real, so every control has a name. */
-function Control({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
+/**
+ * A labelled row in the control column. Every control has a name: a native control through `htmlFor`/`id`, and a
+ * library `Slider` through `aria-labelledby` on the label's own id, because its named element is the thumb
+ * (`role="slider"`), not the root a `for` attribute would point at.
+ */
+function Control({ id, label, slider = false, children }: { id: string; label: string; slider?: boolean; children: React.ReactNode }) {
   return (
     <div className="grid gap-2">
-      <Label htmlFor={id} className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <Label
+        id={`${id}-label`}
+        htmlFor={slider ? undefined : id}
+        className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+      >
         {label}
       </Label>
       {children}
@@ -86,6 +95,12 @@ function Row({ name, children }: { name: string; children: React.ReactNode }) {
   );
 }
 
+/**
+ * Battery and signal stay native ranges (a documented exception, C): each is disabled while the device reports no
+ * value, and the library `Slider` cannot say so yet — `aria-disabled` lands on its root, not on the thumb that has
+ * `role="slider"`, and its `disabled:` styles target a span that is never `:disabled`. Last sync and temperature,
+ * never disabled, are the library `Slider`. See the audit, "Wave 2e".
+ */
 const rangeClass =
   "h-9 w-full accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
   "focus-visible:ring-offset-2 focus-visible:ring-offset-background";
@@ -101,6 +116,8 @@ export function DeviceShowcase() {
   const [signalReported, setSignalReported] = React.useState(true);
 
   const step = LAST_SEEN_STEPS[lastSeenStep] ?? LAST_SEEN_STEPS[1]!;
+  // Radix reads direction from context or `dir`; this page has no provider, so pass the document's.
+  const dir = useDocumentDirection();
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-10">
@@ -187,29 +204,33 @@ export function DeviceShowcase() {
           </Label>
         </Control>
 
-        <Control id="iot-demo-last-seen" label={`Last sync — ${step.label}`}>
-          <input
+        {/* The library Slider: one thumb, so the value is a one-item array. `h-9` keeps the 36px pointer target the
+            native range had: Radix takes a press anywhere on the root, not only on the 16px thumb. */}
+        <Control id="iot-demo-last-seen" label={`Last sync — ${step.label}`} slider>
+          <Slider
             id="iot-demo-last-seen"
-            type="range"
+            aria-labelledby="iot-demo-last-seen-label"
+            dir={dir}
             min={0}
             max={LAST_SEEN_STEPS.length - 1}
             step={1}
-            value={lastSeenStep}
-            onChange={(e) => setLastSeenStep(Number(e.target.value))}
-            className={rangeClass}
+            value={[lastSeenStep]}
+            onValueChange={([next]) => setLastSeenStep(next!)}
+            className="h-9"
           />
         </Control>
 
-        <Control id="iot-demo-temperature" label={`Temperature — ${temperature.toFixed(1)} °C`}>
-          <input
+        <Control id="iot-demo-temperature" label={`Temperature — ${temperature.toFixed(1)} °C`} slider>
+          <Slider
             id="iot-demo-temperature"
-            type="range"
+            aria-labelledby="iot-demo-temperature-label"
+            dir={dir}
             min={-10}
             max={45}
             step={0.1}
-            value={temperature}
-            onChange={(e) => setTemperature(Number(e.target.value))}
-            className={rangeClass}
+            value={[temperature]}
+            onValueChange={([next]) => setTemperature(next!)}
+            className="h-9"
           />
         </Control>
 
