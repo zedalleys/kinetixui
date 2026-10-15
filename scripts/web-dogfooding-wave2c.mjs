@@ -139,6 +139,7 @@ try {
         assert.equal(await radios.nth(1).getAttribute("aria-checked"), "true", "a click un-chose the filter");
         assert(await fits(group), "the filter row overflows");
         const filters = await radios.count();
+        const column = Math.round(await page.locator("article").first().evaluate((el) => el.getBoundingClientRect().width));
         await radios.nth(0).click();
         await page.waitForURL((u) => !u.search.includes("filter="));
         // search, then the empty state's clear button
@@ -155,7 +156,7 @@ try {
         const ov = await overflow(page);
         assert(ov <= 0, `page overflows by ${ov}px`);
         await page.close();
-        return { filters, axe };
+        return { filters, articleWidth: column, axe };
       });
 
     /* ── docs sidebar filter (the sidebar is shown from lg) ── */
@@ -192,7 +193,9 @@ try {
       await check("create", tag, row, async () => {
         const page = await open(context, "/create", view);
         let scope = page.getByRole("complementary", { name: "Configuration" });
-        if (!(await scope.isVisible())) {
+        // the sidebar is a sheet below the rem-based `lg-rem` breakpoint: on a phone, and at 1280px with 200% text
+        const inSheet = !(await scope.isVisible());
+        if (inSheet) {
           await page.getByRole("button", { name: "Customize" }).click();
           scope = page.getByRole("dialog");
           await scope.waitFor();
@@ -228,7 +231,10 @@ try {
         await hex.fill("#1d4ed8");
         let axe = await axeOn(page, '[role="radiogroup"][aria-label="Preview appearance"]', `create appearance ${tag}`);
         // close the sheet before reaching the scene control on a phone
-        if (width < 1024) await press(page, "Escape");
+        if (inSheet) {
+          await press(page, "Escape");
+          await page.getByRole("dialog").waitFor({ state: "detached" });
+        }
         const scene = page.getByRole("radiogroup", { name: "Preview scene" });
         await scene.getByRole("radio", { name: "Form" }).click();
         assert.equal(await scene.getByRole("radio", { name: "Form" }).getAttribute("aria-checked"), "true");
@@ -237,7 +243,7 @@ try {
         const ov = await overflow(page);
         assert(ov <= 0, `page overflows by ${ov}px`);
         await page.close();
-        return { axe };
+        return { sidebarInSheet: inSheet, axe };
       });
 
     /* ── charts legend ── */
@@ -288,13 +294,17 @@ try {
         const swatch = firstRamp.locator("button").nth(1);
         assert.match(await swatch.textContent(), /^Copy azure /);
         assert.match(await swatch.textContent(), /hsl\(/);
-        await tabTo(page, copyRamp, swatch, 1);
-        assert(await focusRing(swatch), "no visible focus indicator on a swatch card");
-        const rest = await swatch.evaluate((el) => getComputedStyle(el).boxShadow);
+        // hover first, with nothing focused (focus replaces the elevation with the ring)
         await page.mouse.move(0, 0);
+        await page.evaluate(() => document.activeElement?.blur());
+        const rest = await swatch.evaluate((el) => getComputedStyle(el).boxShadow);
         await swatch.hover();
         await page.waitForTimeout(250);
-        const hovered = await swatch.evaluate((el) => (el.blur(), getComputedStyle(el).boxShadow));
+        const hovered = await swatch.evaluate((el) => getComputedStyle(el).boxShadow);
+        assert.notEqual(rest, hovered, "hovering a swatch card does not lift it");
+        await page.mouse.move(0, 0);
+        await tabTo(page, copyRamp, swatch, 1);
+        assert(await focusRing(swatch), "no visible focus indicator on a swatch card");
         await hex.click();
         const axe = await axeOn(page, '[role="radiogroup"][aria-label="Value format"], section#azure', `colors ${tag}`);
         const ov = await overflow(page);

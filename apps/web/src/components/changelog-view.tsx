@@ -445,9 +445,14 @@ export function ChangelogView({ releases }: { releases: ViewRelease[] }) {
           {FILTERS.map((f) => {
             const active = filter === f.id;
             return (
-              <ToggleGroupItem key={f.id} value={f.id} className="text-sm">
+              <ToggleGroupItem
+                key={f.id}
+                value={f.id}
+                // In a narrow column (200% text) the label and count wrap inside the pill instead of spilling out.
+                className="min-w-0 flex-wrap gap-x-1.5 gap-y-0 text-sm [overflow-wrap:anywhere]"
+              >
                 {active ? <span aria-hidden>✓</span> : null}
-                {f.label}{" "}
+                <span className="min-w-0">{f.label}</span>{" "}
                 <span className={active ? "opacity-80" : "text-muted-foreground"}>{filterReleases(releases, f.id, query).length}</span>
               </ToggleGroupItem>
             );
