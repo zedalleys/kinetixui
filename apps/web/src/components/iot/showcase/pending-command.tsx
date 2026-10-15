@@ -24,6 +24,7 @@
  */
 import * as React from "react";
 import { CommandFeedback } from "@kinetixui/iot/react";
+import { Button } from "@kinetixui/ui";
 import { canRetryLifecycle, isLifecyclePending, parseTimestamp, type KinetixCommandLifecycle } from "@kinetixui/iot/functions";
 import { cn } from "@/lib/utils";
 import { Disclosure, StateGlyph, STATE_TEXT } from "./primitives";
@@ -52,10 +53,8 @@ export function pendingCommandView(lifecycle: KinetixCommandLifecycle | undefine
   return "none";
 }
 
-const SMALL_BUTTON = cn(
-  "inline-flex min-h-11 items-center rounded-lg px-3 text-label-lg md:min-h-9",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-);
+/** The library Button (`lg`, the label size these rows always used) at a compact height: 44px on a phone, 36px from `md`. */
+const SMALL_BUTTON = "min-h-11 px-3 py-0 md:min-h-9";
 
 /** Whether the lifecycle has a record worth reading: a request in flight or one that failed. */
 export const hasRequestRecord = (view: PendingCommandView) => view === "changing" || view === "waiting" || view === "failed";
@@ -223,20 +222,22 @@ export function PendingCommand({
           {active && (retry || cancel) ? (
             <span className="flex flex-wrap gap-2">
               {retry ? (
-                <button type="button" onClick={onRetry} aria-label={subject ? `Retry ${subject}: ${want}` : undefined} className={cn(SMALL_BUTTON, "bg-primary text-primary-foreground")}>
+                <Button type="button" variant="Primary" size="lg" onClick={onRetry} aria-label={subject ? `Retry ${subject}: ${want}` : undefined} className={SMALL_BUTTON}>
                   Retry
-                </button>
+                </Button>
               ) : null}
               {cancel ? (
-                <button
+                <Button
                   type="button"
+                  variant="Outline"
+                  size="lg"
                   onClick={onCancel}
                   aria-label={view === "failed" ? (subject ? `Dismiss the ${subject} failure` : undefined) : subject ? `Cancel the ${subject} request` : "Cancel request"}
-                  className={cn(SMALL_BUTTON, view === "failed" ? "bg-card text-foreground" : "bg-card/80 text-foreground")}
+                  className={cn(SMALL_BUTTON, view === "failed" ? "bg-card" : "bg-card/80")}
                 >
                   {/* Short on screen so the row fits a phone in one line; the accessible name says what it cancels. */}
                   {view === "failed" ? "Dismiss" : "Cancel"}
-                </button>
+                </Button>
               ) : null}
             </span>
           ) : null}

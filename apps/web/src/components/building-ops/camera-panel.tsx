@@ -7,7 +7,7 @@
 import * as React from "react";
 import { CameraOff, X } from "lucide-react";
 import { DeviceConnection, TelemetryMetric } from "@kinetixui/iot/react";
-import { SegmentedControl, SegmentedControlItem } from "@kinetixui/ui";
+import { Button, Card, SegmentedControl, SegmentedControlItem } from "@kinetixui/ui";
 import {
   formatAgo,
   formatClock,
@@ -187,14 +187,10 @@ export function CameraList({
           <span>
             Zone: <span className="font-medium text-foreground">{zoneName(zoneId)}</span>
           </span>
-          <button
-            type="button"
-            onClick={onClearZone}
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-label-md text-foreground underline-offset-4 outline-none hover:underline focus-visible:shadow-focus"
-          >
-            <X aria-hidden="true" className="size-3.5" />
+          <Button type="button" variant="Ghost" size="md" onClick={onClearZone} className="gap-1 px-2 py-1">
+            <X aria-hidden="true" className="!size-3.5" />
             Clear zone filter
-          </button>
+          </Button>
         </p>
       ) : null}
       {hiddenSelection ? <p className="text-body-sm text-muted-foreground">The selected camera is hidden by this filter.</p> : null}
@@ -208,26 +204,22 @@ export function CameraList({
             const selected = camera.id === selectedId;
             return (
               <li key={camera.id}>
-                <button
-                  type="button"
-                  data-camera-row={camera.id}
-                  aria-pressed={selected}
-                  onClick={() => onSelect(camera.id)}
-                  className={cn(
-                    "grid w-full gap-0.5 rounded-lg border px-3 py-2 text-start outline-none",
-                    "transition-colors duration-fast ease-standard motion-reduce:transition-none focus-visible:shadow-focus",
-                    selected ? "border-foreground bg-accent" : "border-transparent bg-surface-grouped hover:border-border hover:bg-accent",
-                  )}
-                >
-                  <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
-                    <span className="font-mono text-label-lg font-medium text-foreground">{camera.name}</span>
-                    <StatusText Icon={st.Icon} word={st.word} spin={s?.connectivity === "connecting"} className={cn("text-label-md", TONE_TEXT[st.tone])} />
-                  </span>
-                  <span className="flex flex-wrap justify-between gap-x-3 text-body-sm text-muted-foreground">
-                    <span className="min-w-0 break-words">{zoneName(camera.zoneId)}</span>
-                    <span className="tabular-nums">Seen {formatAgo(s?.lastSeenAt, snapshot.now)}</span>
-                  </span>
-                </button>
+                {/* The library Card as a toggle button: aria-pressed draws its selected 2px primary edge, and hover,
+                    press and the focus ring are the Card's own interactive states. */}
+                <Card asChild className="w-full rounded-lg px-3 py-2 shadow-sm">
+                  <button type="button" data-camera-row={camera.id} aria-pressed={selected} onClick={() => onSelect(camera.id)}>
+                    <span className="grid gap-0.5">
+                      <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
+                        <span className="font-mono text-label-lg font-medium text-foreground">{camera.name}</span>
+                        <StatusText Icon={st.Icon} word={st.word} spin={s?.connectivity === "connecting"} className={cn("text-label-md", TONE_TEXT[st.tone])} />
+                      </span>
+                      <span className="flex flex-wrap justify-between gap-x-3 text-body-sm text-muted-foreground">
+                        <span className="min-w-0 break-words">{zoneName(camera.zoneId)}</span>
+                        <span className="tabular-nums">Seen {formatAgo(s?.lastSeenAt, snapshot.now)}</span>
+                      </span>
+                    </span>
+                  </button>
+                </Card>
               </li>
             );
           })}

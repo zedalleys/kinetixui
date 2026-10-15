@@ -2,7 +2,16 @@
 
 import * as React from "react";
 import { ChevronRight } from "lucide-react";
+import {
+  Button,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+  SegmentedControl,
+  SegmentedControlItem,
+} from "@kinetixui/ui";
 import { cn } from "@/lib/utils";
+import { useDocumentDirection } from "@/lib/use-document-direction";
 import { SectionHead } from "@/components/section-head";
 import type { CreateAction, CreateConfig, PreviewMode } from "@/lib/create/config";
 import { currentStyle } from "@/lib/create/config";
@@ -153,16 +162,18 @@ function ContrastPanel({ results, manual }: { results: ContrastResult[]; manual:
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-4 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <ChevronRight className={cn("size-4 transition-transform motion-reduce:transition-none", open && "rotate-90")} aria-hidden />
-        {open ? "Hide" : "Show"} all pairs
-      </button>
-      {open && <div className="mt-2 divide-y divide-border rounded-lg border border-border px-3 py-1">{results.map(row)}</div>}
+      {/* The library Collapsible: the trigger carries aria-expanded and, while open, aria-controls. */}
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <Button variant="Ghost" size="md" className="-ms-2 mt-2 px-2 text-sm font-normal text-muted-foreground hover:text-foreground">
+            <ChevronRight className={cn("size-4 transition-transform motion-reduce:transition-none", open && "rotate-90")} aria-hidden />
+            {open ? "Hide" : "Show"} all pairs
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="mt-2 divide-y divide-border rounded-lg border border-border px-3 py-1">{results.map(row)}</div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
@@ -181,6 +192,7 @@ export function CreateSidebar({
   className?: string;
 }) {
   const id = React.useId();
+  const dir = useDocumentDirection();
   const style = currentStyle(config);
 
   const heading = (key: string, text: string) => (
@@ -199,24 +211,22 @@ export function CreateSidebar({
           Which one the preview shows. One configuration generates both, and the copied CSS carries both —
           you are not setting up two themes.
         </p>
-        <div role="group" aria-label="Preview appearance" className="mt-3 flex gap-2">
+        {/* One appearance at a time: the library SegmentedControl, a radiogroup with one tab stop. */}
+        <SegmentedControl
+          aria-label="Preview appearance"
+          dir={dir}
+          value={config.mode}
+          onValueChange={(mode) => {
+            if (mode) dispatch({ type: "set-mode", mode: mode as PreviewMode });
+          }}
+          className="mt-3 flex w-full"
+        >
           {MODES.map((m) => (
-            <button
-              key={m.value}
-              type="button"
-              aria-pressed={config.mode === m.value}
-              onClick={() => dispatch({ type: "set-mode", mode: m.value })}
-              className={cn(
-                "flex-1 rounded-md border px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                config.mode === m.value
-                  ? "border-primary bg-accent font-medium text-accent-foreground"
-                  : "border-border text-muted-foreground hover:text-foreground",
-              )}
-            >
+            <SegmentedControlItem key={m.value} value={m.value} className="text-sm">
               {m.label}
-            </button>
+            </SegmentedControlItem>
           ))}
-        </div>
+        </SegmentedControl>
       </section>
 
       {/* ── Design ─────────────────────────────────────────────────────── */}
