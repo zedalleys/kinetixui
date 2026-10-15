@@ -1,0 +1,355 @@
+{
+  "base": "http://127.0.0.1:3000",
+  "rows": [
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 1,
+      "dashboard": {
+        "groups": 4,
+        "all": 6,
+        "plantRoom": 2,
+        "axe": 0
+      },
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "ltr",
+        "afterKeyboard": "ltr",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 2,
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "ltr",
+        "afterKeyboard": "ltr",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 1,
+      "dashboard": {
+        "groups": 4,
+        "all": 6,
+        "plantRoom": 2,
+        "axe": 0
+      },
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "ltr",
+        "afterKeyboard": "ltr",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 2,
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "ltr",
+        "afterKeyboard": "ltr",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 1,
+      "dashboard": {
+        "groups": 4,
+        "all": 6,
+        "plantRoom": 2,
+        "axe": 0
+      },
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "rtl",
+        "afterKeyboard": "rtl",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 2,
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "rtl",
+        "afterKeyboard": "rtl",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 1,
+      "dashboard": {
+        "groups": 4,
+        "all": 6,
+        "plantRoom": 2,
+        "axe": 0
+      },
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "rtl",
+        "afterKeyboard": "rtl",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 2,
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "rtl",
+        "afterKeyboard": "rtl",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 1,
+      "dashboard": {
+        "groups": 4,
+        "all": 6,
+        "plantRoom": 2,
+        "axe": 0
+      },
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "ltr",
+        "afterKeyboard": "ltr",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 2,
+      "dashboard": {
+        "groups": 4,
+        "all": 6,
+        "plantRoom": 2,
+        "axe": 0
+      },
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "ltr",
+        "afterKeyboard": "ltr",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 1,
+      "dashboard": {
+        "groups": 4,
+        "all": 6,
+        "plantRoom": 2,
+        "axe": 0
+      },
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "ltr",
+        "afterKeyboard": "ltr",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 2,
+      "dashboard": {
+        "groups": 4,
+        "all": 6,
+        "plantRoom": 2,
+        "axe": 0
+      },
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "ltr",
+        "afterKeyboard": "ltr",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 1,
+      "dashboard": {
+        "groups": 4,
+        "all": 6,
+        "plantRoom": 2,
+        "axe": 0
+      },
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "rtl",
+        "afterKeyboard": "rtl",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 2,
+      "dashboard": {
+        "groups": 4,
+        "all": 6,
+        "plantRoom": 2,
+        "axe": 0
+      },
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "rtl",
+        "afterKeyboard": "rtl",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 1,
+      "dashboard": {
+        "groups": 4,
+        "all": 6,
+        "plantRoom": 2,
+        "axe": 0
+      },
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "rtl",
+        "afterKeyboard": "rtl",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 2,
+      "dashboard": {
+        "groups": 4,
+        "all": 6,
+        "plantRoom": 2,
+        "axe": 0
+      },
+      "pillSelector": {
+        "metrics": 2,
+        "axe": 0
+      },
+      "previewDirection": {
+        "start": "rtl",
+        "afterKeyboard": "rtl",
+        "axe": 0
+      },
+      "galleryAxe": 0,
+      "gallery": "clear search, business chip on/off, active-filter removal"
+    }
+  ],
+  "failures": [
+    "dashboard 390px ltr light 200%: page overflows by 168px",
+    "dashboard 390px ltr dark 200%: page overflows by 168px",
+    "dashboard 390px rtl light 200%: page overflows by 168px",
+    "dashboard 390px rtl dark 200%: page overflows by 168px"
+  ]
+}
