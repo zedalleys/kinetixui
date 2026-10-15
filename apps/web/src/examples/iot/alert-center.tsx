@@ -6,8 +6,8 @@ import { selectAlerts, selectFleetHealth } from "@/lib/iot-sim";
 import { useIotSimulation } from "@/lib/iot-sim/use-simulation";
 import { operations } from "./scenarios";
 import { Panel } from "@/components/iot/showcase";
-import { BUTTON, SimNotice, SimTransport, deviceOf } from "./harness";
-import { cn } from "@/lib/utils";
+import { Button, Checkbox, Label } from "@kinetixui/ui";
+import { SimNotice, SimTransport, deviceOf } from "./harness";
 
 // kx-iot:start
 /**
@@ -53,13 +53,13 @@ export function AlertCenterExample() {
 
       <Panel title="Alerts" description="Acknowledging says “I have seen this”. It does not resolve the alert.">
         <div className="flex flex-wrap items-center gap-3 rounded-xl bg-muted/60 p-3">
-          <label className="flex min-h-11 cursor-pointer items-center gap-3 text-body-md text-foreground md:min-h-9">
-            <input type="checkbox" className="size-5" checked={showAcknowledged} onChange={(event) => setShowAcknowledged(event.target.checked)} />
+          <Label className="flex min-h-11 cursor-pointer items-center gap-3 text-body-md font-normal leading-normal text-foreground md:min-h-9">
+            <Checkbox checked={showAcknowledged} onCheckedChange={(checked) => setShowAcknowledged(checked === true)} />
             Show acknowledged
-          </label>
-          <button type="button" className={cn(BUTTON, "min-h-11 md:min-h-9")} onClick={() => iot.setReachable("s-101", silent)}>
+          </Label>
+          <Button type="button" variant="Outline" size="lg" className="max-w-full whitespace-normal" onClick={() => iot.setReachable("s-101", silent)}>
             {silent ? "Vessel sensor S-101 answers again" : "Make Vessel sensor S-101 stop answering"}
-          </button>
+          </Button>
         </div>
         <AlertList
           alerts={alerts}

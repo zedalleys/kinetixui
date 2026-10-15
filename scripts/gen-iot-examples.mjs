@@ -16,6 +16,7 @@
  */
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const read = (p) => readFileSync(`${root}/${p}`, "utf8");
@@ -54,6 +55,48 @@ function extract(relPath) {
     return null;
   }
   return body;
+}
+
+/**
+ * What a reader copies must be the same controls the preview renders, from packages they can install.
+ *
+ *   - No hand-rolled control in the copyable region: a native `<button>`, `<input>`, `<select>` or `<textarea>`
+ *     there is a local re-implementation of a KinetixUI component, and copying it copies the drift. Compose the
+ *     library control (Button, Input, NativeSelect, Checkbox, RadioGroup, …) instead. (Wave 2d removed the last 28.)
+ *   - Every `@kinetixui/*` import in an example file is a public package export, so the components the region uses
+ *     resolve for a consumer exactly as they do here — never a monorepo source path.
+ */
+const PUBLIC_ENTRIES = new Set(
+  ["packages/ui", "packages/iot"].flatMap((dir) => {
+    const pkg = JSON.parse(read(`${dir}/package.json`));
+    return Object.keys(pkg.exports ?? { ".": null })
+      .filter((key) => !key.endsWith(".json") && !key.includes("tailwind"))
+      .map((key) => (key === "." ? pkg.name : `${pkg.name}/${key.slice(2)}`));
+  }),
+);
+const RAW_CONTROL = /^(button|input|select|textarea)$/;
+
+function copyability(relPath, text) {
+  const found = [];
+  const file = ts.createSourceFile(relPath, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const start = text.indexOf("kx-iot:start");
+  const end = text.indexOf("kx-iot:end");
+  for (const statement of file.statements) {
+    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
+    const from = statement.moduleSpecifier.text;
+    if (from.startsWith("@kinetixui/") && !PUBLIC_ENTRIES.has(from)) found.push(`imports "${from}", which is not a public package export`);
+  }
+  (function visit(node) {
+    if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) && node.getStart(file) > start && node.getStart(file) < end) {
+      const tag = node.tagName.getText(file);
+      if (RAW_CONTROL.test(tag)) {
+        const line = file.getLineAndCharacterOfPosition(node.getStart(file)).line + 1;
+        found.push(`a raw <${tag}> at ${relPath}:${line} in the copyable region; compose the KinetixUI control instead`);
+      }
+    }
+    ts.forEachChild(node, visit);
+  })(file);
+  return found;
 }
 
 const slugs = Object.keys(manifest.examples ?? {});
@@ -96,7 +139,10 @@ for (const slug of slugs) {
   }
 
   const body = extract(entry.source);
-  if (body !== null) snippets[slug] = body;
+  if (body !== null) {
+    snippets[slug] = body;
+    problems.push(...copyability(entry.source, source).map((p) => `${slug}: ${p}`));
+  }
 }
 
 if (problems.length) {

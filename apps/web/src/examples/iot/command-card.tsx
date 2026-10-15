@@ -15,6 +15,7 @@
  */
 import * as React from "react";
 import { BatteryIndicator } from "@kinetixui/iot/react";
+import { Button } from "@kinetixui/ui";
 import { describeDeviceStatus, formatRelativeTime, type KinetixControlState, type KinetixDevice } from "@kinetixui/iot/functions";
 import { Disclosure, PendingCommand, RequestDetails, hasRequestRecord, pendingCommandView } from "@/components/iot/showcase";
 import { cn } from "@/lib/utils";
@@ -71,22 +72,19 @@ export function NextAction({
   return (
     <>
       {actions.map((value, i) => (
-        <button
+        <Button
           key={value}
           type="button"
+          variant={i === 0 ? "Primary" : "Outline"}
+          size="lg"
           {...{ [dataAttribute]: value }}
           aria-label={`${verbs[value]} ${binding.device.name}`}
           disabled={!binding.control.interactive}
           onClick={() => binding.send(value)}
-          className={cn(
-            "inline-flex min-h-11 min-w-32 flex-1 items-center justify-center rounded-xl px-5 text-label-lg font-semibold sm:flex-none",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-            "disabled:cursor-not-allowed disabled:opacity-55",
-            i === 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-input bg-background text-foreground hover:bg-muted",
-          )}
+          className="min-h-11 min-w-32 max-w-full flex-1 whitespace-normal rounded-xl px-5 py-2 font-semibold sm:flex-none"
         >
           {labels?.[value] ?? verbs[value]}
-        </button>
+        </Button>
       ))}
     </>
   );

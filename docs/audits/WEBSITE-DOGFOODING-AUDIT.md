@@ -1,6 +1,6 @@
 # KinetixUI website dogfooding audit
 
-Refreshed 14 October 2026 against main `acfe95af62befb4d11b3527a529bfd635c825fb8`, after #375, #377, #378, #380, #358 and #357 landed, and merged as #379 (`d155db1`). It was first audited on 13 October against `ae9cc44`. **Wave 2a** (the command menu and the mobile menu, below) is measured against `d155db1`; **Wave 2b** (selectors and modes) against `bfddb67`, after #381; **Wave 2c** (site actions and fields) against `4f465a4`, after #382. Scope: `apps/web` routes, components, registry demos, and block/usage/IoT examples. This is a consumer audit. It is not a library redesign, and it does not declare the whole site accessible.
+Refreshed 14 October 2026 against main `acfe95af62befb4d11b3527a529bfd635c825fb8`, after #375, #377, #378, #380, #358 and #357 landed, and merged as #379 (`d155db1`). It was first audited on 13 October against `ae9cc44`. **Wave 2a** (the command menu and the mobile menu, below) is measured against `d155db1`; **Wave 2b** (selectors and modes) against `bfddb67`, after #381; **Wave 2c** (site actions and fields) against `4f465a4`, after #382; **Wave 2d** (copyable IoT examples) against `1893c9f`, after #383. Scope: `apps/web` routes, components, registry demos, and block/usage/IoT examples. This is a consumer audit. It is not a library redesign, and it does not declare the whole site accessible.
 
 Every interactive or styled product control should use KinetixUI, unless a documented exception explains why. Structural HTML, real content, illustrations, layout, route logic and application state belong to the website. Using a library component does not by itself prove visual consistency, so local class overrides remain reviewable.
 
@@ -14,16 +14,16 @@ Text, comments, quoted snippet strings and test files are not scanned. Neither i
 
 ## Snapshot: current versus the original audit
 
-| Class | Meaning | Original (`ae9cc44`, after Wave 1) | #379 (`d155db1`) | After Wave 2a (#381) | After Wave 2b (#382) | **After Wave 2c** | Δ 2c |
-|---|---|---:|---:|---:|---:|---:|---:|
-| A | KinetixUI component JSX sites | 1,037 | 1,196 | 1,218 | 1,236 | **1,273** | +37 |
-| B | KinetixUI equivalent exists; site authors a native/vendor primitive | 135 | 96 | 76 | 58 | **32** | −26 |
-| C | Needs a missing library variant first | 6 | 4 | 4 | 4 | **5** | +1 |
-| D | Valid site composition or deliberate native behaviour | 24 | 27 | 27 | 31 | **33** | +2 |
-| E | Read-only semantic HTML (tables) | 9 | 9 | 9 | 9 | **9** | 0 |
-| | Source files scanned | 241 | 252 | 252 | 252 | **252** | 0 |
-| | Native/vendor sites (B+C+D+E) | 174 | 136 | 116 | 102 | **79** | −23 |
-| | Files with B/C debt | — | 30 | 28 | 24 | **12** | −12 |
+| Class | Meaning | Original (`ae9cc44`, after Wave 1) | #379 (`d155db1`) | After Wave 2a (#381) | After Wave 2b (#382) | After Wave 2c (#383) | **After Wave 2d** | Δ 2d |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| A | KinetixUI component JSX sites | 1,037 | 1,196 | 1,218 | 1,236 | 1,273 | **1,312** | +39 |
+| B | KinetixUI equivalent exists; site authors a native/vendor primitive | 135 | 96 | 76 | 58 | 32 | **4** | −28 |
+| C | Needs a missing library variant first | 6 | 4 | 4 | 4 | 5 | **5** | 0 |
+| D | Valid site composition or deliberate native behaviour | 24 | 27 | 27 | 31 | 33 | **33** | 0 |
+| E | Read-only semantic HTML (tables) | 9 | 9 | 9 | 9 | 9 | **9** | 0 |
+| | Source files scanned | 241 | 252 | 252 | 252 | 252 | **252** | 0 |
+| | Native/vendor sites (B+C+D+E) | 174 | 136 | 116 | 102 | 79 | **51** | −28 |
+| | Files with B/C debt | — | 30 | 28 | 24 | 12 | **4** | −8 |
 
 A grew mostly through new surfaces built on the library: business discovery (#377), the Phase 2 business components on component pages (#378), and #380's Tabs/Toggle migration.
 
@@ -57,17 +57,17 @@ Canonical semantics: **Tabs** are peer content/section navigation, **SegmentedCo
 | IoT device-dashboard group filter | library `ToggleGroup type="single" variant="pill"`; was `role="tab"` with no tabpanels (Wave 2b) | A |
 | Floor selector, date strip | multi-line tiles, `role="radiogroup"` | C (see below) |
 
-## Remaining debt (B, 32 sites in 9 files)
+## Remaining debt (B, 4 sites in 1 file)
 
 | Wave | Sites | Files and KinetixUI equivalent | Why it remains |
 |---|---:|---|---|
 | ~~2a Overlays~~ | ~~20~~ → 0 | Done in Wave 2a (below): `command-menu` (14) → `CommandDialog` + `Command*`; `mobile-nav` (6) → `Sheet side="start"` | — |
 | ~~2b Selectors and modes~~ | ~~18~~ → 0 | Done in Wave 2b (below): 14 migrated, 4 (`systems/hero-system-map` tabs) reclassified D | — |
 | ~~2c Site actions and fields~~ | ~~26~~ → 0 | Done in Wave 2c (below): 23 migrated and removed from the ledger, 2 migrated onto `Card asChild` and kept as D (the guard counts the native child), 1 (`create-sidebar` option tiles) reclassified C | — |
-| **2d Copyable IoT examples** | 28 | `examples/iot/` `pairing-flow` (16), `alert-center`, `alert-inbox`, `automation-builder`, `command-card`, `device-dashboard` actions, `operations-environment`, `state-honesty` → `Button`, `Input`, `Checkbox`, `RadioGroup`, `NativeSelect` | Each change must regenerate the published snippets (`gen-iot-examples`) in the same PR |
+| ~~2d Copyable IoT examples~~ | ~~28~~ → 0 | Done in Wave 2d (below): all 28 migrated, snippets regenerated; `gen-iot-examples` now rejects a raw control in a copyable region | — |
 | **2e Sliders** | 4 | `iot/device-showcase` ranges → `Slider` | Needs scalar-to-array event adaptation, labelled values and touch/keyboard proof |
 
-B findings are mostly consistency debt (P2), not proven accessibility violations. The device-dashboard's incomplete tab semantics (P1) were fixed in Wave 2b. Of the 32 B sites left, 28 are Wave 2d (copyable IoT examples) and 4 are Wave 2e (sliders); `iot/device-showcase.tsx` is the one file in both 2c and 2e, and only its checkboxes moved here.
+B findings are mostly consistency debt (P2), not proven accessibility violations. The device-dashboard's incomplete tab semantics (P1) were fixed in Wave 2b. The 4 B sites left are all Wave 2e: the `iot/device-showcase.tsx` ranges.
 
 ## Library gaps (C, 5 sites)
 
@@ -177,6 +177,36 @@ Both were direct `@radix-ui/react-dialog` (and, for the command menu, direct `cm
 **Visible changes, on purpose:** the changelog search, the hex fields and the docs filter take the library field edge and focus ring; the camera rows and swatches are Cards (edge, depth, hover lift); the series legend is outline toggles with an accent fill when shown; "Show all pairs" and the Retry/Cancel buttons take library button styling. Sizes were kept where layout depended on them: the hero pause stays 28px in a 28px toolbar, the registry icon buttons stay 36px, the pending-command buttons keep 44/36px.
 
 **Found in the browser pass.** At 1280px with 200% text the docs layout leaves the changelog article 128px wide (pre-existing; recorded, not changed here). The filter pills kept label and count on one line and overflowed; they now wrap inside the pill. Bundle: first-load JS is flat on every touched route (−2.3 KB gzip on `/docs/colors`, within ±120 B elsewhere); see RESULTS.md.
+
+## Wave 2d: copyable IoT examples
+
+28 B sites in 8 files, every one inside or used by a published snippet. All 28 now render library components; no exception was needed. No IoT package API, simulation, device model or analytics changed (none of these examples tracks analytics).
+
+| # | Example | Before | After | Behaviour kept | Accessibility |
+|---:|---|---|---|---|---|
+| 1 | `pairing-flow` "Simulate a failure" | raw `<select>` wrapped in a label | `NativeSelect` + `Label`; the outcome line is now its `aria-describedby` | locked while setup runs, unlocked after cancel | named combobox, described |
+| 2–4, 6–7, 14 | `pairing-flow` Start setup, Finish this step, Continue with …, Yes that is my device, Start again, Pair another device | raw buttons (local `ACTION` pill recipe) | `Button` `lg`, `type="button"` | same handlers through the package's machine; focus still moves to each step heading | named by text |
+| 5 | `pairing-flow` found devices | native radios in a `fieldset` | `RadioGroup` + `RadioGroupItem` in `Label` rows, named by the "N sample devices found" line | arrows move and choose, as native radios do; the chosen row keeps its tint and ring | one tab stop; `dir` from the preview's provider |
+| 8, 10 | `pairing-flow` Setup code, Device name | raw inputs | `Input` + `Label` | same ids, hint (`aria-describedby`), shape check | library field states |
+| 9, 11, 13 | `pairing-flow` Verify code, Apply settings, Place it here | raw `type="submit"` | `Button type="submit"` | the forms' Enter/submit path; one submit starts one wait (the form leaves the page) | submit kept only where it submits |
+| 12 | `pairing-flow` Room or zone | raw `<select>` | `NativeSelect` | same options | named combobox |
+| 15–16 | `pairing-flow` Back, Cancel setup | raw buttons (harness `BUTTON`) | `Button variant="Outline"`, `type="button"` | same `transitionPairing` guards for disabled | named by text |
+| 17–18 | `alert-center` Show acknowledged, S-101 | native checkbox, raw button | `Checkbox` + `Label`, `Button variant="Outline"` | same state; same `setReachable` | checkbox named by its label |
+| 19–20 | `alert-inbox` Show acknowledged, Acknowledge | native checkbox, raw button | `Checkbox` + `Label`, `Button variant="Outline"` | same; Acknowledge keeps its visually hidden "Acknowledge alert: …" name | as before |
+| 21–22 | `automation-builder` blank rule, reset | raw buttons (`BUTTON`) | `Button variant="Outline"` | same draft resets | named by text |
+| 23 | `device-dashboard` Details | raw `aria-pressed` button | `Toggle variant="pill"` | pressing the shown device keeps it (as before) | `aria-pressed`, hidden "Show details for …" |
+| 24 | `device-dashboard` Simulate a state | raw buttons | `Button variant="Outline"` | same overrides; the one polite live region unchanged | named by status word |
+| 25–26 | `state-honesty` pump buttons | raw buttons (`BUTTON`) | `Button variant="Outline"` `md` | same disabled rules (`pumpGone`, `pumpBusy`) | named by text |
+| 27 | `command-card` NextAction | raw buttons, primary/outline by index | `Button` Primary / Outline | same caller data attribute (`data-lock-action`, …), device-named `aria-label`, `interactive` disabling | as before |
+| 28 | `operations-environment` equipment rows | raw buttons styled as rows | `Button variant="Ghost"` laid out as a row | same `select`, `aria-current` on the shown machine, same tint | `aria-current` |
+
+**Snippets.** The examples' copyable regions are cut from the same files by `gen-iot-examples` (one file renders the preview and is the snippet), so the published code changed with the source and was regenerated, not edited. Before this wave, four snippets (`pairing-flow`, `alert-center`, `automation-builder`, `state-honesty`) referenced `BUTTON`, a class string from the site's private `harness.tsx` that a reader copying the code does not have. The recipe is deleted. `gen-iot-examples --check` (CI) now also fails on a raw `<button>`, `<input>`, `<select>` or `<textarea>` in a copyable region and on any `@kinetixui/*` import that is not a public package export (`@kinetixui/ui`, `@kinetixui/iot`, `/react`, `/functions`); both fail as intended when reintroduced. Every library component the snippets use is exported from the built `@kinetixui/ui` entry.
+
+**Button safety.** Every migrated `Button` that is not a form's submit passes `type="button"`; the three pairing form actions keep `type="submit"`. `Toggle` sets its type itself. The library default is unchanged (see Wave 2c). `wave2d.test.tsx` asserts every pairing-flow button carries a `type` and checks the type of each migrated action in the other examples; the browser check asserts the same for the pairing flow and automation builder as rendered.
+
+**Layout, measured against main.** At 390px with 200% text the first browser pass found four regressions, all fixed and re-measured against a main build: library buttons are `nowrap`, so the text buttons now wrap; the pairing device rows may shrink (`min-w-0`, the original gap); the state-honesty buttons take `md` and their old padding; and the Details toggle is start-aligned, because the library toggle's `justify-center` laid its visually hidden name out beside the word and widened `/iot` by 47px. What overflows at that size on main still does (the IoT package's AlertList buttons, the "Show acknowledged" labels, the device cards that widen `/iot` by 168px); the browser check fails on anything main does not have.
+
+**Visible changes, on purpose:** the pairing actions are library Primary buttons (rounded, not pill); quiet actions are Outline buttons; fields and selects take the library edge and focus ring; the radios are the library dot.
 
 ## Guard
 

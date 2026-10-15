@@ -1,5 +1,46 @@
 # Website dogfooding — evidence
 
+## Wave 2d: copyable IoT examples (15 October 2026)
+
+Against main `1893c9f108efcef69f9f72f5352c0423af1567cc` (#383 merged). Production builds of main and this branch, served side by side; Chromium through Playwright. Details in `docs/audits/WEBSITE-DOGFOODING-AUDIT.md`, "Wave 2d".
+
+| Check | Result / scope |
+|---|---|
+| `pnpm --filter @kinetixui/web lint` / `tsc --noEmit` | PASS (2 existing warnings in `marketing-claims.test.ts`, untouched) |
+| `@kinetixui/web` tests | PASS, 105 files / 2,201 tests. New `examples/iot/wave2d.test.tsx` (25): pairing on library controls, the device radiogroup by keyboard, one pairing per double press, one verification per double submit, cancel stopping a simulated wait, Back, the scenario select locking; each other example's control roles and types; the published snippets; axe. The existing 64 example tests (whole journey, every failure scenario, recover and cancel) pass unchanged |
+| `pnpm check:iot-examples` | PASS. Snippets regenerated. New: a raw control in a copyable region, or a non-public `@kinetixui/*` import, fails the check |
+| Snippet negative controls (live, then restored) | FAIL (exit 1) as intended: a raw `<button>` back in the pairing-flow region; `@kinetixui/ui/src/components/button` imported in `alert-inbox` |
+| Snippet components | `Button`, `Input`, `Label`, `NativeSelect`, `NativeSelectOption`, `RadioGroup`, `RadioGroupItem`, `Checkbox`, `Toggle`, `ToggleGroup`, `ToggleGroupItem`: each exported from the built public `@kinetixui/ui` entry |
+| `pnpm check:web-dogfooding` | PASS. A 1,312 · B 4 · C 5 · D 33 · E 9; B/C debt in 4 files. 14 approvals (the 28 sites) deleted; the 4 left are the Wave 2e ranges |
+| Guard negative controls (live, then restored) | FAIL (exit 1) as intended: a raw `<button>` back in `pairing-flow`, a native checkbox back in `alert-inbox`. Clean again after restoring |
+| Generated output and source checks | `check:stories`, `check:verification`, `check:manifest`, `check:usage`, `check:blocks`, `check:block-source`, `check:rtl`, `check:typography`, `check:type-scale`, `check:grid`, `check:flagship-examples`, `check:a11y-coverage`, `check:capabilities`, `check:contrast`, `check:keyboard`: PASS |
+| `scripts/web-dogfooding-wave2d.mjs` | PASS, 16 views (`wave2d-browser.json`): 390/1280px × LTR/RTL × light/dark × 100/200% text, reduced motion, direction and theme applied before hydration and asserted. Real keyboard and pointer on all eight examples: the pairing journey to step 6 (scenario select, device radiogroup with held arrow keys and its `dir`, setup code by Enter, verification, Cancel by Tab + Enter with a visible ring, Start again unlocking the select, no untyped button), alert-centre and inbox checkboxes (label press and Space) and actions, automation draft buttons, state-honesty disabled rules, dashboard Details toggle (second press keeps it) and state buttons, operations equipment rows (`aria-current`, start-aligned in RTL), the smart-space lock command (no optimistic state). **axe on each example: 0 findings** |
+| Overflow against main | Each view also measures the eight examples on both builds. **0 controls overflow that do not already overflow on main** (628 baseline items across the matrix, all on main too: the IoT package's AlertList buttons, the "Show acknowledged" labels, the device cards). `/iot` with the dashboard at 390px/200%: 165px on this branch, 168px on main |
+| `check:a11y-site` | PASS. 576 views, no axe findings, no horizontal overflow |
+| `check:web-quality`, `check:tabs-dogfood`, `check:home-systems`, `check:iot-state-spatial` | PASS |
+| Wave 2a / 2b / 2c browser checks | 2a PASS (33 views), 2b PASS (16 views × 4 surfaces), 2c PASS (16 views) |
+
+**Found by measuring against main, fixed before the PR.** At 390px with 200% text the first pass found four layout regressions: nowrap library buttons that no longer wrapped, pairing device rows that could not shrink, state-honesty buttons wider than their 100px column, and the Details toggle, whose `justify-center` laid its visually hidden name out beside the word and widened `/iot` by 47px. A last 3px (the pill's border) pushed main's already-overflowing dashboard panel over the line at 390px; `px-3.5` restores the old width.
+
+### Bundle (`bundle-wave2d.json`)
+
+| Measure | Delta (gzip) |
+|---|---:|
+| First load, `/iot`, `/`, `/docs/iot` (layout + page union) | −5 B, −7 B, −8 B; same chunks |
+| Lazy chunk `pairing-flow` (main 3,317 B) | −67 B |
+| `alert-center` / `alert-inbox` | +22 B / −58 B |
+| `automation-builder` / `state-honesty` | +7 B / +49 B |
+| `device-dashboard` / `operations-environment` | −42 B / −4 B |
+| `smart-space-environment` (command card) | −135 B |
+
+Flat: the library controls come from the `@kinetixui/ui` chunk `/iot` already loads, and the hand-written class strings they replace are gone. No new chunk anywhere.
+
+### Not covered
+
+No manual screen-reader pass. Touch is exercised as pointer presses. The pairing journey is driven in the browser to step 6 and to the end, through every failure scenario, in jsdom.
+
+---
+
 ## Wave 2c: site actions and fields (15 October 2026)
 
 Against main `4f465a43b947b4708f0a5860589853bbdeb38a9a` (#382 merged). Production build: static Next.js 15.5.27, Chromium through Playwright. Details in `docs/audits/WEBSITE-DOGFOODING-AUDIT.md`, "Wave 2c".

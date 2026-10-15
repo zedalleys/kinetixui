@@ -63,6 +63,7 @@ import {
   type ControlBinding,
 } from "./harness";
 import { CommandRow, pickBinding, quietPending } from "./command-card";
+import { Button } from "@kinetixui/ui";
 
 // kx-iot:start
 /**
@@ -504,11 +505,13 @@ export function OperationsEnvironmentExample() {
                   const v = valueOf(id);
                   return (
                     <li key={id}>
-                      <button
+                      {/* A library Ghost Button laid out as a list row; aria-current marks the machine the detail shows. */}
+                      <Button
                         type="button"
+                        variant="Ghost"
                         aria-current={id === deviceId ? "true" : undefined}
                         onClick={() => select(id)}
-                        className={`flex min-h-11 w-full min-w-0 items-center gap-3 rounded-xl px-2 py-2 text-start transition-colors duration-fast motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${id === deviceId ? "bg-primary/10 font-semibold" : "hover:bg-muted/60"}`}
+                        className={`h-auto min-h-11 w-full min-w-0 justify-start gap-3 whitespace-normal rounded-xl px-2 py-2 text-start text-body-md font-normal ${id === deviceId ? "bg-primary/10 font-semibold" : ""}`}
                       >
                         <span className="flex min-w-0 flex-1 flex-col">
                           <span className="truncate text-body-md text-foreground">
@@ -528,7 +531,7 @@ export function OperationsEnvironmentExample() {
                             {v}
                           </bdi>
                         ) : null}
-                      </button>
+                      </Button>
                     </li>
                   );
                 })}

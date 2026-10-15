@@ -12,7 +12,7 @@ import {
   DeviceStateSummary,
   TelemetryCard,
 } from "@kinetixui/iot/react";
-import { ToggleGroup, ToggleGroupItem } from "@kinetixui/ui";
+import { Button, Toggle, ToggleGroup, ToggleGroupItem } from "@kinetixui/ui";
 import { compareDeviceAttention, describeDeviceStatus, resolveControlState, summarizeDevices } from "@kinetixui/iot/functions";
 import type { KinetixDevice, KinetixDeviceStatus } from "@kinetixui/iot/functions";
 import {
@@ -141,15 +141,18 @@ export function DeviceDashboardExample() {
                 now={DEMO_NOW}
                 className={isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}
                 action={
-                  <button
-                    type="button"
-                    onClick={() => setSelectedId(device.id)}
-                    aria-pressed={isSelected}
-                    className="inline-flex min-h-11 items-center rounded-full bg-muted px-4 text-body-md text-foreground hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:min-h-9"
+                  // A library Toggle: pressed says which device the panel shows. Pressing the shown device again keeps it.
+                  // Start-aligned: centred, the visually hidden name is laid out beside the word and widens the page.
+                  // px-3.5 plus the pill's 1px border is the old button's 16px, so the card keeps its width.
+                  <Toggle
+                    variant="pill"
+                    pressed={isSelected}
+                    onPressedChange={() => setSelectedId(device.id)}
+                    className="min-h-11 max-w-full justify-start px-3.5 text-body-md md:min-h-9"
                   >
                     <span className="sr-only">Show details for {device.name}. </span>
                     Details
-                  </button>
+                  </Toggle>
                 }
               />
             );
@@ -221,14 +224,9 @@ export function DeviceDashboardExample() {
               <span className="text-title-md text-foreground">Simulate a state</span>
               <div className="flex flex-wrap gap-1.5">
                 {(["online", "syncing", "stale", "offline", "error"] as const).map((status) => (
-                  <button
-                    key={status}
-                    type="button"
-                    onClick={() => setOverrides((prev) => ({ ...prev, [selected.id]: status }))}
-                    className="inline-flex min-h-11 items-center rounded-full bg-muted/60 px-4 text-body-md text-foreground transition-colors duration-fast hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none md:min-h-9"
-                  >
+                  <Button key={status} type="button" variant="Outline" size="lg" className="max-w-full whitespace-normal px-4" onClick={() => setOverrides((prev) => ({ ...prev, [selected.id]: status }))}>
                     {describeDeviceStatus(status)}
-                  </button>
+                  </Button>
                 ))}
               </div>
               {/* One polite live region for the whole panel, announced only when the reader acted.

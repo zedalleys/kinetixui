@@ -27,11 +27,6 @@ import type { SimCommand, SimScenario, Simulation } from "@/lib/iot-sim";
 import type { UseIotSimulation } from "@/lib/iot-sim/use-simulation";
 import { cn } from "@/lib/utils";
 
-export const BUTTON =
-  "inline-flex min-h-9 items-center justify-center rounded-md border border-input bg-background px-3 text-label-sm text-foreground " +
-  "hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none " +
-  "disabled:cursor-not-allowed disabled:opacity-60";
-
 /** A section heading inside an example. Level 4: the page owns levels 1-3. */
 export function Section({ title, hint, children, className }: { title: string; hint?: string; children: React.ReactNode; className?: string }) {
   return (

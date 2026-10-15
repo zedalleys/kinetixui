@@ -1,0 +1,1446 @@
+{
+  "base": "http://127.0.0.1:3000",
+  "rows": [
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 1,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 16,
+        "pageOverflow": 0
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 9,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 3,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 2,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 2,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 400,
+        "pageOverflow": 165
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 5,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 5,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 2,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 2,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 165,
+          "mainPageOverflow": 168,
+          "baseline": 20,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 17,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 19,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 1,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 16,
+        "pageOverflow": 0
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 9,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 3,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 2,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 390,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 2,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 400,
+        "pageOverflow": 165
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 5,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 5,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 2,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 2,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 165,
+          "mainPageOverflow": 168,
+          "baseline": 20,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 17,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 19,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 1,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 16,
+        "pageOverflow": 0
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 9,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 3,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 2,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 2,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 400,
+        "pageOverflow": 165
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 5,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 5,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 2,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 2,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 165,
+          "mainPageOverflow": 168,
+          "baseline": 20,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 17,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 19,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 1,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 16,
+        "pageOverflow": 0
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 9,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 3,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 2,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 390,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 2,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 400,
+        "pageOverflow": 165
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 5,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 5,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 2,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 2,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 165,
+          "mainPageOverflow": 168,
+          "baseline": 20,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 17,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 19,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 1,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 0,
+        "pageOverflow": 0
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 15,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 9,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 2,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 0,
+        "pageOverflow": 0
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 16,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 33,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 1,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 0,
+        "pageOverflow": 0
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 15,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 9,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 2,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 0,
+        "pageOverflow": 0
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 16,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 33,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 1,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 0,
+        "pageOverflow": 0
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 15,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 9,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 2,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 0,
+        "pageOverflow": 0
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 16,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 33,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 1,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 0,
+        "pageOverflow": 0
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 15,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 9,
+          "added": []
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 2,
+      "pairing": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertCenter": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "alertInbox": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "automation": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "stateHonesty": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "dashboard": {
+        "axe": 0,
+        "exampleOverflow": 0,
+        "pageOverflow": 0
+      },
+      "operations": {
+        "rows": 8,
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "commandCard": {
+        "axe": 0,
+        "pageOverflow": 0
+      },
+      "overflow": {
+        "pairing-flow": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-center": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "alert-inbox": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "automation-builder": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "state-honesty": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "device-dashboard": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 0,
+          "added": []
+        },
+        "operations-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 16,
+          "added": []
+        },
+        "smart-space-environment": {
+          "pageOverflow": 0,
+          "mainPageOverflow": 0,
+          "baseline": 33,
+          "added": []
+        }
+      }
+    }
+  ],
+  "failures": []
+}
