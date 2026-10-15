@@ -1,6 +1,6 @@
 # KinetixUI website dogfooding audit
 
-Refreshed 14 October 2026 against main `acfe95af62befb4d11b3527a529bfd635c825fb8`, after #375, #377, #378, #380, #358 and #357 landed, and merged as #379 (`d155db1`). It was first audited on 13 October against `ae9cc44`. **Wave 2a** (the command menu and the mobile menu, below) is measured against `d155db1`; **Wave 2b** (selectors and modes) against `bfddb67`, after #381; **Wave 2c** (site actions and fields) against `4f465a4`, after #382; **Wave 2d** (copyable IoT examples) against `1893c9f`, after #383. Scope: `apps/web` routes, components, registry demos, and block/usage/IoT examples. This is a consumer audit. It is not a library redesign, and it does not declare the whole site accessible.
+Refreshed 14 October 2026 against main `acfe95af62befb4d11b3527a529bfd635c825fb8`, after #375, #377, #378, #380, #358 and #357 landed, and merged as #379 (`d155db1`). It was first audited on 13 October against `ae9cc44`. **Wave 2a** (the command menu and the mobile menu, below) is measured against `d155db1`; **Wave 2b** (selectors and modes) against `bfddb67`, after #381; **Wave 2c** (site actions and fields) against `4f465a4`, after #382; **Wave 2d** (copyable IoT examples) against `1893c9f`, after #383; **Wave 2e** (IoT showcase sliders) against `e15f0e8`, after #384. Scope: `apps/web` routes, components, registry demos, and block/usage/IoT examples. This is a consumer audit. It is not a library redesign, and it does not declare the whole site accessible.
 
 Every interactive or styled product control should use KinetixUI, unless a documented exception explains why. Structural HTML, real content, illustrations, layout, route logic and application state belong to the website. Using a library component does not by itself prove visual consistency, so local class overrides remain reviewable.
 
@@ -14,16 +14,16 @@ Text, comments, quoted snippet strings and test files are not scanned. Neither i
 
 ## Snapshot: current versus the original audit
 
-| Class | Meaning | Original (`ae9cc44`, after Wave 1) | #379 (`d155db1`) | After Wave 2a (#381) | After Wave 2b (#382) | After Wave 2c (#383) | **After Wave 2d** | Δ 2d |
-|---|---|---:|---:|---:|---:|---:|---:|---:|
-| A | KinetixUI component JSX sites | 1,037 | 1,196 | 1,218 | 1,236 | 1,273 | **1,312** | +39 |
-| B | KinetixUI equivalent exists; site authors a native/vendor primitive | 135 | 96 | 76 | 58 | 32 | **4** | −28 |
-| C | Needs a missing library variant first | 6 | 4 | 4 | 4 | 5 | **5** | 0 |
-| D | Valid site composition or deliberate native behaviour | 24 | 27 | 27 | 31 | 33 | **33** | 0 |
-| E | Read-only semantic HTML (tables) | 9 | 9 | 9 | 9 | 9 | **9** | 0 |
-| | Source files scanned | 241 | 252 | 252 | 252 | 252 | **252** | 0 |
-| | Native/vendor sites (B+C+D+E) | 174 | 136 | 116 | 102 | 79 | **51** | −28 |
-| | Files with B/C debt | — | 30 | 28 | 24 | 12 | **4** | −8 |
+| Class | Meaning | Original (`ae9cc44`, after Wave 1) | #379 (`d155db1`) | After Wave 2a (#381) | After Wave 2b (#382) | After Wave 2c (#383) | After Wave 2d (#384) | **After Wave 2e** | Δ 2e |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| A | KinetixUI component JSX sites | 1,037 | 1,196 | 1,218 | 1,236 | 1,273 | 1,312 | **1,314** | +2 |
+| B | KinetixUI equivalent exists; site authors a native/vendor primitive | 135 | 96 | 76 | 58 | 32 | 4 | **0** | −4 |
+| C | Needs a missing library variant first | 6 | 4 | 4 | 4 | 5 | 5 | **7** | +2 |
+| D | Valid site composition or deliberate native behaviour | 24 | 27 | 27 | 31 | 33 | 33 | **33** | 0 |
+| E | Read-only semantic HTML (tables) | 9 | 9 | 9 | 9 | 9 | 9 | **9** | 0 |
+| | Source files scanned | 241 | 252 | 252 | 252 | 252 | 252 | **252** | 0 |
+| | Native/vendor sites (B+C+D+E) | 174 | 136 | 116 | 102 | 79 | 51 | **49** | −2 |
+| | Files with B/C debt | — | 30 | 28 | 24 | 12 | 4 | **4** | 0 |
 
 A grew mostly through new surfaces built on the library: business discovery (#377), the Phase 2 business components on component pages (#378), and #380's Tabs/Toggle migration.
 
@@ -57,7 +57,7 @@ Canonical semantics: **Tabs** are peer content/section navigation, **SegmentedCo
 | IoT device-dashboard group filter | library `ToggleGroup type="single" variant="pill"`; was `role="tab"` with no tabpanels (Wave 2b) | A |
 | Floor selector, date strip | multi-line tiles, `role="radiogroup"` | C (see below) |
 
-## Remaining debt (B, 4 sites in 1 file)
+## Remaining debt (B: none)
 
 | Wave | Sites | Files and KinetixUI equivalent | Why it remains |
 |---|---:|---|---|
@@ -65,13 +65,15 @@ Canonical semantics: **Tabs** are peer content/section navigation, **SegmentedCo
 | ~~2b Selectors and modes~~ | ~~18~~ → 0 | Done in Wave 2b (below): 14 migrated, 4 (`systems/hero-system-map` tabs) reclassified D | — |
 | ~~2c Site actions and fields~~ | ~~26~~ → 0 | Done in Wave 2c (below): 23 migrated and removed from the ledger, 2 migrated onto `Card asChild` and kept as D (the guard counts the native child), 1 (`create-sidebar` option tiles) reclassified C | — |
 | ~~2d Copyable IoT examples~~ | ~~28~~ → 0 | Done in Wave 2d (below): all 28 migrated, snippets regenerated; `gen-iot-examples` now rejects a raw control in a copyable region | — |
-| **2e Sliders** | 4 | `iot/device-showcase` ranges → `Slider` | Needs scalar-to-array event adaptation, labelled values and touch/keyboard proof |
+| ~~2e Sliders~~ | ~~4~~ → 0 | Done in Wave 2e (below): Last sync and temperature → `Slider`; battery and signal reclassified C (the library Slider cannot express disabled yet) | — |
 
-B findings are mostly consistency debt (P2), not proven accessibility violations. The device-dashboard's incomplete tab semantics (P1) were fixed in Wave 2b. The 4 B sites left are all Wave 2e: the `iot/device-showcase.tsx` ranges.
+No B debt remains: every site control with a KinetixUI equivalent uses it. What is left is library gaps (C, below), each waiting on a library change, and reviewed exceptions (D, E).
 
-## Library gaps (C, 5 sites)
+## Library gaps (C, 7 sites)
 
-All three C surfaces need an **exclusive selectable tile/card item**: a radio-like single selection whose item is a multi-line tile (rounded-lg card, a primary line plus secondary rows, status badges, or a rendered sample) with roving focus and RTL support.
+**Slider disabled state (2 sites, Wave 2e).** `iot/device-showcase.tsx` battery and signal ranges are disabled while the device reports no value. The library `Slider` cannot express that: Radix puts `aria-disabled` on the root span, not on the thumb that carries `role="slider"` (the thumb only leaves the tab order), and the thumb's `disabled:` utilities target a span, which never matches `:disabled`, so a disabled Slider is neither announced nor shown as disabled. Proposed library issue: in `packages/ui/src/components/slider.tsx`, put `aria-disabled` on each thumb and give the root and thumb a `data-[disabled]` visual state (opacity, no pointer), with a test that a disabled Slider's thumb is reported disabled; then migrate both ranges. A second, smaller gap: the thumb accepts only `aria-label`/`aria-labelledby`, so a caller cannot set `aria-valuetext` (Last sync's stops are announced as their index, as the native range did; the name carries the label).
+
+The other three C surfaces need an **exclusive selectable tile/card item**: a radio-like single selection whose item is a multi-line tile (rounded-lg card, a primary line plus secondary rows, status badges, or a rendered sample) with roving focus and RTL support.
 - `building-ops/building-ops-demo.tsx` floor selector (2 sites): floor code, alert count, occupancy, cameras.
 - `iot/showcase/date-strip.tsx` (2 sites): weekday, date, today and event cues; locale/UTC formatting.
 - `create/create-sidebar.tsx` option tiles (1 site, Wave 2c): a label tile holding a native radio and a rendered sample (style, surface, radius, chart palette), in a `fieldset` whose legend names the group. `RadioGroupItem` is a bare circle, and `Card asChild` takes only links and buttons, so neither carries a radio tile; the native radios already give the group semantics, arrow keys and form behaviour.
@@ -207,6 +209,21 @@ Both were direct `@radix-ui/react-dialog` (and, for the command menu, direct `cm
 **Layout, measured against main.** At 390px with 200% text the first browser pass found four regressions, all fixed and re-measured against a main build: library buttons are `nowrap`, so the text buttons now wrap; the pairing device rows may shrink (`min-w-0`, the original gap); the state-honesty buttons take `md` and their old padding; and the Details toggle is start-aligned, because the library toggle's `justify-center` laid its visually hidden name out beside the word and widened `/iot` by 47px. What overflows at that size on main still does (the IoT package's AlertList buttons, the "Show acknowledged" labels, the device cards that widen `/iot` by 168px); the browser check fails on anything main does not have.
 
 **Visible changes, on purpose:** the pairing actions are library Primary buttons (rounded, not pill); quiet actions are Outline buttons; fields and selects take the library edge and focus ring; the radios are the library dot.
+
+## Wave 2e: IoT showcase sliders
+
+The last 4 B sites, all `<input type="range">` in `components/iot/device-showcase.tsx` (the /iot "Imperfect data" panel; not a copyable snippet, so no generated output changed). Two migrated, two reclassified C.
+
+| Control | Before | After | Behaviour kept | Accessibility |
+|---|---|---|---|---|
+| Last sync (6 labelled stops, 0–5, step 1) | native range | `Slider`, `value={[i]}` / `onValueChange` | same stops, label ("Last sync — 5m"), preview | `role="slider"` thumb named by the visible label (`aria-labelledby`), `aria-valuemin/max/now`; arrows, Home/End, PageUp/Down; `dir` from the document, so ArrowLeft increases under RTL (the library contract) |
+| Temperature (−10–45 °C, step 0.1) | native range | `Slider` | same bounds, step without float drift, label with one decimal | as above |
+| Battery (0–100 %) | native range | **unchanged, C** | disabled while "no battery" is ticked | native disabled semantics kept |
+| Signal (0–100) | native range | **unchanged, C** | disabled while "no signal" is ticked | as above |
+
+**Why two stayed native.** Migrating battery and signal would have removed the disabled state a screen reader announces and the dimming a reader sees: the library `Slider` cannot express disabled yet (see Library gaps). That is a library fix, not a site workaround, and it is out of scope here.
+
+**Kept from the native ranges:** values, bounds, steps and defaults; the label that names the control and carries the value; a 36px pointer target (`h-9` on the root, where Radix takes presses; the thumb is 16px); no business logic or device behaviour changes. **Changed, on purpose:** the library track and thumb replace the browser's range; clicking the label no longer focuses the control (it names it).
 
 ## Guard
 
