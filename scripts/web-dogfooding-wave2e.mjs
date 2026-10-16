@@ -79,11 +79,19 @@ async function axeOn(page, selector, label) {
 }
 
 const overflow = (page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-const focusRing = (locator) =>
+/**
+ * The thumb's visible outline and box-shadow. The thumb always carries a base `shadow`, and `outline-none` leaves a
+ * transparent outline, so neither proves a ring alone: a focus ring is shown only by a visible outline, or by a
+ * box-shadow that differs from the thumb's at rest.
+ */
+const ringStyle = (locator) =>
   locator.evaluate((el) => {
     const s = getComputedStyle(el);
-    return s.outlineStyle !== "none" || (s.boxShadow && s.boxShadow !== "none");
+    // `outline-none` is a 2px transparent outline (kept for forced colours), not a visible indicator
+    const visibleOutline = s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0 && !/^(transparent|rgba\(.*,\s*0\))$/.test(s.outlineColor);
+    return { outline: visibleOutline ? `${s.outlineStyle} ${s.outlineWidth} ${s.outlineColor}` : "none", boxShadow: s.boxShadow };
   });
+const focusRingShown = (rest, focused) => focused.outline !== "none" || focused.boxShadow !== rest.boxShadow;
 const isFocused = (locator) => locator.evaluate((el) => el === document.activeElement);
 /** Radix roving focus moves focus on the next tick (`setTimeout`), so read focus only after it has run. */
 async function press(page, key) {
@@ -175,8 +183,10 @@ try {
       assert.deepEqual([await temp.getAttribute("aria-valuemin"), await temp.getAttribute("aria-valuemax"), await temp.getAttribute("aria-valuenow")], ["-10", "45", "23.4"]);
       assert.equal(await page.locator("#iot-demo-temperature").getAttribute("dir"), dir, "the slider does not follow the page direction");
       // keyboard: Tab in from the signal checkbox, with a visible ring
+      const rest = await ringStyle(last);
       await tabTo(page, page.getByRole("checkbox", { name: "Device reports no signal" }), last, 2);
-      assert(await focusRing(last), "no visible focus indicator on the Last sync thumb");
+      const focused = await ringStyle(last);
+      assert(focusRingShown(rest, focused), `no visible focus indicator on the Last sync thumb: ${JSON.stringify({ rest, focused })}`);
       await press(page, fwd);
       assert.equal(await now(last), 2, `${fwd} did not move Last sync forward`);
       assert.equal(await name(last), "Last sync — 90m");
