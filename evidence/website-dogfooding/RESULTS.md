@@ -1,5 +1,39 @@
 # Website dogfooding — evidence
 
+## Wave 2e: IoT showcase sliders (16 October 2026)
+
+Against main `e15f0e8b` (#384 merged). Production builds of main and this branch, served side by side; Chromium through Playwright. Details in `docs/audits/WEBSITE-DOGFOODING-AUDIT.md`, "Wave 2e" and "Library gaps".
+
+| Check | Result / scope |
+|---|---|
+| `pnpm build` / `pnpm lint` / `pnpm typecheck` | PASS |
+| `@kinetixui/web` tests | PASS, 106 files / 2,207 tests. New `device-showcase.test.tsx` cases (6): each thumb named by its visible label with the native range's bounds and value; arrow keys by step, Home/End; the preview following the sliders; ArrowLeft increasing under RTL; battery and signal keeping native disabled semantics; axe |
+| `pnpm check:web-dogfooding` | PASS. A 1,314 · B 0 · C 7 · D 33 · E 9; B/C debt in 4 files. The device-showcase entry is now C, `maxCount` 2 |
+| Guard negative control (live, then restored) | FAIL (exit 1) as intended: a third raw `<input type="range">` in `device-showcase` ("3 occurrences; approved 2"). Clean again after restoring |
+| Generated output and source checks | `check:stories`, `check:verification`, `check:manifest`, `check:usage`, `check:blocks`, `check:block-source`, `check:rtl`, `check:typography`, `check:type-scale`, `check:grid`, `check:iot-examples`, `check:flagship-examples`, `check:a11y-coverage`, `check:capabilities`, `check:contrast`, `check:keyboard`, `check:registry-deps`, `check:content`: PASS, no diff |
+| `scripts/web-dogfooding-wave2e.mjs` | PASS, 16 views (`wave2e-browser.json`): 390/1280px × LTR/RTL × light/dark × 100/200% text, reduced motion, direction and theme applied before hydration and asserted. Real input on both Sliders: names from the visible labels, min/max/now, Tab in with a visible ring, the forward arrow for the reading direction (ArrowLeft in RTL), Home/End, PageUp, a pointer press and a drag on the track, a press inside the 36px target but off the 16px thumb; the native battery range still disables. **axe on the four controls: 0 findings**. Target height 36px (72px at 200% text) |
+| Overflow against main | **0 controls overflow that do not already overflow on main**; page overflow 0px on both builds in every view. 14 baseline items at 390px/200%, all on main too |
+| `check:a11y-site` | PASS. 576 views (36 pages × 2 themes × 4 widths × 2 text sizes), no axe findings, no horizontal overflow |
+| `check:web-quality`, `check:tabs-dogfood`, `check:home-systems`, `check:iot-state-spatial` | PASS (layout 220 views, 0 overflowing; 8 cases; home systems; 67 checks) |
+| Wave 2a / 2b / 2c / 2d browser checks | PASS (33 views; 16 × 4 surfaces; 16 views; 16 × 8 examples, 2d with its overflow comparison against main) |
+| `scripts/slider-disabled-probe.mjs` (library gap, not a pass/fail gate) | `slider-gaps.json`, on the built Storybook Slider story. Control: a disabled native range is reported **disabled** in Chromium's accessibility tree. `<Slider disabled>`: thumb reported **not disabled** (`aria-disabled` only on the role-less root; thumb unfocusable, `data-disabled`), opacity 1, pointer events on, the same as an enabled Slider. This is why battery and signal stay native |
+
+### Bundle (`bundle-wave2e.json`)
+
+| Route (first load, layout + page union) | Chunks | Raw JS delta | Gzip delta |
+|---|---|---:|---:|
+| `/iot` | 0 | +185 B | +66 B |
+| `/` | 0 | 0 | 0 |
+| `/docs/iot` | 0 | 0 | +2 B |
+
+The library Slider comes from the `@kinetixui/ui` chunk `/iot` already loads; no new chunk.
+
+### Not covered
+
+No manual screen-reader pass. Touch is exercised as pointer presses. The `aria-valuetext` gap (Library gaps, 2) is confirmed in the wrapper source, not measured in a browser.
+
+---
+
 ## Wave 2d: copyable IoT examples (15 October 2026)
 
 Against main `1893c9f108efcef69f9f72f5352c0423af1567cc` (#383 merged). Production builds of main and this branch, served side by side; Chromium through Playwright. Details in `docs/audits/WEBSITE-DOGFOODING-AUDIT.md`, "Wave 2d".

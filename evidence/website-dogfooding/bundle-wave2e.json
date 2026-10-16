@@ -1,0 +1,56 @@
+{
+ "method": "First-load JS per route: distinct chunks of the root layout, nested layouts and the page (app-build-manifest), each gzipped (level 9) and summed. Main e15f0e8 vs this branch, same lockfile.",
+ "firstLoad": {
+  "/iot": {
+   "main": {
+    "files": 15,
+    "bytes": 1858899,
+    "gzipBytes": 535198
+   },
+   "branch": {
+    "files": 15,
+    "bytes": 1859084,
+    "gzipBytes": 535264
+   },
+   "delta": {
+    "files": 0,
+    "bytes": 185,
+    "gzipBytes": 66
+   }
+  },
+  "/": {
+   "main": {
+    "files": 14,
+    "bytes": 1603086,
+    "gzipBytes": 472091
+   },
+   "branch": {
+    "files": 14,
+    "bytes": 1603086,
+    "gzipBytes": 472091
+   },
+   "delta": {
+    "files": 0,
+    "bytes": 0,
+    "gzipBytes": 0
+   }
+  },
+  "/docs/iot": {
+   "main": {
+    "files": 19,
+    "bytes": 1955590,
+    "gzipBytes": 560715
+   },
+   "branch": {
+    "files": 19,
+    "bytes": 1955590,
+    "gzipBytes": 560717
+   },
+   "delta": {
+    "files": 0,
+    "bytes": 0,
+    "gzipBytes": 2
+   }
+  }
+ }
+}

@@ -1,0 +1,41 @@
+{
+  "nativeDisabled": {
+    "inAccessibilityTree": true,
+    "reportedDisabled": true,
+    "reportedFocusable": false,
+    "reportedValueText": "",
+    "ariaDisabled": null,
+    "ariaValueText": null,
+    "dataDisabled": false,
+    "rootAriaDisabled": null,
+    "opacity": "1",
+    "pointerEvents": "auto",
+    "tabIndex": 0
+  },
+  "sliderEnabled": {
+    "inAccessibilityTree": true,
+    "reportedDisabled": false,
+    "reportedFocusable": true,
+    "reportedValueText": "",
+    "ariaDisabled": null,
+    "ariaValueText": null,
+    "dataDisabled": false,
+    "rootAriaDisabled": "false",
+    "opacity": "1",
+    "pointerEvents": "auto",
+    "tabIndex": 0
+  },
+  "sliderDisabled": {
+    "inAccessibilityTree": true,
+    "reportedDisabled": false,
+    "reportedFocusable": false,
+    "reportedValueText": "",
+    "ariaDisabled": null,
+    "ariaValueText": null,
+    "dataDisabled": true,
+    "rootAriaDisabled": "true",
+    "opacity": "1",
+    "pointerEvents": "auto",
+    "tabIndex": -1
+  }
+}
