@@ -433,3 +433,36 @@ describe("The form family under RTL", () => {
     expect(field.value).toBe("مرحبا abc");
   });
 });
+
+describe("<Slider> describes itself on the thumb, the element with role=slider", () => {
+  it("reports a disabled Slider as disabled on the thumb, and draws it from data-disabled", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<Slider aria-label="Battery" defaultValue={[40]} disabled onValueChange={onValueChange} />);
+    const thumb = screen.getByRole("slider", { name: "Battery" });
+
+    // Radix puts aria-disabled on the role-less root only; a thumb does not inherit it
+    expect(thumb).toHaveAttribute("aria-disabled", "true");
+    expect(thumb).toHaveAttribute("data-disabled");
+    // the disabled look keys on data-disabled, because a span never matches :disabled
+    expect(thumb.closest("[data-orientation]:not([role])")?.className).toMatch(/data-\[disabled\]:opacity-disabled/);
+
+    await user.tab();
+    expect(thumb).not.toHaveFocus();
+    thumb.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("does not mark an enabled Slider's thumb disabled", () => {
+    render(<Slider aria-label="Volume" defaultValue={[50]} />);
+    expect(screen.getByRole("slider", { name: "Volume" })).not.toHaveAttribute("aria-disabled");
+  });
+
+  it("puts aria-valuetext on the thumb, where a screen reader reads the value", () => {
+    render(<Slider aria-label="Last sync" aria-valuetext="90 minutes ago" defaultValue={[2]} max={5} />);
+    const thumb = screen.getByRole("slider", { name: "Last sync" });
+    expect(thumb).toHaveAttribute("aria-valuetext", "90 minutes ago");
+    expect(thumb.closest("[data-orientation]:not([role])")).not.toHaveAttribute("aria-valuetext");
+  });
+});

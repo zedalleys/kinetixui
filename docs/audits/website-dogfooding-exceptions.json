@@ -110,13 +110,6 @@
       "reason": "Interactive SVG map region (<g role=\"button\">): a <button> cannot live inside SVG. Keep the geometry, hit area and explicit focus/keyboard model local, as with the floor plan and system map."
     },
     {
-      "file": "apps/web/src/components/iot/device-showcase.tsx",
-      "pattern": "input[type=range]",
-      "maxCount": 2,
-      "classification": "C",
-      "reason": "Battery and signal ranges, each disabled while the device reports no value. The library Slider cannot express disabled yet: Radix puts aria-disabled on the root span, not on the thumb that has role=\"slider\" (the thumb only leaves the tab order), and the thumb's disabled: styles target a span that never matches :disabled, so a disabled Slider would be neither announced nor shown as disabled. Library fix first (Slider: aria-disabled and a visible disabled state on the thumb), then migrate. Last sync and temperature moved to Slider in Wave 2e."
-    },
-    {
       "file": "apps/web/src/components/iot/example-showcase.tsx",
       "pattern": "details",
       "maxCount": 1,

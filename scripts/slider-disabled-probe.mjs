@@ -1,17 +1,17 @@
 /**
- * The library Slider disabled-state gap behind the Wave 2e exceptions, measured in Chromium rather than read from source.
- * Run after `pnpm build-storybook`: `node scripts/slider-disabled-probe.mjs`.
+ * A disabled library Slider, measured in Chromium: is the thumb (the element with `role="slider"`) reported
+ * disabled, and does it look disabled? Run after `pnpm build-storybook`: `node scripts/slider-disabled-probe.mjs`.
  *
  * It serves the built Storybook and opens the Slider Playground story (the real `@kinetixui/ui` Slider, mounted
- * client side, with the library's CSS). For each case it reads the `role="slider"` node from Chromium's
- * accessibility tree (CDP) and the element's computed style:
- *   - control: a native `<input type="range" disabled>` on the same page. It must read as disabled and look
- *     dimmed, or this probe cannot see the thing it measures;
- *   - `disabled: false` and `disabled: true`: is the thumb reported disabled, and does it look disabled?
- * The second gap (a caller cannot set `aria-valuetext` on the thumb) is not measured here: Storybook URL args only
- * carry declared controls, and the wrapper's source (`slider.tsx`) settles it.
- * It writes the measurements to `evidence/website-dogfooding/slider-gaps.json`. A gap is a finding to report, not
- * a failure of this probe: it exits non-zero only when the control does not read as disabled.
+ * client side, with the library's CSS), reading the `role="slider"` node from Chromium's accessibility tree (CDP)
+ * and the computed style of the thumb and its ancestors:
+ *   - control: a native `<input type="range" disabled>`. It must read as disabled, or this probe is blind;
+ *   - `disabled: false`: not reported disabled, full opacity;
+ *   - `disabled: true`: reported disabled, dimmed.
+ * Before the Slider fix the disabled thumb was reported enabled at full opacity (Radix put `aria-disabled` only on
+ * the role-less root, and the `disabled:` styles targeted a span). `aria-valuetext` is not measured here: Storybook
+ * URL args only carry declared controls; `components-form.test.tsx` covers it.
+ * Writes `evidence/website-dogfooding/slider-disabled.json`; exits non-zero when any of the three does not hold.
  */
 import fs from "node:fs";
 import { createServer } from "node:http";
@@ -23,7 +23,7 @@ if (!fs.existsSync(join(staticDir, "index.json"))) {
   console.error("apps/docs/storybook-static not found — run `pnpm build-storybook` first.");
   process.exit(2);
 }
-const out = process.env.KX_EVIDENCE_OUT || "evidence/website-dogfooding/slider-gaps.json";
+const out = process.env.KX_EVIDENCE_OUT || "evidence/website-dogfooding/slider-disabled.json";
 const MIME = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".woff2": "font/woff2" };
 const server = createServer((req, res) => {
   let file = join(staticDir, normalize(decodeURIComponent(new URL(req.url, "http://x").pathname)).replace(/^(\.\.[/\\])+/, ""));
@@ -57,7 +57,13 @@ async function measure(page, selector) {
     ariaDisabled: await el.getAttribute("aria-disabled"),
     ariaValueText: await el.getAttribute("aria-valuetext"),
     dataDisabled: (await el.getAttribute("data-disabled")) !== null,
-    rootAriaDisabled: await el.evaluate((e) => e.closest("[aria-disabled]")?.getAttribute("aria-disabled") ?? null),
+    rootAriaDisabled: await el.evaluate((e) => e.parentElement?.closest("[aria-disabled]")?.getAttribute("aria-disabled") ?? null),
+    // what the reader sees: the element's own opacity times every ancestor's (the Slider dims its root)
+    effectiveOpacity: await el.evaluate((e) => {
+      let o = 1;
+      for (let n = e; n; n = n.parentElement) o *= Number(getComputedStyle(n).opacity);
+      return Math.round(o * 100) / 100;
+    }),
     ...style,
   };
 }
@@ -85,7 +91,13 @@ try {
 
 fs.writeFileSync(out, JSON.stringify(results, null, 2) + "\n");
 console.log(JSON.stringify(results, null, 2));
-if (!results.nativeDisabled.reportedDisabled) {
-  console.error("The control (a disabled native range) did not read as disabled: the probe cannot see disabled state.");
+const problems = [];
+if (!results.nativeDisabled.reportedDisabled) problems.push("the control (a disabled native range) did not read as disabled: the probe is blind");
+if (results.sliderEnabled.reportedDisabled || results.sliderEnabled.effectiveOpacity < 1) problems.push("an enabled Slider reads or looks disabled");
+if (!results.sliderDisabled.reportedDisabled) problems.push("a disabled Slider's thumb is not reported disabled");
+if (results.sliderDisabled.effectiveOpacity >= 1) problems.push("a disabled Slider is drawn at full opacity");
+if (problems.length) {
+  console.error(problems.join("\n"));
   process.exit(1);
 }
+console.log("slider-disabled ok — the disabled thumb is reported disabled and drawn dimmed; the enabled one is neither.");

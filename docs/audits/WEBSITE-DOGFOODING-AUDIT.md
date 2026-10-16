@@ -16,14 +16,14 @@ Text, comments, quoted snippet strings and test files are not scanned. Neither i
 
 | Class | Meaning | Original (`ae9cc44`, after Wave 1) | #379 (`d155db1`) | After Wave 2a (#381) | After Wave 2b (#382) | After Wave 2c (#383) | After Wave 2d (#384) | **After Wave 2e** | Δ 2e |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| A | KinetixUI component JSX sites | 1,037 | 1,196 | 1,218 | 1,236 | 1,273 | 1,312 | **1,314** | +2 |
+| A | KinetixUI component JSX sites | 1,037 | 1,196 | 1,218 | 1,236 | 1,273 | 1,312 | **1,316** | +4 |
 | B | KinetixUI equivalent exists; site authors a native/vendor primitive | 135 | 96 | 76 | 58 | 32 | 4 | **0** | −4 |
-| C | Needs a missing library variant first | 6 | 4 | 4 | 4 | 5 | 5 | **7** | +2 |
+| C | Needs a missing library variant first | 6 | 4 | 4 | 4 | 5 | 5 | **5** | 0 |
 | D | Valid site composition or deliberate native behaviour | 24 | 27 | 27 | 31 | 33 | 33 | **33** | 0 |
 | E | Read-only semantic HTML (tables) | 9 | 9 | 9 | 9 | 9 | 9 | **9** | 0 |
 | | Source files scanned | 241 | 252 | 252 | 252 | 252 | 252 | **252** | 0 |
-| | Native/vendor sites (B+C+D+E) | 174 | 136 | 116 | 102 | 79 | 51 | **49** | −2 |
-| | Files with B/C debt | — | 30 | 28 | 24 | 12 | 4 | **4** | 0 |
+| | Native/vendor sites (B+C+D+E) | 174 | 136 | 116 | 102 | 79 | 51 | **47** | −4 |
+| | Files with B/C debt | — | 30 | 28 | 24 | 12 | 4 | **3** | −1 |
 
 A grew mostly through new surfaces built on the library: business discovery (#377), the Phase 2 business components on component pages (#378), and #380's Tabs/Toggle migration.
 
@@ -65,18 +65,18 @@ Canonical semantics: **Tabs** are peer content/section navigation, **SegmentedCo
 | ~~2b Selectors and modes~~ | ~~18~~ → 0 | Done in Wave 2b (below): 14 migrated, 4 (`systems/hero-system-map` tabs) reclassified D | — |
 | ~~2c Site actions and fields~~ | ~~26~~ → 0 | Done in Wave 2c (below): 23 migrated and removed from the ledger, 2 migrated onto `Card asChild` and kept as D (the guard counts the native child), 1 (`create-sidebar` option tiles) reclassified C | — |
 | ~~2d Copyable IoT examples~~ | ~~28~~ → 0 | Done in Wave 2d (below): all 28 migrated, snippets regenerated; `gen-iot-examples` now rejects a raw control in a copyable region | — |
-| ~~2e Sliders~~ | ~~4~~ → 0 | Done in Wave 2e (below): Last sync and temperature → `Slider`; battery and signal reclassified C (the library Slider cannot express disabled yet) | — |
+| ~~2e Sliders~~ | ~~4~~ → 0 | Done in Wave 2e (below): all four → `Slider`, after a `@kinetixui/ui` patch that lets the Slider express disabled and value text | — |
 
 No B debt remains: every site control with a KinetixUI equivalent uses it. What is left is library gaps (C, below), each waiting on a library change, and reviewed exceptions (D, E).
 
-## Library gaps (C, 7 sites)
+## Library gaps (C, 5 sites)
 
-**Slider (2 sites, Wave 2e).** `iot/device-showcase.tsx` battery and signal ranges are disabled while the device reports no value, so they stay native until the library `Slider` closes two gaps. Neither is a site workaround; both are library changes in `packages/ui/src/components/slider.tsx` (Radix `@radix-ui/react-slider` 1.5.0).
+**Slider (closed in Wave 2e).** Two gaps in `packages/ui/src/components/slider.tsx` (Radix `@radix-ui/react-slider` 1.5.0) kept the battery and signal ranges native at first. Both are fixed in the library, in this wave, as a `@kinetixui/ui` patch (`.changeset/slider-thumb-disabled-valuetext.md`):
 
-1. **Disabled state is neither announced nor shown (blocks the 2 sites).** Radix puts `aria-disabled` on the root span, which has no role, and only `data-disabled` plus `tabIndex=-1` on the thumb that carries `role="slider"`. The KinetixUI thumb styles disabled with `disabled:` utilities, which never match a span. Measured in Chromium with `scripts/slider-disabled-probe.mjs` on the built Storybook (`evidence/website-dogfooding/slider-gaps.json`): a disabled native range is reported disabled (the control that proves the probe can see it); `<Slider disabled>`'s thumb is reported **not disabled** (only unfocusable), with opacity 1 and pointer events on, the same as an enabled Slider. Proposed fix: `aria-disabled` on each thumb and a `data-[disabled]:` visual state (the `opacity-disabled` token, no pointer) on the root and thumb, with a test that a disabled Slider's thumb is reported disabled; then migrate both ranges and delete the C entry.
-2. **A caller cannot set the thumb's value text (does not block; a quality gap).** The wrapper forwards only `aria-label`/`aria-labelledby` to the thumb and spreads every other prop onto the root, so `aria-valuetext` never reaches the element with `role="slider"`. Last sync's six stops are announced as 0–5, as the native range did; its visible label ("Last sync — 90m") names the value. Confirmed in the wrapper source; not browser-measured, since Storybook URL args carry only declared controls. Proposed fix: forward `aria-valuetext` (or a `getValueText(value)` prop) to the thumb.
+1. **Disabled state was neither announced nor shown.** Radix puts `aria-disabled` on the root span, which has no role, and only `data-disabled` plus `tabIndex=-1` on the thumb that carries `role="slider"`; the old thumb styled disabled with `disabled:` utilities, which never match a span. Measured before the fix with `scripts/slider-disabled-probe.mjs` on the built Storybook: a disabled native range is reported disabled (the control), `<Slider disabled>`'s thumb was reported **not disabled** with opacity 1. **Fix:** the thumb carries `aria-disabled`, and the root dims with `data-[disabled]:opacity-disabled` and `cursor-not-allowed`. The probe is now a gate (`evidence/website-dogfooding/slider-disabled.json`): it fails on the old build and passes on the new one, where the disabled thumb is reported disabled at effective opacity 0.5.
+2. **A caller could not set the thumb's value text.** The wrapper forwarded only `aria-label`/`aria-labelledby` to the thumb, so `aria-valuetext` landed on the root. **Fix:** `aria-valuetext` is forwarded to the thumb. Last sync now speaks "5 minutes ago" rather than 1, and battery "72%".
 
-The other three C surfaces need an **exclusive selectable tile/card item**: a radio-like single selection whose item is a multi-line tile (rounded-lg card, a primary line plus secondary rows, status badges, or a rendered sample) with roving focus and RTL support.
+The remaining C surfaces (5 sites in 3 files) need an **exclusive selectable tile/card item**: a radio-like single selection whose item is a multi-line tile (rounded-lg card, a primary line plus secondary rows, status badges, or a rendered sample) with roving focus and RTL support.
 - `building-ops/building-ops-demo.tsx` floor selector (2 sites): floor code, alert count, occupancy, cameras.
 - `iot/showcase/date-strip.tsx` (2 sites): weekday, date, today and event cues; locale/UTC formatting.
 - `create/create-sidebar.tsx` option tiles (1 site, Wave 2c): a label tile holding a native radio and a rendered sample (style, surface, radius, chart palette), in a `fieldset` whose legend names the group. `RadioGroupItem` is a bare circle, and `Card asChild` takes only links and buttons, so neither carries a radio tile; the native radios already give the group semantics, arrow keys and form behaviour.
@@ -215,16 +215,16 @@ Both were direct `@radix-ui/react-dialog` (and, for the command menu, direct `cm
 
 ## Wave 2e: IoT showcase sliders
 
-The last 4 B sites, all `<input type="range">` in `components/iot/device-showcase.tsx` (the /iot "Imperfect data" panel; not a copyable snippet, so no generated output changed). Two migrated, two reclassified C.
+The last 4 B sites, all `<input type="range">` in `components/iot/device-showcase.tsx` (the /iot "Imperfect data" panel; not a copyable snippet). All four migrated. Two needed a library fix first (Library gaps, Slider), so this wave also ships a `@kinetixui/ui` patch; the registry copy of `slider.tsx` was regenerated from it.
 
 | Control | Before | After | Behaviour kept | Accessibility |
 |---|---|---|---|---|
-| Last sync (6 labelled stops, 0–5, step 1) | native range | `Slider`, `value={[i]}` / `onValueChange` | same stops, label ("Last sync — 5m"), preview | `role="slider"` thumb named by the visible label (`aria-labelledby`), `aria-valuemin/max/now`; arrows, Home/End, PageUp/Down; `dir` from the document, so ArrowLeft increases under RTL (the library contract) |
+| Last sync (6 labelled stops, 0–5, step 1) | native range | `Slider`, `value={[i]}` / `onValueChange` | same stops, label ("Last sync — 5m"), preview | `role="slider"` thumb named by the visible label (`aria-labelledby`), `aria-valuemin/max/now`, value text "5 minutes ago"; arrows, Home/End, PageUp/Down; `dir` from the document, so ArrowLeft increases under RTL (the library contract) |
 | Temperature (−10–45 °C, step 0.1) | native range | `Slider` | same bounds, step without float drift, label with one decimal | as above |
-| Battery (0–100 %) | native range | **unchanged, C** | disabled while "no battery" is ticked | native disabled semantics kept |
-| Signal (0–100) | native range | **unchanged, C** | disabled while "no signal" is ticked | as above |
+| Battery (0–100 %) | native range | `Slider` | disabled while "no battery" is ticked | as above, value text "72%"; while disabled the thumb is reported disabled, leaves the tab order, dims to the `opacity-disabled` token and ignores keys and presses |
+| Signal (0–100) | native range | `Slider` | disabled while "no signal" is ticked | as battery; no value text, the number is the value |
 
-**Why two stayed native.** Migrating battery and signal would have removed the disabled state a screen reader announces and the dimming a reader sees: the library `Slider` cannot express disabled yet (see Library gaps). That is a library fix, not a site workaround, and it is out of scope here.
+**Library change.** At first battery and signal stayed native, because migrating them would have removed the disabled state a screen reader announces and the dimming a reader sees. Rather than work around that in the site, the Slider was fixed (Library gaps, Slider) and both migrated. For other consumers the change is additive: an enabled Slider renders the same, a disabled one now says so and looks it, and `aria-valuetext` now reaches the thumb.
 
 **Kept from the native ranges:** values, bounds, steps and defaults; the label that names the control and carries the value; a 36px pointer target (`h-9` on the root, where Radix takes presses; the thumb is 16px); no business logic or device behaviour changes. **Changed, on purpose:** the library track and thumb replace the browser's range; clicking the label no longer focuses the control (it names it).
 

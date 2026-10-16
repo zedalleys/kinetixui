@@ -1,12 +1,13 @@
 /**
- * Wave 2e browser evidence: the IoT device showcase's Last sync and temperature on the library Slider.
+ * Wave 2e browser evidence: the IoT device showcase's four ranges on the library Slider.
  * Run against a production build: `KX_AUDIT_BASE=http://127.0.0.1:3000 KX_MAIN_BASE=http://127.0.0.1:3001
  * node scripts/web-dogfooding-wave2e.mjs`.
  *
  * Page: /iot#monitoring-playground, Monitoring tab, "Imperfect data". Real input on each slider: Tab in (visible
  * ring), the forward arrow key for the reading direction (ArrowRight in LTR, ArrowLeft in RTL, the library's
  * contract), Home/End, PageUp/PageDown; a pointer press on the track and a drag; a press inside the 36px target
- * but off the 16px thumb. The native battery and signal ranges (a documented exception) keep their disabled state.
+ * but off the 16px thumb. Battery and signal: the thumb speaks its value text, and while the device reports no
+ * value the thumb is reported disabled and ignores the keyboard.
  * axe on the showcase; with KX_MAIN_BASE, overflow inside the showcase and on the page is compared with main.
  */
 import fs from "node:fs";
@@ -218,10 +219,39 @@ try {
       // inside the 36px target but well off the 16px thumb's row
       await page.mouse.click(at(0.9), track.y + 3);
       assert(await now(temp) > 35, "a press at the top edge of the target did nothing");
-      // the native ranges keep their disabled state
+      // Last sync speaks its stop, not its index
+      await last.focus();
+      await press(page, "End");
+      assert.equal(await last.getAttribute("aria-valuetext"), "never reported");
+      // battery and signal: value text on the thumb, disabled while the device reports no value
+      const battery = page.getByRole("slider", { name: /^Battery — / });
+      const signal = page.getByRole("slider", { name: /^Signal — / });
+      assert.equal(await page.locator("#iot-demo-battery input[type=range], #iot-demo-signal input[type=range]").count(), 0);
+      assert.equal(await battery.getAttribute("aria-valuetext"), "72%");
+      assert.equal(await battery.getAttribute("aria-disabled"), null, "battery reads disabled while reported");
+      await battery.focus();
+      await press(page, fwd);
+      assert.equal(await now(battery), 73, `${fwd} did not move battery`);
       await page.getByRole("checkbox", { name: "Device reports no battery" }).click();
-      assert(await page.locator("#iot-demo-battery").isDisabled(), "battery range not disabled");
-      const axe = await axeOn(page, '[aria-labelledby="iot-demo-temperature-label"], [aria-labelledby="iot-demo-last-seen-label"], #iot-demo-battery, #iot-demo-signal', `sliders ${tag}`);
+      const off = page.locator('[aria-labelledby="iot-demo-battery-label"][role="slider"]');
+      assert.equal(await off.getAttribute("aria-disabled"), "true", "battery thumb not reported disabled");
+      assert.equal(await off.getAttribute("tabindex"), null, "a disabled battery thumb is still tabbable");
+      // a site-wide transition duration (1e-5s here) also applies to the root's opacity, so wait for the opacity to settle before reading
+      const opacity = await page
+        .waitForFunction(() => Number(getComputedStyle(document.getElementById("iot-demo-battery")).opacity) < 1, null, { timeout: 2000 })
+        .then(() => page.locator("#iot-demo-battery").evaluate((el) => getComputedStyle(el).opacity))
+        .catch(() => "1");
+      assert(Number(opacity) < 1, `the disabled battery Slider looks enabled (opacity ${opacity})`);
+      await off.focus();
+      await press(page, fwd);
+      assert.equal(await now(off), 73, "the disabled battery Slider moved");
+      const bat = await page.locator("#iot-demo-battery").boundingBox();
+      await page.mouse.click(dir === "rtl" ? bat.x + bat.width * 0.9 : bat.x + bat.width * 0.1, bat.y + bat.height / 2);
+      assert.equal(await now(off), 73, "a press moved the disabled battery Slider");
+      await page.getByRole("checkbox", { name: "Device reports no signal" }).click();
+      const signalOff = page.locator('[aria-labelledby="iot-demo-signal-label"][role="slider"]');
+      assert.equal(await signalOff.getAttribute("aria-disabled"), "true", "signal thumb not reported disabled");
+      const axe = await axeOn(page, '#iot-demo-temperature, #iot-demo-last-seen, #iot-demo-battery, #iot-demo-signal', `sliders ${tag}`);
       await page.close();
       return { axe, targetHeight: Math.round(track.height) };
     });

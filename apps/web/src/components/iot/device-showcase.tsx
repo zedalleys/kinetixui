@@ -51,13 +51,13 @@ const QUALITIES: readonly { value: KinetixTelemetryQuality; label: string }[] = 
 ];
 
 /** Minutes-ago stops for the Last sync control. `null` is "never reported", which is not the same as "old". */
-const LAST_SEEN_STEPS: readonly { minutes: number | null; label: string }[] = [
-  { minutes: 0, label: "now" },
-  { minutes: 5, label: "5m" },
-  { minutes: 90, label: "90m" },
-  { minutes: 60 * 26, label: "26h" },
-  { minutes: 60 * 24 * 3, label: "3d" },
-  { minutes: null, label: "never" },
+const LAST_SEEN_STEPS: readonly { minutes: number | null; label: string; spoken: string }[] = [
+  { minutes: 0, label: "now", spoken: "now" },
+  { minutes: 5, label: "5m", spoken: "5 minutes ago" },
+  { minutes: 90, label: "90m", spoken: "90 minutes ago" },
+  { minutes: 60 * 26, label: "26h", spoken: "26 hours ago" },
+  { minutes: 60 * 24 * 3, label: "3d", spoken: "3 days ago" },
+  { minutes: null, label: "never", spoken: "never reported" },
 ];
 
 function instantFor(minutes: number | null): string | null {
@@ -94,16 +94,6 @@ function Row({ name, children }: { name: string; children: React.ReactNode }) {
     </div>
   );
 }
-
-/**
- * Battery and signal stay native ranges (a documented exception, C): each is disabled while the device reports no
- * value, and the library `Slider` cannot say so yet — `aria-disabled` lands on its root, not on the thumb that has
- * `role="slider"`, and its `disabled:` styles target a span that is never `:disabled`. Last sync and temperature,
- * never disabled, are the library `Slider`. See the audit, "Wave 2e".
- */
-const rangeClass =
-  "h-9 w-full accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
-  "focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 export function DeviceShowcase() {
   const [status, setStatus] = React.useState<KinetixDeviceStatus>("online");
@@ -168,17 +158,22 @@ export function DeviceShowcase() {
           </NativeSelect>
         </Control>
 
-        <Control id="iot-demo-battery" label={batteryReported ? `Battery — ${battery}%` : "Battery — not reported"}>
-          <input
+        {/* The library Slider: one thumb, so the value is a one-item array. `h-9` keeps the 36px pointer target the
+            native range had: Radix takes a press anywhere on the root, not only on the 16px thumb. Battery and
+            signal are disabled while the device reports no value; the Slider says so on its thumb. */}
+        <Control id="iot-demo-battery" slider label={batteryReported ? `Battery — ${battery}%` : "Battery — not reported"}>
+          <Slider
             id="iot-demo-battery"
-            type="range"
+            aria-labelledby="iot-demo-battery-label"
+            aria-valuetext={`${battery}%`}
+            dir={dir}
             min={0}
             max={100}
             step={1}
-            value={battery}
+            value={[battery]}
             disabled={!batteryReported}
-            onChange={(e) => setBattery(Number(e.target.value))}
-            className={rangeClass}
+            onValueChange={([next]) => setBattery(next!)}
+            className="h-9"
           />
           <Label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-xs font-normal leading-normal text-muted-foreground">
             <Checkbox checked={!batteryReported} onCheckedChange={(checked) => setBatteryReported(checked !== true)} />
@@ -186,17 +181,18 @@ export function DeviceShowcase() {
           </Label>
         </Control>
 
-        <Control id="iot-demo-signal" label={signalReported ? `Signal — ${signal}` : "Signal — not reported"}>
-          <input
+        <Control id="iot-demo-signal" slider label={signalReported ? `Signal — ${signal}` : "Signal — not reported"}>
+          <Slider
             id="iot-demo-signal"
-            type="range"
+            aria-labelledby="iot-demo-signal-label"
+            dir={dir}
             min={0}
             max={100}
             step={1}
-            value={signal}
+            value={[signal]}
             disabled={!signalReported}
-            onChange={(e) => setSignal(Number(e.target.value))}
-            className={rangeClass}
+            onValueChange={([next]) => setSignal(next!)}
+            className="h-9"
           />
           <Label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-xs font-normal leading-normal text-muted-foreground">
             <Checkbox checked={!signalReported} onCheckedChange={(checked) => setSignalReported(checked !== true)} />
@@ -204,12 +200,11 @@ export function DeviceShowcase() {
           </Label>
         </Control>
 
-        {/* The library Slider: one thumb, so the value is a one-item array. `h-9` keeps the 36px pointer target the
-            native range had: Radix takes a press anywhere on the root, not only on the 16px thumb. */}
         <Control id="iot-demo-last-seen" label={`Last sync — ${step.label}`} slider>
           <Slider
             id="iot-demo-last-seen"
             aria-labelledby="iot-demo-last-seen-label"
+            aria-valuetext={step.spoken}
             dir={dir}
             min={0}
             max={LAST_SEEN_STEPS.length - 1}

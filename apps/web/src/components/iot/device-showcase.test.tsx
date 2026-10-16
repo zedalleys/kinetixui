@@ -5,10 +5,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import { DeviceShowcase } from "./device-showcase";
 
 /**
- * Wave 2e — the device showcase's ranges. Last sync and temperature are the library `Slider` (Radix): the thumb is
- * the `role="slider"` element, named by the visible label through `aria-labelledby`, with the native range's min,
- * max and step. Battery and signal stay native ranges, a documented exception: each is disabled while the device
- * reports no value, which the library Slider cannot announce or show yet (see the audit, "Wave 2e").
+ * Wave 2e — the device showcase's four ranges, all the library `Slider` (Radix): the thumb is the `role="slider"`
+ * element, named by the visible label through `aria-labelledby`, with the native range's min, max and step. Battery
+ * and signal are disabled while the device reports no value, which the Slider now says on its thumb.
  */
 const slider = (name: RegExp) => screen.getByRole("slider", { name });
 const lastSync = () => slider(/^Last sync — /);
@@ -78,17 +77,53 @@ describe("Last sync and temperature on the library Slider", () => {
   });
 });
 
-describe("battery and signal stay native ranges (documented exception)", () => {
-  it("keep their native disabled semantics while the device reports no value", async () => {
+describe("battery and signal on the library Slider, disabled while the device reports no value", () => {
+  it("say so on the thumb, the element a screen reader reads, and come back when the value returns", async () => {
     const user = userEvent.setup();
     render(<DeviceShowcase />);
-    const battery = document.getElementById("iot-demo-battery") as HTMLInputElement;
-    expect(battery.type).toBe("range");
-    expect(screen.getByRole("slider", { name: "Battery — 72%" })).toBe(battery);
+    expect(document.querySelector('input[type="range"]')).toBeNull();
+    const battery = () => slider(/^Battery — /);
+    expect(battery()).toHaveAccessibleName("Battery — 72%");
+    expect(battery()).toHaveAttribute("aria-valuetext", "72%");
+    expect(battery()).not.toHaveAttribute("aria-disabled");
+
     await user.click(screen.getByRole("checkbox", { name: "Device reports no battery" }));
-    expect(battery).toBeDisabled();
-    expect(screen.getByRole("slider", { name: "Battery — not reported" })).toBe(battery);
-    expect((document.getElementById("iot-demo-signal") as HTMLInputElement).type).toBe("range");
+    expect(battery()).toHaveAccessibleName("Battery — not reported");
+    expect(battery()).toHaveAttribute("aria-disabled", "true");
+    expect(battery()).not.toHaveAttribute("tabindex", "0");
+
+    await user.click(screen.getByRole("checkbox", { name: "Device reports no battery" }));
+    expect(battery()).not.toHaveAttribute("aria-disabled");
+
+    const signal = () => slider(/^Signal — /);
+    await user.click(screen.getByRole("checkbox", { name: "Device reports no signal" }));
+    expect(signal()).toHaveAccessibleName("Signal — not reported");
+    expect(signal()).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("ignore the keyboard while disabled", async () => {
+    const user = userEvent.setup();
+    render(<DeviceShowcase />);
+    const before = slider(/^Signal — /).getAttribute("aria-valuenow");
+    await user.click(screen.getByRole("checkbox", { name: "Device reports no signal" }));
+    slider(/^Signal — /).focus();
+    await user.keyboard("{ArrowRight}{End}");
+    expect(slider(/^Signal — /)).toHaveAttribute("aria-valuenow", before);
+    await user.click(screen.getByRole("checkbox", { name: "Device reports no signal" }));
+    expect(slider(/^Signal — /)).toHaveAccessibleName(`Signal — ${before}`);
+  });
+});
+
+describe("Last sync speaks its stop, not its index", () => {
+  it("reads 90 minutes ago where the label shows 90m", async () => {
+    const user = userEvent.setup();
+    render(<DeviceShowcase />);
+    expect(lastSync()).toHaveAttribute("aria-valuetext", "5 minutes ago");
+    lastSync().focus();
+    await user.keyboard("{ArrowRight}");
+    expect(lastSync()).toHaveAttribute("aria-valuetext", "90 minutes ago");
+    await user.keyboard("{End}");
+    expect(lastSync()).toHaveAttribute("aria-valuetext", "never reported");
   });
 });
 

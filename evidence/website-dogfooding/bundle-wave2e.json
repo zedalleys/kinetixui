@@ -9,13 +9,13 @@
    },
    "branch": {
     "files": 15,
-    "bytes": 1859084,
-    "gzipBytes": 535264
+    "bytes": 1859294,
+    "gzipBytes": 535326
    },
    "delta": {
     "files": 0,
-    "bytes": 185,
-    "gzipBytes": 66
+    "bytes": 395,
+    "gzipBytes": 128
    }
   },
   "/": {
@@ -26,13 +26,13 @@
    },
    "branch": {
     "files": 14,
-    "bytes": 1603086,
-    "gzipBytes": 472091
+    "bytes": 1603172,
+    "gzipBytes": 472116
    },
    "delta": {
     "files": 0,
-    "bytes": 0,
-    "gzipBytes": 0
+    "bytes": 86,
+    "gzipBytes": 25
    }
   },
   "/docs/iot": {
@@ -43,13 +43,13 @@
    },
    "branch": {
     "files": 19,
-    "bytes": 1955590,
-    "gzipBytes": 560717
+    "bytes": 1955676,
+    "gzipBytes": 560742
    },
    "delta": {
     "files": 0,
-    "bytes": 0,
-    "gzipBytes": 2
+    "bytes": 86,
+    "gzipBytes": 27
    }
   }
  }

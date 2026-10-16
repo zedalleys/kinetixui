@@ -8,6 +8,7 @@
     "ariaValueText": null,
     "dataDisabled": false,
     "rootAriaDisabled": null,
+    "effectiveOpacity": 1,
     "opacity": "1",
     "pointerEvents": "auto",
     "tabIndex": 0
@@ -21,19 +22,21 @@
     "ariaValueText": null,
     "dataDisabled": false,
     "rootAriaDisabled": "false",
+    "effectiveOpacity": 1,
     "opacity": "1",
     "pointerEvents": "auto",
     "tabIndex": 0
   },
   "sliderDisabled": {
     "inAccessibilityTree": true,
-    "reportedDisabled": false,
+    "reportedDisabled": true,
     "reportedFocusable": false,
     "reportedValueText": "",
-    "ariaDisabled": null,
+    "ariaDisabled": "true",
     "ariaValueText": null,
     "dataDisabled": true,
     "rootAriaDisabled": "true",
+    "effectiveOpacity": 0.5,
     "opacity": "1",
     "pointerEvents": "auto",
     "tabIndex": -1
