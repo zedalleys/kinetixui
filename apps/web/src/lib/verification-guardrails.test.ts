@@ -351,6 +351,9 @@ describe("block evidence: negative controls", () => {
       "true || pnpm build:web", // skipped whenever the left side succeeds
       ">\n          echo preparing\n          pnpm build:web", // folded: one command, `echo preparing pnpm build:web`
       "pnpm build:web\n        if: false", // a step GitHub may skip
+      "pnpm build:web\n        continue-on-error: true", // a step whose failure is ignored
+      "pnpm build:web || true", // failure masked
+      "pnpm build:web | tee build.log", // the pipe's status is tee's
     ]) {
       const fake = blockFixture({}, { buildWeb });
       expect(run(script, [`--root=${fake}`]).ok).toBe(true);
@@ -365,7 +368,7 @@ describe("block evidence: negative controls", () => {
     const otherJob = blockFixture({ ".github/workflows/ci.yml": `${workflow({ drop: ["build:web"] })}  web:\n    steps:\n      - run: pnpm build:web\n` });
     expect(run(script, [`--root=${otherJob}`]).ok).toBe(true);
     expect(blocksOut(otherJob)["sign-in"]!.platforms.React!.level).toBe("build");
-    for (const buildWeb of ["pnpm install --frozen-lockfile && pnpm build:web", "|\n          pnpm install\n          pnpm build:web", "pnpm build:web || exit 1"]) {
+    for (const buildWeb of ["pnpm install --frozen-lockfile && pnpm build:web", "|\n          pnpm install\n          pnpm build:web"]) {
       const real = blockFixture({}, { buildWeb });
       expect(run(script, [`--root=${real}`]).ok).toBe(true);
       expect(blocksOut(real)["sign-in"]!.platforms.React!.level, buildWeb).toBe("build");

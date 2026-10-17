@@ -459,13 +459,19 @@ function runsInWorkflowStep(script) {
  * is matched from its start, so `echo 'swift test'` or `# swift test` is not a run of `swift test`.
  */
 function commandsOf(lines) {
-  // what follows `||` runs only when what precedes it fails, so it is never counted as having run
-  return lines.flatMap((l) => l.replace(/\s+#.*$/, "").split("||")[0].split(/&&|;/)).map((c) => c.trim()).filter(Boolean);
+  // Only plain sequences count. `a || b` either masks a's failure or runs b only when a failed, and a pipe,
+  // background job or substitution changes what the step's exit status means, so such a line counts as nothing.
+  return lines
+    .map((l) => l.replace(/\s+#.*$/, ""))
+    .filter((l) => !/\|\||(?<!\|)\|(?!\|)|&(?!&)|`|\$\(/.test(l.replace(/&&/g, "")))
+    .flatMap((l) => l.split(/&&|;/))
+    .map((c) => c.trim())
+    .filter(Boolean);
 }
 const startsCommand = (command, prefix) => command === prefix || command.startsWith(`${prefix} `);
 
 /**
- * Is the `run:` at line `at` inside a step or a job that carries an `if:`? Read by indentation: the step is the
+ * Is the `run:` at line `at` inside a step or a job that carries an `if:` or `continue-on-error:`? Read by indentation: the step is the
  * nearest `- ` item above it, the job the mapping that holds that step's `steps:`. Conditions are not evaluated;
  * any condition at all means the step may be skipped, and a skipped step is not evidence.
  */
@@ -491,7 +497,8 @@ function conditional(lines, at) {
     }
     return false;
   };
-  const ifAt = (n) => (l) => new RegExp(`^\\s{${n}}if:`).test(l.replace(/^(\s*)-\s/, (_, sp) => `${sp}  `));
+  // `continue-on-error` lets a failing step pass, which is the same as not knowing whether it ran clean
+  const ifAt = (n) => (l) => new RegExp(`^\\s{${n}}(?:if|continue-on-error):`).test(l.replace(/^(\s*)-\s/, (_, sp) => `${sp}  `));
   if (within(dash, dashIndent, ifAt(stepKeys))) return true;
   // the job: the line above `steps:` that opens the mapping `steps:` belongs to
   for (let j = dash; j >= 0; j--) {
