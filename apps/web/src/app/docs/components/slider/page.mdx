@@ -29,6 +29,21 @@ component is built on a primitive; the hand-built widgets (DataGrid, TreeView,
 ColorPicker, MultiSelect, Tour, KanbanBoard) have their own documented interaction
 models — see [Accessibility](/docs/accessibility).
 
+## Range (React)
+
+Pass more than one value and the React Slider draws one thumb per value, each
+with its own tab stop. One name cannot tell two thumbs apart, so `aria-label` or
+`aria-labelledby` names the group (`role="group"`) and each thumb keeps the name
+of its position: "Minimum" and "Maximum", or "Value 1 of 3" beyond two.
+`aria-valuetext` describes a single value, so it applies to a single-thumb
+Slider only.
+
+```tsx
+<Slider aria-label="Price" defaultValue={[20, 80]} max={100} step={1} />
+```
+
+The Angular, SwiftUI, Compose and Flutter Sliders take a single value today.
+
 <ComponentApi slug="slider" />
 
 ## Keyboard
