@@ -157,6 +157,11 @@ describe("sourceForPath / componentSlugFor", () => {
     ["/components", "components_gallery"],
     ["/charts", null],
     ["/create", null],
+    ["/capabilities", "use_cases_hub"],
+    ["/use-cases/commerce", "use_case_page"],
+    // a use-case-shaped URL with no page is a 404, not a use-case page
+    ["/use-cases/healthcare", null],
+    ["/use-cases/not-a-domain", null],
   ])("%s → %s", (path, source) => {
     expect(sourceForPath(path)).toBe(source);
   });

@@ -68,6 +68,7 @@
     "check:web-quality": "node scripts/web-quality-browser.mjs --base http://127.0.0.1:3000",
     "check:blocks-discovery": "node scripts/blocks-discovery-browser.mjs --base http://127.0.0.1:3000",
     "check:global-search": "node scripts/global-search-browser.mjs --base http://127.0.0.1:3000",
+    "check:use-cases": "node scripts/use-cases-browser.mjs --base http://127.0.0.1:3000",
     "check:grid": "node scripts/check-grid.mjs",
     "build:registry": "node scripts/gen-registry.mjs && shadcn build registry/registry.json --output apps/web/public/r && node scripts/rewrite-schema.mjs && node scripts/gen-registry-index.mjs && node scripts/gen-component-specs.mjs",
     "check:registry-deps": "node scripts/check-registry-deps.mjs",

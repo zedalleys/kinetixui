@@ -82,15 +82,12 @@ export function BusinessContext({
           <Row label="Business domains">
             <Inline
               items={ctx.domains}
-              render={(d) =>
-                d.href ? (
-                  <Link href={d.href} className={linkClass}>
-                    {d.label}
-                  </Link>
-                ) : (
-                  d.label
-                )
-              }
+              // its use-case page, or its card on the Use cases hub when it has no page
+              render={(d) => (
+                <Link href={d.href} className={linkClass}>
+                  {d.label}
+                </Link>
+              )}
             />
           </Row>
         )}
@@ -100,13 +97,9 @@ export function BusinessContext({
               items={ctx.workflows}
               render={(w) => (
                 <>
-                  {w.href ? (
-                    <Link href={w.href} className={linkClass}>
-                      {w.label}
-                    </Link>
-                  ) : (
-                    w.label
-                  )}{" "}
+                  <Link href={w.href} className={linkClass}>
+                    {w.label}
+                  </Link>{" "}
                   <span className="text-muted-foreground">({w.domain})</span>
                 </>
               )}

@@ -41,8 +41,16 @@ export type Capability = {
   iot: string[];
   rows: string[];
 };
-export type Domain = Omit<Capability, "families"> & { page: boolean; capabilities: string[]; workflows: string[] };
-export type Workflow = { id: string; title: string; domain: string; summary: string; stages: { title: string; rows: string[] }[] };
+export type Domain = Omit<Capability, "families"> & {
+  page: boolean;
+  capabilities: string[];
+  workflows: string[];
+  /** The publication criteria (scripts/business-discovery.mjs): `unmet` lists the ones this domain does not meet. */
+  publication: { eligible: boolean; unmet: string[] };
+};
+/** A stage is `existing` only when every row it uses is; `planned` when none ships; `partial` otherwise. */
+export type WorkflowStage = { title: string; rows: string[]; status: RowStatus };
+export type Workflow = { id: string; title: string; domain: string; summary: string; stages: WorkflowStage[]; coverage: Counts };
 export type ComponentDiscovery = {
   layer: Layer | Unclassified;
   target: string;
@@ -72,6 +80,46 @@ export const ships = (row: Pick<DiscoveryRow, "status">) => row.status === "exis
 /** Domains whose discovery page exists: `/use-cases/<id>`. */
 export const DOMAIN_PAGES = DOMAINS.filter((d) => d.page);
 export const domainHref = (id: string) => `/use-cases/${id}`;
+
+/** The hub. Its URL stays /capabilities (W1 contract); readers know it as "Use cases". */
+export const HUB_HREF = "/capabilities";
+/** Anchors on the hub, for a domain or workflow that has no page of its own. Prefixed so they cannot meet a capability id. */
+export const hubDomainAnchor = (id: string) => `domain-${id}`;
+export const hubWorkflowAnchor = (id: string) => `workflow-${id}`;
+
+/** Where to read about a domain: its page when it has one, else its card on the hub. Never a page that does not exist. */
+export function domainLink(id: string): string {
+  return domainById(id)?.page ? domainHref(id) : `${HUB_HREF}#${hubDomainAnchor(id)}`;
+}
+
+/** Where to read about a workflow: its section on its domain page, else its card on the hub. */
+export function workflowLink(id: string): string {
+  const w = workflowById(id)!;
+  return domainById(w.domain)?.page ? `${domainHref(w.domain)}#${id}` : `${HUB_HREF}#${hubWorkflowAnchor(id)}`;
+}
+
+/**
+ * What a workflow lets a reader open today: the catalogue components, blocks and @kinetixui/iot exports cited by the
+ * shipping rows its stages use. Planned rows carry none (the generator strips them), so nothing planned is linked.
+ */
+export function workflowParts(w: Workflow): { components: string[]; blocks: string[]; iot: number } {
+  const rows = w.stages.flatMap((s) => s.rows.map((n) => ROWS[n]!)).filter(ships);
+  const uniq = (xs: string[]) => [...new Set(xs)];
+  return {
+    components: uniq(rows.flatMap((r) => r.components)).sort(),
+    blocks: uniq(rows.flatMap((r) => r.blocks)).sort(),
+    iot: uniq(rows.flatMap((r) => r.iot)).length,
+  };
+}
+
+/** "3 of 6 stages available · 2 partial · 1 planned". Only a workflow whose every stage is available says so. */
+export function coverageLine(w: Pick<Workflow, "coverage" | "stages">): string {
+  const { existing, partial, planned } = w.coverage;
+  if (existing === w.stages.length) return `All ${w.stages.length} stages available`;
+  return [`${existing} of ${w.stages.length} stages available`, partial ? `${partial} partial` : "", planned ? `${planned} planned` : ""]
+    .filter(Boolean)
+    .join(" · ");
+}
 export { DISCOVERY_ROUTES } from "./discovery-routes";
 
 /**
@@ -134,8 +182,9 @@ export type BusinessContext = {
   layer?: string;
   target?: string;
   capabilities: FacetOption[];
-  domains: (FacetOption & { href?: string })[];
-  workflows: (FacetOption & { domain: string; href?: string })[];
+  /** `href`: the domain's page, or its card on the hub when it has none. */
+  domains: (FacetOption & { href: string })[];
+  workflows: (FacetOption & { domain: string; href: string })[];
   buildsToward: string[];
 };
 
@@ -154,14 +203,10 @@ export function businessContextFor(slug: string): BusinessContext | null {
     ...(layer ? { layer } : {}),
     ...(target ? { target } : {}),
     capabilities: e.capabilities.map((id) => ({ id, label: capabilityById(id)!.title })),
-    domains: e.domains.map((id) => {
-      const d = domainById(id)!;
-      return { id, label: d.title, ...(d.page ? { href: domainHref(id) } : {}) };
-    }),
+    domains: e.domains.map((id) => ({ id, label: domainById(id)!.title, href: domainLink(id) })),
     workflows: e.workflows.map((id) => {
       const w = workflowById(id)!;
-      const d = domainById(w.domain)!;
-      return { id, label: w.title, domain: d.title, ...(d.page ? { href: `${domainHref(d.id)}#${id}` } : {}) };
+      return { id, label: w.title, domain: domainById(w.domain)!.title, href: workflowLink(id) };
     }),
     buildsToward: e.buildsToward ?? [],
   };
@@ -182,8 +227,8 @@ export function businessContexts(): Record<string, BusinessContext> {
 export type BlockFacets = {
   capabilities: FacetOption[];
   domains: FacetOption[];
-  /** `href`: the workflow's section on its domain page, when that page exists. */
-  workflows: (FacetOption & { href?: string })[];
+  /** `href`: the workflow's section on its domain page, or its card on the hub when the domain has no page. */
+  workflows: (FacetOption & { href: string })[];
   bySlug: Record<string, { capabilities: string[]; domains: string[]; workflows: string[]; terms: string }>;
 };
 
@@ -200,10 +245,7 @@ export function blockFacets(): BlockFacets {
   return {
     capabilities: CAPABILITIES.filter((c) => caps.has(c.id)).map((c) => ({ id: c.id, label: c.title })),
     domains: DOMAINS.filter((d) => doms.has(d.id)).map((d) => ({ id: d.id, label: d.title })),
-    workflows: WORKFLOWS.filter((w) => wfs.has(w.id)).map((w) => {
-      const d = domainById(w.domain)!;
-      return { id: w.id, label: w.title, ...(d.page ? { href: `${domainHref(d.id)}#${w.id}` } : {}) };
-    }),
+    workflows: WORKFLOWS.filter((w) => wfs.has(w.id)).map((w) => ({ id: w.id, label: w.title, href: workflowLink(w.id) })),
     bySlug: Object.fromEntries(
       entries.map(([slug, e]) => [
         slug,

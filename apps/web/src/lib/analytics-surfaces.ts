@@ -49,6 +49,9 @@ export function sourceForPath(pathname: string): AnalyticsSource | null {
   if (pathname === "/blocks") return "blocks_gallery";
   if (pathname === "/iot") return "iot_page";
   if (pathname === "/demos/building-operations") return "building_operations_demo";
+  if (pathname === "/capabilities") return "use_cases_hub";
+  // only a use-case page that exists: a 404 at a use-case-shaped URL is not a use-case page
+  if (pathname.startsWith("/use-cases/") && PUBLIC_ROUTES.has(pathname)) return "use_case_page";
   return null;
 }
 
