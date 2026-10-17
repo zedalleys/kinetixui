@@ -77,6 +77,22 @@ describe("/blocks discovery filters", () => {
     expect(nav.replace).toHaveBeenCalledWith("/blocks?q=checkout", { scroll: false });
   });
 
+  it("keeps a filter chosen while the search is still waiting to be written", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { rerender } = render(<BlocksGallery {...DATA} />);
+    await user.type(screen.getByLabelText("Search"), "order");
+    await user.selectOptions(screen.getByLabelText("Category"), "Commerce");
+    expect(nav.replace).toHaveBeenLastCalledWith("/blocks?q=order&cat=Commerce", { scroll: false });
+    // the router applies the write; the pending search timer must not put the old facets back
+    go("q=order&cat=Commerce");
+    rerender(<BlocksGallery {...DATA} />);
+    const calls = nav.replace.mock.calls.length;
+    await act(async () => vi.advanceTimersByTime(250));
+    expect(nav.replace.mock.calls.slice(calls)).toEqual([]);
+    expect(screen.getByLabelText("Category")).toHaveValue("Commerce");
+  });
+
   it("reads Back/Forward from the URL, so a changed query string re-renders without stale results", () => {
     go("workflow=checkout");
     const { rerender } = render(<BlocksGallery {...DATA} />);

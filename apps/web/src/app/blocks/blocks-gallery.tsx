@@ -282,10 +282,18 @@ export function BlocksGallery(props: Props) {
     [params, pathname, router],
   );
 
+  // the pending search write reads the URL state as it is when it fires, not when typing started, so a filter
+  // changed during the pause is kept rather than overwritten with the facets of a few keystrokes ago
+  const latest = React.useRef({ state, write });
+  latest.current = { state, write };
+
   // the typed term reaches the URL after a pause, like /components
   React.useEffect(() => {
     if (query.trim() === state.q) return;
-    const id = setTimeout(() => write({ ...state, q: query }), 200);
+    const id = setTimeout(() => {
+      const { state: now, write: commit } = latest.current;
+      if (query.trim() !== now.q) commit({ ...now, q: query });
+    }, 200);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
