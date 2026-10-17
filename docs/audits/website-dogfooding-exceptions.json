@@ -241,6 +241,20 @@
       "maxCount": 1,
       "classification": "D",
       "reason": "Spatial diagram composition (Wave 2b review): the platform tabs are nodes of the measured trace drawing, placed by the map's CSS subgrid and styled as dashed cards that the traces connect. Semantics are already correct (real tabs with real panels, automatic activation, dir from the page, the tour's pause control). Library TabsList/TabsTrigger would need their list display, gap, border, scroll, underline indicator, centring, nowrap, hover fill, inset focus ring and vertical borders overridden locally to keep the drawing, which is the local restyling #380 rules out; matching them instead redesigns the homepage hero. Same family as the world map, floor plan and space canvas."
+    },
+    {
+      "file": "apps/web/src/examples/fab-speed-dial.tsx",
+      "pattern": "button[type=button]",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "Speed-dial Fab example (#386): the travelling discs are measured to land under these action rows, so each row is a local composition of disc and sliding label rather than a library Button, and the root handles Escape for the disclosure. The trigger is the library Fab; keep geometry and motion local."
+    },
+    {
+      "file": "apps/web/src/examples/fab-speed-dial.tsx",
+      "pattern": "div",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "Speed-dial Fab example (#386): the travelling discs are measured to land under these action rows, so each row is a local composition of disc and sliding label rather than a library Button, and the root handles Escape for the disclosure. The trigger is the library Fab; keep geometry and motion local."
     }
   ]
 }
