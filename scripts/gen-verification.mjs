@@ -438,11 +438,24 @@ function runsInWorkflowStep(script) {
   const pkg = JSON.parse(read("package.json"));
   const wrappers = Object.entries(pkg.scripts ?? {})
     .filter(([, cmd]) => cmd.includes(script))
-    .map(([name]) => new RegExp(`\\b(?:pnpm|npm|yarn)(?:\\s+run)?(?:\\s+-s)?\\s+${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w:-])`));
+    .map(([name]) => new RegExp(`^(?:pnpm|npm|yarn)(?:\\s+run)?(?:\\s+-s)?\\s+${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:\\s|$)`));
   return readdirSync(dir)
     .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
-    .some((f) => runCommands(readFileSync(`${dir}/${f}`, "utf8")).some((l) => l.includes(script) || wrappers.some((w) => w.test(l))));
+    .some((f) =>
+      commandsOf(runCommands(readFileSync(`${dir}/${f}`, "utf8"))).some(
+        (c) => [`node ${script}`, `node ./${script}`].some((p) => startsCommand(c, p)) || wrappers.some((w) => w.test(c)),
+      ),
+    );
 }
+
+/**
+ * The commands a list of run lines executes: split on `&&`, `||` and `;`, trailing comments dropped. A command
+ * is matched from its start, so `echo 'swift test'` or `# swift test` is not a run of `swift test`.
+ */
+function commandsOf(lines) {
+  return lines.flatMap((l) => l.replace(/\s+#.*$/, "").split(/&&|\|\||;/)).map((c) => c.trim()).filter(Boolean);
+}
+const startsCommand = (command, prefix) => command === prefix || command.startsWith(`${prefix} `);
 
 /** The command lines of a workflow's `run:` steps, including the body of a `run: |` block. Comments dropped. */
 function runCommands(yaml) {
@@ -469,9 +482,7 @@ function runCommands(yaml) {
 function workflowRuns(workflow, command) {
   const path = `${root}/.github/workflows/${workflow}`;
   if (!existsSync(path)) return false;
-  return readFileSync(path, "utf8")
-    .split("\n")
-    .some((l) => /^\s*(-\s+)?run:/.test(l) && l.includes(command));
+  return commandsOf(runCommands(readFileSync(path, "utf8"))).some((c) => startsCommand(c, command));
 }
 
 export function blockPassages(text) {

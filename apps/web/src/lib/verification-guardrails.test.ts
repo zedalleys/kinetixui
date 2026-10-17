@@ -281,8 +281,8 @@ const BLOCKS_MANIFEST = {
 const RUNTIME_SCRIPT = "scripts/blocks-runtime-browser.mjs";
 
 /** A workflow that really runs both builds and every standalone evidence script, unless told to drop one. */
-function workflow({ drop = [] as string[], runtimeStep = `node ${RUNTIME_SCRIPT}` } = {}) {
-  const steps = ["pnpm build:web", "pnpm build:angular", ...extraEvidenceScripts().map((s) => `node ${s}`), runtimeStep];
+function workflow({ drop = [] as string[], runtimeStep = `node ${RUNTIME_SCRIPT}`, buildWeb = "pnpm build:web" } = {}) {
+  const steps = [buildWeb, "pnpm build:angular", ...extraEvidenceScripts().map((s) => `node ${s}`), runtimeStep];
   // a path filter naming the runtime script, as a real workflow has: a mention that is not a step
   const on = `on:\n  pull_request:\n    paths:\n      - "${RUNTIME_SCRIPT}"\n`;
   return `${on}jobs:\n  ci:\n    steps:\n${steps.filter((c) => !drop.some((d) => c.includes(d))).map((c) => `      - run: ${c}\n`).join("")}`;
@@ -290,7 +290,13 @@ function workflow({ drop = [] as string[], runtimeStep = `node ${RUNTIME_SCRIPT}
 
 function blockFixture(
   files: Record<string, string> = {},
-  { blocks = BLOCKS_MANIFEST, drop = [] as string[], runtimeStep = undefined as string | undefined, scripts = {} as Record<string, string> } = {},
+  {
+    blocks = BLOCKS_MANIFEST,
+    drop = [] as string[],
+    runtimeStep = undefined as string | undefined,
+    buildWeb = undefined as string | undefined,
+    scripts = {} as Record<string, string>,
+  } = {},
 ) {
   return fixture({
     "blocks.manifest.json": JSON.stringify(blocks),
@@ -298,7 +304,7 @@ function blockFixture(
     "apps/web/src/examples/blocks/sign-in.tsx": "export function SignInBlock() { return null }\n",
     "apps/web/src/examples/blocks/stat-cards.tsx": "export function StatCardsBlock() { return null }\n",
     "packages/ui-angular/src/examples/blocks/sign-in.ts": "export class SignInBlock {}\n",
-    ".github/workflows/ci.yml": workflow({ drop, ...(runtimeStep ? { runtimeStep } : {}) }),
+    ".github/workflows/ci.yml": workflow({ drop, ...(runtimeStep ? { runtimeStep } : {}), ...(buildWeb ? { buildWeb } : {}) }),
     [RUNTIME_SCRIPT]: "// no markers\n",
     ...files,
   });
@@ -337,6 +343,15 @@ describe("block evidence: negative controls", () => {
     expect(run(script, [`--root=${dir}`]).ok).toBe(true);
     expect(blocksOut(dir)["sign-in"]!.platforms.React!.level).toBe("source");
     expect(blocksOut(dir)["sign-in"]!.platforms.React!.limitations).toContain("no CI step compiles this file");
+    // the command has to be what the step executes, not text inside it
+    for (const buildWeb of ["echo 'pnpm build:web'", "pnpm lint # pnpm build:web", "pnpm build:web-docs"]) {
+      const fake = blockFixture({}, { buildWeb });
+      expect(run(script, [`--root=${fake}`]).ok).toBe(true);
+      expect(blocksOut(fake)["sign-in"]!.platforms.React!.level, buildWeb).toBe("source");
+    }
+    const chained = blockFixture({}, { buildWeb: "pnpm install --frozen-lockfile && pnpm build:web" });
+    expect(run(script, [`--root=${chained}`]).ok).toBe(true);
+    expect(blocksOut(chained)["sign-in"]!.platforms.React!.level).toBe("build");
   });
 
   it("3b. does not credit the Angular package build to blocks it never compiles", () => {
@@ -432,6 +447,8 @@ describe("block evidence: negative controls", () => {
     expect(wrapped.ok, wrapped.output).toBe(true);
     const blockScalar = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "|\n          pnpm build:web\n          pnpm check:blocks-runtime" })}`]);
     expect(blockScalar.ok, blockScalar.output).toBe(true);
+    const echoed = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "echo 'pnpm check:blocks-runtime'" })}`]);
+    expect(echoed.ok).toBe(false);
     const commentedOut = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "|\n          # pnpm check:blocks-runtime\n          echo skipped" })}`]);
     expect(commentedOut.ok).toBe(false);
     const otherCommand = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "pnpm check:blocks-runtime-old" })}`]);
