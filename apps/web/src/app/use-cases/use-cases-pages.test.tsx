@@ -201,9 +201,12 @@ describe("use-case pages (/use-cases/<domain>)", () => {
         const cells = [...row.querySelectorAll("th, td")].map((c) => c.textContent);
         expect(cells[0]).toBe(PLATFORM_DEFINITIONS[r.platform].label);
         expect(cells[1]).toBe(implementedLine(r));
-        const word = (l: typeof r.weakestComponent) => (l ? EVIDENCE_LEVEL_LABEL[l] : "None implemented");
+        const word = (l: typeof r.weakestComponent) => (l ? EVIDENCE_LEVEL_LABEL[l] : "No components");
         const hasBlocks = r.parts.some((p) => p.kind === "block");
         expect(cells.slice(2, hasBlocks ? 4 : 3)).toEqual(hasBlocks ? [word(r.weakestComponent), word(r.weakestBlock)] : [word(r.weakestComponent)]);
+        // independent of the computation: a component missing on this platform must show as the component floor
+        const missing = r.parts.some((p) => p.kind === "component" && p.level === "not-implemented");
+        if (missing) expect(cells[2], `${w.id} ${r.platform}`).toBe(EVIDENCE_LEVEL_LABEL["not-implemented"]);
         // no workflow with a partial or planned stage may be offered as buildable, on any platform
         if (w.coverage.existing < w.stages.length) expect(cells.at(-1), `${w.id} ${r.platform}`).not.toBe("Can be built");
         for (const [i, part] of r.parts.entries()) {

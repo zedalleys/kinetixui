@@ -4,7 +4,7 @@
  * Two views of the same computed data (lib/workflow-readiness.ts), never a hand-typed status:
  *
  *   the summary table   per platform: how many of the workflow's parts exist there, the weakest evidence among its
- *                       components and, separately, among its blocks,
+ *                       components and, separately, among its blocks (a missing part is the weakest of all),
  *                       and whether the whole workflow can be built there (only when every stage ships in full and
  *                       every part exists, so today it never says yes).
  *   the parts table     per part and platform: the evidence level in words, behind a native disclosure.
@@ -62,8 +62,9 @@ export function WorkflowReadiness({ workflow }: { workflow: Workflow }) {
       <h4 className="text-body-sm font-medium">Platform readiness</h4>
       <p className="mt-1 max-w-2xl text-body-sm text-muted-foreground">
         Over the {rows[0]!.total} components and blocks the shipping stages use. Each evidence column is the weakest part of
-        that kind on that platform, never an average. Blocks have no verification record yet, so none rises above source
-        present. A platform missing any part cannot build the whole workflow.
+        that kind on that platform, never an average, and a part missing there counts as not implemented. Blocks have no
+        verification record yet, so none rises above source present. A platform missing any part cannot build the whole
+        workflow.
       </p>
       {/* a phone cannot fit four columns at 200% text: the table scrolls in its own region, the page does not */}
       <div role="region" aria-label={`${workflow.title}: platform readiness`} tabIndex={0} className="mt-3 overflow-x-auto rounded-lg border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -83,11 +84,11 @@ export function WorkflowReadiness({ workflow }: { workflow: Workflow }) {
                 <th scope="row" className="px-3 py-2 text-start font-medium">{PLATFORM_DEFINITIONS[r.platform].label}</th>
                 <td className="px-3 py-2">{implementedLine(r)}</td>
                 <td className="px-3 py-2">
-                  {r.weakestComponent ? <Level level={r.weakestComponent} /> : <span className="text-muted-foreground">None implemented</span>}
+                  {r.weakestComponent ? <Level level={r.weakestComponent} /> : <span className="text-muted-foreground">No components</span>}
                 </td>
                 {hasBlocks && (
                   <td className="px-3 py-2">
-                    {r.weakestBlock ? <Level level={r.weakestBlock} /> : <span className="text-muted-foreground">None implemented</span>}
+                    {r.weakestBlock && <Level level={r.weakestBlock} />}
                   </td>
                 )}
                 <td className="px-3 py-2" data-complete={r.complete}>

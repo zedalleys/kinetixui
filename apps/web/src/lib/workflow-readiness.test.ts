@@ -98,6 +98,16 @@ describe("evidence levels: negative controls", () => {
     expect(r.weakestImplemented).toBe("source"); // the overall floor still counts the block
   });
 
+  it("counts a missing part in the per-kind floor, so a platform with fewer parts never outranks one with all", () => {
+    const w = synthetic([{ title: "A", rows: [], status: "existing" }]);
+    // number-input is runtime verified on Angular; price-breakdown does not exist there
+    const parts = { components: ["number-input", "price-breakdown"], blocks: [], iot: 0 };
+    expect(readinessFor(w, "Angular", parts).weakestComponent).toBe("not-implemented");
+    for (const wf of WORKFLOWS)
+      for (const r of workflowReadiness(wf))
+        if (r.implemented < r.total) expect(r.weakestRequired, `${wf.id} ${r.platform}`).toBe("not-implemented");
+  });
+
   it("caps a block at source present: no record verifies blocks", () => {
     for (const slug of Object.keys(BLOCK_SOURCES))
       for (const p of PLATFORMS) expect(["source", "not-implemented"]).toContain(blockLevel(slug, p));

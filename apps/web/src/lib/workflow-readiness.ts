@@ -23,7 +23,8 @@ import { workflowParts, type Workflow } from "./business-discovery";
  *   not-implemented   no implementation on this platform.
  *   not-verified      an implementation is declared, but no evidence record exists for it.
  *   source            the source exists; nothing records that it builds (every block today: blocks have no record).
- *   build             CI compiles it; no test records BOTH interaction and accessibility for this part.
+ *   build             a build record (gen:verification records one for every declared platform, as CI compiles
+ *                     that package); no test records BOTH interaction and accessibility for this part.
  *   runtime           a test records interaction AND accessibility for this specific part on this platform.
  *
  * A package build is not runtime evidence, and source inspection is never build evidence.
@@ -44,7 +45,7 @@ export const EVIDENCE_LEVEL_MEANING: Record<EvidenceLevel, string> = {
   "not-implemented": "There is no implementation on this platform.",
   "not-verified": "An implementation is declared, but no test or build records evidence for it.",
   source: "The source exists; no build or test records evidence for it.",
-  build: "CI compiles it; interaction and accessibility are not both tested.",
+  build: "CI compiles the package it ships in; interaction and accessibility are not both tested.",
   runtime: "Tests record both interaction and accessibility for it.",
 };
 
@@ -99,8 +100,10 @@ export type PlatformReadiness = {
   /** The weakest level among the parts that exist here; null when none does. */
   weakestImplemented: EvidenceLevel | null;
   /**
-   * The same floor split by kind, over the parts that exist here. Blocks have no verification record, so they would
-   * hide what the components' tests prove; the table shows both rather than letting one stand for the other.
+   * The floor split by kind, over EVERY part of that kind, so a missing component makes the component floor
+   * `not-implemented`: a platform with two of ten parts never outranks one with all ten. Null only when the workflow
+   * uses no part of that kind. Blocks have no verification record, so they would hide what the components' tests
+   * prove; the table shows both rather than letting one stand for the other.
    */
   weakestComponent: EvidenceLevel | null;
   weakestBlock: EvidenceLevel | null;
@@ -129,8 +132,8 @@ export function readinessFor(w: Workflow, platform: Platform, parts = workflowPa
     implemented: present.length,
     total: list.length,
     weakestImplemented: present.length ? weakest(present.map((p) => p.level)) : null,
-    weakestComponent: floorOf(present.filter((p) => p.kind === "component")),
-    weakestBlock: floorOf(present.filter((p) => p.kind === "block")),
+    weakestComponent: floorOf(list.filter((p) => p.kind === "component")),
+    weakestBlock: floorOf(list.filter((p) => p.kind === "block")),
     weakestRequired: list.length ? weakest(list.map((p) => p.level)) : "not-implemented",
     complete: stagesComplete && list.length > 0 && present.length === list.length,
   };

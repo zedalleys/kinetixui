@@ -237,7 +237,10 @@ for (const p of indexable) {
     continue;
   }
   for (const list of lists) {
-    const ld = list.itemListElement.map((e) => ({ name: e.name, path: e.item ? toPath(e.item) : null }));
+    const items = list.itemListElement ?? [];
+    const badPos = items.findIndex((e, i) => e["@type"] !== "ListItem" || e.position !== i + 1);
+    if (badPos !== -1) fail("breadcrumb-mismatch", p.route, `BreadcrumbList item ${badPos + 1} is not a ListItem at position ${badPos + 1}`);
+    const ld = items.map((e) => ({ name: e.name, path: e.item ? toPath(e.item) : null }));
     const visible = p.crumbs.map((c) => ({ name: c.name, path: c.href }));
     const same =
       ld.length === visible.length &&
@@ -250,6 +253,7 @@ for (const p of indexable) {
 for (const p of indexable.filter((x) => x.route.startsWith("/use-cases/"))) {
   const hasList = p.jsonld.some((b) => b.ok && (b.data["@graph"] ?? [b.data]).some((n) => n["@type"] === "BreadcrumbList"));
   if (!p.crumbs?.length) fail("breadcrumb-missing", p.route, "no visible breadcrumb");
+  else if (p.crumbs[0].href !== "/capabilities") fail("breadcrumb-missing", p.route, `the trail starts at ${p.crumbs[0].href ?? "nothing"}, not the hub`);
   else if (!hasList) fail("breadcrumb-missing", p.route, "no BreadcrumbList JSON-LD");
 }
 

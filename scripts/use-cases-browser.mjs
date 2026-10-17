@@ -187,8 +187,9 @@ const pageDomains = index.domains.filter((d) => d.page);
   await page.locator(`#domain-${d.id}`).getByRole("link", { name: new RegExp(`${d.title}`) }).first().click();
   await page.waitForURL(`**/use-cases/${d.id}`);
   await ready(page);
-  // a block the domain cites when it has one; otherwise (Travel today) its "Explore blocks" next step
-  const cited = main(page).locator('a[href^="/blocks#"]');
+  // a block the domain cites when it has one (a visible link, not one in a closed evidence disclosure); otherwise
+  // (Travel today) its "Explore blocks" next step
+  const cited = main(page).locator('a[href^="/blocks#"]:visible');
   const block = (await cited.count()) ? cited.first() : main(page).getByRole("link", { name: /Explore blocks/ });
   const blockHref = await block.getAttribute("href");
   await block.click();

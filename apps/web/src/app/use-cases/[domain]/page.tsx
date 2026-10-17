@@ -129,7 +129,7 @@ export default async function UseCasePage({ params }: Props) {
         {d.components.length === 1 ? "component" : "components"}
         {d.blocks.length > 0 && ` and ${d.blocks.length} ${d.blocks.length === 1 ? "block" : "blocks"}`} ship for this
         domain.{" "}
-        {complete === workflows.length
+        {workflows.length > 0 && complete === workflows.length
           ? "Every workflow here ships all its stages, and platform support differs part by part."
           : `${complete} of ${workflows.length} ${workflows.length === 1 ? "workflow ships" : "workflows ship"} every stage, and platform support differs part by part.`}
       </p>

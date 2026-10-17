@@ -162,6 +162,23 @@ const CONTROLS = [
     mutate: (s) => s.replace("</urlset>", "<url>\n<loc>https://kinetixui.com/use-cases/healthcare</loc>\n</url>\n</urlset>"),
     expect: "sitemap-missing-page",
   },
+  {
+    id: 21,
+    name: "a BreadcrumbList item out of position",
+    file: "use-cases/commerce.html",
+    mutate: (s) => s.replace('{"@type":"ListItem","position":2,"name":"Commerce"}', '{"@type":"ListItem","position":1,"name":"Commerce"}'),
+    expect: "breadcrumb-mismatch",
+  },
+  {
+    id: 22,
+    name: "a use-case trail that no longer starts at the hub (both visible and JSON-LD agree)",
+    file: "use-cases/travel-booking.html",
+    mutate: (s) =>
+      s
+        .replace('href="/capabilities">Use cases</a>', 'href="/blocks">Use cases</a>')
+        .replace('"name":"Use cases","item":"https://kinetixui.com/capabilities"', '"name":"Use cases","item":"https://kinetixui.com/blocks"'),
+    expect: "breadcrumb-missing",
+  },
 ];
 
 function runGate() {
