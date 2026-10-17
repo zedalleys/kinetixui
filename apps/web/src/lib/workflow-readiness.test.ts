@@ -4,7 +4,17 @@ import manifest from "../../../../components.manifest.json";
 import blocksManifest from "../../../../blocks.manifest.json";
 import { WORKFLOWS, workflowParts, type Workflow } from "./business-discovery";
 import { PLATFORMS, type Platform } from "./platform-parity";
-import { blockLevel, componentLevel, levelFor, readinessFor, weakest, workflowReadiness, type EvidenceLevel } from "./workflow-readiness";
+import {
+  blockEvidenceNote,
+  blockLevel,
+  componentLevel,
+  levelFor,
+  readinessFor,
+  weakest,
+  workflowReadiness,
+  type BlockPlatformEvidence,
+  type EvidenceLevel,
+} from "./workflow-readiness";
 
 /**
  * The evidence model behind the /use-cases readiness tables. Two kinds of test:
@@ -20,6 +30,24 @@ type Raw = Record<string, Partial<Record<Platform, Record<string, string[]>>>>;
 const RAW = verification.components as unknown as Raw;
 const DECLARED = manifest.components as unknown as Record<string, { platforms: string[] }>;
 const BLOCK_SOURCES = blocksManifest.blocks as unknown as Record<string, { sources: Partial<Record<Platform, string>> }>;
+const RAW_BLOCKS = verification.blocks as unknown as Record<string, { platforms: Record<Platform, BlockPlatformEvidence> }>;
+
+/**
+ * The block rule, restated against the raw refs: its own source, a CI build, and interaction AND accessibility
+ * both OBSERVED (an environment in runtimeEnvironments). A headless ref never counts toward runtime.
+ */
+function expectedBlock(e: BlockPlatformEvidence | undefined): EvidenceLevel {
+  if (!e?.source?.length) return "not-implemented";
+  if (!e.build?.length) return "source";
+  const seen = (k: "interaction" | "accessibility") => (e[k] ?? []).some((r) => r.environment === "chromium");
+  return seen("interaction") && seen("accessibility") ? "runtime" : "build";
+}
+const block = (over: Partial<BlockPlatformEvidence>): BlockPlatformEvidence => ({
+  level: "build",
+  source: [{ ref: "x.tsx" }],
+  build: [{ ref: "ci" }],
+  ...over,
+});
 
 /** The rule, restated against the raw records: runtime needs a recorded build, interaction AND accessibility source. */
 function expectedComponent(slug: string, p: Platform): EvidenceLevel {
@@ -90,12 +118,35 @@ describe("evidence levels: negative controls", () => {
     expect(readinessFor(partial, "React", parts).complete).toBe(false);
   });
 
-  it("keeps the component floor apart from the block floor, so an unverified block does not hide component evidence", () => {
+  it("keeps the component floor apart from the block floor, so a weaker block does not hide component evidence", () => {
     const w = synthetic([{ title: "A", rows: [], status: "existing" }]);
-    const r = readinessFor(w, "React", { components: ["result-state"], blocks: ["receipt"], iot: 0 });
-    expect(r.weakestBlock).toBe("source");
-    expect(r.weakestComponent).toBe(expectedComponent("result-state", "React"));
-    expect(r.weakestImplemented).toBe("source"); // the overall floor still counts the block
+    // receipt on Angular has headless tests only, so it is build; number-input there is runtime verified
+    const r = readinessFor(w, "Angular", { components: ["number-input"], blocks: ["receipt"], iot: 0 });
+    expect(r.weakestBlock).toBe(expectedBlock(RAW_BLOCKS.receipt!.platforms.Angular));
+    expect(r.weakestComponent).toBe("runtime");
+    expect(r.weakestBlock).toBe("build");
+    expect(r.weakestImplemented).toBe(weakest([r.weakestBlock!, r.weakestComponent!])); // the overall floor counts both
+  });
+
+  it("never lets headless evidence make a block runtime verified", () => {
+    const headless = block({ interaction: [{ ref: "a.spec.ts:1-9", environment: "jsdom" }], accessibility: [{ ref: "b_test.dart:1-9", environment: "flutter_test" }] });
+    expect(expectedBlock(headless)).toBe("build");
+    expect(blockEvidenceNote(headless)).toBe("Interaction and accessibility tested headless");
+    // one observed kind is not enough: runtime needs BOTH seen in a browser or on a device
+    const half = block({ interaction: [{ ref: "r.mjs:1-9", environment: "chromium" }], accessibility: [{ ref: "c.kt:1-9", environment: "robolectric" }] });
+    expect(expectedBlock(half)).toBe("build");
+    expect(blockEvidenceNote(half)).toBe("Interaction observed in a browser; accessibility tested headless");
+    expect(expectedBlock(block({}))).toBe("build");
+    expect(blockEvidenceNote(block({}))).toBe("No interaction or accessibility test");
+    expect(expectedBlock(block({ build: [] }))).toBe("source");
+    expect(expectedBlock({ level: "build" })).toBe("not-implemented"); // no source of its own, whatever it says
+  });
+
+  it("does not let a block borrow its components' evidence", () => {
+    // order-summary composes number-input, which is runtime verified on Angular; the block itself is not
+    expect(componentLevel("number-input", "Angular")).toBe("runtime");
+    expect(blockLevel("order-summary", "Angular")).toBe(expectedBlock(RAW_BLOCKS["order-summary"]!.platforms.Angular));
+    expect(blockLevel("order-summary", "Angular")).not.toBe("runtime");
   });
 
   it("counts a missing part in the per-kind floor, so a platform with fewer parts never outranks one with all", () => {
@@ -108,9 +159,31 @@ describe("evidence levels: negative controls", () => {
         if (r.implemented < r.total) expect(r.weakestRequired, `${wf.id} ${r.platform}`).toBe("not-implemented");
   });
 
-  it("caps a block at source present: no record verifies blocks", () => {
+  it("does not let the floor skip a required block that is missing on a platform", () => {
+    const w = synthetic([{ title: "A", rows: [], status: "existing" }]);
+    // every real block exists on every platform today, so the missing one is made up: it has no source anywhere
+    const parts = { components: ["number-input"], blocks: ["receipt", "not-a-block"], iot: 0 };
+    for (const p of PLATFORMS) {
+      const r = readinessFor(w, p, parts);
+      expect(r.weakestBlock, p).toBe("not-implemented");
+      expect(r.weakestRequired, p).toBe("not-implemented");
+      expect(r.implemented, p).toBe(2);
+    }
+  });
+
+  it("does not call a workflow complete when one of its blocks is unsupported on that platform", () => {
+    const w = synthetic([{ title: "A", rows: [], status: "existing" }]);
+    const withBlock = { components: [], blocks: ["receipt"], iot: 0 };
+    const missing = { components: [], blocks: ["receipt", "not-a-block"], iot: 0 };
+    for (const p of PLATFORMS) {
+      expect(readinessFor(w, p, withBlock).complete, p).toBe(true);
+      expect(readinessFor(w, p, missing).complete, p).toBe(false);
+    }
+  });
+
+  it("counts a block as implemented only where the manifest names its own file", () => {
     for (const slug of Object.keys(BLOCK_SOURCES))
-      for (const p of PLATFORMS) expect(["source", "not-implemented"]).toContain(blockLevel(slug, p));
+      for (const p of PLATFORMS) expect(blockLevel(slug, p) === "not-implemented", `${slug} on ${p}`).toBe(!BLOCK_SOURCES[slug]!.sources[p]);
   });
 });
 
@@ -121,10 +194,17 @@ describe("evidence levels: the real data", () => {
         for (const p of PLATFORMS) expect(componentLevel(slug, p), `${slug} on ${p}`).toBe(expectedComponent(slug, p));
   });
 
-  it("every block level matches the block manifest's sources", () => {
-    for (const w of WORKFLOWS)
-      for (const slug of workflowParts(w).blocks)
-        for (const p of PLATFORMS) expect(blockLevel(slug, p)).toBe(BLOCK_SOURCES[slug]?.sources[p] ? "source" : "not-implemented");
+  it("every block level matches the rule applied to its raw evidence refs, and no generated level is inflated", () => {
+    for (const slug of Object.keys(RAW_BLOCKS))
+      for (const p of PLATFORMS) {
+        const raw = RAW_BLOCKS[slug]!.platforms[p];
+        expect(raw.level, `${slug} on ${p}: generated level`).toBe(expectedBlock(raw));
+        expect(blockLevel(slug, p), `${slug} on ${p}`).toBe(expectedBlock(raw));
+      }
+  });
+
+  it("has no block evidence for a block the manifest no longer lists, and none missing for one it does", () => {
+    expect(Object.keys(RAW_BLOCKS).sort()).toEqual(Object.keys(BLOCK_SOURCES).sort());
   });
 
   it("calls a workflow complete on a platform only when every stage ships and every part exists there", () => {

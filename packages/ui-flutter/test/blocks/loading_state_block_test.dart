@@ -78,6 +78,7 @@ class LoadingStateBlock extends StatelessWidget {
 // kx-block:end
 
 void main() {
+  // kx-verify-block: accessibility
   testWidgets('the placeholders announce as one thing that is loading', (WidgetTester tester) async {
     final SemanticsHandle handle = tester.ensureSemantics();
     await tester.pumpWidget(

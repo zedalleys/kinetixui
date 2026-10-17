@@ -6,7 +6,7 @@ import { DOMAIN_PAGES, DOMAINS, WORKFLOWS, blockFacets, catalogueFacets } from "
 import { blocks } from "@/lib/blocks";
 import { publicRoutes } from "@/lib/seo";
 import { PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
-import { EVIDENCE_LEVEL_LABEL, implementedLine, workflowReadiness } from "@/lib/workflow-readiness";
+import { blockEvidence, blockEvidenceNote, EVIDENCE_LEVEL_LABEL, implementedLine, workflowReadiness } from "@/lib/workflow-readiness";
 
 /**
  * Navigation integrity of the Use Cases hub and the use-case pages, on the rendered markup: every internal link must
@@ -211,7 +211,10 @@ describe("use-case pages (/use-cases/<domain>)", () => {
         if (w.coverage.existing < w.stages.length) expect(cells.at(-1), `${w.id} ${r.platform}`).not.toBe("Can be built");
         for (const [i, part] of r.parts.entries()) {
           const cell = table.querySelector(`tr[data-part="${part.kind}:${part.slug}"] td[data-platform="${r.platform}"]`)!;
-          expect(cell.textContent, `${part.slug} ${r.platform} (${i})`).toBe(EVIDENCE_LEVEL_LABEL[part.level]);
+          expect(cell.querySelector("[data-evidence-level]")!.textContent, `${part.slug} ${r.platform} (${i})`).toBe(EVIDENCE_LEVEL_LABEL[part.level]);
+          // a block cell also says what stands behind it, computed, never typed
+          const note = cell.querySelector("[data-block-evidence]")?.textContent ?? null;
+          expect(note, `${part.slug} ${r.platform} note`).toBe(part.kind === "block" ? blockEvidenceNote(blockEvidence(part.slug, r.platform)) : null);
         }
       }
     }

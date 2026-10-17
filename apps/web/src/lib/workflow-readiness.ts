@@ -13,7 +13,7 @@
  * part, never an average. A workflow on a platform where one part is missing is incomplete, however well the other
  * parts are tested.
  */
-import blocksManifest from "../../../../blocks.manifest.json";
+import verification from "../../../../verification.json";
 import { PLATFORMS, evidenceFor, platformsFor, type EvidenceKind, type Platform } from "./platform-parity";
 import { workflowParts, type Workflow } from "./business-discovery";
 
@@ -22,10 +22,13 @@ import { workflowParts, type Workflow } from "./business-discovery";
  *
  *   not-implemented   no implementation on this platform.
  *   not-verified      an implementation is declared, but no evidence record exists for it.
- *   source            the source exists; nothing records that it builds (every block today: blocks have no record).
+ *   source            the source exists; nothing records that it builds.
  *   build             a build record (gen:verification records one for every declared platform, as CI compiles
  *                     that package); no test records BOTH interaction and accessibility for this part.
  *   runtime           a test records interaction AND accessibility for this specific part on this platform.
+ *                     For a block, both must have been OBSERVED: in a real browser for web, on a simulator,
+ *                     emulator or device for native. Headless runs (jsdom, Robolectric, flutter_test) are
+ *                     recorded and shown, and keep a block at build.
  *
  * A package build is not runtime evidence, and source inspection is never build evidence.
  */
@@ -46,7 +49,7 @@ export const EVIDENCE_LEVEL_MEANING: Record<EvidenceLevel, string> = {
   "not-verified": "An implementation is declared, but no test or build records evidence for it.",
   source: "The source exists; no build or test records evidence for it.",
   build: "CI compiles the package it ships in; interaction and accessibility are not both tested.",
-  runtime: "Tests record both interaction and accessibility for it.",
+  runtime: "Tests record both interaction and accessibility for it. For a block, both were observed in a real browser or on a device.",
 };
 
 /** The kinds a part must hold, all of them, for a level. `build` is the manifest's own declaration, read through CI. */
@@ -73,8 +76,20 @@ export function levelFor(implemented: boolean, evidence: readonly EvidenceKind[]
   return hasSource ? "source" : "not-verified";
 }
 
-type BlockEntry = { sources: Partial<Record<Platform, string>> };
-const BLOCKS = blocksManifest.blocks as Record<string, BlockEntry>;
+/** One evidence reference, as gen:verification writes it: where, and (for a test) the environment it ran in. */
+export type BlockEvidenceRef = { ref: string; environment?: string };
+export type BlockPlatformEvidence = {
+  level: EvidenceLevel;
+  source?: BlockEvidenceRef[];
+  build?: BlockEvidenceRef[];
+  interaction?: BlockEvidenceRef[];
+  accessibility?: BlockEvidenceRef[];
+  limitations?: string[];
+};
+type BlockRecord = { title: string; platforms: Record<Platform, BlockPlatformEvidence> };
+const BLOCK_EVIDENCE = verification.blocks as unknown as Record<string, BlockRecord>;
+/** The environments that count as observing a block run. Read from the generated file, never restated. */
+export const RUNTIME_ENVIRONMENTS: readonly string[] = verification.runtimeEnvironments;
 
 /** A catalogue component on a platform: the manifest says whether it exists, verification.json what it proved. */
 export function componentLevel(slug: string, platform: Platform): EvidenceLevel {
@@ -82,12 +97,16 @@ export function componentLevel(slug: string, platform: Platform): EvidenceLevel 
 }
 
 /**
- * A block on a platform. blocks.manifest.json names a source file per platform, and no evidence record covers blocks,
- * so the most a block can be is `source`. Said as such rather than borrowed from the components it composes.
+ * A block on a platform, as gen:verification recorded it (verification.json `blocks`): its own source file, the
+ * CI step that compiles it, and the tests that drove it, each with where it ran. Never borrowed from the
+ * components it composes. A block with no record is not implemented.
  */
+export function blockEvidence(slug: string, platform: Platform): BlockPlatformEvidence {
+  return BLOCK_EVIDENCE[slug]?.platforms[platform] ?? { level: "not-implemented" };
+}
+
 export function blockLevel(slug: string, platform: Platform): EvidenceLevel {
-  const source = BLOCKS[slug]?.sources?.[platform];
-  return levelFor(Boolean(source), null, Boolean(source));
+  return blockEvidence(slug, platform).level;
 }
 
 export type Part = { kind: "component" | "block"; slug: string; level: EvidenceLevel };
@@ -102,8 +121,8 @@ export type PlatformReadiness = {
   /**
    * The floor split by kind, over EVERY part of that kind, so a missing component makes the component floor
    * `not-implemented`: a platform with two of ten parts never outranks one with all ten. Null only when the workflow
-   * uses no part of that kind. Blocks have no verification record, so they would hide what the components' tests
-   * prove; the table shows both rather than letting one stand for the other.
+   * uses no part of that kind. Kept apart because a block and the components inside it are verified separately; the
+   * table shows both rather than letting one stand for the other.
    */
   weakestComponent: EvidenceLevel | null;
   weakestBlock: EvidenceLevel | null;
@@ -149,4 +168,26 @@ export function workflowReadiness(w: Workflow): PlatformReadiness[] {
 export function implementedLine(r: Pick<PlatformReadiness, "implemented" | "total">): string {
   if (r.total === 0) return "Nothing to implement yet";
   return `${r.implemented} of ${r.total} ${r.total === 1 ? "part" : "parts"} implemented`;
+}
+
+/**
+ * What stands behind a block's interaction and accessibility, in words: observed (a browser or a device), headless
+ * (jsdom, Robolectric, flutter_test), or nothing. Said beside the level, so a Build verified block with headless
+ * tests reads differently from one with none, and neither reads as more than it is.
+ */
+export function blockEvidenceNote(e: BlockPlatformEvidence): string | null {
+  if (e.level === "not-implemented") return null;
+  const observed: string[] = [];
+  const headless: string[] = [];
+  for (const kind of ["interaction", "accessibility"] as const) {
+    const list = e[kind] ?? [];
+    if (list.some((r) => RUNTIME_ENVIRONMENTS.includes(r.environment ?? ""))) observed.push(kind);
+    else if (list.length) headless.push(kind);
+  }
+  const out: string[] = [];
+  if (observed.length) out.push(`${observed.join(" and ")} observed in a browser`);
+  if (headless.length) out.push(`${headless.join(" and ")} tested headless`);
+  if (!observed.length && !headless.length) return "No interaction or accessibility test";
+  const line = out.join("; ");
+  return line[0]!.toUpperCase() + line.slice(1);
 }

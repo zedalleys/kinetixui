@@ -6533,5 +6533,2261 @@
         ]
       }
     }
+  },
+  "blockKinds": [
+    "interaction",
+    "accessibility"
+  ],
+  "runtimeEnvironments": [
+    "chromium"
+  ],
+  "blockTotals": {
+    "React": {
+      "not-implemented": 0,
+      "source": 0,
+      "build": 19,
+      "runtime": 2
+    },
+    "Angular": {
+      "not-implemented": 0,
+      "source": 0,
+      "build": 21,
+      "runtime": 0
+    },
+    "SwiftUI": {
+      "not-implemented": 0,
+      "source": 0,
+      "build": 21,
+      "runtime": 0
+    },
+    "Compose": {
+      "not-implemented": 0,
+      "source": 0,
+      "build": 21,
+      "runtime": 0
+    },
+    "Flutter": {
+      "not-implemented": 0,
+      "source": 0,
+      "build": 21,
+      "runtime": 0
+    }
+  },
+  "blocks": {
+    "sign-in": {
+      "title": "Sign in",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/sign-in.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/sign-in.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/SignInBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/SignInBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/sign_in_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "stat-cards": {
+      "title": "Stat cards",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/stat-cards.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/stat-cards.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/StatCardsBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/StatCardsBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/stat_cards_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "pricing-tier": {
+      "title": "Pricing tier",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/pricing-tier.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/pricing-tier.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:279-285",
+              "environment": "jsdom"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (jsdom), not observed in a browser or on a device"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/PricingTierBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/PricingTierBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/pricing_tier_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "cta-banner": {
+      "title": "CTA banner",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/cta-banner.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/cta-banner.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/CtaBannerBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/CtaBannerBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/cta_banner_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "table-toolbar": {
+      "title": "Table + toolbar",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/table-toolbar.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/table-toolbar.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:121-128",
+              "environment": "jsdom"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (jsdom), not observed in a browser or on a device"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/TableToolbarBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/TableToolbarBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/table_toolbar_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "settings-list": {
+      "title": "Settings list",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/settings-list.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/settings-list.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:87-98",
+              "environment": "jsdom"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (jsdom), not observed in a browser or on a device"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/SettingsListBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/SettingsListBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/settings_list_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "team-members": {
+      "title": "Team members",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/team-members.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/team-members.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:99-105",
+              "environment": "jsdom"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (jsdom), not observed in a browser or on a device"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/TeamMembersBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/TeamMembersBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/team_members_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "comment-box": {
+      "title": "Comment box",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/comment-box.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/comment-box.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/CommentBoxBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/CommentBoxBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/comment_box_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "empty-state": {
+      "title": "Empty state",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/empty-state.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/empty-state.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/EmptyStateBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/EmptyStateBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/empty_state_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "alert-stack": {
+      "title": "Alert stack",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/alert-stack.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/alert-stack.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/AlertStackBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AlertStackBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/alert_stack_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "testimonial": {
+      "title": "Testimonial",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/testimonial.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/testimonial.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/TestimonialBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/TestimonialBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/testimonial_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "create-account": {
+      "title": "Create account",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/create-account.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/create-account.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/CreateAccountBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/CreateAccountBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/create_account_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "profile-form": {
+      "title": "Profile form",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/profile-form.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/profile-form.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:262-270",
+              "environment": "jsdom"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (jsdom), not observed in a browser or on a device"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/ProfileFormBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/ProfileFormBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/ProfileFormBlockTest.kt:149-162",
+              "environment": "robolectric"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/ProfileFormBlockTest.kt:149-162",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (robolectric), not observed in a browser or on a device",
+            "accessibility tested headless only (robolectric), not observed in a browser or on a device"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/profile_form_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/profile_form_block_test.dart:147-173",
+              "environment": "flutter_test"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/profile_form_block_test.dart:147-173",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (flutter_test), not observed in a browser or on a device",
+            "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
+          ]
+        }
+      }
+    },
+    "account-security": {
+      "title": "Account security",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/account-security.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/account-security.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:271-278",
+              "environment": "jsdom"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (jsdom), not observed in a browser or on a device"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/AccountSecurityBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AccountSecurityBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AccountSecurityBlockTest.kt:125-135",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (robolectric), not observed in a browser or on a device"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/account_security_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/account_security_block_test.dart:108-126",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
+          ]
+        }
+      }
+    },
+    "onboarding-checklist": {
+      "title": "Onboarding checklist",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/onboarding-checklist.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/onboarding-checklist.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:242-253",
+              "environment": "jsdom"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (jsdom), not observed in a browser or on a device"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/OnboardingChecklistBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/OnboardingChecklistBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/onboarding_checklist_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "editor-toolbar": {
+      "title": "Editor toolbar",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/editor-toolbar.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/editor-toolbar.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:177-190",
+              "environment": "jsdom"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (jsdom), not observed in a browser or on a device"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/EditorToolbarBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/EditorToolbarBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/EditorToolbarBlockTest.kt:106-116",
+              "environment": "robolectric"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/EditorToolbarBlockTest.kt:106-116",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (robolectric), not observed in a browser or on a device",
+            "accessibility tested headless only (robolectric), not observed in a browser or on a device"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/editor_toolbar_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/editor_toolbar_block_test.dart:119-152",
+              "environment": "flutter_test"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/editor_toolbar_block_test.dart:119-152",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (flutter_test), not observed in a browser or on a device",
+            "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
+          ]
+        }
+      }
+    },
+    "filter-panel": {
+      "title": "Filter panel",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/filter-panel.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/filter-panel.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:162-176",
+              "environment": "jsdom"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:162-176",
+              "environment": "jsdom"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (jsdom), not observed in a browser or on a device",
+            "accessibility tested headless only (jsdom), not observed in a browser or on a device"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/FilterPanelBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/FilterPanelBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/FilterPanelBlockTest.kt:153-166",
+              "environment": "robolectric"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/FilterPanelBlockTest.kt:153-166",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (robolectric), not observed in a browser or on a device",
+            "accessibility tested headless only (robolectric), not observed in a browser or on a device"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/filter_panel_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/filter_panel_block_test.dart:129-155",
+              "environment": "flutter_test"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/filter_panel_block_test.dart:129-155",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (flutter_test), not observed in a browser or on a device",
+            "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
+          ]
+        }
+      }
+    },
+    "dashboard-tabs": {
+      "title": "Dashboard tabs",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/dashboard-tabs.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/dashboard-tabs.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/DashboardTabsBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/DashboardTabsBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/DashboardTabsBlockTest.kt:121-131",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (robolectric), not observed in a browser or on a device",
+            "no accessibility test"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/dashboard_tabs_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/dashboard_tabs_block_test.dart:98-116",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (flutter_test), not observed in a browser or on a device",
+            "no accessibility test"
+          ]
+        }
+      }
+    },
+    "loading-state": {
+      "title": "Loading state",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/loading-state.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/loading-state.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:233-241",
+              "environment": "jsdom"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (jsdom), not observed in a browser or on a device"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/LoadingStateBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/LoadingStateBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/LoadingStateBlockTest.kt:96-103",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (robolectric), not observed in a browser or on a device"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/loading_state_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/loading_state_block_test.dart:81-98",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
+          ]
+        }
+      }
+    },
+    "order-summary": {
+      "title": "Order summary",
+      "platforms": {
+        "React": {
+          "level": "runtime",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/order-summary.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:97-144",
+              "environment": "chromium"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/order-summary.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:191-199",
+              "environment": "jsdom"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (jsdom), not observed in a browser or on a device"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/OrderSummaryBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/OrderSummaryBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/OrderSummaryBlockTest.kt:147-162",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (robolectric), not observed in a browser or on a device"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/order_summary_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/order_summary_block_test.dart:154-185",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
+          ]
+        }
+      }
+    },
+    "receipt": {
+      "title": "Receipt",
+      "platforms": {
+        "React": {
+          "level": "runtime",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/receipt.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:145-164",
+              "environment": "chromium"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/receipt.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:angular (ng-packagr AOT build, strict templates)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:200-213",
+              "environment": "jsdom"
+            },
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/blocks.spec.ts:214-232",
+              "environment": "jsdom"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (jsdom), not observed in a browser or on a device"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/ReceiptBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/ReceiptBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/ReceiptBlockTest.kt:203-218",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (robolectric), not observed in a browser or on a device"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/receipt_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/receipt_block_test.dart:236-260",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
+          ]
+        }
+      }
+    }
   }
 }

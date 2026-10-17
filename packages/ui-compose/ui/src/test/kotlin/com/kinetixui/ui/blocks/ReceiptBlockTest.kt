@@ -200,6 +200,7 @@ class ReceiptBlockTest {
     @get:Rule
     val rule = createComposeRule()
 
+    // kx-verify-block: accessibility
     @Test
     fun the_status_is_a_word_the_amount_is_spoken_and_each_total_row_is_one_node() {
         rule.setContent { KinetixTheme(darkTheme = false) { ReceiptBlock() } }
