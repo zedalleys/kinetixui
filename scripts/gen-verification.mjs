@@ -403,15 +403,19 @@ const BLOCK_MARKER = /kx-verify-block:\s*([a-zA-Z, ]+)\s*$/;
 /** Environments that observe the running block the way a person would. Nothing else earns Runtime verified. */
 export const RUNTIME_ENVIRONMENTS = ["chromium"];
 /** Where block evidence lives per platform, and the environment each file runs in (derived, never claimed). */
+// `runs`: the workflow step that executes the suite. A test is evidence only while CI runs it, so a suite whose
+// step is gone keeps its markers checked but records nothing. The browser suite is gated by runsInWorkflowStep.
 const BLOCK_TEST_SOURCES = {
   React: [
-    { dir: "apps/web/src", match: /\.test\.tsx$/, environment: "jsdom" },
+    { dir: "apps/web/src", match: /\.test\.tsx$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm --filter @kinetixui/web test" } },
     { file: "scripts/blocks-runtime-browser.mjs", environment: "chromium" },
   ],
-  Angular: [{ dir: "packages/ui-angular/src", match: /\.spec\.ts$/, environment: "jsdom" }],
-  SwiftUI: [{ dir: "packages/ui-swiftui/Tests", match: /\.swift$/, environment: "xctest" }],
-  Compose: [{ dir: "packages/ui-compose/ui/src/test", match: /\.kt$/, environment: "robolectric" }],
-  Flutter: [{ dir: "packages/ui-flutter/test", match: /_test\.dart$/, environment: "flutter_test" }],
+  Angular: [{ dir: "packages/ui-angular/src", match: /\.spec\.ts$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm test:angular" } }],
+  SwiftUI: [{ dir: "packages/ui-swiftui/Tests", match: /\.swift$/, environment: "xctest", runs: { workflow: "native-swiftui.yml", command: "swift test" } }],
+  Compose: [
+    { dir: "packages/ui-compose/ui/src/test", match: /\.kt$/, environment: "robolectric", runs: { workflow: "native-compose.yml", command: "./gradlew :ui:testDebugUnitTest" } },
+  ],
+  Flutter: [{ dir: "packages/ui-flutter/test", match: /_test\.dart$/, environment: "flutter_test", runs: { workflow: "native-flutter.yml", command: "flutter test" } }],
 };
 /** The CI step that compiles a platform's block files. `under` is the directory that step compiles. */
 const BLOCK_BUILD = {
@@ -436,14 +440,16 @@ function runsInWorkflowStep(script) {
   const dir = `${root}/.github/workflows`;
   if (!existsSync(dir)) return false;
   const pkg = JSON.parse(read("package.json"));
+  const direct = (c) => [`node ${script}`, `node ./${script}`].some((p) => startsCommand(c, p));
+  // a wrapper counts only when it EXECUTES the script, not when its text merely names it
   const wrappers = Object.entries(pkg.scripts ?? {})
-    .filter(([, cmd]) => cmd.includes(script))
+    .filter(([, cmd]) => commandsOf([cmd]).some(direct))
     .map(([name]) => new RegExp(`^(?:pnpm|npm|yarn)(?:\\s+run)?(?:\\s+-s)?\\s+${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:\\s|$)`));
   return readdirSync(dir)
     .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
     .some((f) =>
       commandsOf(runCommands(readFileSync(`${dir}/${f}`, "utf8"))).some(
-        (c) => [`node ${script}`, `node ./${script}`].some((p) => startsCommand(c, p)) || wrappers.some((w) => w.test(c)),
+        (c) => direct(c) || wrappers.some((w) => w.test(c)),
       ),
     );
 }
@@ -560,6 +566,7 @@ for (const platform of platforms) {
     if (spec.file && files.length && spec.environment === "chromium" && !runsInWorkflowStep(spec.file)) {
       errors.push(`${spec.file}: a ${platform} block evidence source that no workflow step in .github/workflows runs`);
     }
+    const ran = spec.runs ? workflowRuns(spec.runs.workflow, spec.runs.command) : true;
     for (const file of files.sort()) {
       const claims = blockPassages(read(file));
       for (const claim of claims) {
@@ -596,7 +603,7 @@ for (const platform of platforms) {
             errors.push(`${where}: exercises ${slug} on ${platform}, which blocks.manifest.json does not implement there`);
             continue;
           }
-          for (const k of claim.kinds) blockRecord(slug, platform, k, { ref: where, environment: spec.environment });
+          if (ran) for (const k of claim.kinds) blockRecord(slug, platform, k, { ref: where, environment: spec.environment });
         }
       }
     }

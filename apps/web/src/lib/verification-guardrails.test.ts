@@ -282,7 +282,7 @@ const RUNTIME_SCRIPT = "scripts/blocks-runtime-browser.mjs";
 
 /** A workflow that really runs both builds and every standalone evidence script, unless told to drop one. */
 function workflow({ drop = [] as string[], runtimeStep = `node ${RUNTIME_SCRIPT}`, buildWeb = "pnpm build:web" } = {}) {
-  const steps = [buildWeb, "pnpm build:angular", ...extraEvidenceScripts().map((s) => `node ${s}`), runtimeStep];
+  const steps = [buildWeb, "pnpm build:angular", "pnpm --filter @kinetixui/web test", "pnpm test:angular", ...extraEvidenceScripts().map((s) => `node ${s}`), runtimeStep];
   // a path filter naming the runtime script, as a real workflow has: a mention that is not a step
   const on = `on:\n  pull_request:\n    paths:\n      - "${RUNTIME_SCRIPT}"\n`;
   return `${on}jobs:\n  ci:\n    steps:\n${steps.filter((c) => !drop.some((d) => c.includes(d))).map((c) => `      - run: ${c}\n`).join("")}`;
@@ -398,6 +398,20 @@ describe("block evidence: negative controls", () => {
     expect(react.level).toBe("build");
   });
 
+  it("6c. records no test evidence from a suite that no workflow step runs", () => {
+    const files = { "packages/ui-angular/src/x.spec.ts": `// kx-verify-block: interaction, accessibility\nmount(SignInBlock);\n` };
+    const ran = blockFixture(files);
+    expect(run(script, [`--root=${ran}`]).ok).toBe(true);
+    expect(blocksOut(ran)["sign-in"]!.platforms.Angular!.interaction).toBeDefined();
+    const unrun = blockFixture(files, { drop: ["test:angular"] });
+    expect(run(script, [`--root=${unrun}`]).ok).toBe(true);
+    expect(blocksOut(unrun)["sign-in"]!.platforms.Angular!.interaction).toBeUndefined();
+    expect(blocksOut(unrun)["sign-in"]!.platforms.Angular!.accessibility).toBeUndefined();
+    // its markers are still checked: a bad claim in a suite that is not run is still an error
+    const bad = blockFixture({ "packages/ui-angular/src/x.spec.ts": `// kx-verify-block: interaction\nmount(StatCardsBlock);\n` }, { drop: ["test:angular"] });
+    expect(run(script, [`--root=${bad}`]).ok).toBe(false);
+  });
+
   it("7. keeps component evidence and block evidence apart, in both directions", () => {
     const dir = blockFixture({
       // a component test that happens to render the block: evidence for Button, none for the block
@@ -451,6 +465,11 @@ describe("block evidence: negative controls", () => {
     expect(echoed.ok).toBe(false);
     const commentedOut = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "|\n          # pnpm check:blocks-runtime\n          echo skipped" })}`]);
     expect(commentedOut.ok).toBe(false);
+    // a wrapper that names the script without running it is not a run of it
+    const noop = { "check:blocks-runtime": `echo ${RUNTIME_SCRIPT}` };
+    const noopWrapper = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts: noop, runtimeStep: "pnpm check:blocks-runtime" })}`]);
+    expect(noopWrapper.ok).toBe(false);
+    expect(noopWrapper.output).toMatch(/no workflow step/);
     const otherCommand = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "pnpm check:blocks-runtime-old" })}`]);
     expect(otherCommand.ok).toBe(false);
     expect(otherCommand.output).toMatch(/no workflow step/);
