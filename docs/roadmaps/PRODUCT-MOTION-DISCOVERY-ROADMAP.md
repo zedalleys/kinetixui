@@ -163,7 +163,7 @@ claims runtime parity; see §5.
 | MX2 | Tick / ruler picker | — | — | — | — | — | — | composition recipe on Slider, not a component | — |
 | MX3 | Dialog, AlertDialog, Sheet, Drawer, Popover, Tooltip, HoverCard, Menu family | src | RM | src | src | src | open / close → opacity, translate, scale | Menubar exit (G6); Angular global floor (G5); Compose and Flutter overlay enter / exit (none today, §5) | `overlay-visual`, `menu-visual`, `check:motion` |
 | MX3 | Accordion / Collapsible | RM | RM | RM | RM | RM | expand → height | already gated; keep | `check:motion` |
-| MX4 | Chart | src | — | src | src | src | mount → series draw | reduced motion for Recharts (G3) | new browser assertion |
+| MX4 | Chart | src | — | src | src | src | mount → series draw | reduced motion for Recharts (G3); native charts render statically, so they need none unless they gain motion | new browser assertion |
 | MX4 | Skeleton / Spinner | src | src | RM | RM | RM | loop | already gated on web by `check:loop-motion` | `check:loop-motion` |
 | MX4 | Sonner, Alert, Banner | src | src / RM | src | src | src | appear → enter | no change planned until MX0 rules land | — |
 
@@ -187,7 +187,7 @@ Statuses: **V** implemented and runtime-verified by a gate · **I** implemented,
 | Sliding selection indicator (Tabs) | Pl (#388) | Pl | Pl | Pl | Pl |
 | Overlay enter / exit with directional easing | P (Menubar has no exit animation, G6; the rest I, contract test checks tokens, not rendered timing) | I (the browser `reducedMotion` pass measures duration, midpoint and end state, not easing) | P (Sheet / Sidebar / Toaster slide helper, Dialog fade only; ledger) | Pl (Dialog and Sheet show and hide without animation; no ledger family) | Pl (`KinetixDialog` and `KinetixSheet` switch between `SizedBox.shrink()` and the overlay; no ledger family) |
 | Default transition duration on every transition | P (G1) | I | NA | NA | NA |
-| Chart reduced motion | Pl (G3) | NA (no Angular Chart) | Pl | Pl | Pl |
+| Chart reduced motion | Pl (G3) | NA (no Angular Chart) | NA (renders statically, no mount animation) | NA (static) | NA (static) |
 | RTL-correct motion direction | P (Switch, Tabs in #388) | P (`rtl` evidence 47) | Pl | Pl | P (`rtl` evidence 58, layout not motion) |
 | Runtime change of the reduced-motion setting | I (media query) | I | I (`@Environment`) | I (observer) | I (`MediaQuery`) |
 
