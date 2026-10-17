@@ -237,11 +237,14 @@ to carry. A handful of pre-existing values that don't cleanly match a token
 step (e.g. a couple of `opacity-40`/`opacity-60` icon dimmings) are left as
 literals with a comment, rather than silently changed to the nearest token.
 
-**Newly defined, not yet consumed by components:** `duration.instant` (100ms) and the `easing.enter`,
-`easing.exit` and `easing.emphasized` curves (standard decelerate / accelerate / expressive), plus the
-larger spacing steps (`spacing.10`–`spacing.32`, 40–128) and `radius.xxl` (24). They are part of the contract
-and generated for every platform, but no component reads them yet and there are no Tailwind utilities for
-the new curves — adopting them is incremental, component by component.
+**Motion tokens not yet consumed by components:** `easing.emphasized` (reserved for travelling selection
+indicators; see the motion roles in [Foundations](/docs/foundations)) and `duration.slower` (reserved for loop
+periods; no loop reads it yet). Both are generated for every platform and reachable as `ease-emphasized` and
+`duration-slower`. The other durations and easings are in use.
+
+**Newly defined, not yet consumed by components:** the larger spacing steps (`spacing.10`–`spacing.32`,
+40–128) and `radius.xxl` (24). They are part of the contract and generated for every platform, but no
+component reads them yet — adopting them is incremental, component by component.
 
 ### Interaction tokens
 
