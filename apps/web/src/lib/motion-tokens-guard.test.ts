@@ -115,6 +115,14 @@ describe("check:motion-tokens", () => {
     expect(out).toMatch(/switch\.tsx: ease-smooth is not a motion easing/);
   });
 
+  it("catches a hyphenated easing utility that only starts like a token", () => {
+    const { code, out } = run(
+      mutate("packages/ui/src/components/switch.tsx", "duration-instant ease-standard", "duration-instant ease-standard-extra"),
+    );
+    expect(code).toBe(1);
+    expect(out).toMatch(/switch\.tsx: ease-standard-extra is not a motion easing/);
+  });
+
   it("catches a native symbol that is not a token", () => {
     const { code, out } = run(
       mutate("packages/ui-flutter/lib/src/kinetix_switch_motion.dart", "KinetixDuration.instant", "KinetixDuration.quick"),

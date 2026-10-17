@@ -165,6 +165,7 @@ export function motionErrors(overrides = {}) {
     if (ref) sources.push({ f: p, kind: ref.kind });
   }
   const isGenerated = (f) => Object.values(NATIVE_FILES).flat().includes(f);
+  const TAILWIND_EASES = new Set(["linear", "in", "out", "in-out"]);
   for (const { f, kind } of sources) {
     if (isGenerated(f)) continue;
     const src = read(f);
@@ -174,9 +175,9 @@ export function motionErrors(overrides = {}) {
       // A tier utility that is not a tier generates no CSS at all. Numeric and arbitrary values are
       // the motion-contract test's job; this only catches names.
       for (const [, n] of src.matchAll(/(?<![\w-])duration-([a-z][a-z0-9-]*)/g)) if (!(n in durations)) fail(`${f}: duration-${n} is not a motion tier; Tailwind emits nothing for it`);
-      // `ease-in-out` and friends are the motion-contract test's job (Tailwind does emit them); a single
-      // unknown name such as `ease-smooth` emits nothing at all.
-      for (const [, n] of src.matchAll(/(?<![\w-])ease-([a-z]+)\b(?!-)/g)) if (!(n in easings)) fail(`${f}: ease-${n} is not a motion easing; Tailwind emits nothing for it`);
+      // Tailwind's own `ease-linear|in|out|in-out` are the motion-contract test's job (Tailwind does emit
+      // them); any other name, `ease-smooth` or `ease-standard-extra`, emits nothing at all.
+      for (const [, n] of src.matchAll(/(?<![\w-])ease-([a-z][a-z0-9-]*)/g)) if (!(n in easings) && !TAILWIND_EASES.has(n)) fail(`${f}: ease-${n} is not a motion easing; Tailwind emits nothing for it`);
     }
     if (kind === "native") {
       for (const [, n] of src.matchAll(/KinetixDuration\.(\w+)/g)) if (!(n in durations)) fail(`${f}: KinetixDuration.${n} is not a motion token`);
