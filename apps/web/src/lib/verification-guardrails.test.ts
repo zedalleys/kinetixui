@@ -355,6 +355,10 @@ describe("block evidence: negative controls", () => {
       "pnpm build:web || true", // failure masked
       "pnpm build:web | tee build.log", // the pipe's status is tee's
       "pnpm build:web; true", // the sequence exits with the last command's status
+      "|\n          if false\n          then\n          pnpm build:web\n          fi", // never runs, and the step passes
+      "|\n          exit 0\n          pnpm build:web", // the step ends before it
+      "|\n          set +e\n          pnpm build:web\n          true", // failure no longer stops the step
+      "|\n          pnpm build:web \\\n            --dry-run", // a continuation makes it another command
     ]) {
       const fake = blockFixture({}, { buildWeb });
       expect(run(script, [`--root=${fake}`]).ok).toBe(true);

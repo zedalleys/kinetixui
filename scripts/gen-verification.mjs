@@ -470,6 +470,12 @@ function commandsOf(lines) {
     .map((c) => c.trim())
     .filter(Boolean);
 }
+const SHELL_CONTROL = /^(?:if|then|else|elif|fi|for|while|until|do|done|case|esac|select|function|exit|return|set|trap|exec|eval|source|\.|break|continue|[{}()!]|\[\[?|\w+\s*\(\s*\))(?:\s|;|$)/;
+/** One run line that is nothing but plain commands: not rejected by commandsOf, and no shell control word. */
+const plainLine = (line) => {
+  const l = line.replace(/\s+#.*$/, "").trim();
+  return !l.endsWith("\\") && commandsOf([l]).length > 0 && commandsOf([l]).every((c) => !SHELL_CONTROL.test(c));
+};
 const startsCommand = (command, prefix) => command === prefix || command.startsWith(`${prefix} `);
 
 /**
@@ -523,7 +529,13 @@ function runCommands(yaml) {
   const out = [];
   let block = null; // { indent of the `run:` key, folded?, lines } while a block scalar is being read
   const flush = () => {
-    if (block) out.push(...(block.folded ? [block.lines.join(" ")] : block.lines));
+    // A body is evidence only when it is a flat list of plain commands. Control flow (`if false; then … fi`), an
+    // early `exit 0`, `set +e`, a continuation or a masked line decide which of its commands run and whether a
+    // failure reaches the step's status, so one such line makes the whole body count as nothing.
+    if (block) {
+      const body = block.folded ? [block.lines.join(" ")] : block.lines;
+      if (body.every(plainLine)) out.push(...body);
+    }
     block = null;
   };
   const lines = yaml.split("\n");
