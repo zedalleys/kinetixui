@@ -1,5 +1,41 @@
 # Website dogfooding — evidence
 
+## Wave 2e: IoT showcase sliders (16 October 2026)
+
+Against main `e15f0e8b` (#384 merged). Production builds of main and this branch, served side by side; Chromium through Playwright. Details in `docs/audits/WEBSITE-DOGFOODING-AUDIT.md`, "Wave 2e" and "Library gaps".
+
+| Check | Result / scope |
+|---|---|
+| `pnpm build` / `pnpm lint` / `pnpm typecheck` | PASS |
+| `@kinetixui/ui` tests | PASS, 19 files / 517 tests. New `<Slider>` cases (3): a disabled thumb has `aria-disabled="true"` and `data-disabled`, the root carries the `data-[disabled]:opacity-disabled` style, the thumb leaves the tab order and ArrowRight does not change the value; an enabled thumb has no `aria-disabled`; `aria-valuetext` lands on the thumb, not the root. **Negative control:** with the previous `slider.tsx`, 2 of the 3 fail |
+| `@kinetixui/web` tests | PASS, 106 files / 2,209 tests. `device-showcase.test.tsx` (8): each thumb named by its visible label with the native range's bounds and value; arrow keys by step, Home/End; the preview following the sliders; ArrowLeft increasing under RTL; no native range left; battery's value text and its thumb reported disabled (and ignoring keys) while "no battery" is ticked; Last sync speaking its stop ("5 minutes ago", "never reported"); axe. The Wave 2c checkbox test now reads the battery thumb's `aria-disabled` instead of the native range's `disabled` |
+| `pnpm check:web-dogfooding` | PASS. A 1,316 · B 0 · C 5 · D 33 · E 9; B/C debt in 3 files. The device-showcase entry is deleted |
+| Guard negative control (live, then restored) | FAIL (exit 1) as intended: a raw `<input type="range">` put back in `device-showcase` ("1 occurrences; approved 0"). Clean again after restoring |
+| Generated output and source checks | `build:registry` regenerated `apps/web/public/r/slider.json` and `registry/kinetixui/ui/slider.tsx` from the library source; `verification.json` moved one test range. Then `check:stories`, `check:verification`, `check:manifest`, `check:usage`, `check:blocks`, `check:block-source`, `check:rtl`, `check:typography`, `check:type-scale`, `check:grid`, `check:iot-examples`, `check:flagship-examples`, `check:a11y-coverage`, `check:capabilities`, `check:contrast`, `check:keyboard`, `check:component-colors`, `check:registry-deps`, `check:registry-motion`, `check:releases`, `check:package-readmes`, `check:distribution`, `release:check`, `test:release`: PASS, no further diff |
+| Storybook gates for the changed Slider | `check:a11y-browser`, `check:large-text`, `check:entry-visual`: PASS |
+| `scripts/web-dogfooding-wave2e.mjs` | PASS, 16 views (`wave2e-browser.json`): 390/1280px × LTR/RTL × light/dark × 100/200% text, reduced motion, direction and theme applied before hydration and asserted. Real input on all four Sliders: names from the visible labels, min/max/now, Tab in with a visible ring, the forward arrow for the reading direction (ArrowLeft in RTL), Home/End, PageUp, a pointer press and a drag on the track, a press inside the 36px target but off the 16px thumb; Last sync's value text; battery's value text, then, with "no battery" ticked, its thumb reported disabled, out of the tab order, dimmed (opacity < 1) and ignoring an arrow key and a press; signal's thumb reported disabled likewise. **axe on the four controls: 0 findings**. Target height 36px (72px at 200% text). The focus check compares the focused thumb with its style at rest and ignores transparent outlines, since the thumb always carries a base shadow and `outline-none` leaves a transparent outline (found in review). **Negative control:** with the ring's shadow suppressed on `:focus-visible`, the check fails ("no visible focus indicator"); the earlier "any outline or box-shadow" check passed in the same condition |
+| Overflow against main | **0 controls overflow that do not already overflow on main**; page overflow 0px on both builds in every view. 14 baseline items at 390px/200%, all on main too |
+| `check:a11y-site` | PASS. 576 views (36 pages × 2 themes × 4 widths × 2 text sizes), no axe findings, no horizontal overflow |
+| `check:web-quality`, `check:tabs-dogfood`, `check:home-systems`, `check:iot-state-spatial` | PASS (layout 220 views, 0 overflowing; 8 cases; home systems; 67 checks) |
+| Wave 2a / 2b / 2c / 2d browser checks | PASS (33 views; 16 × 4 surfaces; 16 views; 16 × 8 examples, 2d with its overflow comparison against main) |
+| `scripts/slider-disabled-probe.mjs` (gate) | `slider-disabled.json`, on the built Storybook Slider story. Control: a disabled native range is reported **disabled** in Chromium's accessibility tree. After the fix, `<Slider disabled>`'s thumb is reported **disabled** and not focusable, at effective opacity 0.5; the enabled Slider reads and looks enabled. **Negative control:** on the Storybook built from the previous `slider.tsx` the probe exits 1 (thumb reported not disabled, opacity 1) |
+
+### Bundle (`bundle-wave2e.json`)
+
+| Route (first load, layout + page union) | Chunks | Raw JS delta | Gzip delta |
+|---|---|---:|---:|
+| `/iot` | 0 | +395 B | +128 B |
+| `/` | 0 | +86 B | +25 B |
+| `/docs/iot` | 0 | +86 B | +27 B |
+
+The library Slider comes from the `@kinetixui/ui` chunk `/iot` already loads; no new chunk. The 86 B on `/` and `/docs/iot` is the Slider patch in the shared `@kinetixui/ui` chunk.
+
+### Not covered
+
+No manual screen-reader pass. Touch is exercised as pointer presses. Value text is asserted on the thumb's attribute in unit tests and in the browser matrix; Chromium's spoken output was not recorded.
+
+---
+
 ## Wave 2d: copyable IoT examples (15 October 2026)
 
 Against main `1893c9f108efcef69f9f72f5352c0423af1567cc` (#383 merged). Production builds of main and this branch, served side by side; Chromium through Playwright. Details in `docs/audits/WEBSITE-DOGFOODING-AUDIT.md`, "Wave 2d".

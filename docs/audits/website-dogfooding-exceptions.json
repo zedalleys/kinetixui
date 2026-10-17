@@ -110,13 +110,6 @@
       "reason": "Interactive SVG map region (<g role=\"button\">): a <button> cannot live inside SVG. Keep the geometry, hit area and explicit focus/keyboard model local, as with the floor plan and system map."
     },
     {
-      "file": "apps/web/src/components/iot/device-showcase.tsx",
-      "pattern": "input[type=range]",
-      "maxCount": 4,
-      "classification": "B",
-      "reason": "Slider exists; migrate separately with scalar/array event adaptation, labelled values and touch/keyboard proof."
-    },
-    {
       "file": "apps/web/src/components/iot/example-showcase.tsx",
       "pattern": "details",
       "maxCount": 1,

@@ -169,7 +169,8 @@ describe("IoT: checkboxes and pending-command actions", () => {
     expect(signal).toHaveAttribute("aria-checked", "false");
     await user.click(screen.getByText("Device reports no battery"));
     expect(battery).toHaveAttribute("aria-checked", "true");
-    expect(document.getElementById("iot-demo-battery")).toBeDisabled();
+    // the battery Slider says so on its thumb, the element with role=slider
+    expect(screen.getByRole("slider", { name: /^Battery/ })).toHaveAttribute("aria-disabled", "true");
     signal.focus();
     await user.keyboard(" ");
     expect(signal).toHaveAttribute("aria-checked", "true");
