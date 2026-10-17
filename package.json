@@ -45,6 +45,7 @@
     "check:large-text": "node scripts/large-text.mjs",
     "check:motion": "node scripts/motion.mjs",
     "check:loop-motion": "node scripts/loop-motion.mjs",
+    "check:toggle-motion": "node scripts/toggle-motion.mjs",
     "check:card-visual": "node scripts/card-visual.mjs",
     "check:selection-visual": "node scripts/selection-visual.mjs",
     "check:entry-visual": "node scripts/entry-visual.mjs",

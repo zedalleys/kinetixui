@@ -245,7 +245,6 @@ const UNTOKENISED_TRANSITIONS: Record<string, number> = {
   "ui/table-of-contents.tsx": 1,
   "ui/table.tsx": 1,
   "ui/tag.tsx": 1,
-  "ui/toggle.tsx": 1,
   "ui/tree-view.tsx": 1,
   "iot/command-lifecycle.tsx": 1,
   "iot/device-control-card.tsx": 1,
