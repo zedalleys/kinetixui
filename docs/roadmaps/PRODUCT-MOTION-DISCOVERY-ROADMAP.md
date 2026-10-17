@@ -184,7 +184,7 @@ Statuses: **V** implemented and runtime-verified by a gate · **I** implemented,
 | Switch motion + reduced form | V | V | I | I | I |
 | Loop stop under reduced motion | V (`check:loop-motion`) | P (spinner slows to 3 s by design rather than stopping; no global floor, G5) | I | I | I |
 | Sliding selection indicator (Tabs) | Pl (#388) | Pl | Pl | Pl | Pl |
-| Overlay enter / exit with directional easing | I (contract test checks tokens, not rendered timing) | V (`reducedMotion` evidence from the browser on the overlay and menu family) | P (Dialog fade only, ledger) | I | I |
+| Overlay enter / exit with directional easing | I (contract test checks tokens, not rendered timing) | I (the browser `reducedMotion` pass measures duration, midpoint and end state, not easing) | P (Dialog fade only, ledger) | I | I |
 | Default transition duration on every transition | P (G1) | I | NA | NA | NA |
 | Chart reduced motion | Pl (G3) | NA (no Angular Chart) | Pl | Pl | Pl |
 | RTL-correct motion direction | P (Switch, Tabs in #388) | P (`rtl` evidence 47) | Pl | Pl | P (`rtl` evidence 58, layout not motion) |
@@ -232,8 +232,9 @@ One work package per PR. Motion, discovery and native parity never share a PR.
 
 Every PR runs, and its description records, what applies of: `pnpm typecheck` · `pnpm lint` · the changed packages'
 unit tests · real-browser gates for any layout, focus, keyboard or timing claim (`check:a11y-browser`, `check:motion`,
-the visual gates, `check:large-text`) · RTL · reduced motion (same end state) · forced colours · 200 % text (CDP
-`Page.setFontSizes`, not an `html` font-size override) · light and dark · registry and manifest checks
+the visual gates, `check:large-text`) · RTL · reduced motion (same end state) · forced colours · 200 % text (the library
+gates, `check:large-text` and Angular's `largeText` pass, scale the root font size; site pages use CDP
+`Page.setFontSizes`) · light and dark · registry and manifest checks
 (`check:manifest`, `check:registry-deps`, `check:registry-motion`) · generators at a fixed point · bundle delta for
 runtime changes · a negative control for any new or changed gate · CI green · Codex review.
 
