@@ -130,7 +130,7 @@ flowchart LR
 | --- | --- | --- | --- |
 | 0 | Reconcile and plan (this document) | — | this PR |
 | 1 | Finish #388 verification; #390 Angular forced colours | — | done (#388, #390 merged) |
-| 2 / MX0 | Semantic motion contract, default transition tier, stagger/delay, reduced-motion and RTL rules, gates | D1 (decided) | done (#393 merged, MX1a) |
+| 2 / MX0 | Semantic motion contract, default transition tier, stagger/delay, reduced-motion and RTL rules, gates | D1 (decided) | done (#393 merged, MX1a); the default tier (G1) is frozen as a debt register and retimed per component in MX1b |
 | 3 / MX1–MX4 | Component animation waves | MX0 (#393 merged) | MX1b-1 next; MX2–MX4 planned |
 | 4 / BD-W3b–W5 | Search, Use cases hub, journeys, new blocks | BD-W3a (merged) | W3b1 merged (#394); W3b2a open (#395); W4–W5 planned |
 | 5 | Native parity, one component family per PR | MX1, MX3 contracts | planned |
@@ -215,9 +215,9 @@ One work package per PR. Motion, discovery and native parity never share a PR.
 | 2 | #388 finish, #390 | A / B | restyle thread | done (merged) |
 | 3 | MX1a motion foundation (#393, merged), then MX1b-1 React selection motion | B | MX1 thread | — |
 | 4 | BD-W3b2 Use cases hub (W3b1 merged as #394; W3b2a is #395) | C | use-cases thread | — |
-| 5 | MX0d Chart reduced motion (G3) | B | unassigned | MX1a contract (to reuse its hook / rules) |
+| 5 | MX0d Chart reduced motion (G3) | B | unassigned | — (reuses the #393 contract's `loop` and reduced-motion rules) |
 | 6 | Angular `timeline` RTL + large-text evidence (closes 3 of 6 open graduation criteria) | A | unassigned | — |
-| 7 | MX3a Menubar exit (G6) + Angular global reduced-motion floor (G5) | B | unassigned | MX1a |
+| 7 | MX3a Menubar exit (G6) + Angular global reduced-motion floor (G5) | B | unassigned | — (#393 merged) |
 | 8 | MX2a Progress logical fill (G7), measured in RTL first | B | unassigned | — |
 | 9 | MX2b Slider value text, marks, vertical (React), then native spoken value per platform | B / A | unassigned | #387 (merged) |
 | 10 | Phase 5a: first native UI test (simulator / emulator) for Switch on one platform | A | unassigned | CI runner decision D4 |
