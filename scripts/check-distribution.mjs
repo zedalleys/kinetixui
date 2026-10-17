@@ -300,7 +300,7 @@ for (const off of offCalendar) {
  * most likely way this set of documents goes wrong, because prose has no schema.
  */
 const DOCS = ["marketing/distribution/README.md", "marketing/distribution/first-14-days.md", "marketing/distribution/github.md", "marketing/distribution/outreach.md", "marketing/distribution/execution-calendar.md"];
-const ID_SHAPE = /\b(?:LI|X|ART|COM|VIS|MOT)-\d{3}\b/g;
+const ID_SHAPE = /\b(?:LI|X|ART|COM|GH|VIS|MOT)-\d{3}\b/g;
 const visuals = new Set(JSON.parse(readFileSync("marketing/content/visuals/manifest.json", "utf8")).assets.map((v) => v.id));
 const motion = new Set([...readFileSync("marketing/content/motion-briefs.md", "utf8").matchAll(/\bMOT-\d{3}\b/g)].map((m) => m[0]));
 const briefs = new Set([...readFileSync("marketing/content/visual-briefs.md", "utf8").matchAll(/\bVIS-\d{3}\b/g)].map((m) => m[0]));

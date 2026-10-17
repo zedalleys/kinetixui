@@ -13,14 +13,60 @@
 /** Rows published on or after this date must carry a live URL. Earlier rows may instead explain the gap. */
 export const LIVE_URL_REQUIRED_FROM = "2026-10-17";
 
-/** Hosts a live post can be on, per channel. A kinetixui.com URL is a destination, never a post. */
+/**
+ * Hosts a live post can be on, per channel. A kinetixui.com URL is a destination, never a post. lnkd.in is
+ * deliberately absent: a short link names no post until someone resolves it, and LI-005's short link resolved
+ * to a different post (see the header).
+ */
 export const CHANNEL_HOSTS = {
-  linkedin: ["linkedin.com", "www.linkedin.com", "lnkd.in"],
-  x: ["x.com", "twitter.com"],
+  linkedin: ["linkedin.com", "www.linkedin.com"],
+  x: ["x.com", "twitter.com", "www.x.com", "www.twitter.com"],
   devto: ["dev.to"],
   hashnode: ["hashnode.com", ".hashnode.dev"],
   github: ["github.com"],
 };
+
+/**
+ * The post a URL names, per channel, as a key that is the same for every spelling of one post (query string,
+ * fragment, trailing slash, www, a LinkedIn /feed/update/ vs /posts/ link). null when the URL is on the right
+ * host but names no single post: a profile, a feed, a home page, a tag page.
+ */
+const POST_IDENTITY = {
+  linkedin: (url) => {
+    const m = url.pathname.match(/urn:li:(?:activity|share|ugcPost):(\d+)/) ?? url.pathname.match(/^\/posts\/[^/]+-activity-(\d+)-/);
+    return m ? `linkedin:activity:${m[1]}` : null;
+  },
+  x: (url) => {
+    const m = url.pathname.match(/^\/[A-Za-z0-9_]+\/status\/(\d+)\/?$/);
+    return m ? `x:status:${m[1]}` : null;
+  },
+  devto: (url) => {
+    const m = url.pathname.match(/^\/([A-Za-z0-9_-]+)\/([A-Za-z0-9_-]+)\/?$/);
+    return m && !["t", "settings", "search", "top", "enter"].includes(m[1]) ? `devto:${m[1].toLowerCase()}/${m[2].toLowerCase()}` : null;
+  },
+  hashnode: (url) => {
+    const m = url.pathname.match(/^\/(?:post\/)?([A-Za-z0-9_-]+)\/?$/);
+    return m ? `hashnode:${url.hostname.toLowerCase()}/${m[1].toLowerCase()}` : null;
+  },
+  github: (url) => {
+    const m = url.pathname.match(/^\/([^/]+)\/([^/]+)\/(discussions|issues|pull|releases\/tag)\/([^/]+)\/?$/);
+    return m ? `github:${m[1].toLowerCase()}/${m[2].toLowerCase()}/${m[3]}/${m[4]}` : null;
+  },
+};
+
+/** The canonical post key for a URL on a known channel, or for an off-calendar URL whose channel is given. */
+export function postKey(channel, href) {
+  let url;
+  try {
+    url = new URL(href);
+  } catch {
+    return null;
+  }
+  const identify = POST_IDENTITY[channel];
+  if (identify && hostAllowed(channel, url.hostname.toLowerCase())) return identify(url);
+  // Unknown channel: still compare like with like, ignoring query, fragment and trailing slash.
+  return `${url.hostname.toLowerCase().replace(/^www\./, "")}${url.pathname.replace(/\/+$/, "").toLowerCase()}`;
+}
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -35,8 +81,7 @@ export function publicationEvidenceProblems(rows = [], offCalendar = []) {
   const problems = [];
   const fail = (where, msg) => problems.push(`${where}: ${msg}`);
   const urlOwners = new Map();
-  const claim = (url, where) => {
-    const key = url.replace(/\/+$/, "").toLowerCase();
+  const claim = (key, where) => {
     if (urlOwners.has(key)) fail(where, `liveUrl is already the evidence for ${urlOwners.get(key)} — one post cannot publish two records`);
     else urlOwners.set(key, where);
   };
@@ -82,11 +127,18 @@ export function publicationEvidenceProblems(rows = [], offCalendar = []) {
       fail(where, `liveUrl host "${host}" is not a ${row.channel} host — the evidence must be the post itself, on its own channel`);
     }
     if (row.liveUrlGap) fail(where, "liveUrl is set but so is liveUrlGap — remove the gap once the URL is known");
-    claim(row.liveUrl, where);
+    if (!hostAllowed(row.channel, host)) continue;
+    const post = postKey(row.channel, row.liveUrl);
+    if (!post) {
+      fail(where, `liveUrl "${row.liveUrl}" is on ${row.channel} but names no single post — link the post itself, not a profile, feed or home page`);
+      continue;
+    }
+    claim(post, where);
   }
 
   for (const off of offCalendar) {
-    if (off.url) claim(off.url, `offCalendar ${off.id ?? "<no id>"}`);
+    const key = off.url ? postKey(off.channel, off.url) : null;
+    if (key) claim(key, `offCalendar ${off.id ?? "<no id>"}`);
   }
   return problems;
 }

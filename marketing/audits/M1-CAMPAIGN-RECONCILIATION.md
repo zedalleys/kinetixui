@@ -67,8 +67,9 @@ distribution: planned / published / skipped / blocked). The M1 statuses are **de
 
 ## 2. Verified campaign inventory
 
-Full table: `pnpm marketing:inventory` (snapshot saved in the project files as
-`marketing/m1-reconciliation/inventory-2026-10-17.md`). Planned dates come from day offsets.
+Full table: `pnpm marketing:inventory`. The dated snapshot this section was written from is committed as
+[`M1-inventory-2026-10-17.md`](./M1-inventory-2026-10-17.md); rerunning the script later is not equivalent,
+because its overdue flags are relative to the day it runs. Planned dates come from day offsets.
 
 | Asset | Channel | Planned | Actual | M1 status | Live URL / evidence | Blockers |
 | --- | --- | --- | --- | --- | --- | --- |

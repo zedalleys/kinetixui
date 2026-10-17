@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { approvalProblems, m1Status, publicationEvidenceProblems } from "./marketing-publication-rules.mjs";
+import { approvalProblems, m1Status, postKey, publicationEvidenceProblems } from "./marketing-publication-rules.mjs";
 
 /** A row that passes every rule. Each negative control below breaks exactly one thing. */
 const good = () => ({
@@ -55,8 +55,42 @@ test("negative control: the same asset published twice on one channel fails", ()
 
 test("negative control: one post cannot be the evidence for two records (the LI-005 failure)", () => {
   const li005 = { ...good(), asset: "LI-005", day: 9 };
-  const off = [{ id: "off-001", url: good().liveUrl }];
+  const off = [{ id: "off-001", channel: "linkedin", url: good().liveUrl }];
   assert.match(publicationEvidenceProblems([li005], off).join("\n"), /already the evidence for LI-005/);
+});
+
+test("negative control: a channel page that names no single post is not evidence", () => {
+  for (const [channel, liveUrl] of [
+    ["x", "https://x.com/home"],
+    ["x", "https://x.com/zedalleys"],
+    ["linkedin", "https://www.linkedin.com/in/zedalleys/"],
+    ["linkedin", "https://www.linkedin.com/feed/"],
+    ["devto", "https://dev.to/zedalleys"],
+    ["devto", "https://dev.to/t/designsystems"],
+    ["github", "https://github.com/zedalleys/kinetixui"],
+  ]) {
+    const row = { ...good(), channel, liveUrl };
+    assert.match(publicationEvidenceProblems([row]).join("\n"), /names no single post/, liveUrl);
+  }
+});
+
+test("negative control: a LinkedIn short link is not evidence (it names no post until resolved)", () => {
+  const row = { ...good(), liveUrl: "https://lnkd.in/p/dafq4fNP" };
+  assert.match(publicationEvidenceProblems([row]).join("\n"), /not a linkedin host/);
+});
+
+test("negative control: one post spelled two ways still cannot evidence two records", () => {
+  const a = { ...good(), asset: "X-001", channel: "x", liveUrl: "https://x.com/zedalleys/status/1" };
+  const b = { ...a, asset: "X-008", liveUrl: "https://twitter.com/zedalleys/status/1/?utm_source=x#reply" };
+  assert.match(publicationEvidenceProblems([a, b]).join("\n"), /already the evidence for X-001/);
+  const li = { ...good(), liveUrl: "https://www.linkedin.com/feed/update/urn:li:activity:7513596965998333955/" };
+  const off = [{ id: "off-001", channel: "linkedin", url: "https://www.linkedin.com/posts/zedalleys_iot-activity-7513596965998333955-KRhK?trk=x" }];
+  assert.match(publicationEvidenceProblems([li], off).join("\n"), /already the evidence for LI-001/);
+});
+
+test("postKey ignores query, fragment, trailing slash and www", () => {
+  assert.equal(postKey("devto", "https://dev.to/zedalleys/a-post-1/?x=1#c"), postKey("devto", "https://dev.to/zedalleys/a-post-1"));
+  assert.equal(postKey("x", "https://www.x.com/u/status/9?s=20"), "x:status:9");
 });
 
 test("negative control: a planned row carrying a live URL fails", () => {
