@@ -455,16 +455,18 @@ function runsInWorkflowStep(script) {
 }
 
 /**
- * The commands a list of run lines executes: split on `&&`, `||` and `;`, trailing comments dropped. A command
+ * The commands a list of run lines executes: split on `&&`, trailing comments dropped. A command
  * is matched from its start, so `echo 'swift test'` or `# swift test` is not a run of `swift test`.
  */
 function commandsOf(lines) {
-  // Only plain sequences count. `a || b` either masks a's failure or runs b only when a failed, and a pipe,
-  // background job or substitution changes what the step's exit status means, so such a line counts as nothing.
+  // Only `&&` chains count, because only there does every command's failure decide the exit status. `a || b`
+  // masks a's failure or runs b only when a failed, `a; b` exits with b's status (a package script runs without
+  // `-e`), and a pipe, background job or substitution changes what the exit status means, so such a line counts
+  // as nothing.
   return lines
     .map((l) => l.replace(/\s+#.*$/, ""))
-    .filter((l) => !/\|\||(?<!\|)\|(?!\|)|&(?!&)|`|\$\(/.test(l.replace(/&&/g, "")))
-    .flatMap((l) => l.split(/&&|;/))
+    .filter((l) => !/\|\||(?<!\|)\|(?!\|)|&(?!&)|;|`|\$\(/.test(l.replace(/&&/g, "")))
+    .flatMap((l) => l.split(/&&/))
     .map((c) => c.trim())
     .filter(Boolean);
 }

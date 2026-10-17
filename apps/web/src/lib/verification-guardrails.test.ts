@@ -354,6 +354,7 @@ describe("block evidence: negative controls", () => {
       "pnpm build:web\n        continue-on-error: true", // a step whose failure is ignored
       "pnpm build:web || true", // failure masked
       "pnpm build:web | tee build.log", // the pipe's status is tee's
+      "pnpm build:web; true", // the sequence exits with the last command's status
     ]) {
       const fake = blockFixture({}, { buildWeb });
       expect(run(script, [`--root=${fake}`]).ok).toBe(true);
@@ -491,6 +492,12 @@ describe("block evidence: negative controls", () => {
     const noopWrapper = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts: noop, runtimeStep: "pnpm check:blocks-runtime" })}`]);
     expect(noopWrapper.ok).toBe(false);
     expect(noopWrapper.output).toMatch(/no workflow step/);
+    const semicolon = { "check:blocks-runtime": `node ${RUNTIME_SCRIPT} --base http://127.0.0.1:3000; true` };
+    const masked = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts: semicolon, runtimeStep: "pnpm check:blocks-runtime" })}`]);
+    expect(masked.ok).toBe(false);
+    expect(masked.output).toMatch(/no workflow step/);
+    const maskedStep = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { runtimeStep: `node ${RUNTIME_SCRIPT}; true` })}`]);
+    expect(maskedStep.ok).toBe(false);
     const otherCommand = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "pnpm check:blocks-runtime-old" })}`]);
     expect(otherCommand.ok).toBe(false);
     expect(otherCommand.output).toMatch(/no workflow step/);
