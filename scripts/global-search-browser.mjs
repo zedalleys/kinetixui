@@ -37,10 +37,23 @@ const ok = (msg) => passed.push(msg);
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 
 const consoleErrors = [];
+const thirdPartyFailures = new Set();
+const ORIGIN = new URL(base).origin;
 function watch(page) {
   page.on("pageerror", (e) => consoleErrors.push(`${page.url()}: ${e.message}`));
   page.on("console", (m) => {
+    // Chromium logs every failed request as "Failed to load resource" with no URL; the response listener below
+    // reports those with their URL instead, so a third-party outage is told apart from this site's own failure.
+    if (/^Failed to load resource/.test(m.text())) return;
     if (m.type() === "error" || /hydrat/i.test(m.text())) consoleErrors.push(`${page.url()}: ${m.text()}`);
+  });
+  page.on("response", (r) => {
+    if (r.status() < 400) return;
+    const url = new URL(r.url());
+    // The header's star count asks api.github.com, which rate-limits shared CI runners (403); GitHubButton keeps
+    // the plain icon when it fails. Other origins are not this site's to answer for, but they are listed.
+    if (url.origin !== ORIGIN) thirdPartyFailures.add(`${r.status()} ${url.origin}${url.pathname}`);
+    else consoleErrors.push(`${page.url()}: ${r.status()} for ${url.pathname}`);
   });
   return page;
 }
@@ -290,7 +303,8 @@ ok(`layout: ${views} views (390/768/1280 × 100/200% × LTR/RTL × light/dark, r
 }
 
 if (consoleErrors.length) for (const e of [...new Set(consoleErrors)]) fail(`console: ${e}`);
-else ok("no page errors, console errors or hydration warnings");
+else ok("no page errors, console errors, hydration warnings or failed same-origin requests");
+if (thirdPartyFailures.size) passed.push(`(not this site's) third-party requests failed: ${[...thirdPartyFailures].join(", ")}`);
 
 await browser.close();
 for (const p of passed) console.log(`  ✓ ${p}`);
