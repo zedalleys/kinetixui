@@ -68,6 +68,11 @@ jobs:
       - name: Token table matches the tokens
         run: pnpm check:token-contract
 
+      # Motion values agree across the source, web CSS and the six native files; no motion token name
+      # is referenced that does not exist; tokens/contracts/motion.json still matches the components it names.
+      - name: Motion tokens and contract agree
+        run: pnpm check:motion-tokens
+
       - name: Changelog page is current with the packages
         run: pnpm check:releases
 

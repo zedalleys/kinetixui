@@ -200,6 +200,91 @@ describe("loops state their reduced form", () => {
   });
 });
 
+/**
+ * Transitions on Tailwind's default timing: a debt register, not a permission.
+ *
+ * The preset defines no `DEFAULT` transition duration or easing, so a class string that says
+ * `transition-colors` (or `transition`, `-opacity`, `-transform`, `-shadow`, `-[…]`) and names no
+ * `duration-*` tier runs on Tailwind's untokenised 150ms `cubic-bezier(0.4, 0, 0.2, 1)`. Retuning a
+ * token never reaches these. They are mostly hover and press colour, the `press-feedback` role in
+ * tokens/contracts/motion.json, whose tier (instant or fast) is an open owner decision, so they are
+ * frozen here rather than retimed blindly.
+ *
+ * Counted per class string literal, per file. A file not listed may have none; a listed file may not
+ * gain any; and a listed count that is now too high fails too, so fixing one tightens the register
+ * instead of leaving room for the next. The set of transition utilities matched is deliberately the
+ * same one the press-feedback migration will touch.
+ */
+const UNTOKENISED_TRANSITIONS: Record<string, number> = {
+  "ui/app-bar.tsx": 2,
+  "ui/audio-player.tsx": 3,
+  "ui/badge.tsx": 1,
+  "ui/banner.tsx": 1,
+  "ui/breadcrumb.tsx": 1,
+  "ui/code-block.tsx": 3,
+  "ui/color-picker.tsx": 1,
+  "ui/dialog.tsx": 1,
+  "ui/dropdown-menu.tsx": 1,
+  "ui/fab.tsx": 1,
+  "ui/file-upload.tsx": 3,
+  "ui/footer.tsx": 1,
+  "ui/inform.tsx": 1,
+  "ui/json-viewer.tsx": 1,
+  "ui/modal.tsx": 1,
+  "ui/navigation-bar.tsx": 1,
+  "ui/navigation-menu.tsx": 1,
+  "ui/number-input.tsx": 2,
+  "ui/password-input.tsx": 1,
+  "ui/progress.tsx": 1,
+  "ui/rating.tsx": 1,
+  "ui/scroll-area.tsx": 1,
+  "ui/sheet.tsx": 1,
+  "ui/sidebar.tsx": 1,
+  "ui/slider.tsx": 1,
+  "ui/tab-bar.tsx": 1,
+  "ui/table-of-contents.tsx": 1,
+  "ui/table.tsx": 1,
+  "ui/tag.tsx": 1,
+  "ui/toggle.tsx": 1,
+  "ui/tree-view.tsx": 1,
+  "iot/command-lifecycle.tsx": 1,
+  "iot/device-control-card.tsx": 1,
+};
+
+/** Class string literals that start a transition and name no duration tier. */
+function untokenisedTransitions(src: string): string[] {
+  const TRANSITION = /(?:^|[\s"`:])transition(?:-(?:colors|opacity|transform|shadow|\[[^\]]+\]))?(?=[\s"`])/;
+  const TIER = /duration-(instant|fast|base|slow|slower)\b/;
+  return (src.match(/"[^"\n]*"|`[^`]*`/g) ?? []).filter((lit) => TRANSITION.test(lit) && !TIER.test(lit));
+}
+
+describe("transitions on the untokenised default are a closed register", () => {
+  const counts = new Map<string, number>(components.map(([file, src]) => [file, untokenisedTransitions(src).length]));
+
+  it("finds what it is looking for, so an empty result means something", () => {
+    expect(untokenisedTransitions('"rounded transition-colors hover:bg-muted"')).toHaveLength(1);
+    expect(untokenisedTransitions('"transition-colors duration-instant ease-standard"')).toHaveLength(0);
+    expect(untokenisedTransitions('"transition-[inset-inline-start] ease-standard"')).toHaveLength(1);
+    expect(untokenisedTransitions('"data-[state=open]:animate-in"')).toHaveLength(0);
+  });
+
+  it("lets no new component, and no listed one, add a transition without a duration tier", () => {
+    for (const [file, n] of counts) {
+      const allowed = UNTOKENISED_TRANSITIONS[file] ?? 0;
+      expect(
+        n,
+        `${file} has ${n} transition(s) on Tailwind's default 150ms (register allows ${allowed}); name a duration tier`,
+      ).toBeLessThanOrEqual(allowed);
+    }
+  });
+
+  it("tightens when a listed transition is tokenised", () => {
+    for (const [file, allowed] of Object.entries(UNTOKENISED_TRANSITIONS)) {
+      expect(counts.get(file) ?? 0, `${file} now has fewer untokenised transitions; lower its register entry`).toBe(allowed);
+    }
+  });
+});
+
 describe("components name their motion", () => {
   const TOKEN_DURATION = /duration-(instant|fast|base|slow|slower)/;
 
