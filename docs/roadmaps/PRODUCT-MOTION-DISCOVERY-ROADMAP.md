@@ -178,7 +178,7 @@ Statuses: **V** implemented and runtime-verified by a gate · **I** implemented,
 | Motion tokens generated from one source | I (contract test checks class-string wiring, not runtime) | I (reads the CSS variables; no gate inspects computed values) | I | I | I (`flutter-tokens` test checks values) |
 | Disclosure (Accordion / Collapsible) motion + reduced form | V (`check:motion`) | V (browser) | I (helper + unit tests) | I | I |
 | Switch motion + reduced form | V | V | I | I | I |
-| Loop stop under reduced motion | V (`check:loop-motion`) | P (spinner slows to 3 s by design rather than stopping; no global floor, G5) | I | I | I |
+| Loop stop under reduced motion | V for Spinner and Skeleton (`check:loop-motion`); I for Marquee, MessageBubble and the InputOTP caret, which no browser gate covers | P (spinner slows to 3 s by design rather than stopping; no global floor, G5) | I | I | I |
 | Sliding selection indicator (Tabs) | V (`check:motion` midpoint and `check:tabs-indicator`, #388) | Pl | Pl | Pl | Pl |
 | Overlay enter / exit with directional easing | P (Menubar has no exit animation, G6; the rest I, contract test checks tokens, not rendered timing) | I (the browser `reducedMotion` pass measures duration, midpoint and end state, not easing) | P (Sheet / Sidebar / Toaster slide helper, Dialog fade only; ledger) | Pl (Dialog and Sheet show and hide without animation; no ledger family) | Pl (`KinetixDialog` and `KinetixSheet` switch between `SizedBox.shrink()` and the overlay; no ledger family) |
 | Default transition duration on every transition | P (G1) | I | NA | NA | NA |
@@ -215,7 +215,7 @@ One work package per PR. Motion, discovery and native parity never share a PR.
 | 2 | #388 finish, #390 | A / B | restyle thread | done (merged) |
 | 3 | MX1a motion foundation (#393, merged), then MX1b-1 React selection motion | B | MX1 thread | — |
 | 4 | BD-W3b2 Use cases hub (W3b1 merged as #394; W3b2a is #395) | C | use-cases thread | — |
-| 5 | MX0d Chart reduced motion (G3) | B | unassigned | — (reuses the #393 contract's `loop` and reduced-motion rules) |
+| 5 | MX4a Chart reduced motion (G3) | B | unassigned | — (reuses the #393 contract's `loop` and reduced-motion rules) |
 | 6 | Angular `timeline` RTL + large-text evidence (closes 3 of 6 open graduation criteria) | A | unassigned | — |
 | 7 | MX3a Menubar exit (G6) + Angular global reduced-motion floor (G5) | B | unassigned | — (#393 merged) |
 | 8 | MX2a Progress logical fill (G7), measured in RTL first | B | unassigned | — |
