@@ -384,6 +384,8 @@ const LAYOUT_PAGES = [
   // business discovery: the index, the domain template, a component page with its "In applications" section, and the
   // catalogue with the business filter group open and two filters active (their chips, the status line)
   "/capabilities", "/use-cases/commerce", "/docs/components/price-breakdown", "/components?capability=transactions&domain=commerce",
+  // the blocks gallery unfiltered, and filtered down to the blocks that carry a workflow link and a status badge
+  "/blocks", "/blocks?cat=Commerce&capability=transactions",
 ];
 const LAYOUT_WIDTHS = [320, 375, 390, 768, 1280];
 

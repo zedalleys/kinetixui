@@ -10,7 +10,8 @@
  *   - every evidence reference resolves: `ui:<slug>` is a components.manifest.json entry, `iot:<Name>` is
  *     exported from @kinetixui/iot/react, `block:<slug>` is a blocks.manifest.json entry, `file:<path>` exists;
  *   - a row marked existing or partial cites at least one piece of evidence (nothing is "existing" on say-so);
- *   - a row marked planned or not-planned cites no `ui:` evidence (a shipped component is not "planned");
+ *   - a row marked planned or not-planned cites no `ui:` or `block:` evidence (a shipped component or block is not
+ *     "planned");
  *   - a Pro row is never existing (nothing is behind a paywall today), and a Core-only concern is never Pro:
  *     the rows in CORE_FLOOR must stay tier "core";
  *   - enums are the documented ones, phases are 1–10 or null.
@@ -90,6 +91,8 @@ for (const family of data.families) {
       errors.push(`${at}: ${row.status} with no evidence`);
     if ((row.status === "planned" || row.status === "not-planned") && row.evidence.some((r) => r.startsWith("ui:")))
       errors.push(`${at}: ${row.status} but cites a shipped component`);
+    if ((row.status === "planned" || row.status === "not-planned") && row.evidence.some((r) => r.startsWith("block:")))
+      errors.push(`${at}: ${row.status} but cites a published block`);
     if (row.tier === "pro" && row.status === "existing") errors.push(`${at}: a Pro row cannot be existing`);
     if (row.tier === "pro" && row.target !== "pro-candidate") errors.push(`${at}: Pro rows target pro-candidate`);
     if (row.tier === "pro" && CORE_FLOOR.some((re) => re.test(row.name))) errors.push(`${at}: on the Core floor, cannot be Pro`);

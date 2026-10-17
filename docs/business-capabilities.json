@@ -117,7 +117,8 @@
           "evidence": [
             "block:filter-panel",
             "ui:tag",
-            "ui:multi-select"
+            "ui:multi-select",
+            "block:table-toolbar"
           ],
           "dependsOn": [],
           "phase": 3,
@@ -139,7 +140,8 @@
           "delivery": "component",
           "evidence": [
             "ui:metric",
-            "block:stat-cards"
+            "block:stat-cards",
+            "block:dashboard-tabs"
           ],
           "dependsOn": [
             "Sparkline"
@@ -3053,7 +3055,8 @@
           "evidence": [
             "ui:banner",
             "ui:inform",
-            "ui:alert"
+            "ui:alert",
+            "block:alert-stack"
           ],
           "dependsOn": [],
           "phase": null,
@@ -3069,7 +3072,8 @@
           "delivery": "component",
           "evidence": [
             "ui:result-state",
-            "ui:spinner"
+            "ui:spinner",
+            "block:loading-state"
           ],
           "dependsOn": [],
           "phase": 1,
@@ -3252,7 +3256,7 @@
     }
   ],
   "discovery": {
-    "$comment": "Website discovery (Business Discovery W1). Every family belongs to exactly one capability group; a family may also belong to business domains. A family with no domain is domain-neutral: it reaches a domain only through a workflow that uses it. Workflow stages name capability rows above, never components, so what a stage offers is whatever those rows' evidence says ships today. Nothing here may restate a status, a layer or a platform: those stay on the rows and in components.manifest.json. Pro-candidate rows never reach the website (marketing/STRATEGY.md rule 7).",
+    "$comment": "Website discovery (Business Discovery W1). Every family belongs to exactly one capability group; a family may also belong to business domains. A family with no domain is domain-neutral: it reaches a domain only through a workflow that uses it. Workflow stages name capability rows above, never components, so what a stage offers is whatever those rows' evidence says ships today. Nothing here may restate a status, a layer or a platform: those stay on the rows and in components.manifest.json. Pro-candidate rows never reach the website (marketing/STRATEGY.md rule 7). `unclassifiedBlocks` lists every published block that no shipping row cites, each with the reason it was reviewed and left without a capability; check:capabilities fails on a published block that is in neither place, so a new block cannot reach /blocks untagged without a decision.",
     "capabilities": [
       {
         "id": "data-analytics",
@@ -3404,8 +3408,8 @@
       },
       {
         "id": "travel-booking",
-        "title": "Travel & booking",
-        "summary": "Reservations, availability, itineraries, travellers and boarding passes.",
+        "title": "Travel & hospitality",
+        "summary": "Reservations, stays, availability, guests, itineraries, travellers and boarding passes.",
         "families": [
           "E",
           "F",
@@ -3618,6 +3622,74 @@
             ]
           }
         ]
+      },
+      {
+        "id": "device-pairing",
+        "title": "Device pairing",
+        "domain": "iot",
+        "summary": "From adding a device to monitoring it and sending it a command whose result is confirmed.",
+        "stages": [
+          {
+            "title": "Pair the device",
+            "uses": [
+              "DeviceProvisioningStepper"
+            ]
+          },
+          {
+            "title": "Check the connection",
+            "uses": [
+              "SyncStatus / ConnectionStatus / StaleDataState / OfflineState"
+            ]
+          },
+          {
+            "title": "Monitor it",
+            "uses": [
+              "IoT monitoring",
+              "IoT summaries & cards"
+            ]
+          },
+          {
+            "title": "Control it",
+            "uses": [
+              "IoT controls",
+              "RequestedState / ReportedState / PendingDeviceState / CommandStatus"
+            ]
+          }
+        ]
+      }
+    ],
+    "unclassifiedBlocks": [
+      {
+        "block": "cta-banner",
+        "reason": "A marketing-page section (heading and two actions). It demonstrates no business capability, and no roadmap row describes marketing sections."
+      },
+      {
+        "block": "testimonial",
+        "reason": "A marketing-page section (an attributed quote). It demonstrates no business capability, and no roadmap row describes marketing sections."
+      },
+      {
+        "block": "profile-form",
+        "reason": "A generic profile form. The closest row, FormSection, is a stage of the checkout and flight-booking workflows, so citing it would place a profile form in both; no row describes account profiles."
+      },
+      {
+        "block": "settings-list",
+        "reason": "A list of notification preferences with a Switch per row. No roadmap row describes settings or preferences."
+      },
+      {
+        "block": "team-members",
+        "reason": "A member list with roles and a per-row action. The rows it would demonstrate (RoleEditor, PermissionMatrix) are planned, and a block cannot make a planned row ship."
+      },
+      {
+        "block": "empty-state",
+        "reason": "An empty inbox with a call to action. No roadmap row describes empty states; ResultState covers the outcome of an action, not an empty collection."
+      },
+      {
+        "block": "onboarding-checklist",
+        "reason": "Setup steps with progress. The closest row, WorkflowStepper, is the Stepper component, which this block does not use."
+      },
+      {
+        "block": "editor-toolbar",
+        "reason": "A write/preview switch and formatting marks. The closest rows (CodeEditorShell, CommentComposer) describe a code editor and a comment thread, which this toolbar is not on its own."
       }
     ]
   }

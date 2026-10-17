@@ -54,7 +54,8 @@
         "multi-select"
       ],
       "blocks": [
-        "filter-panel"
+        "filter-panel",
+        "table-toolbar"
       ],
       "iot": []
     },
@@ -67,7 +68,8 @@
         "metric"
       ],
       "blocks": [
-        "stat-cards"
+        "stat-cards",
+        "dashboard-tabs"
       ],
       "iot": []
     },
@@ -1546,7 +1548,9 @@
         "inform",
         "alert"
       ],
-      "blocks": [],
+      "blocks": [
+        "alert-stack"
+      ],
       "iot": []
     },
     "ProcessingState / PendingState": {
@@ -1558,7 +1562,9 @@
         "result-state",
         "spinner"
       ],
-      "blocks": [],
+      "blocks": [
+        "loading-state"
+      ],
       "iot": []
     },
     "ApprovalStatus": {
@@ -1685,8 +1691,10 @@
         "tag"
       ],
       "blocks": [
+        "dashboard-tabs",
         "filter-panel",
-        "stat-cards"
+        "stat-cards",
+        "table-toolbar"
       ],
       "iot": [],
       "rows": [
@@ -2293,7 +2301,10 @@
         "sidebar",
         "spinner"
       ],
-      "blocks": [],
+      "blocks": [
+        "alert-stack",
+        "loading-state"
+      ],
       "iot": [
         "ConnectionHealth",
         "DeviceConnection",
@@ -2381,8 +2392,8 @@
     },
     {
       "id": "travel-booking",
-      "title": "Travel & booking",
-      "summary": "Reservations, availability, itineraries, travellers and boarding passes.",
+      "title": "Travel & hospitality",
+      "summary": "Reservations, stays, availability, guests, itineraries, travellers and boarding passes.",
       "page": true,
       "counts": {
         "existing": 11,
@@ -2550,7 +2561,7 @@
       "page": false,
       "counts": {
         "existing": 9,
-        "partial": 0,
+        "partial": 1,
         "planned": 2
       },
       "components": [],
@@ -2563,6 +2574,7 @@
         "CommandFeedback",
         "CommandLifecycle",
         "CommandStatus",
+        "ConnectionHealth",
         "DeviceActivity",
         "DeviceBattery",
         "DeviceCard",
@@ -2580,6 +2592,7 @@
         "DeviceStateSummary",
         "EnergySummary",
         "FirmwareStatus",
+        "LastSync",
         "PairingFailure",
         "PairingMethodPicker",
         "PairingStepper",
@@ -2592,9 +2605,12 @@
         "TelemetryTrend"
       ],
       "capabilities": [
-        "connected-devices"
+        "connected-devices",
+        "application-foundations"
       ],
-      "workflows": [],
+      "workflows": [
+        "device-pairing"
+      ],
       "rows": [
         "IoT controls",
         "IoT monitoring",
@@ -2606,7 +2622,8 @@
         "DeviceProvisioningStepper",
         "DeviceFirmwareStatus",
         "SpatialDeviceMarker",
-        "DeviceMaintenance"
+        "DeviceMaintenance",
+        "SyncStatus / ConnectionStatus / StaleDataState / OfflineState"
       ]
     },
     {
@@ -2841,6 +2858,40 @@
           "title": "History",
           "rows": [
             "TransactionList"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "device-pairing",
+      "title": "Device pairing",
+      "domain": "iot",
+      "summary": "From adding a device to monitoring it and sending it a command whose result is confirmed.",
+      "stages": [
+        {
+          "title": "Pair the device",
+          "rows": [
+            "DeviceProvisioningStepper"
+          ]
+        },
+        {
+          "title": "Check the connection",
+          "rows": [
+            "SyncStatus / ConnectionStatus / StaleDataState / OfflineState"
+          ]
+        },
+        {
+          "title": "Monitor it",
+          "rows": [
+            "IoT monitoring",
+            "IoT summaries & cards"
+          ]
+        },
+        {
+          "title": "Control it",
+          "rows": [
+            "IoT controls",
+            "RequestedState / ReportedState / PendingDeviceState / CommandStatus"
           ]
         }
       ]
@@ -4125,7 +4176,9 @@
       "workflows": []
     },
     "alert-stack": {
-      "capabilities": [],
+      "capabilities": [
+        "application-foundations"
+      ],
       "domains": [],
       "workflows": []
     },
@@ -4149,7 +4202,9 @@
       "workflows": []
     },
     "dashboard-tabs": {
-      "capabilities": [],
+      "capabilities": [
+        "data-analytics"
+      ],
       "domains": [],
       "workflows": []
     },
@@ -4171,7 +4226,9 @@
       "workflows": []
     },
     "loading-state": {
-      "capabilities": [],
+      "capabilities": [
+        "application-foundations"
+      ],
       "domains": [],
       "workflows": []
     },
@@ -4237,7 +4294,9 @@
       "workflows": []
     },
     "table-toolbar": {
-      "capabilities": [],
+      "capabilities": [
+        "data-analytics"
+      ],
       "domains": [],
       "workflows": []
     },

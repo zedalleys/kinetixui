@@ -24,6 +24,7 @@ on:
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
       - "scripts/web-quality-browser.mjs"
+      - "scripts/blocks-discovery-browser.mjs"
       # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
       - "components.manifest.json"
       - "platform-parity.json"
@@ -47,6 +48,7 @@ on:
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
       - "scripts/web-quality-browser.mjs"
+      - "scripts/blocks-discovery-browser.mjs"
       # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
       - "components.manifest.json"
       - "platform-parity.json"
@@ -142,3 +144,9 @@ jobs:
       # gallery thumbnails that stay decorative and in their frame in LTR and RTL (check:typography covers source).
       - name: Web type floor, contrast, touch targets and thumbnails
         run: pnpm check:web-quality
+
+      # /blocks discovery filters against the built site: direct links, reload, replace-not-push, debounced search,
+      # Back/Forward, unknown values, empty state, keyboard order and focus, and no sideways scroll at 390/768/1280,
+      # 100/200% text, LTR/RTL, light/dark.
+      - name: Blocks discovery filters (URL state, keyboard, layout)
+        run: pnpm check:blocks-discovery
