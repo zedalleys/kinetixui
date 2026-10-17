@@ -184,8 +184,8 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 | DataTable | — | L1 Core primitive | Core | Cross-platform Core | existing | ui:data-table | — | — | TanStack-based table on React plus native ports; the light alternative to DataGrid. Angular planned (data wave). |
 | DataGrid advanced | aggregation, multi-level grouping with totals, spreadsheet export, million-row server model, master/detail | L2 Enterprise | Pro | Pro candidate | Pro candidate | — | DataGrid | 10 | Advanced organisational value (analyst tooling), not difficulty, is why this is a Pro candidate. Keyboard, RTL and accessibility of the base grid stay Core. |
 | QueryBuilder | QueryGroup, QueryRule, QueryFieldSelect, QueryOperatorSelect, QueryValueEditor, QueryPresetSelect | L2 Enterprise | Core | Web-first Enterprise | planned | — | Select, MultiSelect, DatePicker, NumberInput, FilterBar | 3 | A rule tree with a keyboard-operable add/remove/reorder model. The query it produces is data the product executes; the component never runs it. |
-| FilterBar | FilterChip, FilterGroup, FilterPreset, FilterSearch, FilterClear | L2 Enterprise | Core | Web-first Enterprise | partial | block:filter-panel, ui:tag, ui:multi-select | — | 3 | Today a block (removable tags, a price slider, the filters behind them) assembled from Tag and MultiSelect. Promote to a component once two consumers (DataGrid, QueryBuilder) need the same chip contract. |
-| MetricCard | MetricValue, MetricDelta, MetricTrend, MetricGoal, MetricSparkline | L2 Enterprise | Core | Cross-platform Core | partial | ui:metric, block:stat-cards | Sparkline | 3 | Metric already has label, value, trend, change, icon and a chart slot on all five platforms — it IS MetricCard under another name. Missing: progress toward a goal, and a built-in sparkline (bring-your-own today). Extend Metric; do not add MetricCard. |
+| FilterBar | FilterChip, FilterGroup, FilterPreset, FilterSearch, FilterClear | L2 Enterprise | Core | Web-first Enterprise | partial | block:filter-panel, ui:tag, ui:multi-select, block:table-toolbar | — | 3 | Today a block (removable tags, a price slider, the filters behind them) assembled from Tag and MultiSelect. Promote to a component once two consumers (DataGrid, QueryBuilder) need the same chip contract. |
+| MetricCard | MetricValue, MetricDelta, MetricTrend, MetricGoal, MetricSparkline | L2 Enterprise | Core | Cross-platform Core | partial | ui:metric, block:stat-cards, block:dashboard-tabs | Sparkline | 3 | Metric already has label, value, trend, change, icon and a chart slot on all five platforms — it IS MetricCard under another name. Missing: progress toward a goal, and a built-in sparkline (bring-your-own today). Extend Metric; do not add MetricCard. |
 | PivotTable | — | L2 Enterprise | Pro | Pro candidate | Pro candidate | — | DataGrid | 10 | Analyst tooling. Pro candidate. |
 
 ### B. Data visualization
@@ -473,8 +473,8 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 
 | Capability | Parts | Layer | Core/Pro | Platform target | Status | Evidence | Depends on | Phase | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| StatusBanner / InlineStatus | — | L1 Core primitive | Core | Cross-platform Core | existing | ui:banner, ui:inform, ui:alert | — | — | Banner, Inform, Alert. |
-| ProcessingState / PendingState | — | L2 Enterprise | Core | Cross-platform Core | existing | ui:result-state, ui:spinner | — | 1 | ResultState status="pending" for a whole result; Spinner inline. |
+| StatusBanner / InlineStatus | — | L1 Core primitive | Core | Cross-platform Core | existing | ui:banner, ui:inform, ui:alert, block:alert-stack | — | — | Banner, Inform, Alert. |
+| ProcessingState / PendingState | — | L2 Enterprise | Core | Cross-platform Core | existing | ui:result-state, ui:spinner, block:loading-state | — | 1 | ResultState status="pending" for a whole result; Spinner inline. |
 | ApprovalStatus | — | L2 Enterprise | Core | Cross-platform Core | planned | — | Tag | 4 |  |
 | SyncStatus / ConnectionStatus / StaleDataState / OfflineState | — | L2 Enterprise | Core | Cross-platform Core | partial | iot:LastSync, iot:DeviceConnection, iot:ConnectionHealth | — | 3 | The IoT freshness and connectivity contract already exists; lifting a domain-neutral version into Core (with IoT re-using it) is the job — do not fork a second model. |
 | ConflictState / MaintenanceState | — | L2 Enterprise | Core | Cross-platform Core | planned | — | ResultState, Banner | 3 | ResultState and Banner variants with resolution actions. |
@@ -548,6 +548,25 @@ workflow or domain is an entry in `discovery`, validated by the same check.
 - `/use-cases/<domain>`: the reusable domain template (workflows, components available now, blocks, planned
   capabilities, related capabilities). W1 builds Commerce and Travel & booking.
 - Component pages: an "In applications" section (layer, capabilities, domains, workflows, blocks, planned work).
+- `/blocks` (BD-W3a): search plus one filter per dimension (category, capability, business domain, workflow,
+  platform), as native selects with counts that respect the other filters. The URL contract is `?q=&cat=&capability=
+  &domain=&workflow=&platform=` (`apps/web/src/lib/block-filters.ts`): one value per dimension, dimensions combine
+  with AND, search words must all match; an unknown value is no filter and is dropped on the next write; keys the
+  page does not own are kept. Writes use `router.replace`, search is debounced, so Back and Forward move between
+  pages rather than keystrokes. Canonical stays `/blocks`. Platform availability is each block's real source list
+  in `blocks.manifest.json`, never inferred.
+
+**Blocks (BD-W2a).** A block's business context comes only from shipping rows that cite `block:<slug>`. Every
+published block is either cited or listed in `discovery.unclassifiedBlocks` with the reason it has no capability
+(marketing sections, patterns no row describes yet); `check:capabilities` fails on a block in neither place or in
+both, on a workflow with no shipping stage, and on a planned row citing a block. Block categories are a closed list
+in `blocks.manifest.json` `categories`, checked by `check:block-source`. Do not cite a row only because a block
+"could be used" in its domain: a row that is a workflow stage (FormSection) would carry the block into that workflow.
+
+**Not built yet (proposed URLs, from the W2 discovery proposal).** `/capabilities` becomes the "Use cases" hub (main
+nav label to be decided); workflows stay anchors on `/use-cases/<domain>#<workflow>` until a domain has three; more
+domain pages flip `page: true` once a workflow ships there (finance and saas-admin first); Cmd-K gains Blocks and Use
+cases groups fed from `discovery-routes.json` and `lib/blocks.ts`, never from the full index.
 
 **Follow-ups (W2 and dogfooding)**
 

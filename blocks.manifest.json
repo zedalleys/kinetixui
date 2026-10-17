@@ -2,6 +2,15 @@
   "$schema": "https://kinetixui.com/schema/blocks.manifest.json",
   "$description": "Every published Block and the REAL source file behind each platform it claims. Platform names are validated against components.manifest.json -> platformDefinitions; this file deliberately does not redeclare them, so there is still exactly one authoritative platform-definition site. Coverage is explicit: a platform absent from a block's `sources` is not supported, and nothing is ever inferred. Source paths are written out rather than guessed from the slug, because a block's file naming differs per platform and a wrong guess would silently drop a real implementation. scripts/check-block-source.mjs verifies every path exists and carries the extraction markers; scripts/gen-block-examples.mjs turns them into the snippets the website shows.",
   "$blockCatalogue": "A PUBLISHED Block carries every platform in components.manifest.json -> platformDefinitions. A Block is a worked example of KinetixUI composition, so one that exists on two platforms is not a smaller version of the idea — it is a different claim, and a reader who copies the React tab has no way to know the Compose tab was never written. scripts/check-block-source.mjs enforces this: status beta / stable / deprecated all require the full set. The escape hatch is status \"draft\", which may be missing platforms and which the website never publishes — gen-block-examples.mjs leaves drafts out of the generated snippets entirely. That way work in progress can live in the manifest without the catalogue quietly advertising a hole.",
+  "$categories": "The block categories, in the order the /blocks filter offers them. Every block's `category` must be one of these and every category must have a published block; scripts/check-block-source.mjs enforces both, so a typo cannot create a new filter option.",
+  "categories": [
+    "Forms",
+    "Data",
+    "Application",
+    "Commerce",
+    "Feedback",
+    "Marketing"
+  ],
   "blocks": {
     "sign-in": {
       "title": "Sign in",

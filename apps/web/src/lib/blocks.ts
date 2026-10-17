@@ -60,3 +60,6 @@ export const platformsWithBlocks: Platform[] = PLATFORMS.filter((p) => (blockCov
  */
 export const blocksOnEveryPlatform: number = parity.onEveryPlatform;
 export const everyBlockIsFivePlatform: boolean = blockTotal > 0 && blocksOnEveryPlatform === blockTotal;
+
+/** The block categories in the order the /blocks filter offers them. `check:block-source` keeps every block in one. */
+export const BLOCK_CATEGORIES: readonly string[] = manifest.categories;
