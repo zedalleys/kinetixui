@@ -291,6 +291,12 @@ export function consumerFiles({ name = "kinetixui-angular-consumer", angular = "
           "@angular/compiler-cli": angular,
           typescript: "~5.9.0",
         },
+        // vitest 4.1.12 (2026-10-15) peers `@vitest/browser-webdriverio@^4.1.11`, whose 4.1.11 peers vitest
+        // 4.1.11 exactly. `@angular/build` lists vitest as an optional peer, so npm walks that set and its
+        // arborist crashes ("Cannot read properties of null (reading 'edgesOut')") before installing
+        // anything. Holding the optional peer at the last consistent release lets the clean install run; the
+        // consumer never installs vitest. Drop this once a vitest release has a consistent peer set.
+        overrides: { vitest: "4.1.11" },
       },
       null,
       2,
