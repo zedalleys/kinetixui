@@ -220,7 +220,7 @@ One work package per PR. Motion, discovery and native parity never share a PR.
 | 3 | MX1a motion foundation, then MX1 component slices | B | MX1 thread | D1 |
 | 4 | BD-W3b1 Cmd-K, then BD-W3b2 hub | C | use-cases thread | — |
 | 5 | MX0d Chart reduced motion (G3) | B | unassigned | MX1a contract (to reuse its hook / rules) |
-| 6 | Angular `timeline` RTL + large-text evidence (closes 2 of 4 open graduation criteria) | A | unassigned | — |
+| 6 | Angular `timeline` RTL + large-text evidence (closes 3 of 4 open graduation criteria) | A | unassigned | — |
 | 7 | MX3a Menubar exit (G6) + Angular global reduced-motion floor (G5) | B | unassigned | MX1a |
 | 8 | MX2a Progress logical fill (G7), measured in RTL first | B | unassigned | — |
 | 9 | MX2b Slider value text, marks, vertical (React), then native spoken value per platform | B / A | unassigned | #387 (merged) |
@@ -277,7 +277,7 @@ and CTA events are counted; no new event is added without updating the arrival-e
 ## 11. Next executable PR
 
 After this roadmap, the smallest independent slice that no other thread owns is **#6 in §7: Angular `timeline` RTL and
-large-text evidence.** It closes two of the four open Angular graduation criteria with one component, touches neither
+large-text evidence.** It closes three of the four open Angular graduation criteria (RTL parity, large-text parity, and large text from a real browser) with one component, touches neither
 motion files nor discovery files, and is measurable.
 
 Acceptance criteria:
@@ -288,7 +288,7 @@ Acceptance criteria:
    logical geometry (marker and connector on the start side under `dir="rtl"`), not only that the attribute is set.
 3. Large text: add `timeline` to the `largeText` pass of the same script, the browser instrument the graduation
    check requires, and fix any defect it finds in `packages/ui-angular` instead of allowlisting it.
-4. Regenerate `verification.json` with its generator (`check:verification` at a fixed point); never hand-edit it.
-5. The graduation check then reports 22/22 and 27/27 for those rows.
+4. Regenerate `verification.json` with `pnpm gen:verification`, then confirm the fixed point with `pnpm check:verification`; never hand-edit it.
+5. The graduation check then reports 22/22, 27/27 and 27/27 for those three rows, leaving only the planned-entries criterion open.
 6. Negative control: temporarily remove the fix or the new assertion and show the gate failing; restore it.
 7. Angular's `maturity` stays `preview`: 27 catalogue entries are still planned.
