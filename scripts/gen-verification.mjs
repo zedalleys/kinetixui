@@ -440,11 +440,13 @@ function runsInWorkflowStep(script) {
   const dir = `${root}/.github/workflows`;
   if (!existsSync(dir)) return false;
   const pkg = JSON.parse(read("package.json"));
-  const direct = (c) => [`node ${script}`, `node ./${script}`].some((p) => startsCommand(c, p));
+  // the script exactly, optionally pointed at a server with `--base <url>`; any other argument (`--help`) may
+  // change what it does, so it is not a run of it
+  const direct = (c) => [`node ${script}`, `node ./${script}`].some((p) => c === p || new RegExp(`^${escapeRe(p)} --base https?://\\S+$`).test(c));
   // a wrapper counts only when it EXECUTES the script, not when its text merely names it
   const wrappers = Object.entries(pkg.scripts ?? {})
     .filter(([, cmd]) => commandsOf([cmd]).some(direct))
-    .map(([name]) => new RegExp(`^(?:pnpm|npm|yarn)(?:\\s+run)?(?:\\s+-s)?\\s+${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:\\s|$)`));
+    .map(([name]) => new RegExp(`^(?:pnpm|npm|yarn)(?:\\s+run)?(?:\\s+-s)?\\s+${escapeRe(name)}$`));
   return readdirSync(dir)
     .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
     .some((f) =>
@@ -480,7 +482,7 @@ const plainLine = (line) => {
   const l = line.replace(/\s+#.*$/, "").trim();
   return !l.endsWith("\\") && commandsOf([l]).length > 0;
 };
-const startsCommand = (command, prefix) => command === prefix || command.startsWith(`${prefix} `);
+const escapeRe = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
  * Is the `run:` at line `at` inside a step or a job that carries an `if:` or `continue-on-error:`? Read by indentation: the step is the
@@ -567,7 +569,7 @@ function runCommands(yaml) {
 function workflowRuns(workflow, command) {
   const path = `${root}/.github/workflows/${workflow}`;
   if (!existsSync(path)) return false;
-  return commandsOf(runCommands(readFileSync(path, "utf8"))).some((c) => startsCommand(c, command));
+  return commandsOf(runCommands(readFileSync(path, "utf8"))).some((c) => c === command); // exactly: an extra flag (`swift test --help`) can turn it into a no-op
 }
 
 export function blockPassages(text) {

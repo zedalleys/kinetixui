@@ -360,6 +360,7 @@ describe("block evidence: negative controls", () => {
       "|\n          builtin exit 0\n          pnpm build:web", // the same exit, prefixed
       "|\n          X=1 exit 0\n          pnpm build:web", // the same exit, behind an assignment
       "CI=1 pnpm build:web", // not one of the programs a build is read from
+      "pnpm build:web --help", // an extra flag can make it a no-op
       "|\n          set +e\n          pnpm build:web\n          true", // failure no longer stops the step
       "|\n          pnpm build:web \\\n            --dry-run", // a continuation makes it another command
     ]) {
@@ -505,6 +506,10 @@ describe("block evidence: negative controls", () => {
     expect(masked.output).toMatch(/no workflow step/);
     const maskedStep = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { runtimeStep: `node ${RUNTIME_SCRIPT}; true` })}`]);
     expect(maskedStep.ok).toBe(false);
+    const help = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { runtimeStep: `node ${RUNTIME_SCRIPT} --help` })}`]);
+    expect(help.ok).toBe(false);
+    const based = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { runtimeStep: `node ${RUNTIME_SCRIPT} --base http://127.0.0.1:3000` })}`]);
+    expect(based.ok, based.output).toBe(true);
     const otherCommand = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "pnpm check:blocks-runtime-old" })}`]);
     expect(otherCommand.ok).toBe(false);
     expect(otherCommand.output).toMatch(/no workflow step/);
