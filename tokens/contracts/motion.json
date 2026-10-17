@@ -173,14 +173,25 @@
       "consumers": [],
       "deviations": []
     },
-    "press-feedback": {
+    "selection-state": {
       "status": "proposed",
       "duration": ["fast"],
+      "easing": ["standard"],
+      "properties": ["background-color", "color", "border-color", "opacity"],
+      "reducedForm": "shorten",
+      "evidence": [],
+      "note": "Colour and surface change when a control becomes selected or unselected: Toggle, ToggleGroup items, Checkbox and Radio indicators. Owner decision 2026-10-17: fast (200ms). The semantic state changes at once; only the paint interpolates. Switch keeps selection-control (instant) unless a defect is shown. Adopted component by component from MX1b-1.",
+      "consumers": [],
+      "deviations": []
+    },
+    "press-feedback": {
+      "status": "proposed",
+      "duration": ["instant"],
       "easing": ["standard"],
       "properties": ["background-color", "opacity", "box-shadow"],
       "reducedForm": "shorten",
       "evidence": [],
-      "note": "Hover/press colour on buttons, toggles and rows. Today most of these React components name no duration and run on Tailwind's untokenised 150ms default (see the debt register in motion-contract.test.ts). Decided by the owner on 2026-10-17: they move to fast (200ms). The move itself is MX1b, so the role stays proposed until a component adopts it.",
+      "note": "Immediate hover and press colour on buttons, toggles and rows. Today most of these React components name no duration and run on Tailwind's untokenised 150ms default (see the debt register in motion-contract.test.ts). Owner decision 2026-10-17: press feedback is instant (100ms) where it applies, and a change of selected state uses selection-state (fast). There is no global retiming; each component moves in its own slice.",
       "consumers": [],
       "deviations": []
     },

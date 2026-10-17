@@ -78,7 +78,7 @@ Each role names one reduced form:
 
 | Form | Meaning | Used by |
 | --- | --- | --- |
-| `shorten` | Runs at ~0ms, same end state. Only the interpolation goes. | selection control, disclosure, overlay, spatial, press feedback |
+| `shorten` | Runs at ~0ms, same end state. Only the interpolation goes. | selection control, selection state, disclosure, overlay, spatial, press feedback |
 | `crossfade` | Travel replaced by opacity to the same end state. | SwiftUI slides (`KinetixSlideMotion`) |
 | `rest` | A loop stops at a static state that keeps its role and name. | Spinner, Skeleton, Marquee, typing indicator |
 | `remove-travel` | The element appears at its destination; colour may still shorten. | selection indicator (proposed) |
@@ -120,7 +120,7 @@ a disclosure). Avoid animating `box-shadow` on large surfaces and filters on scr
 - Motion that runs on its own with no trigger, or decorates nothing.
 - Delaying navigation, focus or semantic state until an animation ends.
 - A bare `transition-colors` with no tier: it runs on Tailwind's untokenised 150ms. Existing ones are frozen
-  in a debt register in `apps/web/src/lib/motion-contract.test.ts` until each moves to the press-feedback tier (fast, decided 2026-10-17);
+  in a debt register in `apps/web/src/lib/motion-contract.test.ts` until each moves to its role: press feedback on instant, a change of selected state on fast (both decided 2026-10-17);
   new ones fail.
 - Slowing a loop under reduced motion (`motion-reduce:animate-[spin_3s…]`): the floor freezes it instead.
 - Scale effects that shrink or clip a focus ring.
