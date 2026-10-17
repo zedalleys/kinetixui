@@ -142,21 +142,23 @@ flowchart LR
 
 Platforms: R React · A Angular · S SwiftUI · C Compose · F Flutter. **src** = source exists; **RM** = a
 `reducedMotion` evidence marker in `verification.json`; **—** = not in the catalogue for that platform. Nothing here
-claims runtime parity; see §5.
+claims runtime parity; see §5. **Gate** is what runs today: `check:motion` measures midpoints only for the components
+in `scripts/motion-states.mjs` (Accordion, Collapsible, Switch, Tabs), in LTR; the `*-visual` gates check rendered
+states (rest, hover, selected, focus), not motion; `motion-contract` is a class-string test, not a render.
 
 | Wave | Component | R | A | S | C | F | Trigger → property | Planned work | Gate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| MX1 | Tabs | src | src | src | src | src | selection → indicator inline offset + size | React done (#388); promote the contract's `selection-indicator` role (still `proposed`, no consumer, in `tokens/contracts/motion.json`) to proven with the Tabs consumer and its midpoint evidence (MX1 thread); Angular / native after | `check:motion` midpoint, `check:tabs-indicator`, `selection-visual` |
+| MX1 | Tabs | src | src | src | src | src | selection → indicator inline offset + size | React done (#388); promote the contract's `selection-indicator` role (still `proposed`, no consumer, in `tokens/contracts/motion.json`) to proven with the Tabs consumer and its midpoint evidence (MX1 thread); Angular / native after | `check:motion` midpoint, `check:tabs-indicator` |
 | MX1 | SegmentedControl | src | src | src | src | src | selection → fill | done (#388, #390) | `selection-visual`, forced colours |
-| MX1 | Switch | RM | RM | RM | RM | RM | toggle → thumb inline offset, track colour | verify RTL thumb direction everywhere | `check:motion`, `check:native-motion` |
+| MX1 | Switch | RM | RM | RM | RM | RM | toggle → thumb inline offset, track colour | add rendered RTL thumb-travel assertions: an RTL case in `motion-states.mjs` for web, native UI tests for SwiftUI and Compose (Flutter's suite already asserts RTL) | `check:motion` (LTR only), `check:native-motion` (reduced-motion wiring, not direction) |
 | MX1 | Checkbox / RadioGroup | src | src | src | src | src | check → mark opacity / scale | decide whether any motion is warranted | `selection-visual` |
-| MX1 | Toggle / ToggleGroup | src | src | src | src | src | press → colour | default-tier fix (G1) | motion-contract |
-| MX1 | NavigationMenu | src | RM | — | — | — | open → content enter / exit | web only by design | `check:motion` |
+| MX1 | Toggle / ToggleGroup | src | src | src | src | src | press → colour | default-tier fix (G1) | `motion-contract` (class strings) |
+| MX1 | NavigationMenu | src | RM | — | — | — | open → content enter / exit | web only by design; add it to `motion-states.mjs` so `check:motion` measures it | none yet |
 | MX1 | TabBar | src | src | src | src | src | selection → active indicator | follows Tabs contract | `navigation-visual` |
 | MX2 | Slider (incl. range) | src | src | src | src | src | drag / key → thumb, range | value text, marks, vertical; native spoken value | a11y-browser, native tests |
 | MX2 | Progress / CircularProgress | src | src | src | src | src | value → fill | logical fill (G7, measure first); native ledger gap | new RTL probe |
 | MX2 | Tick / ruler picker | — | — | — | — | — | — | composition recipe on Slider, not a component | — |
-| MX3 | Dialog, AlertDialog, Sheet, Drawer, Popover, Tooltip, HoverCard, Menu family | src | RM | src | src | src | open / close → opacity, translate, scale | Menubar exit (G6); Angular global floor (G5); Compose and Flutter overlay enter / exit (none today, §5) | `overlay-visual`, `menu-visual`, `check:motion` |
+| MX3 | Dialog, AlertDialog, Sheet, Drawer, Popover, Tooltip, HoverCard, Menu family | src | RM | src | src | src | open / close → opacity, translate, scale | Menubar exit (G6); Angular global floor (G5); Compose and Flutter overlay enter / exit (none today, §5) | state only: `overlay-visual`, `menu-visual`; no motion gate yet (add overlay cases to `motion-states.mjs`) |
 | MX3 | Accordion / Collapsible | RM | RM | RM | RM | RM | expand → height | already gated; keep | `check:motion` |
 | MX4 | Chart | src | — | src | src | src | mount → series draw | reduced motion for Recharts (G3); native charts render statically, so they need none unless they gain motion | new browser assertion |
 | MX4 | Skeleton / Spinner | src | src | RM | RM | RM | loop | React gated by `check:loop-motion` (Storybook Spinner and Skeleton, React only); Angular's spinner slows instead of stopping (§5) and has no runtime loop gate: add one with the G5 decision | `check:loop-motion` (React); Angular: none |
@@ -215,7 +217,7 @@ One work package per PR. Motion, discovery and native parity never share a PR.
 | 2 | #388 finish, #390 | A / B | restyle thread | done (merged) |
 | 3 | MX1a motion foundation (#393, merged), then MX1b-1 React selection motion | B | MX1 thread | — |
 | 4 | BD-W3b2 Use cases hub (W3b1 merged as #394; W3b2a is #395) | C | use-cases thread | — |
-| 5 | MX4a Chart reduced motion (G3) | B | unassigned | — (reuses the #393 contract's `loop` and reduced-motion rules) |
+| 5 | MX4a Chart reduced motion (G3) | B | unassigned | — (a chart draw is a finite entry, not a `loop`: add a finite entry role to the #393 contract or apply its general reduced-motion shortening rule) |
 | 6 | Angular `timeline` RTL + large-text evidence (closes 3 of 6 open graduation criteria) | A | unassigned | — |
 | 7 | MX3a Menubar exit (G6) + Angular global reduced-motion floor (G5) | B | unassigned | — (#393 merged) |
 | 8 | MX2a Progress logical fill (G7), measured in RTL first | B | unassigned | — |
