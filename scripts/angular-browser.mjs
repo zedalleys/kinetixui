@@ -188,10 +188,11 @@ const AXE_BASELINE = {
  * component with no example earns nothing here, and the run reconciles the file against the manifest and
  * against what actually rendered before it claims anything.
  *
- * Two behaviour checks only a browser can make ride along, as React's pass does: under
- * `prefers-reduced-motion` no example may leave a looping animation faster than 3s running, and under
+ * Three behaviour checks only a browser can make ride along, as React's pass does: under
+ * `prefers-reduced-motion` no example may leave a looping animation faster than 3s running; under
  * `forced-colors: active` every focus stop must keep a visible indicator (box-shadow rings are removed in
- * that mode; an outline survives).
+ * that mode; an outline survives), and a chosen segment must still stand apart from its unchosen and
+ * disabled neighbours, on pixels, in both palettes and both directions.
  * ════════════════════════════════════════════════════════════════════════════ */
 if (runs("accessibility")) {
   const examplesCover = coveredSlugs(readFileSync(`${root}/packages/ui-angular/src/usage/examples.ts`, "utf8"), "Angular");
@@ -303,6 +304,34 @@ if (runs("accessibility")) {
       await page.close();
     }
     await context.close();
+  }
+
+  // Forced colours: a chosen segment still reads as chosen. Its everyday cue is a raised surface and a shadow,
+  // and a forced palette paints every label's background the same Canvas and drops the shadow, which left the
+  // chosen and unchosen segments identical (1.00:1). Read on pixels, in both palettes and both directions,
+  // with the chosen label measured against its unchosen and disabled neighbours and its own text.
+  {
+    const shot = framer({ dpr: 1, pad: 4 });
+    for (const theme of ["light", "dark"]) {
+      const context = await browser.newContext({ viewport: { width: 1024, height: 900 }, colorScheme: theme, forcedColors: "active", reducedMotion: "reduce" });
+      for (const dir of ["ltr", "rtl"]) {
+        const page = await open(context, "selection", { theme, dir });
+        const track = page.locator('kx-segmented-control[data-kx-case="page"]');
+        const label = (state) => track.locator(`.kx-segmented__radio${state} + .kx-segmented__label`).first();
+        const [box, on, off, disabled] = await Promise.all([track.boundingBox(), ...[":checked", ":not(:checked):enabled", ":disabled"].map((st) => label(st).boundingBox())]);
+        const f = await shot(page, box);
+        // Inside the label's padding, clear of its text and of the 2px focus outline drawn outside it.
+        const fill = (b) => f.at(b.x + 3, b.y + 3);
+        const name = `forced colours ${theme} ${dir} segment`;
+        const ink = await label(":checked").evaluate((el) => getComputedStyle(el).color);
+        const text = ink.match(/\d+/g).slice(0, 3).map(Number);
+        check(contrast(fill(on), fill(off)) >= 3, `${name}: chosen stands apart from unchosen`, `${contrast(fill(on), fill(off)).toFixed(2)}:1`);
+        check(contrast(fill(on), fill(disabled)) >= 3, `${name}: chosen stands apart from disabled`, `${contrast(fill(on), fill(disabled)).toFixed(2)}:1`);
+        check(contrast(fill(on), text) >= 4.5, `${name}: chosen text is legible on its mark`, `${contrast(fill(on), text).toFixed(2)}:1`);
+        await page.close();
+      }
+      await context.close();
+    }
   }
 }
 

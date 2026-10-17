@@ -3587,4 +3587,12 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
   .kx-carousel__control:focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
   .kx-scroll-area__viewport:focus-visible,
   .kx-carousel__item:focus-visible { outline-color: Highlight; }
+  /* the chosen segment is a raised surface and a shadow, both flattened to the same Canvas as its neighbours
+     (check:angular-browser, 1.00:1): it keeps the system's own selected pair, which the mode guarantees to
+     contrast with Canvas and with each other. The focus outline above stays outside it, in Highlight. */
+  .kx-segmented__radio:checked + .kx-segmented__label {
+    forced-color-adjust: none;
+    background-color: SelectedItem;
+    color: SelectedItemText;
+  }
 }
