@@ -34,10 +34,7 @@ const Slider = React.forwardRef<
     ref,
   ) => {
     // Radix fixes the thumb count from the first render's values (uncontrolled) or the current ones (controlled).
-    const count = Math.max(
-      1,
-      (props.value ?? props.defaultValue ?? [props.min ?? 0]).length,
-    );
+    const count = Math.max(1, (props.value ?? props.defaultValue ?? [props.min ?? 0]).length);
     const range = count > 1;
     return (
       <SliderPrimitive.Root
