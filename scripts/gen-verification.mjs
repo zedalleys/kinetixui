@@ -394,7 +394,7 @@ for (const [slug, per] of Object.entries(evidence)) {
  * Where a test ran is a fact about the file, not a claim in it, and it decides what the evidence is worth.
  * Only an observed runtime — a real browser here; a simulator, emulator or device for native — can make a
  * block Runtime verified. Headless runs (jsdom, Robolectric, flutter_test) are recorded with their
- * environment and keep the block at Build verified: they prove the logic and the semantics tree, not what a
+ * environment and never lift the block above Build verified: they prove the logic and the semantics tree, not what a
  * person on a device meets. No native block has simulator, emulator or device evidence today.
  */
 const BLOCK_KINDS = ["interaction", "accessibility"];
@@ -416,7 +416,10 @@ const BLOCK_TEST_SOURCES = {
 /** The CI step that compiles a platform's block files. `under` is the directory that step compiles. */
 const BLOCK_BUILD = {
   React: { under: "apps/web/src/", workflow: "ci.yml", run: "pnpm build:web", what: "Next.js production build of apps/web" },
-  Angular: { under: "packages/ui-angular/src/", workflow: "ci.yml", run: "pnpm build:angular", what: "ng-packagr AOT build, strict templates" },
+  // No Angular entry, deliberately. `pnpm build:angular` (ng-packagr) compiles from src/public-api.ts only, and
+  // nothing there imports src/examples/blocks: a type error planted in a block still builds. The block spec runs
+  // them through Vitest, which transpiles without type-checking. Until a CI step compiles the blocks themselves,
+  // Angular blocks are Source present. (A strict ngc pass over them today fails on create-account.ts.)
   SwiftUI: { under: "packages/ui-swiftui/", workflow: "native-swiftui.yml", run: "swift test", what: "swift test compiles the test target" },
   Compose: { under: "packages/ui-compose/", workflow: "native-compose.yml", run: "./gradlew :ui:testDebugUnitTest", what: "Gradle compiles the unit-test source set" },
   Flutter: { under: "packages/ui-flutter/", workflow: "native-flutter.yml", run: "flutter test", what: "flutter test compiles the test directory" },
@@ -489,7 +492,8 @@ export function blockPassages(text) {
     if (c) current.covers = c[1];
     else if (current) current.body.push(line);
   });
-  if (current) out.push({ ...current, end: lines.length });
+  // a file ending in a newline splits into a last empty string, which is not a line of the file
+  if (current) out.push({ ...current, end: lines.at(-1) === "" ? lines.length - 1 : lines.length });
   return out;
 }
 

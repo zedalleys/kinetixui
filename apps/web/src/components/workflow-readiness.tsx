@@ -66,7 +66,7 @@ export function WorkflowReadiness({ workflow }: { workflow: Workflow }) {
         Over the {rows[0]!.total} components and blocks the shipping stages use. Each evidence column is the weakest part of
         that kind on that platform, never an average, and a part missing there counts as not implemented. A block is
         runtime verified only when its interaction and accessibility were observed in a real browser or on a device;
-        headless tests are listed with it and keep it at build verified. A platform missing any part cannot build the
+        headless tests are listed with it and keep it below runtime verified. A platform missing any part cannot build the
         whole workflow.
       </p>
       {/* a phone cannot fit four columns at 200% text: the table scrolls in its own region, the page does not */}

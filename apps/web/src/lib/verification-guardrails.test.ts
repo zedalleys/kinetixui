@@ -330,10 +330,21 @@ describe("block evidence: negative controls", () => {
   });
 
   it("3. gives no build record when the CI step that compiles the file is gone", () => {
-    const dir = blockFixture({}, { drop: ["build:angular"] });
+    const built = blockFixture();
+    expect(run(script, [`--root=${built}`]).ok).toBe(true);
+    expect(blocksOut(built)["sign-in"]!.platforms.React!.level).toBe("build");
+    const dir = blockFixture({}, { drop: ["build:web"] });
+    expect(run(script, [`--root=${dir}`]).ok).toBe(true);
+    expect(blocksOut(dir)["sign-in"]!.platforms.React!.level).toBe("source");
+    expect(blocksOut(dir)["sign-in"]!.platforms.React!.limitations).toContain("no CI step compiles this file");
+  });
+
+  it("3b. does not credit the Angular package build to blocks it never compiles", () => {
+    // ng-packagr builds from public-api.ts, which imports no block: the step running is not evidence for them
+    const dir = blockFixture();
     expect(run(script, [`--root=${dir}`]).ok).toBe(true);
     expect(blocksOut(dir)["sign-in"]!.platforms.Angular!.level).toBe("source");
-    expect(blocksOut(dir)["sign-in"]!.platforms.React!.level).toBe("build");
+    expect(blocksOut(dir)["sign-in"]!.platforms.Angular!.build).toBeUndefined();
   });
 
   it("4. is not runtime verified without observed interaction", () => {
@@ -356,17 +367,20 @@ describe("block evidence: negative controls", () => {
     const dir = blockFixture({ ...chromium(BOTH_OBSERVED), "apps/web/src/x.test.tsx": `// kx-verify-block: interaction, accessibility\n<SignInBlock />\n` });
     expect(run(script, [`--root=${dir}`]).ok).toBe(true);
     const angular = blocksOut(dir)["sign-in"]!.platforms.Angular!;
-    expect(angular.level).toBe("build");
+    expect(angular.level).toBe("source");
     expect(angular.interaction).toBeUndefined();
     expect(angular.accessibility).toBeUndefined();
   });
 
   it("6b. keeps headless evidence below runtime even when it covers both kinds", () => {
-    const dir = blockFixture({ "packages/ui-angular/src/x.spec.ts": `// kx-verify-block: interaction, accessibility\nmount(SignInBlock);\n` });
+    // React, which has a build record, so the only thing between this block and runtime is where the test ran
+    const dir = blockFixture({ "apps/web/src/x.test.tsx": `// kx-verify-block: interaction, accessibility\n<SignInBlock />\n` });
     expect(run(script, [`--root=${dir}`]).ok).toBe(true);
-    const angular = blocksOut(dir)["sign-in"]!.platforms.Angular!;
-    expect(angular.interaction).toEqual([{ ref: "packages/ui-angular/src/x.spec.ts:1-3", environment: "jsdom" }]);
-    expect(angular.level).toBe("build");
+    const react = blocksOut(dir)["sign-in"]!.platforms.React!;
+    expect(react.interaction).toEqual([{ ref: "apps/web/src/x.test.tsx:1-2", environment: "jsdom" }]);
+    expect(react.accessibility).toEqual([{ ref: "apps/web/src/x.test.tsx:1-2", environment: "jsdom" }]);
+    expect(react.build).toBeDefined();
+    expect(react.level).toBe("build");
   });
 
   it("7. keeps component evidence and block evidence apart, in both directions", () => {
@@ -375,9 +389,13 @@ describe("block evidence: negative controls", () => {
       "packages/ui/src/x.test.tsx": `// kx-verify: interaction\n<Button /><SignInBlock />\n`,
       // a block test that happens to render Button: evidence for the block, none for Button
       "packages/ui-angular/src/y.spec.ts": `// kx-verify-block: interaction\nmount(SignInBlock); KxButton;\n`,
+      // the one tree both scanners read: a component marker in an Angular spec that mounts the block
+      "packages/ui-angular/src/z.spec.ts": `// kx-verify: accessibility\nmount(SignInBlock); KxButton;\n`,
     });
     expect(run(script, [`--root=${dir}`]).ok).toBe(true);
     expect(blocksOut(dir)["sign-in"]!.platforms.React!.interaction).toBeUndefined();
+    expect(blocksOut(dir)["sign-in"]!.platforms.Angular!.accessibility).toBeUndefined();
+    expect(blocksOut(dir)["sign-in"]!.platforms.Angular!.interaction).toEqual([{ ref: "packages/ui-angular/src/y.spec.ts:1-2", environment: "jsdom" }]);
     expect(generated(dir).components.button?.Angular?.interaction).toBeUndefined();
     expect(generated(dir).components.button?.React?.interaction).toBeDefined();
   });

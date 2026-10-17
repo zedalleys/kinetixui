@@ -28,7 +28,7 @@ import { workflowParts, type Workflow } from "./business-discovery";
  *   runtime           a test records interaction AND accessibility for this specific part on this platform.
  *                     For a block, both must have been OBSERVED: in a real browser for web, on a simulator,
  *                     emulator or device for native. Headless runs (jsdom, Robolectric, flutter_test) are
- *                     recorded and shown, and keep a block at build.
+ *                     recorded and shown, and never lift a block above build.
  *
  * A package build is not runtime evidence, and source inspection is never build evidence.
  */

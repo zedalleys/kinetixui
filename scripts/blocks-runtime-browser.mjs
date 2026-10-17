@@ -16,8 +16,8 @@
  * environment (Chromium) is a fact about this file, recorded by the generator, not claimed here.
  *
  * Only what a passage asserts counts. The accessibility pass runs axe over each block's own preview in light
- * and dark, left-to-right and right-to-left. The interaction passes drive one block each, by keyboard and by
- * pointer, and assert what changed. A block with no interaction passage here stays Build verified on React.
+ * and dark, left-to-right and right-to-left. The interaction passes drive one block each and assert what changed:
+ * order summary by keyboard and by pointer, receipt by keyboard. A block with no interaction passage here stays Build verified on React.
  */
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";

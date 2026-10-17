@@ -168,7 +168,7 @@ jobs:
         run: pnpm check:blocks-discovery
 
       # The React blocks as a reader meets them: axe over every block preview in light/dark and LTR/RTL, and the
-      # interactive blocks a published workflow uses (order summary, receipt) driven by keyboard and pointer.
+      # interactive blocks a published workflow uses driven by keyboard (order summary also by pointer).
       # This is the Chromium evidence gen-verification.mjs records for blocks (kx-verify-block passages).
       - name: Blocks runtime (axe per block, order summary and receipt interaction)
         run: pnpm check:blocks-runtime

@@ -120,11 +120,11 @@ describe("evidence levels: negative controls", () => {
 
   it("keeps the component floor apart from the block floor, so a weaker block does not hide component evidence", () => {
     const w = synthetic([{ title: "A", rows: [], status: "existing" }]);
-    // receipt on Angular has headless tests only, so it is build; number-input there is runtime verified
+    // receipt on Angular has its source but no CI step that compiles it; number-input there is runtime verified
     const r = readinessFor(w, "Angular", { components: ["number-input"], blocks: ["receipt"], iot: 0 });
     expect(r.weakestBlock).toBe(expectedBlock(RAW_BLOCKS.receipt!.platforms.Angular));
     expect(r.weakestComponent).toBe("runtime");
-    expect(r.weakestBlock).toBe("build");
+    expect(r.weakestBlock).toBe("source");
     expect(r.weakestImplemented).toBe(weakest([r.weakestBlock!, r.weakestComponent!])); // the overall floor counts both
   });
 
