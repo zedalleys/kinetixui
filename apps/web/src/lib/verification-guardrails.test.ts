@@ -304,7 +304,7 @@ function blockFixture(
   });
 }
 
-type BlockOut = Record<string, { platforms: Record<string, { level: string; interaction?: unknown[]; accessibility?: unknown[] }> }>;
+type BlockOut = Record<string, { platforms: Record<string, { level: string; build?: unknown[]; interaction?: unknown[]; accessibility?: unknown[]; limitations?: string[] }> }>;
 const blocksOut = (dir: string) => (JSON.parse(readFileSync(join(dir, "verification.json"), "utf8")) as { blocks: BlockOut }).blocks;
 
 const chromium = (body: string) => ({ [RUNTIME_SCRIPT]: body });
