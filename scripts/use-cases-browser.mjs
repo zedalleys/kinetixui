@@ -210,12 +210,13 @@ const inView = (page, id) =>
           a.blur();
           return rest === focused;
         })
-        .map((a) => a.getAttribute("href"));
+        .map((a) => as.indexOf(a));
     });
-  // `focus()` from script does not always count as keyboard focus; check the stragglers by tabbing to them
+  // `focus()` from script does not always count as keyboard focus; check every straggler by tabbing to it
   const stragglers = [];
-  for (const href of [...new Set(unindicated)].slice(0, 20)) {
-    const link = main(page).locator(`a[href="${href}"]`).first();
+  const links = main(page).locator("a[href]");
+  for (const i of unindicated) {
+    const link = links.nth(i);
     await link.focus();
     await page.keyboard.press("Shift+Tab");
     await page.keyboard.press("Tab");
@@ -223,7 +224,7 @@ const inView = (page, id) =>
       const s = getComputedStyle(a);
       return document.activeElement === a && s.outlineStyle === "none" && s.boxShadow === "none";
     });
-    if (same) stragglers.push(href);
+    if (same) stragglers.push(await link.getAttribute("href"));
   }
   if (stragglers.length) fail(`keyboard: no focus indicator on ${stragglers.join(", ")}`);
   ok("keyboard: the on-page navigation is among the first stops in the page, Enter moves to its section, every link shows focus");
