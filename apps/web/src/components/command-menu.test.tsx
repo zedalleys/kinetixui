@@ -316,6 +316,24 @@ describe("CommandMenu: blocks and use cases (BD-W3b1)", () => {
     expect(titles(d)).toContain("Button");
   });
 
+  it("tries again on the next open after an error response", async () => {
+    let up = false;
+    const fetchMock = vi.fn(async () => (up ? Response.json(PROJECTION) : new Response("", { status: 503 })));
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<CommandMenu />);
+    await user.click(trigger());
+    let d = await dialog();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(within(d).queryByRole("group", { name: "Blocks" })).toBeNull();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    up = true; // the endpoint recovers; the failed response was not cached
+    await user.click(trigger());
+    d = await dialog();
+    expect(await within(d).findByRole("group", { name: "Blocks" })).toBeInTheDocument();
+  });
+
   it("keeps working when the projection cannot be loaded", async () => {
     const user = userEvent.setup();
     render(<CommandMenu />);

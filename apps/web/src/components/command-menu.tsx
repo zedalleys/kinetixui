@@ -51,9 +51,12 @@ function Key(props: React.ComponentProps<typeof Kbd>) {
 let projection: Promise<SearchProjection | null> | null = null;
 function loadProjection(): Promise<SearchProjection | null> {
   projection ??= fetch("/search-index.json")
-    .then((r) => (r.ok ? (r.json() as Promise<SearchProjection>) : null))
+    .then((r) => {
+      if (!r.ok) throw new Error(`search-index.json: ${r.status}`);
+      return r.json() as Promise<SearchProjection>;
+    })
     .catch(() => {
-      projection = null; // let the next open try again
+      projection = null; // a failed request or an error status: let the next open try again
       return null;
     });
   return projection;
