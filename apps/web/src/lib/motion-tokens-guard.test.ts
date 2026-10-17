@@ -89,6 +89,14 @@ describe("check:motion-tokens", () => {
     expect(out).toMatch(/toggle\.tsx: duration-normal is not a motion tier/);
   });
 
+  it("catches a Tailwind easing utility that does not exist", () => {
+    const { code, out } = run(
+      mutate("packages/ui/src/components/switch.tsx", "duration-instant ease-standard", "duration-instant ease-smooth"),
+    );
+    expect(code).toBe(1);
+    expect(out).toMatch(/switch\.tsx: ease-smooth is not a motion easing/);
+  });
+
   it("catches a native symbol that is not a token", () => {
     const { code, out } = run(
       mutate("packages/ui-flutter/lib/src/kinetix_switch_motion.dart", "KinetixDuration.instant", "KinetixDuration.quick"),
