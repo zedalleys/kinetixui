@@ -286,7 +286,7 @@ describe("transitions on the untokenised default are a closed register", () => {
 });
 
 describe("components name their motion", () => {
-  const TOKEN_DURATION = /duration-(instant|fast|base|slow|slower)/;
+  const TIERS = ["instant", "fast", "base", "slow", "slower"];
 
   /**
    * Per class string, not per file. A file-wide check passes as soon as one element in it is
@@ -294,6 +294,31 @@ describe("components name their motion", () => {
    * duration two lines below — the surface most likely to be missed is the one hiding behind a
    * sibling that is already right.
    */
+  /**
+   * Each `animate-in`/`animate-out` runs under its own variant prefix (`data-[state=open]:`,
+   * `data-[motion^=from-]:`, or none), and only a duration under the same prefix, or an unscoped one,
+   * applies to it. Compared as literal strings: prefixes contain regex characters such as `^`.
+   */
+  function untimedAnimations(literal: string): string[] {
+    const toks = literal.replace(/^"|"$/g, "").split(/\s+/);
+    const tiered = (prefix: string) => TIERS.some((tier) => toks.includes(`${prefix}duration-${tier}`));
+    return toks.filter((tok) => {
+      const m = /^(.*?)animate-(?:in|out)$/.exec(tok);
+      return m !== null && !tiered("") && !tiered(m[1]);
+    });
+  }
+
+  it("times each animation state by its own variant, not by a sibling state's duration", () => {
+    expect(untimedAnimations('"data-[state=open]:animate-in data-[state=open]:duration-fast"')).toEqual([]);
+    expect(untimedAnimations('"animate-in animate-out duration-fast"')).toEqual([]);
+    expect(
+      untimedAnimations('"data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:duration-fast"'),
+    ).toEqual(["data-[state=closed]:animate-out"]);
+    expect(
+      untimedAnimations('"data-[motion^=from-]:animate-in data-[motion^=from-]:duration-fast"'),
+    ).toEqual([]);
+  });
+
   it("gives every animated surface a token duration rather than the plugin default", () => {
     let checked = 0;
     for (const [file, src] of components) {
@@ -301,17 +326,26 @@ describe("components name their motion", () => {
         if (!/animate-in|animate-out/.test(literal)) continue;
         checked++;
         expect(
-          TOKEN_DURATION.test(literal),
-          `${file} animates on an untokenised default duration: ${literal.slice(0, 120)}…`,
-        ).toBe(true);
+          untimedAnimations(literal),
+          `${file} animates a state on an untokenised default duration: ${literal.slice(0, 120)}…`,
+        ).toEqual([]);
       }
     }
     expect(checked, "no animated class string found — the check is not looking at anything").toBeGreaterThan(0);
   });
 
-  it("uses no raw numeric duration utilities, which bypass the token contract", () => {
+  const RAW_DURATION = /duration-(?:\d+|\[[^\]]*\])/g;
+
+  it("recognises numeric and arbitrary duration utilities as raw", () => {
+    expect("duration-150 hover:duration-[999ms] duration-fast".match(RAW_DURATION)).toEqual([
+      "duration-150",
+      "duration-[999ms]",
+    ]);
+  });
+
+  it("uses no raw numeric or arbitrary duration utilities, which bypass the token contract", () => {
     for (const [file, src] of components) {
-      const raw = src.match(/duration-\d+/g);
+      const raw = src.match(RAW_DURATION);
       expect(raw, `${file} hardcodes ${raw?.join(", ")} instead of a motion token`).toBeNull();
     }
   });
