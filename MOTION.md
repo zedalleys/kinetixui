@@ -122,6 +122,9 @@ a disclosure). Avoid animating `box-shadow` on large surfaces and filters on scr
 - A bare `transition-colors` with no tier: it runs on Tailwind's untokenised 150ms. Existing ones are frozen
   in a debt register in `apps/web/src/lib/motion-contract.test.ts` until each moves to its role: press feedback on instant, a change of selected state on fast (both decided 2026-10-17);
   new ones fail.
+- Hover and selection on the same property. A transition is timed by the property that changes, not by
+  what changed it, so `hover:bg-*` beside a selected `bg-*` runs hover on selection's tier. Put hover and
+  press on a state layer (Toggle uses an inset `box-shadow`) and give each property its own tier.
 - Slowing a loop under reduced motion (`motion-reduce:animate-[spin_3s…]`): the floor freezes it instead.
 - Scale effects that shrink or clip a focus ring.
 - Sliding indicators where the platform's native control does not slide.
@@ -137,7 +140,8 @@ Different claims need different evidence; do not collapse them.
 | Values agree across platforms | `check:motion-tokens` (source shape, web CSS and six native files) plus CI's generated-files fixed point |
 | A component uses its role's pairing | `check:motion-tokens` consumer check |
 | No untokenised timing is added | `motion-contract.test.ts` |
-| Motion is perceptible and reaches its end state; reduced motion removes it | `check:motion` (rendered midpoint and duration in Chromium) |
+| Motion is perceptible and reaches its end state; reduced motion removes it | `check:motion` (rendered midpoint and duration in Chromium; a state may also pin its property's own tier) |
+| Toggle and ToggleGroup: layer on instant, hover that leaves selection alone and does not stick on touch, rapid input, forced colours, RTL, 320–1280px at 100/200% text | `check:toggle-motion` |
 | Loops rest under reduced motion | `check:loop-motion`, `check:registry-motion` |
 | Native components honour the reduced-motion setting | `check:native-motion` (source bookkeeping) and native tests in `native-*.yml` |
 
@@ -148,6 +152,21 @@ behaviour should add a rendered check, and a negative control that shows the che
 ## Component motion specs
 
 Every component motion change states: trigger · property · duration tier · easing · reduced form ·
-interruption · final state · focus and screen-reader behaviour · RTL. The selection and navigation specs,
-the parity matrix and the slice plan for MX1 (selection primitives, navigation motion, platform parity) live
-in the MX1 plan, not here, until they are implemented.
+interruption · final state · focus and screen-reader behaviour · RTL. Specs land here as each is
+implemented; the rest of the MX1 plan (navigation motion, platform parity) stays in the plan until then.
+
+### Toggle and ToggleGroup (React, MX1b-1a)
+
+| | Selection | Hover and press |
+| --- | --- | --- |
+| Trigger | `data-state` / `aria-pressed` (`aria-checked` in a single group) changes | pointer over (only where `(hover: hover)`), `:active` |
+| Property | `background-color`, `color`, `border-color` | inset `box-shadow` state layer, `foreground` at 8% / 14% |
+| Tier · easing | `fast` 200ms · `standard` (role `selection-state`) | `instant` 100ms · `standard` (role `press-feedback`) |
+| Reduced form | shorten (preset floor; `motion-reduce:transition-none` for registry installs) | shorten |
+| Interruption | a new state retargets from the current colour; the last input wins | follows the pointer |
+| Final state | the state's colour; semantics change at once, before any paint | layer gone when the pointer leaves or the finger lifts |
+| Focus / SR | focus ring unchanged; `aria-pressed` / `aria-checked` never wait for paint | none |
+| Forced colours | the chosen item takes `Highlight` / `HighlightText`; focus stays an outline | the system replaces the layer |
+| RTL | colour is direction-free; arrow keys follow reading order through `KinetixDirectionProvider` or `dir` | — |
+
+ToggleGroup items wrap rather than overflow, so a labelled group reflows at 320px with 200% text.

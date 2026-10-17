@@ -101,7 +101,7 @@ describe("check:motion-tokens", () => {
 
   it("catches a Tailwind tier utility that does not exist", () => {
     const { code, out } = run(
-      mutate("packages/ui/src/components/toggle.tsx", "transition-colors", "transition-colors duration-normal"),
+      mutate("packages/ui/src/components/toggle.tsx", "motion-reduce:transition-none", "motion-reduce:transition-none duration-normal"),
     );
     expect(code).toBe(1);
     expect(out).toMatch(/toggle\.tsx: duration-normal is not a motion tier/);

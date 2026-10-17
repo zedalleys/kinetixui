@@ -24,9 +24,9 @@
       "build": 109,
       "interaction": 48,
       "accessibility": 109,
-      "rtl": 36,
+      "rtl": 38,
       "largeText": 39,
-      "reducedMotion": 4,
+      "reducedMotion": 6,
       "visual": 0,
       "published": 109
     },
@@ -376,6 +376,18 @@
         ]
       },
       {
+        "file": "packages/ui/src/toggle-motion.test.tsx",
+        "kinds": [
+          "interaction",
+          "rtl"
+        ],
+        "components": [
+          "direction-provider",
+          "toggle",
+          "toggle-group"
+        ]
+      },
+      {
         "file": "scripts/a11y-browser.mjs",
         "kinds": [
           "accessibility"
@@ -548,7 +560,9 @@
           "accordion",
           "collapsible",
           "switch",
-          "tabs"
+          "tabs",
+          "toggle",
+          "toggle-group"
         ]
       }
     ],
@@ -1065,7 +1079,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-301"
+          "scripts/motion.mjs:24-320"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2165,7 +2179,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-301"
+          "scripts/motion.mjs:24-320"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2777,7 +2791,8 @@
           "packages/ui/src/components-overlay.test.tsx:325-491",
           "packages/ui/src/components-rtl.test.tsx:60-259",
           "packages/ui/src/components-selection.test.tsx:138-208",
-          "packages/ui/src/components-transactional.test.tsx:255-317"
+          "packages/ui/src/components-transactional.test.tsx:255-317",
+          "packages/ui/src/toggle-motion.test.tsx:217-281"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5691,7 +5706,7 @@
           "scripts/large-text.mjs:99-738"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-301"
+          "scripts/motion.mjs:24-320"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5932,7 +5947,7 @@
           "scripts/large-text.mjs:99-738"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-301"
+          "scripts/motion.mjs:24-320"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6205,14 +6220,21 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:1242-1653",
-          "packages/ui/src/components-selection.test.tsx:27-137"
+          "packages/ui/src/components-selection.test.tsx:27-137",
+          "packages/ui/src/toggle-motion.test.tsx:110-216"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
         ],
+        "rtl": [
+          "packages/ui/src/toggle-motion.test.tsx:217-281"
+        ],
         "largeText": [
           "scripts/large-text.mjs:99-738"
+        ],
+        "reducedMotion": [
+          "scripts/motion.mjs:24-320"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6276,14 +6298,21 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:1242-1653",
-          "packages/ui/src/components-selection.test.tsx:27-137"
+          "packages/ui/src/components-selection.test.tsx:27-137",
+          "packages/ui/src/toggle-motion.test.tsx:110-216"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
         ],
+        "rtl": [
+          "packages/ui/src/toggle-motion.test.tsx:217-281"
+        ],
         "largeText": [
           "scripts/large-text.mjs:99-738"
+        ],
+        "reducedMotion": [
+          "scripts/motion.mjs:24-320"
         ],
         "published": [
           "npm: @kinetixui/ui"
