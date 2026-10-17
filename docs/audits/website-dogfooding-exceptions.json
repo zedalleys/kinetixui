@@ -208,6 +208,20 @@
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
     },
     {
+      "file": "apps/web/src/components/workflow-readiness.tsx",
+      "pattern": "details",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "Native disclosure for the per-part evidence table on /use-cases pages: server-rendered, keyboard operable and openable without JavaScript, matching platform-verification.tsx. Do not replace with a JS-only accordion without progressive-enhancement proof."
+    },
+    {
+      "file": "apps/web/src/components/workflow-readiness.tsx",
+      "pattern": "summary",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "Native disclosure for the per-part evidence table on /use-cases pages: server-rendered, keyboard operable and openable without JavaScript, matching platform-verification.tsx. Do not replace with a JS-only accordion without progressive-enhancement proof."
+    },
+    {
       "file": "apps/web/src/components/systems/hero-system-map.tsx",
       "pattern": "button[type=button]",
       "maxCount": 1,
