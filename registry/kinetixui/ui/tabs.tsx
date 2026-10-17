@@ -32,6 +32,21 @@ function useTabsIndicator(listRef: React.RefObject<HTMLDivElement | null>, indic
     // moving its logical ones, so transitions are off before anything is read, or the browser would animate it.
     const place = (reframed = false) => {
       if (reframed) bar.style.transition = "none";
+      // Any tab can resize (a label, a badge, a font arriving) and move the chosen one without resizing it, so
+      // every current tab is watched, and a removed one is released rather than held for the list's lifetime.
+      if (sizes) {
+        const tabs = new Set(list.querySelectorAll<HTMLElement>(':scope > [role="tab"]'));
+        for (const t of watched) {
+          if (tabs.has(t)) continue;
+          sizes.unobserve(t);
+          watched.delete(t);
+        }
+        for (const t of tabs) {
+          if (watched.has(t)) continue;
+          sizes.observe(t);
+          watched.add(t);
+        }
+      }
       const tab = list.querySelector<HTMLElement>(':scope > [role="tab"][data-state="active"]');
       if (!tab) {
         list.removeAttribute("data-kx-tabs-indicator");
@@ -50,8 +65,6 @@ function useTabsIndicator(listRef: React.RefObject<HTMLDivElement | null>, indic
         reframed = true;
         bar.style.transition = "none";
       }
-      // Any tab can resize (a label, a badge, a font arriving) and move the chosen one without resizing it.
-      for (const t of list.querySelectorAll(':scope > [role="tab"]')) sizes?.observe(t);
       if (!reframed && chosen === tab && nextStart === start && nextEnd === end) return;
       const travels = !reframed && chosen !== null && chosen !== tab;
       // The edge on the side the bar is heading leads; the other waits for it.
@@ -72,6 +85,7 @@ function useTabsIndicator(listRef: React.RefObject<HTMLDivElement | null>, indic
       list.setAttribute("data-kx-tabs-indicator", "");
     };
     const sizes = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => place());
+    const watched = new Set<HTMLElement>();
     sizes?.observe(list);
     place();
     const mutations = new MutationObserver((records) =>
@@ -86,6 +100,7 @@ function useTabsIndicator(listRef: React.RefObject<HTMLDivElement | null>, indic
       mutations.disconnect();
       reframes.disconnect();
       sizes?.disconnect();
+      watched.clear();
     };
   }, [listRef, indicatorRef]);
 }

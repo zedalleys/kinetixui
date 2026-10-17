@@ -23,6 +23,8 @@
  *   fallback      before the bar has measured, and under forced colours, the chosen trigger draws its
  *                 own edge in exactly the box the bar would occupy, so hydration does not move it
  *   semantics     the bar is aria-hidden and exactly one tab is aria-selected
+ *   released      the list's observers let go of a tab once it is removed, and of everything once the strip
+ *                 unmounts: no detached tab is still watched, and no observer of the list stays connected
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary for local runs.
  */
@@ -61,6 +63,7 @@ const check = (ok, label, detail) => {
 async function open({ story = "indicator", viewport = { width: 480, height: 720 }, fontPx, ...ctxOpts } = {}) {
   const ctx = await browser.newContext({ viewport, deviceScaleFactor: 1, ...ctxOpts });
   const page = await ctx.newPage();
+  await page.addInitScript(OBSERVERS);
   await page.route((url) => !url.href.startsWith(storybook.base) && !url.href.startsWith("data:"), (route) => route.abort());
   if (fontPx) {
     const cdp = await ctx.newCDPSession(page);
@@ -71,6 +74,46 @@ async function open({ story = "indicator", viewport = { width: 480, height: 720 
   await settle(page);
   return { page, ctx };
 }
+
+/**
+ * Every Resize/MutationObserver the page creates, with what it watches now. Observers are the indicator's only
+ * long-lived state, so a tab they keep watching after it is removed, or an observer still connected after the
+ * strip unmounts, is a leak no geometry check can see. `window.__kxObservers()` reports the ones that ever
+ * watched a tab list, a tab, or the Tabs root that sets the list's direction.
+ */
+const OBSERVERS = `(() => {
+  const all = [];
+  for (const name of ["ResizeObserver", "MutationObserver"]) {
+    const Native = window[name];
+    if (!Native) continue;
+    window[name] = class extends Native {
+      constructor(cb) {
+        super(cb);
+        this.__kx = { name, targets: new Set(), tabs: false };
+        all.push(this);
+      }
+      observe(target, opts) {
+        this.__kx.targets.add(target);
+        if (target.matches?.("[data-kx-tabs-list], [role=tab], [dir][data-orientation]")) this.__kx.tabs = true;
+        return super.observe(target, opts);
+      }
+      unobserve(target) {
+        this.__kx.targets.delete(target);
+        return super.unobserve(target);
+      }
+      disconnect() {
+        this.__kx.targets.clear();
+        return super.disconnect();
+      }
+    };
+  }
+  window.__kxObservers = () =>
+    all.filter((o) => o.__kx.tabs).map((o) => ({
+      name: o.__kx.name,
+      watching: o.__kx.targets.size,
+      detachedTabs: [...o.__kx.targets].filter((t) => !t.isConnected && t.getAttribute?.("role") === "tab").length,
+    }));
+})();`;
 
 /** Wait until no animation is running on the page, then two more frames. */
 const settle = (page) =>
@@ -261,6 +304,30 @@ const expectAligned = (m, label) => check(aligned(m) && clearOfRing(m), label, f
   check(!m.shown && m.selected === 0, "the chosen tab is removed: no bar, nothing selected", `bar ${m.shown ? "SHOWN" : "hidden"}, selected ${m.selected}`);
   const fallback = await page.evaluate(() => [...document.querySelectorAll("[role=tab]")].every((t) => getComputedStyle(t).borderBottomColor === "rgba(0, 0, 0, 0)"));
   check(fallback, "and no trigger draws a stale edge", fallback ? "every edge transparent" : "an edge is drawn");
+  await ctx.close();
+}
+
+/* ── observer lifecycle ──────────────────────────────────────────────── */
+{
+  const { page, ctx } = await open();
+  const detached = async () => (await page.evaluate(() => window.__kxObservers())).reduce((n, o) => n + o.detachedTabs, 0);
+  await page.evaluate(act("select-second"));
+  await settle(page);
+  for (const key of ["remove-first-inactive", "remove-first-inactive", "remove-selected"]) {
+    await page.evaluate(act(key));
+    await settle(page);
+  }
+  const held = await detached();
+  check(held === 0, "removed tabs are no longer observed", `${held} detached tab(s) still watched`);
+  await page.evaluate(act("unmount"));
+  await settle(page);
+  const live = (await page.evaluate(() => window.__kxObservers())).filter((o) => o.watching > 0);
+  check(live.length === 0, "unmounting the strip disconnects its observers", live.length ? live.map((o) => `${o.name} watching ${o.watching}`).join(", ") : "none left connected");
+  await page.evaluate(act("unmount"));
+  await page.waitForSelector("[role=tablist] [data-kx-tabs-bar]", { state: "attached" });
+  await page.evaluate(act("select-second"));
+  await settle(page);
+  expectAligned(await measure(page), "remounted after unmounting");
   await ctx.close();
 }
 

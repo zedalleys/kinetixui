@@ -911,7 +911,7 @@ const EXTRA = {
     {
       // The travelling indicator under the conditions a real strip meets: more tabs than fit, selection set
       // from outside, labels that change, tabs added and removed, direction and orientation switched, and the
-      // whole strip hidden and shown. Each \`data-kx-action\` button is one of those; \`check:tabs-indicator\`
+      // whole strip hidden and shown, or unmounted. Each \`data-kx-action\` button is one of those; \`check:tabs-indicator\`
       // presses them and measures the bar against the chosen tab.
       name: "Indicator",
       imports: "Button",
@@ -924,6 +924,7 @@ const EXTRA = {
     const [disabled, setDisabled] = React.useState<string | null>(null);
     const [hidden, setHidden] = React.useState(false);
     const [renamed, setRenamed] = React.useState(false);
+    const [mounted, setMounted] = React.useState(true);
     const actions: [string, string, () => void][] = [
       ["select-last", "Choose last", () => setValue(tabs[tabs.length - 1])],
       ["select-second", "Choose second", () => setValue(tabs[1])],
@@ -937,6 +938,7 @@ const EXTRA = {
       ["direction", "Flip direction", () => setDir((d) => (d === "ltr" ? "rtl" : "ltr"))],
       ["orientation", "Flip orientation", () => setOrientation((o) => (o === "horizontal" ? "vertical" : "horizontal"))],
       ["hidden", "Hide or show", () => setHidden((h) => !h)],
+      ["unmount", "Unmount or mount", () => setMounted((m) => !m)],
     ];
     return (
       <div className="grid w-[22rem] max-w-full grid-cols-[minmax(0,1fr)] gap-4">
@@ -946,6 +948,7 @@ const EXTRA = {
           ))}
         </div>
         <div hidden={hidden}>
+          {mounted ? (
           <Tabs value={value} onValueChange={setValue} dir={dir} orientation={orientation} className={orientation === "vertical" ? "flex gap-4" : undefined}>
             <TabsList data-kx-case="lab" aria-label="Project sections" className={orientation === "vertical" ? "w-auto" : undefined}>
               {tabs.map((t, i) => (
@@ -956,6 +959,7 @@ const EXTRA = {
               <TabsContent key={t} value={t} className="text-sm text-muted-foreground">{t} panel.</TabsContent>
             ))}
           </Tabs>
+          ) : null}
         </div>
       </div>
     );

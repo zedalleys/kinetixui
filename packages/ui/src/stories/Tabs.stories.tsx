@@ -83,6 +83,7 @@ export const Indicator: StoryObj<typeof meta> = { render: () => {
     const [disabled, setDisabled] = React.useState<string | null>(null);
     const [hidden, setHidden] = React.useState(false);
     const [renamed, setRenamed] = React.useState(false);
+    const [mounted, setMounted] = React.useState(true);
     const actions: [string, string, () => void][] = [
       ["select-last", "Choose last", () => setValue(tabs[tabs.length - 1])],
       ["select-second", "Choose second", () => setValue(tabs[1])],
@@ -96,6 +97,7 @@ export const Indicator: StoryObj<typeof meta> = { render: () => {
       ["direction", "Flip direction", () => setDir((d) => (d === "ltr" ? "rtl" : "ltr"))],
       ["orientation", "Flip orientation", () => setOrientation((o) => (o === "horizontal" ? "vertical" : "horizontal"))],
       ["hidden", "Hide or show", () => setHidden((h) => !h)],
+      ["unmount", "Unmount or mount", () => setMounted((m) => !m)],
     ];
     return (
       <div className="grid w-[22rem] max-w-full grid-cols-[minmax(0,1fr)] gap-4">
@@ -105,6 +107,7 @@ export const Indicator: StoryObj<typeof meta> = { render: () => {
           ))}
         </div>
         <div hidden={hidden}>
+          {mounted ? (
           <Tabs value={value} onValueChange={setValue} dir={dir} orientation={orientation} className={orientation === "vertical" ? "flex gap-4" : undefined}>
             <TabsList data-kx-case="lab" aria-label="Project sections" className={orientation === "vertical" ? "w-auto" : undefined}>
               {tabs.map((t, i) => (
@@ -115,6 +118,7 @@ export const Indicator: StoryObj<typeof meta> = { render: () => {
               <TabsContent key={t} value={t} className="text-sm text-muted-foreground">{t} panel.</TabsContent>
             ))}
           </Tabs>
+          ) : null}
         </div>
       </div>
     );
