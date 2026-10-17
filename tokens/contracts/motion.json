@@ -175,12 +175,12 @@
     },
     "press-feedback": {
       "status": "proposed",
-      "duration": ["instant", "fast"],
+      "duration": ["fast"],
       "easing": ["standard"],
       "properties": ["background-color", "opacity", "box-shadow"],
       "reducedForm": "shorten",
       "evidence": [],
-      "note": "Hover/press colour on buttons, toggles and rows. Today most of these React components name no duration and run on Tailwind's untokenised 150ms default (see the debt register in motion-contract.test.ts). Which tier they should move to is an open owner decision (instant or fast).",
+      "note": "Hover/press colour on buttons, toggles and rows. Today most of these React components name no duration and run on Tailwind's untokenised 150ms default (see the debt register in motion-contract.test.ts). Decided by the owner on 2026-10-17: they move to fast (200ms). The move itself is MX1b, so the role stays proposed until a component adopts it.",
       "consumers": [],
       "deviations": []
     },
