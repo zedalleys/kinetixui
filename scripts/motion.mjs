@@ -23,7 +23,7 @@
 //
 // kx-verify: reducedMotion
 // Subjects, named so the claim resolves to exactly what is proven rather than to every story:
-// <Accordion>, <Collapsible>, <Switch>, <Tabs>, <Toggle> and <ToggleGroup>. Adding an interaction to
+// <Accordion>, <Checkbox>, <Collapsible>, <RadioGroup>, <Switch>, <Tabs>, <Toggle> and <ToggleGroup>. Adding an interaction to
 // motion-states.mjs for another component means naming it here too, which is the point — the evidence
 // should not widen silently.
 // <Switch> was added by the selection-control slice, whose two declared states measure the thumb's
@@ -34,6 +34,9 @@
 // midpoint in both directions, in a single-choice group (the chosen item and the released one) and in
 // a right-to-left group, its own transition is held to 200ms, and under reduced motion each lands on
 // the same colour with no transition.
+// <Checkbox> and <RadioGroup> were added by MX1b-1b: the box's fill (Checkbox) or border (Radio) is sampled
+// on check and uncheck and in a right-to-left row, and the tick and the dot are sampled fading in (and the
+// released radio's dot fading out), each held to 200ms; under reduced motion each lands with no transition.
 import { chromium } from "playwright";
 import { createServer } from "node:http";
 import { existsSync, readFileSync, statSync } from "node:fs";
@@ -233,6 +236,12 @@ async function runPass({ reduced }) {
 /** `backgroundColor` → `background-color`, the name a CSSTransition reports. */
 const kebab = (prop) => prop.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
+/**
+ * How long the transition of `prop` ran. A shorthand runs as its longhands — `border-color` is reported as
+ * `border-top-color` and three more — and every side is on the same tier, so the top one stands for it.
+ */
+const ownDuration = (byProperty, prop) => byProperty?.[kebab(prop)] ?? byProperty?.[kebab(prop).replace(/^border-/, "border-top-")];
+
 /** The end state under reduced motion must be the one normal motion reaches, within rounding. */
 function sameEndState(a, b) {
   const na = Number.parseFloat(a);
@@ -277,13 +286,13 @@ for (let i = 0; i < MOTION_STATES.length; i++) {
         `      ${state.property}: A=${n.a} mid=${n.mid} B=${n.b}\n` +
         `      An animation that does not move the measured property is not evidence of motion.`,
     );
-  } else if (state.durationMs !== undefined && Math.abs((n.byProperty?.[kebab(state.property)] ?? -1) - state.durationMs) > 1) {
+  } else if (state.durationMs !== undefined && Math.abs((ownDuration(n.byProperty, state.property) ?? -1) - state.durationMs) > 1) {
     failures.push(
-      `${label} normal: ${kebab(state.property)} runs for ${n.byProperty?.[kebab(state.property)] ?? "no"}ms, but its tier is ${state.durationMs}ms.\n` +
+      `${label} normal: ${kebab(state.property)} runs for ${ownDuration(n.byProperty, state.property) ?? "no"}ms, but its tier is ${state.durationMs}ms.\n` +
         `      Another property's transition on the same element does not time this one.`,
     );
   } else {
-    const own = state.durationMs !== undefined ? `${Math.round(n.byProperty[kebab(state.property)])}ms (${kebab(state.property)})` : `${Math.round(n.durationMs)}ms`;
+    const own = state.durationMs !== undefined ? `${Math.round(ownDuration(n.byProperty, state.property))}ms (${kebab(state.property)})` : `${Math.round(n.durationMs)}ms`;
     lines.push(`  ${label.padEnd(30)} ${state.property}: ${n.a} → ${n.mid} → ${n.b}   ${own}`);
   }
 

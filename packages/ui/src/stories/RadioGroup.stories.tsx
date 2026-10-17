@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx · controls: scripts/gen-stories.mjs CONTROLS */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Card, CardContent, Label, RadioGroup, RadioGroupItem } from "@kinetixui/ui";
+import { Card, CardContent, KinetixDirectionProvider, Label, RadioGroup, RadioGroupItem } from "@kinetixui/ui";
 
 const Demo = () => (
     <RadioGroup defaultValue="comfortable">
@@ -74,4 +74,29 @@ export const States: StoryObj<typeof meta> = { render: () => (
         </RadioGroup>
       </CardContent>
     </Card>
+  ) };
+
+export const Motion: StoryObj<typeof meta> = { render: () => (
+    <div className="grid gap-6">
+      <RadioGroup defaultValue="free" aria-label="Plan" data-kx-case="plan">
+        {([["free", "Free"], ["pro", "Pro"], ["team", "Team"]] as const).map(([v, label]) => (
+          <div key={v} className="flex items-center gap-3">
+            <RadioGroupItem value={v} id={`rgm-${v}`} />
+            <Label htmlFor={`rgm-${v}`}>{label}</Label>
+          </div>
+        ))}
+      </RadioGroup>
+      <KinetixDirectionProvider dir="rtl">
+        <div dir="rtl" lang="ar">
+          <RadioGroup defaultValue="free" orientation="horizontal" aria-label="الخطة" data-kx-case="rtl" className="flex flex-wrap gap-4">
+            {([["free", "مجاني"], ["pro", "احترافي"], ["team", "فريق"]] as const).map(([v, label]) => (
+              <div key={v} className="flex items-center gap-2">
+                <RadioGroupItem value={v} id={`rgm-rtl-${v}`} />
+                <Label htmlFor={`rgm-rtl-${v}`}>{label}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+      </KinetixDirectionProvider>
+    </div>
   ) };
