@@ -459,29 +459,39 @@ function runsInWorkflowStep(script) {
  * is matched from its start, so `echo 'swift test'` or `# swift test` is not a run of `swift test`.
  */
 function commandsOf(lines) {
-  return lines.flatMap((l) => l.replace(/\s+#.*$/, "").split(/&&|\|\||;/)).map((c) => c.trim()).filter(Boolean);
+  // what follows `||` runs only when what precedes it fails, so it is never counted as having run
+  return lines.flatMap((l) => l.replace(/\s+#.*$/, "").split("||")[0].split(/&&|;/)).map((c) => c.trim()).filter(Boolean);
 }
 const startsCommand = (command, prefix) => command === prefix || command.startsWith(`${prefix} `);
 
-/** The command lines of a workflow's `run:` steps, including the body of a `run: |` block. Comments dropped. */
+/**
+ * The command lines of a workflow's `run:` steps, including the body of a block scalar. A literal `run: |` keeps
+ * its lines; a folded `run: >` is one line, as YAML joins it. Comment lines dropped.
+ */
 function runCommands(yaml) {
   const out = [];
-  let block = null; // indentation of the `run:` key whose block scalar is being read
+  let block = null; // { indent of the `run:` key, folded?, lines } while a block scalar is being read
+  const flush = () => {
+    if (block) out.push(...(block.folded ? [block.lines.join(" ")] : block.lines));
+    block = null;
+  };
   for (const line of yaml.split("\n")) {
     const indent = line.search(/\S/);
-    if (block !== null) {
+    if (block) {
       if (indent === -1) continue;
-      if (indent > block) {
-        if (!line.trim().startsWith("#")) out.push(line);
+      if (indent > block.indent) {
+        if (!line.trim().startsWith("#")) block.lines.push(line.trim());
         continue;
       }
-      block = null;
+      flush();
     }
     const m = line.match(/^(\s*)(?:-\s+)?run:\s*(.*)$/);
     if (!m) continue;
-    if (/^[|>][-+]?\s*$/.test(m[2])) block = line.indexOf("run:");
+    const scalar = m[2].match(/^([|>])[-+]?\s*$/);
+    if (scalar) block = { indent: line.indexOf("run:"), folded: scalar[1] === ">", lines: [] };
     else out.push(m[2]);
   }
+  flush();
   return out;
 }
 

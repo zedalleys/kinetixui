@@ -344,14 +344,22 @@ describe("block evidence: negative controls", () => {
     expect(blocksOut(dir)["sign-in"]!.platforms.React!.level).toBe("source");
     expect(blocksOut(dir)["sign-in"]!.platforms.React!.limitations).toContain("no CI step compiles this file");
     // the command has to be what the step executes, not text inside it
-    for (const buildWeb of ["echo 'pnpm build:web'", "pnpm lint # pnpm build:web", "pnpm build:web-docs"]) {
+    for (const buildWeb of [
+      "echo 'pnpm build:web'",
+      "pnpm lint # pnpm build:web",
+      "pnpm build:web-docs",
+      "true || pnpm build:web", // skipped whenever the left side succeeds
+      ">\n          echo preparing\n          pnpm build:web", // folded: one command, `echo preparing pnpm build:web`
+    ]) {
       const fake = blockFixture({}, { buildWeb });
       expect(run(script, [`--root=${fake}`]).ok).toBe(true);
       expect(blocksOut(fake)["sign-in"]!.platforms.React!.level, buildWeb).toBe("source");
     }
-    const chained = blockFixture({}, { buildWeb: "pnpm install --frozen-lockfile && pnpm build:web" });
-    expect(run(script, [`--root=${chained}`]).ok).toBe(true);
-    expect(blocksOut(chained)["sign-in"]!.platforms.React!.level).toBe("build");
+    for (const buildWeb of ["pnpm install --frozen-lockfile && pnpm build:web", "|\n          pnpm install\n          pnpm build:web", "pnpm build:web || exit 1"]) {
+      const real = blockFixture({}, { buildWeb });
+      expect(run(script, [`--root=${real}`]).ok).toBe(true);
+      expect(blocksOut(real)["sign-in"]!.platforms.React!.level, buildWeb).toBe("build");
+    }
   });
 
   it("3b. does not credit the Angular package build to blocks it never compiles", () => {
