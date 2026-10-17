@@ -138,7 +138,9 @@ sessions and Returning evaluators are all counted **among eligible sessions only
 `component_viewed`, `component_code_copied`, `platform_selected`, `component_code_viewed`, `github_clicked`, `npm_clicked`,
 `changelog_viewed`, `external_link_clicked`, `preset_shared`, `preset_code_copied`, `preset_loaded`,
 `preset_randomized`, `create_export_target_selected`, `create_export_copied`, `iot_example_copied`,
-`block_code_copied`. A session with one of these and no `$pageview` is an arrival.
+`block_code_copied`, `search_result_selected`. A session with one of these and no `$pageview` is an arrival.
+(`search_result_selected`, added 2026-10-17, fires from the command menu of a page that has already sent its
+`$pageview`, so it cannot add an arrival in practice; it is listed because the list is the contract.)
 
 **Does not qualify on its own.** `$pageleave`, and any other event name: PostHog SDK events (`$autocapture`,
 `$identify`, `$web_vitals`, …) and names nobody declared. The list is an allowlist, so a new event cannot
@@ -255,6 +257,13 @@ Only one gap was worth code. Everything else the funnel needs already existed.
 | **`analyticsPlatformFor()`** | Maps a manifest platform name to the analytics vocabulary **and validates membership**, so a future platform that does not map produces *no* dimension rather than an unvalidated string |
 
 **No renames.** Historical continuity matters more than tidiness.
+
+**2026-10-17, global search (BD-W3b1).** One event, `search_result_selected`, when a result is chosen in the
+command menu (⌘K). It carries the kind of destination only (`target`: component, docs, link, block, use_case,
+workflow, capability, theme) with `source: header`, `location: command_menu`; never the search text, the result's
+title or its URL. It is in neither Qualified Evaluation nor Adoption Intent: a component chosen there still
+qualifies through the `component_viewed` its page sends, so the QE definition and its dashboard tiles are
+unchanged. Opening the menu is not an event (it answers no decision on its own).
 
 **Vocabulary health, audited:** no duplicate events; no event without a decision it supports; every
 documented event is emitted and every emitted event is documented. (`button_clicked` appears in the

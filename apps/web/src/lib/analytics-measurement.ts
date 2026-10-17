@@ -69,6 +69,9 @@ export const ARRIVAL_EVENTS = [
   "create_export_copied",
   "iot_example_copied",
   "block_code_copied",
+  // fired from the command menu in a page's header, so a session holding it was on a page; in practice it always
+  // follows that page's `$pageview`, so listing it cannot change an arrival count (analytics.md §4)
+  "search_result_selected",
 ] as const satisfies readonly ("$pageview" | AnalyticsEventName)[];
 
 // A compile error here means an event was added to `AnalyticsEvents` without deciding whether it proves arrival.
