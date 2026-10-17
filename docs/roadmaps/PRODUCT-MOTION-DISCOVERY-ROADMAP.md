@@ -243,7 +243,9 @@ What each instrument proves is stated narrowly: jsdom proves logic, not layout; 
 rendering; a native unit test proves the helper's branches, not what a user sees on a device.
 
 **This PR** is documentation only. It changes no source, token, generator or gate, so the applicable checks are: the
-file renders on GitHub (Mermaid included), every repository path it names exists, every number in §2 was read from
+file renders on GitHub (Mermaid included), every repository path it names exists on `4c6a0af` except the two it
+labels as outside the tree (the project file `motion-and-discovery-w2/01-MOTION-AUDIT.md` and
+`tokens/contracts/motion.json`, which only open PR #393 proposes), every number in §2 was read from
 the file cited next to it on `a6019a1` and re-checked unchanged on `4c6a0af`, and CI stays green.
 
 ## 9. Marketing dependencies
