@@ -350,11 +350,21 @@ describe("block evidence: negative controls", () => {
       "pnpm build:web-docs",
       "true || pnpm build:web", // skipped whenever the left side succeeds
       ">\n          echo preparing\n          pnpm build:web", // folded: one command, `echo preparing pnpm build:web`
+      "pnpm build:web\n        if: false", // a step GitHub may skip
     ]) {
       const fake = blockFixture({}, { buildWeb });
       expect(run(script, [`--root=${fake}`]).ok).toBe(true);
       expect(blocksOut(fake)["sign-in"]!.platforms.React!.level, buildWeb).toBe("source");
     }
+    // a condition on the job skips every step in it
+    const skippedJob = blockFixture({
+      ".github/workflows/ci.yml": `${workflow({ drop: ["build:web"] })}  web:\n    if: false\n    steps:\n      - run: pnpm build:web\n`,
+    });
+    expect(run(script, [`--root=${skippedJob}`]).ok).toBe(true);
+    expect(blocksOut(skippedJob)["sign-in"]!.platforms.React!.level).toBe("source");
+    const otherJob = blockFixture({ ".github/workflows/ci.yml": `${workflow({ drop: ["build:web"] })}  web:\n    steps:\n      - run: pnpm build:web\n` });
+    expect(run(script, [`--root=${otherJob}`]).ok).toBe(true);
+    expect(blocksOut(otherJob)["sign-in"]!.platforms.React!.level).toBe("build");
     for (const buildWeb of ["pnpm install --frozen-lockfile && pnpm build:web", "|\n          pnpm install\n          pnpm build:web", "pnpm build:web || exit 1"]) {
       const real = blockFixture({}, { buildWeb });
       expect(run(script, [`--root=${real}`]).ok).toBe(true);

@@ -47,7 +47,7 @@ export const EVIDENCE_LEVEL_LABEL: Record<EvidenceLevel, string> = {
 export const EVIDENCE_LEVEL_MEANING: Record<EvidenceLevel, string> = {
   "not-implemented": "There is no implementation on this platform.",
   "not-verified": "An implementation is declared, but no test or build records evidence for it.",
-  source: "The source exists; no build or test records evidence for it.",
+  source: "The source exists; no CI build records it. Any tests it has are listed but do not raise its level.",
   build: "CI compiles the package it ships in; interaction and accessibility are not both tested.",
   runtime: "Tests record both interaction and accessibility for it. For a block, both were observed in a real browser or on a device.",
 };

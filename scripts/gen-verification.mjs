@@ -465,6 +465,48 @@ function commandsOf(lines) {
 const startsCommand = (command, prefix) => command === prefix || command.startsWith(`${prefix} `);
 
 /**
+ * Is the `run:` at line `at` inside a step or a job that carries an `if:`? Read by indentation: the step is the
+ * nearest `- ` item above it, the job the mapping that holds that step's `steps:`. Conditions are not evaluated;
+ * any condition at all means the step may be skipped, and a skipped step is not evidence.
+ */
+function conditional(lines, at) {
+  const indentOf = (l) => l.search(/\S/);
+  const keyIndent = indentOf(lines[at].replace(/-\s+/, (d) => " ".repeat(d.length)));
+  // the step: the closest item line above (or on) the run whose dash sits left of the run key
+  let dash = -1;
+  for (let j = at; j >= 0; j--) {
+    const m = lines[j].match(/^(\s*)-\s/);
+    if (m && m[1].length < keyIndent) {
+      dash = j;
+      break;
+    }
+  }
+  if (dash < 0) return false;
+  const dashIndent = indentOf(lines[dash]);
+  const stepKeys = dashIndent + 2;
+  const within = (from, indent, test) => {
+    for (let j = from; j < lines.length; j++) {
+      if (j > from && lines[j].trim() && indentOf(lines[j]) <= indent) break;
+      if (test(lines[j])) return true;
+    }
+    return false;
+  };
+  const ifAt = (n) => (l) => new RegExp(`^\\s{${n}}if:`).test(l.replace(/^(\s*)-\s/, (_, sp) => `${sp}  `));
+  if (within(dash, dashIndent, ifAt(stepKeys))) return true;
+  // the job: the line above `steps:` that opens the mapping `steps:` belongs to
+  for (let j = dash; j >= 0; j--) {
+    const m = lines[j].match(/^(\s*)steps:\s*$/);
+    if (!m) continue;
+    const jobKeys = m[1].length;
+    for (let k = j; k >= 0; k--) {
+      if (lines[k].trim() && indentOf(lines[k]) < jobKeys) return within(k, indentOf(lines[k]), ifAt(jobKeys));
+    }
+    return false;
+  }
+  return false;
+}
+
+/**
  * The command lines of a workflow's `run:` steps, including the body of a block scalar. A literal `run: |` keeps
  * its lines; a folded `run: >` is one line, as YAML joins it. Comment lines dropped.
  */
@@ -475,7 +517,8 @@ function runCommands(yaml) {
     if (block) out.push(...(block.folded ? [block.lines.join(" ")] : block.lines));
     block = null;
   };
-  for (const line of yaml.split("\n")) {
+  const lines = yaml.split("\n");
+  for (const [i, line] of lines.entries()) {
     const indent = line.search(/\S/);
     if (block) {
       if (indent === -1) continue;
@@ -487,6 +530,7 @@ function runCommands(yaml) {
     }
     const m = line.match(/^(\s*)(?:-\s+)?run:\s*(.*)$/);
     if (!m) continue;
+    if (conditional(lines, i)) continue; // a step or job that may be skipped proves nothing ran
     const scalar = m[2].match(/^([|>])[-+]?\s*$/);
     if (scalar) block = { indent: line.indexOf("run:"), folded: scalar[1] === ">", lines: [] };
     else out.push(m[2]);
