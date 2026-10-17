@@ -23,12 +23,13 @@
 //
 // kx-verify: reducedMotion
 // Subjects, named so the claim resolves to exactly what is proven rather than to every story:
-// <Accordion>, <Collapsible>, <Switch>, <Toggle> and <ToggleGroup>. Adding an interaction to
+// <Accordion>, <Collapsible>, <Switch>, <Tabs>, <Toggle> and <ToggleGroup>. Adding an interaction to
 // motion-states.mjs for another component means naming it here too, which is the point — the evidence
 // should not widen silently.
 // <Switch> was added by the selection-control slice, whose two declared states measure the thumb's
 // rendered transform in both directions (100ms, matrix translate 0 → 24 and back) and confirm each
-// collapses under prefers-reduced-motion while landing on the same end state.
+// collapses under prefers-reduced-motion while landing on the same end state. <Tabs> was added when its
+// indicator became one travelling bar: both directions are driven, on its inline-start edge.
 // <Toggle> and <ToggleGroup> were added by MX1b-1a: the selected background colour is sampled at its
 // midpoint in both directions, in a single-choice group (the chosen item and the released one) and in
 // a right-to-left group, its own transition is held to 200ms, and under reduced motion each lands on

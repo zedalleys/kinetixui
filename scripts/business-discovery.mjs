@@ -28,6 +28,11 @@
  *     same rule as a component's. Every published block is either cited or listed in `discovery.unclassifiedBlocks`
  *     with a reason; one in neither place, or in both, is an error.
  *   - Every workflow has at least one stage that uses a shipping row.
+ *   - A stage is existing when every row it uses is existing, planned when none ships, partial otherwise; a workflow's
+ *     `coverage` counts its stages by that status, so one available part never makes a whole workflow available.
+ *   - A domain may have a page (`"page": true`) only when it meets the publication criteria: at least one workflow,
+ *     every workflow shipping more than half its stages, and at least PAGE_MIN_DESTINATIONS shipping catalogue
+ *     components or blocks to link to. Every domain carries `publication` with the criteria it does not meet.
  */
 
 /** Layer and target of a catalogue entry no roadmap row classifies. Distinct from L1: absence is not a claim. */
@@ -52,6 +57,14 @@ const kebab = (name) =>
 
 const uniq = (xs) => [...new Set(xs)];
 const ships = (row) => row.status === "existing" || row.status === "partial";
+/**
+ * A workflow stage's status from the rows it uses: available only when every row is existing, planned when none ships,
+ * partial otherwise. A stage is never "available" because one of its parts is.
+ */
+const stageStatus = (list) =>
+  list.every((r) => r.status === "existing") ? "existing" : list.some(ships) ? "partial" : "planned";
+/** Publication criterion (3): the fewest shipping catalogue components + blocks a domain page may send a reader to. */
+export const PAGE_MIN_DESTINATIONS = 5;
 const refs = (row, kind) => row.evidence.filter((r) => r.startsWith(`${kind}:`)).map((r) => r.slice(kind.length + 1));
 
 /**
@@ -252,18 +265,39 @@ export function buildDiscovery(data, manifest, blocks) {
     };
   });
 
-  const workflows = disc.workflows.map((w) => ({
-    id: w.id,
-    title: w.title,
-    domain: w.domain,
-    summary: w.summary,
-    stages: w.stages.map((s) => ({ title: s.title, rows: s.uses })),
-  }));
+  const workflows = disc.workflows.map((w) => {
+    const stages = w.stages.map((s) => ({ title: s.title, rows: s.uses, status: stageStatus(s.uses.map((n) => rows.get(n))) }));
+    return {
+      id: w.id,
+      title: w.title,
+      domain: w.domain,
+      summary: w.summary,
+      stages,
+      coverage: summarise(stages),
+    };
+  });
 
   // A domain page that says "available now" must have something available, or it is a list of promises.
   for (const d of domains)
     if (d.page && d.counts.existing + d.counts.partial === 0)
       errors.push(`discovery.domains / ${d.id}: has a page but no existing or partial capability to show`);
+
+  // Publication criteria: a page is only worth publishing when it has a workflow a reader can mostly follow today and
+  // enough real destinations to send them to. Evaluated for every domain; a page that fails them is an error, a domain
+  // that meets them without a page is an owner decision, not an error.
+  for (const d of domains) {
+    const wfs = workflows.filter((w) => w.domain === d.id);
+    const unmet = [];
+    if (!wfs.length) unmet.push("has no workflow");
+    for (const w of wfs)
+      if (2 * (w.coverage.existing + w.coverage.partial) <= w.stages.length)
+        unmet.push(`workflow "${w.id}" ships ${w.coverage.existing + w.coverage.partial} of ${w.stages.length} stages, not more than half`);
+    const destinations = d.components.length + d.blocks.length;
+    if (destinations < PAGE_MIN_DESTINATIONS)
+      unmet.push(`${destinations} shipping catalogue components or blocks, fewer than ${PAGE_MIN_DESTINATIONS}`);
+    d.publication = { eligible: unmet.length === 0, unmet };
+    if (d.page && unmet.length) errors.push(`discovery.domains / ${d.id}: has a page but does not meet the publication criteria: ${unmet.join("; ")}`);
+  }
 
   const index = {
     $comment:

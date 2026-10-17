@@ -26,7 +26,7 @@
       "accessibility": 109,
       "rtl": 38,
       "largeText": 39,
-      "reducedMotion": 5,
+      "reducedMotion": 6,
       "visual": 0,
       "published": 109
     },
@@ -560,6 +560,7 @@
           "accordion",
           "collapsible",
           "switch",
+          "tabs",
           "toggle",
           "toggle-group"
         ]
@@ -1078,7 +1079,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-319"
+          "scripts/motion.mjs:24-320"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2178,7 +2179,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-319"
+          "scripts/motion.mjs:24-320"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5705,7 +5706,7 @@
           "scripts/large-text.mjs:99-738"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-319"
+          "scripts/motion.mjs:24-320"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5944,6 +5945,9 @@
         ],
         "largeText": [
           "scripts/large-text.mjs:99-738"
+        ],
+        "reducedMotion": [
+          "scripts/motion.mjs:24-320"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6230,7 +6234,7 @@
           "scripts/large-text.mjs:99-738"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-319"
+          "scripts/motion.mjs:24-320"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6308,7 +6312,7 @@
           "scripts/large-text.mjs:99-738"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-319"
+          "scripts/motion.mjs:24-320"
         ],
         "published": [
           "npm: @kinetixui/ui"

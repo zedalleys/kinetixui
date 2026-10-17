@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { PlatformBadges } from "@/components/platform-badges";
 import { blocks } from "@/lib/blocks";
-import { ROWS, ships, type Counts, type DiscoveryRow, type RowStatus } from "@/lib/business-discovery";
+import { ROWS, ships, type Counts, type DiscoveryRow, type RowStatus, type Workflow } from "@/lib/business-discovery";
 import { STATUS } from "@/lib/component-status";
 import { componentDocs } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -114,5 +114,34 @@ export function ComponentCard({ slug }: { slug: string }) {
       </span>
       <PlatformBadges slug={slug} />
     </li>
+  );
+}
+
+/* ------------------------------------------------------------------------------------------------- workflows */
+
+/**
+ * A workflow's stages in order, each with its status in words. `detailed` adds the roadmap rows of every stage (the
+ * use-case page); without it the list is the compact path the hub shows.
+ */
+export function WorkflowStages({ workflow, detailed = false }: { workflow: Workflow; detailed?: boolean }) {
+  return (
+    <ol className={cn("mt-3", detailed ? "space-y-3" : "space-y-1.5")}>
+      {workflow.stages.map((s, i) => (
+        <li key={s.title} className={cn(detailed && "grid gap-1 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] lg:gap-4")}>
+          <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 font-medium [overflow-wrap:anywhere]">
+            <span className="font-mono text-body-sm text-primary">{String(i + 1).padStart(2, "0")}</span>
+            <span className="min-w-0">{s.title}</span>
+            <StatusTag status={s.status} />
+          </span>
+          {detailed && (
+            <ul className="min-w-0 divide-y divide-border/60">
+              {s.rows.map((name) => (
+                <RowItem key={name} row={ROWS[name]!} />
+              ))}
+            </ul>
+          )}
+        </li>
+      ))}
+    </ol>
   );
 }

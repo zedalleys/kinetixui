@@ -37,9 +37,11 @@
  *   invalid    (React; Angular has no invalid input on these controls) the edge clears 3:1, is a different
  *              colour from valid, and is still that colour under the pointer
  *   disabled   hovering changes no pixel, and the edge is weaker than an enabled one
- *   segment    the chosen segment is lighter than its track and has an edge against it, in both themes,
- *              on the page and inside a Card; the track is below the Card surface it sits in; an unchosen
- *              segment answers hover and press
+ *   segment    the chosen segment is marked against its track, in both themes, on the page and inside a
+ *              Card, by the platform's own cue (`chosen` in the adapter): React's is the inverse fill, which
+ *              must clear 3:1 against the track; Angular's is a raised surface, lighter than the track with
+ *              an edge against it. The track is below the Card surface it sits in; an unchosen segment
+ *              answers hover and press; React's chosen segment keeps a mark under forced colours
  *   motion     hover runs a box-shadow transition over a perceptible duration; under prefers-reduced-motion
  *              it runs none and lands on the same end state
  *   direction  a switch's thumb stays inside its track and sits at the inline END of the switch's OWN
@@ -98,6 +100,11 @@ const ADAPTERS = {
       return { visual: `[data-kx-case="${where}"] ${sel}` };
     },
     track: (where) => `[data-kx-case="${where}"]`,
+    // the chosen segment is the inverse fill (`foreground` on the `surface-grouped` well): TOKENS.md
+    chosen: "inverse",
+    // Angular's raised segment measures 1.00:1 against an unchosen one under forced colours, a known gap
+    // recorded with the follow-up that brings it onto the inverse fill; it is not asserted until then.
+    forcedMark: true,
     card: ".bg-card",
     hasInvalid: true,
     // the switch's own box, and the thumb inside it
@@ -110,6 +117,7 @@ const ADAPTERS = {
       return { visual: `[data-kx-case="${where}"] kx-segment:has(${input}) label`, target: `[data-kx-case="${where}"] kx-segment:has(${input}) input` };
     },
     track: (where) => `[data-kx-case="${where}"]`,
+    chosen: "raised",
     card: "kx-card",
     hasInvalid: false,
     switchParts: (c) => ({ track: `kx-switch[data-kx-case="${c}"] button`, thumb: `kx-switch[data-kx-case="${c}"] .kx-switch__thumb` }),
@@ -479,12 +487,17 @@ async function segmentControl(context, platform, theme) {
     const cy = on.y + on.height / 2;
     const trackPx = f.at(track.x + 2, cy);
     const segPx = f.at(on.x + 5, cy);
-    const edge = maxContrast(f.row(cy, on.x - 0.5, on.x + 1.5), trackPx);
-    check(
-      lum(segPx) > lum(trackPx) && edge >= 1.2,
-      `${name} chosen segment sits above its track (${where})`,
-      `segment L ${lum(segPx).toFixed(4)} vs track L ${lum(trackPx).toFixed(4)}, edge ${r2(edge)}:1`,
-    );
+    if (A.chosen === "inverse") {
+      const fill = contrast(segPx, trackPx);
+      check(fill >= 3, `${name} chosen segment is the inverse fill (${where})`, `fill ${r2(fill)}:1 against the track`);
+    } else {
+      const edge = maxContrast(f.row(cy, on.x - 0.5, on.x + 1.5), trackPx);
+      check(
+        lum(segPx) > lum(trackPx) && edge >= 1.2,
+        `${name} chosen segment sits above its track (${where})`,
+        `segment L ${lum(segPx).toFixed(4)} vs track L ${lum(trackPx).toFixed(4)}, edge ${r2(edge)}:1`,
+      );
+    }
     if (where === "card") {
       const cardBox = await page.locator(A.track(where)).first().evaluate((el, cardSel) => {
         const c = el.closest(cardSel).getBoundingClientRect();
@@ -526,7 +539,8 @@ async function segmentControl(context, platform, theme) {
   const trackPx = t0.at(track.x + 2, onBox.y + onBox.height / 2);
   const focused = await keyboardFocus(p, seg.target ?? seg.visual);
   const fy = onBox.y + onBox.height / 2;
-  const ring = maxContrast((await frame(p, track)).row(fy, onBox.x - 3, onBox.x + 1), trackPx);
+  // An inverse fill out-contrasts any ring, so for it only the pixels outside the segment are the ring's.
+  const ring = maxContrast((await frame(p, track)).row(fy, onBox.x - 3, A.chosen === "inverse" ? onBox.x - 0.5 : onBox.x + 1), trackPx);
   check(focused && ring >= 3, `${name} focus ring clears 3:1`, `${focused ? "" : "NOT FOCUSED, "}ring ${r2(ring)}:1 against the track`);
   await p.close();
 
@@ -538,6 +552,21 @@ async function segmentControl(context, platform, theme) {
   const moved = (await frame(q, d)).changed(dr);
   check(moved === 0, `${name} disabled segment is inert`, `${moved} pixel(s) changed on hover`);
   await q.close();
+}
+
+/** Forced colours repaint every fill to Canvas: the chosen segment must still differ from an unchosen one. */
+async function forcedSegment(platform, theme) {
+  const A = ADAPTERS[platform];
+  const ctx = await browser.newContext({ viewport: { width: 900, height: 900 }, deviceScaleFactor: DPR, forcedColors: "active" });
+  const page = await open(ctx, platform, "segment", theme);
+  const on = await page.locator(A.segment("page", "on").visual).first().boundingBox();
+  const off = await page.locator(A.segment("page", "off").visual).first().boundingBox();
+  const track = await page.locator(A.track("page")).first().boundingBox();
+  const f = await frame(page, track);
+  const cy = on.y + on.height / 2;
+  const mark = contrast(f.at(on.x + 5, cy), f.at(off.x + 5, cy));
+  check(mark >= 3, `${platform} ${theme} segment chosen is marked under forced colours`, `chosen ${r2(mark)}:1 against unchosen`);
+  await ctx.close();
 }
 
 /** Motion on the state layer: perceptible normally, gone under reduced motion, same end state. */
@@ -579,6 +608,7 @@ for (const platform of PLATFORMS) {
     await switchControl(context, platform, theme);
     await segmentControl(context, platform, theme);
     await context.close();
+    if (ADAPTERS[platform].forcedMark) await forcedSegment(platform, theme);
     await switchDirection(platform, theme);
     await motion(platform, theme);
   }

@@ -13,10 +13,14 @@ import {
   ROWS,
   UNCLASSIFIED,
   WORKFLOWS,
+  DOMAIN_PAGES,
   businessContextFor,
   blockFacets,
   catalogueFacets,
+  coverageLine,
   ships,
+  workflowLink,
+  workflowParts,
 } from "./business-discovery";
 import { blocks } from "./blocks";
 import { publicRoutes } from "./seo";
@@ -85,9 +89,14 @@ describe("relationships derived for a component", () => {
     expect(ROWS.Receipt.status).toBe("existing");
     expect(ROWS.Receipt.blocks).toEqual(["receipt"]);
     expect(BLOCK_DISCOVERY.receipt.workflows).toContain("checkout");
-    // a domain with a page links to the workflow on it; one without stays plain text
+    // a domain with a page links to the workflow on it; one without links to the workflow's card on the hub
     expect(ctx.workflows.find((w) => w.id === "checkout")!.href).toBe("/use-cases/commerce#checkout");
-    expect(ctx.workflows.find((w) => w.id === "money-transfer")!.href).toBeUndefined();
+    // Finance meets the publication criteria but has no page yet (BD-W3b2b), so its workflow links to the hub card
+    expect(ctx.workflows.find((w) => w.id === "money-transfer")!.href).toBe(workflowLink("money-transfer"));
+    expect(workflowLink("money-transfer")).toBe(
+      DOMAINS.find((d) => d.id === "finance")!.page ? "/use-cases/finance#money-transfer" : "/capabilities#workflow-money-transfer",
+    );
+    expect(workflowLink("device-pairing")).toBe("/capabilities#workflow-device-pairing");
   });
 
   it("says nothing for a component with no classification and no business context", () => {
@@ -222,5 +231,96 @@ describe("block facets", () => {
   });
   it("lets a search for the job find the block", () => {
     expect(facets.bySlug["order-summary"]!.terms).toContain("checkout");
+  });
+});
+
+describe("workflow coverage and page publication (BD-W3b)", () => {
+  type Data = typeof capabilities;
+  const mutate = (fn: (d: Data) => void) => {
+    const d = structuredClone(capabilities) as Data;
+    fn(d);
+    return buildDiscovery(d, componentManifest.components, blocksManifest.blocks).errors.join("\n");
+  };
+  const domain = (d: Data, id: string) => d.discovery.domains.find((x) => x.id === id)!;
+
+  it("gives a stage the status of its weakest part: available only when every row it uses is", () => {
+    for (const w of WORKFLOWS)
+      for (const s of w.stages) {
+        const st = s.rows.map((n) => ROWS[n]!.status);
+        const expected = st.every((x) => x === "existing") ? "existing" : st.some((x) => x !== "planned") ? "partial" : "planned";
+        expect(s.status, `${w.id} / ${s.title}`).toBe(expected);
+      }
+  });
+
+  it("counts every stage once and never calls a workflow complete while a stage is partial or planned", () => {
+    for (const w of WORKFLOWS) {
+      const { existing, partial, planned } = w.coverage;
+      expect(existing + partial + planned).toBe(w.stages.length);
+      expect(coverageLine(w).startsWith("All ")).toBe(existing === w.stages.length);
+    }
+    // Checkout has one available component in its first stage, and that stage is still partial
+    const checkout = WORKFLOWS.find((w) => w.id === "checkout")!;
+    expect(checkout.stages[0]!.status).toBe("partial");
+    expect(coverageLine(checkout)).not.toMatch(/^All/);
+  });
+
+  it("links from a workflow only to parts of rows that ship, never to a planned one", () => {
+    for (const w of WORKFLOWS) {
+      const shippingRows = w.stages.flatMap((s) => s.rows.map((n) => ROWS[n]!)).filter(ships);
+      const parts = workflowParts(w);
+      for (const slug of parts.components) expect(shippingRows.some((r) => r.components.includes(slug)), `${w.id}: ${slug}`).toBe(true);
+      for (const slug of parts.blocks) expect(shippingRows.some((r) => r.blocks.includes(slug)), `${w.id}: ${slug}`).toBe(true);
+      for (const slug of parts.components) expect(SLUGS.has(slug)).toBe(true);
+      for (const slug of parts.blocks) expect(BLOCKS.has(slug)).toBe(true);
+    }
+  });
+
+  it("publishes a page only for a domain that meets the criteria, and lists every page as a route", () => {
+    for (const d of DOMAINS) if (d.page) expect(d.publication, d.id).toEqual({ eligible: true, unmet: [] });
+    expect(DOMAIN_PAGES.length).toBeGreaterThan(0);
+    expect(DOMAIN_PAGES).toEqual(DOMAINS.filter((d) => d.page));
+    expect([...DISCOVERY_ROUTES].sort()).toEqual(["/capabilities", ...DOMAIN_PAGES.map((d) => `/use-cases/${d.id}`)].sort());
+    // IoT's evidence is the @kinetixui/iot package: no catalogue component or block, so no page (it points to /iot)
+    expect(DOMAINS.find((d) => d.id === "iot")!.publication.unmet.join()).toMatch(/fewer than 5/);
+  });
+
+  it("has no duplicate domain, workflow or capability ids", () => {
+    for (const list of [DOMAINS, WORKFLOWS, CAPABILITIES]) expect(new Set(list.map((x) => x.id)).size).toBe(list.length);
+  });
+
+  it("links every workflow to a page section or hub card that exists", () => {
+    for (const w of WORKFLOWS) {
+      const href = workflowLink(w.id);
+      const page = DOMAINS.find((d) => d.id === w.domain)!.page;
+      expect(href).toBe(page ? `/use-cases/${w.domain}#${w.id}` : `/capabilities#workflow-${w.id}`);
+    }
+  });
+
+  // negative controls: each criterion, broken on its own, fails check:capabilities
+  it("fails a page for a domain with no workflow", () => {
+    expect(mutate((d) => (domain(d, "saas-admin").page = true))).toMatch(/saas-admin: has a page but does not meet the publication criteria: has no workflow/);
+  });
+  it("fails a page whose workflow ships half its stages or fewer", () => {
+    expect(
+      mutate((d) => {
+        domain(d, "finance").page = true;
+        const w = d.discovery.workflows.find((x) => x.id === "money-transfer")!;
+        w.stages.push({ title: "Schedule", uses: ["TransactionList"] }, { title: "Repeat", uses: ["MoneyInput"] });
+      }),
+    ).toMatch(/finance: .*workflow "money-transfer" ships 3 of 6 stages, not more than half/);
+  });
+  it("fails a page with too few components and blocks to send a reader to", () => {
+    expect(mutate((d) => (domain(d, "iot").page = true))).toMatch(/iot: .*0 shipping catalogue components or blocks, fewer than 5/);
+  });
+  it("passes when a row a stage uses really ships, and fails when it is set back to planned", () => {
+    const publishFinance = (d: Data) => (domain(d, "finance").page = true);
+    expect(mutate(publishFinance)).toBe("");
+    const regress = (d: Data) => {
+      publishFinance(d);
+      for (const f of d.families)
+        for (const r of f.capabilities as { name: string; status: string }[])
+          if (["AmountDisplay", "MoneyMovementSummary / FeeBreakdown"].includes(r.name)) r.status = "planned";
+    };
+    expect(mutate(regress)).toMatch(/finance: .*money-transfer" ships 1 of 4 stages/);
   });
 });

@@ -112,6 +112,9 @@ export const DISCLOSURE_FAMILY = ["accordion", "collapsible"];
  */
 export const SELECTION_FAMILY = ["switch", "toggle", "toggle-group"];
 
+/** The navigation family. Tabs only so far: its indicator travels to the chosen tab. */
+export const NAVIGATION_FAMILY = ["tabs"];
+
 /**
  * Every family this suite is responsible for exercising, by name.
  *
@@ -124,6 +127,7 @@ export const SELECTION_FAMILY = ["switch", "toggle", "toggle-group"];
 export const MOTION_FAMILIES = {
   disclosure: DISCLOSURE_FAMILY,
   selection: SELECTION_FAMILY,
+  navigation: NAVIGATION_FAMILY,
 };
 
 /**
@@ -219,6 +223,29 @@ export const MOTION_STATES = [
     prelude: { action: "click", selector: "button[role=switch][data-state=unchecked]" },
     trigger: { action: "click", selector: "button[role=switch][data-state=checked]" },
     target: "button[role=switch] > span",
+    property: "insetInlineStart",
+  },
+  {
+    slug: "tabs",
+    story: "navigation-tabs--playground",
+    interaction: "indicator travel → inline end",
+    classification: MOTION_REQUIRED,
+    // Radix activates a tab on mousedown or key, not on a bare `click()`, so the trigger is a key press.
+    trigger: { action: "press", selector: '[role=tab][data-state=inactive]' },
+    // One bar per list, present before and after, so one selector reads both states. Its inline-start
+    // edge is the trailing one on this move: held back by `instant`, it is still on its way at the midpoint.
+    target: "[data-kx-tabs-bar]",
+    property: "insetInlineStart",
+  },
+  {
+    slug: "tabs",
+    story: "navigation-tabs--playground",
+    interaction: "indicator travel → inline start",
+    classification: MOTION_REQUIRED,
+    // Back again: the other edge leads, so this is a different pair of delays, not a replay.
+    prelude: { action: "press", selector: '[role=tab][data-state=inactive]' },
+    trigger: { action: "press", selector: '[role=tab][data-state=inactive]' },
+    target: "[data-kx-tabs-bar]",
     property: "insetInlineStart",
   },
   {

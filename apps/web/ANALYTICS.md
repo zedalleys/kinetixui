@@ -76,7 +76,7 @@ explicit that installs are not measurable on-site, and there is deliberately no 
 | `installation_viewed` | `/docs/installation` is viewed | `AnalyticsProvider` |
 | `component_viewed` | a component's docs page is viewed | `AnalyticsProvider` |
 | `changelog_viewed` | `/docs/changelog` is viewed | `AnalyticsProvider` |
-| `cta_clicked` | a link marked with `ctaAttrs(source, target)` is clicked | `AnalyticsProvider` listener; markup on the homepage |
+| `cta_clicked` | a link marked with `ctaAttrs(source, target)` is clicked | `AnalyticsProvider` listener; markup on the homepage, `/iot` and the Use cases hub (`/capabilities`, source `use_cases_hub`) |
 | `platform_selected` | the user switches a platform tab: in a component's code view, a block's code view on `/blocks` (with `block`), or the homepage cross-platform example. The choice is shared by every switcher and remembered between pages (`platform-preference.ts`); restoring it on a later page, or opening a page with `?platform=`, is not a selection and fires nothing | `ComponentPreview`, `Showcase`, `CrossPlatformFlagship` |
 | `component_code_viewed` | on a component page, the user opens the Code tab (`location: code_tab`) or, with it open, switches to another platform's code (`location: platform_tabs`). Carries `component`, the `platform` whose code is now on screen, and `source: component_page`; never the code. Not fired on render, on a restored platform, on a planned port (no code shown) or on a copy. Neither Qualified Evaluation nor Adoption Intent (analytics.md §3) | `ComponentPreview` |
 | `github_clicked` | a link into our GitHub repository is clicked | `AnalyticsProvider` listener |

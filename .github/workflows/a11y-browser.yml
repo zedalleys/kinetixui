@@ -146,6 +146,14 @@ jobs:
       - name: Toggle motion (selection 200ms, state layer 100ms, touch, rapid input, forced colours, RTL)
         run: pnpm check:toggle-motion
 
+      # The React Tabs indicator is one bar that travels to the chosen tab; the motion pass proves it moves.
+      # This proves it lands on the right tab where strips break: an overflowing strip scrolled by pointer,
+      # keyboard and code, a resize, a label that grows, tabs added and removed, the chosen tab disabled or
+      # removed, direction and orientation flipped, the strip hidden and shown, 200% text, reduced motion,
+      # forced colours, and the pre-hydration edge it takes over from.
+      - name: Tabs indicator geometry (scrolling, dynamic tabs, direction, orientation, text size)
+        run: pnpm check:tabs-indicator
+
       # Loops are the case the pass above cannot express: nothing to click, no destination to seek to.
       # This reads whether each loop is really running normally and really stopped under reduced motion
       # (including the Spinner, whose "slow to 3s" class was dead behind the floor), and that the stopped

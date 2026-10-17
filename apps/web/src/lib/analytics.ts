@@ -50,6 +50,10 @@ export const ANALYTICS_SOURCES = [
   // The simulated Building Operations console. Its own source so a link followed from it (GitHub, docs) is
   // attributed to the demo rather than dropped as an unlisted page.
   "building_operations_demo",
+  // Business discovery (BD-W3b): the Use Cases hub (/capabilities) and the /use-cases/<domain> pages. Before these,
+  // a link or CTA followed from either page had no source, so it was dropped rather than attributed.
+  "use_cases_hub",
+  "use_case_page",
 ] as const;
 export type AnalyticsSource = (typeof ANALYTICS_SOURCES)[number];
 
