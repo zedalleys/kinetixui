@@ -175,3 +175,51 @@ export function businessContexts(): Record<string, BusinessContext> {
       .filter((pair): pair is readonly [string, BusinessContext] => pair[1] !== null),
   );
 }
+
+/* --------------------------------------------------------------------------------------------- block facets */
+
+/** What the /blocks gallery needs to filter and label blocks by business context, and nothing else. */
+export type BlockFacets = {
+  capabilities: FacetOption[];
+  domains: FacetOption[];
+  /** `href`: the workflow's section on its domain page, when that page exists. */
+  workflows: (FacetOption & { href?: string })[];
+  bySlug: Record<string, { capabilities: string[]; domains: string[]; workflows: string[]; terms: string }>;
+};
+
+/**
+ * The blocks gallery's business facets, read from the index's `blocks` entries (only shipping rows that cite
+ * `block:<slug>` put a block there). As with the catalogue, an option is offered only when a block carries it.
+ */
+export function blockFacets(): BlockFacets {
+  const entries = Object.entries(BLOCK_DISCOVERY);
+  const used = (key: "capabilities" | "domains" | "workflows") => new Set(entries.flatMap(([, e]) => e[key]));
+  const caps = used("capabilities");
+  const doms = used("domains");
+  const wfs = used("workflows");
+  return {
+    capabilities: CAPABILITIES.filter((c) => caps.has(c.id)).map((c) => ({ id: c.id, label: c.title })),
+    domains: DOMAINS.filter((d) => doms.has(d.id)).map((d) => ({ id: d.id, label: d.title })),
+    workflows: WORKFLOWS.filter((w) => wfs.has(w.id)).map((w) => {
+      const d = domainById(w.domain)!;
+      return { id: w.id, label: w.title, ...(d.page ? { href: `${domainHref(d.id)}#${w.id}` } : {}) };
+    }),
+    bySlug: Object.fromEntries(
+      entries.map(([slug, e]) => [
+        slug,
+        {
+          capabilities: e.capabilities,
+          domains: e.domains,
+          workflows: e.workflows,
+          terms: [
+            ...e.capabilities.map((id) => capabilityById(id)!.title),
+            ...e.domains.map((id) => domainById(id)!.title),
+            ...e.workflows.map((id) => workflowById(id)!.title),
+          ]
+            .join(" · ")
+            .toLowerCase(),
+        },
+      ]),
+    ),
+  };
+}
