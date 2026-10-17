@@ -25,6 +25,7 @@ on:
       - "scripts/home-systems-browser.mjs"
       - "scripts/web-quality-browser.mjs"
       - "scripts/blocks-discovery-browser.mjs"
+      - "scripts/global-search-browser.mjs"
       # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
       - "components.manifest.json"
       - "platform-parity.json"
@@ -49,6 +50,7 @@ on:
       - "scripts/home-systems-browser.mjs"
       - "scripts/web-quality-browser.mjs"
       - "scripts/blocks-discovery-browser.mjs"
+      - "scripts/global-search-browser.mjs"
       # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
       - "components.manifest.json"
       - "platform-parity.json"
@@ -150,3 +152,9 @@ jobs:
       # 100/200% text, LTR/RTL, light/dark.
       - name: Blocks discovery filters (URL state, keyboard, layout)
         run: pnpm check:blocks-discovery
+
+      # The ⌘K menu with blocks and use cases against the built site: every result's destination answers and has its
+      # anchor, ⌘K/Ctrl+K and /, Escape and focus return, arrows and Enter, Back/Forward and reload, axe on the open
+      # menu, and no sideways scroll at 390/768/1280, 100/200% text, LTR/RTL, light/dark and forced colours.
+      - name: Global search (keyboard, destinations, axe, layout)
+        run: pnpm check:global-search
