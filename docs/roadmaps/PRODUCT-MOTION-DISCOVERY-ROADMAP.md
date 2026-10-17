@@ -1,6 +1,6 @@
 # Product roadmap: motion, components, business discovery and adoption
 
-**Written:** 2026-10-17 · **Baseline:** `main` at `4c6a0af` (#394; first written on `a6019a1`) · **Status:** plan, not a record of shipped work.
+**Written:** 2026-10-17 · **Baseline:** `main` at `f586c12` (#388; first written on `a6019a1`, refreshed on `4c6a0af`) · **Status:** plan, not a record of shipped work.
 
 This document coordinates four workstreams so they can move in parallel without colliding:
 
@@ -37,15 +37,15 @@ Two of the brief's labels collide with names already in use, so this roadmap use
 
 | Fact | Value | Source |
 | --- | --- | --- |
-| `main` | `4c6a0af` — #394 Blocks and Use cases in global search (previous: `a6019a1`, #389) | `git log` |
-| Recently merged | #385 IoT sliders on library Slider · #386 speed-dial Fab example · #387 range Slider · #389 `/blocks` discovery · #394 Blocks and Use cases in Cmd-K | `git log` |
+| `main` | `f586c12` — #388 SegmentedControl black fill + travelling Tabs indicator (previous refresh: `4c6a0af`, #394) | `git log` |
+| Recently merged | #385 IoT sliders on library Slider · #386 speed-dial Fab example · #387 range Slider · #389 `/blocks` discovery · #394 Blocks and Use cases in Cmd-K · #391 Angular consumer vitest peer · #390 Angular SegmentedControl forced colours · #393 MX1a motion contract · #388 Tabs indicator | `git log` |
 | Package versions on `main` | `@kinetixui/ui` 0.24.0 · `tokens` 0.24.0 · `cli` 0.24.0 · `angular` 0.25.1 · `iot` 0.5.0 | `packages/*/package.json` |
-| Unreleased changesets | 13 in `.changeset/` (ui minor line incl. #387 Slider patch, Angular waves); IoT changesets held in `.changeset-held/iot/` | `.changeset/` |
+| Unreleased changesets | 15 in `.changeset/` (ui minor line incl. #387 Slider patch and #388, Angular waves incl. #390); IoT changesets held in `.changeset-held/iot/` | `.changeset/` |
 | Catalogue | 109 entries; React 109 · Angular 80 · SwiftUI 90 · Compose 90 · Flutter 90 | `platform-parity.json` |
 | Platform maturity | React stable · Angular **preview** · SwiftUI / Compose / Flutter stable (source; not published to SPM / Maven / pub.dev) | `platform-parity.json` `platformDefinitions` |
 | Blocks | 21 (13 cited by shipping capability rows, 8 in `discovery.unclassifiedBlocks`) | `blocks.manifest.json`, `docs/business-capabilities.json` |
 | Discovery data | 8 domains (pages: commerce, travel-booking) · 15 capability groups · 4 workflows (checkout, flight-booking, money-transfer, device-pairing) | `docs/business-capabilities.json` `discovery` |
-| Angular graduation | 9 of 13 criteria met; open: 27 entries still planned, `timeline` missing `rtl` and `largeText` (both kinds, incl. browser) | `node scripts/check-angular-graduation.mjs` |
+| Angular graduation | 7 of 13 criteria met; open: 27 entries still planned, `timeline` missing `rtl` and `largeText` (both kinds, incl. browser), `tabs` missing `reducedMotion` (both kinds; #388 gave React that evidence, so Angular now owes it) | `node scripts/check-angular-graduation.mjs` |
 
 ### 2.2 Evidence totals
 
@@ -54,7 +54,7 @@ because rendered visual gates are tracked by `scripts/visual-gates.mjs`, not by 
 
 | | build | interaction | accessibility | rtl | largeText | reducedMotion |
 | --- | --- | --- | --- | --- | --- | --- |
-| React | 109 | 48 | 109 | 36 | 39 | 3 |
+| React | 109 | 48 | 109 | 36 | 39 | 4 |
 | Angular | 80 | 80 | 80 | 47 | 53 | 23 |
 | SwiftUI | 90 | 0 | 0 | 0 | 0 | 7 |
 | Compose | 90 | 7 | 6 | 1 | 0 | 7 |
@@ -63,14 +63,11 @@ because rendered visual gates are tracked by `scripts/visual-gates.mjs`, not by 
 The native columns are the honest gap: 90 components build on each native platform, but almost none carry
 interaction or accessibility evidence. Section 5 is planned around that.
 
-### 2.3 Open pull requests (re-checked 2026-10-17, ~13:45 UTC)
+### 2.3 Open pull requests (re-checked 2026-10-17, ~15:35 UTC)
 
 | PR | What | State | Owner |
 | --- | --- | --- | --- |
-| #388 | React SegmentedControl inverse fill + travelling Tabs indicator | ready for review; 9/9 checks green on head `6d50c13`, both `axe` runs included | Segmented tabs restyle thread |
-| #390 | Angular SegmentedControl forced-colours selection | draft; 12/12 green on `381e0e9` | same thread |
-| #391 | Hold the Angular consumer's optional vitest peer at 4.1.11 | draft; 11/11 green on `1a2a3cc`; still needed (`main` lacks the fixture override) | CI fix |
-| #393 | MX1a motion contract + `check:motion-tokens` | draft; CI running on `bd3bf73` at check time | MX1 thread |
+| #395 | BD-W3b2a: `/capabilities` becomes the Use Cases hub | open, ready for review | Use cases hub thread |
 | #348 | Version packages (changesets) | open; **not touched by this roadmap** | release |
 | #325 | IoT M4C-A harness | superseded by #342; **not touched** | — |
 
@@ -78,49 +75,47 @@ interaction or accessibility evidence. Section 5 is planned around that.
 
 | Work | Where |
 | --- | --- |
-| React Tabs / SegmentedControl motion and fill | #388 |
-| Angular SegmentedControl forced colours | #390 |
-| **MX1 motion foundation and selection interactions**: MX1a is #393; MX1b-1 (React Toggle, ToggleGroup, Checkbox, RadioGroup, Switch regression) is planned and waits for #393 to merge | MX1 thread, from Ziad's MX1 and MX1b-1 briefs |
-| BD-W3b2 Use cases hub (BD-W3b1 merged as #394) | "Use cases hub and global search" thread |
+| **MX1 selection interactions**: MX1a merged as #393; MX1b-1 (React Toggle, ToggleGroup, Checkbox, RadioGroup, Switch regression) is next, starting with Toggle and ToggleGroup | MX1 thread, from Ziad's MX1 and MX1b-1 briefs |
+| BD-W3b2 Use cases hub: W3b2a is #395 (BD-W3b1 merged as #394) | "Use cases hub and global search" thread |
 | Website Dogfooding Wave 3 adoption audit | its own thread |
 
 ### 2.5 Motion baseline
 
-Verified in the Phase M0 audit (project file `motion-and-discovery-w2/01-MOTION-AUDIT.md`, re-checked on `a6019a1`; motion sources unchanged by #394):
+Verified in the Phase M0 audit (project file `motion-and-discovery-w2/01-MOTION-AUDIT.md`, re-checked on `a6019a1`; what #393 and #388 changed is noted inline):
 
 - **One token source.** `tokens/primitives/motion.json`: durations `instant` 100 · `fast` 200 · `base` 300 · `slow`
   500 · `slower` 1000 ms; easings `linear`, `standard`, `enter`, `exit`, `emphasized`. Generated to CSS variables,
   the Tailwind preset, SwiftUI, Compose and Flutter; Angular reads the CSS variables.
 - **The brief's candidate tiers do not match the shipped tokens.** It proposes `normal` 300 and `slow` 400; the source
   has `base` 300 and `slow` 500. Ziad decided (D1, §10): shipped names and values stay; selection-state motion uses
-  `fast` 200 ms and press feedback `instant` 100 ms where it applies. #393 records this in `tokens/contracts/motion.json`.
+  `fast` 200 ms and press feedback `instant` 100 ms where it applies. #393 (merged) records this in `tokens/contracts/motion.json` and `MOTION.md`.
 - **Reduced motion.** React: a global 0.01 ms floor in the preset plus explicit loop stops. Angular: per-component
   media blocks, no global floor. SwiftUI / Compose / Flutter: family helpers (disclosure, switch, loop; slide on
   SwiftUI only) reading the platform setting.
-- **Gates.** `motion-contract.test.ts`, `check:motion` (Accordion, Collapsible, Switch midpoints), `check:loop-motion`,
+- **Gates.** `motion-contract.test.ts`, `check:motion-tokens` (#393), `check:motion` (Accordion, Collapsible, Switch
+  and, since #388, Tabs midpoints), `check:tabs-indicator` (#388), `check:loop-motion`,
   `check:native-motion` (with a `KNOWN_GAPS` ledger), `check:registry-motion`, Angular browser motion steps.
 - **Known gaps** (G-numbers from the audit): G1 no default transition duration (about 24 components run Tailwind's
-  untokenised 150 ms); G2 no stagger/delay tokens; G3 library `Chart` (Recharts) ignores reduced motion; G4 `/docs/tokens`
-  still says `duration.instant` and `easing.enter/exit` are unconsumed (they are used 36 / 16 / 15 times in
-  `packages/ui/src/components`); G5 Angular has no global floor; G6 Menubar has no exit animation; G7 Progress fills
+  untokenised 150 ms; #393 froze them in a debt register so none can be added, and each is retimed in its own slice); G2 no stagger/delay tokens (#393 decided stagger stays untokenised while it has one consumer); G3 library `Chart` (Recharts) ignores reduced motion; G4 `/docs/tokens`
+  said `duration.instant` and `easing.enter/exit` were unconsumed (fixed by #393); G5 Angular has no global floor; G6 Menubar has no exit animation; G7 Progress fills
   with a physical `translateX` (RTL unmeasured); G9 no per-component motion docs; G10 native ledger gaps; G11 no
   layout-transition policy; G12 gesture tokens unwired.
 
-G1, G2, G4 and the token naming question now belong to the MX1 thread (§2.4). This roadmap lists them for
-dependency purposes only.
+#393 closed G4 and settled G2 and the token naming question; working down G1's debt register belongs to the MX1
+thread (§2.4). This roadmap lists them for dependency purposes only.
 
 ## 3. Phases and dependencies
 
 ```mermaid
 flowchart LR
   P0[Phase 0<br/>this roadmap] --> P1
-  P1[Phase 1 stabilisation<br/>#388 · #390] --> MX1
-  MX0[MX0 contract<br/>#393 MX1a] --> MX1[MX1 selection]
+  P1[Phase 1 stabilisation<br/>#388 · #390 merged] --> MX1
+  MX0[MX0 contract<br/>#393 MX1a merged] --> MX1[MX1 selection]
   MX0 --> MX2[MX2 continuous input]
   MX0 --> MX3[MX3 overlays]
   MX0 --> MX4[MX4 data and feedback]
   BD3a[BD-W3a /blocks facets<br/>merged #389] --> BD3b1[BD-W3b1 Cmd-K<br/>merged #394]
-  BD3b1 --> BD3b2[BD-W3b2 Use cases hub]
+  BD3b1 --> BD3b2[BD-W3b2 Use cases hub<br/>#395]
   BD3b2 --> BD4[BD-W4 domain journeys]
   BD4 --> BD5[BD-W5 new blocks]
   MX2 --> BD5
@@ -134,10 +129,10 @@ flowchart LR
 | Phase | Scope | Depends on | Status |
 | --- | --- | --- | --- |
 | 0 | Reconcile and plan (this document) | — | this PR |
-| 1 | Finish #388 verification; #390 Angular forced colours | — | in flight, other thread |
-| 2 / MX0 | Semantic motion contract, default transition tier, stagger/delay, reduced-motion and RTL rules, gates | D1 (decided) | #393 open (MX1a) |
-| 3 / MX1–MX4 | Component animation waves | MX0 (#393 merged) | MX1b-1 planned; MX2–MX4 planned |
-| 4 / BD-W3b–W5 | Search, Use cases hub, journeys, new blocks | BD-W3a (merged) | W3b1 merged (#394); W3b2 in flight; W4–W5 planned |
+| 1 | Finish #388 verification; #390 Angular forced colours | — | done (#388, #390 merged) |
+| 2 / MX0 | Semantic motion contract, default transition tier, stagger/delay, reduced-motion and RTL rules, gates | D1 (decided) | done (#393 merged, MX1a) |
+| 3 / MX1–MX4 | Component animation waves | MX0 (#393 merged) | MX1b-1 next; MX2–MX4 planned |
+| 4 / BD-W3b–W5 | Search, Use cases hub, journeys, new blocks | BD-W3a (merged) | W3b1 merged (#394); W3b2a open (#395); W4–W5 planned |
 | 5 | Native parity, one component family per PR | MX1, MX3 contracts | planned |
 | 6 | Motion and business documentation, live demos | MX1 | planned |
 | 7 | Verification (applies to every PR) | — | standing |
@@ -151,8 +146,8 @@ claims runtime parity; see §5.
 
 | Wave | Component | R | A | S | C | F | Trigger → property | Planned work | Gate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| MX1 | Tabs | src | src | src | src | src | selection → indicator inline offset + size | #388 (React); Angular / native after | `check:motion` midpoint, `selection-visual` |
-| MX1 | SegmentedControl | src | src | src | src | src | selection → fill | #388, #390 | `selection-visual`, forced colours |
+| MX1 | Tabs | src | src | src | src | src | selection → indicator inline offset + size | React done (#388); Angular / native after | `check:motion` midpoint, `check:tabs-indicator`, `selection-visual` |
+| MX1 | SegmentedControl | src | src | src | src | src | selection → fill | done (#388, #390) | `selection-visual`, forced colours |
 | MX1 | Switch | RM | RM | RM | RM | RM | toggle → thumb inline offset, track colour | verify RTL thumb direction everywhere | `check:motion`, `check:native-motion` |
 | MX1 | Checkbox / RadioGroup | src | src | src | src | src | check → mark opacity / scale | decide whether any motion is warranted | `selection-visual` |
 | MX1 | Toggle / ToggleGroup | src | src | src | src | src | press → colour | default-tier fix (G1) | motion-contract |
@@ -184,11 +179,11 @@ Statuses: **V** implemented and runtime-verified by a gate · **I** implemented,
 | Disclosure (Accordion / Collapsible) motion + reduced form | V (`check:motion`) | V (browser) | I (helper + unit tests) | I | I |
 | Switch motion + reduced form | V | V | I | I | I |
 | Loop stop under reduced motion | V (`check:loop-motion`) | P (spinner slows to 3 s by design rather than stopping; no global floor, G5) | I | I | I |
-| Sliding selection indicator (Tabs) | Pl (#388) | Pl | Pl | Pl | Pl |
+| Sliding selection indicator (Tabs) | V (`check:motion` midpoint and `check:tabs-indicator`, #388) | Pl | Pl | Pl | Pl |
 | Overlay enter / exit with directional easing | P (Menubar has no exit animation, G6; the rest I, contract test checks tokens, not rendered timing) | I (the browser `reducedMotion` pass measures duration, midpoint and end state, not easing) | P (Sheet / Sidebar / Toaster slide helper, Dialog fade only; ledger) | Pl (Dialog and Sheet show and hide without animation; no ledger family) | Pl (`KinetixDialog` and `KinetixSheet` switch between `SizedBox.shrink()` and the overlay; no ledger family) |
 | Default transition duration on every transition | P (G1) | I | NA | NA | NA |
 | Chart reduced motion | Pl (G3) | NA (no Angular Chart) | NA (renders statically, no mount animation) | NA (static) | NA (static) |
-| RTL-correct motion direction | P (Switch, Tabs in #388) | P (`rtl` evidence 47) | Pl | Pl | P (`rtl` evidence 58, layout not motion) |
+| RTL-correct motion direction | P (Switch; Tabs indicator geometry measured under RTL by `check:tabs-indicator`) | P (`rtl` evidence 47) | Pl | Pl | P (`rtl` evidence 58, layout not motion) |
 | Runtime change of the reduced-motion setting | I (media query) | I | I (`@Environment`) | I (observer) | I (`MediaQuery`) |
 
 Native rows are I at best because `check:native-motion` proves that each animating file references the platform
@@ -203,7 +198,7 @@ simulator or emulator, which is the first item of Phase 5.
 | BD-W2a | Tag blocks with business metadata; `unclassifiedBlocks` ledger | shipped (#389) | `check:capabilities`, `check:block-source` | W1 |
 | BD-W3a | `/blocks` facets (q, cat, capability, domain, workflow, platform) | shipped (#389) | `check:blocks-discovery` | W2a |
 | BD-W3b1 | Cmd-K groups for Blocks and published Use cases from a static projection | shipped (#394) | see #394 | W3a |
-| BD-W3b2 | `/capabilities` as the Use cases hub; page criteria for domains | in flight | generator criteria + negative controls; a11y-site | W3b1 |
+| BD-W3b2 | `/capabilities` as the Use cases hub; page criteria for domains | W3b2a open (#395) | generator criteria + negative controls; a11y-site | W3b1 |
 | BD-W4 | Evidence-backed domain journeys (finance first if it meets the page criteria) | planned | `check:capabilities` refuses a page with nothing shipping | W3b2 |
 | BD-W5 | New business blocks, only for composition gaps a journey exposed | planned | `check:block-source` (five platforms), `check:blocks` | W4, MX2 |
 
@@ -217,17 +212,18 @@ One work package per PR. Motion, discovery and native parity never share a PR.
 | # | PR | Workstream | Owner | Blocked by |
 | --- | --- | --- | --- | --- |
 | 1 | **This roadmap** (docs only) | all | this thread | — |
-| 2 | #388 finish, #390 | A / B | restyle thread | Ziad review |
-| 3 | MX1a motion foundation (#393), then MX1b-1 React selection motion | B | MX1 thread | MX1b-1 waits for #393 to merge |
-| 4 | BD-W3b2 Use cases hub (W3b1 merged as #394) | C | use-cases thread | — |
+| 2 | #388 finish, #390 | A / B | restyle thread | done (merged) |
+| 3 | MX1a motion foundation (#393, merged), then MX1b-1 React selection motion | B | MX1 thread | — |
+| 4 | BD-W3b2 Use cases hub (W3b1 merged as #394; W3b2a is #395) | C | use-cases thread | — |
 | 5 | MX0d Chart reduced motion (G3) | B | unassigned | MX1a contract (to reuse its hook / rules) |
-| 6 | Angular `timeline` RTL + large-text evidence (closes 3 of 4 open graduation criteria) | A | unassigned | — |
+| 6 | Angular `timeline` RTL + large-text evidence (closes 3 of 6 open graduation criteria) | A | unassigned | — |
 | 7 | MX3a Menubar exit (G6) + Angular global reduced-motion floor (G5) | B | unassigned | MX1a |
 | 8 | MX2a Progress logical fill (G7), measured in RTL first | B | unassigned | — |
 | 9 | MX2b Slider value text, marks, vertical (React), then native spoken value per platform | B / A | unassigned | #387 (merged) |
 | 10 | Phase 5a: first native UI test (simulator / emulator) for Switch on one platform | A | unassigned | CI runner decision D4 |
 | 11 | BD-W4 first journey | C | unassigned | BD-W3b2 |
 | 12 | Phase 6 per-component Motion section on docs pages, generated from a motion spec | D | unassigned | MX1 |
+| 13 | Angular Tabs travelling indicator + `reducedMotion` evidence, marker and browser (closes the 2 criteria #388 opened) | A / B | unassigned | #388 (merged) |
 
 ## 8. Verification strategy
 
@@ -243,10 +239,9 @@ What each instrument proves is stated narrowly: jsdom proves logic, not layout; 
 rendering; a native unit test proves the helper's branches, not what a user sees on a device.
 
 **This PR** is documentation only. It changes no source, token, generator or gate, so the applicable checks are: the
-file renders on GitHub (Mermaid included), every repository path it names exists on `4c6a0af` except the two it
-labels as outside the tree (the project file `motion-and-discovery-w2/01-MOTION-AUDIT.md` and
-`tokens/contracts/motion.json`, which only open PR #393 proposes), every number in §2 was read from
-the file cited next to it on `a6019a1` and re-checked unchanged on `4c6a0af`, and CI stays green.
+file renders on GitHub (Mermaid included), every repository path it names exists on `f586c12` except the one it
+labels as outside the tree (the project file `motion-and-discovery-w2/01-MOTION-AUDIT.md`), every number in §2
+was read from the file cited next to it and re-checked on `f586c12`, and CI stays green.
 
 ## 9. Marketing dependencies
 
@@ -274,14 +269,14 @@ and CTA events are counted; no new event is added without updating the arrival-e
 | D3 | "Use cases" in the main navigation | Decide with BD-W3b2. |
 | D4 | Native UI tests need macOS (SwiftUI) and an Android emulator (Compose) in CI | Start with one platform and one component; the cost is CI minutes. |
 | R1 | Parallel threads editing the same files (`tabs.tsx`, `segmented-control.tsx`, the motion gates) | Ownership table in §2.4; later PRs merge `main` and rerun gates. |
-| R2 | Unreleased `ui` minor line keeps growing (#376, #385, #387, #388 if merged) | Release is a separate, explicit decision; this roadmap publishes nothing. |
+| R2 | Unreleased `ui` minor line keeps growing (#376, #385, #387, #388) | Release is a separate, explicit decision; this roadmap publishes nothing. |
 | R3 | `verification.json` markers read as "verified" by a casual reader | Docs keep the source / evidence / runtime-verified distinction (§5). |
 | R4 | Native "stable" maturity with near-zero native interaction evidence | Phase 5 adds runtime evidence before any new native claim. |
 
 ## 11. Next executable PR
 
 After this roadmap, the smallest independent slice that no other thread owns is **#6 in §7: Angular `timeline` RTL and
-large-text evidence.** It closes three of the four open Angular graduation criteria (RTL parity, large-text parity, and large text from a real browser) with one component, touches neither
+large-text evidence.** It closes three of the six open Angular graduation criteria (RTL parity, large-text parity, and large text from a real browser) with one component, touches neither
 motion files nor discovery files, and is measurable.
 
 Acceptance criteria:
@@ -293,6 +288,7 @@ Acceptance criteria:
 3. Large text: add `timeline` to the `largeText` pass of the same script, the browser instrument the graduation
    check requires, and fix any defect it finds in `packages/ui-angular` instead of allowlisting it.
 4. Regenerate `verification.json` with `pnpm gen:verification`, then confirm the fixed point with `pnpm check:verification`; never hand-edit it.
-5. The graduation check then reports 22/22, 27/27 and 27/27 for those three rows, leaving only the planned-entries criterion open.
+5. The graduation check then reports 22/22, 27/27 and 27/27 for those three rows, leaving the planned-entries
+   criterion and the two `tabs` reduced-motion criteria (§7 row 13) open.
 6. Negative control: temporarily remove the fix or the new assertion and show the gate failing; restore it.
 7. Angular's `maturity` stays `preview`: 27 catalogue entries are still planned.
