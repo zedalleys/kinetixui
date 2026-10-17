@@ -33,8 +33,11 @@ const Slider = React.forwardRef<
     },
     ref,
   ) => {
-    // Radix fixes the thumb count from the first render's values (uncontrolled) or the current ones (controlled).
-    const count = Math.max(1, (props.value ?? props.defaultValue ?? [props.min ?? 0]).length);
+    // Radix reads `defaultValue` once, so an uncontrolled Slider keeps its first count even if `defaultValue` later
+    // changes; a controlled one follows `value`. Counting a later `defaultValue` would draw a thumb with no value and
+    // move the name to a group around the one thumb that is still there.
+    const [uncontrolledCount] = React.useState(() => (props.defaultValue ?? [props.min ?? 0]).length);
+    const count = Math.max(1, props.value ? props.value.length : uncontrolledCount);
     const range = count > 1;
     return (
       <SliderPrimitive.Root
