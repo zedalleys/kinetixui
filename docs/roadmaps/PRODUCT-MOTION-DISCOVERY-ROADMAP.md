@@ -1,6 +1,6 @@
 # Product roadmap: motion, components, business discovery and adoption
 
-**Written:** 2026-10-17 · **Baseline:** `main` at `a6019a1` (#389) · **Status:** plan, not a record of shipped work.
+**Written:** 2026-10-17 · **Baseline:** `main` at `4c6a0af` (#394; first written on `a6019a1`) · **Status:** plan, not a record of shipped work.
 
 This document coordinates four workstreams so they can move in parallel without colliding:
 
@@ -37,8 +37,8 @@ Two of the brief's labels collide with names already in use, so this roadmap use
 
 | Fact | Value | Source |
 | --- | --- | --- |
-| `main` | `a6019a1` — #389 block business metadata + `/blocks` filters | `git log` |
-| Recently merged | #385 IoT sliders on library Slider · #386 speed-dial Fab example · #387 range Slider · #389 `/blocks` discovery | `git log` |
+| `main` | `4c6a0af` — #394 Blocks and Use cases in global search (previous: `a6019a1`, #389) | `git log` |
+| Recently merged | #385 IoT sliders on library Slider · #386 speed-dial Fab example · #387 range Slider · #389 `/blocks` discovery · #394 Blocks and Use cases in Cmd-K | `git log` |
 | Package versions on `main` | `@kinetixui/ui` 0.24.0 · `tokens` 0.24.0 · `cli` 0.24.0 · `angular` 0.25.1 · `iot` 0.5.0 | `packages/*/package.json` |
 | Unreleased changesets | 13 in `.changeset/` (ui minor line incl. #387 Slider patch, Angular waves); IoT changesets held in `.changeset-held/iot/` | `.changeset/` |
 | Catalogue | 109 entries; React 109 · Angular 80 · SwiftUI 90 · Compose 90 · Flutter 90 | `platform-parity.json` |
@@ -63,13 +63,14 @@ because rendered visual gates are tracked by `scripts/visual-gates.mjs`, not by 
 The native columns are the honest gap: 90 components build on each native platform, but almost none carry
 interaction or accessibility evidence. Section 5 is planned around that.
 
-### 2.3 Open pull requests (checked 06:40 UTC)
+### 2.3 Open pull requests (re-checked 2026-10-17, ~13:45 UTC)
 
 | PR | What | State | Owner |
 | --- | --- | --- | --- |
-| #388 | React SegmentedControl inverse fill + travelling Tabs indicator | draft; build green; one of two `axe` runs failed on head `70d68a7` | Segmented tabs restyle thread |
-| #390 | Angular SegmentedControl forced-colours selection | draft; all checks green | same thread |
-| #391 | Hold the Angular consumer's optional vitest peer at 4.1.11 | draft; all checks green | CI fix |
+| #388 | React SegmentedControl inverse fill + travelling Tabs indicator | ready for review; 9/9 checks green on head `6d50c13`, both `axe` runs included | Segmented tabs restyle thread |
+| #390 | Angular SegmentedControl forced-colours selection | draft; 12/12 green on `381e0e9` | same thread |
+| #391 | Hold the Angular consumer's optional vitest peer at 4.1.11 | draft; 11/11 green on `1a2a3cc`; still needed (`main` lacks the fixture override) | CI fix |
+| #393 | MX1a motion contract + `check:motion-tokens` | draft; CI running on `bd3bf73` at check time | MX1 thread |
 | #348 | Version packages (changesets) | open; **not touched by this roadmap** | release |
 | #325 | IoT M4C-A harness | superseded by #342; **not touched** | — |
 
@@ -79,20 +80,20 @@ interaction or accessibility evidence. Section 5 is planned around that.
 | --- | --- |
 | React Tabs / SegmentedControl motion and fill | #388 |
 | Angular SegmentedControl forced colours | #390 |
-| **MX1 motion foundation and selection interactions** (first PR: MX1a) | "MX1a motion foundation" thread, from Ziad's MX1 brief |
-| BD-W3b1 Cmd-K Blocks + Use cases, then BD-W3b2 Use cases hub | "Use cases hub and global search" thread |
+| **MX1 motion foundation and selection interactions**: MX1a is #393; MX1b-1 (React Toggle, ToggleGroup, Checkbox, RadioGroup, Switch regression) is planned and waits for #393 to merge | MX1 thread, from Ziad's MX1 and MX1b-1 briefs |
+| BD-W3b2 Use cases hub (BD-W3b1 merged as #394) | "Use cases hub and global search" thread |
 | Website Dogfooding Wave 3 adoption audit | its own thread |
 
 ### 2.5 Motion baseline
 
-Verified in the Phase M0 audit (project file `motion-and-discovery-w2/01-MOTION-AUDIT.md`, re-checked on `a6019a1`):
+Verified in the Phase M0 audit (project file `motion-and-discovery-w2/01-MOTION-AUDIT.md`, re-checked on `a6019a1`; motion sources unchanged by #394):
 
 - **One token source.** `tokens/primitives/motion.json`: durations `instant` 100 · `fast` 200 · `base` 300 · `slow`
   500 · `slower` 1000 ms; easings `linear`, `standard`, `enter`, `exit`, `emphasized`. Generated to CSS variables,
   the Tailwind preset, SwiftUI, Compose and Flutter; Angular reads the CSS variables.
 - **The brief's candidate tiers do not match the shipped tokens.** It proposes `normal` 300 and `slow` 400; the source
-  has `base` 300 and `slow` 500. Renaming or retiming is a breaking token change on five platforms and is an owner
-  decision (D1 in §9), not something this roadmap does.
+  has `base` 300 and `slow` 500. Ziad decided (D1, §10): shipped names and values stay; selection-state motion uses
+  `fast` 200 ms and press feedback `instant` 100 ms where it applies. #393 records this in `tokens/contracts/motion.json`.
 - **Reduced motion.** React: a global 0.01 ms floor in the preset plus explicit loop stops. Angular: per-component
   media blocks, no global floor. SwiftUI / Compose / Flutter: family helpers (disclosure, switch, loop; slide on
   SwiftUI only) reading the platform setting.
@@ -114,11 +115,11 @@ dependency purposes only.
 flowchart LR
   P0[Phase 0<br/>this roadmap] --> P1
   P1[Phase 1 stabilisation<br/>#388 · #390] --> MX1
-  MX0[MX0 contract<br/>in MX1 thread] --> MX1[MX1 selection]
+  MX0[MX0 contract<br/>#393 MX1a] --> MX1[MX1 selection]
   MX0 --> MX2[MX2 continuous input]
   MX0 --> MX3[MX3 overlays]
   MX0 --> MX4[MX4 data and feedback]
-  BD3a[BD-W3a /blocks facets<br/>merged #389] --> BD3b1[BD-W3b1 Cmd-K]
+  BD3a[BD-W3a /blocks facets<br/>merged #389] --> BD3b1[BD-W3b1 Cmd-K<br/>merged #394]
   BD3b1 --> BD3b2[BD-W3b2 Use cases hub]
   BD3b2 --> BD4[BD-W4 domain journeys]
   BD4 --> BD5[BD-W5 new blocks]
@@ -134,9 +135,9 @@ flowchart LR
 | --- | --- | --- | --- |
 | 0 | Reconcile and plan (this document) | — | this PR |
 | 1 | Finish #388 verification; #390 Angular forced colours | — | in flight, other thread |
-| 2 / MX0 | Semantic motion contract, default transition tier, stagger/delay, reduced-motion and RTL rules, gates | owner decision D1 | in flight, MX1 thread |
-| 3 / MX1–MX4 | Component animation waves | MX0 | MX1 in flight; MX2–MX4 planned |
-| 4 / BD-W3b–W5 | Search, Use cases hub, journeys, new blocks | BD-W3a (merged) | W3b in flight; W4–W5 planned |
+| 2 / MX0 | Semantic motion contract, default transition tier, stagger/delay, reduced-motion and RTL rules, gates | D1 (decided) | #393 open (MX1a) |
+| 3 / MX1–MX4 | Component animation waves | MX0 (#393 merged) | MX1b-1 planned; MX2–MX4 planned |
+| 4 / BD-W3b–W5 | Search, Use cases hub, journeys, new blocks | BD-W3a (merged) | W3b1 merged (#394); W3b2 in flight; W4–W5 planned |
 | 5 | Native parity, one component family per PR | MX1, MX3 contracts | planned |
 | 6 | Motion and business documentation, live demos | MX1 | planned |
 | 7 | Verification (applies to every PR) | — | standing |
@@ -201,7 +202,7 @@ simulator or emulator, which is the first item of Phase 5.
 | BD-W1 | Capability data, `/components` business filters, `/capabilities`, `/use-cases/{commerce,travel-booking}` | shipped (#377) | `check:capabilities` | — |
 | BD-W2a | Tag blocks with business metadata; `unclassifiedBlocks` ledger | shipped (#389) | `check:capabilities`, `check:block-source` | W1 |
 | BD-W3a | `/blocks` facets (q, cat, capability, domain, workflow, platform) | shipped (#389) | `check:blocks-discovery` | W2a |
-| BD-W3b1 | Cmd-K groups for Blocks and published Use cases from a static projection | in flight | planned: search-projection tests, command-menu browser test | W3a |
+| BD-W3b1 | Cmd-K groups for Blocks and published Use cases from a static projection | shipped (#394) | see #394 | W3a |
 | BD-W3b2 | `/capabilities` as the Use cases hub; page criteria for domains | in flight | generator criteria + negative controls; a11y-site | W3b1 |
 | BD-W4 | Evidence-backed domain journeys (finance first if it meets the page criteria) | planned | `check:capabilities` refuses a page with nothing shipping | W3b2 |
 | BD-W5 | New business blocks, only for composition gaps a journey exposed | planned | `check:block-source` (five platforms), `check:blocks` | W4, MX2 |
@@ -217,8 +218,8 @@ One work package per PR. Motion, discovery and native parity never share a PR.
 | --- | --- | --- | --- | --- |
 | 1 | **This roadmap** (docs only) | all | this thread | — |
 | 2 | #388 finish, #390 | A / B | restyle thread | Ziad review |
-| 3 | MX1a motion foundation, then MX1 component slices | B | MX1 thread | D1 |
-| 4 | BD-W3b1 Cmd-K, then BD-W3b2 hub | C | use-cases thread | — |
+| 3 | MX1a motion foundation (#393), then MX1b-1 React selection motion | B | MX1 thread | MX1b-1 waits for #393 to merge |
+| 4 | BD-W3b2 Use cases hub (W3b1 merged as #394) | C | use-cases thread | — |
 | 5 | MX0d Chart reduced motion (G3) | B | unassigned | MX1a contract (to reuse its hook / rules) |
 | 6 | Angular `timeline` RTL + large-text evidence (closes 3 of 4 open graduation criteria) | A | unassigned | — |
 | 7 | MX3a Menubar exit (G6) + Angular global reduced-motion floor (G5) | B | unassigned | MX1a |
@@ -243,7 +244,7 @@ rendering; a native unit test proves the helper's branches, not what a user sees
 
 **This PR** is documentation only. It changes no source, token, generator or gate, so the applicable checks are: the
 file renders on GitHub (Mermaid included), every repository path it names exists, every number in §2 was read from
-the file cited next to it on `a6019a1`, and CI stays green.
+the file cited next to it on `a6019a1` and re-checked unchanged on `4c6a0af`, and CI stays green.
 
 ## 9. Marketing dependencies
 
@@ -266,7 +267,7 @@ and CTA events are counted; no new event is added without updating the arrival-e
 
 | # | Decision or risk | Recommendation |
 | --- | --- | --- |
-| D1 | Motion tier names and values: brief's `instant/fast/normal/slow` = 100/200/300/400 vs shipped `instant/fast/base/slow/slower` = 100/200/300/500/1000; and the default transition tier (`instant` or `fast`) | Keep shipped names and values; decide the default tier in the MX1 thread. A rename is a breaking change on five platforms. |
+| D1 | Motion tier names and values | **Decided by Ziad (MX1b-1 brief):** keep shipped names and values (`base` 300, `slow` 500, `slower` 1000, easings unchanged); selection-state motion `fast` 200 ms; press feedback `instant` 100 ms where appropriate; no global retiming. |
 | D2 | "Industry" vs "Business domain" as the UI label | Decide before BD-W3b2 ships. |
 | D3 | "Use cases" in the main navigation | Decide with BD-W3b2. |
 | D4 | Native UI tests need macOS (SwiftUI) and an Android emulator (Compose) in CI | Start with one platform and one component; the cost is CI minutes. |
