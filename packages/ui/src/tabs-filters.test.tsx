@@ -47,6 +47,26 @@ describe("navigation and filter semantics", () => {
     await user.keyboard("{Enter}");
     expect(screen.getByRole("tab", { name: "Two" })).toHaveAttribute("aria-selected", "true");
   });
+  it("keeps the TabsList asChild contract, with the indicator inside the consumer's element", async () => {
+    render(
+      <Tabs defaultValue="a">
+        <TabsList asChild aria-label="Sections">
+          <nav>
+            <TabsTrigger value="a">One</TabsTrigger>
+            <TabsTrigger value="b">Two</TabsTrigger>
+          </nav>
+        </TabsList>
+        <TabsContent value="a">First</TabsContent>
+        <TabsContent value="b">Second</TabsContent>
+      </Tabs>,
+    );
+    const list = screen.getByRole("tablist", { name: "Sections" });
+    expect(list.tagName).toBe("NAV");
+    expect(list).toHaveAttribute("data-kx-tabs-list");
+    expect(list.querySelector(":scope > [data-kx-tabs-bar]")).toHaveAttribute("aria-hidden", "true");
+    await userEvent.setup().click(screen.getByRole("tab", { name: "Two" }));
+    expect(screen.getByRole("tabpanel")).toHaveTextContent("Second");
+  });
   it("keeps icon-bearing chips named by text and keyboard-toggleable", async () => {
     render(
       <Toggle variant="pill" leadingIcon={<svg role="img" aria-label="Redundant logo" />}>

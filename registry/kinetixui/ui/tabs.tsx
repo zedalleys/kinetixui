@@ -108,7 +108,7 @@ function useTabsIndicator(listRef: React.RefObject<HTMLDivElement | null>, indic
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
->(({ className, onFocusCapture, children, ...props }, ref) => {
+>(({ className, onFocusCapture, asChild, children, ...props }, ref) => {
   const listRef = React.useRef<HTMLDivElement | null>(null);
   const indicatorRef = React.useRef<HTMLSpanElement | null>(null);
   const setRefs = React.useCallback(
@@ -120,10 +120,28 @@ const TabsList = React.forwardRef<
     [ref],
   );
   useTabsIndicator(listRef, indicatorRef);
+  // With `asChild` Radix's Slot takes exactly one child, so the bar goes inside the consumer's element.
+  const bar = (
+    <span
+      ref={indicatorRef}
+      aria-hidden="true"
+      data-kx-tabs-bar=""
+      className={cn(
+        "pointer-events-none absolute hidden bg-foreground group-data-[kx-tabs-indicator]/tabs:block forced-colors:!hidden",
+        // grid-ok: 2px is a stroke weight, not spacing: the trigger's border-b-2 at any text size
+        "bottom-0 h-[2px] [inset-inline-end:var(--kx-tabs-end,0px)] [inset-inline-start:var(--kx-tabs-start,0px)]", // grid-ok
+        "group-data-[orientation=vertical]/tabs:bottom-auto group-data-[orientation=vertical]/tabs:h-auto group-data-[orientation=vertical]/tabs:w-[2px] group-data-[orientation=vertical]/tabs:[inset-inline-start:auto] group-data-[orientation=vertical]/tabs:[inset-inline-end:0px] group-data-[orientation=vertical]/tabs:[inset-block-start:var(--kx-tabs-start,0px)] group-data-[orientation=vertical]/tabs:[inset-block-end:var(--kx-tabs-end,0px)]", // grid-ok
+        // Two edges on one curve, the trailing one held back by `instant`: a stretch, then a settle.
+        "[transition-duration:var(--duration-base)] [transition-property:inset-inline-start,inset-inline-end,inset-block-start,inset-block-end] [transition-timing-function:var(--easing-emphasized)]",
+        "[transition-delay:var(--kx-tabs-start-delay,0ms),var(--kx-tabs-end-delay,0ms),var(--kx-tabs-start-delay,0ms),var(--kx-tabs-end-delay,0ms)] motion-reduce:transition-none",
+      )}
+    />
+  );
   return (
     <TabsPrimitive.List
       ref={setRefs}
       data-kx-tabs-list=""
+      asChild={asChild}
       onFocusCapture={(event) => {
         onFocusCapture?.(event);
         if (event.defaultPrevented) return;
@@ -142,21 +160,14 @@ const TabsList = React.forwardRef<
       )}
       {...props}
     >
-      {children}
-      <span
-        ref={indicatorRef}
-        aria-hidden="true"
-        data-kx-tabs-bar=""
-        className={cn(
-          "pointer-events-none absolute hidden bg-foreground group-data-[kx-tabs-indicator]/tabs:block forced-colors:!hidden",
-          // grid-ok: 2px is a stroke weight, not spacing: the trigger's border-b-2 at any text size
-          "bottom-0 h-[2px] [inset-inline-end:var(--kx-tabs-end,0px)] [inset-inline-start:var(--kx-tabs-start,0px)]", // grid-ok
-          "group-data-[orientation=vertical]/tabs:bottom-auto group-data-[orientation=vertical]/tabs:h-auto group-data-[orientation=vertical]/tabs:w-[2px] group-data-[orientation=vertical]/tabs:[inset-inline-start:auto] group-data-[orientation=vertical]/tabs:[inset-inline-end:0px] group-data-[orientation=vertical]/tabs:[inset-block-start:var(--kx-tabs-start,0px)] group-data-[orientation=vertical]/tabs:[inset-block-end:var(--kx-tabs-end,0px)]", // grid-ok
-          // Two edges on one curve, the trailing one held back by `instant`: a stretch, then a settle.
-          "[transition-duration:var(--duration-base)] [transition-property:inset-inline-start,inset-inline-end,inset-block-start,inset-block-end] [transition-timing-function:var(--easing-emphasized)]",
-          "[transition-delay:var(--kx-tabs-start-delay,0ms),var(--kx-tabs-end-delay,0ms),var(--kx-tabs-start-delay,0ms),var(--kx-tabs-end-delay,0ms)] motion-reduce:transition-none",
-        )}
-      />
+      {asChild && React.isValidElement<{ children?: React.ReactNode }>(children) ? (
+        React.cloneElement(children, undefined, children.props.children, bar)
+      ) : (
+        <>
+          {children}
+          {bar}
+        </>
+      )}
     </TabsPrimitive.List>
   );
 });
