@@ -1,6 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
-import { durations, easings, elevation, platformUnits, radiusRoles, radiusScale, spacingScale } from "@/lib/foundations";
+import { durations, easings, elevation, motionRoles, platformUnits, radiusRoles, radiusScale, spacingScale } from "@/lib/foundations";
 import manifest from "../../../../components.manifest.json";
 import {
   CATALOGUE_VERIFICATION,
@@ -172,6 +172,39 @@ export function MotionTable() {
         ))}
       </Table>
     </>
+  );
+}
+
+const codeList = (names: string[]) =>
+  names.map((n, i) => (
+    <React.Fragment key={n}>
+      {i ? " / " : ""}
+      <span className="whitespace-nowrap">
+        <Code>{n}</Code>
+      </span>
+    </React.Fragment>
+  ));
+
+/** Roles from tokens/contracts/motion.json; the status column is what check:motion-tokens enforces. */
+export function MotionRolesTable() {
+  return (
+    <Table label="Motion roles" head={["Role", "Duration", "Easing", "Reduced motion", "Status", "Where"]}>
+      {motionRoles.map((r) => (
+        <tr key={r.name}>
+          <th scope="row" className={`${td} text-left font-medium`}>
+            {r.name}
+          </th>
+          <td className={td}>{r.duration.length ? codeList(r.duration) : "own period"}</td>
+          <td className={td}>{r.easing.length ? codeList(r.easing) : "own curve"}</td>
+          <td className={`${td} text-muted-foreground`}>{r.reducedForm}</td>
+          <td className={td}>{r.status}</td>
+          <td className={`${td} text-muted-foreground`}>
+            {r.platforms.join(", ") || r.scope || "—"}
+            {r.deviations.length ? ` (differs on ${r.deviations.join(", ")})` : ""}
+          </td>
+        </tr>
+      ))}
+    </Table>
   );
 }
 

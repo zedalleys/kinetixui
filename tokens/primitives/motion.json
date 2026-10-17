@@ -3,54 +3,54 @@
     "instant": {
       "$type": "duration",
       "$value": "100ms",
-      "$description": "Near-immediate feedback — press states, toggles. Below this a change reads as a jump."
+      "$description": "Press and toggle feedback — the tier a control uses to answer the pointer. Below this a change reads as a jump."
     },
     "fast": {
       "$type": "duration",
       "$value": "200ms",
-      "$description": "Quick UI transitions — icon rotation, chevrons, sidebar collapse."
+      "$description": "Small state changes — a chevron, a disclosure, a menu or overlay opening."
     },
     "base": {
       "$type": "duration",
       "$value": "300ms",
-      "$description": "Default transition speed — fades, stroke/progress animations."
+      "$description": "Fades, progress strokes and travelling indicators; a sheet or drawer closing."
     },
     "slow": {
       "$type": "duration",
       "$value": "500ms",
-      "$description": "Entrance transitions for larger surfaces — sheet/drawer open."
+      "$description": "A large surface arriving — sheet or drawer open."
     },
     "slower": {
       "$type": "duration",
       "$value": "1000ms",
-      "$description": "Looping animations — caret blink."
+      "$description": "Reserved for loop periods. Not a transition tier."
     }
   },
   "easing": {
     "linear": {
       "$type": "cubicBezier",
       "$value": [0, 0, 1, 1],
-      "$description": "Constant-speed motion — panel slides (Sidebar)."
+      "$description": "Constant speed — loops and panels whose position tracks a value, never a state change."
     },
     "standard": {
       "$type": "cubicBezier",
       "$value": [0.4, 0, 0.2, 1],
-      "$description": "Default ease-in-out — dialogs, sheets, overlays."
+      "$description": "Symmetric state change in place — selection, colour, a control moving between two rest positions."
     },
     "enter": {
       "$type": "cubicBezier",
       "$value": [0, 0, 0.2, 1],
-      "$description": "Decelerate — an element entering the screen or a surface opening."
+      "$description": "Decelerate — an element entering the screen or a surface opening should settle."
     },
     "exit": {
       "$type": "cubicBezier",
       "$value": [0.4, 0, 1, 1],
-      "$description": "Accelerate — an element leaving the screen or a surface closing."
+      "$description": "Accelerate — an element leaving the screen or a surface closing should get out of the way."
     },
     "emphasized": {
       "$type": "cubicBezier",
       "$value": [0.2, 0, 0, 1],
-      "$description": "Expressive — large or attention-drawing transitions. Use sparingly."
+      "$description": "Expressive — rare, attention-carrying travel such as a selection indicator moving between items. Use sparingly."
     }
   }
 }
