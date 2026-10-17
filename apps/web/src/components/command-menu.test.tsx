@@ -196,7 +196,9 @@ describe("CommandMenu", () => {
   });
 });
 
-describe("CommandMenu: blocks and use cases (BD-W3b1)", () => {
+// Each test types into a menu of several hundred results; on a shared CI runner that outlasts the 5 s default (the
+// highlight test timed out there at 5.1 s while taking 3.4 s locally), so the group gets more room, not fewer checks.
+describe("CommandMenu: blocks and use cases (BD-W3b1)", { timeout: 20_000 }, () => {
   const PROJECTION = searchProjection();
   const serve = () => {
     const fetchMock = vi.fn(async () => Response.json(PROJECTION));
