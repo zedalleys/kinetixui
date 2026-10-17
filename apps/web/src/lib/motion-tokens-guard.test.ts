@@ -87,6 +87,18 @@ describe("check:motion-tokens", () => {
     expect(out).toMatch(/--duration-normal is not a motion token/);
   });
 
+  it("catches a suffixed CSS variable that only starts like a token", () => {
+    const { code, out } = run(mutate(ANGULAR, "box-shadow var(--duration-instant)", "box-shadow var(--duration-instant-extra)"));
+    expect(code).toBe(1);
+    expect(out).toMatch(/--duration-instant-extra is not a motion token/);
+  });
+
+  it("catches a suffixed CSS easing variable", () => {
+    const { code, out } = run(mutate(ANGULAR, "var(--easing-standard)", "var(--easing-standard2)"));
+    expect(code).toBe(1);
+    expect(out).toMatch(/--easing-standard2 is not a motion token/);
+  });
+
   it("catches a Tailwind tier utility that does not exist", () => {
     const { code, out } = run(
       mutate("packages/ui/src/components/toggle.tsx", "transition-colors", "transition-colors duration-normal"),
