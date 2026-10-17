@@ -179,7 +179,7 @@ Statuses: **V** implemented and runtime-verified by a gate · **I** implemented,
 
 | Behaviour | React | Angular | SwiftUI | Compose | Flutter |
 | --- | --- | --- | --- | --- | --- |
-| Motion tokens generated from one source | V (contract test) | V (reads CSS vars) | I | I | I (`flutter-tokens` test checks values) |
+| Motion tokens generated from one source | I (contract test checks class-string wiring, not runtime) | I (reads the CSS variables; no gate inspects computed values) | I | I | I (`flutter-tokens` test checks values) |
 | Disclosure (Accordion / Collapsible) motion + reduced form | V (`check:motion`) | V (browser) | I (helper + unit tests) | I | I |
 | Switch motion + reduced form | V | V | I | I | I |
 | Loop stop under reduced motion | V (`check:loop-motion`) | P (spinner slows to 3 s by design rather than stopping; no global floor, G5) | I | I | I |
