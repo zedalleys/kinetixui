@@ -14,6 +14,14 @@
 > ([`analytics.md`](./analytics.md) §5) and `CLAIMS.md` **D1** is `PENDING LIVE VERIFICATION`. A copied
 > command is where our knowledge ends. The strongest honest signal is **Adoption Intent**, below.
 
+## Period and sources
+- Reporting period (UTC, Monday 00:00 to Sunday 23:59):
+- PostHog project and the query or dashboard tile each number came from (dashboard "KinetixUI — marketing
+  funnel"; any one-off query pasted into the capture):
+- Repository commit the product numbers were read at (`pnpm marketing:stats`):
+- Inventory at the start of the week: `pnpm marketing:inventory` (statuses, planned versus actual dates)
+- What could not be read this week, and why (a channel's own analytics, a live URL):
+
 ## Traffic — Tier 3, context only
 - Sessions:
 - Acquisition channels (`kx_source`), as counts:
@@ -29,6 +37,11 @@ Sessions in which someone inspected the product rather than the pitch. Any one s
 - `installation_viewed`:
 - **Qualified Evaluation sessions (count):**
 - **Which event started it** most often:
+- **Automated-traffic check:** how many Qualified Evaluation sessions were one page, under 5 seconds, with no
+  referrer and a new device each time? Report them beside the count, never silently inside it. In the week of
+  12 to 14 October all 38 Qualified Evaluation sessions looked like this
+  ([`audits/M1-CAMPAIGN-RECONCILIATION.md`](./audits/M1-CAMPAIGN-RECONCILIATION.md) §8). Whether to exclude
+  them from the definition is the owner's decision in `analytics.md`, not a reviewer's in a query.
 
 ## Adoption Intent — Tier 1 ([`analytics.md`](./analytics.md) §4)
 Someone looking at *how to adopt*. Evaluation is **not** required — see `analytics.md` §4, which is why the
@@ -42,12 +55,19 @@ rate and the progression are separate measures. **Not an install count.**
 - **Which rung** did people reach for:
 
 ## Distribution — from [`distribution/register.json`](./distribution/register.json)
-- Assets published this week, by channel:
+- Assets published this week, by channel, **each with its live URL** (no URL, not published):
+- Planned versus actual date for each, from `pnpm marketing:inventory`:
 - Rows appended to the register (date + result filled in):
 - Anything planned and **not** published, and why:
 - **Content → Qualified Evaluation:** campaign-attributed sessions vs direct, as counts:
 - **P1 vs P2:** `kx_p1_*` vs `kx_p2_*` counts. **Do not declare a winner** ([`analytics.md`](./analytics.md) §9):
 - Community contributions made, and whether the rules were re-read first:
+
+## Engagement — platform-reported, context only
+Copy only what the channel itself shows (LinkedIn, X and dev.to analytics), with the date it was read.
+Leave a field empty rather than estimate it. None of these is a Tier 1 metric.
+- Per asset: impressions · clicks · reactions · comments · reposts or shares · read date:
+- Paid amplification running this week, if any (`amplification` log), so its counts are not read as organic:
 
 ## Exploration — Tier 2
 - Docs views · component views · platform-doc views:
@@ -84,6 +104,10 @@ One per line reviewed, from [`analytics.md`](./analytics.md) §10's evidence lad
 - Verdicts this week:
 
 ## Next week
+- Content to publish (from the execution calendar, `distribution/execution-calendar.md`):
+- Content to improve (a draft whose `verify-package.mjs` fails, a stale figure):
+- Product issues for BD-W4 (adoption friction seen in sessions or replies), routed to that workstream:
+- Development milestones worth covering (`opportunities.md`), only once live:
 - One content priority:
 - One product priority that creates content:
 - One experiment ([`experiments.md`](./experiments.md)) — **one at a time**:

@@ -47,7 +47,7 @@ This is the single most important sentence in KinetixUI's marketing, and the eas
 
 One DTCG source produces every platform's token output — CSS variables, Swift, Kotlin, Dart. That pipeline is
 real and automated. The *components* are five separate implementations in five idioms: SwiftUI views, Compose
-composables, Flutter widgets, Angular directives on native elements, React components. They share a contract,
+composables, Flutter widgets, Angular components written in Angular, React components. They share a contract,
 not a codebase.
 
 Collapsing these into "one source, every platform" would be the most attractive lie available to us, and the
@@ -233,7 +233,7 @@ demonstrable in a minute, on our own repository, and is the reason the rest of t
 - **Problem:** "cross-platform UI" usually means a web view in a native shell.
 - **Promise:** each platform's components are written in that platform's idiom, and read like that platform.
 - **Mechanism:** separate source trees per platform, each compiled by its own CI workflow. Angular is
-  directives on native elements (`<button kxButton>`), not React wrapped.
+  written in Angular (a button is a directive on a real `<button kxButton>`), not React wrapped.
 - **Evidence:** `native-swiftui.yml`, `native-compose.yml`, `native-flutter.yml`; `check:angular-api`.
 
 ### Pillar 3 — Coverage you can check, including where it is thin
@@ -349,10 +349,12 @@ check exists.
 3. **Distribution is not maturity.** Every native port is `maturity: "stable"` and on **no** package
    registry. Never show an install command for an undistributed library. `pnpm marketing:stats` prints
    installable-versus-source-only as its own section for exactly this reason.
-4. **The catalogue is 98 entries, of which one is a documented recipe, not a component.** "98 components"
-   overstates by one. `marketing:stats` says so out loud; quote it that way.
-5. **Direction-aware evidence is uneven.** Flutter is strong; React, Compose and Angular are single-digit
-   component counts; SwiftUI has none at all. Quote the fractions, never a platform list.
+4. **The catalogue count includes one documented recipe, not a component.** Calling every entry a component
+   overstates by one. `marketing:stats` says so out loud; quote the count from it, never from memory.
+5. **Direction-aware evidence is uneven.** It ranges from most of one platform's implementations to one
+   component on another and none at all on a third, and the ranking moves as tests land (it read Flutter >
+   Angular > React > Compose > SwiftUI on 2026-10-17). Quote the fractions from `marketing:stats`, never a
+   platform list.
 6. **No users to point at.** Engineering proof only. Never invent adoption, testimonials or download
    narratives.
 7. **Pro does not exist.** Do not market it, tease it, or imply a paid tier is planned.

@@ -11,6 +11,7 @@
  *   node scripts/check-content-register.mjs
  */
 import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { approvalProblems } from "./marketing-publication-rules.mjs";
 
 const register = JSON.parse(readFileSync("marketing/content/register.json", "utf8"));
 const problems = [];
@@ -99,6 +100,12 @@ for (const asset of register.assets) {
     fail(id, `visual "${asset.visual}" is not in the visuals list`);
   }
 }
+
+/*
+ * `ready` means the copy's own checks pass, not that anyone approved it (content/README.md). An approval is an
+ * explicit owner decision recorded on the asset: who, when, and where it was given. Nothing sets it by default.
+ */
+problems.push(...approvalProblems(register.assets));
 
 /* Families must reference real assets, or the repurposing map is decoration. */
 for (const [family, def] of Object.entries(register.families)) {

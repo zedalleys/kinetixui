@@ -1,5 +1,5 @@
 {
-  "$comment": "Canonical register for the first 30 days. Validated by scripts/check-content-register.mjs (pnpm check:content). ONE CAMPAIGN PER IDEA (family), utm_content identifies the asset within it \u2014 so reporting shows which argument works, not which button. Names follow marketing/analytics.md \u00a78.",
+  "$comment": "Canonical register for the first 30 days. Validated by scripts/check-content-register.mjs (pnpm check:content). ONE CAMPAIGN PER IDEA (family), utm_content identifies the asset within it \u2014 so reporting shows which argument works, not which button. Names follow marketing/analytics.md \u00a78. M1 (2026-10-17) added ART-003 and GH-001 and the optional `approval` field: { by, on, evidence }, set only by an explicit owner decision on ready copy.",
   "visuals": [
     "VIS-001",
     "VIS-002",
@@ -77,6 +77,13 @@
         "VIS-005"
       ],
       "idea": "Runtime vs native implementations is a trade, not a winner"
+    },
+    "F7-preview": {
+      "spine": "ART-003",
+      "assets": [
+        "ART-003"
+      ],
+      "idea": "Preview is a measured state with a gate a script can fail, not a modesty label"
     }
   },
   "assets": [
@@ -462,6 +469,34 @@
       "campaign": "kx_p1_a_denominator",
       "utm_content": "x_single",
       "url": "https://kinetixui.com/docs/platforms?utm_source=x&utm_medium=social&utm_campaign=kx_p1_a_denominator&utm_content=x_single"
+    },
+    {
+      "id": "ART-003",
+      "kind": "article",
+      "channel": "devto",
+      "icp": "p1",
+      "pillar": "a",
+      "stage": "awareness",
+      "status": "brief",
+      "file": "marketing/content/drafts/m1/ART-003-outline.md",
+      "destination": "/docs/angular",
+      "campaign": "kx_p1_a_preview_contract",
+      "utm_content": "art_primary",
+      "url": "https://kinetixui.com/docs/angular?utm_source=devto&utm_medium=referral&utm_campaign=kx_p1_a_preview_contract&utm_content=art_primary"
+    },
+    {
+      "id": "GH-001",
+      "kind": "update",
+      "channel": "github",
+      "icp": "neutral",
+      "pillar": "g",
+      "stage": "evaluation",
+      "status": "drafted",
+      "file": "marketing/content/drafts/m1/GH-001-project-status.md",
+      "destination": "/docs/platforms",
+      "campaign": "kx_neutral_g_project_status",
+      "utm_content": "gh_discussion",
+      "url": "https://kinetixui.com/docs/platforms?utm_source=github&utm_medium=referral&utm_campaign=kx_neutral_g_project_status&utm_content=gh_discussion"
     },
     {
       "id": "COM-001",

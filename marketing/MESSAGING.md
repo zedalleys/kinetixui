@@ -45,8 +45,8 @@ No number below is typed from memory. Run `pnpm marketing:stats` before quoting 
 > **Tokens are generated. Components are not.** One DTCG source in `tokens/` compiles through Style
 > Dictionary into every platform's native token output, including Swift, Kotlin and Dart constants and
 > Material and Cupertino theme adapters you can use with no Kinetix component at all. The components are five
-> independent implementations — SwiftUI views, Compose composables, Flutter widgets, Angular directives on
-> native elements, React components — sharing a contract, not a codebase. Nothing is transpiled from one
+> independent implementations — SwiftUI views, Compose composables, Flutter widgets, Angular components
+> written in Angular, React components — sharing a contract, not a codebase. Nothing is transpiled from one
 > component source into five, and we never say otherwise.
 >
 > Coverage is generated from a single manifest and published with its gaps: exact per-platform counts,
@@ -122,7 +122,7 @@ Per-package, because the packages are not one product and do not version togethe
 | `@kinetixui/ui` | React components for the KinetixUI design system, on the shared token contract |
 | `@kinetixui/tokens` | The DTCG token contract, generated for web, iOS, Android and Flutter |
 | `@kinetixui/cli` | Add KinetixUI components and tokens to your project |
-| `@kinetixui/angular` | Angular directives on native elements for the KinetixUI token contract — preview |
+| `@kinetixui/angular` | Angular components and directives for the KinetixUI token contract, written in Angular — preview |
 | `@kinetixui/iot` | React primitives for device interfaces: connectivity, telemetry staleness, fleet state — experimental |
 
 Never imply one version number describes the product. Core (`ui`, `tokens`, `cli`) shares a line; Angular and
@@ -163,7 +163,7 @@ Canonical wording per platform, at three lengths. All derive from `pnpm marketin
 - **Medium:** "Angular is on npm and in preview — a deliberate subset of the catalogue, versioned
   independently of the core packages."
 - **Technical:** "Preview package, preview catalogue verification, `catalogComplete: false`, published on npm
-  in its own release cohort. Directives on native elements, not React wrapped."
+  in its own release cohort. Written in Angular, not React wrapped."
 
 **Both halves always travel together.** "Published" alone overstates; "preview" alone tells a reader they
 cannot install it, which is false.
@@ -320,7 +320,7 @@ oversold to before.
 | --- | --- | --- |
 | token **contract** | token system | A contract is checkable |
 | **implementation** per platform | port, wrapper | "Port" implies a translation of one original |
-| **catalogue entry** when counting | component | 98 entries include one documented recipe |
+| **catalogue entry** when counting | component | The entries include one documented recipe; read the count from `marketing:stats` |
 | **source you build** | not yet published | States what you can do, not what you cannot |
 | **preview** (Angular) | beta, early access | Matches the manifest's own field value |
 | catalogue **verification** | test coverage | It is claim-to-source verification, a different thing |

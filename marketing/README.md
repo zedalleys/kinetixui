@@ -11,7 +11,7 @@ KinetixUI's differentiator is that it proves what it claims. That only works if
 the marketing does the same. Before writing any number or platform claim, read
 it from the source:
 
-**Run `pnpm marketing:stats` first.** It prints every number below from the
+**Run `pnpm marketing:stats` first** (product numbers) and `pnpm marketing:inventory` (campaign status). It prints every number below from the
 generated sources, live, and refuses to guess: an unpublished package reads
 "NOT PUBLISHED", and a package it could not check reads "could not check"
 rather than being collapsed into the same thing.
@@ -71,6 +71,8 @@ repository may contradict them.
 | `content-calendar.md` | The cadence principle. **Superseded as a calendar** — the schedule is `content/calendar.md` |
 | `community.md` | Which communities to participate in, fit classification, the weekly listening routine |
 | `distribution/` | **Channel roles, the 14-day execution plan, GitHub as a channel, partnerships, the distribution log** |
+| `distribution/execution-calendar.md` | **The rolling 14-day execution plan** — what goes out next, rebuilt every second Monday |
+| `opportunities.md` | Development milestones that could become content, and what each waits on |
 | `launches.md` | Staged launch criteria and Product Hunt prep |
 | `experiments.md` | Growth experiment backlog |
 | `analytics.md` | Instrumentation, funnels and what each event is for |
@@ -142,6 +144,7 @@ beside it, and the audit keeps a banner pointing there.
 | `audits/PHASE-4-CONTENT-ENGINE.md` | The 30-day content engine: 27 finished assets, six families, the campaign register |
 | `audits/PHASE-5-VISUAL-LAUNCH-ASSETS.md` | Generated visual proof, and the check that measures what the browser drew |
 | `audits/PHASE-6-DISTRIBUTION.md` | Channel roles, the first 14 days, GitHub as a channel, the launch model and the distribution log |
+| `audits/M1-CAMPAIGN-RECONCILIATION.md` | Marketing Operations M1, 2026-10-17: verified campaign baseline, claims, visuals, analytics and funnel audit |
 
 Because they are historical, audits are deliberately **not** in the `CURRENT_SURFACES` list that
 `current-truth.test.ts` checks — a present-tense guard pointed at a dated document produces failures on
