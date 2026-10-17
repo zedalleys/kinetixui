@@ -138,6 +138,14 @@ jobs:
       - name: Motion pass (rendered intermediate states, normal and reduced)
         run: pnpm check:motion
 
+      # MX1b-1a: Toggle and ToggleGroup. The pass above proves the selected colour interpolates over 200ms;
+      # this proves the rest: the state layer on 100ms, hover that leaves the selection colour alone and
+      # does not stick after a tap on a device that cannot hover, a burst of clicks landing on the last
+      # one, the system's selection colours for the chosen item under forced colours, right-to-left order and keys, and no
+      # overflow at 320-1280px, 100% and 200% text, light and dark, LTR and RTL.
+      - name: Toggle motion (selection 200ms, state layer 100ms, touch, rapid input, forced colours, RTL)
+        run: pnpm check:toggle-motion
+
       # The React Tabs indicator is one bar that travels to the chosen tab; the motion pass proves it moves.
       # This proves it lands on the right tab where strips break: an overflowing strip scrolled by pointer,
       # keyboard and code, a resize, a label that grows, tabs added and removed, the chosen tab disabled or

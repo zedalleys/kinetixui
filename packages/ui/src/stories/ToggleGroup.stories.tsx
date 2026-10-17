@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx · controls: scripts/gen-stories.mjs CONTROLS */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ToggleGroup, ToggleGroupItem } from "@kinetixui/ui";
+import { KinetixDirectionProvider, ToggleGroup, ToggleGroupItem } from "@kinetixui/ui";
 import { Bold, Italic, Underline } from "lucide-react";
 
 const Demo = () => (
@@ -35,3 +35,27 @@ export const Playground: StoryObj<typeof meta> = { render: (args) => (
   ) };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const States: StoryObj<typeof meta> = { render: () => (
+    <div className="grid gap-4">
+      <ToggleGroup type="single" defaultValue="start" aria-label="Alignment" data-kx-case="single">
+        <ToggleGroupItem value="start">Start</ToggleGroupItem>
+        <ToggleGroupItem value="center">Center</ToggleGroupItem>
+        <ToggleGroupItem value="end">End</ToggleGroupItem>
+      </ToggleGroup>
+      <ToggleGroup type="multiple" variant="outline" defaultValue={["bold"]} aria-label="Formatting" data-kx-case="multiple">
+        <ToggleGroupItem value="bold">Bold</ToggleGroupItem>
+        <ToggleGroupItem value="italic">Italic</ToggleGroupItem>
+        <ToggleGroupItem value="underline" disabled>Underline</ToggleGroupItem>
+      </ToggleGroup>
+      <KinetixDirectionProvider dir="rtl">
+        <div dir="rtl" lang="ar">
+          <ToggleGroup type="single" variant="pill" defaultValue="day" aria-label="الفترة" data-kx-case="rtl">
+            <ToggleGroupItem value="day">يوم</ToggleGroupItem>
+            <ToggleGroupItem value="week">أسبوع</ToggleGroupItem>
+            <ToggleGroupItem value="month">شهر</ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      </KinetixDirectionProvider>
+    </div>
+  ) };

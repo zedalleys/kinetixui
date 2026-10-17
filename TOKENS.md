@@ -117,6 +117,11 @@ Shared contract (every platform):
 | Focus | keyboard | The ring (`ring`, 2px, offset), declared so no hover or pressed layer can cover it | ring |
 | Disabled | `disabled` | `opacity-disabled`; hover and pressed are keyed on `:enabled`, so it never answers | inert |
 
+Toggle and ToggleGroup items use the same 8% / 14% `foreground` layer as a **fill** inside the control rather
+than a halo around it (a toggle is large enough to carry one), drawn as an inset `box-shadow` so it never
+touches the selected background colour. It is keyed on `(hover: hover)` and `:enabled` like the rest of the
+family (MOTION.md, "Toggle and ToggleGroup").
+
 Why a halo and not a fill: an 18px box has no room inside it for a hover fill that is distinguishable from
 checked, and a darker edge alone is hard to see on a checked box. The halo is the same on every value, so
 hover means "this is the target" whether the control is on or off.

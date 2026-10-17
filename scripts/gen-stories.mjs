@@ -737,6 +737,54 @@ const EXTRA = {
   )`,
     },
   ],
+  // MX1b-1a, selection motion: every variant resting off, on and disabled, and a ToggleGroup in single, multiple
+  // and right-to-left form, so `check:motion` and `check:toggle-motion` measure the selection colour (fast) and
+  // the hover/press layer (instant) on a real element of each kind, and both axe passes see every state.
+  toggle: [
+    {
+      name: "States",
+      render: `() => (
+    <div className="grid gap-3">
+      {(["default", "outline", "pill"] as const).map((variant) => (
+        <div key={variant} className="flex flex-wrap items-center gap-2">
+          <Toggle variant={variant} data-kx-case={\`\${variant}-off\`}>Bold</Toggle>
+          <Toggle variant={variant} defaultPressed data-kx-case={\`\${variant}-on\`}>Italic</Toggle>
+          <Toggle variant={variant} disabled data-kx-case={\`\${variant}-disabled\`}>Underline</Toggle>
+        </div>
+      ))}
+    </div>
+  )`,
+    },
+  ],
+  "toggle-group": [
+    {
+      name: "States",
+      imports: "KinetixDirectionProvider",
+      render: `() => (
+    <div className="grid gap-4">
+      <ToggleGroup type="single" defaultValue="start" aria-label="Alignment" data-kx-case="single">
+        <ToggleGroupItem value="start">Start</ToggleGroupItem>
+        <ToggleGroupItem value="center">Center</ToggleGroupItem>
+        <ToggleGroupItem value="end">End</ToggleGroupItem>
+      </ToggleGroup>
+      <ToggleGroup type="multiple" variant="outline" defaultValue={["bold"]} aria-label="Formatting" data-kx-case="multiple">
+        <ToggleGroupItem value="bold">Bold</ToggleGroupItem>
+        <ToggleGroupItem value="italic">Italic</ToggleGroupItem>
+        <ToggleGroupItem value="underline" disabled>Underline</ToggleGroupItem>
+      </ToggleGroup>
+      <KinetixDirectionProvider dir="rtl">
+        <div dir="rtl" lang="ar">
+          <ToggleGroup type="single" variant="pill" defaultValue="day" aria-label="الفترة" data-kx-case="rtl">
+            <ToggleGroupItem value="day">يوم</ToggleGroupItem>
+            <ToggleGroupItem value="week">أسبوع</ToggleGroupItem>
+            <ToggleGroupItem value="month">شهر</ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      </KinetixDirectionProvider>
+    </div>
+  )`,
+    },
+  ],
   switch: [
     {
       name: "States",
