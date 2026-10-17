@@ -112,7 +112,7 @@ Shared contract (every platform):
 | Rest | — | Unchecked checkbox / radio edge is `muted-foreground` (5.1:1 light, 8.1:1 dark on a card), not `input` (2.2:1). The box is the only thing that says the control is there, so it must clear SC 1.4.11's 3:1. The Switch's off track stays `tertiary` (a tracked exception in `check-contrast.mjs`): its thumb carries it | — |
 | Hover | a pointer that can hover | A **state layer**: `foreground` at 8% in a 5px halo around a checkbox, radio or switch, or filling an unchosen segment; an unchecked edge darkens to `foreground`; a checked fill steps to `action`/90 | a shape appears around the control |
 | Pressed | `:active` | The layer deepens to 14% (checked checkbox fill `action`/85) | layer depth |
-| Checked | `data-state` / `aria-checked` / `:checked` | `action` fill **and** a glyph (checkbox), a dot or ring (radio), the thumb's side (switch); a chosen segment is a small raised surface — `card`, the Card's half-strength `border` edge and `sm` depth — on a `surface-grouped` well | glyph / dot / position / surface + edge + depth |
+| Checked | `data-state` / `aria-checked` / `:checked` | `action` fill **and** a glyph (checkbox), a dot or ring (radio), the thumb's side (switch); a chosen segment is the inverse fill — `foreground` with `background` text (18.1:1 light, 17.7:1 dark against its track) — on a `surface-grouped` well with the Card's half-strength `border` edge; under forced colours it is the `SelectedItem` / `SelectedItemText` pair (React; Angular still uses a raised `card` segment, which forced colours flatten to 1.00:1 — a tracked follow-up) | glyph / dot / position / luminance |
 | Invalid | `aria-invalid="true"` | `destructive` edge (and fill when checked); hover does not replace it | the field's error text (SC 1.4.1) |
 | Focus | keyboard | The ring (`ring`, 2px, offset), declared so no hover or pressed layer can cover it | ring |
 | Disabled | `disabled` | `opacity-disabled`; hover and pressed are keyed on `:enabled`, so it never answers | inert |
@@ -124,7 +124,11 @@ hover means "this is the target" whether the control is on or off.
 Why the segment changed surface: the track was `muted` with a `background` segment. In dark mode
 `background` is the darkest surface, so the chosen segment sat *below* its track and read as a hole
 (measured: segment L 0.0031 vs track L 0.0160). It now follows the surface model — the track is an inset
-well (`surface-grouped`, below a Card in both themes) and the chosen segment is raised content on it.
+well (`surface-grouped`, below a Card in both themes). In React the chosen segment is the inverse fill:
+`foreground` with `background` text, near-black on the light well and near-white on the dark one, since a
+black fill would sink into the near-black dark track. A raised `card` segment differed from its light track
+by 1.09:1, which read as barely chosen, and forced colours flattened it to nothing. The focus ring is offset
+by 1px of the well, so in dark it stays apart from the near-white fill (6.11:1 light, 7.57:1 dark).
 
 Motion:
 
@@ -173,9 +177,9 @@ Navigation (Tabs):
 
 | State | Trigger | Change | Not carried by colour alone |
 |---|---|---|---|
-| Rest | — | One group: React's tabs sit in an inset `surface-grouped` well (below a Card in both themes); Angular's strip is underlined | — |
+| Rest | — | One group on a 1px `border` rail; Angular's strip is underlined the same way | — |
 | Hover | a pointer that can hover, unselected and enabled | The selection controls' `foreground` state layer at 8% (1.16–1.19:1 against rest) and `foreground` text | fill |
-| Selected | `aria-selected="true"` | React: a small raised surface on the well — `card`, the Card's half-strength `border` edge (1.33:1 light, 1.59:1 dark) and `sm` depth, above the well in both themes. Angular: a 2px `primary` indicator (6.66:1 light, 7.86:1 dark) | surface + edge + depth / indicator |
+| Selected | `aria-selected="true"` | React: `foreground` text and one 2px `foreground` indicator per list that travels to the chosen tab (19.8:1 light, 18.3:1 dark against the strip); before hydration and under forced colours each chosen tab draws its own 2px edge instead. Angular: a 2px `primary` indicator (6.66:1 light, 7.86:1 dark) | indicator |
 | Focus | keyboard | The ring (`ring`, 2px), drawn above the selected surface, which stays under it | ring |
 | Disabled | `disabled` | `opacity-disabled`, inert | inert |
 
@@ -197,10 +201,11 @@ Motion:
 | Control | Trigger | Property | Purpose | Duration | Easing | Reduced motion |
 |---|---|---|---|---|---|---|
 | Input, Textarea, Select, NativeSelect | hover, focus, invalid | `border-color`, `box-shadow`, `background-color` | affordance: this field is the target | `duration-instant` (100ms) | `ease-standard` | collapses (the library floor in React, `transition: none` in Angular); same end state |
-| Tabs | hover, select | `color`, `background-color`, `box-shadow` | navigation state | `duration-fast` (200ms) | `ease-standard` | collapses |
+| Tabs | hover, select | `color`, `background-color` | navigation state | `duration-fast` (200ms) | `ease-standard` | collapses |
+| Tabs indicator (React) | select | `inset-inline-start` / `inset-inline-end` (`inset-block-*` when vertical) | where the selection came from and went: the leading edge moves first and the trailing edge follows `duration-instant` later, so the bar stretches across and settles on the new tab | `duration-base` (300ms) per edge | `ease-emphasized` | collapses; lands on the same tab (`check:motion`). A resize, a text-size change or a change of direction snaps |
 | Switch thumb | on/off | `inset-inline-start` | where the value went | `duration-instant` | `ease-standard` | collapses; same side |
 
-Nothing scales or slides; no field or tab changes size between states.
+No field or tab changes size between states. The only thing that slides is the React tabs indicator.
 
 | Platform | Status |
 |---|---|
