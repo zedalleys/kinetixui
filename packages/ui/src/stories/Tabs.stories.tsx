@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx · controls: scripts/gen-stories.mjs CONTROLS */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Card, CardContent, Tabs, TabsContent, TabsList, TabsTrigger } from "@kinetixui/ui";
+import { Button, Card, CardContent, Tabs, TabsContent, TabsList, TabsTrigger } from "@kinetixui/ui";
 
 const Demo = () => (
     <Tabs defaultValue="account" className="w-[360px]">
@@ -73,3 +73,53 @@ export const States: StoryObj<typeof meta> = { render: () => (
       })}
     </div>
   ) };
+
+export const Indicator: StoryObj<typeof meta> = { render: () => {
+    const all = ["Overview", "Activity", "Deployments", "Analytics", "Logs", "Storage", "Preferences", "Members", "Billing", "Integrations"];
+    const [tabs, setTabs] = React.useState(all);
+    const [value, setValue] = React.useState("Overview");
+    const [dir, setDir] = React.useState<"ltr" | "rtl">("ltr");
+    const [orientation, setOrientation] = React.useState<"horizontal" | "vertical">("horizontal");
+    const [disabled, setDisabled] = React.useState<string | null>(null);
+    const [hidden, setHidden] = React.useState(false);
+    const [renamed, setRenamed] = React.useState(false);
+    const [mounted, setMounted] = React.useState(true);
+    const actions: [string, string, () => void][] = [
+      ["select-last", "Choose last", () => setValue(tabs[tabs.length - 1])],
+      ["select-second", "Choose second", () => setValue(tabs[1])],
+      ["add", "Add tab", () => setTabs((t) => [...t, "Tab " + (t.length + 1)])],
+      ["remove-first-inactive", "Remove first inactive", () => setTabs((t) => { const i = t.findIndex((x) => x !== value); return t.filter((_, k) => k !== i); })],
+      ["remove-selected", "Remove selected", () => setTabs((t) => t.filter((x) => x !== value))],
+      ["disable-selected", "Disable selected", () => setDisabled(value)],
+      // The second label carries a count. Changing it rewrites a text node in place (a characterData mutation),
+      // which resizes that tab and moves every tab after it without resizing the chosen one.
+      ["grow-count", "Grow a count", () => setRenamed((r) => !r)],
+      ["direction", "Flip direction", () => setDir((d) => (d === "ltr" ? "rtl" : "ltr"))],
+      ["orientation", "Flip orientation", () => setOrientation((o) => (o === "horizontal" ? "vertical" : "horizontal"))],
+      ["hidden", "Hide or show", () => setHidden((h) => !h)],
+      ["unmount", "Unmount or mount", () => setMounted((m) => !m)],
+    ];
+    return (
+      <div className="grid w-[22rem] max-w-full grid-cols-[minmax(0,1fr)] gap-4">
+        <div className="flex flex-wrap gap-2">
+          {actions.map(([key, label, run]) => (
+            <Button key={key} size="sm" variant="outline" data-kx-action={key} onClick={run}>{label}</Button>
+          ))}
+        </div>
+        <div hidden={hidden}>
+          {mounted ? (
+          <Tabs value={value} onValueChange={setValue} dir={dir} orientation={orientation} className={orientation === "vertical" ? "flex gap-4" : undefined}>
+            <TabsList data-kx-case="lab" aria-label="Project sections" className={orientation === "vertical" ? "w-auto" : undefined}>
+              {tabs.map((t, i) => (
+                <TabsTrigger key={t} value={t} disabled={disabled === t}>{t}{i === 1 ? " " + (renamed ? 1280 : 3) : null}</TabsTrigger>
+              ))}
+            </TabsList>
+            {tabs.map((t) => (
+              <TabsContent key={t} value={t} className="text-sm text-muted-foreground">{t} panel.</TabsContent>
+            ))}
+          </Tabs>
+          ) : null}
+        </div>
+      </div>
+    );
+  } };

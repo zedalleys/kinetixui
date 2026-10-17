@@ -78,11 +78,25 @@ try {
           shadow: s.boxShadow,
           color: s.color,
           borderColor: s.borderBottomColor,
+          // Once the list has measured, its travelling bar is the selected mark (packages/ui tabs.tsx); before
+          // that, and under forced colours, the trigger's own 2px edge is. Read whichever is drawn.
+          mark: (() => {
+            const list = el.closest("[role=tablist]");
+            const bar = list?.querySelector("[data-kx-tabs-bar]");
+            if (!bar || getComputedStyle(bar).display === "none") return { color: s.borderBottomColor, aligned: true };
+            const r = el.getBoundingClientRect();
+            const q = bar.getBoundingClientRect();
+            const near = (x, y) => Math.abs(x - y) <= 1;
+            return { color: getComputedStyle(bar).backgroundColor, aligned: near(r.left, q.left) && near(r.right, q.right) && near(r.bottom, q.bottom) };
+          })(),
         };
       });
       assert(parseFloat(styles.duration) <= 0.001, "reduced motion is suppressed");
       assert.equal(styles.border, "2px");
-      if (!config.forced) assert.equal(styles.borderColor, styles.color);
+      if (!config.forced) {
+        assert.equal(styles.mark.color, styles.color);
+        assert(styles.mark.aligned, "the selected mark sits under the selected tab");
+      }
       assert(/rgba\([^)]*, 0\)$/.test(styles.bg), "tab has no fill");
       assert.equal(
         await last.evaluate(
