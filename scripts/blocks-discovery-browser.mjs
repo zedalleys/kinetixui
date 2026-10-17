@@ -40,12 +40,25 @@ const settle = async (page) => {
   await page.waitForTimeout(300);
 };
 
+// every published block, read from the unfiltered page itself so a new block does not break the check
+const TOTAL = await (async () => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto(`${base}/blocks`);
+  await settle(page);
+  const n = (await titles(page)).length;
+  await context.close();
+  return n;
+})();
+if (!TOTAL) fail("the unfiltered /blocks page shows no blocks");
+
 /* ── url ─────────────────────────────────────────────────────────────────────────────────────────── */
 {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await context.newPage();
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
+  page.on("console", (m) => m.type() === "error" && /hydrat/i.test(m.text()) && errors.push(m.text()));
 
   await page.goto(`${base}/blocks?cat=Commerce&domain=finance`);
   await settle(page);
@@ -97,8 +110,8 @@ const settle = async (page) => {
   await page.goto(`${base}/blocks?capability=teleportation&platform=WearOS&utm_source=x`);
   await settle(page);
   const all = (await titles(page)).length;
-  if (all !== 21) fail(`unknown values: expected all 21 blocks, got ${all}`);
-  else ok("unknown values are ignored: all 21 blocks");
+  if (all !== TOTAL) fail(`unknown values: expected all ${TOTAL} blocks, got ${all}`);
+  else ok(`unknown values are ignored: all ${TOTAL} blocks`);
   await page.selectOption("#blocks-filter-cat", "Forms");
   await page.waitForFunction(() => location.search.includes("cat=Forms"));
   if (search(page) !== "?cat=Forms&utm_source=x") fail(`invalid values not dropped / foreign key not kept: ${search(page)}`);
@@ -128,8 +141,8 @@ const settle = async (page) => {
   await page.getByRole("button", { name: "Clear all filters" }).last().click();
   await page.waitForFunction(() => location.search === "");
   await settle(page);
-  if ((await titles(page)).length !== 21) fail("Clear all did not bring every block back");
-  else ok("empty state explains itself; Clear all filters resets to 21");
+  if ((await titles(page)).length !== TOTAL) fail("Clear all did not bring every block back");
+  else ok(`empty state explains itself; Clear all filters resets to ${TOTAL}`);
   if (errors.length) fail(`page errors: ${errors.join(" | ")}`);
   await context.close();
 }
@@ -172,7 +185,7 @@ const settle = async (page) => {
   await page.keyboard.press("ArrowDown");
   await page.waitForFunction(() => location.search.includes("capability="));
   const s = await status(page);
-  if (!/of 21 blocks · Capability: /.test(s ?? "")) fail(`status after keyboard change: ${s}`);
+  if (!new RegExp(`of ${TOTAL} blocks · Capability: `).test(s ?? "")) fail(`status after keyboard change: ${s}`);
   else ok(`keyboard change updates results and the live status ("${s}")`);
   const live = await page.locator("[data-blocks-status]").getAttribute("aria-live");
   if (live !== "polite") fail("status line is not aria-live=polite");

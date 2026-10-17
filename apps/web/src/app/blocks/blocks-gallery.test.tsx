@@ -112,6 +112,22 @@ describe("/blocks discovery filters", () => {
     expect(nav.replace).toHaveBeenLastCalledWith("/blocks?cat=Commerce&platform=SwiftUI", { scroll: false });
   });
 
+  it("keeps a filter whose write is still in flight when typing re-renders the page on the old URL", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<BlocksGallery {...DATA} />);
+    await user.selectOptions(screen.getByLabelText("Category"), "Commerce");
+    await user.type(screen.getByLabelText("Search"), "order");
+    await act(async () => vi.advanceTimersByTime(250));
+    expect(nav.replace).toHaveBeenLastCalledWith("/blocks?q=order&cat=Commerce", { scroll: false });
+  });
+
+  it("renders a beta block's status without nesting the badge in a paragraph", () => {
+    go("q=receipt");
+    render(<BlocksGallery {...DATA} />);
+    expect(document.querySelector("p div, p [data-slot=badge]")).toBeNull();
+  });
+
   it("reads Back/Forward from the URL, so a changed query string re-renders without stale results", () => {
     go("workflow=checkout");
     const { rerender } = render(<BlocksGallery {...DATA} />);

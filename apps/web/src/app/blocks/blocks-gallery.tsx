@@ -227,7 +227,7 @@ function BlockContext({ item, facets }: { item: Item; facets: BlockFacets }) {
   const caps = item.capabilities.map((id) => facets.capabilities.find((c) => c.id === id)?.label ?? id);
   const flows = item.workflows.map((id) => facets.workflows.find((w) => w.id === id)!).filter(Boolean);
   return (
-    <p className="mt-1.5 flex flex-wrap items-center gap-x-1 gap-y-1 text-sm text-muted-foreground">
+    <div className="mt-1.5 flex flex-wrap items-center gap-x-1 gap-y-1 text-sm text-muted-foreground">
       {item.status !== "stable" && (
         <Badge variant="outline" className="capitalize">
           {item.status}
@@ -256,7 +256,7 @@ function BlockContext({ item, facets }: { item: Item; facets: BlockFacets }) {
           )}
         </span>
       ))}
-    </p>
+    </div>
   );
 }
 
@@ -276,11 +276,16 @@ export function BlocksGallery(props: Props) {
 
   // The state last asked for. A write lands in `params` only after the router re-renders, so two changes made before
   // that (two selects during a slow transition, a filter just before the search pause ends) must build on this, not
-  // on the render-time `state`, or the second undoes the first. It follows the URL again once the URL is one this
-  // page did not write (Back/Forward, a shared link).
+  // on the render-time `state`, or the second undoes the first. Renders on the same URL (typing re-renders while a
+  // write is in flight) keep it; it follows the URL again only when the URL moves somewhere this page did not write
+  // (Back/Forward, a shared link).
   const urlKey = params.toString();
-  const requested = React.useRef({ state, written: new Set<string>() });
-  if (!requested.current.written.has(urlKey)) requested.current = { state, written: new Set() };
+  const requested = React.useRef({ state, url: urlKey, written: new Set<string>() });
+  if (requested.current.url !== urlKey) {
+    requested.current = requested.current.written.has(urlKey)
+      ? { ...requested.current, url: urlKey }
+      : { state, url: urlKey, written: new Set() };
+  }
 
   // the search write waiting out its pause; any other write carries the typed term itself, so it cancels this one
   const pending = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
