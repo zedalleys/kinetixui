@@ -908,6 +908,63 @@ const EXTRA = {
     </div>
   )`,
     },
+    {
+      // The travelling indicator under the conditions a real strip meets: more tabs than fit, selection set
+      // from outside, labels that change, tabs added and removed, direction and orientation switched, and the
+      // whole strip hidden and shown, or unmounted. Each \`data-kx-action\` button is one of those; \`check:tabs-indicator\`
+      // presses them and measures the bar against the chosen tab.
+      name: "Indicator",
+      imports: "Button",
+      render: `() => {
+    const all = ["Overview", "Activity", "Deployments", "Analytics", "Logs", "Storage", "Preferences", "Members", "Billing", "Integrations"];
+    const [tabs, setTabs] = React.useState(all);
+    const [value, setValue] = React.useState("Overview");
+    const [dir, setDir] = React.useState<"ltr" | "rtl">("ltr");
+    const [orientation, setOrientation] = React.useState<"horizontal" | "vertical">("horizontal");
+    const [disabled, setDisabled] = React.useState<string | null>(null);
+    const [hidden, setHidden] = React.useState(false);
+    const [renamed, setRenamed] = React.useState(false);
+    const [mounted, setMounted] = React.useState(true);
+    const actions: [string, string, () => void][] = [
+      ["select-last", "Choose last", () => setValue(tabs[tabs.length - 1])],
+      ["select-second", "Choose second", () => setValue(tabs[1])],
+      ["add", "Add tab", () => setTabs((t) => [...t, "Tab " + (t.length + 1)])],
+      ["remove-first-inactive", "Remove first inactive", () => setTabs((t) => { const i = t.findIndex((x) => x !== value); return t.filter((_, k) => k !== i); })],
+      ["remove-selected", "Remove selected", () => setTabs((t) => t.filter((x) => x !== value))],
+      ["disable-selected", "Disable selected", () => setDisabled(value)],
+      // The second label carries a count. Changing it rewrites a text node in place (a characterData mutation),
+      // which resizes that tab and moves every tab after it without resizing the chosen one.
+      ["grow-count", "Grow a count", () => setRenamed((r) => !r)],
+      ["direction", "Flip direction", () => setDir((d) => (d === "ltr" ? "rtl" : "ltr"))],
+      ["orientation", "Flip orientation", () => setOrientation((o) => (o === "horizontal" ? "vertical" : "horizontal"))],
+      ["hidden", "Hide or show", () => setHidden((h) => !h)],
+      ["unmount", "Unmount or mount", () => setMounted((m) => !m)],
+    ];
+    return (
+      <div className="grid w-[22rem] max-w-full grid-cols-[minmax(0,1fr)] gap-4">
+        <div className="flex flex-wrap gap-2">
+          {actions.map(([key, label, run]) => (
+            <Button key={key} size="sm" variant="outline" data-kx-action={key} onClick={run}>{label}</Button>
+          ))}
+        </div>
+        <div hidden={hidden}>
+          {mounted ? (
+          <Tabs value={value} onValueChange={setValue} dir={dir} orientation={orientation} className={orientation === "vertical" ? "flex gap-4" : undefined}>
+            <TabsList data-kx-case="lab" aria-label="Project sections" className={orientation === "vertical" ? "w-auto" : undefined}>
+              {tabs.map((t, i) => (
+                <TabsTrigger key={t} value={t} disabled={disabled === t}>{t}{i === 1 ? " " + (renamed ? 1280 : 3) : null}</TabsTrigger>
+              ))}
+            </TabsList>
+            {tabs.map((t) => (
+              <TabsContent key={t} value={t} className="text-sm text-muted-foreground">{t} panel.</TabsContent>
+            ))}
+          </Tabs>
+          ) : null}
+        </div>
+      </div>
+    );
+  }`,
+    },
   ],
   // Composite fields (TOKENS.md, "Composite fields"): one field whose parts — an add-on, a button, steppers,
   // chips, code slots — sit inside a single edge. The demos show one field at rest; a real form also has a

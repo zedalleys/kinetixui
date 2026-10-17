@@ -13,15 +13,16 @@ import { cn } from "../lib/utils";
  * unselected or multi-select isn't the pattern. Gap-fill addition (not in
  * the original Figma source).
  *
- * Surfaces follow the surface model (TOKENS.md): the track is an inset well, `--surface-grouped`, and the
- * chosen segment is a small raised surface on it — `--card`, the Card's half-strength `--border` edge and
- * `sm` depth. The track used to be `--muted` with a `--background` segment, which in dark mode put the
- * chosen segment BELOW its track (`--background` is the darkest surface), so it read as a hole.
+ * Surfaces follow the surface model (TOKENS.md): the track is an inset well, `--surface-grouped` with the
+ * Card's half-strength `--border` edge. The chosen segment is the inverse fill, `--foreground` with
+ * `--background` text: near-black on the light well, and near-white on the dark one, where a black fill would
+ * sink into the near-black track. It used to be a raised `--card` segment, which a light track barely set apart.
  *
- * States (TOKENS.md, "Selection controls"): an unchosen segment answers the pointer with the same
- * `--foreground` state layer the other selection controls use (8% hover, 14% pressed) and `--foreground`
- * text; chosen is surface + edge + depth + `--foreground` text, so it is never colour alone; focus is the
- * ring; disabled is inert.
+ * States (TOKENS.md, "Selection controls"): an unchosen segment has `--muted-foreground` text and answers the
+ * pointer with the same `--foreground` state layer the other selection controls use (8% hover, 14% pressed);
+ * chosen is the inverse fill, a change of luminance far past 3:1, so it is never hue alone, and under forced
+ * colours it is the system `SelectedItem` pair; focus is the ring, offset by a sliver of the well so it stays
+ * separate from a near-white chosen fill in dark; disabled is inert.
  */
 export type SegmentedControlProps = Omit<ToggleGroupPrimitive.ToggleGroupSingleProps, "type">;
 
@@ -32,7 +33,7 @@ const SegmentedControl = React.forwardRef<
   <ToggleGroupPrimitive.Root
     ref={ref}
     type="single"
-    className={cn("inline-flex min-w-0 max-w-full flex-wrap items-center rounded-lg bg-surface-grouped p-1 font-sans", className)}
+    className={cn("inline-flex min-w-0 max-w-full flex-wrap items-center rounded-lg border border-border/50 bg-surface-grouped p-1 font-sans", className)}
     {...props}
   />
 ));
@@ -52,8 +53,10 @@ const SegmentedControlItem = React.forwardRef<
       // emits media-wrapped utilities after plain ones and the hover layer would otherwise outrank the press.
       "enabled:active:data-[state=off]:bg-foreground/[0.14] enabled:active:data-[state=off]:text-foreground",
       "[@media(hover:hover)]:enabled:active:data-[state=off]:bg-foreground/[0.14] [@media(hover:hover)]:enabled:active:data-[state=off]:text-foreground",
-      "data-[state=on]:bg-card data-[state=on]:text-foreground data-[state=on]:[box-shadow:inset_0_0_0_1px_hsl(var(--border)/0.5),var(--shadow-sm)]",
-      "outline-none focus-visible:!ring-2 focus-visible:ring-ring forced-colors:focus-visible:[outline:2px_solid_Highlight] forced-colors:focus-visible:outline-offset-[-2px]",
+      "data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm",
+      // Forced colours repaint every fill to Canvas, which would leave the chosen segment marked by nothing.
+      "forced-colors:data-[state=on]:[forced-color-adjust:none] forced-colors:data-[state=on]:bg-[SelectedItem] forced-colors:data-[state=on]:text-[SelectedItemText]",
+      "outline-none focus-visible:!ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-surface-grouped forced-colors:focus-visible:[outline:2px_solid_Highlight] forced-colors:focus-visible:outline-offset-[-2px]",
       "disabled:pointer-events-none disabled:opacity-disabled",
       className,
     )}

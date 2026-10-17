@@ -26,7 +26,7 @@
       "accessibility": 109,
       "rtl": 36,
       "largeText": 39,
-      "reducedMotion": 3,
+      "reducedMotion": 4,
       "visual": 0,
       "published": 109
     },
@@ -547,7 +547,8 @@
         "components": [
           "accordion",
           "collapsible",
-          "switch"
+          "switch",
+          "tabs"
         ]
       }
     ],
@@ -1064,7 +1065,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-300"
+          "scripts/motion.mjs:24-301"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2164,7 +2165,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-300"
+          "scripts/motion.mjs:24-301"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5690,7 +5691,7 @@
           "scripts/large-text.mjs:99-738"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-300"
+          "scripts/motion.mjs:24-301"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5929,6 +5930,9 @@
         ],
         "largeText": [
           "scripts/large-text.mjs:99-738"
+        ],
+        "reducedMotion": [
+          "scripts/motion.mjs:24-301"
         ],
         "published": [
           "npm: @kinetixui/ui"
