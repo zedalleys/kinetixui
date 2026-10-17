@@ -185,7 +185,7 @@ Statuses: **V** implemented and runtime-verified by a gate · **I** implemented,
 | Switch motion + reduced form | V | V | I | I | I |
 | Loop stop under reduced motion | V (`check:loop-motion`) | P (spinner slows to 3 s by design rather than stopping; no global floor, G5) | I | I | I |
 | Sliding selection indicator (Tabs) | Pl (#388) | Pl | Pl | Pl | Pl |
-| Overlay enter / exit with directional easing | I (contract test checks tokens, not rendered timing) | I (the browser `reducedMotion` pass measures duration, midpoint and end state, not easing) | P (Sheet / Sidebar / Toaster slide helper, Dialog fade only; ledger) | Pl (Dialog and Sheet show and hide without animation; no ledger family) | Pl (`KinetixDialog` and `KinetixSheet` switch between `SizedBox.shrink()` and the overlay; no ledger family) |
+| Overlay enter / exit with directional easing | P (Menubar has no exit animation, G6; the rest I, contract test checks tokens, not rendered timing) | I (the browser `reducedMotion` pass measures duration, midpoint and end state, not easing) | P (Sheet / Sidebar / Toaster slide helper, Dialog fade only; ledger) | Pl (Dialog and Sheet show and hide without animation; no ledger family) | Pl (`KinetixDialog` and `KinetixSheet` switch between `SizedBox.shrink()` and the overlay; no ledger family) |
 | Default transition duration on every transition | P (G1) | I | NA | NA | NA |
 | Chart reduced motion | Pl (G3) | NA (no Angular Chart) | Pl | Pl | Pl |
 | RTL-correct motion direction | P (Switch, Tabs in #388) | P (`rtl` evidence 47) | Pl | Pl | P (`rtl` evidence 58, layout not motion) |
