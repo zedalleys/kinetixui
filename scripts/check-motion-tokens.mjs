@@ -54,6 +54,8 @@ const REFERENCE_DIRS = [
   { dir: "packages/ui-compose/ui/src/main", ext: [".kt"], kind: "native" },
   { dir: "packages/ui-flutter/lib", ext: [".dart"], kind: "native" },
 ];
+/** Single files that reference motion variables directly: the preset's animation shorthands. */
+const REFERENCE_FILES = [{ f: "packages/ui/tailwind.config.ts", kind: "css" }];
 
 const STATUSES = ["proven", "observed", "proposed"];
 const DECISIONS = ["matches", "kept-name", "kept-value", "outside-proposal"];
@@ -159,7 +161,7 @@ export function motionErrors(overrides = {}) {
     }
     return out;
   };
-  const sources = REFERENCE_DIRS.flatMap(({ dir, ext, kind }) => walk(dir, ext).map((f) => ({ f, kind })));
+  const sources = [...REFERENCE_DIRS.flatMap(({ dir, ext, kind }) => walk(dir, ext).map((f) => ({ f, kind }))), ...REFERENCE_FILES];
   for (const p of Object.keys(overrides)) if (!sources.some((s) => s.f === p) && /\.(tsx|css|ts|swift|kt|dart)$/.test(p) && !p.startsWith("packages/tokens/")) {
     const ref = REFERENCE_DIRS.find((r) => p.startsWith(r.dir));
     if (ref) sources.push({ f: p, kind: ref.kind });
@@ -174,10 +176,10 @@ export function motionErrors(overrides = {}) {
     if (kind === "tailwind") {
       // A tier utility that is not a tier generates no CSS at all. Numeric and arbitrary values are
       // the motion-contract test's job; this only catches names.
-      for (const [, n] of src.matchAll(/(?<![\w-])duration-([a-z][a-z0-9-]*)/g)) if (!(n in durations)) fail(`${f}: duration-${n} is not a motion tier; Tailwind emits nothing for it`);
+      for (const [, n] of src.matchAll(/(?<![\w-])duration-([A-Za-z_][\w-]*)/g)) if (!(n in durations)) fail(`${f}: duration-${n} is not a motion tier; Tailwind emits nothing for it`);
       // Tailwind's own `ease-linear|in|out|in-out` are the motion-contract test's job (Tailwind does emit
       // them); any other name, `ease-smooth` or `ease-standard-extra`, emits nothing at all.
-      for (const [, n] of src.matchAll(/(?<![\w-])ease-([a-z][a-z0-9-]*)/g)) if (!(n in easings) && !TAILWIND_EASES.has(n)) fail(`${f}: ease-${n} is not a motion easing; Tailwind emits nothing for it`);
+      for (const [, n] of src.matchAll(/(?<![\w-])ease-([A-Za-z_][\w-]*)/g)) if (!(n in easings) && !TAILWIND_EASES.has(n)) fail(`${f}: ease-${n} is not a motion easing; Tailwind emits nothing for it`);
     }
     if (kind === "native") {
       for (const [, n] of src.matchAll(/KinetixDuration\.(\w+)/g)) if (!(n in durations)) fail(`${f}: KinetixDuration.${n} is not a motion token`);

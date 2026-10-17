@@ -123,6 +123,20 @@ describe("check:motion-tokens", () => {
     expect(out).toMatch(/switch\.tsx: ease-standard-extra is not a motion easing/);
   });
 
+  it.each(["ease-standardExtra", "ease-standard_extra"])("reads the whole easing utility %s, not its token prefix", (typo) => {
+    const { code, out } = run(mutate("packages/ui/src/components/switch.tsx", "duration-instant ease-standard", `duration-instant ${typo}`));
+    expect(code).toBe(1);
+    expect(out).toContain(`switch.tsx: ${typo} is not a motion easing`);
+  });
+
+  it("checks the Tailwind preset's animation shorthands", () => {
+    const { code, out } = run(
+      mutate("packages/ui/tailwind.config.ts", '"collapsible-down var(--duration-fast,', '"collapsible-down var(--duration-fats,'),
+    );
+    expect(code).toBe(1);
+    expect(out).toMatch(/tailwind\.config\.ts: --duration-fats is not a motion token/);
+  });
+
   it("catches a native symbol that is not a token", () => {
     const { code, out } = run(
       mutate("packages/ui-flutter/lib/src/kinetix_switch_motion.dart", "KinetixDuration.instant", "KinetixDuration.quick"),
