@@ -24,6 +24,10 @@
  *     evidence of a layer or a target, so it never becomes "L1 core primitive" by default. `unclassified` is carried in
  *     the index only; it has no label, so the site neither shows it nor offers it as a filter.
  *   - "Builds toward" for a component is the planned rows whose `dependsOn` names it.
+ *   - A block's capabilities, domains and workflows come only from the shipping rows that cite `block:<slug>`, by the
+ *     same rule as a component's. Every published block is either cited or listed in `discovery.unclassifiedBlocks`
+ *     with a reason; one in neither place, or in both, is an error.
+ *   - Every workflow has at least one stage that uses a shipping row.
  */
 
 /** Layer and target of a catalogue entry no roadmap row classifies. Distinct from L1: absence is not a claim. */
@@ -104,6 +108,15 @@ export function buildDiscovery(data, manifest, blocks) {
       }
     }
   }
+  // A block no shipping row cites must be named here, with the reason it has no capability, so "untagged" is always a
+  // decision someone wrote down rather than a gap nobody noticed.
+  const unclassifiedBlocks = new Map();
+  for (const entry of disc.unclassifiedBlocks ?? []) {
+    if (!blocks[entry.block]) errors.push(`discovery.unclassifiedBlocks: "${entry.block}" is not a block in blocks.manifest.json`);
+    if (unclassifiedBlocks.has(entry.block)) errors.push(`discovery.unclassifiedBlocks: duplicate block "${entry.block}"`);
+    if (!entry.reason?.trim()) errors.push(`discovery.unclassifiedBlocks / ${entry.block}: a reason is required`);
+    unclassifiedBlocks.set(entry.block, entry.reason);
+  }
   if (errors.length) return { index: null, errors };
 
   /* ---------------------------------------------------------------------------------------------- rows */
@@ -178,6 +191,22 @@ export function buildDiscovery(data, manifest, blocks) {
       add(blockIndex, slug, "workflows", wf);
     }
   }
+
+  for (const [slug, b] of Object.entries(blocks)) {
+    const cited = blockIndex[slug].capabilities.length > 0;
+    if (cited && unclassifiedBlocks.has(slug))
+      errors.push(`discovery.unclassifiedBlocks: "${slug}" is cited by a shipping row, so it is not unclassified — remove it from the list`);
+    if (!cited && !unclassifiedBlocks.has(slug) && b.status !== "draft")
+      errors.push(
+        `blocks.manifest.json / ${slug}: no shipping row cites block:${slug} and it is not in discovery.unclassifiedBlocks — ` +
+          `cite it from the row it demonstrates, or list it there with the reason it has none`,
+      );
+  }
+
+  // A workflow whose every stage is planned would be a page of promises; a stage can be planned, the whole path cannot.
+  for (const w of disc.workflows)
+    if (!w.stages.some((s) => s.uses.some((name) => ships(rows.get(name)))))
+      errors.push(`discovery.workflows / ${w.id}: no stage uses an existing or partial row, so nothing of it ships`);
 
   /* --------------------------------------------------------------------- capability groups, domains */
 
