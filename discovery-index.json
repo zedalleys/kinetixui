@@ -2388,7 +2388,11 @@
         "GiftCardRedeem",
         "FormSection / FieldArray / RepeatableFieldGroup / ConditionalField / DependentSelect",
         "AddressForm / PhoneInput / CountrySelect / TimezoneSelect"
-      ]
+      ],
+      "publication": {
+        "eligible": true,
+        "unmet": []
+      }
     },
     {
       "id": "travel-booking",
@@ -2450,7 +2454,11 @@
         "PaymentCardInput",
         "FormSection / FieldArray / RepeatableFieldGroup / ConditionalField / DependentSelect",
         "DateRangeInput / DateTimeRangeInput"
-      ]
+      ],
+      "publication": {
+        "eligible": true,
+        "unmet": []
+      }
     },
     {
       "id": "finance",
@@ -2493,7 +2501,11 @@
         "PaymentCardInput",
         "TransactionList",
         "MoneyMovementSummary / FeeBreakdown"
-      ]
+      ],
+      "publication": {
+        "eligible": true,
+        "unmet": []
+      }
     },
     {
       "id": "saas-admin",
@@ -2552,7 +2564,13 @@
         "ActivityFeed",
         "KanbanBoard",
         "TaskCard / Milestone"
-      ]
+      ],
+      "publication": {
+        "eligible": false,
+        "unmet": [
+          "has no workflow"
+        ]
+      }
     },
     {
       "id": "iot",
@@ -2624,7 +2642,13 @@
         "SpatialDeviceMarker",
         "DeviceMaintenance",
         "SyncStatus / ConnectionStatus / StaleDataState / OfflineState"
-      ]
+      ],
+      "publication": {
+        "eligible": false,
+        "unmet": [
+          "0 shipping catalogue components or blocks, fewer than 5"
+        ]
+      }
     },
     {
       "id": "developer-platforms",
@@ -2663,7 +2687,13 @@
         "IncidentBanner",
         "IncidentTimeline",
         "AlertRuleBuilder"
-      ]
+      ],
+      "publication": {
+        "eligible": false,
+        "unmet": [
+          "has no workflow"
+        ]
+      }
     },
     {
       "id": "healthcare",
@@ -2690,7 +2720,14 @@
         "ClinicalTimeline",
         "LabResultTable",
         "ConsentStatus"
-      ]
+      ],
+      "publication": {
+        "eligible": false,
+        "unmet": [
+          "has no workflow",
+          "0 shipping catalogue components or blocks, fewer than 5"
+        ]
+      }
     },
     {
       "id": "logistics",
@@ -2715,7 +2752,14 @@
         "RouteSummary",
         "FleetVehicleCard / VehicleStatus",
         "ShipmentCard / ShipmentStatus / ShipmentTimeline / TrackingTimeline / DeliveryStatus"
-      ]
+      ],
+      "publication": {
+        "eligible": false,
+        "unmet": [
+          "has no workflow",
+          "0 shipping catalogue components or blocks, fewer than 5"
+        ]
+      }
     }
   ],
   "workflows": [
@@ -2730,43 +2774,54 @@
           "rows": [
             "Cart",
             "ProductQuantity / CartQuantity / QuantityPicker"
-          ]
+          ],
+          "status": "partial"
         },
         {
           "title": "Review the price",
           "rows": [
             "PriceBreakdown",
             "AmountDisplay"
-          ]
+          ],
+          "status": "existing"
         },
         {
           "title": "Delivery details",
           "rows": [
             "AddressForm / PhoneInput / CountrySelect / TimezoneSelect",
             "FormSection / FieldArray / RepeatableFieldGroup / ConditionalField / DependentSelect"
-          ]
+          ],
+          "status": "partial"
         },
         {
           "title": "Pay",
           "rows": [
             "PaymentCardInput",
             "Checkout"
-          ]
+          ],
+          "status": "planned"
         },
         {
           "title": "Confirm",
           "rows": [
             "ResultState",
             "ReferenceCode"
-          ]
+          ],
+          "status": "existing"
         },
         {
           "title": "Receipt",
           "rows": [
             "Receipt"
-          ]
+          ],
+          "status": "existing"
         }
-      ]
+      ],
+      "coverage": {
+        "existing": 3,
+        "partial": 2,
+        "planned": 1
+      }
     },
     {
       "id": "flight-booking",
@@ -2779,54 +2834,67 @@
           "rows": [
             "DateRangeInput / DateTimeRangeInput",
             "GuestPicker"
-          ]
+          ],
+          "status": "partial"
         },
         {
           "title": "Choose a flight",
           "rows": [
             "FlightCard"
-          ]
+          ],
+          "status": "planned"
         },
         {
           "title": "Choose seats",
           "rows": [
             "SeatMap"
-          ]
+          ],
+          "status": "planned"
         },
         {
           "title": "Traveller details",
           "rows": [
             "TravelerCard / PassengerList / TravelerDocumentStatus",
             "FormSection / FieldArray / RepeatableFieldGroup / ConditionalField / DependentSelect"
-          ]
+          ],
+          "status": "partial"
         },
         {
           "title": "Review the price",
           "rows": [
             "PriceBreakdown"
-          ]
+          ],
+          "status": "existing"
         },
         {
           "title": "Pay",
           "rows": [
             "PaymentCardInput"
-          ]
+          ],
+          "status": "planned"
         },
         {
           "title": "Confirm",
           "rows": [
             "ResultState",
             "ReferenceCode"
-          ]
+          ],
+          "status": "existing"
         },
         {
           "title": "Boarding pass",
           "rows": [
             "BoardingPass",
             "PassCard"
-          ]
+          ],
+          "status": "existing"
         }
-      ]
+      ],
+      "coverage": {
+        "existing": 3,
+        "partial": 2,
+        "planned": 3
+      }
     },
     {
       "id": "money-transfer",
@@ -2839,28 +2907,37 @@
           "rows": [
             "MoneyInput",
             "AmountDisplay"
-          ]
+          ],
+          "status": "partial"
         },
         {
           "title": "Review fees",
           "rows": [
             "MoneyMovementSummary / FeeBreakdown"
-          ]
+          ],
+          "status": "existing"
         },
         {
           "title": "Confirm",
           "rows": [
             "ResultState",
             "ReferenceCode"
-          ]
+          ],
+          "status": "existing"
         },
         {
           "title": "History",
           "rows": [
             "TransactionList"
-          ]
+          ],
+          "status": "planned"
         }
-      ]
+      ],
+      "coverage": {
+        "existing": 2,
+        "partial": 1,
+        "planned": 1
+      }
     },
     {
       "id": "device-pairing",
@@ -2872,29 +2949,38 @@
           "title": "Pair the device",
           "rows": [
             "DeviceProvisioningStepper"
-          ]
+          ],
+          "status": "existing"
         },
         {
           "title": "Check the connection",
           "rows": [
             "SyncStatus / ConnectionStatus / StaleDataState / OfflineState"
-          ]
+          ],
+          "status": "partial"
         },
         {
           "title": "Monitor it",
           "rows": [
             "IoT monitoring",
             "IoT summaries & cards"
-          ]
+          ],
+          "status": "existing"
         },
         {
           "title": "Control it",
           "rows": [
             "IoT controls",
             "RequestedState / ReportedState / PendingDeviceState / CommandStatus"
-          ]
+          ],
+          "status": "existing"
         }
-      ]
+      ],
+      "coverage": {
+        "existing": 3,
+        "partial": 1,
+        "planned": 0
+      }
     }
   ],
   "components": {

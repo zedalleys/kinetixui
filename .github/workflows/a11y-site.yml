@@ -26,6 +26,10 @@ on:
       - "scripts/web-quality-browser.mjs"
       - "scripts/blocks-discovery-browser.mjs"
       - "scripts/global-search-browser.mjs"
+      - "scripts/use-cases-browser.mjs"
+      # The Use cases hub and the use-case pages are rendered from the discovery index.
+      - "discovery-index.json"
+      - "discovery-routes.json"
       # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
       - "components.manifest.json"
       - "platform-parity.json"
@@ -51,6 +55,10 @@ on:
       - "scripts/web-quality-browser.mjs"
       - "scripts/blocks-discovery-browser.mjs"
       - "scripts/global-search-browser.mjs"
+      - "scripts/use-cases-browser.mjs"
+      # The Use cases hub and the use-case pages are rendered from the discovery index.
+      - "discovery-index.json"
+      - "discovery-routes.json"
       # The ticker reads its platforms and labels from these, so a manifest change can move its geometry.
       - "components.manifest.json"
       - "platform-parity.json"
@@ -158,3 +166,10 @@ jobs:
       # menu, and no sideways scroll at 390/768/1280, 100/200% text, LTR/RTL, light/dark and forced colours.
       - name: Global search (keyboard, destinations, axe, layout)
         run: pnpm check:global-search
+
+      # The Use cases hub and the published /use-cases pages against the built site: every internal link and hash
+      # resolves, hub anchors survive a direct load and a reload, hub → use case → component and Back/Forward, keyboard
+      # order and focus, axe in light and dark, and no sideways scroll at 390/768/1280, 100/200% text, LTR/RTL,
+      # light/dark and forced colours.
+      - name: Use cases hub (links, anchors, keyboard, axe, layout)
+        run: pnpm check:use-cases

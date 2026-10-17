@@ -5,7 +5,7 @@ const nav = vi.hoisted(() => ({ pathname: "/docs/components/price-breakdown" }))
 vi.mock("next/navigation", () => ({ usePathname: () => nav.pathname }));
 
 import { BusinessContext } from "./business-context";
-import { businessContexts } from "@/lib/business-discovery";
+import { businessContexts, domainLink } from "@/lib/business-discovery";
 
 const CONTEXTS = businessContexts();
 
@@ -16,13 +16,17 @@ describe("BusinessContext on a component page", () => {
     expect(screen.getByRole("heading", { level: 2, name: "In applications" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Transactions & money" })).toHaveAttribute("href", "/capabilities#transactions");
     expect(screen.getByRole("link", { name: "Commerce" })).toHaveAttribute("href", "/use-cases/commerce");
-    // Finance & banking has no page yet: named, not linked
-    expect(screen.getAllByText(/Finance & banking/).length).toBeGreaterThan(0);
-    expect(screen.queryByRole("link", { name: "Finance & banking" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Finance & banking" })).toHaveAttribute("href", domainLink("finance"));
     expect(screen.getByRole("link", { name: "Checkout" })).toHaveAttribute("href", "/use-cases/commerce#checkout");
     // planned capabilities are text, never links, and say so
     expect(screen.queryByRole("link", { name: "Receipt" })).toBeNull();
     expect(screen.getByText(/Planned means not built/)).toBeInTheDocument();
+  });
+
+  it("links a domain with no page to its card on the Use cases hub, never to a page that does not exist", () => {
+    nav.pathname = "/docs/components/stepper";
+    render(<BusinessContext contexts={CONTEXTS} blocks={{}} />);
+    expect(screen.getByRole("link", { name: "Enterprise administration" })).toHaveAttribute("href", "/capabilities#domain-saas-admin");
   });
 
   it("lists the blocks that use a component even when it has no business context", () => {

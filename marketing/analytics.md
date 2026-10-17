@@ -265,6 +265,13 @@ title or its URL. It is in neither Qualified Evaluation nor Adoption Intent: a c
 qualifies through the `component_viewed` its page sends, so the QE definition and its dashboard tiles are
 unchanged. Opening the menu is not an event (it answers no decision on its own).
 
+**2026-10-17, Use Cases hub (BD-W3b2a).** No new event. Two `source` values, `use_cases_hub` (/capabilities)
+and `use_case_page` (/use-cases/<domain>, only routes that exist), so a CTA or link followed from either page is
+attributed instead of dropped. The hub's next steps reuse existing CTA targets: `browse_components`,
+`installation` and `platform_coverage`. `platform_coverage` is already a Qualified Evaluation signal, and following
+it from the hub is the same act it measures on the homepage, so the QE definition is unchanged; only where the
+signal can come from widens. Viewing the hub or a use-case page is a pageview and qualifies nothing.
+
 **Vocabulary health, audited:** no duplicate events; no event without a decision it supports; every
 documented event is emitted and every emitted event is documented. (`button_clicked` appears in the
 repository only as a test fixture, not in shipped code — checked rather than assumed.)
