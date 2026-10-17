@@ -54,7 +54,7 @@ export const ANALYTICS_SOURCES = [
 export type AnalyticsSource = (typeof ANALYTICS_SOURCES)[number];
 
 /** The position inside a surface. Stable identifiers, never visible text. */
-export const ANALYTICS_LOCATIONS = ["hero", "primary_nav", "sidebar", "installation", "code_example", "platform_tabs", "code_tab", "component_header", "footer", "content"] as const;
+export const ANALYTICS_LOCATIONS = ["hero", "primary_nav", "sidebar", "installation", "code_example", "platform_tabs", "code_tab", "component_header", "footer", "content", "command_menu"] as const;
 export type AnalyticsLocation = (typeof ANALYTICS_LOCATIONS)[number];
 
 /** What a product call-to-action is FOR — never its visible label and never its destination URL. */
@@ -97,6 +97,14 @@ export const ANALYTICS_CTA_TARGETS = [
   "explore_iot",
 ] as const;
 export type AnalyticsCtaTarget = (typeof ANALYTICS_CTA_TARGETS)[number];
+
+/**
+ * The kind of destination a command-menu (⌘K) result is — never the query, the result's title or its URL. Eight
+ * values, so a breakdown by it stays readable: `component` is a component docs page, `docs` any other docs page,
+ * `link` a main-navigation page, `theme` a theme command.
+ */
+export const SEARCH_RESULT_TYPES = ["component", "docs", "link", "block", "use_case", "workflow", "capability", "theme"] as const;
+export type SearchResultType = (typeof SEARCH_RESULT_TYPES)[number];
 
 /**
  * Properties an event may carry. Every value is a short identifier — a slug, a package name, a hostname, a
@@ -186,6 +194,14 @@ export interface AnalyticsEvents {
    * `component_code_copied` for the reason above — a block is not a catalogue component.
    */
   block_code_copied: Shape<"block" | "platform", "source">;
+  /*
+   * A result was chosen in the command menu (⌘K), by Enter or by pointer. `target` is the kind of destination only
+   * (SEARCH_RESULT_TYPES); the search text, the result's title and its URL are never sent — what someone types into
+   * a search box is theirs. Fired once per selection, before the navigation that produces the next `$pageview`.
+   * Opening the menu is not an event: on its own it answers no decision. Neither Qualified Evaluation nor Adoption
+   * Intent (analytics.md §3/§4); a component chosen here still qualifies through the `component_viewed` it leads to.
+   */
+  search_result_selected: { target: SearchResultType; source: "header"; location: "command_menu" };
 }
 
 export type AnalyticsEventName = keyof AnalyticsEvents;

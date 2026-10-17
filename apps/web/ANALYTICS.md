@@ -83,6 +83,7 @@ explicit that installs are not measurable on-site, and there is deliberately no 
 | `npm_clicked` | a link to one of our npm packages is clicked | `AnalyticsProvider` listener |
 | `external_link_clicked` | a link to a listed external host with no more specific event (today: the Figma file) | `AnalyticsProvider` listener |
 | `iot_example_copied` | an IoT example's source is copied from `/iot` | `IotExampleShowcase` |
+| `search_result_selected` | a result is chosen in the command menu (⌘K), by Enter or pointer. `target` is the kind of destination only (`SEARCH_RESULT_TYPES`: component, docs, link, block, use_case, workflow, capability, theme), with `source: header`, `location: command_menu`. Never the search text, the title or the URL. Neither Qualified Evaluation nor Adoption Intent | `CommandMenu` |
 
 `iot_example_copied` is deliberately **not** `component_code_copied`, and the distinction is the reason the
 component signal still means something. `component_code_copied` says code for a component from the 98-component
@@ -122,7 +123,8 @@ code), and the homepage cross-platform example's copy button (a composed example
 events; the `/demos/building-operations` console's own controls (scenario, playback, floor, camera, zone and status
 filters, layers, fullscreen — demo state, and the one signal worth having from the demo is whether it is found, which
 `cta_clicked` with target `building_operations_demo` from `/iot` answers; the page itself is source
-`building_operations_demo`); ordinary navigation, the docs search palette, gallery search and filters (their text must never be sent);
+`building_operations_demo`); ordinary navigation, what is typed into the search palette (only the kind of result chosen is reported, as
+`search_result_selected`), gallery search and filters (their text must never be sent);
 attribution links (Radix, Lucide, Recharts). `npm_clicked` has no surface yet — the site links to no npm page —
 but any link to one of our packages on npmjs.com is reported the moment it is added.
 
