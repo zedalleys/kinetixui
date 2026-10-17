@@ -14,6 +14,7 @@ import {
   UNCLASSIFIED,
   WORKFLOWS,
   businessContextFor,
+  blockFacets,
   catalogueFacets,
   ships,
 } from "./business-discovery";
@@ -142,5 +143,84 @@ describe("catalogue facets", () => {
   it("lets a search for the job find the part", () => {
     expect(facets.bySlug["price-breakdown"]!.terms).toContain("checkout");
     expect(facets.bySlug["pass-card"]!.terms).toContain("flight booking");
+  });
+});
+
+describe("block business metadata (BD-W2a)", () => {
+  const unclassified = new Set(
+    (capabilities.discovery as unknown as { unclassifiedBlocks: { block: string }[] }).unclassifiedBlocks.map((u) => u.block),
+  );
+
+  it("gives every published block a capability, or a written reason in unclassifiedBlocks — never both, never neither", () => {
+    for (const b of blocks) {
+      const cited = BLOCK_DISCOVERY[b.slug]!.capabilities.length > 0;
+      expect(cited !== unclassified.has(b.slug), b.slug).toBe(true);
+    }
+  });
+
+  it("does not let a generic block inherit a workflow through a domain-neutral row", () => {
+    // FormSection is a stage of checkout and flight booking; a profile form is neither
+    expect(BLOCK_DISCOVERY["profile-form"]!.workflows).toEqual([]);
+    expect(BLOCK_DISCOVERY["profile-form"]!.domains).toEqual([]);
+    expect(BLOCK_DISCOVERY["alert-stack"]!.domains).toEqual([]);
+  });
+
+  // Negative controls: each mutation of the canonical data must make the real generator fail.
+  type Data = typeof capabilities & { discovery: { unclassifiedBlocks: { block: string; reason: string }[] } };
+  const mutate = (fn: (d: Data) => void) => {
+    const d = structuredClone(capabilities) as Data;
+    fn(d);
+    return buildDiscovery(d, componentManifest.components, blocksManifest.blocks).errors.join("\n");
+  };
+  const rowNamed = (d: Data, name: string) =>
+    d.families.flatMap((f) => f.capabilities as { name: string; evidence: string[]; status: string }[]).find((r) => r.name === name)!;
+
+  it("passes on the committed data", () => {
+    expect(mutate(() => {})).toBe("");
+  });
+  it("fails a published block that is neither cited nor listed", () => {
+    expect(mutate((d) => (d.discovery.unclassifiedBlocks = d.discovery.unclassifiedBlocks.filter((u) => u.block !== "cta-banner")))).toMatch(
+      /cta-banner: no shipping row cites block:cta-banner/,
+    );
+  });
+  it("fails a block that is both cited and listed as unclassified", () => {
+    expect(mutate((d) => d.discovery.unclassifiedBlocks.push({ block: "receipt", reason: "x" }))).toMatch(/"receipt" is cited by a shipping row/);
+  });
+  it("fails an unknown block, a duplicate and a missing reason in unclassifiedBlocks", () => {
+    expect(mutate((d) => d.discovery.unclassifiedBlocks.push({ block: "no-such-block", reason: "x" }))).toMatch(/"no-such-block" is not a block/);
+    expect(mutate((d) => d.discovery.unclassifiedBlocks.push({ ...d.discovery.unclassifiedBlocks[0]! }))).toMatch(/duplicate block/);
+    expect(mutate((d) => (d.discovery.unclassifiedBlocks[0]!.reason = " "))).toMatch(/a reason is required/);
+  });
+  it("fails a workflow with no shipping stage, and a workflow naming an unknown domain or row", () => {
+    expect(
+      mutate((d) => d.discovery.workflows.push({ id: "goal-setting", title: "Goal setting", domain: "healthcare", summary: "s", stages: [{ title: "Vitals", uses: ["VitalSign"] }] })),
+    ).toMatch(/goal-setting: no stage uses an existing or partial row/);
+    expect(mutate((d) => (d.discovery.workflows[0]!.domain = "real-estate"))).toMatch(/domain "real-estate" does not exist/);
+    expect(mutate((d) => d.discovery.workflows[0]!.stages[0]!.uses.push("NotARow"))).toMatch(/"NotARow" is not a capability row/);
+  });
+  it("fails an unknown family in a capability group and a duplicate domain id", () => {
+    expect(mutate((d) => d.discovery.capabilities[0]!.families.push("ZZ"))).toMatch(/family "ZZ" does not exist/);
+    expect(mutate((d) => d.discovery.domains.push({ ...d.discovery.domains[0]! }))).toMatch(/duplicate id "commerce"/);
+  });
+  it("ignores a block: reference on a planned row when deriving (gen-business-roadmap rejects the row itself)", () => {
+    const d = structuredClone(capabilities) as Data;
+    const row = rowNamed(d, "Checkout");
+    expect(row.status).toBe("planned");
+    row.evidence.push("block:cta-banner");
+    const { index } = buildDiscovery(d, componentManifest.components, blocksManifest.blocks);
+    expect((index as { blocks: Record<string, { capabilities: string[] }> }).blocks["cta-banner"]!.capabilities).toEqual([]);
+  });
+});
+
+describe("block facets", () => {
+  const facets = blockFacets();
+  it("offers only options some block carries, and links a workflow only to a domain page that exists", () => {
+    for (const key of ["capabilities", "domains", "workflows"] as const)
+      for (const o of facets[key]) expect(Object.values(facets.bySlug).some((b) => b[key].includes(o.id)), o.id).toBe(true);
+    expect(facets.workflows.find((w) => w.id === "checkout")!.href).toBe("/use-cases/commerce#checkout");
+    expect(facets.capabilities.map((c) => c.id)).toContain("application-foundations");
+  });
+  it("lets a search for the job find the block", () => {
+    expect(facets.bySlug["order-summary"]!.terms).toContain("checkout");
   });
 });

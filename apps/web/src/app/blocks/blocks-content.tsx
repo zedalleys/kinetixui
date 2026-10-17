@@ -1,5 +1,7 @@
 "use client";
 
+import type * as React from "react";
+
 import { Showcase } from "@/components/showcase";
 import { blocks } from "@/lib/blocks";
 import { PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
@@ -16,10 +18,21 @@ import { BlockComponentLinks, BlockReactInstall } from "./block-install";
  * cannot disagree — and a platform only appears if `blocks.manifest.json` points at a real file for it, which
  * `check:block-source` verifies and the native workflows compile.
  */
-export function BlocksContent({ components }: { components: Record<string, string[]> }) {
+export function BlocksContent({
+  components,
+  only,
+  context,
+}: {
+  components: Record<string, string[]>;
+  /** The blocks the gallery's filters keep; absent means every block. */
+  only?: ReadonlySet<string>;
+  /** A line of business context under a block's title (category, capability, workflow). */
+  context?: (slug: string) => React.ReactNode;
+}) {
   return (
     <div className="mt-10 grid gap-12">
       {blocks.map((block) => {
+        if (only && !only.has(block.slug)) return null;
         const Preview = blockPreviews[block.slug];
         const sources = blockExampleSource[block.slug as keyof typeof blockExampleSource] as Record<string, string> | undefined;
         if (!Preview || !sources) return null; // unreachable: blocks.test.tsx fails if either is missing
@@ -36,6 +49,7 @@ export function BlocksContent({ components }: { components: Record<string, strin
             analyticsBlock={block.slug}
             aside={
               <>
+                {context?.(block.slug)}
                 <BlockComponentLinks components={components[block.slug] ?? []} />
                 <BlockReactInstall components={components[block.slug] ?? []} platforms={block.platforms} />
               </>

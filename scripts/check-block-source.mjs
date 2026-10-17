@@ -53,10 +53,26 @@ const errors = [];
 const slugs = Object.keys(manifest.blocks);
 if (slugs.length === 0) errors.push("blocks.manifest.json declares no blocks");
 
+// JSON.parse keeps the last of two equal keys and drops the first without a word, so a duplicated block slug would
+// silently replace a block. Count the slugs in the text itself: every block opens with `"<slug>": {` at one depth.
+const declaredSlugs = [...read("blocks.manifest.json").matchAll(/^ {4}"([^"]+)": \{$/gm)].map((m) => m[1]);
+for (const slug of new Set(declaredSlugs.filter((s, i) => declaredSlugs.indexOf(s) !== i)))
+  errors.push(`${slug}: declared more than once in blocks.manifest.json — the later entry silently replaces the earlier`);
+
+// The category vocabulary is closed: the /blocks filter offers exactly these, in this order.
+const CATEGORIES = Array.isArray(manifest.categories) ? manifest.categories : [];
+if (CATEGORIES.length === 0) errors.push('blocks.manifest.json needs a "categories" list');
+if (new Set(CATEGORIES).size !== CATEGORIES.length) errors.push('blocks.manifest.json "categories" lists a category twice');
+for (const category of CATEGORIES)
+  if (!slugs.some((s) => manifest.blocks[s].category === category && manifest.blocks[s].status !== "draft"))
+    errors.push(`category "${category}" has no published block, so its filter would always be empty`);
+
 for (const slug of slugs) {
   const b = manifest.blocks[slug];
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) errors.push(`${slug}: slug must be kebab-case (it is a public URL fragment)`);
   for (const field of ["title", "description", "category"]) if (!b[field]) errors.push(`${slug}: missing "${field}"`);
+  if (b.category && !CATEGORIES.includes(b.category))
+    errors.push(`${slug}: category "${b.category}" is not one of blocks.manifest.json "categories" (${CATEGORIES.join(", ")})`);
   if (!STATUSES.has(b.status)) errors.push(`${slug}: invalid status "${b.status}"`);
   if (!b.sources || typeof b.sources !== "object" || Object.keys(b.sources).length === 0) {
     errors.push(`${slug}: needs a "sources" map with at least one real platform implementation`);

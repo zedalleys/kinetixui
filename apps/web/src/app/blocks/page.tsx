@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { routeMetadata } from "@/lib/route-seo";
-import { BlocksContent } from "./blocks-content";
+import { Suspense } from "react";
+import { BlocksGallery, BlocksGalleryFallback } from "./blocks-gallery";
 import { BlocksInstallGuide } from "./block-install";
 import { blockComponents } from "@/lib/block-components";
+import { blockFacets } from "@/lib/business-discovery";
 import { blockTotal, everyBlockIsFivePlatform, platformsWithBlocks } from "@/lib/blocks";
 import { PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
 
@@ -16,6 +18,7 @@ const platformSentence =
 export const metadata: Metadata = routeMetadata("/blocks");
 
 export default function BlocksPage() {
+  const data = { components: blockComponents(), facets: blockFacets() };
   return (
     <div className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8">
       <p className="eyebrow">Compositions</p>
@@ -37,7 +40,15 @@ export default function BlocksPage() {
         )}
       </p>
       <BlocksInstallGuide />
-      <BlocksContent components={blockComponents()} />
+      {/*
+        The filters live in the URL, and a static page cannot read a query string on the server, so the gallery
+        renders client-side from the URL inside Suspense. Its fallback is the same gallery with no filters, which is
+        what the HTML carries: every block, not a "Loading…" line. The facets are computed here, on the server, so
+        the discovery index stays out of the client bundle.
+      */}
+      <Suspense fallback={<BlocksGalleryFallback {...data} />}>
+        <BlocksGallery {...data} />
+      </Suspense>
     </div>
   );
 }
