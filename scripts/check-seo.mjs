@@ -29,6 +29,7 @@
  *   og-image             an indexable page has no og:image, or it does not resolve to a built image
  *   jsonld-invalid       a JSON-LD block does not parse, or has no @context/@type
  *   breadcrumb-mismatch  BreadcrumbList JSON-LD disagrees with the visible breadcrumb
+ *   breadcrumb-missing   a /use-cases page has no visible breadcrumb or no BreadcrumbList JSON-LD
  *   component-title      a component page's title/description does not name the component and a platform
  *   component-related    a component page has no "Related components" links to other component pages
  *   noindex-important    a sitemap or core page is noindex
@@ -129,7 +130,7 @@ function extract(route, file) {
       return { ok: false, error: String(e.message ?? e) };
     }
   });
-  const crumbNav = d.querySelector('nav[aria-label="Docs breadcrumb"]');
+  const crumbNav = d.querySelector('nav[aria-label="Docs breadcrumb"], nav[aria-label="Breadcrumb"]');
   const crumbs = crumbNav
     ? [...crumbNav.querySelectorAll("a, span[data-crumb]")].map((el) => ({
         name: el.textContent.trim(),
@@ -243,6 +244,13 @@ for (const p of indexable) {
       ld.every((e, i) => e.name.toLowerCase() === visible[i].name.toLowerCase() && (e.path ?? null) === (visible[i].path ?? null));
     if (!same) fail("breadcrumb-mismatch", p.route, `JSON-LD ${JSON.stringify(ld)} ≠ visible ${JSON.stringify(visible)}`);
   }
+}
+
+/* Use-case pages: each one must carry the trail back to the hub, both visible and as BreadcrumbList JSON-LD. */
+for (const p of indexable.filter((x) => x.route.startsWith("/use-cases/"))) {
+  const hasList = p.jsonld.some((b) => b.ok && (b.data["@graph"] ?? [b.data]).some((n) => n["@type"] === "BreadcrumbList"));
+  if (!p.crumbs?.length) fail("breadcrumb-missing", p.route, "no visible breadcrumb");
+  else if (!hasList) fail("breadcrumb-missing", p.route, "no BreadcrumbList JSON-LD");
 }
 
 /* Sitemap. */

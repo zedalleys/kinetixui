@@ -256,6 +256,7 @@ page also links every component page through the sidebar, so contextual links ma
 | `WebSite` | `/` | The site: name, canonical URL, language. Unchanged. |
 | `SoftwareSourceCode` | `/` | KinetixUI is an open-source repository of libraries. Name, URL, `codeRepository`, MIT licence and `programmingLanguage` (TypeScript, Swift, Kotlin, Dart, derived from the platform list) are all provable. It replaces `SoftwareApplication`, which does not define `codeRepository` and implied a single product version. |
 | `BreadcrumbList` | every docs page with a trail (118) | Built from the crumbs the page visibly shows; the sidebar group is not a crumb because it is not a page. |
+| `BreadcrumbList` | every published `/use-cases/<domain>` page (BD-W3b2b) | Use cases → the domain, the same two crumbs the page's `Breadcrumb` nav shows. Unpublished domains have no page, so no trail; `breadcrumb-missing` fails a use-case page without one. |
 
 **Considered and rejected:** `Organization` (no organisation entity exists; it would be invented),
 `SoftwareApplication` (not an application; Google's rich result wants `offers` and `aggregateRating`, which we will
@@ -316,8 +317,8 @@ the container.
 Reads every prerendered HTML file plus `sitemap.xml` and `robots.txt`. Rules: `title-missing`, `title-duplicate`,
 `desc-missing`, `desc-markup`, `desc-duplicate`, `canonical-missing`, `canonical-host`, `canonical-query`, `canonical-self`,
 `og-url`, `h1-count`, `sitemap-missing-page`, `sitemap-bad-url`, `sitemap-omits`, `link-broken`, `og-image`,
-`jsonld-invalid`, `breadcrumb-mismatch`, `component-title`, `component-related`, `noindex-important`, `robots`,
-`orphan`.
+`jsonld-invalid`, `breadcrumb-mismatch`, `breadcrumb-missing` (BD-W3b2b), `component-title`, `component-related`,
+`noindex-important`, `robots`, `orphan`.
 
 Baseline on `bc62ed7`: **FAIL**. After: **129 built pages, 128 indexable, 128 sitemap URLs, 15,470 internal links
 checked, all 23 rules pass.**
@@ -361,8 +362,12 @@ verifies its SHA-256. Nothing in the source tree is touched, and no control is c
 | 14 | drop Related components from `/docs/components/slider` | `component-related` | ✓ |
 | 15 | canonical on `https://kinetixui.com.evil.example` (the origin as a host prefix) | `canonical-host` | ✓ |
 | 16 | MDX inline code (`` `<kbd>` ``) in a meta description | `desc-markup` | ✓ |
+| 17 | malformed BreadcrumbList JSON-LD on `/use-cases/commerce` | `jsonld-invalid` | ✓ |
+| 18 | use-case breadcrumb JSON-LD says "Industries" where the page shows "Use cases" | `breadcrumb-mismatch` | ✓ |
+| 19 | drop the BreadcrumbList from `/use-cases/commerce` | `breadcrumb-missing` | ✓ |
+| 20 | `/use-cases/healthcare` (unpublished) in the sitemap | `sitemap-missing-page` | ✓ |
 
-All 16 were caught and the gate is green again afterwards. The browser check's platform assertion was checked the
+All 20 were caught and the gate is green again afterwards (17–20 added in BD-W3b2b). The browser check's platform assertion was checked the
 same way: expecting Flutter on `button?platform=SwiftUI` failed with the SwiftUI tab reported as selected, and the
 script was restored.
 

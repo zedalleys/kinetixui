@@ -13,10 +13,14 @@
  *   anchors       a direct load of a hub anchor (#domain-<id>, #workflow-<id>, a capability id) scrolls it into view,
  *                 and so does a reload
  *   navigation    hub → workflow card → use-case page section → component page, then Back and Forward return to each
+ *   journeys      hub → a second domain page → one of its blocks; ⌘K → a published workflow's anchor; a domain page →
+ *                 platform coverage → installation; each with Back and Forward
+ *   breadcrumb    on each use-case page the trail is the first stop in the page and leads back to the hub
+ *   disclosure    "Evidence for each part" opens and closes from the keyboard
  *   keyboard      Tab reaches the on-page navigation within the first stops of the page and every hub link shows a focus indicator; Enter on an
  *                 on-page link moves to its section
- *   a11y          axe-core (every rule on) on the hub and each use-case page, light and dark
- *   layout        390, 768 and 1280 wide × 100% and 200% text × LTR and RTL × light and dark, reduced motion: no
+ *   a11y          axe-core (every rule on) on the hub and each use-case page, light and dark, disclosures open
+ *   layout        (disclosures open) 390, 768 and 1280 wide × 100% and 200% text × LTR and RTL × light and dark, reduced motion: no
  *                 sideways scroll and no link, card or heading outside the viewport
  *   forced colors a focused hub link is still distinguishable from a resting one
  *   console       no page error, hydration warning or failed same-origin request anywhere above
@@ -171,6 +175,109 @@ const inView = (page, id) =>
   await context.close();
 }
 
+/* ── journeys ────────────────────────────────────────────────────────────────────────────────────── */
+const pageDomains = index.domains.filter((d) => d.page);
+{
+  // hub → the last published domain (the navigation block above takes the first) → one of its blocks
+  const d = pageDomains.at(-1);
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = watch(await context.newPage());
+  await page.goto(`${base}/capabilities`);
+  await ready(page);
+  await page.locator(`#domain-${d.id}`).getByRole("link", { name: new RegExp(`${d.title}`) }).first().click();
+  await page.waitForURL(`**/use-cases/${d.id}`);
+  await ready(page);
+  // a block the domain cites when it has one; otherwise (Travel today) its "Explore blocks" next step
+  const cited = main(page).locator('a[href^="/blocks#"]');
+  const block = (await cited.count()) ? cited.first() : main(page).getByRole("link", { name: /Explore blocks/ });
+  const blockHref = await block.getAttribute("href");
+  await block.click();
+  await page.waitForURL(`**${blockHref}`);
+  await ready(page);
+  if (blockHref.includes("#") && !(await inView(page, blockHref.split("#")[1]))) fail(`${d.id} → ${blockHref}: block not in view`);
+  await page.goBack();
+  await page.waitForURL(`**/use-cases/${d.id}`);
+  await page.goForward();
+  await page.waitForURL(`**${blockHref}`);
+  ok(`journey: hub → /use-cases/${d.id} → ${blockHref}, Back and Forward`);
+  await context.close();
+}
+{
+  // ⌘K → a published workflow → its section on the domain page
+  const w = index.workflows.find((x) => pageDomains.some((d) => d.id === x.domain));
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = watch(await context.newPage());
+  await page.goto(`${base}/capabilities`);
+  await ready(page);
+  await page.keyboard.press("Control+k");
+  const dialog = page.getByRole("dialog", { name: "Search the docs" });
+  await dialog.getByRole("group", { name: "Use cases" }).waitFor({ timeout: 10_000 });
+  await dialog.getByRole("combobox").pressSequentially(w.title, { delay: 10 });
+  await page.waitForTimeout(150);
+  await dialog.getByRole("group", { name: "Use cases" }).locator("[cmdk-item]").filter({ hasText: w.title }).first().click();
+  await page.waitForURL(`**/use-cases/${w.domain}#${w.id}`);
+  await ready(page);
+  if (!(await inView(page, w.id))) fail(`⌘K → ${w.title}: #${w.id} not in view`);
+  await page.reload();
+  await ready(page);
+  if (!(await inView(page, w.id))) fail(`⌘K → ${w.title}: #${w.id} not in view after reload`);
+  ok(`journey: ⌘K "${w.title}" → /use-cases/${w.domain}#${w.id}, in view and after reload`);
+  await context.close();
+}
+{
+  // a domain page → platform coverage → installation
+  const d = pageDomains[0];
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = watch(await context.newPage());
+  await page.goto(`${base}/use-cases/${d.id}`);
+  await ready(page);
+  await main(page).getByRole("link", { name: /View platform coverage/ }).click();
+  await page.waitForURL("**/docs/platforms");
+  await ready(page);
+  await main(page).locator('a[href="/docs/installation"]').first().click();
+  await page.waitForURL("**/docs/installation");
+  await page.goBack();
+  await page.waitForURL("**/docs/platforms");
+  await page.goBack();
+  await page.waitForURL(`**/use-cases/${d.id}`);
+  await page.goForward();
+  await page.waitForURL("**/docs/platforms");
+  ok(`journey: /use-cases/${d.id} → /docs/platforms → /docs/installation, Back and Forward`);
+  await context.close();
+}
+
+/* ── breadcrumb and disclosure, on each use-case page ────────────────────────────────────────────── */
+for (const d of pageDomains) {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = watch(await context.newPage());
+  await page.goto(`${base}/use-cases/${d.id}`);
+  await ready(page);
+  await page.locator("body").focus();
+  let first = null;
+  for (let i = 0; i < 40 && !first; i++) {
+    await page.keyboard.press("Tab");
+    first = await page.evaluate(() => (document.activeElement?.closest("main") ? document.activeElement.textContent.trim() : null));
+  }
+  const inCrumb = await page.evaluate(() => !!document.activeElement?.closest('nav[aria-label="Breadcrumb"]'));
+  if (!inCrumb) fail(`/use-cases/${d.id}: the first stop in the page is "${first}", not the breadcrumb`);
+  const current = await page.locator('nav[aria-label="Breadcrumb"] [aria-current="page"]').textContent();
+  if (current !== d.title) fail(`/use-cases/${d.id}: breadcrumb says "${current}"`);
+  const summary = main(page).locator("summary", { hasText: "Evidence for each part" }).first();
+  await summary.focus();
+  await page.keyboard.press("Enter");
+  const opened = await summary.evaluate((s) => s.parentElement.open);
+  await page.keyboard.press("Enter");
+  const closed = await summary.evaluate((s) => !s.parentElement.open);
+  if (!opened || !closed) fail(`/use-cases/${d.id}: the evidence disclosure does not open and close from the keyboard`);
+  await page.keyboard.press("Shift+Tab");
+  await page.goto(`${base}/use-cases/${d.id}`);
+  await ready(page);
+  await page.locator('nav[aria-label="Breadcrumb"]').getByRole("link", { name: "Use cases" }).press("Enter");
+  await page.waitForURL("**/capabilities");
+  await context.close();
+}
+ok(`breadcrumb: first stop on ${pageDomains.map((d) => `/use-cases/${d.id}`).join(", ")}, names the page, Enter leads to the hub; the evidence disclosure opens and closes from the keyboard`);
+
 /* ── keyboard ────────────────────────────────────────────────────────────────────────────────────── */
 {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -239,6 +346,8 @@ for (const route of routes)
     await page.goto(`${base}${route}`);
     await ready(page);
     await setLook(page, scheme);
+    // the per-part evidence tables sit in closed disclosures; open them so axe sees them too
+    await page.evaluate(() => document.querySelectorAll("main details").forEach((d) => (d.open = true)));
     await page.addScriptTag({ content: axeSource });
     const result = await page.evaluate(async () => window.axe.run(document, { resultTypes: ["violations"] }));
     for (const v of result.violations) fail(`axe ${route} ${scheme}: ${v.id} — ${v.nodes.length} node(s): ${v.nodes[0]?.target}`);
@@ -260,6 +369,7 @@ for (const route of routes)
           await page.goto(`${base}${route}`);
           await ready(page);
           await setLook(page, scheme, dir);
+          await page.evaluate(() => document.querySelectorAll("main details").forEach((d) => (d.open = true)));
           await page.waitForTimeout(100);
           const m = await page.evaluate(() => {
             const main = document.querySelector("main") ?? document.body;

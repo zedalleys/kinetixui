@@ -134,6 +134,34 @@ const CONTROLS = [
     mutate: (s) => s.replace(/(<meta name="description" content="KinetixUI Kbd: )/, "$1`&lt;kbd&gt;` "),
     expect: "desc-markup",
   },
+  {
+    id: 17,
+    name: "invalid breadcrumb JSON-LD on a use-case page",
+    file: "use-cases/commerce.html",
+    mutate: (s) => s.replace('{"@context":"https://schema.org","@type":"BreadcrumbList"', '{"@context":"https://schema.org","@type":"BreadcrumbList",,'),
+    expect: "jsonld-invalid",
+  },
+  {
+    id: 18,
+    name: "use-case breadcrumb JSON-LD disagrees with the visible trail",
+    file: "use-cases/travel-booking.html",
+    mutate: (s) => s.replace('"name":"Use cases","item":"https://kinetixui.com/capabilities"', '"name":"Industries","item":"https://kinetixui.com/capabilities"'),
+    expect: "breadcrumb-mismatch",
+  },
+  {
+    id: 19,
+    name: "drop the breadcrumb JSON-LD from a use-case page",
+    file: "use-cases/commerce.html",
+    mutate: (s) => s.replace(/<script type="application\/ld\+json">\{"@context":"https:\/\/schema\.org","@type":"BreadcrumbList"[^<]*<\/script>/, ""),
+    expect: "breadcrumb-missing",
+  },
+  {
+    id: 20,
+    name: "list an unpublished domain in the sitemap",
+    file: "sitemap.xml.body",
+    mutate: (s) => s.replace("</urlset>", "<url>\n<loc>https://kinetixui.com/use-cases/healthcare</loc>\n</url>\n</urlset>"),
+    expect: "sitemap-missing-page",
+  },
 ];
 
 function runGate() {

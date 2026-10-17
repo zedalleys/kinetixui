@@ -5,6 +5,8 @@ import UseCasePage, { generateStaticParams } from "./[domain]/page";
 import { DOMAIN_PAGES, DOMAINS, WORKFLOWS, blockFacets, catalogueFacets } from "@/lib/business-discovery";
 import { blocks } from "@/lib/blocks";
 import { publicRoutes } from "@/lib/seo";
+import { PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
+import { EVIDENCE_LEVEL_LABEL, implementedLine, workflowReadiness } from "@/lib/workflow-readiness";
 
 /**
  * Navigation integrity of the Use Cases hub and the use-case pages, on the rendered markup: every internal link must
@@ -172,6 +174,56 @@ describe("use-case pages (/use-cases/<domain>)", () => {
     const { container } = await renderUseCase(id);
     expect(problems(container)).toEqual([]);
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+  });
+
+  it.each(DOMAIN_PAGES.map((d) => d.id))("%s has a breadcrumb back to the hub, and JSON-LD that matches it", async (id) => {
+    const { container } = await renderUseCase(id);
+    const nav = screen.getByRole("navigation", { name: "Breadcrumb" });
+    expect(within(nav).getByRole("link", { name: "Use cases" })).toHaveAttribute("href", "/capabilities");
+    const current = nav.querySelector("[aria-current=page]")!;
+    expect(current.textContent).toBe(DOMAINS.find((d) => d.id === id)!.title);
+    const ld = [...container.querySelectorAll('script[type="application/ld+json"]')]
+      .map((s) => JSON.parse(s.textContent!))
+      .find((j) => j["@type"] === "BreadcrumbList");
+    expect(ld.itemListElement.map((e: { name: string; item?: string }) => [e.name, e.item ?? null])).toEqual([
+      ["Use cases", "https://kinetixui.com/capabilities"],
+      [current.textContent, null],
+    ]);
+  });
+
+  it.each(DOMAIN_PAGES.map((d) => d.id))("%s prints each workflow's platform readiness as computed, in words", async (id) => {
+    const { container } = await renderUseCase(id);
+    for (const w of WORKFLOWS.filter((x) => x.domain === id)) {
+      const table = container.querySelector(`[data-workflow-readiness="${w.id}"]`)!;
+      expect(table, w.id).not.toBeNull();
+      for (const r of workflowReadiness(w)) {
+        const row = table.querySelector(`tr[data-platform="${r.platform}"]`)!;
+        const cells = [...row.querySelectorAll("th, td")].map((c) => c.textContent);
+        expect(cells[0]).toBe(PLATFORM_DEFINITIONS[r.platform].label);
+        expect(cells[1]).toBe(implementedLine(r));
+        const word = (l: typeof r.weakestComponent) => (l ? EVIDENCE_LEVEL_LABEL[l] : "None implemented");
+        const hasBlocks = r.parts.some((p) => p.kind === "block");
+        expect(cells.slice(2, hasBlocks ? 4 : 3)).toEqual(hasBlocks ? [word(r.weakestComponent), word(r.weakestBlock)] : [word(r.weakestComponent)]);
+        // no workflow with a partial or planned stage may be offered as buildable, on any platform
+        if (w.coverage.existing < w.stages.length) expect(cells.at(-1), `${w.id} ${r.platform}`).not.toBe("Can be built");
+        for (const [i, part] of r.parts.entries()) {
+          const cell = table.querySelector(`tr[data-part="${part.kind}:${part.slug}"] td[data-platform="${r.platform}"]`)!;
+          expect(cell.textContent, `${part.slug} ${r.platform} (${i})`).toBe(EVIDENCE_LEVEL_LABEL[part.level]);
+        }
+      }
+    }
+  });
+
+  it.each(DOMAIN_PAGES.map((d) => d.id))("%s ends with next steps to destinations that exist, tagged with existing CTA targets", async (id) => {
+    await renderUseCase(id);
+    const section = screen.getByRole("heading", { level: 2, name: /to your code$/ }).closest("section")!;
+    const links = within(section).getAllByRole("link");
+    expect(links.map((a) => [new URL(a.getAttribute("href")!, "https://x").pathname, a.getAttribute("data-analytics-cta"), a.getAttribute("data-analytics-source")])).toEqual([
+      ["/blocks", null, null],
+      ["/components", "browse_components", "use_case_page"],
+      ["/docs/platforms", "platform_coverage", "use_case_page"],
+      ["/docs/installation", "installation", "use_case_page"],
+    ]);
   });
 
   it("refuses a domain with no page", async () => {
