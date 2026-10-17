@@ -146,7 +146,7 @@ claims runtime parity; see §5.
 
 | Wave | Component | R | A | S | C | F | Trigger → property | Planned work | Gate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| MX1 | Tabs | src | src | src | src | src | selection → indicator inline offset + size | React done (#388); Angular / native after | `check:motion` midpoint, `check:tabs-indicator`, `selection-visual` |
+| MX1 | Tabs | src | src | src | src | src | selection → indicator inline offset + size | React done (#388); promote the contract's `selection-indicator` role (still `proposed`, no consumer, in `tokens/contracts/motion.json`) to proven with the Tabs consumer and its midpoint evidence (MX1 thread); Angular / native after | `check:motion` midpoint, `check:tabs-indicator`, `selection-visual` |
 | MX1 | SegmentedControl | src | src | src | src | src | selection → fill | done (#388, #390) | `selection-visual`, forced colours |
 | MX1 | Switch | RM | RM | RM | RM | RM | toggle → thumb inline offset, track colour | verify RTL thumb direction everywhere | `check:motion`, `check:native-motion` |
 | MX1 | Checkbox / RadioGroup | src | src | src | src | src | check → mark opacity / scale | decide whether any motion is warranted | `selection-visual` |
@@ -159,8 +159,8 @@ claims runtime parity; see §5.
 | MX3 | Dialog, AlertDialog, Sheet, Drawer, Popover, Tooltip, HoverCard, Menu family | src | RM | src | src | src | open / close → opacity, translate, scale | Menubar exit (G6); Angular global floor (G5); Compose and Flutter overlay enter / exit (none today, §5) | `overlay-visual`, `menu-visual`, `check:motion` |
 | MX3 | Accordion / Collapsible | RM | RM | RM | RM | RM | expand → height | already gated; keep | `check:motion` |
 | MX4 | Chart | src | — | src | src | src | mount → series draw | reduced motion for Recharts (G3); native charts render statically, so they need none unless they gain motion | new browser assertion |
-| MX4 | Skeleton / Spinner | src | src | RM | RM | RM | loop | already gated on web by `check:loop-motion` | `check:loop-motion` |
-| MX4 | Sonner, Alert, Banner | src | src / RM | src | src | src | appear → enter | no change planned until MX0 rules land | — |
+| MX4 | Skeleton / Spinner | src | src | RM | RM | RM | loop | React gated by `check:loop-motion` (Storybook Spinner and Skeleton, React only); Angular's spinner slows instead of stopping (§5) and has no runtime loop gate: add one with the G5 decision | `check:loop-motion` (React); Angular: none |
+| MX4 | Sonner, Alert, Banner | src | src / RM | src | src | src | appear → enter | the #393 contract has no role for feedback entry: add one (or record each as static by design), then gate it | — (none yet) |
 
 **Per-component spec.** Every MX PR states, for each component it touches: interaction states · trigger · property ·
 duration and easing token · interruption (retarget from the current value, no queued animations) · RTL (logical
