@@ -1,21 +1,29 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const nav = vi.hoisted(() => ({ push: vi.fn() }));
 const theme = vi.hoisted(() => ({ setTheme: vi.fn() }));
+const analyticsTrack = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/analytics", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@/lib/analytics")>();
+  return { ...real, analytics: { ...real.analytics, track: analyticsTrack } };
+});
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: nav.push }) }));
 vi.mock("next-themes", () => ({ useTheme: () => ({ setTheme: theme.setTheme }) }));
 
 import { Dialog, DialogContent, DialogTitle } from "@kinetixui/ui";
+import { searchProjection } from "@/lib/search-projection";
 import { docsNav, mainNav } from "@/lib/site";
-import { CommandMenu } from "./command-menu";
+import { CommandMenu, resetSearchProjectionForTests } from "./command-menu";
 
 beforeEach(() => {
   nav.push.mockClear();
   theme.setTheme.mockClear();
+  analyticsTrack.mockClear();
+  resetSearchProjectionForTests();
+  // no projection unless a test serves one: the menu must work exactly as before without it
+  vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 404 })));
 });
 
 /**
@@ -175,8 +183,187 @@ describe("CommandMenu", () => {
     expect(trigger()).toHaveTextContent(/^Search…/);
   });
 
-  it("emits no analytics of its own, as before; navigation is measured as a page view", () => {
-    const src = readFileSync(path.join(process.cwd(), "src/components/command-menu.tsx"), "utf8");
-    expect(src).not.toMatch(/analytics|track\(/);
+  it("reports only the kind of result chosen, never what was typed", async () => {
+    const user = userEvent.setup();
+    render(<CommandMenu />);
+    await user.click(trigger());
+    await dialog();
+    await user.keyboard("dark");
+    await user.keyboard("{Enter}");
+    expect(analyticsTrack).toHaveBeenCalledOnce();
+    expect(analyticsTrack).toHaveBeenCalledWith("search_result_selected", { target: "theme", source: "header", location: "command_menu" });
+    expect(JSON.stringify(analyticsTrack.mock.calls)).not.toMatch(/dark/i);
+  });
+});
+
+describe("CommandMenu: blocks and use cases (BD-W3b1)", () => {
+  const PROJECTION = searchProjection();
+  const serve = () => {
+    const fetchMock = vi.fn(async () => Response.json(PROJECTION));
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  };
+  const open = async () => {
+    const user = userEvent.setup();
+    render(<CommandMenu />);
+    await user.click(trigger());
+    const d = await dialog();
+    await within(d).findByRole("group", { name: "Blocks" });
+    return { user, d };
+  };
+  /** An option's title: the first line of a two-line result, or the whole text of a one-line one. */
+  const titles = (d: HTMLElement) =>
+    within(d)
+      .getAllByRole("option")
+      .map((o) => o.querySelector(":scope > span > span:first-child")?.textContent ?? o.textContent);
+  const search = async (user: ReturnType<typeof userEvent.setup>, d: HTMLElement, q: string) => {
+    await user.clear(within(d).getByRole("combobox"));
+    if (q) await user.keyboard(q);
+  };
+
+  it("loads the projection once, from the static file, and adds labelled Blocks and Use cases groups", async () => {
+    const fetchMock = serve();
+    const { d } = await open();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith("/search-index.json");
+    expect(within(d).getByRole("group", { name: "Use cases" })).toBeInTheDocument();
+    // the existing groups are all still there, with every one of their items
+    expect(within(d).getByRole("group", { name: "Links" })).toBeInTheDocument();
+    expect(within(d).getByRole("group", { name: "Theme" })).toBeInTheDocument();
+    for (const g of docsNav) expect(within(within(d).getByRole("group", { name: g.title })).getAllByRole("option")).toHaveLength(g.items.length);
+  });
+
+  it.each([
+    ["slider", "Slider"],
+    ["Number Input", "Number Input"],
+    ["order summary", "Order summary"],
+    ["commerce", "Commerce"],
+    ["checkout", "Checkout"],
+  ])("puts the exact title first for %j, and Enter would run it", async (q, first) => {
+    serve();
+    const { user, d } = await open();
+    await search(user, d, q);
+    expect(titles(d)[0]).toBe(first);
+    expect(within(d).getAllByRole("option")[0]).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("answers business queries with real destinations only", async () => {
+    serve();
+    const { user, d } = await open();
+    await search(user, d, "checkout");
+    expect(titles(d)).toEqual(expect.arrayContaining(["Checkout", "Order summary", "Receipt", "Commerce"]));
+    await search(user, d, "dashboard");
+    expect(titles(d)).toEqual(expect.arrayContaining(["Dashboard tabs"]));
+    await search(user, d, "filter");
+    expect(titles(d)).toEqual(expect.arrayContaining(["Filter panel", "Table + toolbar"]));
+    await search(user, d, "iot");
+    // IoT has no use-case page; the module page from the main navigation is the destination
+    expect(titles(d)[0]).toBe("IoT");
+    expect(titles(d)).not.toContain("IoT & connected operations");
+  });
+
+  it("goes to a block's anchor on Enter, closes, and returns focus", async () => {
+    serve();
+    const { user, d } = await open();
+    await search(user, d, "order summary");
+    await user.keyboard("{Enter}");
+    expect(nav.push).toHaveBeenCalledOnce();
+    expect(nav.push).toHaveBeenCalledWith("/blocks#order-summary");
+    expect(analyticsTrack).toHaveBeenCalledWith("search_result_selected", { target: "block", source: "header", location: "command_menu" });
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(trigger()).toHaveFocus();
+  });
+
+  it("goes to a published use case, and to a component page, with the right result type", async () => {
+    serve();
+    const { user, d } = await open();
+    await search(user, d, "commerce");
+    await user.keyboard("{Enter}");
+    expect(nav.push).toHaveBeenLastCalledWith("/use-cases/commerce");
+    expect(analyticsTrack).toHaveBeenLastCalledWith("search_result_selected", { target: "use_case", source: "header", location: "command_menu" });
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    // it opens again after a navigation
+    await user.click(trigger());
+    const d2 = await dialog();
+    await user.keyboard("slider");
+    await user.click(within(d2).getAllByRole("option")[0]!);
+    expect(nav.push).toHaveBeenLastCalledWith("/docs/components/slider");
+    expect(analyticsTrack).toHaveBeenLastCalledWith("search_result_selected", { target: "component", source: "header", location: "command_menu" });
+  });
+
+  it("finds a component by its verified business context, not only by its name", async () => {
+    serve();
+    const { user, d } = await open();
+    await search(user, d, "transactions money");
+    expect(titles(d)).toContain("Price Breakdown");
+    // a boarding pass is the Pass Card component (the shipping BoardingPass row cites it), and a stage of flight booking
+    await search(user, d, "boarding pass");
+    expect(titles(d)).toEqual(expect.arrayContaining(["Pass Card", "Flight booking"]));
+  });
+
+  it("never offers a use-case page that does not exist", async () => {
+    serve();
+    const { user, d } = await open();
+    await search(user, d, "healthcare");
+    expect(within(d).queryAllByRole("option")).toEqual([]);
+    expect(within(d).getByText("No results found.")).toBeInTheDocument();
+  });
+
+  it("keeps the old abbreviation matches", async () => {
+    serve();
+    const { user, d } = await open();
+    await search(user, d, "btn");
+    expect(titles(d)).toContain("Button");
+  });
+
+  it("keeps working when the projection cannot be loaded", async () => {
+    const user = userEvent.setup();
+    render(<CommandMenu />);
+    await user.click(trigger());
+    const d = await dialog();
+    await user.keyboard("order summary");
+    expect(within(d).queryByRole("group", { name: "Blocks" })).toBeNull();
+    await search(user, d, docsNav[0].items[0].title);
+    expect(titles(d)).toContain(docsNav[0].items[0].title);
+  });
+
+  it("points the input and the listbox at the highlighted result, after typing and after the arrow keys", async () => {
+    serve();
+    const { user, d } = await open();
+    const input = within(d).getByRole("combobox");
+    const listbox = within(d).getByRole("listbox");
+    const pointsAtHighlight = () => {
+      const selected = d.querySelector<HTMLElement>('[cmdk-item][aria-selected="true"]');
+      expect(selected).not.toBeNull();
+      expect(document.getElementById(input.getAttribute("aria-activedescendant")!)).toBe(selected);
+      expect(listbox.getAttribute("aria-activedescendant")).toBe(selected!.id);
+    };
+    for (const q of ["checkout", "slider", "order", "dark"]) {
+      await search(user, d, q);
+      await waitFor(pointsAtHighlight);
+    }
+    await user.keyboard("{ArrowDown}");
+    await waitFor(pointsAtHighlight);
+    await search(user, d, "healthcare");
+    await waitFor(() => expect(input).not.toHaveAttribute("aria-activedescendant"));
+  });
+
+  it("moves with the arrow keys and closes the same way in a right-to-left document", async () => {
+    document.documentElement.dir = "rtl";
+    try {
+      serve();
+      const { user, d } = await open();
+      await search(user, d, "order");
+      const [first, second] = within(d).getAllByRole("option");
+      expect(first).toHaveAttribute("aria-selected", "true");
+      await user.keyboard("{ArrowDown}");
+      expect(second).toHaveAttribute("aria-selected", "true");
+      await user.keyboard("{Enter}");
+      expect(nav.push).toHaveBeenCalledOnce();
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+      expect(trigger()).toHaveFocus();
+    } finally {
+      document.documentElement.dir = "";
+    }
   });
 });
