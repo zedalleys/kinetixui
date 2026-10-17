@@ -281,19 +281,24 @@ const BLOCKS_MANIFEST = {
 const RUNTIME_SCRIPT = "scripts/blocks-runtime-browser.mjs";
 
 /** A workflow that really runs both builds and every standalone evidence script, unless told to drop one. */
-function workflow({ drop = [] as string[] } = {}) {
-  const steps = ["pnpm build:web", "pnpm build:angular", ...extraEvidenceScripts().map((s) => `node ${s}`), `node ${RUNTIME_SCRIPT}`];
-  return `jobs:\n  ci:\n    steps:\n${steps.filter((c) => !drop.some((d) => c.includes(d))).map((c) => `      - run: ${c}\n`).join("")}`;
+function workflow({ drop = [] as string[], runtimeStep = `node ${RUNTIME_SCRIPT}` } = {}) {
+  const steps = ["pnpm build:web", "pnpm build:angular", ...extraEvidenceScripts().map((s) => `node ${s}`), runtimeStep];
+  // a path filter naming the runtime script, as a real workflow has: a mention that is not a step
+  const on = `on:\n  pull_request:\n    paths:\n      - "${RUNTIME_SCRIPT}"\n`;
+  return `${on}jobs:\n  ci:\n    steps:\n${steps.filter((c) => !drop.some((d) => c.includes(d))).map((c) => `      - run: ${c}\n`).join("")}`;
 }
 
-function blockFixture(files: Record<string, string> = {}, { blocks = BLOCKS_MANIFEST, drop = [] as string[] } = {}) {
+function blockFixture(
+  files: Record<string, string> = {},
+  { blocks = BLOCKS_MANIFEST, drop = [] as string[], runtimeStep = undefined as string | undefined, scripts = {} as Record<string, string> } = {},
+) {
   return fixture({
     "blocks.manifest.json": JSON.stringify(blocks),
-    "package.json": JSON.stringify({ scripts: {} }),
+    "package.json": JSON.stringify({ scripts }),
     "apps/web/src/examples/blocks/sign-in.tsx": "export function SignInBlock() { return null }\n",
     "apps/web/src/examples/blocks/stat-cards.tsx": "export function StatCardsBlock() { return null }\n",
     "packages/ui-angular/src/examples/blocks/sign-in.ts": "export class SignInBlock {}\n",
-    ".github/workflows/ci.yml": workflow({ drop }),
+    ".github/workflows/ci.yml": workflow({ drop, ...(runtimeStep ? { runtimeStep } : {}) }),
     [RUNTIME_SCRIPT]: "// no markers\n",
     ...files,
   });
@@ -402,7 +407,18 @@ describe("block evidence: negative controls", () => {
     // the browser suite is evidence only while a workflow runs it
     const unrun = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { drop: [RUNTIME_SCRIPT] })}`]);
     expect(unrun.ok).toBe(false);
-    expect(unrun.output).toMatch(/blocks-runtime-browser\.mjs: a React block evidence source that no workflow/);
+    expect(unrun.output).toMatch(/blocks-runtime-browser\.mjs: a React block evidence source that no workflow step/);
+    // through a package.json wrapper it counts, but only as that whole command
+    const scripts = { "check:blocks-runtime": `node ${RUNTIME_SCRIPT} --base http://127.0.0.1:3000` };
+    const wrapped = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "pnpm check:blocks-runtime" })}`]);
+    expect(wrapped.ok, wrapped.output).toBe(true);
+    const blockScalar = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "|\n          pnpm build:web\n          pnpm check:blocks-runtime" })}`]);
+    expect(blockScalar.ok, blockScalar.output).toBe(true);
+    const commentedOut = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "|\n          # pnpm check:blocks-runtime\n          echo skipped" })}`]);
+    expect(commentedOut.ok).toBe(false);
+    const otherCommand = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "pnpm check:blocks-runtime-old" })}`]);
+    expect(otherCommand.ok).toBe(false);
+    expect(otherCommand.output).toMatch(/no workflow step/);
   });
 
   it("12. fails --check when a block leaves the manifest but its evidence stays", () => {

@@ -423,6 +423,46 @@ const BLOCK_BUILD = {
 };
 
 /** Does `workflow` exist and run `command` in a step? A comment that mentions it does not count. */
+/**
+ * Does a workflow STEP run this script, directly or through a package.json wrapper? Stricter than runsInCI, which
+ * accepts a mention anywhere in a workflow: a block evidence source can make a block Runtime verified, so a path
+ * filter or a comment naming it must not count. Only a `run:` line does, and a wrapper only as a whole command
+ * name (`pnpm check:blocks-runtime`, not `pnpm check:blocks-runtime-old`).
+ */
+function runsInWorkflowStep(script) {
+  const dir = `${root}/.github/workflows`;
+  if (!existsSync(dir)) return false;
+  const pkg = JSON.parse(read("package.json"));
+  const wrappers = Object.entries(pkg.scripts ?? {})
+    .filter(([, cmd]) => cmd.includes(script))
+    .map(([name]) => new RegExp(`\\b(?:pnpm|npm|yarn)(?:\\s+run)?(?:\\s+-s)?\\s+${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w:-])`));
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
+    .some((f) => runCommands(readFileSync(`${dir}/${f}`, "utf8")).some((l) => l.includes(script) || wrappers.some((w) => w.test(l))));
+}
+
+/** The command lines of a workflow's `run:` steps, including the body of a `run: |` block. Comments dropped. */
+function runCommands(yaml) {
+  const out = [];
+  let block = null; // indentation of the `run:` key whose block scalar is being read
+  for (const line of yaml.split("\n")) {
+    const indent = line.search(/\S/);
+    if (block !== null) {
+      if (indent === -1) continue;
+      if (indent > block) {
+        if (!line.trim().startsWith("#")) out.push(line);
+        continue;
+      }
+      block = null;
+    }
+    const m = line.match(/^(\s*)(?:-\s+)?run:\s*(.*)$/);
+    if (!m) continue;
+    if (/^[|>][-+]?\s*$/.test(m[2])) block = line.indexOf("run:");
+    else out.push(m[2]);
+  }
+  return out;
+}
+
 function workflowRuns(workflow, command) {
   const path = `${root}/.github/workflows/${workflow}`;
   if (!existsSync(path)) return false;
@@ -502,8 +542,8 @@ for (const [slug, b] of Object.entries(blocksManifest)) {
 for (const platform of platforms) {
   for (const spec of BLOCK_TEST_SOURCES[platform] ?? []) {
     const files = spec.file ? (existsSync(`${root}/${spec.file}`) ? [spec.file] : []) : walk(spec.dir, spec.match);
-    if (spec.file && files.length && spec.environment === "chromium" && !runsInCI(spec.file)) {
-      errors.push(`${spec.file}: a ${platform} block evidence source that no workflow in .github/workflows runs`);
+    if (spec.file && files.length && spec.environment === "chromium" && !runsInWorkflowStep(spec.file)) {
+      errors.push(`${spec.file}: a ${platform} block evidence source that no workflow step in .github/workflows runs`);
     }
     for (const file of files.sort()) {
       const claims = blockPassages(read(file));
