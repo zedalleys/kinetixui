@@ -157,7 +157,7 @@ claims runtime parity; see §5.
 | MX1 | Checkbox / RadioGroup | src | src | src | src | src | check → mark opacity / scale | decide whether any motion is warranted | `selection-visual` |
 | MX1 | Toggle / ToggleGroup | src | src | src | src | src | press → colour | default-tier fix (G1) | motion-contract |
 | MX1 | NavigationMenu | src | RM | — | — | — | open → content enter / exit | web only by design | `check:motion` |
-| MX1 | TabBar / NavigationBar | src | src | src | src | src | selection → active indicator | follows Tabs contract | `navigation-visual` |
+| MX1 | TabBar | src | src | src | src | src | selection → active indicator | follows Tabs contract | `navigation-visual` |
 | MX2 | Slider (incl. range) | src | src | src | src | src | drag / key → thumb, range | value text, marks, vertical; native spoken value | a11y-browser, native tests |
 | MX2 | Progress / CircularProgress | src | src | src | src | src | value → fill | logical fill (G7, measure first); native ledger gap | new RTL probe |
 | MX2 | Tick / ruler picker | — | — | — | — | — | — | composition recipe on Slider, not a component | — |
