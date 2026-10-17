@@ -93,6 +93,18 @@ describe("/blocks discovery filters", () => {
     expect(screen.getByLabelText("Category")).toHaveValue("Commerce");
   });
 
+  it("cancels the waiting search write when a filter is chosen before the router has re-rendered", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<BlocksGallery {...DATA} />);
+    await user.type(screen.getByLabelText("Search"), "order");
+    await user.selectOptions(screen.getByLabelText("Category"), "Commerce");
+    // the URL has not caught up yet (no re-render with the new params): the timer must not fire a stale write
+    await act(async () => vi.advanceTimersByTime(250));
+    expect(nav.replace).toHaveBeenCalledTimes(1);
+    expect(nav.replace).toHaveBeenCalledWith("/blocks?q=order&cat=Commerce", { scroll: false });
+  });
+
   it("reads Back/Forward from the URL, so a changed query string re-renders without stale results", () => {
     go("workflow=checkout");
     const { rerender } = render(<BlocksGallery {...DATA} />);

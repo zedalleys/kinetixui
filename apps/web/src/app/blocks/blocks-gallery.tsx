@@ -273,8 +273,12 @@ export function BlocksGallery(props: Props) {
   const state = parseBlockFilters(params, options);
   const [query, setQuery] = React.useState(state.q);
 
+  // the search write waiting out its pause; any other write carries the typed term itself, so it cancels this one
+  const pending = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
   const write = React.useCallback(
     (next: BlockFilterState) => {
+      clearTimeout(pending.current);
       const qs = serializeBlockFilters(next, Array.from(params.entries()));
       const target = qs ? `${pathname}?${qs}` : pathname;
       if (target !== `${pathname}${window.location.search}`) router.replace(target, { scroll: false });
@@ -290,11 +294,11 @@ export function BlocksGallery(props: Props) {
   // the typed term reaches the URL after a pause, like /components
   React.useEffect(() => {
     if (query.trim() === state.q) return;
-    const id = setTimeout(() => {
+    pending.current = setTimeout(() => {
       const { state: now, write: commit } = latest.current;
       if (query.trim() !== now.q) commit({ ...now, q: query });
     }, 200);
-    return () => clearTimeout(id);
+    return () => clearTimeout(pending.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
