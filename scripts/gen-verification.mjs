@@ -466,15 +466,19 @@ function commandsOf(lines) {
   return lines
     .map((l) => l.replace(/\s+#.*$/, ""))
     .filter((l) => !/\|\||(?<!\|)\|(?!\|)|&(?!&)|;|`|\$\(/.test(l.replace(/&&/g, "")))
-    .flatMap((l) => l.split(/&&/))
-    .map((c) => c.trim())
-    .filter(Boolean);
+    .map((l) => l.split(/&&/).map((c) => c.trim()).filter(Boolean))
+    .filter((cmds) => cmds.every(plainCommand))
+    .flat();
 }
-const SHELL_CONTROL = /^(?:if|then|else|elif|fi|for|while|until|do|done|case|esac|select|function|exit|return|set|trap|exec|eval|source|\.|break|continue|[{}()!]|\[\[?|\w+\s*\(\s*\))(?:\s|;|$)/;
-/** One run line that is nothing but plain commands: not rejected by commandsOf, and no shell control word. */
+// An allowlist, not a list of shell tricks to reject: a command counts only when it starts with one of these
+// programs. A builtin (`exit`, `set`, `builtin exit`), an assignment prefix (`X=1 exit 0`), a keyword or a
+// function definition starts with none of them, so it cannot pass.
+const PROGRAMS = new Set(["pnpm", "npm", "npx", "yarn", "corepack", "node", "swift", "xcodebuild", "./gradlew", "gradle", "flutter", "dart", "cd", "mkdir", "cp", "echo", "printf", "cat", "ls", "git", "curl", "tar", "sleep", "sed"]);
+const plainCommand = (c) => PROGRAMS.has(c.split(/\s+/)[0]);
+/** One run line that is nothing but plain commands: not rejected by commandsOf, and every command an allowed program. */
 const plainLine = (line) => {
   const l = line.replace(/\s+#.*$/, "").trim();
-  return !l.endsWith("\\") && commandsOf([l]).length > 0 && commandsOf([l]).every((c) => !SHELL_CONTROL.test(c));
+  return !l.endsWith("\\") && commandsOf([l]).length > 0;
 };
 const startsCommand = (command, prefix) => command === prefix || command.startsWith(`${prefix} `);
 

@@ -357,6 +357,9 @@ describe("block evidence: negative controls", () => {
       "pnpm build:web; true", // the sequence exits with the last command's status
       "|\n          if false\n          then\n          pnpm build:web\n          fi", // never runs, and the step passes
       "|\n          exit 0\n          pnpm build:web", // the step ends before it
+      "|\n          builtin exit 0\n          pnpm build:web", // the same exit, prefixed
+      "|\n          X=1 exit 0\n          pnpm build:web", // the same exit, behind an assignment
+      "CI=1 pnpm build:web", // not one of the programs a build is read from
       "|\n          set +e\n          pnpm build:web\n          true", // failure no longer stops the step
       "|\n          pnpm build:web \\\n            --dry-run", // a continuation makes it another command
     ]) {
