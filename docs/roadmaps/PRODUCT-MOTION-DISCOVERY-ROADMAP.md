@@ -7,7 +7,7 @@ This document coordinates four workstreams so they can move in parallel without 
 | | Workstream | Existing plan it builds on |
 | --- | --- | --- |
 | A | Component quality and interaction maturity | [`ANGULAR-GRADUATION.md`](../../ANGULAR-GRADUATION.md), `verification.json` |
-| B | Motion foundations and cross-platform animation | `tokens/primitives/motion.json`, the motion gates listed in §6 |
+| B | Motion foundations and cross-platform animation | `tokens/primitives/motion.json`, the motion gates listed in §2.5 and §8 |
 | C | Business discovery and workflow-based navigation | [`BUSINESS-CAPABILITY-ROADMAP.md`](../BUSINESS-CAPABILITY-ROADMAP.md) §6 (Business Discovery W1) |
 | D | Documentation, marketing and adoption | [`marketing/roadmap.md`](../../marketing/roadmap.md), [`marketing/analytics.md`](../../marketing/analytics.md) |
 
