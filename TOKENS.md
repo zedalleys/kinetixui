@@ -179,7 +179,7 @@ Navigation (Tabs):
 |---|---|---|---|
 | Rest | — | One group on a 1px `border` rail; Angular's strip is underlined the same way | — |
 | Hover | a pointer that can hover, unselected and enabled | The selection controls' `foreground` state layer at 8% (1.16–1.19:1 against rest) and `foreground` text | fill |
-| Selected | `aria-selected="true"` | React: `foreground` text and one 2px `foreground` indicator per list that travels to the chosen tab (19.8:1 light, 18.3:1 dark against the strip); before hydration and under forced colours each chosen tab draws its own 2px edge instead. Angular: a 2px `primary` indicator (6.66:1 light, 7.86:1 dark) | indicator |
+| Selected | `aria-selected="true"` | React: `foreground` text and one 2px `foreground` indicator per list that travels to the chosen tab (19.8:1 light, 18.3:1 dark against the strip); before hydration and under forced colours each chosen tab draws its own 2px edge instead. The bar is 2px at any text size, the width of the trigger's reserved edge, so at 200% text it still covers only that edge and never the inset focus ring (`check:tabs-indicator`). Angular: a 2px `primary` indicator (6.66:1 light, 7.86:1 dark) | indicator |
 | Focus | keyboard | The ring (`ring`, 2px), drawn above the selected surface, which stays under it | ring |
 | Disabled | `disabled` | `opacity-disabled`, inert | inert |
 

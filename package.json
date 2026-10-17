@@ -54,6 +54,7 @@
     "check:layout-visual": "node scripts/layout-visual.mjs",
     "check:native-motion": "node scripts/check-native-motion.mjs",
     "check:tabs-dogfood": "node scripts/tabs-dogfood-browser.mjs",
+    "check:tabs-indicator": "node scripts/tabs-indicator.mjs",
     "check:a11y-site": "node scripts/a11y-site.mjs --base http://127.0.0.1:3000",
     "check:theme-isolation": "node scripts/theme-isolation.mjs --base http://127.0.0.1:3000",
     "check:iot-state-spatial": "node scripts/iot-state-spatial.mjs --base http://127.0.0.1:3000",

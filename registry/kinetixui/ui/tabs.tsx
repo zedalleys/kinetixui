@@ -27,6 +27,7 @@ function useTabsIndicator(listRef: React.RefObject<HTMLDivElement | null>, indic
     let chosen: HTMLElement | null = null;
     let start = 0;
     let end = 0;
+    let axis = "";
     // `reframed`: the list's direction or orientation changed. That moves the bar's physical edges without
     // moving its logical ones, so transitions are off before anything is read, or the browser would animate it.
     const place = (reframed = false) => {
@@ -44,6 +45,13 @@ function useTabsIndicator(listRef: React.RefObject<HTMLDivElement | null>, indic
       const nextStart = vertical ? tab.offsetTop : rtl ? list.clientWidth - tab.offsetLeft - tab.offsetWidth : tab.offsetLeft;
       const nextEnd = vertical ? list.clientHeight - tab.offsetTop - tab.offsetHeight : list.clientWidth - nextStart - tab.offsetWidth;
       // Observing a newly chosen tab reports its size at once; with nothing moved, leave the travel running.
+      const frame = `${vertical} ${rtl}`;
+      if (frame !== axis && axis !== "") {
+        reframed = true;
+        bar.style.transition = "none";
+      }
+      // Any tab can resize (a label, a badge, a font arriving) and move the chosen one without resizing it.
+      for (const t of list.querySelectorAll(':scope > [role="tab"]')) sizes?.observe(t);
       if (!reframed && chosen === tab && nextStart === start && nextEnd === end) return;
       const travels = !reframed && chosen !== null && chosen !== tab;
       // The edge on the side the bar is heading leads; the other waits for it.
@@ -57,10 +65,10 @@ function useTabsIndicator(listRef: React.RefObject<HTMLDivElement | null>, indic
         void bar.offsetWidth; // commit the snapped position before transitions return
         bar.style.transition = "";
       }
-      sizes?.observe(tab);
       chosen = tab;
       start = nextStart;
       end = nextEnd;
+      axis = frame;
       list.setAttribute("data-kx-tabs-indicator", "");
     };
     const sizes = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => place());
@@ -70,8 +78,13 @@ function useTabsIndicator(listRef: React.RefObject<HTMLDivElement | null>, indic
       place(records.some((r) => r.attributeName === "dir" || r.attributeName === "aria-orientation")),
     );
     mutations.observe(list, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-state", "aria-orientation", "dir"] });
+    // Radix puts `dir` on the Tabs root, not the list: watch whichever element decides the list's direction.
+    const director = list.parentElement?.closest("[dir]");
+    const reframes = new MutationObserver(() => place(true));
+    if (director) reframes.observe(director, { attributes: true, attributeFilter: ["dir"] });
     return () => {
       mutations.disconnect();
+      reframes.disconnect();
       sizes?.disconnect();
     };
   }, [listRef, indicatorRef]);
@@ -121,8 +134,8 @@ const TabsList = React.forwardRef<
         data-kx-tabs-bar=""
         className={cn(
           "pointer-events-none absolute hidden bg-foreground group-data-[kx-tabs-indicator]/tabs:block forced-colors:!hidden",
-          "bottom-0 h-0.5 [inset-inline-end:var(--kx-tabs-end,0px)] [inset-inline-start:var(--kx-tabs-start,0px)]",
-          "group-data-[orientation=vertical]/tabs:bottom-auto group-data-[orientation=vertical]/tabs:h-auto group-data-[orientation=vertical]/tabs:w-0.5 group-data-[orientation=vertical]/tabs:[inset-inline-start:auto] group-data-[orientation=vertical]/tabs:[inset-inline-end:0px] group-data-[orientation=vertical]/tabs:[inset-block-start:var(--kx-tabs-start,0px)] group-data-[orientation=vertical]/tabs:[inset-block-end:var(--kx-tabs-end,0px)]",
+          "bottom-0 h-[2px] [inset-inline-end:var(--kx-tabs-end,0px)] [inset-inline-start:var(--kx-tabs-start,0px)]",
+          "group-data-[orientation=vertical]/tabs:bottom-auto group-data-[orientation=vertical]/tabs:h-auto group-data-[orientation=vertical]/tabs:w-[2px] group-data-[orientation=vertical]/tabs:[inset-inline-start:auto] group-data-[orientation=vertical]/tabs:[inset-inline-end:0px] group-data-[orientation=vertical]/tabs:[inset-block-start:var(--kx-tabs-start,0px)] group-data-[orientation=vertical]/tabs:[inset-block-end:var(--kx-tabs-end,0px)]",
           // Two edges on one curve, the trailing one held back by `instant`: a stretch, then a settle.
           "[transition-duration:var(--duration-base)] [transition-property:inset-inline-start,inset-inline-end,inset-block-start,inset-block-end] [transition-timing-function:var(--easing-emphasized)]",
           "[transition-delay:var(--kx-tabs-start-delay,0ms),var(--kx-tabs-end-delay,0ms),var(--kx-tabs-start-delay,0ms),var(--kx-tabs-end-delay,0ms)] motion-reduce:transition-none",
