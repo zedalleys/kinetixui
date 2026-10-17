@@ -63,6 +63,12 @@ describe("check:motion-tokens", () => {
     expect(out).toMatch(/KinetixMotion\.swift: duration "slow" is 400, the source says 500ms/);
   });
 
+  it("catches the registry stylesheet drifting from the source", () => {
+    const { code, out } = run(mutate("registry/kinetixui/globals.css", "--duration-fast: 200ms", "--duration-fast: 999ms"));
+    expect(code).toBe(1);
+    expect(out).toMatch(/registry\/kinetixui\/globals\.css: duration "fast" is 999, the source says 200ms/);
+  });
+
   it("catches a native easing that drifted from the source", () => {
     const { code, out } = run(
       mutate(

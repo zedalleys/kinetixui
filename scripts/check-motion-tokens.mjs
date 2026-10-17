@@ -11,7 +11,7 @@
  *    [0, 1]. The native formats strip a literal "ms" (style-dictionary/hooks.mjs `motionMs`), so a
  *    DTCG-legal "0.25s" became `Duration.milliseconds(NaN)` in Swift and `NaN` in Kotlin and Dart:
  *    generated, vendored, fixed-point clean, and only a native compiler would have noticed.
- * 2. Value parity. The web CSS and all six native files (dist + vendored) carry exactly the source's
+ * 2. Value parity. Both web stylesheets (package and registry) and all six native files (dist + vendored) carry exactly the source's
  *    names and values. The CI fixed-point step proves the files are what the generator writes; this
  *    proves what the generator writes is the source.
  * 3. No dead references. A `var(--duration-normal)` in Angular CSS or a `duration-normal` utility in a
@@ -42,7 +42,8 @@ const NATIVE_FILES = {
   ],
   dart: ["packages/tokens/dist/flutter/kinetix_motion.dart", "packages/ui-flutter/lib/src/kinetix_motion.dart"],
 };
-const CSS_FILE = "packages/tokens/dist/web/globals.css";
+/** The package stylesheet, and the bundled copy the registry `tokens` item ships to CLI consumers. */
+const CSS_FILES = ["packages/tokens/dist/web/globals.css", "registry/kinetixui/globals.css"];
 
 /** Library sources that reference motion tokens by name. Tests and stories are excluded on purpose. */
 const REFERENCE_DIRS = [
@@ -106,13 +107,16 @@ export function motionErrors(overrides = {}) {
   };
   const nums = (s) => s.split(",").map((x) => Number(x.trim().replace(/f$/, "")));
 
-  if (!exists(CSS_FILE)) fail(`${CSS_FILE}: missing; run pnpm build:tokens`);
-  else {
-    const css = read(CSS_FILE);
+  for (const file of CSS_FILES) {
+    if (!exists(file)) {
+      fail(`${file}: missing; run pnpm build:tokens`);
+      continue;
+    }
+    const css = read(file);
     const d = {}, e = {};
     for (const [, n, v] of css.matchAll(/--duration-([a-z]+):\s*([^;]+);/g)) d[n] = /^\d+ms$/.test(v.trim()) ? Number(v.trim().slice(0, -2)) : v.trim();
     for (const [, n, v] of css.matchAll(/--easing-([a-z]+):\s*cubic-bezier\(([^)]*)\);/g)) e[n] = nums(v);
-    compare(CSS_FILE, d, e);
+    compare(file, d, e);
   }
   const NATIVE_PATTERNS = {
     swift: [/static let (\w+) = Duration\.milliseconds\(([^)]*)\)/g, /static let (\w+): \(Double, Double, Double, Double\) = \(([^)]*)\)/g],
@@ -277,7 +281,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const roles = Object.entries(c.roles);
   const by = (s) => roles.filter(([, r]) => r.status === s).map(([n]) => n).join(", ") || "none";
   console.log(
-    `check:motion-tokens — source, web CSS and 6 native files agree; no dead motion references; ` +
+    `check:motion-tokens — source, 2 web stylesheets and 6 native files agree; no dead motion references; ` +
       `contract holds (proven: ${by("proven")}; observed: ${by("observed")}; proposed: ${by("proposed")}).`,
   );
 }
