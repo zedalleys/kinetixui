@@ -272,6 +272,12 @@ attributed instead of dropped. The hub's next steps reuse existing CTA targets: 
 it from the hub is the same act it measures on the homepage, so the QE definition is unchanged; only where the
 signal can come from widens. Viewing the hub or a use-case page is a pageview and qualifies nothing.
 
+**2026-10-17, domain journeys (BD-W3b2b).** Still no new event. Each /use-cases page ends with the same next steps
+as the hub, tagged `cta_clicked` with `source: use_case_page` and the existing targets `browse_components`,
+`platform_coverage` and `installation` (the blocks link carries no target, as on the hub). Opening a workflow's
+"Evidence for each part" disclosure is not tracked: it answers no decision on its own. The QE definition is
+unchanged, and a pageview still qualifies nothing.
+
 **Vocabulary health, audited:** no duplicate events; no event without a decision it supports; every
 documented event is emitted and every emitted event is documented. (`button_clicked` appears in the
 repository only as a test fixture, not in shipped code — checked rather than assumed.)
