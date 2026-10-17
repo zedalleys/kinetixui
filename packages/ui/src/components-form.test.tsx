@@ -465,4 +465,39 @@ describe("<Slider> describes itself on the thumb, the element with role=slider",
     expect(thumb).toHaveAttribute("aria-valuetext", "90 minutes ago");
     expect(thumb.closest("[data-orientation]:not([role])")).not.toHaveAttribute("aria-valuetext");
   });
+  it("draws one thumb per value, so every end of a range can be reached, read and moved", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<Slider aria-label="Price" defaultValue={[20, 80]} max={100} onValueChange={onValueChange} />);
+
+    // One name cannot tell two thumbs apart, so it names the group and each thumb keeps its position's name
+    const group = screen.getByRole("group", { name: "Price" });
+    const [low, high] = screen.getAllByRole("slider");
+    expect(screen.getAllByRole("slider")).toHaveLength(2);
+    expect(group).toContainElement(high);
+    expect(low).toHaveAccessibleName("Minimum");
+    expect(high).toHaveAccessibleName("Maximum");
+    expect(low).toHaveAttribute("aria-valuenow", "20");
+    expect(high).toHaveAttribute("aria-valuenow", "80");
+
+    // The second value has its own tab stop and moves on its own
+    await user.tab();
+    await user.tab();
+    expect(high).toHaveFocus();
+    await user.keyboard("{ArrowLeft}");
+    expect(onValueChange).toHaveBeenLastCalledWith([20, 79]);
+  });
+
+  it("follows a controlled value's length and keeps a single-value Slider's name on its thumb", () => {
+    const { rerender } = render(<Slider aria-labelledby="lbl" value={[10, 40, 90]} max={100} />);
+    expect(screen.getAllByRole("slider").map((t) => t.getAttribute("aria-label"))).toEqual([
+      "Value 1 of 3",
+      "Value 2 of 3",
+      "Value 3 of 3",
+    ]);
+    rerender(<Slider aria-label="Volume" aria-valuetext="Loud" value={[90]} max={100} />);
+    const thumb = screen.getByRole("slider", { name: "Volume" });
+    expect(thumb).toHaveAttribute("aria-valuetext", "Loud");
+    expect(screen.queryByRole("group")).toBeNull();
+  });
 });
