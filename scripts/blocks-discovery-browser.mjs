@@ -104,6 +104,23 @@ const settle = async (page) => {
   if (search(page) !== "?cat=Forms&utm_source=x") fail(`invalid values not dropped / foreign key not kept: ${search(page)}`);
   else ok("next write drops the invalid values and keeps utm_source (?cat=Forms&utm_source=x)");
 
+  // two filter changes in one task, before the router can re-render: both must reach the URL
+  await page.goto(`${base}/blocks`);
+  await settle(page);
+  await page.evaluate(() => {
+    const pick = (id, v) => {
+      const el = document.getElementById(id);
+      el.value = v;
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    pick("blocks-filter-cat", "Commerce");
+    pick("blocks-filter-platform", "SwiftUI");
+  });
+  await page.waitForFunction(() => location.search.includes("platform="));
+  await page.waitForTimeout(400);
+  if (search(page) !== "?cat=Commerce&platform=SwiftUI") fail(`rapid filter changes did not compose: ${search(page)}`);
+  else ok("two filter changes before a re-render compose (?cat=Commerce&platform=SwiftUI)");
+
   // empty state and its reset
   await page.goto(`${base}/blocks?cat=Marketing&workflow=checkout`);
   await settle(page);

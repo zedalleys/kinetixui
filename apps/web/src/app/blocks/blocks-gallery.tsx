@@ -95,7 +95,8 @@ export function BlocksGalleryView({
   onQuery,
 }: Props & {
   state: BlockFilterState;
-  onChange: (next: BlockFilterState) => void;
+  /** The dimensions to change; the rest keep the latest requested value. */
+  onChange: (patch: Partial<BlockFilterState>) => void;
   /** The search box's text, which runs ahead of `state.q` while the URL write is debounced. */
   query: string;
   onQuery: (q: string) => void;
@@ -123,7 +124,7 @@ export function BlocksGalleryView({
         <NativeSelect
           id={id}
           value={state[key] ?? ""}
-          onChange={(e) => onChange({ ...state, q: query, [key]: e.target.value || null })}
+          onChange={(e) => onChange({ q: query, [key]: e.target.value || null })}
           className="h-11 py-0 text-body-sm"
         >
           <NativeSelectOption value="">{ANY[key]}</NativeSelectOption>
@@ -273,33 +274,37 @@ export function BlocksGallery(props: Props) {
   const state = parseBlockFilters(params, options);
   const [query, setQuery] = React.useState(state.q);
 
+  // The state last asked for. A write lands in `params` only after the router re-renders, so two changes made before
+  // that (two selects during a slow transition, a filter just before the search pause ends) must build on this, not
+  // on the render-time `state`, or the second undoes the first. It follows the URL again once the URL is one this
+  // page did not write (Back/Forward, a shared link).
+  const urlKey = params.toString();
+  const requested = React.useRef({ state, written: new Set<string>() });
+  if (!requested.current.written.has(urlKey)) requested.current = { state, written: new Set() };
+
   // the search write waiting out its pause; any other write carries the typed term itself, so it cancels this one
   const pending = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const write = React.useCallback(
-    (next: BlockFilterState) => {
+    (patch: Partial<BlockFilterState>) => {
       clearTimeout(pending.current);
+      const next = { ...requested.current.state, ...patch };
       const qs = serializeBlockFilters(next, Array.from(params.entries()));
+      requested.current.state = next;
+      requested.current.written.add(qs);
       const target = qs ? `${pathname}?${qs}` : pathname;
       if (target !== `${pathname}${window.location.search}`) router.replace(target, { scroll: false });
     },
     [params, pathname, router],
   );
-
-  // the pending search write reads the URL state as it is when it fires, not when typing started, so a filter
-  // changed during the pause is kept rather than overwritten with the facets of a few keystrokes ago
-  const latest = React.useRef({ state, write });
-  latest.current = { state, write };
+  const latestWrite = React.useRef(write);
+  latestWrite.current = write;
 
   // the typed term reaches the URL after a pause, like /components
   React.useEffect(() => {
-    if (query.trim() === state.q) return;
-    pending.current = setTimeout(() => {
-      const { state: now, write: commit } = latest.current;
-      if (query.trim() !== now.q) commit({ ...now, q: query });
-    }, 200);
+    if (query.trim() === requested.current.state.q.trim()) return;
+    pending.current = setTimeout(() => latestWrite.current({ q: query }), 200);
     return () => clearTimeout(pending.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   // a URL change from outside (Back/Forward, a shared link, Clear all) refreshes the box

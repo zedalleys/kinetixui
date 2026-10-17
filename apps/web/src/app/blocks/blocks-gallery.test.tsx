@@ -105,6 +105,13 @@ describe("/blocks discovery filters", () => {
     expect(nav.replace).toHaveBeenCalledWith("/blocks?q=order&cat=Commerce", { scroll: false });
   });
 
+  it("composes two filter changes made before the router has re-rendered", async () => {
+    render(<BlocksGallery {...DATA} />);
+    await userEvent.selectOptions(screen.getByLabelText("Category"), "Commerce");
+    await userEvent.selectOptions(screen.getByLabelText("Platform"), "SwiftUI");
+    expect(nav.replace).toHaveBeenLastCalledWith("/blocks?cat=Commerce&platform=SwiftUI", { scroll: false });
+  });
+
   it("reads Back/Forward from the URL, so a changed query string re-renders without stale results", () => {
     go("workflow=checkout");
     const { rerender } = render(<BlocksGallery {...DATA} />);
