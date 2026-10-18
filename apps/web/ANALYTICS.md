@@ -84,6 +84,7 @@ explicit that installs are not measurable on-site, and there is deliberately no 
 | `external_link_clicked` | a link to a listed external host with no more specific event (today: the Figma file) | `AnalyticsProvider` listener |
 | `iot_example_copied` | an IoT example's source is copied from `/iot` | `IotExampleShowcase` |
 | `search_result_selected` | a result is chosen in the command menu (⌘K), by Enter or pointer. `target` is the kind of destination only (`SEARCH_RESULT_TYPES`: component, docs, link, block, use_case, workflow, capability, theme), with `source: header`, `location: command_menu`. Never the search text, the title or the URL. Neither Qualified Evaluation nor Adoption Intent | `CommandMenu` |
+| `verification_inspected` | the first opening, on a page view, of a component page's "Verification details" (`location: verification_details`, with `component`) or a use-case workflow's "Evidence for each part" (`location: workflow_evidence`, with `page`), or the first click on the "how the levels are earned" link there (`location: evidence_link`). Closing, re-opening and a disclosure that is only on screen send nothing; which rows were read is never sent. Neither Qualified Evaluation nor Adoption Intent | `AnalyticsProvider` listener; `inspectAttrs(...)` markup in `PlatformVerification` and `WorkflowReadiness` |
 
 `iot_example_copied` is deliberately **not** `component_code_copied`, and the distinction is the reason the
 component signal still means something. `component_code_copied` says code for a component from the 98-component

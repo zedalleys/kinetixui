@@ -9,7 +9,7 @@ import { STATUS } from "@/lib/component-status";
 import { PACKAGES } from "@/lib/packages";
 import { NpmLinks } from "./npm-links";
 import { PLATFORMS, PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
-import { GUIDANCE_LABEL, SETUP_HREF, WAVE_LABEL, platformStateFor } from "@/lib/platform-tabs";
+import { GUIDANCE_LABEL, SETUP_SECTION_HREF, WAVE_LABEL, platformStateFor } from "@/lib/platform-tabs";
 import { trackFenceCopy } from "@/lib/analytics-surfaces";
 import { CopyButton } from "./copy-button";
 
@@ -67,7 +67,7 @@ function InstallStrip({ slug, pathname }: { slug: string; pathname: string }) {
                 <span className="font-medium text-foreground">{def.label}</span>
                 {def.maturity !== "stable" && <span className="text-muted-foreground"> · {def.maturity}</span>}
               </span>
-              <Link href={SETUP_HREF[p]} className="text-primary underline underline-offset-2">
+              <Link href={SETUP_SECTION_HREF[p]} className="text-primary underline underline-offset-2">
                 {/* named per platform for assistive tech; the visible words stay short and are part of the name */}
                 <span className="sr-only">{def.label}</span> Setup →
               </Link>

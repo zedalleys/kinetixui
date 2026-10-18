@@ -71,9 +71,9 @@ describe("installing a block on the reader's platform", () => {
   });
 
   it.each([
-    ["swiftui", "SwiftUI", "Swift Package Manager", "/docs/swiftui"],
-    ["compose", "Jetpack Compose", "Maven Central", "/docs/compose"],
-    ["flutter", "Flutter", "pub.dev", "/docs/flutter"],
+    ["swiftui", "SwiftUI", "Swift Package Manager", "/docs/swiftui#setup"],
+    ["compose", "Jetpack Compose", "Maven Central", "/docs/compose#setup"],
+    ["flutter", "Flutter", "pub.dev", "/docs/flutter#setup"],
   ])("on %s, says source only and links the pinned-checkout setup — no registry command", (id, label, channel, href) => {
     window.localStorage.setItem(PLATFORM_STORAGE_KEY, id);
     render(<BlocksInstallGuide />);
