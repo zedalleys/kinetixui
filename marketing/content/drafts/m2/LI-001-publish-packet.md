@@ -1,7 +1,7 @@
 ---
 id: LI-001
 type: manual publish packet
-status: APPROVED 2026-10-18 (editorial only). Not published. Stop gate OPEN.
+status: APPROVED 2026-10-18 (editorial only). Not published. Stop gate CLOSED 2026-10-18 19:07 UTC (§4).
 target: Monday 19 October 2026, 14:00 UTC / 17:00 Riyadh, posted by hand by the owner
 ---
 
@@ -34,7 +34,10 @@ LinkedIn API. The owner posts by hand, then closes the row out with the live URL
 The sentence matches what the page says about itself ("Component counts and the gaps below are generated from
 `components.manifest.json`"). Paste the full URL; do not shorten it with lnkd.in or any other shortener.
 
-## 4. Stop gate — OPEN, must close before posting
+## 4. Stop gate — CLOSED 2026-10-18 19:07 UTC
+
+The three rows below are the record as it stood that morning, and the two dated notes after them are what
+changed, in order. Nothing is removed: the failed diagnostic is evidence, not a mistake to tidy away.
 
 | Check | Result |
 | --- | --- |
@@ -50,8 +53,28 @@ The sentence matches what the page says about itself ("Component counts and the 
 > kx_source=other, not linkedin. Cause under investigation (M3.1); the visit's `utm_source` value did not arrive as
 > `linkedin`. LI-001 gate remains BLOCKED.
 
+> **PostHog delivery PASSED, 2026-10-18 19:07 UTC.** A second owner diagnostic arrived correctly attributed and
+> closes this gate. PostHog 620385 holds `$pageview` 19:07:22.944, `docs_viewed` 19:07:22.946 and `page_engaged`
+> 19:07:29.248 UTC, each carrying kx_source **linkedin**, kx_medium social, kx_campaign kx_p1_a_parity_proof,
+> kx_content li_primary, kx_landing_page /docs/platforms, kx_traffic_type diagnostic. Session
+> `01a15069-53d6-788a-a041-498cefb22366`, Chrome on Mac OS X (desktop), posthog-js 1.438.7, `kx_referrer` direct.
+> Read from PostHog twice independently: by the M3.1 thread at about 19:15 UTC and by this one at 19:16 UTC.
+>
+> Two limits on what this proves, stated so nobody reads more into it than it says:
+>
+> - **The iOS path is untested since the failure.** The passing visit was Chrome on macOS; the failing 10:30 visit
+>   was Mobile Safari on iOS. This shows the production pipeline attributes the LI-001 link correctly on that
+>   browser, not that the earlier failure cannot happen again on iOS.
+> - **The earlier anomaly's cause is still unknown.** Nothing was deployed between the two visits and PR #409 is
+>   unmerged, so no code change explains the difference. #409 is a separate improvement (a new tagged arrival in the
+>   same tab starts a new session entry) and does not claim to fix the 10:30 defect. Do not describe it as the fix.
+>
+> What this gate now certifies: the tracked LI-001 link, opened on kinetixui.com, delivers the full attribution
+> quartet to PostHog. The diagnostic visit itself is excluded from every count (analytics.md rule 7) and is not a
+> LinkedIn arrival.
 
-To close it (two minutes, once, any time before Monday 14:00 UTC):
+
+If the gate ever has to be re-run (two minutes, once):
 
 1. Open a private window and visit
    `https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_parity_proof&utm_content=li_primary&kx_traffic=diagnostic`
@@ -84,7 +107,7 @@ is unaffected.
 
 ## 6. Manual checklist on the day
 
-- [ ] Stop gate closed (§4) and confirmed in the thread
+- [x] Stop gate closed (§4): PostHog delivery passed 2026-10-18 19:07 UTC, confirmed in the thread
 - [ ] ART-001 decision made (§5)
 - [ ] dev.to article opens and is the right article
 - [ ] Section A pasted unchanged; preview shows the dev.to link card

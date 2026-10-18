@@ -357,7 +357,7 @@ A checker full of exceptions stops being a specification.
 
 | Asset | State | What unblocks it |
 | --- | --- | --- |
-| LI-001 | APPROVED 2026-10-18, not published, stop gate **BLOCKED** | The owner's diagnostic visit, confirmed in PostHog |
+| LI-001 | APPROVED 2026-10-18, not published, stop gate **CLOSED 19:07 UTC** | Nothing on the gate. The owner's second diagnostic visit arrived correctly attributed; only the ART-001 decision is open ([packet §4–§5](../m2/LI-001-publish-packet.md)) |
 | GH-001 | DRAFTED, BLOCKED | The owner enables GitHub Discussions; numbers re-derived on the day |
 | COM-004 | BLOCKED | A live re-read of the community's rules and a real thread to answer |
 | LI-005 | BLOCKED, publication history unresolved | The owner says whether it ever went out. Nothing is backfilled |
