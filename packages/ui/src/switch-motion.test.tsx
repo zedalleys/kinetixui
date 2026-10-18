@@ -202,6 +202,7 @@ function switchErrors(root: string, thumb: string): string[] {
   if (!t.includes("relative")) errors.push("the thumb's offset is not relative, so the layout around it moves");
   // Forced colours paint the thumb's fill as Canvas, the same as the track, unless it names a system colour.
   if (!t.includes("forced-colors:bg-[CanvasText]")) errors.push("the thumb disappears under forced colours");
+  if (!t.includes("forced-colors:data-[disabled]:bg-[GrayText]")) errors.push("a disabled thumb reads as enabled under forced colours");
   // Hover only where the device can hover, and never on a disabled switch; press works on touch.
   const GATE = "[@media(hover:hover)]:";
   for (const tok of r) {
@@ -245,6 +246,7 @@ describe("Switch motion contract (selection-control)", () => {
     ["a physical translate, flipped by rtl:", (c: string) => c.replace("start-0 data-[state=checked]:start-6", "translate-x-0 data-[state=checked]:translate-x-6 rtl:data-[state=checked]:-translate-x-6"), "thumb"],
     ["the position not keyed on state", (c: string) => c.replace("data-[state=checked]:start-6", "start-6"), "thumb"],
     ["the thumb vanishing under forced colours", (c: string) => c.replace("forced-colors:bg-[CanvasText]", ""), "thumb"],
+    ["a disabled thumb drawn as enabled under forced colours", (c: string) => c.replace("forced-colors:data-[disabled]:bg-[GrayText]", ""), "thumb"],
     ["hover not gated", (c: string) => `${c} hover:[box-shadow:0_0_0_5px_red]`, "root"],
     ["hover that answers while disabled", (c: string) => c.replace("[@media(hover:hover)]:enabled:hover:[box-shadow", "[@media(hover:hover)]:hover:[box-shadow"), "root"],
     ["press that answers while disabled", (c: string) => `${c} active:[box-shadow:0_0_0_5px_red]`, "root"],

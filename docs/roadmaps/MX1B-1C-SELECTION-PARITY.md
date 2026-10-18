@@ -58,7 +58,12 @@ The milestones are those in MX1B-1-PLAN §6:
 | ToggleGroup | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
 | Checkbox | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
 | RadioGroup | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| Switch | ✓ ✓ ✓ | ○ (deviation) ○ ○ | ✓ ✓ ○ | ✓ ✓ ○ | ✓ ✓ ○ |
+| Switch | ✓ ✓ ✓ | ○ (deviation) ○ ○ | ✓ ✓ ○ | ○ (thumb only) ✓ ○ | ✓ ✓ ○ |
+
+Compose's Switch is not ticked for Impl: `selection-control` covers the thumb and the track colour, and
+`Switch.kt` animates only `thumbOffset` while the track colour is applied directly. Its Auto tick is for the
+thumb, which `SwitchMotionTest.kt` checks. `KinetixSwitchMotion.kt` itself does use the pairing and stays a
+contract consumer, so the role's maturity is unchanged; the gap is the component not routing the track through it.
 
 What is there today, by platform (file:line from the tree at 4980c21):
 
@@ -162,7 +167,8 @@ motion.
   - `animateColorAsState(tween(KinetixDuration.fast, easing = KinetixEasing.standard))` for selection
     colour.
   - `rememberReduceMotion()` (animator duration scale) to pass `tween(0)`.
-  - Switch's track colour is not animated today; decide whether it joins the thumb on `instant`.
+  - Switch's track colour is not animated today. It must join the thumb on `instant` (`animateColorAsState`
+    with the selection-control spec) before Compose Switch gets its Impl tick.
 - **Semantics:**
   - Toggle uses `Role.Checkbox` because Compose has no toggle-button role. Keep that and document it.
   - ToggleGroup needs group semantics.

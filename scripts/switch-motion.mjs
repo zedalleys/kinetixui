@@ -354,6 +354,18 @@ async function form(theme) {
 async function forced(theme) {
   const ctx = await browser.newContext({ forcedColors: "active" });
   const page = await open(ctx, STORY.states, theme);
+  // What the system resolves CanvasText and GrayText to in this run, read from a probe that opts out of the repaint.
+  const sys = await page.evaluate(() => {
+    const read = (c) => {
+      const el = document.createElement("div");
+      el.style.cssText = `forced-color-adjust:none;background-color:${c}`;
+      document.body.append(el);
+      const v = getComputedStyle(el).backgroundColor;
+      el.remove();
+      return v;
+    };
+    return { enabled: read("CanvasText"), disabled: read("GrayText") };
+  });
   for (const key of ["off", "on", "disabled", "disabled-on"]) {
     const tr = await style(page, sw(key), ["backgroundColor", "borderTopColor", "borderTopStyle"]);
     const th = await style(page, thumbOf(key), ["backgroundColor"]);
@@ -361,6 +373,9 @@ async function forced(theme) {
     const drawn = th.backgroundColor !== tr.backgroundColor;
     const edge = tr.borderTopStyle !== "none" && !/rgba\([^)]*,\s*0\)/.test(tr.borderTopColor);
     check(drawn && edge && r.at === AT[r.aria], `${theme} forced colours: ${key} draws its thumb against the track, at its end`, `thumb ${th.backgroundColor} on track ${tr.backgroundColor}, edge ${tr.borderTopColor}, at ${r.at}`);
+    // A disabled thumb is GrayText, not the enabled CanvasText, so disabled reads as disabled.
+    const want = key.startsWith("disabled") ? "disabled" : "enabled";
+    check(sys.enabled !== sys.disabled && th.backgroundColor === sys[want], `${theme} forced colours: ${key} thumb is ${want === "disabled" ? "GrayText" : "CanvasText"}`, `thumb ${th.backgroundColor}, CanvasText ${sys.enabled}, GrayText ${sys.disabled}`);
   }
   // On and off must not look the same: the pixels where the thumb sits differ.
   const shot = async (key) => (await page.locator(sw(key)).screenshot()).toString("base64");
