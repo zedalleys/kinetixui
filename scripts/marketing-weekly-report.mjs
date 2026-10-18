@@ -28,7 +28,7 @@ export const ARRIVAL_EVENTS = [
   "component_viewed", "component_code_copied", "platform_selected", "component_code_viewed", "github_clicked",
   "npm_clicked", "changelog_viewed", "external_link_clicked", "preset_shared", "preset_code_copied", "preset_loaded",
   "preset_randomized", "create_export_target_selected", "create_export_copied", "iot_example_copied",
-  "block_code_copied", "search_result_selected", "page_engaged",
+  "block_code_copied", "search_result_selected", "page_engaged", "verification_inspected",
 ];
 export const QE_EVENTS = ["component_viewed", "component_code_copied", "block_code_copied", "platform_selected", "installation_viewed"];
 export const QE_CTA_TARGETS = ["platform_coverage", "platform_availability", "view_verification"];

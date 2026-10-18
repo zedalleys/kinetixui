@@ -127,7 +127,7 @@
     "check:angular-collections": "node scripts/angular-collections.mjs",
     "check:angular-layout": "node scripts/angular-layout.mjs",
     "check:content": "node scripts/check-content-register.mjs",
-    "check:distribution": "node --test scripts/marketing-publication-rules.test.mjs scripts/marketing-weekly-report.test.mjs && node scripts/check-distribution.mjs",
+    "check:distribution": "node --test scripts/marketing-publication-rules.test.mjs scripts/marketing-weekly-report.test.mjs scripts/adoption-funnel-report.test.mjs && node scripts/check-distribution.mjs",
     "check:seo": "node scripts/check-seo.mjs",
     "check:editorial": "node scripts/check-editorial.mjs",
     "check:seo-browser": "node scripts/seo-browser.mjs --base http://127.0.0.1:3000",
