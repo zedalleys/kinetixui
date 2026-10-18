@@ -138,6 +138,11 @@ Show `ContentView` from your app's `WindowGroup` and run it. You should see a
 **Get started** button, a smaller outlined **Cancel** button and a destructive
 **Delete** button, in light or dark to match the system appearance.
 
+This sample is not compiled in CI. The package's own `swift build` and `swift test` build the views it uses,
+so a signature change fails there first, but `ContentView` itself is not built in an app.
+
+<FirstUseNextSteps platform="SwiftUI" />
+
 `@Environment(\.kinetixColors)` exposes the active `KinetixColors` set if
 you need a token directly.
 

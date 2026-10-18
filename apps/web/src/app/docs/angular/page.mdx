@@ -160,6 +160,17 @@ export class PreferencesComponent {
 This exact template is compiled and exercised by the package's own test
 suite, so it can't drift from the real API.
 
+Put the five `@import` lines from [Install](#install) at the top of the global stylesheet your `angular.json`
+lists under `styles` (`src/styles.css` in a new app), then add `PreferencesComponent` to your root
+component's `imports`, render `<app-preferences />` in its template and run `ng serve`. You should see a switch that starts on and an outlined **Save**
+button; clicking the switch, or pressing Space while it has focus, turns it off.
+`save()` is empty, so **Save** does nothing yet.
+The switch has no visible label in this example, only an accessible name: give it a visible label in a real
+form. If the switch and **Save** look like default browser buttons, the component stylesheet is not
+loaded; if a focused control shows no ring, `css/extras` is missing.
+
+<FirstUseNextSteps platform="Angular" />
+
 ## Accessibility
 
 - **Native semantics first.** Buttons, inputs and labels stay real

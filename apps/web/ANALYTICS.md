@@ -64,7 +64,7 @@ explicit that installs are not measurable on-site, and there is deliberately no 
 | Event | Fires when | Owner |
 | --- | --- | --- |
 | `cli_command_copied` | a `npx @kinetixui/cli …` command is copied | `HeroCommand` (homepage), `CodePre` (any docs fence) and the install strip on component pages (`ComponentMeta`) |
-| `install_command_copied` | an `npm i @kinetixui/…` (or pnpm / yarn / bun add) command is copied, or a native port's install snippet is copied: a `Package.swift` dependency on `packages/ui-swiftui`, a Gradle `":kinetixui-ui"` registration, a `kinetix_ui:` pubspec entry, or a git command that clones or pins this repository on that port's setup page. Native copies carry the manifest package (`KinetixUI`, `com.kinetixui:ui-compose`, `kinetix_ui`) and `platform`; npm copies carry the package only | `CodePre`, and the install strip on component pages (`ComponentMeta`) |
+| `install_command_copied` | an `npm i @kinetixui/…` (or pnpm / yarn / bun add) command is copied, or a native port's install snippet is copied: a `Package.swift` dependency on `packages/ui-swiftui`, a Gradle `":kinetixui-ui"` registration, a `kinetix_ui:` pubspec entry, or a git command that clones or pins this repository on that port's setup page. Native copies carry the manifest package (`KinetixUI`, `com.kinetixui:ui-compose`, `kinetix_ui`) and `platform`; npm copies carry the package, plus `platform` when it is a platform's own package (`@kinetixui/ui` → react, `@kinetixui/angular` → angular) | `CodePre`, and the install strip on component pages (`ComponentMeta`) |
 | `component_code_copied` | a component's code is copied, with its component and platform | `ComponentPreview` code tabs and `CodePre` on a component page |
 | `block_code_copied` | a block's source is copied on `/blocks`, with its block and platform | `Showcase` (`analyticsBlock` set by the blocks gallery only) |
 
@@ -72,8 +72,8 @@ explicit that installs are not measurable on-site, and there is deliberately no 
 
 | Event | Fires when | Owner |
 | --- | --- | --- |
-| `docs_viewed` | a listed `/docs/*` page is viewed (not installation, changelog or a component page) | `AnalyticsProvider` |
-| `installation_viewed` | `/docs/installation` is viewed | `AnalyticsProvider` |
+| `docs_viewed` | a listed `/docs/*` page is viewed (not installation, changelog or a component page); on a platform's setup page (/docs/angular, /docs/swiftui, /docs/compose, /docs/flutter) it also carries that `platform` | `AnalyticsProvider` |
+| `installation_viewed` | `/docs/installation` is viewed, with `platform: react` | `AnalyticsProvider` |
 | `component_viewed` | a component's docs page is viewed | `AnalyticsProvider` |
 | `changelog_viewed` | `/docs/changelog` is viewed | `AnalyticsProvider` |
 | `cta_clicked` | a link marked with `ctaAttrs(source, target)` is clicked | `AnalyticsProvider` listener; markup on the homepage, `/iot`, the Use cases hub (`/capabilities`, source `use_cases_hub`) and each use-case page's next steps (source `use_case_page`) |
