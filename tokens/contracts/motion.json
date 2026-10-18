@@ -179,8 +179,8 @@
       "easing": ["standard"],
       "properties": ["background-color", "color", "border-color", "opacity"],
       "reducedForm": "shorten",
-      "evidence": ["scripts/motion.mjs", "scripts/toggle-motion.mjs", "packages/ui/src/toggle-motion.test.tsx"],
-      "note": "Colour and surface change when a control becomes selected or unselected: Toggle, ToggleGroup items, Checkbox and Radio indicators. Owner decision 2026-10-17: fast (200ms). The semantic state changes at once; only the paint interpolates. Switch keeps selection-control (instant) unless a defect is shown. Adopted component by component from MX1b-1. Observed on React Toggle and ToggleGroup (MX1b-1a, which share toggleVariants): background, text and border colour on fast, measured in a browser; promoted to proven when a second platform consumes it.",
+      "evidence": ["scripts/motion.mjs", "scripts/toggle-motion.mjs", "packages/ui/src/toggle-motion.test.tsx", "scripts/checkbox-radio-motion.mjs", "packages/ui/src/checkbox-radio-motion.test.tsx"],
+      "note": "Colour and surface change when a control becomes selected or unselected: Toggle, ToggleGroup items, Checkbox and Radio indicators. Owner decision 2026-10-17: fast (200ms). The semantic state changes at once; only the paint interpolates. Switch keeps selection-control (instant) unless a defect is shown. Adopted component by component from MX1b-1. Observed on React Toggle and ToggleGroup (MX1b-1a, which share toggleVariants): background, text and border colour on fast, measured in a browser. Observed on React Checkbox and RadioGroup (MX1b-1b): box fill, border and glyph colour on fast, and the tick, dash or dot fading in on fast (opacity). The Checkbox glyph leaves at once rather than fading, so a box going from mixed to unchecked never shows the tick on its way out. Promoted to proven when a second platform consumes it.",
       "consumers": [
         {
           "platform": "react",
@@ -188,6 +188,24 @@
           "expects": [
             "transition-[background-color,color,border-color,box-shadow] ease-standard",
             "[transition-duration:var(--duration-fast),var(--duration-fast),var(--duration-fast),"
+          ]
+        },
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/checkbox.tsx",
+          "expects": [
+            "transition-[background-color,color,border-color,box-shadow] ease-standard",
+            "[transition-duration:var(--duration-fast),var(--duration-fast),var(--duration-fast),",
+            "transition-opacity duration-fast ease-standard"
+          ]
+        },
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/radio-group.tsx",
+          "expects": [
+            "transition-[color,border-color,box-shadow] ease-standard",
+            "[transition-duration:var(--duration-fast),var(--duration-fast),",
+            "transition-opacity duration-fast ease-standard"
           ]
         }
       ],
@@ -199,8 +217,8 @@
       "easing": ["standard"],
       "properties": ["background-color", "opacity", "box-shadow"],
       "reducedForm": "shorten",
-      "evidence": ["scripts/toggle-motion.mjs", "packages/ui/src/toggle-motion.test.tsx"],
-      "note": "Immediate hover and press colour on buttons, toggles and rows. Today most of these React components name no duration and run on Tailwind's untokenised 150ms default (see the debt register in motion-contract.test.ts). Owner decision 2026-10-17: press feedback is instant (100ms) where it applies, and a change of selected state uses selection-state (fast). There is no global retiming; each component moves in its own slice. Observed on React Toggle and ToggleGroup (MX1b-1a): an inset box-shadow state layer (foreground 8% hover, 14% press) on instant, so it is told apart from selection by property; the expects below pin instant to the last slot, box-shadow.",
+      "evidence": ["scripts/toggle-motion.mjs", "packages/ui/src/toggle-motion.test.tsx", "scripts/checkbox-radio-motion.mjs", "packages/ui/src/checkbox-radio-motion.test.tsx"],
+      "note": "Immediate hover and press colour on buttons, toggles and rows. Today most of these React components name no duration and run on Tailwind's untokenised 150ms default (see the debt register in motion-contract.test.ts). Owner decision 2026-10-17: press feedback is instant (100ms) where it applies, and a change of selected state uses selection-state (fast). There is no global retiming; each component moves in its own slice. Observed on React Toggle and ToggleGroup (MX1b-1a): an inset box-shadow state layer (foreground 8% hover, 14% press) on instant, so it is told apart from selection by property; the expects below pin instant to the last slot, box-shadow. Checkbox and RadioGroup (MX1b-1b) put their existing 5px foreground halo (8% hover, 14% press) on instant the same way. Their box's own hover and press colour step (TOKENS.md, Selection controls) is kept and moves with the colour on fast; the halo is the immediate answer.",
       "consumers": [
         {
           "platform": "react",
@@ -209,6 +227,16 @@
             "transition-[background-color,color,border-color,box-shadow] ease-standard",
             ",var(--duration-instant)]"
           ]
+        },
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/checkbox.tsx",
+          "expects": ["transition-[background-color,color,border-color,box-shadow] ease-standard", ",var(--duration-instant)]"]
+        },
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/radio-group.tsx",
+          "expects": ["transition-[color,border-color,box-shadow] ease-standard", ",var(--duration-instant)]"]
         }
       ],
       "deviations": []

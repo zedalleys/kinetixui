@@ -13,6 +13,11 @@ import { cn } from "@/lib/utils";
  * Checkbox does: a `--muted-foreground` unchecked edge that clears 3:1, an 8% `--foreground` state layer on
  * hover (14% pressed), a dot as the shape cue for checked, `aria-invalid="true"` → `--destructive` edge and
  * dot, a focus ring no other layer can cover, and no response at all while disabled.
+ *
+ * Motion (MX1b-1b), as in checkbox.tsx: the border and dot colour on `--duration-fast` (selection-state), the
+ * state layer on `--duration-instant` (press-feedback). The dot stays mounted and fades on `fast` both ways, so
+ * choosing B fades A's dot out as B's fades in. There is only one glyph, so the fade can never show the wrong
+ * one. `aria-checked` changes in the same frame as the click; the fade follows it and never holds it back.
  */
 const RadioGroup = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Root>,
@@ -32,7 +37,9 @@ const RadioGroupItem = React.forwardRef<
       // rem rather than px, for the reason spelled out in checkbox.tsx: at a 200% default font size the
       // 18px dot did not grow while its label did.
       "aspect-square size-[1.125rem] rounded-full border-2 border-muted-foreground text-action outline-none",
-      "transition-[color,border-color,box-shadow] duration-instant ease-standard",
+      // One literal, so the property list and its per-property tiers cannot be separated by an edit.
+      "transition-[color,border-color,box-shadow] ease-standard [transition-duration:var(--duration-fast),var(--duration-fast),var(--duration-instant)]",
+      "motion-reduce:transition-none",
       "data-[state=checked]:border-action",
       // `aria-[invalid=true]:`, not `aria-invalid:`, which Tailwind 3 does not define (see checkbox.tsx).
       // `text-` carries the dot, which is `fill-current`.
@@ -49,7 +56,13 @@ const RadioGroupItem = React.forwardRef<
     )}
     {...props}
   >
-    <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
+    <RadioGroupPrimitive.Indicator
+      forceMount
+      className={cn(
+        "flex items-center justify-center opacity-0 data-[state=checked]:opacity-100",
+        "transition-opacity duration-fast ease-standard motion-reduce:transition-none",
+      )}
+    >
       <Circle className="size-2.5 fill-current" />
     </RadioGroupPrimitive.Indicator>
   </RadioGroupPrimitive.Item>

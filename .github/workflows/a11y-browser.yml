@@ -27,6 +27,8 @@ on:
       - "scripts/large-text.mjs"
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
+      - "scripts/toggle-motion.mjs"
+      - "scripts/checkbox-radio-motion.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
       - "scripts/iot-monitoring.mjs"
@@ -62,6 +64,8 @@ on:
       - "scripts/large-text.mjs"
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
+      - "scripts/toggle-motion.mjs"
+      - "scripts/checkbox-radio-motion.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
       - "scripts/iot-monitoring.mjs"
@@ -145,6 +149,11 @@ jobs:
       # overflow at 320-1280px, 100% and 200% text, light and dark, LTR and RTL.
       - name: Toggle motion (selection 200ms, state layer 100ms, touch, rapid input, forced colours, RTL)
         run: pnpm check:toggle-motion
+      # MX1b-1b: Checkbox and RadioGroup. The glyph drawn must be the state announced on every move (the dash under
+      # an uncontrolled mixed box, which used to be a tick), fill and border on 200ms, the halo on 100ms, touch,
+      # rapid input, forced colours, right-to-left placement and keys, and the same 64-cell matrix.
+      - name: Checkbox and RadioGroup motion (glyph matches state, selection 200ms, halo 100ms, touch, rapid input, forced colours, RTL)
+        run: pnpm check:checkbox-radio-motion
 
       # The React Tabs indicator is one bar that travels to the chosen tab; the motion pass proves it moves.
       # This proves it lands on the right tab where strips break: an overflowing strip scrolled by pointer,
