@@ -2189,10 +2189,10 @@
         ],
         "interaction": [
           "packages/ui-flutter/test/interaction_test.dart:18-111",
-          "packages/ui-flutter/test/selection_motion_test.dart:157-271"
+          "packages/ui-flutter/test/selection_motion_test.dart:156-270"
         ],
         "accessibility": [
-          "packages/ui-flutter/test/selection_motion_test.dart:272-360",
+          "packages/ui-flutter/test/selection_motion_test.dart:271-359",
           "packages/ui-flutter/test/semantics_test.dart:30-116"
         ],
         "rtl": [
@@ -2202,7 +2202,7 @@
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
         ],
         "reducedMotion": [
-          "packages/ui-flutter/test/selection_motion_test.dart:157-271"
+          "packages/ui-flutter/test/selection_motion_test.dart:156-270"
         ]
       }
     },
@@ -5014,10 +5014,10 @@
           "packages/ui-flutter (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-flutter/test/selection_motion_test.dart:157-271"
+          "packages/ui-flutter/test/selection_motion_test.dart:156-270"
         ],
         "accessibility": [
-          "packages/ui-flutter/test/selection_motion_test.dart:272-360"
+          "packages/ui-flutter/test/selection_motion_test.dart:271-359"
         ],
         "rtl": [
           "packages/ui-flutter/test/adaptivity_test.dart:32-68"
@@ -5026,7 +5026,7 @@
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
         ],
         "reducedMotion": [
-          "packages/ui-flutter/test/selection_motion_test.dart:157-271"
+          "packages/ui-flutter/test/selection_motion_test.dart:156-270"
         ]
       }
     },
@@ -6448,7 +6448,7 @@
         ],
         "interaction": [
           "packages/ui-flutter/test/interaction_test.dart:18-111",
-          "packages/ui-flutter/test/selection_motion_test.dart:157-271"
+          "packages/ui-flutter/test/selection_motion_test.dart:156-270"
         ],
         "accessibility": [
           "packages/ui-flutter/test/semantics_test.dart:30-116"
@@ -6460,7 +6460,7 @@
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
         ],
         "reducedMotion": [
-          "packages/ui-flutter/test/selection_motion_test.dart:157-271"
+          "packages/ui-flutter/test/selection_motion_test.dart:156-270"
         ]
       }
     },
