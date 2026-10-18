@@ -81,7 +81,11 @@ Compose's Switch is not ticked for Impl: `selection-control` covers the thumb an
 thumb, which `SwitchMotionTest.kt` checks. `KinetixSwitchMotion.kt` itself does use the pairing and stays a
 contract consumer, so the role's maturity is unchanged; the gap is the component not routing the track through it.
 
-What is there today, by platform (file:line from the tree at 4980c21):
+**Historical from here to the end of this section.** The table below is the audit as it stood before
+MX1d; where it and the MX1d notes above disagree, the notes above are current. It is kept because the
+matrix is only readable next to the state it was measured from.
+
+What was there **before MX1d**, by platform (file:line from the tree at 4980c21):
 
 | | Angular | SwiftUI | Compose | Flutter |
 | --- | --- | --- | --- | --- |

@@ -53,9 +53,13 @@ class KinetixRadioButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool isError;
 
-  /// The option's own name, optional and defaulted. An 18pt circle has no text of
-  /// its own, so a caller that puts the label in a sibling `Text` should leave this
-  /// null and let the row carry the name; a caller with no visible label needs it.
+  /// The option's own name, optional and defaulted.
+  ///
+  /// An 18pt circle has no text of its own, and the `Semantics` below is a container, so a sibling
+  /// `Text` in the same `Row` is a separate node and CANNOT name this control. A caller with a visible
+  /// label should pass it here and wrap the visible copy in `ExcludeSemantics` (what the demo on the
+  /// component page does), or wrap the whole row in `MergeSemantics`. Left null, the radio is announced
+  /// with its state and no name — which is what every caller got before MX1d, state included.
   final String? label;
 
   @override
@@ -67,6 +71,8 @@ class KinetixRadioButton extends StatelessWidget {
     // checkbox — it is the property that tells the reader choosing this one unchooses
     // another. The sibling controls (Switch, Checkbox, Toggle) already declared theirs;
     // this one was the gap.
+    // `container: true` matches Switch and Checkbox, which already declared theirs this way. It makes
+    // this control its own node, so the name has to come from `label` rather than from a neighbour.
     return Semantics(
       container: true,
       checked: selected,
