@@ -740,12 +740,15 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 /* The dot: a circle half the control's size, centred over it and out of the pointer's way. It is sized in
    rem like the control, so it grows with the reader's default text size. Under forced colours a background
    is repainted as Canvas, so it takes the system colours the way the Switch thumb does, or a chosen radio
-   would look exactly like an unchosen one. */
+   would look exactly like an unchosen one.
+
+   Centred by `inset: 0` plus auto margins rather than a 50% inset and a -50% translate: `translate` is
+   physical, so on an RTL page it would pull the dot leftward out of a control whose inline start is its
+   right edge. Auto margins have no direction. */
 .kx-radio__dot {
   position: absolute;
-  inset-block-start: 50%;
-  inset-inline-start: 50%;
-  translate: -50% -50%;
+  inset: 0;
+  margin: auto;
   inline-size: 0.5rem;
   block-size: 0.5rem;
   border-radius: var(--radius-full);
@@ -768,7 +771,9 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 .kx-radio__input:enabled:focus-visible { outline: none; --kx-radio-layer: var(--shadow-focus); }
 .kx-radio__input:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 .kx-radio__label { font: var(--text-body-md); font-family: var(--font-family-sans); color: hsl(var(--foreground)); cursor: pointer; }
-.kx-radio__input:disabled + .kx-radio__label { opacity: var(--opacity-disabled); cursor: not-allowed; }
+/* The input sits inside `.kx-radio__control` now, so the label is no longer its adjacent sibling: the
+   disabled wash is keyed on the control that holds a disabled input instead. */
+.kx-radio__control:has(.kx-radio__input:disabled) + .kx-radio__label { opacity: var(--opacity-disabled); cursor: not-allowed; }
 
 /* ── slider ─────────────────────────────────────────────────────────────── */
 .kx-slider { position: relative; display: block; inline-size: 100%; }
@@ -1166,7 +1171,10 @@ label.kx-rating__item { cursor: pointer; }
 .kx-toggle-group__radio { position: absolute; opacity: 0; pointer-events: none; }
 .kx-toggle-group__radio:checked + .kx-toggle { background-color: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
 .kx-toggle-group__radio:focus-visible + .kx-toggle { box-shadow: var(--shadow-focus); }
-.kx-toggle-group__radio:disabled + .kx-toggle { opacity: var(--opacity-disabled); cursor: not-allowed; }
+/* `pointer-events: none` as well as the wash, the same pair `.kx-toggle:disabled` carries: this `.kx-toggle`
+   is a `<label>`, and a label never matches `:disabled`, so without it the hover and press layers below
+   would still answer a pointer over a disabled single-select item. */
+.kx-toggle-group__radio:disabled + .kx-toggle { opacity: var(--opacity-disabled); cursor: not-allowed; pointer-events: none; }
 
 /* ── segmented control ──────────────────────────────────────────────────── */
 .kx-segmented {

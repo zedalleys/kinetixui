@@ -64,6 +64,11 @@ import { KxCheckbox, KxSwitch, KxToggle, KxToggleGroup, KxToggleGroupItem } from
           <kx-toggle-group-item value="centre" data-kx-case="single-off">Centre</kx-toggle-group-item>
           <kx-toggle-group-item value="end" data-kx-case="single-third">End</kx-toggle-group-item>
         </kx-toggle-group>
+        <!-- A group of its own: in single-select mode the painted element is a label, and a label never
+             matches :disabled, so the disabled item needs measuring on its own terms. -->
+        <kx-toggle-group type="single" aria-label="Justification" value="auto">
+          <kx-toggle-group-item value="justify" disabled data-kx-case="single-disabled">Justify</kx-toggle-group-item>
+        </kx-toggle-group>
       </div>
 
       <div class="kx-motion-group" data-kx-group="direction">

@@ -94,10 +94,25 @@ kept as written so the before state and the plan stay readable.
 | Radio | border 100ms, dot inside the input's `box-shadow` | border 200ms, halo 100ms, dot on its own layer fading on 200ms |
 | Toggle, ToggleGroup | colour 200ms, no press layer; hover was a `--muted` background step | colour 200ms, an inset 8% / 14% press layer on 100ms |
 | Forced colours | every switch had track `rgb(255,255,255)` and thumb `rgb(255,255,255)` — no thumb at all | thumb `CanvasText` (`rgb(0,0,0)`), `GrayText` (`rgb(96,0,0)`) when disabled, both read back from the system; the radio dot likewise |
-| Mixed checkbox | activating a mixed box left `aria-checked="mixed"` for ever | it resolves to checked, and goes back to mixed when the caller writes the input again |
+| Mixed checkbox | activating a mixed box left `aria-checked="mixed"` for ever | it resolves to checked, reports touched, and goes back to mixed when the caller writes the input again |
+
+**Fixed after the Codex review of the first push.** Five findings, all real, all on the parts this slice
+changed; each has a check of its own now, listed in the negative controls below:
+
+| Finding | What was wrong | Fix |
+| --- | --- | --- |
+| Radio dot in RTL | the dot was centred with `inset-inline-start: 50%` and a physical `translate: -50%`, so on an RTL page it was pulled 8px out of its control | `inset: 0` with auto margins, which has no direction |
+| Disabled radio label | wrapping the input in `.kx-radio__control` broke `.kx-radio__input:disabled + .kx-radio__label`, so a disabled row's label kept full opacity and a pointer cursor | the rule is keyed on the wrapper that holds a disabled input |
+| Disabled single-select group item | there `.kx-toggle` is a `<label>`, which never matches `:disabled`, so the new hover and press layers answered a pointer over a disabled item | `pointer-events: none`, the pair `.kx-toggle:disabled` already carries |
+| Mixed checkbox already checked | that branch resolves without a value change and so never called the CVA's `onTouched`: a form showing errors on touch did not hear the interaction | a `markTouched()` hook on the base, called on that branch |
+| The gate's focus check | `boxShadow !== "none"` is vacuous for the Checkbox and the Toggle, which now rest on a transparent shadow, and the browser's own default outline would satisfy "something is visible" | the focused shadow is compared against `--shadow-focus` read from a probe in the same page, and read after the transition lands |
+
+The last of those was a gate defect, not a component one: the Switch-focus negative control below passed
+because only the Switch rests on no shadow. The strengthened check also found that reading the ring in the
+same frame as the focus returns the transition's first frame, which is why it now settles first.
 
 **Negative controls** (each a real defect applied to the tree, the gate run, then restored; `git status` clean
-after every one). Nothing but the nine mutations was changed:
+after every one). Nothing but the fourteen mutations was changed:
 
 | Mutation | Caught by `check:angular-selection-motion` | Failing checks |
 | --- | --- | --- |
@@ -110,6 +125,14 @@ after every one). Nothing but the nine mutations was changed:
 | Radio arrow keys swallowed by `preventDefault()` | keyboard | 6 (ArrowDown, and ArrowRight in both page directions) |
 | Checkbox tick and dash swapped | timing | 4 (mixed shows the tick; the swap after activation is wrong) |
 | Disabled `GrayText` thumb removed | forced | 4 (a disabled thumb reads as enabled) |
+| Radio dot centred by `inset-inline-start: 50%` + `translate: -50%` again | travel | 4 (RTL only: off by 8px and outside its control, both themes) |
+| Disabled radio label keyed on the input again | pointer | 2 (opacity 1 against the enabled row's 1, cursor `pointer`) |
+| `pointer-events: none` dropped from the disabled group item | pointer | 2 (the 8% layer on hover and 14% on press over a disabled item) |
+| `markTouched()` dropped from the mixed-and-checked branch | `packages/ui-angular/src/lib/selection-motion.spec.ts` (jsdom) | 1 |
+| Checkbox focus ring removed | keyboard | 2 (the browser's default 1px outline is not `--shadow-focus`) |
+
+One of the fourteen is a jsdom test rather than a browser check, and is marked as such: `onTouched` is a
+callback, not something a page paints, so there is nothing in a browser to measure.
 
 What the gate does **not** catch, recorded so it is not assumed: `check:angular-browser`'s axe pass sees none
 of these — a frozen `aria-checked`, a missing focus ring and a retimed transition are all invisible to it,

@@ -1,5 +1,6 @@
 import { Component, provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import type { ControlValueAccessor } from '@angular/forms';
 import { describe, expect, it } from 'vitest';
 
 import { SelectionMotion } from '../fixtures/selection-motion';
@@ -87,6 +88,25 @@ describe('KxCheckbox, mixed', () => {
     expect(box.getAttribute('aria-checked')).toBe('true');
     expect(h.checked()).toBe(true);
     expect(h.emitted).toEqual([true]);
+  });
+
+  it('reports touched even when the value it resolves to is the one it already holds', () => {
+    // checked AND indeterminate: resolving writes no new value, but the reader did act on the control, and a
+    // form that shows its errors on touch has to hear about it.
+    TestBed.configureTestingModule({ imports: [MixedHost], providers: [provideZonelessChangeDetection()] });
+    const fixture = TestBed.createComponent(MixedHost);
+    fixture.componentInstance.checked.set(true);
+    fixture.detectChanges();
+    const box = (fixture.nativeElement as HTMLElement).querySelector('button.kx-checkbox') as HTMLButtonElement;
+    const cva = fixture.debugElement.children[0].injector.get(KxCheckbox) as unknown as ControlValueAccessor;
+    let touched = 0;
+    cva.registerOnTouched(() => (touched += 1));
+    expect(box.getAttribute('aria-checked')).toBe('mixed');
+    box.click();
+    fixture.detectChanges();
+    expect(box.getAttribute('aria-checked')).toBe('true');
+    expect(fixture.componentInstance.emitted).toEqual([true]);
+    expect(touched).toBe(1);
   });
 
   it('goes back to mixed when the caller writes the input again', () => {

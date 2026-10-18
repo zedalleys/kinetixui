@@ -18,5 +18,10 @@ fade in on `fast` from elements of their own and leave at once. Toggle and Toggl
 `CanvasText`, or `GrayText` when disabled, so forced colours keep them visible. A mixed Checkbox resolves to
 checked when it is activated, and returns to mixed if the caller writes `indeterminate` again.
 
+Fixed along the way: a disabled Radio's label kept full opacity once the input was wrapped, a disabled
+single-select ToggleGroup item answered the pointer with the new press layer because the element it paints is
+a `<label>` and a label never matches `:disabled`, the Radio dot sat outside its control on a right-to-left
+page, and a mixed Checkbox that was already checked resolved without reporting touched to Angular forms.
+
 Public inputs, outputs and ARIA are unchanged. Minor rather than patch because the Toggle's hover fill and
 the Radio dot's markup are visual defaults an application may have styled around.

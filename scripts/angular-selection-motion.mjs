@@ -19,14 +19,21 @@
  *               style AND from the transition that actually runs on a click, so a value that is declared but
  *               never used cannot pass. Under reduced motion nothing runs and the control lands on its end
  *               state in the same frame.
+ *               The radio dot is also measured where it is drawn, in both page directions: it is placed
+ *               absolutely inside its control, and a physical transform would centre it on an LTR page while
+ *               pulling it out of the control on an RTL one.
  *   travel      every frame of a thumb's move: starts at the inline start, only moves forward, never passes
  *               either end, settles at the inline end, and `aria-checked` has already changed on the first
  *               frame. In a right-to-left subtree it travels leftward on screen — and the page stays LTR, so
  *               a switch reading an ancestor's direction instead of its own is caught.
  *   pointer     hover lays the 8% `--foreground` layer and press deepens it to 14%, on 100ms, on Checkbox,
- *               Radio and Toggle; a disabled control answers neither the pointer nor a click.
+ *               Radio and Toggle; a disabled control answers neither the pointer nor a click, its label
+ *               carries the wash, and the disabled single-select group item — a `<label>`, which never
+ *               matches `:disabled` — lays no layer either.
  *   keyboard    Space toggles Switch, Checkbox and Toggle; the arrow keys move the radio selection and follow
- *               the group's own direction; Tab draws the focus ring.
+ *               the group's own direction; a focused control paints `--shadow-focus` itself, read from a probe
+ *               in the same page rather than taken as "something is drawn" — the browser's own default
+ *               outline would satisfy that, and two of these three rest on a transparent shadow.
  *   forced      under forced colours the Switch thumb is drawn in `CanvasText` (and `GrayText` when
  *               disabled) against the resolved system colours, so thumb and track differ; the chosen radio
  *               still shows its dot; focus is still an outline.
@@ -103,6 +110,10 @@ const style = (page, sel, props = T) =>
 const toMs = (s) => (s.endsWith("ms") ? Number.parseFloat(s) : Number.parseFloat(s) * 1000);
 const HOVER = /rgba\([^)]*,\s*0\.08\)/;
 const PRESS = /rgba\([^)]*,\s*0\.14\)/;
+/* A `box-shadow` entry that is actually painted. Both the Checkbox and the Toggle rest on a shadow that is
+   present but transparent (`0 0 #0000`, and the inset press layer), so "not none" says nothing about whether
+   anything is visible: this matches an rgb() or an rgba() whose alpha is not zero. */
+const VISIBLE_SHADOW = /rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*(?!0\s*\))[\d.]+\s*)?\)/;
 
 /** Per-property tiers from one computed style: `{ "background-color": 200, "box-shadow": 100 }`. */
 const tiers = (declared) => {
@@ -294,6 +305,34 @@ async function travel(theme) {
     check(xs.at(-1) < xs[0] === rtl, `${label} travels ${rtl ? "leftward" : "rightward"} on screen`, `x ${xs[0].toFixed(1)} → ${xs.at(-1).toFixed(1)}`);
   }
   await ctx.close();
+
+  /* The radio dot stays centred over its control whichever way the page runs. It is placed absolutely inside
+     the control, so a 50% logical inset paired with a physical `translate` would centre it on an LTR page and
+     pull it out of the control on an RTL one — which no colour or timing check would notice. */
+  for (const rtl of [false, true]) {
+    const dirCtx = await browser.newContext();
+    const dirPage = await dirCtx.newPage();
+    await dirPage.goto(`${base}/${theme}.html${rtl ? "?dir=rtl" : ""}`, { waitUntil: "load" });
+    await waitForAngular(dirPage);
+    await dirPage.waitForTimeout(SETTLE);
+    const geometry = await dirPage.evaluate(
+      ([inputSel, dotSel]) => {
+        const i = document.querySelector(inputSel).getBoundingClientRect();
+        const d = document.querySelector(dotSel).getBoundingClientRect();
+        return {
+          dx: d.left + d.width / 2 - (i.left + i.width / 2),
+          dy: d.top + d.height / 2 - (i.top + i.height / 2),
+          inside: d.left >= i.left - 0.5 && d.right <= i.right + 0.5 && d.top >= i.top - 0.5 && d.bottom <= i.bottom + 0.5,
+          dir: getComputedStyle(document.querySelector(dotSel)).direction,
+        };
+      },
+      [SEL.radio("checked"), SEL.dot("checked")],
+    );
+    const where = `${theme} ${rtl ? "rtl" : "ltr"} (${geometry.dir})`;
+    check(Math.abs(geometry.dx) <= 1 && Math.abs(geometry.dy) <= 1, `${where}: the radio dot is centred on its control`, `off by ${geometry.dx.toFixed(1)}, ${geometry.dy.toFixed(1)}px`);
+    check(geometry.inside, `${where}: the radio dot is drawn inside its control`, `inside=${geometry.inside}`);
+    await dirCtx.close();
+  }
 }
 
 /* ── pointer ────────────────────────────────────────────────────────────── */
@@ -342,6 +381,41 @@ async function pointer(theme) {
     check(native === true, `${theme} a disabled ${label} is disabled in the DOM, so the browser blocks activation`, `disabled=${native}`);
     check(before === after, `${theme} a disabled ${label} does not answer a click`, `${attr} ${before} → ${after}`);
   }
+  /* The disabled radio's label carries the wash too. The input sits inside a wrapper now, so the rule that
+     paints it is keyed on that wrapper: a label left at full opacity would say nothing about being disabled,
+     and no timing or colour check above touches it. */
+  {
+    const label = await style(page, `kx-radio[data-kx-case="disabled-checked"] .kx-radio__label`, ["opacity", "cursor"]);
+    const enabled = await style(page, `kx-radio[data-kx-case="checked"] .kx-radio__label`, ["opacity", "cursor"]);
+    check(
+      Number.parseFloat(label.opacity) < Number.parseFloat(enabled.opacity) && label.cursor === "not-allowed",
+      `${theme} a disabled radio's label is washed out and not a pointer target`,
+      `opacity ${label.opacity} vs ${enabled.opacity}, cursor ${label.cursor}`,
+    );
+  }
+  /* The disabled single-select ToggleGroup item is its own case: there `.kx-toggle` is a `<label>`, and a
+     label never matches `:disabled`, so the `:not(:disabled)` the button branch relies on does not gate it. */
+  {
+    const label = SEL.groupItem("single-disabled");
+    const input = SEL.groupInput("single-disabled");
+    const rest = await style(page, label, ["boxShadow"]);
+    await page.locator(label).first().hover({ force: true });
+    await page.waitForTimeout(SETTLE);
+    const hover = await style(page, label, ["boxShadow"]);
+    await page.mouse.down();
+    await page.waitForTimeout(SETTLE);
+    const press = await style(page, label, ["boxShadow"]);
+    await page.mouse.up();
+    await page.locator(label).first().click({ force: true, timeout: 2000 }).catch(() => {});
+    await settleAngular(page);
+    const chosen = await page.locator(input).first().evaluate((el) => el.checked);
+    check(
+      !HOVER.test(hover.boxShadow) && !PRESS.test(press.boxShadow) && hover.boxShadow === rest.boxShadow,
+      `${theme} a disabled single-select group item lays no state layer`,
+      `rest ${rest.boxShadow} → hover ${hover.boxShadow} → press ${press.boxShadow}`,
+    );
+    check(chosen === false, `${theme} a disabled single-select group item does not take the selection`, `checked=${chosen}`);
+  }
   await ctx.close();
 }
 
@@ -349,15 +423,48 @@ async function pointer(theme) {
 async function keyboard(theme) {
   const ctx = await browser.newContext();
   const page = await open(ctx, theme);
+  /* One Tab before the loop, to put the page in keyboard modality. `:focus-visible` is the ring a keyboard
+     reader gets, and Chromium does not match it for an element focused from script while the last input was
+     a pointer — without this the first control measured reads as having no ring, which is the browser's
+     answer to the wrong question. */
+  await page.keyboard.press("Tab");
+  /* What `--shadow-focus` actually resolves to in this run, read from a probe. Comparing the focused control
+     against it rather than against "something is painted": with the rule deleted the browser falls back to
+     its own default outline, which is visible and would let a check for visibility pass. */
+  const token = await page.evaluate(() => {
+    const el = document.createElement("div");
+    el.style.cssText = "box-shadow: var(--shadow-focus)";
+    document.body.append(el);
+    const v = getComputedStyle(el).boxShadow;
+    el.remove();
+    return v;
+  });
+  check(VISIBLE_SHADOW.test(token), `${theme} --shadow-focus is a ring a reader can see`, token);
   for (const [label, sel, attr] of [
     ["Switch", SEL.switch("off"), "aria-checked"],
     ["Checkbox", SEL.checkbox("unchecked"), "aria-checked"],
     ["Toggle", SEL.toggle("off"), "aria-pressed"],
   ]) {
     const el = page.locator(sel).first();
+    // Read the resting painting first: the Checkbox and the Toggle both rest on a transparent shadow, so a
+    // check for "not none" would stay green with the `:focus-visible` rule deleted.
+    const rest = await style(page, sel, ["boxShadow", "outlineWidth"]);
     await el.focus();
+    // The ring arrives on a transition, so it has to be read once it has landed: read in the same frame as
+    // the focus, the Checkbox reports the transition's first frame — two transparent entries — and a check
+    // for a visible ring fails on motion rather than on painting.
+    await page.waitForTimeout(SETTLE);
     const ring = await style(page, sel, ["boxShadow", "outlineWidth"]);
-    check(ring.boxShadow !== "none" || ring.outlineWidth !== "0px", `${theme} ${label} draws a focus ring`, `${ring.boxShadow} / outline ${ring.outlineWidth}`);
+    check(
+      ring.boxShadow !== rest.boxShadow || ring.outlineWidth !== rest.outlineWidth,
+      `${theme} focus changes what ${label} paints`,
+      `rest ${rest.boxShadow} / outline ${rest.outlineWidth} → ${ring.boxShadow} / outline ${ring.outlineWidth}`,
+    );
+    check(
+      ring.boxShadow === token,
+      `${theme} ${label} draws the package's own focus ring`,
+      `${ring.boxShadow} / outline ${ring.outlineWidth} — --shadow-focus is ${token}`,
+    );
     await page.keyboard.press("Space");
     await settleAngular(page);
     check((await el.getAttribute(attr)) === "true", `${theme} Space activates ${label}`, `${attr}=${await el.getAttribute(attr)}`);
@@ -438,9 +545,14 @@ async function forced(theme) {
   }
   const dot = await style(page, SEL.dot("checked"), ["backgroundColor", "opacity"]);
   check(dot.backgroundColor === sys.enabled && dot.opacity === "1", `${theme} forced colours: a chosen radio still shows its dot`, `${dot.backgroundColor} at opacity ${dot.opacity}`);
+  const ringRest = await style(page, SEL.switch("off"), ["outlineWidth", "outlineStyle", "boxShadow"]);
   await page.locator(SEL.switch("off")).first().focus();
   const ring = await style(page, SEL.switch("off"), ["outlineWidth", "outlineStyle", "boxShadow"]);
-  check(ring.outlineStyle !== "none" || ring.boxShadow !== "none", `${theme} forced colours: focus is still drawn`, `outline ${ring.outlineWidth} ${ring.outlineStyle}, shadow ${ring.boxShadow}`);
+  check(
+    ring.outlineStyle !== ringRest.outlineStyle || ring.outlineWidth !== ringRest.outlineWidth || ring.boxShadow !== ringRest.boxShadow,
+    `${theme} forced colours: focus is still drawn`,
+    `rest outline ${ringRest.outlineWidth} ${ringRest.outlineStyle} → ${ring.outlineWidth} ${ring.outlineStyle}, shadow ${ring.boxShadow}`,
+  );
   await ctx.close();
 }
 

@@ -61,6 +61,15 @@ abstract class KxToggleBase implements ControlValueAccessor {
     this.toggled.emit(next);
   }
 
+  /**
+   * Touched without a value change — the one path a subclass has for "the reader acted on this, and the
+   * value it already holds is the answer" (the mixed Checkbox resolving to checked). `onTouched` is private
+   * so the callbacks stay this class's business.
+   */
+  protected markTouched(): void {
+    this.onTouched();
+  }
+
   writeValue(value: boolean): void {
     this.checked.set(!!value);
   }
@@ -138,6 +147,9 @@ export class KxCheckbox extends KxToggleBase {
     }
     this.answered.set(true);
     if (this.checked()) {
+      // The value does not change, so there is nothing to write back — but the reader did act on the
+      // control, and a form that shows its errors on touch has to hear about it.
+      this.markTouched();
       this.toggled.emit(true);
       return;
     }
