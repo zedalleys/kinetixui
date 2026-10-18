@@ -455,6 +455,20 @@
         ]
       },
       {
+        "file": "packages/ui/src/switch-motion.test.tsx",
+        "environment": "jsdom",
+        "kinds": [
+          "interaction",
+          "rtl"
+        ],
+        "components": [
+          "direction-provider",
+          "form",
+          "label",
+          "switch"
+        ]
+      },
+      {
         "file": "packages/ui/src/toggle-motion.test.tsx",
         "environment": "jsdom",
         "kinds": [
@@ -1189,7 +1203,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-329"
+          "scripts/motion.mjs:24-334"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2113,7 +2127,7 @@
           "scripts/large-text.mjs:99-738"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-329"
+          "scripts/motion.mjs:24-334"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2294,7 +2308,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-329"
+          "scripts/motion.mjs:24-334"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2908,6 +2922,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259",
           "packages/ui/src/components-selection.test.tsx:138-208",
           "packages/ui/src/components-transactional.test.tsx:255-317",
+          "packages/ui/src/switch-motion.test.tsx:263-303",
           "packages/ui/src/toggle-motion.test.tsx:217-281"
         ],
         "published": [
@@ -3304,7 +3319,8 @@
         ],
         "interaction": [
           "packages/ui/src/checkbox-radio-motion.test.tsx:253-448",
-          "packages/ui/src/components-form.test.tsx:39-310"
+          "packages/ui/src/components-form.test.tsx:39-310",
+          "packages/ui/src/switch-motion.test.tsx:27-262"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -3787,7 +3803,8 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-form.test.tsx:39-310"
+          "packages/ui/src/components-form.test.tsx:39-310",
+          "packages/ui/src/switch-motion.test.tsx:27-262"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -4934,7 +4951,7 @@
           "scripts/large-text.mjs:99-738"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-329"
+          "scripts/motion.mjs:24-334"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5815,20 +5832,22 @@
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:315-544",
           "packages/ui/src/components-selection.test.tsx:138-208",
-          "packages/ui/src/components-selection.test.tsx:27-137"
+          "packages/ui/src/components-selection.test.tsx:27-137",
+          "packages/ui/src/switch-motion.test.tsx:27-262"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
-          "packages/ui/src/components-selection.test.tsx:138-208"
+          "packages/ui/src/components-selection.test.tsx:138-208",
+          "packages/ui/src/switch-motion.test.tsx:263-303"
         ],
         "largeText": [
           "scripts/large-text.mjs:99-738"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-329"
+          "scripts/motion.mjs:24-334"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6069,7 +6088,7 @@
           "scripts/large-text.mjs:99-738"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-329"
+          "scripts/motion.mjs:24-334"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6356,7 +6375,7 @@
           "scripts/large-text.mjs:99-738"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-329"
+          "scripts/motion.mjs:24-334"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6434,7 +6453,7 @@
           "scripts/large-text.mjs:99-738"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-329"
+          "scripts/motion.mjs:24-334"
         ],
         "published": [
           "npm: @kinetixui/ui"
