@@ -266,6 +266,12 @@ jobs:
       - name: Distribution register (campaign results, baseline rule)
         run: pnpm check:distribution
 
+      # The content register: ids, statuses, campaign links analytics will keep, and explicit approvals. It
+      # existed since Phase 4 but ran only by hand, so a register edit that check:distribution does not read
+      # (a drafted asset's campaign, an approval with no evidence) could merge unchecked.
+      - name: Content register (campaign ids, attribution, approvals)
+        run: pnpm check:content
+
       - name: Generated files in sync
         run: |
           # The native packages carry vendored copies of packages/tokens/dist/{android,ios,flutter};

@@ -23,7 +23,9 @@
  *  4. TOKENS BRIDGE — land on the ART-002 destination, which alone must send nothing that qualifies; copy its
  *     install command; follow the in-page evaluation link (not the sidebar) to the component it names. The
  *     campaign must survive the navigation, and each action must produce exactly one semantic event.
- * Each asserts the exact event sequence, so a duplicate capture or an event fired on render fails the run.
+ * Each asserts the exact event sequence, so a duplicate capture or an event fired on render fails the run. Since M2
+ * (2026-10-18) that sequence includes `page_engaged`: one per page that received a real click, key or touch, and
+ * none for a page that was only loaded (flow 4's landing proves the second half).
  */
 import { gunzipSync } from "node:zlib";
 import { chromium, devices } from "playwright";
@@ -116,8 +118,9 @@ const evidence = {};
   const fence = page.locator("pre", { hasText: "npx @kinetixui/cli add button" }).first();
   await fence.hover();
   await page.locator("div.group", { has: fence }).getByRole("button", { name: "Copy code" }).click();
-  const events = await settle(7);
-  expectSequence(flow, events, ["$pageview", "docs_viewed", "$pageview", "component_viewed", "$pageview", "installation_viewed", "cli_command_copied"]);
+  const events = await settle(10);
+  // each page was touched (a click), so each sends one page_engaged — before the click's own event or navigation
+  expectSequence(flow, events, ["$pageview", "docs_viewed", "page_engaged", "$pageview", "component_viewed", "page_engaged", "$pageview", "installation_viewed", "page_engaged", "cli_command_copied"]);
   for (const e of events) {
     const p = e.properties;
     if (p.kx_campaign !== "kx_p2_b_token_boundary" || p.kx_source !== "linkedin" || p.kx_landing_page !== "/docs/tokens" || p.kx_content !== "li_ladder") {
@@ -141,7 +144,8 @@ const evidence = {};
   await page.keyboard.press("Enter");
   await page.waitForURL("**/docs/platforms");
   const events = await settle(4);
-  expectSequence(flow, events, ["$pageview", "cta_clicked:view_verification", "$pageview", "docs_viewed"]);
+  // the first key press engages the homepage; the docs page it leads to was not touched, so it sends none
+  expectSequence(flow, events, ["$pageview", "page_engaged", "cta_clicked:view_verification", "$pageview", "docs_viewed"]);
   const click = events.find((e) => e.event === "cta_clicked");
   if (click && click.properties.source !== "homepage_verification") fail(flow, `cta source ${click.properties.source}`);
   if (events.some((e) => e.properties.kx_source !== "direct")) fail(flow, "a direct visit was attributed to something");
@@ -163,9 +167,12 @@ const evidence = {};
   const platformLabel = (await platformTab.textContent())?.trim();
   await platformTab.tap();
   await block.getByRole("button", { name: "Copy" }).tap();
-  const events = await settle(3);
-  expectSequence(flow, events, ["$pageview", "platform_selected", "block_code_copied"]);
-  for (const e of events.slice(1)) {
+  const events = await settle(4);
+  // a touch is engagement too: exactly one page_engaged for the page, however many taps follow
+  expectSequence(flow, events, ["$pageview", "page_engaged", "platform_selected", "block_code_copied"]);
+  const engaged = events.find((e) => e.event === "page_engaged");
+  if (engaged && engaged.properties.source !== "blocks_gallery") fail(flow, `page_engaged source ${engaged.properties.source}`);
+  for (const e of events.filter((x) => x.event === "platform_selected" || x.event === "block_code_copied")) {
     if (e.properties.block !== slug || e.properties.source !== "blocks_gallery" || !e.properties.platform) fail(flow, `${e.event} props ${JSON.stringify({ block: e.properties.block, source: e.properties.source, platform: e.properties.platform })}`);
   }
   expectClean(flow, events);
@@ -194,8 +201,8 @@ const evidence = {};
   await bridge.click();
   await page.waitForURL("**/docs/components/button");
 
-  const events = await settle(5);
-  expectSequence(flow, events, ["$pageview", "docs_viewed", "install_command_copied", "$pageview", "component_viewed"]);
+  const events = await settle(6);
+  expectSequence(flow, events, ["$pageview", "docs_viewed", "page_engaged", "install_command_copied", "$pageview", "component_viewed"]);
   const copy = events.find((e) => e.event === "install_command_copied");
   if (copy && (copy.properties.package !== "@kinetixui/tokens" || copy.properties.source !== "docs_page")) fail(flow, `install copy props ${JSON.stringify({ package: copy.properties.package, source: copy.properties.source })}`);
   const view = events.find((e) => e.event === "component_viewed");
@@ -222,8 +229,8 @@ const evidence = {};
   await page.goto(base + "/docs/installation?kx_traffic=diagnostic", { waitUntil: "networkidle" });
   await page.locator('aside a[href="/docs/components/button"]').first().click();
   await page.waitForURL("**/docs/components/button");
-  const events = await settle(4);
-  expectSequence(flow, events, ["$pageview", "installation_viewed", "$pageview", "component_viewed"]);
+  const events = await settle(5);
+  expectSequence(flow, events, ["$pageview", "installation_viewed", "page_engaged", "$pageview", "component_viewed"]);
   const leaves = () => sent.filter((e) => e.event === "$pageleave");
   for (let i = 0; i < 20 && leaves().length === 0; i++) {
     await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));

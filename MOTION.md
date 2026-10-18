@@ -125,6 +125,11 @@ a disclosure). Avoid animating `box-shadow` on large surfaces and filters on scr
 - Hover and selection on the same property. A transition is timed by the property that changes, not by
   what changed it, so `hover:bg-*` beside a selected `bg-*` runs hover on selection's tier. Put hover and
   press on a state layer (Toggle uses an inset `box-shadow`) and give each property its own tier.
+- Fading out a glyph whose identity is gone. Once a control's state has changed, CSS only knows the new
+  state, so a fade-out shows whichever glyph that state would draw: a Checkbox going mixed → unchecked would
+  fade a tick. Fade in on the new state and leave at once, unless the control has only one glyph (Radio).
+- Choosing what to draw from a prop the primitive may not have. `props.checked` is undefined when uncontrolled;
+  key the drawing on the primitive's own `data-state`.
 - Slowing a loop under reduced motion (`motion-reduce:animate-[spin_3s…]`): the floor freezes it instead.
 - Scale effects that shrink or clip a focus ring.
 - Sliding indicators where the platform's native control does not slide.
@@ -142,6 +147,7 @@ Different claims need different evidence; do not collapse them.
 | No untokenised timing is added | `motion-contract.test.ts` |
 | Motion is perceptible and reaches its end state; reduced motion removes it | `check:motion` (rendered midpoint and duration in Chromium; a state may also pin its property's own tier) |
 | Toggle and ToggleGroup: layer on instant, hover that leaves selection alone and does not stick on touch, rapid input, forced colours, RTL, 320–1280px at 100/200% text | `check:toggle-motion` |
+| Checkbox and RadioGroup: the glyph drawn is the state announced on every move, halo on instant, touch, rapid input, forced colours, RTL, 320–1280px at 100/200% text | `check:checkbox-radio-motion` |
 | Loops rest under reduced motion | `check:loop-motion`, `check:registry-motion` |
 | Native components honour the reduced-motion setting | `check:native-motion` (source bookkeeping) and native tests in `native-*.yml` |
 
@@ -170,3 +176,23 @@ implemented; the rest of the MX1 plan (navigation motion, platform parity) stays
 | RTL | colour is direction-free; arrow keys follow reading order through `KinetixDirectionProvider` or `dir` | — |
 
 ToggleGroup items wrap rather than overflow, so a labelled group reflows at 320px with 200% text.
+
+### Checkbox and RadioGroup (React, MX1b-1b)
+
+| | Selection | Glyph (tick, dash, dot) | Hover and press |
+| --- | --- | --- | --- |
+| Trigger | Radix `data-state` / `aria-checked` changes (click, Space, arrow keys in a group, owner, form reset) | the Indicator's own `data-state` | pointer over (only where `(hover: hover)`), `:active` |
+| Property | Checkbox `background-color`, `color`, `border-color`; Radio `border-color`, `color` | `opacity` of the Indicator; which glyph is `display`ed | the 5px `box-shadow` halo, `foreground` at 8% / 14% |
+| Tier · easing | `fast` 200ms · `standard` (`selection-state`) | in on `fast` · `standard`. Checkbox leaves at once; Radio fades out on `fast` | `instant` 100ms · `standard` (`press-feedback`) |
+| Reduced form | shorten (preset floor; `motion-reduce:transition-none` for registry installs) | the glyph appears and goes at once | shorten |
+| Interruption | retargets from the current colour; the last input wins | the glyph switches in the frame the state does (checked ↔ mixed never cross-fades) | follows the pointer |
+| Final state | the state's fill or border | tick under checked, dash under mixed, nothing under unchecked; one dot, on the chosen radio | halo gone when the pointer leaves or the finger lifts |
+| Focus / SR | ring unchanged and never covered; `aria-checked` (including `mixed`) never waits for paint | glyphs are `aria-hidden`; state is announced by `aria-checked` | none |
+| Forced colours | the edge stays; fills are replaced by the system | the glyph is drawn in the system text colour; focus is an outline | the system removes the halo |
+| RTL | colour is direction-free; a Radio group's arrow keys follow reading order through `KinetixDirectionProvider` or `dir` | centred in the box, so it does not move with direction | — |
+
+The box's own hover and press colour step (TOKENS.md, "Selection controls": an unchecked edge darkening to
+`foreground`, a checked fill stepping to `action`/90 and /85) is kept. It shares a property with selection, so
+it moves on `fast` with it; the halo, on `instant`, is the immediate answer. This is the one place the
+"Hover and selection on the same property" rule is knowingly relaxed, to keep the selection-control contract
+unchanged.

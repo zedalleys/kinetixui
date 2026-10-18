@@ -2388,7 +2388,8 @@
         "build",
         "interaction",
         "largeText",
-        "published"
+        "published",
+        "reducedMotion"
       ],
       "Angular": [
         "accessibility",
@@ -3667,6 +3668,7 @@
         "interaction",
         "largeText",
         "published",
+        "reducedMotion",
         "rtl"
       ],
       "Angular": [
@@ -4436,7 +4438,7 @@
       "accessibility": 109,
       "rtl": 38,
       "largeText": 39,
-      "reducedMotion": 6,
+      "reducedMotion": 8,
       "visual": 0,
       "published": 109
     },

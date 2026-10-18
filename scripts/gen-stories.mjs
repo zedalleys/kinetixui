@@ -699,6 +699,45 @@ const EXTRA = {
     </Card>
   )`,
     },
+    {
+      // MX1b-1b, selection motion: a box at rest off and on, the uncontrolled mixed box whose glyph was drawn as
+      // a tick, a box whose owner moves it through every state (each \`data-kx-action\` sets one), and a box in
+      // a right-to-left row. \`check:motion\` and \`check:checkbox-radio-motion\` drive these.
+      name: "Motion",
+      imports: "Button KinetixDirectionProvider Label",
+      render: `() => {
+    const [owned, setOwned] = React.useState<boolean | "indeterminate">(false);
+    return (
+      <div className="grid gap-4">
+        {([
+          ["off", "Email me about product updates", {}],
+          ["on", "Email me about security alerts", { defaultChecked: true }],
+          ["mixed-uncontrolled", "Select all regions", { defaultChecked: "indeterminate" }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="flex items-center gap-3">
+            <Checkbox id={\`cbm-\${key}\`} data-kx-case={key} {...props} />
+            <Label htmlFor={\`cbm-\${key}\`}>{label}</Label>
+          </div>
+        ))}
+        <div className="flex items-center gap-3">
+          <Checkbox id="cbm-owned" data-kx-case="owned" checked={owned} onCheckedChange={setOwned} />
+          <Label htmlFor="cbm-owned">All files</Label>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="Outline" data-kx-action="checked" onClick={() => setOwned(true)}>Select all</Button>
+          <Button size="sm" variant="Outline" data-kx-action="indeterminate" onClick={() => setOwned("indeterminate")}>Select some</Button>
+          <Button size="sm" variant="Outline" data-kx-action="unchecked" onClick={() => setOwned(false)}>Select none</Button>
+        </div>
+        <KinetixDirectionProvider dir="rtl">
+          <div dir="rtl" lang="ar" className="flex items-center gap-3">
+            <Checkbox id="cbm-rtl" data-kx-case="rtl" />
+            <Label htmlFor="cbm-rtl">أرسل لي التحديثات</Label>
+          </div>
+        </KinetixDirectionProvider>
+      </div>
+    );
+  }`,
+    },
   ],
   "radio-group": [
     {
@@ -734,6 +773,36 @@ const EXTRA = {
         </RadioGroup>
       </CardContent>
     </Card>
+  )`,
+    },
+    {
+      // MX1b-1b: a plan picker and its right-to-left twin, horizontal so the arrow keys follow reading order.
+      // \`check:motion\` and \`check:checkbox-radio-motion\` choose items here and measure the border and the dot.
+      name: "Motion",
+      imports: "KinetixDirectionProvider Label",
+      render: `() => (
+    <div className="grid gap-6">
+      <RadioGroup defaultValue="free" aria-label="Plan" data-kx-case="plan">
+        {([["free", "Free"], ["pro", "Pro"], ["team", "Team"]] as const).map(([v, label]) => (
+          <div key={v} className="flex items-center gap-3">
+            <RadioGroupItem value={v} id={\`rgm-\${v}\`} />
+            <Label htmlFor={\`rgm-\${v}\`}>{label}</Label>
+          </div>
+        ))}
+      </RadioGroup>
+      <KinetixDirectionProvider dir="rtl">
+        <div dir="rtl" lang="ar">
+          <RadioGroup defaultValue="free" orientation="horizontal" aria-label="الخطة" data-kx-case="rtl" className="flex flex-wrap gap-4">
+            {([["free", "مجاني"], ["pro", "احترافي"], ["team", "فريق"]] as const).map(([v, label]) => (
+              <div key={v} className="flex items-center gap-2">
+                <RadioGroupItem value={v} id={\`rgm-rtl-\${v}\`} />
+                <Label htmlFor={\`rgm-rtl-\${v}\`}>{label}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+      </KinetixDirectionProvider>
+    </div>
   )`,
     },
   ],

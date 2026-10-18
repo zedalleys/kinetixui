@@ -167,8 +167,8 @@ non‑port, compiled in CI per platform. Angular is a fifth implementation,
 still Preview and rolling out in waves, so it is not required.
 
 Compiling is not the same as being verified. What automated tests actually
-prove about each implementation is tracked separately, per component and per
-platform, in `verification.json`; see
+prove about each implementation is tracked separately, per component (and per
+block) and per platform, in `verification.json`; see
 [Supported platforms](https://kinetixui.com/docs/platforms). The full workflow
 is in [Contributing](https://kinetixui.com/docs/contributing).
 

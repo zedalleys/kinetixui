@@ -7,7 +7,8 @@
     "Validated by `pnpm check:distribution`, which re-derives every field from the content register and the site routes and fails on any drift.",
     "Append rows for days 15-30 when those days are reached. This file is a log, not a plan: marketing/content/calendar.md is the schedule.",
     "amplification is a SEPARATE log for paid promotion of an already-published asset. It is not a row, because a boost is not an act of publishing, and it never changes the organic row's date, result or copy. The row points at it so its counts cannot be read as organic-only. Unknowns stay null: a guessed spend or boost window is worse than an absent one.",
-    "offCalendar is a SEPARATE log for acts of publishing that are not assets in marketing/content/register.json. They are real posts, so they are recorded, but they are not rows: a row must re-derive from a registered asset, and inventing an asset after the fact would rewrite the calendar. Unknowns stay null. Added 2026-10-09 by the October 7 reconciliation (measurement/OCTOBER-7-RECONCILIATION.md)."
+    "offCalendar is a SEPARATE log for acts of publishing that are not assets in marketing/content/register.json. They are real posts, so they are recorded, but they are not rows: a row must re-derive from a registered asset, and inventing an asset after the fact would rewrite the calendar. Unknowns stay null. Added 2026-10-09 by the October 7 reconciliation (measurement/OCTOBER-7-RECONCILIATION.md).",
+    "liveUrl / liveUrlGap were added 2026-10-17 by the M1 reconciliation (audits/M1-CAMPAIGN-RECONCILIATION.md). A published row names the live post, or says in liveUrlGap why the repository has none. From 2026-10-17 a row may not be marked published without a liveUrl: the URL is the publication evidence, and a planned date, a draft or a merged close-out PR is not."
   ],
   "rowShape": {
     "date": "YYYY-MM-DD, the day it actually went out. null while planned",
@@ -19,6 +20,8 @@
     "pillar": "a | b | c | d | e | f | g, from CONTENT-PILLARS.md",
     "attribution": "the utm quartet, or null where the channel carries no tracked link by design",
     "status": "planned | published | skipped | blocked",
+    "liveUrl": "published rows only: the live post URL on the row's own channel (supplied by the author, never inferred). null only with liveUrlGap, and only for rows dated before 2026-10-17",
+    "liveUrlGap": "published rows with a null liveUrl only: why the repository holds no live URL, and who can supply it",
     "result": "free text, written after. Absolute counts only until analytics.md section 10's baseline window closes"
   },
   "amplificationShape": {
@@ -106,6 +109,8 @@
       "amplification": "amp-001",
       "metricToWatch": "kx_p2_a_drift sessions; any arrival at /docs/platforms",
       "status": "published",
+      "liveUrl": null,
+      "liveUrlGap": "No post URL was recorded when this row was closed out (2026-09-29); the row predates the liveUrl field and the URL appears nowhere in the repository or in the close-out record. Publication rests on the author's statement at the time and on tagged kx_p2_a_drift arrivals beginning 2026-09-29 18:54 UTC. The author can supply the URL; it is not inferred.",
       "result": "5 sessions carried kx_p2_a_drift; 1 reached Qualified Evaluation; 0 reached Adoption Intent. Attribution pipeline confirmed working end to end \u2014 campaign, medium and content arrived intact, and the funnel vocabulary was already deployed (#253, 2026-09-29 12:43 UTC). One early session recorded kx_source=other while campaign, medium and content survived; the register's own URL cannot produce that, so a variant link was used for that click. The raw value is discarded by design and was not recovered, and this is logged as a single observation, not a defect. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open, so no rate is computed and no conclusion drawn."
     },
     {
@@ -128,6 +133,8 @@
       "communityReuse": null,
       "metricToWatch": "whether kx_source=x produces any session at all",
       "status": "published",
+      "liveUrl": null,
+      "liveUrlGap": "No post URL was recorded when this row was closed out (2026-09-30); the row predates the liveUrl field and the URL appears nowhere in the repository or in the close-out record. Publication rests on the author's statement at the time and on two tagged x_single arrivals on 2026-09-30. The author can supply the URL; it is not inferred.",
       "result": "2 sessions carried kx_p2_a_drift with utm_content=x_single; 0 reached Qualified Evaluation; 0 reached Adoption Intent. Logged the same day it posted, so these are early counts and not a settled figure. The metric to watch was whether kx_source=x produces a session at all: it did \u2014 1 of the 2 resolved to x, the other to `other`, the same fallback one day-1 session hit. Both carried a correct medium, campaign and content and arrived with no referrer, so only utm_source failed to resolve; the register's own URL cannot produce that. Link hygiene to watch, not an instrumentation change \u2014 the raw value is discarded by design and was not recovered. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open, so no rate is computed and no conclusion drawn."
     },
     {
@@ -150,6 +157,8 @@
       "communityReuse": null,
       "metricToWatch": "kx_p1_c_manifest vs kx_p2_a_drift \u2014 the P1/P2 comparison starts here",
       "status": "published",
+      "liveUrl": null,
+      "liveUrlGap": "No post URL was recorded when this row was closed out (2026-10-03); the row predates the liveUrl field and the URL appears nowhere in the repository or in the close-out record. Publication rests on the author's statement at the time; tagged arrivals on 2026-10-02 18:31-18:34 UTC predate the recorded posting date (see result). The author can supply the URL; it is not inferred.",
       "result": "Posted 2026-10-03 as recorded at the time, one day after its scheduled day 4 (2026-10-02); the day offset stays 4 because it is the schedule slot. Counts as of 2026-10-09 04:15 UTC, read from PostHog: 5 sessions carried kx_p1_c_manifest with utm_content=li_primary; 0 reached Qualified Evaluation; 0 reached Adoption Intent. Each landed on /docs/platforms and emitted only $pageview and docs_viewed, neither of which is a qualifying signal (analytics.md \u00a73). All 5 began between 18:31 and 18:34 UTC on 2026-10-02, before the recorded posting date, and no session has carried this campaign since. Four of them began within the same second, which is consistent with automated link previews rather than readers \u2014 an inference, not verified. The posting date is left as recorded until the author confirms whether the post went out on 2026-10-02 (UTC); 18:31 UTC is 21:31 at UTC+3. Organic only \u2014 no amplification. Comparison caveat stands: LI-003 (kx_p2_a_drift) took a four-day paid boost (amp-001) and this did not, so any gap between kx_p1_c_manifest and kx_p2_a_drift is message and paid reach together and must not be attributed to the message. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
@@ -172,6 +181,8 @@
       "communityReuse": "COM-002 draws on the same argument \u2014 not within 48 hours",
       "metricToWatch": "replies; the most quotable asset in week 1",
       "status": "published",
+      "liveUrl": null,
+      "liveUrlGap": "No post URL was recorded when this row was closed out (2026-10-04); the row predates the liveUrl field and the URL appears nowhere in the repository or in the close-out record. Publication rests on the author's statement at the time; no tagged arrival has been observed for it. The author can supply the URL; it is not inferred.",
       "result": "Posted 2026-10-04, on its scheduled day 6. Counts as of 2026-10-09 04:15 UTC, read from PostHog: 0 sessions carried kx_p1_c_manifest with utm_content=x_single, and no session since 2026-10-03 carried kx_source=x. Replies, the metric to watch, are not readable from this environment and are not recorded; the author can add them. Organic only \u2014 no amplification. The exact posting time is not recorded, so to keep COM-002 a full 48 hours clear it should not go out before 2026-10-07. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
@@ -194,6 +205,7 @@
       "communityReuse": "COM-001 derives from it \u2014 not before day 10",
       "metricToWatch": "Qualified Evaluation of devto sessions against linkedin, as counts",
       "status": "published",
+      "liveUrl": "https://dev.to/zedalleys/your-design-tokens-stop-at-the-web-boundary-4p6a",
       "result": "Published on dev.to on 2026-10-06 (about 09:03 UTC), on its scheduled day 8. The live article is https://dev.to/zedalleys/your-design-tokens-stop-at-the-web-boundary-4p6a. Counts as of 2026-10-09 04:15 UTC, read from PostHog: 0 sessions carried kx_p2_b_token_boundary with utm_content=art_primary, and no session carried kx_source=devto. dev.to's own view and reaction counts are not readable from this environment and are not recorded; the author can add them. Organic only \u2014 no amplification; no hashnode cross-post. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
@@ -239,6 +251,7 @@
       "communityReuse": null,
       "metricToWatch": "kx_p2_b_token_boundary sessions with utm_content=x_thread, then component_viewed or platform_selected downstream (Button is linked from /docs/tokens) and install_command_copied on /docs/tokens. /docs/tokens itself emits no platform_selected",
       "status": "published",
+      "liveUrl": "https://x.com/zedalleys/status/2108651928087413167",
       "result": "Posted 2026-10-09, on its scheduled day 11. Post 1 is https://x.com/zedalleys/status/2108651928087413167 (author-supplied; x.com is not reachable from this environment, so the thread's text was not read back). Posting time about 20:12:51 UTC, derived from the status ID's embedded timestamp rather than read from the post; the author confirmed keeping it as derived, not verified. The author confirmed the thread went out exactly as the X-004 publication package (post 4 reading 'Angular components'); the live thread was not read back. Counts as of 2026-10-09 20:16 UTC, read from PostHog: 0 sessions carried kx_p2_b_token_boundary with utm_content=x_thread, minutes after posting, so not a settled figure. Replies are not readable from this environment and are not recorded; the author can add them. Organic only, no amplification. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
@@ -261,6 +274,7 @@
       "communityReuse": null,
       "metricToWatch": "/components arrivals that reach component_viewed",
       "status": "published",
+      "liveUrl": "https://www.linkedin.com/feed/update/urn:li:activity:7515463797164265473/",
       "result": "Posted 2026-10-12 at 17:36:41 UTC (2026-10-12T17:36:41Z), with the publication URL and exact posting time supplied by the author: https://www.linkedin.com/feed/update/urn:li:activity:7515463797164265473/ Scheduled day 13; actually published 2026-10-12. Campaign kx_p2_f_two_trades, destination /components, visual VIS-005. Performance counts were not retrieved or recorded at close-out; follow up on /components arrivals that reach component_viewed. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
@@ -283,6 +297,7 @@
       "communityReuse": "COM-002 derives from it",
       "metricToWatch": "kx_p1_a_parity_proof sessions with utm_content=art_primary that reach /docs/platforms, then Qualified Evaluation, as counts",
       "status": "published",
+      "liveUrl": "https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0",
       "result": "Published on dev.to on 2026-10-13 (author-supplied date), on its scheduled day 15. The live article is https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0 (author-supplied). Exact publication time: not recorded. The author did not supply one and dev.to is not reachable from this environment (the egress proxy refused the request), so it is left unknown rather than guessed. The live article text was not read back for the same reason, so its links are as the author states: the tracked primary CTA is the register's built URL for ART-001 (utm_content=art_primary). The pillar link (utm_content=art_pillar) is logged separately as ART-001-PILLAR, which stays at brief until the author confirms the edit is live. Counts as of 2026-10-13 14:40 UTC, read from PostHog: 0 events carried kx_p1_a_parity_proof and 0 carried kx_source=devto since 2026-10-12 00:00 UTC, hours after publication, so not a settled figure; it also means publish-checklist.md's attribution stop gate had not yet been observed. dev.to's own view and reaction counts are not readable from this environment and are not recorded; the author can add them. Organic only, no amplification; no hashnode cross-post. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {

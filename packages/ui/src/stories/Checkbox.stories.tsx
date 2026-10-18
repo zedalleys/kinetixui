@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx · controls: scripts/gen-stories.mjs CONTROLS */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Card, CardContent, Checkbox, Label, Select } from "@kinetixui/ui";
+import { Button, Card, CardContent, Checkbox, KinetixDirectionProvider, Label, Select } from "@kinetixui/ui";
 
 const Demo = () => (
     <div className="flex items-center gap-2">
@@ -49,3 +49,36 @@ export const States: StoryObj<typeof meta> = { render: () => (
       </CardContent>
     </Card>
   ) };
+
+export const Motion: StoryObj<typeof meta> = { render: () => {
+    const [owned, setOwned] = React.useState<boolean | "indeterminate">(false);
+    return (
+      <div className="grid gap-4">
+        {([
+          ["off", "Email me about product updates", {}],
+          ["on", "Email me about security alerts", { defaultChecked: true }],
+          ["mixed-uncontrolled", "Select all regions", { defaultChecked: "indeterminate" }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="flex items-center gap-3">
+            <Checkbox id={`cbm-${key}`} data-kx-case={key} {...props} />
+            <Label htmlFor={`cbm-${key}`}>{label}</Label>
+          </div>
+        ))}
+        <div className="flex items-center gap-3">
+          <Checkbox id="cbm-owned" data-kx-case="owned" checked={owned} onCheckedChange={setOwned} />
+          <Label htmlFor="cbm-owned">All files</Label>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="Outline" data-kx-action="checked" onClick={() => setOwned(true)}>Select all</Button>
+          <Button size="sm" variant="Outline" data-kx-action="indeterminate" onClick={() => setOwned("indeterminate")}>Select some</Button>
+          <Button size="sm" variant="Outline" data-kx-action="unchecked" onClick={() => setOwned(false)}>Select none</Button>
+        </div>
+        <KinetixDirectionProvider dir="rtl">
+          <div dir="rtl" lang="ar" className="flex items-center gap-3">
+            <Checkbox id="cbm-rtl" data-kx-case="rtl" />
+            <Label htmlFor="cbm-rtl">أرسل لي التحديثات</Label>
+          </div>
+        </KinetixDirectionProvider>
+      </div>
+    );
+  } };

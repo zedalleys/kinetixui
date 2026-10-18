@@ -107,10 +107,10 @@ export const DISCLOSURE_FAMILY = ["accordion", "collapsible"];
 
 /**
  * The selection-control family. Switch moves its thumb on `selection-control` (instant); Toggle and
- * ToggleGroup, from MX1b-1a, move their selected colour on `selection-state` (fast). Checkbox and RadioGroup
- * are not claimed until MX1b-1b.
+ * ToggleGroup (MX1b-1a) and Checkbox and RadioGroup (MX1b-1b) move their selected colour, and the tick or dot,
+ * on `selection-state` (fast).
  */
-export const SELECTION_FAMILY = ["switch", "toggle", "toggle-group"];
+export const SELECTION_FAMILY = ["switch", "toggle", "toggle-group", "checkbox", "radio-group"];
 
 /** The navigation family. Tabs only so far: its indicator travels to the chosen tab. */
 export const NAVIGATION_FAMILY = ["tabs"];
@@ -313,6 +313,88 @@ export const MOTION_STATES = [
     property: "backgroundColor",
     durationMs: 200,
   },
+  // MX1b-1b. The box's fill is the selection colour on a Checkbox, its border on a Radio. Each glyph is
+  // sampled too: the tick and the dot fade on `fast`, which is the one opacity transition in either control.
+  {
+    slug: "checkbox",
+    story: "form-inputs-checkbox--motion",
+    interaction: "check OFF → ON: fill",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="off"]' },
+    target: '[data-kx-case="off"]',
+    property: "backgroundColor",
+    durationMs: 200,
+  },
+  {
+    slug: "checkbox",
+    story: "form-inputs-checkbox--motion",
+    interaction: "check OFF → ON: tick fades in",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="off"]' },
+    target: '[data-kx-case="off"] > span',
+    property: "opacity",
+    durationMs: 200,
+  },
+  {
+    slug: "checkbox",
+    story: "form-inputs-checkbox--motion",
+    interaction: "uncheck ON → OFF: fill",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="on"]' },
+    target: '[data-kx-case="on"]',
+    property: "backgroundColor",
+    durationMs: 200,
+  },
+  {
+    slug: "checkbox",
+    story: "form-inputs-checkbox--motion",
+    interaction: "rtl: check, fill",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="rtl"]' },
+    target: '[data-kx-case="rtl"]',
+    property: "backgroundColor",
+    durationMs: 200,
+  },
+  {
+    slug: "radio-group",
+    story: "form-inputs-radiogroup--motion",
+    interaction: "choose Pro: border",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="plan"] [role=radio][value=pro]' },
+    target: '[data-kx-case="plan"] [role=radio][value=pro]',
+    property: "borderColor",
+    durationMs: 200,
+  },
+  {
+    slug: "radio-group",
+    story: "form-inputs-radiogroup--motion",
+    interaction: "choose Pro: dot fades in",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="plan"] [role=radio][value=pro]' },
+    target: '[data-kx-case="plan"] [role=radio][value=pro] > span',
+    property: "opacity",
+    durationMs: 200,
+  },
+  {
+    slug: "radio-group",
+    story: "form-inputs-radiogroup--motion",
+    interaction: "Free released: dot fades out",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="plan"] [role=radio][value=pro]' },
+    target: '[data-kx-case="plan"] [role=radio][value=free] > span',
+    property: "opacity",
+    durationMs: 200,
+  },
+  {
+    slug: "radio-group",
+    story: "form-inputs-radiogroup--motion",
+    interaction: "rtl: choose, border",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="rtl"] [role=radio][value=pro]' },
+    target: '[data-kx-case="rtl"] [role=radio][value=pro]',
+    property: "borderColor",
+    durationMs: 200,
+  },
 ];
 
 /** A family member with no declared state is a coverage hole, not a pass. */
@@ -403,6 +485,15 @@ export function isIntermediate(a, mid, b) {
     if (hi - lo < PERCEPTIBLE_PX) return false; // the ends are the same; there is nothing to move between
     return nm > lo + 0.01 && nm < hi - 0.01;
   }
+  // A unitless number (opacity): the same betweenness test as a length, on its own scale.
+  const unitless = (v) => /^-?\d*\.?\d+$/.test(String(v).trim());
+  if ([a, mid, b].every(unitless)) {
+    const [x, m, y] = [a, mid, b].map(Number);
+    const lo = Math.min(x, y);
+    const hi = Math.max(x, y);
+    if (hi - lo < PERCEPTIBLE_OPACITY) return false;
+    return m > lo + 0.001 && m < hi - 0.001;
+  }
   const asMatrix = (v) => (String(v).trim() === "none" ? IDENTITY : parseMatrix(v));
   const [ma, mm, mb] = [a, mid, b].map(asMatrix);
   if (ma && mm && mb) {
@@ -423,6 +514,9 @@ export function isIntermediate(a, mid, b) {
   // change rendered in a single frame.
   return false;
 }
+
+/** Two opacities closer than this are the same to a reader. */
+export const PERCEPTIBLE_OPACITY = 0.05;
 
 /** Two colours closer than this, in 0–255 RGBA units, are the same colour to a reader. */
 export const PERCEPTIBLE_COLOR = 4;

@@ -122,6 +122,10 @@ than a halo around it (a toggle is large enough to carry one), drawn as an inset
 touches the selected background colour. It is keyed on `(hover: hover)` and `:enabled` like the rest of the
 family (MOTION.md, "Toggle and ToggleGroup").
 
+From MX1b-1b the Checkbox and Radio halo moves on `instant`, and checking, unchecking and mixed move the
+box's fill and edge on `fast`, with the tick, dash or dot fading in (MOTION.md, "Checkbox and RadioGroup").
+The states in the table above are unchanged.
+
 Why a halo and not a fill: an 18px box has no room inside it for a hover fill that is distinguishable from
 checked, and a darker edge alone is hard to see on a checked box. The halo is the same on every value, so
 hover means "this is the target" whether the control is on or off.

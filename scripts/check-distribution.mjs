@@ -22,6 +22,7 @@
  */
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { publicationEvidenceProblems } from "./marketing-publication-rules.mjs";
 
 const problems = [];
 const fail = (where, msg) => problems.push(`${where}: ${msg}`);
@@ -176,6 +177,15 @@ for (const asset of content.assets) {
   }
 }
 
+/* ---------------------------------------------- publication evidence (M1) */
+
+/**
+ * A published row names its live post, or (only before the rule existed) says why the repository has none.
+ * Also: one asset is published once per channel, and one post is the evidence for one record. The rules and
+ * their negative controls live in marketing-publication-rules.mjs / .test.mjs.
+ */
+problems.push(...publicationEvidenceProblems(register.rows, register.offCalendar ?? []));
+
 /* ---------------------------------------------- paid amplification */
 
 /**
@@ -289,8 +299,8 @@ for (const off of offCalendar) {
  * Asset ids and routes named in prose are checked too. A plan naming an asset that does not exist is the
  * most likely way this set of documents goes wrong, because prose has no schema.
  */
-const DOCS = ["marketing/distribution/README.md", "marketing/distribution/first-14-days.md", "marketing/distribution/github.md", "marketing/distribution/outreach.md"];
-const ID_SHAPE = /\b(?:LI|X|ART|COM|VIS|MOT)-\d{3}\b/g;
+const DOCS = ["marketing/distribution/README.md", "marketing/distribution/first-14-days.md", "marketing/distribution/github.md", "marketing/distribution/outreach.md", "marketing/distribution/execution-calendar.md"];
+const ID_SHAPE = /\b(?:LI|X|ART|COM|GH|VIS|MOT)-\d{3}\b/g;
 const visuals = new Set(JSON.parse(readFileSync("marketing/content/visuals/manifest.json", "utf8")).assets.map((v) => v.id));
 const motion = new Set([...readFileSync("marketing/content/motion-briefs.md", "utf8").matchAll(/\bMOT-\d{3}\b/g)].map((m) => m[0]));
 const briefs = new Set([...readFileSync("marketing/content/visual-briefs.md", "utf8").matchAll(/\bVIS-\d{3}\b/g)].map((m) => m[0]));

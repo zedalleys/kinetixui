@@ -17,6 +17,11 @@ validates. This file stays the schedule.
 
 The machine-readable version of every row is `register.json`, which `pnpm check:content` validates.
 
+**Execution from 2026-10-19** follows the rolling 14-day plan in
+[`../distribution/execution-calendar.md`](../distribution/execution-calendar.md), which carries overdue assets
+forward without changing any day offset below. `pnpm marketing:inventory` prints every asset's status and
+planned date from the registers.
+
 ## Cadence
 
 **2–3 original assets a week, plus repurposing.** Twenty assets in thirty days, from six content families.

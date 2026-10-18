@@ -116,6 +116,7 @@ class _EditorToolbarBlockState extends State<EditorToolbarBlock> {
 // kx-block:end
 
 void main() {
+  // kx-verify-block: interaction, accessibility
   testWidgets('formatting is named, and switches off with the editor', (WidgetTester tester) async {
     final SemanticsHandle handle = tester.ensureSemantics();
     await tester.pumpWidget(

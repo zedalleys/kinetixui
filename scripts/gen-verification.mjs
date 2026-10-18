@@ -373,6 +373,335 @@ for (const [slug, per] of Object.entries(evidence)) {
   }
 }
 
+/* ── blocks ───────────────────────────────────────────────────────────────────
+ *
+ * A block is a composition, and the evidence for its parts is not evidence for it: a tested Button says
+ * nothing about whether the sign-in form that contains it submits. So blocks get their own records, built
+ * by the same rules as components and kept apart from them.
+ *
+ *   SOURCE         blocks.manifest.json names one file per platform. The file must exist. A block is
+ *                  implemented on a platform only when the manifest names its OWN file there; the
+ *                  components it composes being available proves nothing.
+ *   BUILD          that file sits where a named CI job compiles it (BLOCK_BUILD), and the workflow really
+ *                  runs that command. A job that stops running it takes the record with it.
+ *   INTERACTION /  claimed per passage with `kx-verify-block: <kind>` — a marker distinct from `kx-verify:`,
+ *   ACCESSIBILITY  so a block test can never add evidence to the components it happens to render, and a
+ *                  component test can never add evidence to a block. A passage in a block's own source
+ *                  file covers that block; elsewhere, the blocks it covers are read from the block symbols
+ *                  it uses (`OrderSummaryBlock`, `block("order-summary")`), or from
+ *                  `kx-verify-covers: blocks.manifest.json` for a suite that walks the whole manifest.
+ *
+ * Where a test ran is a fact about the file, not a claim in it, and it decides what the evidence is worth.
+ * Only an observed runtime — a real browser here; a simulator, emulator or device for native — can make a
+ * block Runtime verified. Headless runs (jsdom, Robolectric, flutter_test) are recorded with their
+ * environment and never lift the block above Build verified: they prove the logic and the semantics tree, not what a
+ * person on a device meets. No native block has simulator, emulator or device evidence today.
+ */
+const BLOCK_KINDS = ["interaction", "accessibility"];
+const PUBLISHED_BLOCK = new Set(["beta", "stable", "deprecated"]);
+const BLOCK_MARKER = /kx-verify-block:\s*([a-zA-Z, ]+)\s*$/;
+/** Environments that observe the running block the way a person would. Nothing else earns Runtime verified. */
+export const RUNTIME_ENVIRONMENTS = ["chromium"];
+/** Where block evidence lives per platform, and the environment each file runs in (derived, never claimed). */
+// `runs`: the workflow step that executes the suite. A test is evidence only while CI runs it, so a suite whose
+// step is gone keeps its markers checked but records nothing. The browser suite is gated by runsInWorkflowStep.
+const BLOCK_TEST_SOURCES = {
+  React: [
+    { dir: "apps/web/src", match: /\.test\.tsx$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm --filter @kinetixui/web test" } },
+    { file: "scripts/blocks-runtime-browser.mjs", environment: "chromium" },
+  ],
+  Angular: [{ dir: "packages/ui-angular/src", match: /\.spec\.ts$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm test:angular" } }],
+  SwiftUI: [{ dir: "packages/ui-swiftui/Tests", match: /\.swift$/, environment: "xctest", runs: { workflow: "native-swiftui.yml", command: "swift test" } }],
+  Compose: [
+    { dir: "packages/ui-compose/ui/src/test", match: /\.kt$/, environment: "robolectric", runs: { workflow: "native-compose.yml", command: "./gradlew :ui:testDebugUnitTest" } },
+  ],
+  Flutter: [{ dir: "packages/ui-flutter/test", match: /_test\.dart$/, environment: "flutter_test", runs: { workflow: "native-flutter.yml", command: "flutter test" } }],
+};
+/** The CI step that compiles a platform's block files. `under` is the directory that step compiles. */
+const BLOCK_BUILD = {
+  React: { under: "apps/web/src/", workflow: "ci.yml", run: "pnpm build:web", what: "Next.js production build of apps/web" },
+  // No Angular entry, deliberately. `pnpm build:angular` (ng-packagr) compiles from src/public-api.ts only, and
+  // nothing there imports src/examples/blocks: a type error planted in a block still builds. The block spec runs
+  // them through Vitest, which transpiles without type-checking. Until a CI step compiles the blocks themselves,
+  // Angular blocks are Source present. (A strict ngc pass over them today fails on create-account.ts.)
+  SwiftUI: { under: "packages/ui-swiftui/", workflow: "native-swiftui.yml", run: "swift test", what: "swift test compiles the test target" },
+  Compose: { under: "packages/ui-compose/", workflow: "native-compose.yml", run: "./gradlew :ui:testDebugUnitTest", what: "Gradle compiles the unit-test source set" },
+  Flutter: { under: "packages/ui-flutter/", workflow: "native-flutter.yml", run: "flutter test", what: "flutter test compiles the test directory" },
+};
+
+/** Does `workflow` exist and run `command` in a step? A comment that mentions it does not count. */
+/**
+ * Does a workflow STEP run this script, directly or through a package.json wrapper? Stricter than runsInCI, which
+ * accepts a mention anywhere in a workflow: a block evidence source can make a block Runtime verified, so a path
+ * filter or a comment naming it must not count. Only a `run:` line does, and a wrapper only as a whole command
+ * name (`pnpm check:blocks-runtime`, not `pnpm check:blocks-runtime-old`).
+ */
+function runsInWorkflowStep(script) {
+  const dir = `${root}/.github/workflows`;
+  if (!existsSync(dir)) return false;
+  const pkg = JSON.parse(read("package.json"));
+  // the script exactly, optionally pointed at a server with `--base <url>`; any other argument (`--help`) may
+  // change what it does, so it is not a run of it
+  const direct = (c) => [`node ${script}`, `node ./${script}`].some((p) => c === p || new RegExp(`^${escapeRe(p)} --base https?://\\S+$`).test(c));
+  // a wrapper counts only when it EXECUTES the script, not when its text merely names it
+  const wrappers = Object.entries(pkg.scripts ?? {})
+    .filter(([, cmd]) => commandsOf([cmd]).some(direct))
+    .map(([name]) => new RegExp(`^(?:pnpm|npm|yarn)(?:\\s+run)?(?:\\s+-s)?\\s+${escapeRe(name)}$`));
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
+    .some((f) =>
+      commandsOf(runCommands(readFileSync(`${dir}/${f}`, "utf8"))).some(
+        (c) => direct(c) || wrappers.some((w) => w.test(c)),
+      ),
+    );
+}
+
+/**
+ * The commands a list of run lines executes: split on `&&`, trailing comments dropped. A command
+ * is matched from its start, so `echo 'swift test'` or `# swift test` is not a run of `swift test`.
+ */
+function commandsOf(lines) {
+  // Only `&&` chains count, because only there does every command's failure decide the exit status. `a || b`
+  // masks a's failure or runs b only when a failed, `a; b` exits with b's status (a package script runs without
+  // `-e`), and a pipe, background job or substitution changes what the exit status means, so such a line counts
+  // as nothing.
+  return lines
+    .map((l) => l.replace(/\s+#.*$/, ""))
+    .filter((l) => !/\|\||(?<!\|)\|(?!\|)|&(?!&)|;|`|\$\(/.test(l.replace(/&&/g, "")))
+    .map((l) => l.split(/&&/).map((c) => c.trim()).filter(Boolean))
+    .filter((cmds) => cmds.every(plainCommand))
+    .flat();
+}
+// An allowlist, not a list of shell tricks to reject: a command counts only when it starts with one of these
+// programs. A builtin (`exit`, `set`, `builtin exit`), an assignment prefix (`X=1 exit 0`), a keyword or a
+// function definition starts with none of them, so it cannot pass.
+const PROGRAMS = new Set(["pnpm", "npm", "npx", "yarn", "corepack", "node", "swift", "xcodebuild", "./gradlew", "gradle", "flutter", "dart", "cd", "mkdir", "cp", "echo", "printf", "cat", "ls", "git", "curl", "tar", "sleep", "sed"]);
+const plainCommand = (c) => PROGRAMS.has(c.split(/\s+/)[0]);
+/** One run line that is nothing but plain commands: not rejected by commandsOf, and every command an allowed program. */
+const plainLine = (line) => {
+  const l = line.replace(/\s+#.*$/, "").trim();
+  return !l.endsWith("\\") && commandsOf([l]).length > 0;
+};
+const escapeRe = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Is the `run:` at line `at` inside a step or a job that carries an `if:` or `continue-on-error:`? Read by indentation: the step is the
+ * nearest `- ` item above it, the job the mapping that holds that step's `steps:`. Conditions are not evaluated;
+ * any condition at all means the step may be skipped, and a skipped step is not evidence.
+ */
+function conditional(lines, at) {
+  const indentOf = (l) => l.search(/\S/);
+  const keyIndent = indentOf(lines[at].replace(/-\s+/, (d) => " ".repeat(d.length)));
+  // the step: the closest item line above (or on) the run whose dash sits left of the run key
+  let dash = -1;
+  for (let j = at; j >= 0; j--) {
+    const m = lines[j].match(/^(\s*)-\s/);
+    if (m && m[1].length < keyIndent) {
+      dash = j;
+      break;
+    }
+  }
+  if (dash < 0) return false;
+  const dashIndent = indentOf(lines[dash]);
+  const stepKeys = dashIndent + 2;
+  const within = (from, indent, test) => {
+    for (let j = from; j < lines.length; j++) {
+      if (j > from && lines[j].trim() && indentOf(lines[j]) <= indent) break;
+      if (test(lines[j])) return true;
+    }
+    return false;
+  };
+  // `continue-on-error` lets a failing step pass, which is the same as not knowing whether it ran clean
+  const ifAt = (n) => (l) => new RegExp(`^\\s{${n}}(?:if|continue-on-error):`).test(l.replace(/^(\s*)-\s/, (_, sp) => `${sp}  `));
+  if (within(dash, dashIndent, ifAt(stepKeys))) return true;
+  // the job: the line above `steps:` that opens the mapping `steps:` belongs to
+  for (let j = dash; j >= 0; j--) {
+    const m = lines[j].match(/^(\s*)steps:\s*$/);
+    if (!m) continue;
+    const jobKeys = m[1].length;
+    for (let k = j; k >= 0; k--) {
+      if (lines[k].trim() && indentOf(lines[k]) < jobKeys) return within(k, indentOf(lines[k]), ifAt(jobKeys));
+    }
+    return false;
+  }
+  return false;
+}
+
+/**
+ * The command lines of a workflow's `run:` steps, including the body of a block scalar. A literal `run: |` keeps
+ * its lines; a folded `run: >` is one line, as YAML joins it. Comment lines dropped.
+ */
+function runCommands(yaml) {
+  const out = [];
+  let block = null; // { indent of the `run:` key, folded?, lines } while a block scalar is being read
+  const flush = () => {
+    // A body is evidence only when it is a flat list of plain commands. Control flow (`if false; then … fi`), an
+    // early `exit 0`, `set +e`, a continuation or a masked line decide which of its commands run and whether a
+    // failure reaches the step's status, so one such line makes the whole body count as nothing.
+    if (block) {
+      const body = block.folded ? [block.lines.join(" ")] : block.lines;
+      if (body.every(plainLine)) out.push(...body);
+    }
+    block = null;
+  };
+  const lines = yaml.split("\n");
+  for (const [i, line] of lines.entries()) {
+    const indent = line.search(/\S/);
+    if (block) {
+      if (indent === -1) continue;
+      if (indent > block.indent) {
+        if (!line.trim().startsWith("#")) block.lines.push(line.trim());
+        continue;
+      }
+      flush();
+    }
+    const m = line.match(/^(\s*)(?:-\s+)?run:\s*(.*)$/);
+    if (!m) continue;
+    if (conditional(lines, i)) continue; // a step or job that may be skipped proves nothing ran
+    const scalar = m[2].match(/^([|>])[-+]?\s*$/);
+    if (scalar) block = { indent: line.indexOf("run:"), folded: scalar[1] === ">", lines: [] };
+    else out.push(m[2]);
+  }
+  flush();
+  return out;
+}
+
+function workflowRuns(workflow, command) {
+  const path = `${root}/.github/workflows/${workflow}`;
+  if (!existsSync(path)) return false;
+  return commandsOf(runCommands(readFileSync(path, "utf8"))).some((c) => c === command); // exactly: an extra flag (`swift test --help`) can turn it into a no-op
+}
+
+export function blockPassages(text) {
+  const lines = text.split("\n");
+  const out = [];
+  let current = null;
+  lines.forEach((line, i) => {
+    const m = line.match(BLOCK_MARKER);
+    if (m) {
+      if (current) out.push({ ...current, end: i });
+      // `kx-verify-block: end` closes a passage without opening one, so an unmarked test that follows a
+      // marked one in a shared suite is not swept into its claim.
+      const kinds = m[1].split(",").map((k) => k.trim()).filter(Boolean);
+      current = kinds.length === 1 && kinds[0] === "end" ? null : { kinds, covers: null, body: [], start: i + 1 };
+      return;
+    }
+    const c = current && line.match(COVERS);
+    if (c) current.covers = c[1];
+    else if (current) current.body.push(line);
+  });
+  // a file ending in a newline splits into a last empty string, which is not a line of the file
+  if (current) out.push({ ...current, end: lines.at(-1) === "" ? lines.length - 1 : lines.length });
+  return out;
+}
+
+const blocksManifest = existsSync(`${root}/blocks.manifest.json`) ? JSON.parse(read("blocks.manifest.json")).blocks : {};
+const blockSlugs = Object.keys(blocksManifest);
+/** file → { slug, platform } for every manifest-named block source */
+const blockFileOwner = new Map();
+for (const [slug, b] of Object.entries(blocksManifest)) {
+  for (const [platform, file] of Object.entries(b.sources ?? {})) {
+    if (!platforms.includes(platform)) errors.push(`${slug}: blocks.manifest.json names a source for unknown platform ${platform}`);
+    else blockFileOwner.set(file, { slug, platform });
+  }
+}
+
+/** The blocks a passage in a shared suite exercises, read from the symbols it uses. */
+function blocksNamedIn(body) {
+  const found = new Set();
+  for (const slug of blockSlugs) {
+    const symbol = new RegExp(`\\b${pascal(slug)}Block\\b`);
+    // `block(page, "receipt")`: the slug as any argument of a call to a function named `block`
+    const call = new RegExp(`\\bblock\\([^)]*["'\`]${slug}["'\`]`);
+    if (symbol.test(body) || call.test(body)) found.add(slug);
+  }
+  return [...found];
+}
+
+/** slug → platform → { source, build, interaction, accessibility } — each a list of { ref, environment? } */
+const blockEvidence = {};
+const blockRecord = (slug, platform, kind, entry) => {
+  const per = ((blockEvidence[slug] ??= {})[platform] ??= {});
+  const list = (per[kind] ??= []);
+  if (!list.some((e) => e.ref === entry.ref)) list.push(entry);
+};
+
+for (const [slug, b] of Object.entries(blocksManifest)) {
+  for (const [platform, file] of Object.entries(b.sources ?? {})) {
+    if (!platforms.includes(platform)) continue;
+    if (!existsSync(`${root}/${file}`)) {
+      errors.push(`${slug}: blocks.manifest.json names ${file} as its ${platform} source, which does not exist`);
+      continue;
+    }
+    blockRecord(slug, platform, "source", { ref: file });
+    const build = BLOCK_BUILD[platform];
+    if (build && file.startsWith(build.under) && workflowRuns(build.workflow, build.run)) {
+      blockRecord(slug, platform, "build", { ref: `.github/workflows/${build.workflow}: ${build.run} (${build.what})` });
+    }
+  }
+}
+
+for (const platform of platforms) {
+  for (const spec of BLOCK_TEST_SOURCES[platform] ?? []) {
+    const files = spec.file ? (existsSync(`${root}/${spec.file}`) ? [spec.file] : []) : walk(spec.dir, spec.match);
+    if (spec.file && files.length && spec.environment === "chromium" && !runsInWorkflowStep(spec.file)) {
+      errors.push(`${spec.file}: a ${platform} block evidence source that no workflow step in .github/workflows runs`);
+    }
+    const ran = spec.runs ? workflowRuns(spec.runs.workflow, spec.runs.command) : true;
+    for (const file of files.sort()) {
+      const claims = blockPassages(read(file));
+      for (const claim of claims) {
+        const where = `${file}:${claim.start}-${claim.end}`;
+        const unknown = claim.kinds.filter((k) => !BLOCK_KINDS.includes(k));
+        if (unknown.length) {
+          errors.push(`${where}: kx-verify-block names ${unknown.join(", ")} — a block test may claim only ${BLOCK_KINDS.join(", ")}`);
+          continue;
+        }
+        const owner = blockFileOwner.get(file);
+        let slugs;
+        if (owner) {
+          if (owner.platform !== platform) {
+            errors.push(`${where}: this is the ${owner.platform} source of ${owner.slug}, read as ${platform} evidence`);
+            continue;
+          }
+          slugs = [owner.slug];
+        } else if (claim.covers === "blocks.manifest.json") {
+          // every PUBLISHED block this platform implements: a draft is never rendered, so a suite that walks
+          // the manifest cannot have reached it
+          slugs = blockSlugs.filter((b) => PUBLISHED_BLOCK.has(blocksManifest[b].status) && blocksManifest[b].sources?.[platform]);
+        } else if (claim.covers) {
+          errors.push(`${where}: kx-verify-covers ${claim.covers} — a block passage may only cover blocks.manifest.json`);
+          continue;
+        } else {
+          slugs = blocksNamedIn(claim.body.join("\n"));
+        }
+        if (!slugs.length) {
+          errors.push(`${where}: claims ${claim.kinds.join(", ")} for a block but uses no block`);
+          continue;
+        }
+        for (const slug of slugs) {
+          if (!blocksManifest[slug].sources?.[platform]) {
+            errors.push(`${where}: exercises ${slug} on ${platform}, which blocks.manifest.json does not implement there`);
+            continue;
+          }
+          if (ran) for (const k of claim.kinds) blockRecord(slug, platform, k, { ref: where, environment: spec.environment });
+        }
+      }
+    }
+  }
+}
+
+/**
+ * The level a block's evidence earns on a platform. The same ladder as the /use-cases pages; exported so the
+ * guardrail tests hold this function to the rule rather than to a copy of it.
+ */
+export function blockLevelFrom(per) {
+  if (!per?.source?.length) return "not-implemented";
+  if (!per.build?.length) return "source";
+  const observed = (kind) => (per[kind] ?? []).some((e) => RUNTIME_ENVIRONMENTS.includes(e.environment));
+  return observed("interaction") && observed("accessibility") ? "runtime" : "build";
+}
+
 if (errors.length) {
   console.error(errors.map((e) => `  x ${e}`).join("\n"));
   console.error(`\ngen:verification failed — ${errors.length} problem(s).`);
@@ -398,6 +727,48 @@ const totals = Object.fromEntries(
   ]),
 );
 
+/** What a reader should know is missing, said as facts derived from the records rather than written by hand. */
+function blockLimitations(per) {
+  if (!per?.source?.length) return [];
+  const out = [];
+  if (!per.build?.length) out.push("no CI step compiles this file");
+  for (const kind of BLOCK_KINDS) {
+    const list = per[kind] ?? [];
+    if (!list.length) out.push(`no ${kind} test`);
+    else if (!list.some((e) => RUNTIME_ENVIRONMENTS.includes(e.environment))) {
+      const envs = [...new Set(list.map((e) => e.environment))].sort().join(", ");
+      out.push(`${kind} tested headless only (${envs}), not observed in a browser or on a device`);
+    }
+  }
+  return out;
+}
+
+const byBlock = {};
+for (const slug of blockSlugs) {
+  const per = blockEvidence[slug] ?? {};
+  byBlock[slug] = {
+    title: blocksManifest[slug].title,
+    platforms: Object.fromEntries(
+      platforms.map((p) => {
+        const e = per[p];
+        const row = { level: blockLevelFrom(e) };
+        for (const k of ["source", "build", ...BLOCK_KINDS]) if (e?.[k]?.length) row[k] = [...e[k]].sort((a, b) => a.ref.localeCompare(b.ref));
+        const limits = blockLimitations(e);
+        if (limits.length) row.limitations = limits;
+        return [p, row];
+      }),
+    ),
+  };
+}
+const blockTotals = Object.fromEntries(
+  platforms.map((p) => [
+    p,
+    Object.fromEntries(
+      ["not-implemented", "source", "build", "runtime"].map((l) => [l, Object.values(byBlock).filter((b) => b.platforms[p].level === l).length]),
+    ),
+  ]),
+);
+
 const data = {
   $schema: "https://kinetixui.com/schema/verification.json",
   $description:
@@ -412,6 +783,10 @@ const data = {
   totals,
   sources,
   components: byComponent,
+  blockKinds: BLOCK_KINDS,
+  runtimeEnvironments: RUNTIME_ENVIRONMENTS,
+  blockTotals,
+  blocks: byBlock,
 };
 
 const body = JSON.stringify(data, null, 2) + "\n";
@@ -428,4 +803,10 @@ if (CHECK) {
 const line = platforms
   .map((p) => `${p} ${KINDS.map((k) => `${k}:${totals[p][k]}`).join(" ")}`)
   .join("\n  ");
-console.log(`${CHECK ? "check:verification ok" : "gen:verification"} — evidence for ${Object.keys(byComponent).length} components\n  ${line}`);
+const blockLine = platforms
+  .map((p) => `${p} ${Object.entries(blockTotals[p]).map(([l, n]) => `${l}:${n}`).join(" ")}`)
+  .join("\n  ");
+console.log(
+  `${CHECK ? "check:verification ok" : "gen:verification"} — evidence for ${Object.keys(byComponent).length} components\n  ${line}\n` +
+    `blocks (${blockSlugs.length}):\n  ${blockLine}`,
+);
