@@ -46,6 +46,9 @@ A passage earns credit only when all of these hold:
      - `swift test`
      - `./gradlew :ui:testDebugUnitTest`
      - `flutter test`
+   - Each package script that command goes through must itself be exactly the next command: `packages/ui`,
+     `packages/ui-angular` and `apps/web` `test` are `vitest run`, and the root `test:angular` is
+     `pnpm --filter @kinetixui/angular test`. A wrapper repointed at `echo` or `vitest run || true` loses the credit.
    - The browser scripts must be run by a step of their own, directly or through their package script.
    - The step loses its credit if it has an `if:` or `continue-on-error`, or if it is masked:
      - `|| true` or `; true`;
@@ -56,7 +59,7 @@ A passage earns credit only when all of these hold:
    the test.
 5. **It skips nothing.** A passage containing a skipped test loses its credit. The skip forms recognised are:
    - `it.skip`, `xit`, `describe.skip`, `it.todo` and `skipIf`;
-   - `XCTSkip` and `.disabled(`;
+   - `XCTSkip` and the Swift Testing trait `@Test(.disabled(…))` (not the SwiftUI `.disabled(` view modifier);
    - `@Ignore`, `@Disabled` and JUnit assumptions;
    - Dart `skip:`.
 

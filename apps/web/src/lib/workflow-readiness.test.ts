@@ -126,6 +126,9 @@ describe("evidence levels: negative controls", () => {
     expect(skipIn("a.spec.ts", "xit('x', () => {})")).toBe("xit(");
     expect(skipIn("a.spec.ts", "describe.skipIf(ci)('x', () => {})")).toBe("describe.skipIf");
     expect(skipIn("A.swift", "throw XCTSkip(\"later\")")).toBe("XCTSkip");
+    expect(skipIn("A.swift", "@Test(.disabled(\"later\")) func x() {}")).toMatch(/\.disabled\s*\($/);
+    // the SwiftUI view modifier, which a disabled-state test uses, is not a skip
+    expect(skipIn("A.swift", "Button(\"Save\") {}.disabled(true)")).toBeNull();
     expect(skipIn("A.kt", "@Ignore\n@Test fun x() {}")).toBe("@Ignore");
     expect(skipIn("a_test.dart", "testWidgets('x', (t) async {}, skip: true);")).toBe("skip: true");
     expect(skipIn("overlays.mjs", "return { skip: true };")).toBeNull();

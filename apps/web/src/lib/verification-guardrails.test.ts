@@ -79,6 +79,8 @@ function extraEvidenceScripts(): string[] {
 
 /** The CI steps that run the component unit suites (TEST_SOURCES `runs` in gen-verification.mjs). */
 const UNIT_SUITE_STEPS = ["pnpm --filter @kinetixui/ui test", "pnpm test:angular"];
+/** The root wrapper `pnpm test:angular` goes through, as the real package.json has it. */
+const ROOT_SCRIPTS = { "test:angular": "pnpm --filter @kinetixui/angular test" };
 
 const temps: string[] = [];
 function fixture(files: Record<string, string>, manifest: unknown = MANIFEST) {
@@ -95,7 +97,11 @@ function fixture(files: Record<string, string>, manifest: unknown = MANIFEST) {
     writeFileSync(join(dir, script), "// no markers\n");
   }
   // a test is evidence only while a CI step runs its suite, so the fixture runs them, as ci.yml does
-  writeFileSync(join(dir, "package.json"), JSON.stringify({ scripts: { "test:angular": "pnpm --filter @kinetixui/angular test" } }));
+  writeFileSync(join(dir, "package.json"), JSON.stringify({ scripts: ROOT_SCRIPTS }));
+  for (const pkg of ["packages/ui", "packages/ui-angular", "apps/web"]) {
+    mkdirSync(join(dir, pkg), { recursive: true });
+    writeFileSync(join(dir, pkg, "package.json"), JSON.stringify({ scripts: { test: "vitest run" } }));
+  }
   mkdirSync(join(dir, ".github/workflows"), { recursive: true });
   writeFileSync(join(dir, ".github/workflows/ci.yml"), `jobs:\n  ci:\n    steps:\n${UNIT_SUITE_STEPS.map((c) => `      - run: ${c}\n`).join("")}${extraEvidenceScripts().map((s) => `      - run: node ${s}\n`).join("")}`);
   for (const [rel, body] of Object.entries(files)) {
@@ -310,7 +316,7 @@ function blockFixture(
 ) {
   return fixture({
     "blocks.manifest.json": JSON.stringify(blocks),
-    "package.json": JSON.stringify({ scripts }),
+    "package.json": JSON.stringify({ scripts: { ...ROOT_SCRIPTS, ...scripts } }),
     "apps/web/src/examples/blocks/sign-in.tsx": "export function SignInBlock() { return null }\n",
     "apps/web/src/examples/blocks/stat-cards.tsx": "export function StatCardsBlock() { return null }\n",
     "packages/ui-angular/src/examples/blocks/sign-in.ts": "export class SignInBlock {}\n",
@@ -650,6 +656,26 @@ describe("component tiers: negative controls (ENG-2b-5)", () => {
     }
     // the suite's step removed entirely
     expect(levels({ ...reactTest(BOTH), ...ciWith(["pnpm test:angular"]) }).componentLevels.button!.React!.level).toBe("build");
+  });
+
+  it("e2. takes the credit away when a package script behind the CI step stops running the tests", () => {
+    for (const [pkg, script] of [
+      ["packages/ui/package.json", "echo vitest run"],
+      ["packages/ui/package.json", "vitest run || true"],
+      ["packages/ui/package.json", "true"],
+      ["packages/ui/package.json", "vitest run --help"],
+    ] as const) {
+      const out = levels({ ...reactTest(BOTH), [pkg]: JSON.stringify({ scripts: { test: script } }) });
+      expect(out.componentLevels.button!.React!.level, script).toBe("build");
+      expect(out.uncredited.map((u) => u.ref), script).toContain("packages/ui/src/x.test.tsx");
+    }
+    // the package script gone
+    expect(levels({ ...reactTest(BOTH), "packages/ui/package.json": "{}" }).componentLevels.button!.React!.level).toBe("build");
+    // the Angular root wrapper repointed: Angular unit evidence earns nothing, React is untouched
+    const angular = `// kx-verify: interaction\nKxButton;\n// kx-verify: accessibility\nKxButton;\n`;
+    const repointed = levels({ ...reactTest(BOTH), "packages/ui-angular/src/x.spec.ts": angular, "package.json": JSON.stringify({ scripts: { "test:angular": "echo skipped" } }) });
+    expect(repointed.componentLevels.button!.React!.level).toBe("headless");
+    expect(repointed.uncredited.map((u) => u.ref)).toContain("packages/ui-angular/src/x.spec.ts");
   });
 
   it("f. does not let a test of one component verify another", () => {

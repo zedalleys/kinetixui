@@ -107,12 +107,18 @@ const COVERS = /kx-verify-covers:\s*(\S+)/;
  *
  * `runs` is the CI step that executes the `dirs` suites, matched exactly and only when the step is unconditional
  * (the same rules as the block suites). A suite no step runs is not evidence: its markers are still checked, and
- * it records nothing. An `extra` script must itself be run by a workflow step, directly or through its package
- * script.
+ * it records nothing. `runs.scripts` are the package scripts that command goes through, each of which must be exactly
+ * the next command (see suiteRuns). An `extra` script must itself be run by a workflow step, directly or through its
+ * package script.
  */
+// `pnpm test:angular` reaches Vitest through two package scripts, and each must be exactly the next command.
+const ANGULAR_SUITE_SCRIPTS = [
+  { pkg: "package.json", name: "test:angular", is: "pnpm --filter @kinetixui/angular test" },
+  { pkg: "packages/ui-angular/package.json", name: "test", is: "vitest run" },
+];
 const TEST_SOURCES = {
-  React: { dirs: ["packages/ui/src"], match: /\.test\.tsx$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm --filter @kinetixui/ui test" }, extra: ["scripts/a11y-browser.mjs", "scripts/large-text.mjs", "scripts/motion.mjs"], extraEnvironment: "chromium" },
-  Angular: { dirs: ["packages/ui-angular/src"], match: /\.spec\.ts$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm test:angular" }, extra: ["scripts/angular-browser.mjs", "scripts/angular-overlays.mjs", "scripts/angular-collections.mjs", "scripts/angular-layout.mjs"], extraEnvironment: "chromium" },
+  React: { dirs: ["packages/ui/src"], match: /\.test\.tsx$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm --filter @kinetixui/ui test", scripts: [{ pkg: "packages/ui/package.json", name: "test", is: "vitest run" }] }, extra: ["scripts/a11y-browser.mjs", "scripts/large-text.mjs", "scripts/motion.mjs"], extraEnvironment: "chromium" },
+  Angular: { dirs: ["packages/ui-angular/src"], match: /\.spec\.ts$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm test:angular", scripts: ANGULAR_SUITE_SCRIPTS }, extra: ["scripts/angular-browser.mjs", "scripts/angular-overlays.mjs", "scripts/angular-collections.mjs", "scripts/angular-layout.mjs"], extraEnvironment: "chromium" },
   SwiftUI: { dirs: ["packages/ui-swiftui/Tests"], match: /\.swift$/, environment: "xctest", runs: { workflow: "native-swiftui.yml", command: "swift test" } },
   Compose: { dirs: ["packages/ui-compose/ui/src/test"], match: /\.kt$/, environment: "robolectric", runs: { workflow: "native-compose.yml", command: "./gradlew :ui:testDebugUnitTest" } },
   Flutter: { dirs: ["packages/ui-flutter/test"], match: /_test\.dart$/, environment: "flutter_test", runs: { workflow: "native-flutter.yml", command: "flutter test" } },
@@ -320,7 +326,7 @@ for (const platform of platforms) {
     continue;
   }
   const files = [...spec.dirs.flatMap((d) => walk(d, spec.match)), ...(spec.extra ?? [])].sort();
-  const suitesRun = spec.runs ? workflowRuns(spec.runs.workflow, spec.runs.command) : false;
+  const suitesRun = spec.runs ? suiteRuns(spec.runs) : false;
   for (const script of spec.extra ?? []) {
     // A standalone script is evidence only if CI runs it. The suites found by `dirs` are covered by
     // `pnpm test`; an `extra` script has no such home, and one was added here, published `largeText` for
@@ -452,10 +458,10 @@ const BLOCK_MARKER = /kx-verify-block:\s*([a-zA-Z, ]+)\s*$/;
 // step is gone keeps its markers checked but records nothing. The browser suite is gated by runsInWorkflowStep.
 const BLOCK_TEST_SOURCES = {
   React: [
-    { dir: "apps/web/src", match: /\.test\.tsx$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm --filter @kinetixui/web test" } },
+    { dir: "apps/web/src", match: /\.test\.tsx$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm --filter @kinetixui/web test", scripts: [{ pkg: "apps/web/package.json", name: "test", is: "vitest run" }] } },
     { file: "scripts/blocks-runtime-browser.mjs", environment: "chromium" },
   ],
-  Angular: [{ dir: "packages/ui-angular/src", match: /\.spec\.ts$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm test:angular" } }],
+  Angular: [{ dir: "packages/ui-angular/src", match: /\.spec\.ts$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm test:angular", scripts: ANGULAR_SUITE_SCRIPTS } }],
   SwiftUI: [{ dir: "packages/ui-swiftui/Tests", match: /\.swift$/, environment: "xctest", runs: { workflow: "native-swiftui.yml", command: "swift test" } }],
   Compose: [
     { dir: "packages/ui-compose/ui/src/test", match: /\.kt$/, environment: "robolectric", runs: { workflow: "native-compose.yml", command: "./gradlew :ui:testDebugUnitTest" } },
@@ -637,6 +643,21 @@ function runCommands(yaml) {
   return out;
 }
 
+/**
+ * Does CI run this test suite? The step must run `runs.command` exactly, and every package script it goes through
+ * (`runs.scripts`, in order) must itself be exactly the next command: a step that still says `pnpm test:angular`
+ * proves nothing once the wrapper is repointed at `echo`, `true` or `vitest run || true`.
+ */
+function suiteRuns(runs) {
+  if (!workflowRuns(runs.workflow, runs.command)) return false;
+  return (runs.scripts ?? []).every(({ pkg, name, is }) => {
+    if (!existsSync(`${root}/${pkg}`)) return false;
+    const script = JSON.parse(read(pkg)).scripts?.[name];
+    // exactly, as the CI step is matched: any chain, mask or extra flag (`vitest run --help`) is not a run of it
+    return typeof script === "string" && script.trim() === is;
+  });
+}
+
 function workflowRuns(workflow, command) {
   const path = `${root}/.github/workflows/${workflow}`;
   if (!existsSync(path)) return false;
@@ -718,7 +739,7 @@ for (const platform of platforms) {
     if (spec.file && files.length && spec.environment === "chromium" && !runsInWorkflowStep(spec.file)) {
       errors.push(`${spec.file}: a ${platform} block evidence source that no workflow step in .github/workflows runs`);
     }
-    const ran = spec.runs ? workflowRuns(spec.runs.workflow, spec.runs.command) : true;
+    const ran = spec.runs ? suiteRuns(spec.runs) : true;
     for (const file of files.sort()) {
       const claims = blockPassages(read(file));
       for (const claim of claims) {

@@ -44,12 +44,13 @@ export function levelFrom({ implemented, source = true, build, interaction = [],
 
 /**
  * Does a passage skip a test? A skipped test proves nothing, so the whole passage loses its credit. Per language,
- * the framework's own skip forms; `skip: true` alone is Dart's, so a browser suite returning `{ skip: true }` is
+ * the framework's own skip forms. Swift's `.disabled(` counts only as a Swift Testing `@Test` trait, since it is also
+ * the ordinary SwiftUI view modifier; `skip: true` alone is Dart's, so a browser suite returning `{ skip: true }` is
  * not read as one.
  */
 const SKIPS = [
   { files: /\.(?:tsx?|mjs)$/, re: /\b(?:it|test|describe|suite)\.(?:skip|todo|fixme|skipIf|runIf)\b|\bx(?:it|describe|test)\s*\(/ },
-  { files: /\.swift$/, re: /\bXCTSkip\w*|\.disabled\s*\(|\bfunc\s+DISABLED_/ },
+  { files: /\.swift$/, re: /\bXCTSkip\w*|@Test\s*\([^\n]*\.disabled\s*\(|\bfunc\s+DISABLED_/ },
   { files: /\.kt$/, re: /@Ignore\b|@Disabled\b|\bassume(?:True|False|That)\s*\(|\bAssume\./ },
   { files: /\.dart$/, re: /\bskip\s*:\s*(?:true|['"])/ },
 ];
