@@ -77,12 +77,18 @@ MX1d moved the Compose column (2026-10-18). What each tick means there:
 - **Runtime ○** — no emulator job exists, and nothing measured an interpolated colour. Robolectric is a JVM
   host.
 
-Compose's Switch is not ticked for Impl: `selection-control` covers the thumb and the track colour, and
-`Switch.kt` animates only `thumbOffset` while the track colour is applied directly. Its Auto tick is for the
-thumb, which `SwitchMotionTest.kt` checks. `KinetixSwitchMotion.kt` itself does use the pairing and stays a
-contract consumer, so the role's maturity is unchanged; the gap is the component not routing the track through it.
+**Historical, superseded by the MX1d notes above.** The rest of this section is the audit as it stood
+before MX1d; where it and the notes above disagree, the notes above are current. It is kept because the
+matrix is only readable next to the state it was measured from.
 
-What is there today, by platform (file:line from the tree at 4980c21):
+~~Compose's Switch is not ticked for Impl: `selection-control` covers the thumb and the track colour, and
+`Switch.kt` animates only `thumbOffset` while the track colour is applied directly.~~ The track joined the
+thumb on `KinetixSwitchMotion` in MX1d, which was the stated condition, and the Impl tick above is that
+change. `KinetixSwitchMotion.kt` itself always used the pairing and stays a contract consumer, so the role's
+maturity is unchanged either way.
+
+What was there **before MX1d**, by platform (file:line from the tree at 4980c21) — the audit record, not the
+current state:
 
 | | Angular | SwiftUI | Compose | Flutter |
 | --- | --- | --- | --- | --- |
