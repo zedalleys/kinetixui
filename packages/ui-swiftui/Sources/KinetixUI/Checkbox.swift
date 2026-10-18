@@ -78,6 +78,9 @@ public struct KinetixCheckbox: View {
         // VoiceOver at all. The value carries all three; the trait stays for the fully-checked one.
         .accessibilityValue(state.accessibilityValue)
         .accessibilityAddTraits(state.isFullySelected ? [.isSelected] : [])
-        .kinetixToggleTrait()
+        // No `.isToggle` here, deliberately. This is a Button, and Apple defines button + toggle as a
+        // SWITCH button, so adding the trait would have VoiceOver call every checkbox — mixed ones
+        // included — a switch. The value above is what carries the three states; a checkbox-specific
+        // representation is a separate question from this slice's defect.
     }
 }

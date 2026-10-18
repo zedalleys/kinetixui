@@ -52,7 +52,10 @@ enum KinetixTriState: Equatable {
 }
 
 extension View {
-    /// Adds the toggle trait where the OS has one.
+    /// Adds the toggle trait where the OS has one. For `KinetixSwitch` only.
+    ///
+    /// It belongs to a control that IS a switch. Applied to a button that is not one — a checkbox, say —
+    /// button + toggle is Apple's switch button, and VoiceOver would announce a checkbox as a switch.
     ///
     /// `AccessibilityTraits.isToggle` is iOS 17 / macOS 14; this package's floor is iOS 16 / macOS 13
     /// (see `Package.swift`), so it is applied behind an availability check rather than by raising the

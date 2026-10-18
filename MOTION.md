@@ -238,7 +238,7 @@ swapped in one frame. They now route through `KinetixSelectionMotion`, which is 
 | Reduced form | `nil` animation under `@Environment(\.accessibilityReduceMotion)`: the same end state, not interpolated | — |
 | Interruption | SwiftUI retargets from the current colour | — |
 | Final state | the state's colour; the accessibility value is set from the same state and takes no motion parameter | — |
-| Focus / SR | Checkbox announces `accessibilityValue` Unchecked / Mixed / Checked and carries `.isSelected` only when fully checked; Switch and Checkbox add `.isToggle` on iOS 17 / macOS 14; RadioGroup is an `.accessibilityElement(children: .contain)` with an optional label | — |
+| Focus / SR | Checkbox announces `accessibilityValue` Unchecked / Mixed / Checked and carries `.isSelected` only when fully checked; Switch adds `.isToggle` on iOS 17 / macOS 14 (the Checkbox does not: button + toggle is Apple's switch button, so it would be announced as a switch); RadioGroup is an `.accessibilityElement(children: .contain)` with an optional label | — |
 | RTL | colour is direction-free | — |
 
 Evidence, stated exactly: **Build verified**. `swift build` and `swift test` compile and run on the macOS
