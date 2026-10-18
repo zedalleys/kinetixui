@@ -902,6 +902,51 @@ const EXTRA = {
     </div>
   )`,
     },
+    {
+      // MX1b-1c, selection-control motion: switches at rest off and on, one whose owner turns it on and off from
+      // outside (each \`data-kx-action\` sets one state), a required switch in a form with a reset, a disabled one,
+      // and a switch in a right-to-left row. \`check:switch-motion\` drives these.
+      name: "Motion",
+      imports: "Button KinetixDirectionProvider Label",
+      render: `() => {
+    const [owned, setOwned] = React.useState(false);
+    return (
+      <div className="grid w-full max-w-[22rem] gap-4">
+        {([
+          ["off", "Push notifications", {}],
+          ["on", "Weekly digest", { defaultChecked: true }],
+          ["disabled", "SMS alerts (add a phone first)", { disabled: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="flex flex-wrap items-center justify-between gap-4">
+            <Label htmlFor={\`swm-\${key}\`}>{label}</Label>
+            <Switch id={\`swm-\${key}\`} data-kx-case={key} {...props} />
+          </div>
+        ))}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <Label htmlFor="swm-owned">Sync over mobile data</Label>
+          <Switch id="swm-owned" data-kx-case="owned" checked={owned} onCheckedChange={setOwned} />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="Outline" data-kx-action="checked" onClick={() => setOwned(true)}>Turn on</Button>
+          <Button size="sm" variant="Outline" data-kx-action="unchecked" onClick={() => setOwned(false)}>Turn off</Button>
+        </div>
+        <form aria-label="Consent" className="flex flex-wrap items-center justify-between gap-4">
+          <Label htmlFor="swm-required">Accept the terms</Label>
+          <div className="flex flex-wrap items-center gap-2">
+            <Switch id="swm-required" name="terms" required data-kx-case="required" />
+            <Button size="sm" variant="Outline" type="reset" data-kx-action="reset">Reset</Button>
+          </div>
+        </form>
+        <KinetixDirectionProvider dir="rtl">
+          <div dir="rtl" lang="ar" className="flex flex-wrap items-center justify-between gap-4">
+            <Label htmlFor="swm-rtl">الإشعارات</Label>
+            <Switch id="swm-rtl" data-kx-case="rtl" />
+          </div>
+        </KinetixDirectionProvider>
+      </div>
+    );
+  }`,
+    },
   ],
   "segmented-control": [
     {

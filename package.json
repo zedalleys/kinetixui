@@ -47,6 +47,7 @@
     "check:loop-motion": "node scripts/loop-motion.mjs",
     "check:toggle-motion": "node scripts/toggle-motion.mjs",
     "check:checkbox-radio-motion": "node scripts/checkbox-radio-motion.mjs",
+    "check:switch-motion": "node scripts/switch-motion.mjs",
     "check:card-visual": "node scripts/card-visual.mjs",
     "check:selection-visual": "node scripts/selection-visual.mjs",
     "check:entry-visual": "node scripts/entry-visual.mjs",

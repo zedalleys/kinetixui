@@ -389,6 +389,19 @@
         ]
       },
       {
+        "file": "packages/ui/src/switch-motion.test.tsx",
+        "kinds": [
+          "interaction",
+          "rtl"
+        ],
+        "components": [
+          "direction-provider",
+          "form",
+          "label",
+          "switch"
+        ]
+      },
+      {
         "file": "packages/ui/src/toggle-motion.test.tsx",
         "kinds": [
           "interaction",
@@ -2813,6 +2826,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259",
           "packages/ui/src/components-selection.test.tsx:138-208",
           "packages/ui/src/components-transactional.test.tsx:255-317",
+          "packages/ui/src/switch-motion.test.tsx:261-301",
           "packages/ui/src/toggle-motion.test.tsx:217-281"
         ],
         "published": [
@@ -3209,7 +3223,8 @@
         ],
         "interaction": [
           "packages/ui/src/checkbox-radio-motion.test.tsx:253-448",
-          "packages/ui/src/components-form.test.tsx:39-310"
+          "packages/ui/src/components-form.test.tsx:39-310",
+          "packages/ui/src/switch-motion.test.tsx:27-260"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -3692,7 +3707,8 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-form.test.tsx:39-310"
+          "packages/ui/src/components-form.test.tsx:39-310",
+          "packages/ui/src/switch-motion.test.tsx:27-260"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -5720,14 +5736,16 @@
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:315-544",
           "packages/ui/src/components-selection.test.tsx:138-208",
-          "packages/ui/src/components-selection.test.tsx:27-137"
+          "packages/ui/src/components-selection.test.tsx:27-137",
+          "packages/ui/src/switch-motion.test.tsx:27-260"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
         ],
         "rtl": [
-          "packages/ui/src/components-selection.test.tsx:138-208"
+          "packages/ui/src/components-selection.test.tsx:138-208",
+          "packages/ui/src/switch-motion.test.tsx:261-301"
         ],
         "largeText": [
           "scripts/large-text.mjs:99-738"

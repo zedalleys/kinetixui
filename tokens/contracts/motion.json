@@ -50,12 +50,13 @@
       "easing": ["standard"],
       "properties": ["background-color", "box-shadow", "inset-inline-start (thumb)"],
       "reducedForm": "shorten",
-      "evidence": ["scripts/motion.mjs", "apps/web/src/lib/motion-contract.test.ts"],
+      "evidence": ["scripts/motion.mjs", "apps/web/src/lib/motion-contract.test.ts", "scripts/switch-motion.mjs", "packages/ui/src/switch-motion.test.tsx"],
+      "note": "Switch only, on purpose: its thumb is a physical control, so the thumb's travel, the track colour and the halo all run on instant. It is not selection-state (fast), and the two are not to be normalised (owner decision 2026-10-17, re-confirmed for MX1b-1c). React MX1b-1c measured the thumb frame by frame in Chromium (forward only, no overshoot, mirrored in RTL, aria-checked first) and added the registry reduced form and a forced-colours thumb.",
       "consumers": [
         {
           "platform": "react",
           "file": "packages/ui/src/components/switch.tsx",
-          "expects": ["transition-[background-color,box-shadow] duration-instant ease-standard", "transition-[inset-inline-start] duration-instant ease-standard"]
+          "expects": ["transition-[background-color,box-shadow] duration-instant ease-standard", "transition-[inset-inline-start] duration-instant ease-standard", "motion-reduce:transition-none"]
         },
         {
           "platform": "swiftui",

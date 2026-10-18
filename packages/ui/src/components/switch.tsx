@@ -13,6 +13,13 @@ import { cn } from "../lib/utils";
  * under the pointer, the thumb's position is the shape cue for on/off, the focus ring cannot be covered by
  * any other layer, and a disabled switch does not answer the pointer. The off track stays `--tertiary`
  * (2.6:1, a tracked SC 1.4.11 exception in check-contrast.mjs): the thumb and `aria-checked` carry it.
+ *
+ * Motion (MOTION.md, "Switch"): `selection-control`, on purpose not Toggle's or Checkbox's `selection-state`.
+ * The thumb's travel, the track colour and the 5px halo all run on `instant` (100ms) `standard`, because the
+ * thumb is a physical control that should land with the finger, not a colour settling. `aria-checked` and
+ * `data-state` change at once; only paint follows. `motion-reduce:transition-none` is the reduced form for a
+ * registry install, which does not get the preset's global reduced-motion floor (check-registry-motion.mjs):
+ * without it, such a reader's thumb still slid on Tailwind's default 150ms.
  */
 const Switch = React.forwardRef<
   React.ElementRef<typeof SwitchPrimitive.Root>,
@@ -23,6 +30,7 @@ const Switch = React.forwardRef<
     className={cn(
       "peer inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent",
       "transition-[background-color,box-shadow] duration-instant ease-standard",
+      "motion-reduce:transition-none",
       "data-[state=checked]:bg-action data-[state=unchecked]:bg-tertiary",
       "[@media(hover:hover)]:enabled:hover:[box-shadow:0_0_0_5px_hsl(var(--foreground)/0.08)]",
       // Pressed is written twice: bare for touch, and again inside the hover media query, because Tailwind
@@ -50,7 +58,11 @@ const Switch = React.forwardRef<
         // Storybook — a consumer's toolchain can do the same. A logical property needs no selector at all.
         // The offset is relative, so nothing around the switch reflows while it moves.
         "transition-[inset-inline-start] duration-instant ease-standard",
+        "motion-reduce:transition-none",
         "start-0 data-[state=checked]:start-6",
+        // Forced colours repaint both the track and the thumb's fill as Canvas and strip the shadow, so the
+        // thumb, the only on/off cue, vanished and on read the same as off. A system colour is honoured there.
+        "forced-colors:bg-[CanvasText] forced-colors:data-[disabled]:bg-[GrayText]",
       )}
     />
   </SwitchPrimitive.Root>

@@ -29,6 +29,7 @@ on:
       - "scripts/motion-states.mjs"
       - "scripts/toggle-motion.mjs"
       - "scripts/checkbox-radio-motion.mjs"
+      - "scripts/switch-motion.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
       - "scripts/iot-monitoring.mjs"
@@ -66,6 +67,7 @@ on:
       - "scripts/motion-states.mjs"
       - "scripts/toggle-motion.mjs"
       - "scripts/checkbox-radio-motion.mjs"
+      - "scripts/switch-motion.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
       - "scripts/iot-monitoring.mjs"
@@ -154,6 +156,13 @@ jobs:
       # rapid input, forced colours, right-to-left placement and keys, and the same 64-cell matrix.
       - name: Checkbox and RadioGroup motion (glyph matches state, selection 200ms, halo 100ms, touch, rapid input, forced colours, RTL)
         run: pnpm check:checkbox-radio-motion
+
+      # MX1b-1c: Switch stays on selection-control (instant), not selection-state. Its thumb, track and halo on
+      # 100ms standard, the thumb sampled every frame of a move (starts, only goes forward, no overshoot, lands,
+      # mirrored in RTL) with aria-checked already changed, touch, rapid input and mid-travel reversal, form
+      # reset, forced colours (the thumb is still drawn), and a 32-cell viewport, theme, direction and text matrix.
+      - name: Switch motion (thumb 100ms, no overshoot, semantics first, touch, rapid input, form, forced colours, RTL)
+        run: pnpm check:switch-motion
 
       # The React Tabs indicator is one bar that travels to the chosen tab; the motion pass proves it moves.
       # This proves it lands on the right tab where strips break: an overflowing strip scrolled by pointer,
