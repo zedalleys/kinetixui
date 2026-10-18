@@ -238,6 +238,9 @@ export interface AttributionInput {
   ownHostname: string;
 }
 
+/** The four tagged values a URL can carry, each already normalised. */
+type AcquisitionParams = ReturnType<typeof readAcquisitionParams>;
+
 /** Only the four allowed keys are read; each is normalised at once and the raw values go out of scope. */
 function readAcquisitionParams(search: string) {
   const params = new URLSearchParams(search);
@@ -474,13 +477,21 @@ function browserInput(): AttributionInput | null {
 let context: Readonly<Record<string, string>> = Object.freeze({});
 
 /**
- * A page that carries one of OUR campaign tags (a valid `kx_` campaign) whose source, medium, campaign or content
- * differs from the tab's stored record is a new tagged arrival, and it starts a new session entry. Untagged pages,
- * referrers and a reload of the same tagged URL never do, so internal navigation keeps the campaign.
+ * A page that carries one of OUR campaign tags (a valid `kx_` campaign) whose tagged values differ from the tab's
+ * stored record is a new tagged arrival, and it starts a new session entry. Untagged pages, referrers and a reload
+ * of the same tagged URL never do, so internal navigation keeps the campaign.
+ *
+ * Only values the QUERY STRING carries are compared, never a derived one. A derived source depends on the
+ * referrer: the same tagged URL reached from LinkedIn and then reloaded (an internal referrer, so `direct`)
+ * derives two different sources, and comparing those would treat a reload as a new arrival and lose the channel.
+ * `campaign` and `content` come from the query only; a tagged `medium` is always used as given; a tagged source
+ * decides the record only when it is a recognised alias, which is why `other` does not count here.
  */
-function isNewTaggedArrival(here: Attribution, stored: Attribution): boolean {
+function isNewTaggedArrival(here: Attribution, stored: Attribution, tagged: AcquisitionParams): boolean {
   if (!here.campaign) return false;
-  return here.campaign !== stored.campaign || here.source !== stored.source || here.medium !== stored.medium || here.content !== stored.content;
+  if (here.campaign !== stored.campaign || here.content !== stored.content) return true;
+  if (tagged.source && tagged.source !== "other" && tagged.source !== stored.source) return true;
+  return Boolean(tagged.medium) && tagged.medium !== stored.medium;
 }
 
 /**
@@ -499,7 +510,7 @@ export function initAttribution(input: AttributionInput | null = browserInput(),
 
   let session = read("session", SESSION_KEY);
   const here = deriveAttribution(input);
-  if (!session || isNewTaggedArrival(here, session)) {
+  if (!session || isNewTaggedArrival(here, session, readAcquisitionParams(input.search))) {
     session = here;
     write("session", SESSION_KEY, session);
   }

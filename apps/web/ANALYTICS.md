@@ -144,7 +144,7 @@ adds the attribution to **every** event (including `$pageview`) centrally.
 
 | | Answers | Stored in | Lifetime | Rule |
 | --- | --- | --- | --- | --- |
-| `kx_*` (session entry) | How did *this browsing session* begin? | `sessionStorage` (`kx_analytics_session_v1`) | the tab | derived on the first page of the session, then reused. Later pages, referrers and every client-side navigation leave it alone; a later arrival carrying a **different valid `kx_` campaign tag** (source, medium, campaign or content) starts a new session entry |
+| `kx_*` (session entry) | How did *this browsing session* begin? | `sessionStorage` (`kx_analytics_session_v1`) | the tab | derived on the first page of the session, then reused. Later pages, referrers and every client-side navigation leave it alone; a later arrival carrying a **different valid `kx_` campaign tag** starts a new session entry. Only the values the query string carries are compared (campaign, content, and a tagged source or medium), never a source inferred from the referrer, so a reload keeps the channel |
 | `kx_first_*` (first touch) | How was this *browser* first acquired? | `localStorage` (`kx_analytics_first_touch_v1`) | until cleared | **write-once**. Never overwritten, and never replaced by `direct` |
 
 Properties (each present only when known): `kx_source`, `kx_medium`, `kx_campaign`, `kx_content`, `kx_referrer`,

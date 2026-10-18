@@ -425,6 +425,17 @@ describe("initAttribution — session entry and first touch", () => {
     expect(JSON.parse(window.sessionStorage.getItem(SESSION_KEY)!)).toMatchObject({ source: "reddit", campaign: "kx_other_campaign" });
   });
 
+  it("L3. a tagged URL with no utm_source keeps its referred channel when the same URL is reloaded", () => {
+    // the source here comes from the referrer, not the query; reloading gives an internal referrer and would
+    // derive `direct`, so comparing derived sources would treat a reload as a new arrival and lose the channel
+    const tagged = "?utm_campaign=kx_launch_2026&utm_content=hero_a";
+    initAttribution(input(tagged, "https://www.linkedin.com/feed/", "/docs/platforms"), false);
+    const first = { ...getAttributionContext() };
+    expect(first).toMatchObject({ kx_source: "linkedin", kx_campaign: "kx_launch_2026", kx_landing_page: "/docs/platforms" });
+    initAttribution(input(tagged, "https://kinetixui.com/docs/platforms", "/docs/platforms"), false);
+    expect(getAttributionContext()).toEqual(first);
+  });
+
   it("K. first touch is write-once", () => {
     initAttribution(input(LINKEDIN), false);
     const stored = window.localStorage.getItem(FIRST_KEY);
