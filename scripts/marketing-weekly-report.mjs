@@ -207,8 +207,13 @@ export function summarise(rows) {
   };
 }
 
+/** An experiment arm's `utm_content` (`li_xa_infra`, `x_xc_firstuse`): channel, experiment letter, arm name. */
+export const ARM_CONTENT = /^[a-z]+_x[a-z]_[a-z0-9-]+$/;
+
 /**
- * Per campaign / content, audience cohort only: the table experiment arms are read from (distribution/M3-EXPERIMENTS.md).
+ * Per experiment arm, audience cohort only: the table experiment arms are read from (distribution/M3-EXPERIMENTS.md).
+ * An arm is its `utm_content`, summed across every post (campaign) that carried it, so an arm run through several
+ * assets is one row. Content that is not an arm tag is left out.
  * "Acted" is a person doing something after the page rendered (an event that is not render-fired, or a second page),
  * so it is comparable across destinations that fire different events on load. "Copied" is an install or CLI copy
  * or an adopt CTA, never the render-fired `installation_viewed`.
@@ -216,8 +221,8 @@ export function summarise(rows) {
 function armCount(audienceRows) {
   const m = new Map();
   for (const r of audienceRows) {
-    if (!r.kx_campaign) continue;
-    const k = `${r.kx_campaign} / ${r.kx_content ?? "—"}`;
+    if (!r.kx_campaign || !ARM_CONTENT.test(r.kx_content ?? "")) continue;
+    const k = r.kx_content;
     const g = m.get(k) ?? { sessions: 0, qe: 0, acted: 0, copied: 0 };
     g.sessions += 1;
     if (isQE(r)) g.qe += 1;
@@ -226,6 +231,11 @@ function armCount(audienceRows) {
     m.set(k, g);
   }
   return [...m.entries()].sort((a, b) => b[1].sessions - a[1].sessions);
+}
+
+/** A count, with its share of the arm's audience sessions once the count reaches the evidence floor. */
+function armCell(n, sessions) {
+  return n >= MIN_QE_FOR_COMPARISON ? `${n} (${((100 * n) / sessions).toFixed(1)}%)` : `${n}`;
 }
 
 function groupCount(rows, key) {
@@ -359,10 +369,12 @@ ${table(s.byCampaign)}
 
 ### Experiment arms (audience cohort only)
 
-Read experiment arms here, never from the table above (distribution/M3-EXPERIMENTS.md). *Acted*: an event that is not
-fired on render, or a second page. *Copied*: an install or CLI copy, or an adopt CTA.
+Read experiment arms here, never from the table above (distribution/M3-EXPERIMENTS.md). One row per arm tag, summed
+across every post that carried it. *Acted*: an event that is not fired on render, or a second page. *Copied*: an
+install or CLI copy, or an adopt CTA. A share of the arm's audience sessions is printed only once a count reaches
+${MIN_QE_FOR_COMPARISON}; arms are compared on those shares, never on raw counts.
 
-${s.byArm.length === 0 ? "_none_" : ["| Campaign / content | Audience sessions | Audience QE | Acted after landing | Copied or adopt CTA |", "| --- | --- | --- | --- | --- |"].concat(s.byArm.map(([k, g]) => `| ${k} | ${g.sessions} | ${g.qe} | ${g.acted} | ${g.copied} |`)).join("\n")}
+${s.byArm.length === 0 ? "_none_" : ["| Arm (utm_content) | Audience sessions | Audience QE | Acted after landing | Copied or adopt CTA |", "| --- | --- | --- | --- | --- |"].concat(s.byArm.map(([k, g]) => `| ${k} | ${g.sessions} | ${armCell(g.qe, g.sessions)} | ${armCell(g.acted, g.sessions)} | ${armCell(g.copied, g.sessions)} |`)).join("\n")}
 
 ### By source / medium
 ${table(s.bySource)}

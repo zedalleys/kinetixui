@@ -586,7 +586,8 @@ fires on render, versus a command copied), and an absolute-count trend from `--h
 that cap results at 100 rows (the PostHog MCP tool), `--print-query --compact` returns the same sessions as one text
 cell; save it as `.txt` and pass it to `--sessions`. Experiment arms (distribution/M3-EXPERIMENTS.md) are read only from its
 *Experiment arms (audience cohort only)* table: audience sessions, audience QE, *acted after landing* (an event not
-fired on render, or a second page) and *copied or adopt CTA* per campaign / content. A multi-week export is cut to `--from`/`--to` when read, so one
+fired on render, or a second page) and *copied or adopt CTA*, one row per arm `utm_content` summed across posts, with
+each count's share of the arm's audience sessions once it reaches 30 (arms are compared on shares). A multi-week export is cut to `--from`/`--to` when read, so one
 export feeds every week's report. Warnings never change a number.
 
 ### Arrival eligibility and diagnostic exclusion, 2026-10-09

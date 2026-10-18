@@ -217,8 +217,29 @@ test("experiment arms are counted from the audience cohort, with a destination-n
     row(tag("li_xb_relevant", { internal_events: 1 })),
   ]);
   const arms = Object.fromEntries(s.byArm);
-  assert.deepEqual(arms["kx_p1_d_partial_evidence / li_xb_relevant"], { sessions: 2, qe: 2, acted: 1, copied: 1 });
-  assert.deepEqual(arms["kx_p1_d_partial_evidence / x_xc_firstuse"], { sessions: 1, qe: 1, acted: 0, copied: 0 });
+  assert.deepEqual(arms["li_xb_relevant"], { sessions: 2, qe: 2, acted: 1, copied: 1 });
+  assert.deepEqual(arms["x_xc_firstuse"], { sessions: 1, qe: 1, acted: 0, copied: 0 });
   const md = renderReport({ from: "2026-10-19", to: "2026-10-26", rows: [row(tag("li_xb_relevant"))], distribution: { rows: [] } });
-  assert.match(md, /\| kx_p1_d_partial_evidence \/ li_xb_relevant \| 1 \| 1 \| 1 \| 0 \|/);
+  assert.match(md, /\| li_xb_relevant \| 1 \| 1 \| 1 \| 0 \|/);
+});
+
+test("an arm run through several posts is one row, and content that is not an arm tag stays out of the arm table", () => {
+  const s = summarise([
+    row({ kx_campaign: "kx_p1_d_partial_evidence", kx_source: "linkedin", kx_content: "li_xa_infra" }),
+    row({ kx_campaign: "kx_p1_a_parity_proof", kx_source: "linkedin", kx_content: "li_xa_infra" }),
+    row({ kx_campaign: "kx_p1_a_parity_proof", kx_source: "linkedin", kx_content: "li_primary" }),
+  ]);
+  assert.deepEqual(s.byArm.map(([k, g]) => [k, g.sessions]), [["li_xa_infra", 2]]);
+});
+
+test("arm shares are printed only once a count reaches the floor, so unequal traffic is compared as a rate", () => {
+  const tag = (content, n, acted) =>
+    Array.from({ length: n }, (_, i) =>
+      row({ kx_campaign: "kx_p2_b_relevant", kx_source: "linkedin", kx_content: content, kx_referrer: "linkedin",
+            pageviews: 1, interaction_events: i < acted ? 1 : 0, ai_copy_or_rung: 0 }));
+  const md = renderReport({ from: "2026-10-19", to: "2026-10-26", rows: [...tag("li_xb_coverage", 100, 60), ...tag("li_xb_relevant", 31, 31)], distribution: { rows: [] } });
+  assert.match(md, /\| li_xb_coverage \| 100 \| [^|]+ \| 60 \(60\.0%\) \| 0 \|/);
+  assert.match(md, /\| li_xb_relevant \| 31 \| [^|]+ \| 31 \(100\.0%\) \| 0 \|/);
+  const few = renderReport({ from: "2026-10-19", to: "2026-10-26", rows: tag("li_xb_relevant", 5, 2), distribution: { rows: [] } });
+  assert.match(few, /\| li_xb_relevant \| 5 \| [^|]+ \| 2 \| 0 \|/);
 });
