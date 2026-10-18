@@ -182,6 +182,19 @@ Text entry (Input, Textarea, Select's trigger, NativeSelect):
 A field is an inset, interactive control, not raised content: no elevation, at rest or on hover. There is no
 pressed state: pressing a text field places the caret and focuses it, and pressing a select opens it.
 
+Shape: every field, and every trigger that opens a picker from a field (DatePicker, DateRangeInput, GuestPicker,
+CountrySelect), is one shape: radius `field` (`--radius-field` → `radius.sm`, 4px), `background` fill,
+`spacing-3` block padding around `text-body-md`, so a single-line field is 46px at default text and lines up
+with Input in a row. The composites (below) and MarkdownEditor's shell take the same radius; InputOTP rounds its
+outer slots with it. Measured before (main at `dcda82a`, Chromium, docs previews, light and dark): GuestPicker,
+CountrySelect, DateRangeInput, NumberInput, PhoneInput, MarkdownEditor and InputOTP's ends were 8px beside a
+4px Input; the three picker triggers were 44px; DatePicker's trigger was an Outline button (`input` edge 2.2:1,
+transparent fill, an edge focus left unchanged); MarkdownEditor's shell had a `border` edge and no focus
+indicator; Angular's `kx-input` was 44px and focused with `ring` rather than `action`. After: one radius, edge,
+fill and 46px height across all of them, in both themes. Not yet held by a gate: `check:entry-visual` and
+`check:composite-visual` assert state, not shape. MultiSelect stays 44px: its padding is set by the 24px chip
+remove targets inside it.
+
 Navigation (Tabs):
 
 | State | Trigger | Change | Not carried by colour alone |

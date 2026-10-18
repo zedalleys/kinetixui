@@ -476,7 +476,7 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
               Filter components by name, primitive or category
             </label>
             {/* 44px on a touch screen: the clear button lives inside this clipped box, so the box is its hit area's ceiling */}
-            <InputGroup className="h-9 flex-1 rounded-md coarse:h-11 sm:max-w-xs">
+            <InputGroup className="h-9 flex-1 coarse:h-11 sm:max-w-xs">
               <InputGroupAddon>
                 <Search aria-hidden />
               </InputGroupAddon>

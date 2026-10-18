@@ -279,6 +279,17 @@ as the hub, tagged `cta_clicked` with `source: use_case_page` and the existing t
 "Evidence for each part" disclosure is not tracked: it answers no decision on its own. The QE definition is
 unchanged, and a pageview still qualifies nothing.
 
+**2026-10-18, developer adoption (BD-W4).** No new event and no change to which events or targets count. Three
+additions of the existing `platform` property, so setup interest and installs can be read per platform:
+`installation_viewed` now carries `platform: react` (the page is React's setup); `docs_viewed` carries `platform` on
+the four platform setup pages (/docs/angular, /docs/swiftui, /docs/compose, /docs/flutter) and on no other page;
+an npm `install_command_copied` carries `platform` when the package is a platform's own published package
+(`@kinetixui/ui` → react, `@kinetixui/angular` → angular; tokens, the CLI and IoT carry none, as before). Viewing a
+platform setup page is still `docs_viewed`, which is neither QE nor Adoption Intent; counting it as either would
+change QER and needs an owner decision. Nothing here can show that an install succeeded, so activation stays
+unmeasured (§5). Events before 2026-10-18 have no `platform` on these three, so a per-platform breakdown starts
+that day.
+
 **Vocabulary health, audited:** no duplicate events; no event without a decision it supports; every
 documented event is emitted and every emitted event is documented. (`button_clicked` appears in the
 repository only as a test fixture, not in shipped code — checked rather than assumed.)

@@ -67,6 +67,6 @@ describe("native install snippets on the setup pages", () => {
 describe("Angular install copies name Angular", () => {
   // Before @kinetixui/angular was a known package, this command reported as an install of @kinetixui/tokens.
   it("attributes `npm i @kinetixui/angular @kinetixui/tokens` to the Angular package", () => {
-    expect(classifyCommand("npm i @kinetixui/angular @kinetixui/tokens", "bash")).toEqual({ event: "install_command_copied", package: "@kinetixui/angular" });
+    expect(classifyCommand("npm i @kinetixui/angular @kinetixui/tokens", "bash")).toEqual({ event: "install_command_copied", package: "@kinetixui/angular", platform: "angular" });
   });
 });

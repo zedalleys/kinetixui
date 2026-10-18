@@ -33,7 +33,7 @@ const InputGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
       ref={ref}
       data-slot="input-group"
       className={cn(
-        "flex w-full items-center overflow-hidden rounded-sm border border-muted-foreground/80 bg-background font-sans",
+        "flex w-full items-center overflow-hidden rounded-field border border-muted-foreground/80 bg-background font-sans",
         "transition-[border-color,box-shadow,background-color] duration-instant ease-standard",
         "[@media(hover:hover)]:hover:[&:not(:has([data-slot=input-group-input]:is(:focus,:disabled,[readonly],[aria-invalid=true])))]:border-muted-foreground",
         "has-[[data-slot=input-group-input][readonly]]:bg-muted",

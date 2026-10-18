@@ -356,7 +356,7 @@ describe("The form family under RTL", () => {
     // Each slot is bordered on every side and pulled back a pixel, rather than sharing one neighbour's
     // divider, so that a row which wraps is still closed at the end it starts from — see the comment in
     // input-otp.tsx, and the geometry check in scripts/large-text.mjs.
-    expect(slot).toHaveClass("border", "[&:not(:first-child)]:-ms-px", "first:rounded-s-md", "last:rounded-e-md");
+    expect(slot).toHaveClass("border", "[&:not(:first-child)]:-ms-px", "first:rounded-s-field", "last:rounded-e-field");
     expect(slot.className).not.toMatch(/\bborder-[rl]\b|\brounded-[lr]-|\bborder-[ye]\b/);
   });
 

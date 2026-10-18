@@ -222,6 +222,13 @@ jobs:
       - name: Build @kinetixui/angular (AOT + strict template typecheck)
         run: pnpm build:angular
 
+      # That build compiles only what src/public-api.ts reaches, and no block is reachable from there. This
+      # compiles every Angular block in blocks.manifest.json (tsconfig.blocks.json) with the same strict
+      # templates, after a negative control proves the gate rejects a wrong-typed binding. It is what makes
+      # Angular blocks Build verified in verification.json; remove it and they fall back to Source present.
+      - name: Compile the Angular blocks (strict templates)
+        run: pnpm check:angular-blocks
+
       # The Angular package's public surface — every exported symbol, selector, input and output —
       # as a file review can diff. Cheap here because the build above already produced the .d.ts it
       # reads; the expensive external-consumer proof lives in angular-package.yml.

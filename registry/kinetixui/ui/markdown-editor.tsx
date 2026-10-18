@@ -215,7 +215,20 @@ const MarkdownEditor = React.forwardRef<HTMLDivElement, MarkdownEditorProps>(
     };
 
     return (
-      <div ref={ref} className={cn("overflow-hidden rounded-md border font-sans", className)} {...props}>
+      <div
+        ref={ref}
+        className={cn(
+          // One field (TOKENS.md, "Composite fields"): the shell carries the field edge, radius and the focus
+          // ring while its textarea has focus. It had a `--border` edge (under 3:1) and, with the textarea's own
+          // ring switched off, no focus indicator at all.
+          "overflow-hidden rounded-field border border-muted-foreground/80 bg-background font-sans",
+          "transition-[border-color,box-shadow] duration-instant ease-standard",
+          "[@media(hover:hover)]:hover:[&:not(:has(textarea:focus))]:border-muted-foreground",
+          "has-[textarea:focus]:border-action has-[textarea:focus]:shadow-focus",
+          className,
+        )}
+        {...props}
+      >
         <div role="toolbar" aria-label="Formatting" className="flex items-center gap-0.5 border-b bg-muted/40 p-1">
           <ToolbarButton label="Bold" onClick={() => applyInline("**", "**", "bold text")}>
             <Bold className="size-4" />
