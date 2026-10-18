@@ -120,6 +120,11 @@ Show it from your app, for example with
 You should see a **Save** button above a smaller outlined **Cancel** button, in
 light or dark to match the platform brightness.
 
+This sample is not compiled in CI either. The package's own `flutter analyze` and `flutter test` exercise the
+widgets it uses, so a constructor change fails there first, but `Demo` itself is not built in an app.
+
+<FirstUseNextSteps platform="Flutter" />
+
 ## A custom theme
 
 `KinetixTheme.custom` takes your own palettes and still selects between them on

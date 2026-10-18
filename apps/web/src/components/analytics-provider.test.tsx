@@ -91,7 +91,7 @@ describe("AnalyticsProvider — semantic view events (one per navigation)", () =
     const { rerender } = render(<AnalyticsProvider />);
     rerender(<AnalyticsProvider />);
     rerender(<AnalyticsProvider />);
-    expect(track.mock.calls).toEqual([["installation_viewed", { source: "installation_page" }]]);
+    expect(track.mock.calls).toEqual([["installation_viewed", { source: "installation_page", platform: "react" }]]);
   });
 
   it("classifies each route as the user navigates, one event each, and none for the homepage or the gallery", () => {
