@@ -99,7 +99,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
         className={cn(
           // no fixed height: the input's own padding sets it, so it matches Input and InputGroup in the same row
           // (it was a fixed 40px beside their 46px) and still grows with the text
-          "flex items-stretch overflow-hidden rounded-md border border-muted-foreground/80 bg-background font-sans",
+          "flex items-stretch overflow-hidden rounded-field border border-muted-foreground/80 bg-background font-sans",
           "transition-[border-color,box-shadow,background-color] duration-instant ease-standard",
           !disabled && "[@media(hover:hover)]:hover:[&:not(:has(input:is(:focus,[readonly],[aria-invalid=true])))]:border-muted-foreground",
           "has-[input[readonly]]:bg-muted",

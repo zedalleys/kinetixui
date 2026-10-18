@@ -27,7 +27,7 @@ export function DocsSidebar() {
       <div className="sticky top-[5.5rem] -ml-2 flex h-[calc(100dvh-5.5rem)] flex-col py-10 pr-4">
         {/* The library InputGroup: one field shell (edge, hover, focus and RTL-aware add-ons) around the input, its
             search icon and the clear button. The clear button gets its own focus ring from InputGroupButton. */}
-        <InputGroup className="mb-6 ml-2 w-auto rounded-md bg-muted/40">
+        <InputGroup className="mb-6 ml-2 w-auto">
           <InputGroupAddon className="ps-2.5">
             <Search className="!size-3.5" aria-hidden />
           </InputGroupAddon>

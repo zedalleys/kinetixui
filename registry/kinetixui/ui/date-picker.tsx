@@ -4,7 +4,6 @@ import * as React from "react";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Calendar, type CalendarProps } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -35,16 +34,24 @@ const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
         {label && <label className="text-label-md font-medium text-foreground">{label}</label>}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button
+            {/* A field, not a button: the text-entry contract (TOKENS.md, "Text entry and navigation") as
+                DateRangeInput's trigger draws it, so the two date fields and Input share one edge, radius and
+                height. It was an Outline Button, whose `--input` edge is 2.2:1 and whose focus left the edge alone. */}
+            <button
               ref={ref}
               type="button"
-              variant="Outline"
               disabled={disabled}
-              className={cn("w-full justify-start px-3 font-normal", !value && "text-muted-foreground", error && "border-destructive text-destructive")}
+              aria-invalid={error || undefined}
+              className={cn(
+                "flex min-h-11 w-full min-w-0 items-center gap-2 rounded-field border border-muted-foreground/80 bg-background px-3 py-3 text-start text-body-md text-foreground outline-none transition-[border-color,box-shadow] duration-instant ease-standard focus-visible:border-action focus-visible:shadow-focus disabled:pointer-events-none disabled:opacity-disabled [@media(hover:hover)]:hover:border-muted-foreground",
+                "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:shadow-focus-destructive",
+              )}
             >
-              <CalendarIcon className="size-4" />
-              {value ? format(value, formatStr) : placeholder}
-            </Button>
+              <CalendarIcon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+              <span className={cn("min-w-0 [overflow-wrap:anywhere]", !value && "text-muted-foreground")}>
+                {value ? format(value, formatStr) : placeholder}
+              </span>
+            </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
