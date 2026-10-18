@@ -401,11 +401,28 @@ describe("initAttribution — session entry and first touch", () => {
   it("L. later navigation in the same session does not change the session attribution", () => {
     initAttribution(input(LINKEDIN, "", "/"), false);
     const first = { ...getAttributionContext() };
-    // a later page in the same tab — even one carrying a different UTM — must not replace the session entry
-    initAttribution(input(REDDIT, "https://www.reddit.com/", "/docs/installation"), false);
+    // a later untagged page in the same tab — from a referrer, a UTM without our campaign, or our own site — keeps it
+    initAttribution(input("", "https://www.reddit.com/", "/docs/installation"), false);
+    expect(getAttributionContext()).toEqual(first);
+    initAttribution(input("?utm_source=reddit&utm_medium=community", "", "/docs/installation"), false);
     expect(getAttributionContext()).toEqual(first);
     initAttribution(input("", "https://kinetixui.com/", "/docs/components/button"), false);
     expect(getAttributionContext()).toEqual(first);
+    initAttribution(input(LINKEDIN, "", "/"), false); // the same tagged URL again
+    expect(getAttributionContext()).toEqual(first);
+  });
+
+  it("L2. a new arrival carrying a different kx_ campaign tag starts a new session entry; first touch stays", () => {
+    initAttribution(input(LINKEDIN, "", "/"), false);
+    initAttribution(input(REDDIT, "https://www.reddit.com/", "/docs/installation"), false);
+    expect(getAttributionContext()).toMatchObject({
+      kx_source: "reddit",
+      kx_campaign: "kx_other_campaign",
+      kx_landing_page: "/docs/installation",
+      kx_first_source: "linkedin",
+      kx_first_campaign: "kx_launch_2026",
+    });
+    expect(JSON.parse(window.sessionStorage.getItem(SESSION_KEY)!)).toMatchObject({ source: "reddit", campaign: "kx_other_campaign" });
   });
 
   it("K. first touch is write-once", () => {
@@ -472,7 +489,7 @@ describe("initAttribution — session entry and first touch", () => {
       SESSION_KEY,
       JSON.stringify({ source: "linkedin", medium: "social", referrer: "direct", campaign: "launch John Smith", content: "hero_a", email: "a@b.co", landing: "/x?y=1" }),
     );
-    initAttribution(input(REDDIT), false);
+    initAttribution(input("", "https://www.reddit.com/"), false);
     const ctx = getAttributionContext();
     expect(ctx).toMatchObject({ kx_source: "linkedin" });
     expect(ctx).not.toHaveProperty("kx_campaign");

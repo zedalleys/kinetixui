@@ -3,8 +3,8 @@
  *
  * It is directional evidence, not causal truth: a simple, inspectable model with no multi-touch and no
  * probabilistic logic. Two views of the same normalised record:
- *  - SESSION ENTRY — how this browsing session (a tab's sessionStorage) began. Derived once, on the first page
- *    of the session, and never overwritten by later navigation or a later UTM in the same session.
+ *  - SESSION ENTRY — how this browsing session (a tab's sessionStorage) began. Derived on the first page of the
+ *    session and kept through later navigation; only a new arrival carrying a different `kx_` campaign tag replaces it.
  *  - FIRST TOUCH — how this anonymous browser was first acquired. localStorage, write-once.
  *
  * NOTHING RAW EVER LEAVES THIS MODULE. The query string is read here and nowhere else in analytics; each value
@@ -474,11 +474,21 @@ function browserInput(): AttributionInput | null {
 let context: Readonly<Record<string, string>> = Object.freeze({});
 
 /**
+ * A page that carries one of OUR campaign tags (a valid `kx_` campaign) whose source, medium, campaign or content
+ * differs from the tab's stored record is a new tagged arrival, and it starts a new session entry. Untagged pages,
+ * referrers and a reload of the same tagged URL never do, so internal navigation keeps the campaign.
+ */
+function isNewTaggedArrival(here: Attribution, stored: Attribution): boolean {
+  if (!here.campaign) return false;
+  return here.campaign !== stored.campaign || here.source !== stored.source || here.medium !== stored.medium || here.content !== stored.content;
+}
+
+/**
  * Establish this page load's attribution. Called ONCE, by `startAnalytics`, only after the config gate has said
  * analytics is on — so dev, tests, previews, missing config and Do Not Track never persist anything.
  *
  *  - session: reuse the session's stored record; otherwise derive from THIS page (the first of the session) and store it.
- *    A later page's UTM, and any later navigation, never replaces it.
+ *    Later navigation, untagged pages and referrers never replace it; a new tagged arrival (`isNewTaggedArrival`) does.
  *  - first touch: reuse the stored record; otherwise write this session's record. Write-once. If it cannot be
  *    persisted it is omitted rather than claimed, because it would then just be "this session" again.
  *  - blocked storage: the session record is kept in memory for the life of the page, first touch is omitted.
@@ -488,8 +498,9 @@ export function initAttribution(input: AttributionInput | null = browserInput(),
   if (!input || dnt) return;
 
   let session = read("session", SESSION_KEY);
-  if (!session) {
-    session = deriveAttribution(input);
+  const here = deriveAttribution(input);
+  if (!session || isNewTaggedArrival(here, session)) {
+    session = here;
     write("session", SESSION_KEY, session);
   }
 
