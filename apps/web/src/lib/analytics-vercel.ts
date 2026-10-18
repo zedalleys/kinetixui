@@ -21,7 +21,7 @@
  *    reaches Vercel.
  */
 import { cleanPath } from "./analytics-safe";
-import { doNotTrack, isDiagnosticTab } from "./analytics-attribution";
+import { doNotTrack, isDiagnosticTab, isInternalBrowser } from "./analytics-attribution";
 import { siteConfig } from "./site";
 
 export interface VercelAnalyticsEnv {
@@ -57,19 +57,21 @@ export interface VercelEvent {
 export interface VercelPrivacy {
   dnt: boolean;
   diagnostic: boolean;
+  /** a browser marked `?kx_traffic=internal`: the team's own visits are not audience traffic either */
+  internal?: boolean;
 }
 
 function browserPrivacy(): VercelPrivacy {
-  return { dnt: doNotTrack(), diagnostic: isDiagnosticTab() };
+  return { dnt: doNotTrack(), diagnostic: isDiagnosticTab(), internal: isInternalBrowser() };
 }
 
 /**
- * The shared `beforeSend` rule: only the one event type a tool is allowed to send, nothing under Do Not Track or
- * from a diagnostic tab, and the URL cut to origin + path. Null cancels the event.
+ * The shared `beforeSend` rule: only the one event type a tool is allowed to send, nothing under Do Not Track,
+ * from a diagnostic tab or from an internal browser, and the URL cut to origin + path. Null cancels the event.
  */
 function allowOnly<E extends VercelEvent>(type: VercelEvent["type"], event: E, privacy: VercelPrivacy): E | null {
   if (event.type !== type) return null;
-  if (privacy.dnt || privacy.diagnostic) return null;
+  if (privacy.dnt || privacy.diagnostic || privacy.internal) return null;
   let url: URL;
   try {
     url = new URL(event.url);

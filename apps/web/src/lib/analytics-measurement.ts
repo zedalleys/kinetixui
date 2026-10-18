@@ -72,6 +72,9 @@ export const ARRIVAL_EVENTS = [
   // fired from the command menu in a page's header, so a session holding it was on a page; in practice it always
   // follows that page's `$pageview`, so listing it cannot change an arrival count (analytics.md §4)
   "search_result_selected",
+  // fired by an input on a page after that page's `$pageview`; like a click event it proves the visitor was on a
+  // page, and like `search_result_selected` it cannot add an arrival that page did not already count
+  "page_engaged",
 ] as const satisfies readonly ("$pageview" | AnalyticsEventName)[];
 
 // A compile error here means an event was added to `AnalyticsEvents` without deciding whether it proves arrival.

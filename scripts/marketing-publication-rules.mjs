@@ -10,6 +10,8 @@
  * without one either predates this rule and says why, or is not published.
  */
 
+import { createHash } from "node:crypto";
+
 /** Rows published on or after this date must carry a live URL. Earlier rows may instead explain the gap. */
 export const LIVE_URL_REQUIRED_FROM = "2026-10-17";
 
@@ -143,12 +145,80 @@ export function publicationEvidenceProblems(rows = [], offCalendar = []) {
   return problems;
 }
 
-/** brief -> drafted -> ready -> published, plus an optional, explicit owner approval on ready/published. */
-export function approvalProblems(assets = []) {
+/** Approvals given on or after this date must pin the exact copy they approve (`approval.copy`). */
+export const COPY_PIN_REQUIRED_FROM = "2026-10-18";
+
+/**
+ * The words an approval pins, in the two layouts the drafts use:
+ *  - a lettered variant (`a01/linkedin.md` § A): under the `## <section> — …` heading, the text between the first
+ *    two `---` lines before the next heading (the span above them is an editor's note, not copy);
+ *  - a register entry (`content/linkedin.md` § LI-008): a heading with no such pair, where everything from the
+ *    heading to the closing `---` (or the next heading) is the entry, its campaign line included.
+ * That is exactly what gets pasted, so it is what an approval pins. Returns null when the heading is missing.
+ */
+export function sectionText(markdown, section) {
+  const lines = String(markdown).split("\n");
+  const start = lines.findIndex((l) => new RegExp(`^## ${section.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\s|$)`).test(l));
+  if (start < 0) return null;
+  let end = lines.findIndex((l, i) => i > start && l.startsWith("## "));
+  if (end < 0) end = lines.length;
+  const rules = [];
+  for (let i = start + 1; i < end; i++) if (lines[i].trim() === "---") rules.push(i);
+  const [from, to] = rules.length >= 2 ? [rules[0] + 1, rules[1]] : [start + 1, rules[0] ?? end];
+  const text = lines.slice(from, to).join("\n").trim();
+  return text === "" ? null : text;
+}
+
+/** A whole draft file without its front matter: what an approval pins when the asset is the file (a thread). */
+export function fileCopyText(markdown) {
+  const body = String(markdown).replace(/\r\n/g, "\n");
+  const m = body.match(/^---\n[\s\S]*?\n---\n/);
+  return (m ? body.slice(m[0].length) : body).trim();
+}
+
+/** sha256 of a section's text with line endings normalised and trailing whitespace removed from each line. */
+export function copyHash(text) {
+  const normal = String(text).replace(/\r\n/g, "\n").split("\n").map((l) => l.replace(/\s+$/, "")).join("\n").trim();
+  return createHash("sha256").update(normal, "utf8").digest("hex");
+}
+
+/**
+ * Which span of its file an asset's copy is, so a pin cannot point at some other, stable text:
+ *  - `variant` on the asset names a lettered section (a01/linkedin.md holds LI-001 as A and LI-002 as B);
+ *  - otherwise a `## <asset id>` heading in the file is the asset's entry (content/linkedin.md, content/x.md);
+ *  - otherwise a file that is this asset's alone is pinned whole; a shared one needs a `variant`.
+ */
+export function expectedPin(asset, assets, body) {
+  if (asset.variant !== undefined) {
+    if (typeof asset.variant !== "string" || !asset.variant.trim()) return { problem: "variant must be a non-empty section name" };
+    return { section: asset.variant };
+  }
+  if (sectionText(body, asset.id) !== null) return { section: asset.id };
+  const shared = assets.some((o) => o !== asset && o.file === asset.file);
+  if (shared) return { problem: `${asset.file} holds other assets too — set "variant" to the section that is this asset's copy` };
+  return { section: undefined };
+}
+
+/**
+ * brief -> drafted -> ready -> published, plus an optional, explicit owner approval on ready/published.
+ *
+ * `readFile` is injected so the rule stays pure for its tests. An approval given from COPY_PIN_REQUIRED_FROM must
+ * carry `copy: { file, section?, sha256 }` (no section: the whole file after its front matter), and the hash must
+ * match that text as it is now: an approval is for
+ * exact words, so copy edited after approval fails until the owner approves again. An asset flagged `stale`
+ * (current-state claims that no longer hold) cannot carry an approval at all.
+ */
+export function approvalProblems(assets = [], readFile = null) {
   const problems = [];
   for (const asset of assets) {
-    if (!("approval" in asset)) continue;
     const where = asset.id ?? "<no id>";
+    if ("stale" in asset && asset.stale !== null) {
+      const st = asset.stale;
+      if (typeof st !== "object" || Array.isArray(st) || !st.reason || !String(st.reason).trim() || !DATE.test(st.since ?? "")) {
+        problems.push(`${where}: stale must be { reason, since: YYYY-MM-DD } — say what no longer holds and since when`);
+      }
+    }
+    if (!("approval" in asset)) continue;
     const a = asset.approval;
     if (a === null) continue;
     if (typeof a !== "object" || Array.isArray(a)) {
@@ -158,10 +228,51 @@ export function approvalProblems(assets = []) {
     if (!["ready", "published"].includes(asset.status)) {
       problems.push(`${where}: approval on a "${asset.status}" asset — only ready copy can be approved`);
     }
+    if (asset.stale && asset.status !== "published") {
+      problems.push(`${where}: approval on copy flagged stale (${asset.stale.reason ?? "no reason"}) — refresh the claims, then ask again`);
+    }
     if (!a.by || !String(a.by).trim()) problems.push(`${where}: approval has no "by" — approval is a named person's decision`);
     if (!DATE.test(a.on ?? "")) problems.push(`${where}: approval "on" is not YYYY-MM-DD`);
     if (!a.evidence || !String(a.evidence).trim()) {
       problems.push(`${where}: approval has no "evidence" — link the message or PR where it was given`);
+    }
+    if (!a.copy) {
+      if (DATE.test(a.on ?? "") && a.on >= COPY_PIN_REQUIRED_FROM) {
+        problems.push(`${where}: approval from ${COPY_PIN_REQUIRED_FROM} must pin the approved words — add copy: { file, section?, sha256 }`);
+      }
+      continue;
+    }
+    const { file, section, sha256 } = a.copy;
+    if (!file || (section !== undefined && (typeof section !== "string" || !section.trim())) || !/^[0-9a-f]{64}$/.test(sha256 ?? "")) {
+      problems.push(`${where}: approval.copy needs a file, an optional non-empty section and a sha256 hex digest`);
+      continue;
+    }
+    if (file !== asset.file) {
+      problems.push(`${where}: approval.copy pins ${file}, but this asset's copy is ${asset.file ?? "(no file)"} — a pin must cover the words being approved`);
+      continue;
+    }
+    if (!readFile) continue;
+    let body;
+    try {
+      body = readFile(file);
+    } catch {
+      problems.push(`${where}: approval.copy file ${file} cannot be read`);
+      continue;
+    }
+    const expected = expectedPin(asset, assets, body);
+    if (expected.problem) {
+      problems.push(`${where}: ${expected.problem}`);
+      continue;
+    }
+    if (section !== expected.section) {
+      problems.push(`${where}: approval.copy pins ${section === undefined ? "the whole file" : `section "${section}"`}, but this asset's copy is ${expected.section === undefined ? "the whole file" : `section "${expected.section}"`} — a pin must cover the words being approved`);
+      continue;
+    }
+    const text = section === undefined ? fileCopyText(body) : sectionText(body, section);
+    const label = section === undefined ? file : `${file} § ${section}`;
+    if (text === null) problems.push(`${where}: approval.copy section "${section}" is not in ${file} (no "## ${section}" heading with copy under it)`);
+    else if (copyHash(text) !== sha256) {
+      problems.push(`${where}: the approved copy (${label}) changed after approval on ${a.on} — the owner approved different words; ask again`);
     }
   }
   return problems;
@@ -178,7 +289,7 @@ export function m1Status(asset, rows = []) {
   if (asset.status === "published" || own.some((r) => r.status === "published")) return "PUBLISHED";
   if (own.some((r) => r.status === "blocked")) return "BLOCKED";
   if (own.length > 0 && own.every((r) => r.status === "skipped")) return "CANCELLED";
-  if (asset.status === "ready") return asset.approval ? "APPROVED" : "READY FOR REVIEW";
+  if (asset.status === "ready") return asset.approval && !asset.stale ? "APPROVED" : "READY FOR REVIEW";
   if (asset.status === "drafted") return "DRAFTED";
   return "PLANNED";
 }

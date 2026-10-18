@@ -82,7 +82,7 @@ because its overdue flags are relative to the day it runs. Planned dates come fr
 | X-004 | X | 10-09 | 10-09 | PUBLISHED | x.com status URL recorded; 0 tagged sessions | — |
 | LI-007 | LinkedIn | 10-11 | 10-12 | PUBLISHED | LinkedIn activity URL recorded; **0 tagged sessions** | check the link kept its tag |
 | ART-001 | dev.to | 10-13 | 10-13 | PUBLISHED | dev.to URL recorded; 0 `art_primary` sessions | — |
-| ART-001-PILLAR | dev.to edit | — | — | PLANNED | 1 tagged `art_pillar` session 2026-10-17 03:51 UTC (inference: the edit may be live) | owner confirms the edit |
+| ART-001-PILLAR | dev.to edit | — | — | PLANNED | 1 tagged `art_pillar` session 2026-10-17 03:51 UTC (inference: the edit may be live). **Corrected 2026-10-18 (M2):** the session matches the suspected-automation fingerprint, so it is not evidence the edit is live (`../measurement/M2-TRAFFIC-QUALITY.md`) | owner confirms the edit |
 | LI-001 | LinkedIn | 10-14 | — | READY FOR REVIEW | — | approval; a01 stop gate |
 | X-001 | X | 10-15 | — | READY FOR REVIEW | — | approval; after LI-001 |
 | X-008 | X | 10-16 | — | READY FOR REVIEW | — | approval |
