@@ -211,6 +211,8 @@ export const MOTION_STATES = [
     // The thumb's logical offset (it was a physical `translate-x`, which went the wrong way in an LTR
     // section of an RTL page — see switch.tsx).
     property: "insetInlineStart",
+    // selection-control, not selection-state: pinned so "aligning" Switch with the 200ms family fails here.
+    durationMs: 100,
   },
   {
     slug: "switch",
@@ -224,6 +226,7 @@ export const MOTION_STATES = [
     trigger: { action: "click", selector: "button[role=switch][data-state=checked]" },
     target: "button[role=switch] > span",
     property: "insetInlineStart",
+    durationMs: 100,
   },
   {
     slug: "tabs",

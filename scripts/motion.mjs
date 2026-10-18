@@ -238,9 +238,14 @@ const kebab = (prop) => prop.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
 /**
  * How long the transition of `prop` ran. A shorthand runs as its longhands — `border-color` is reported as
- * `border-top-color` and three more — and every side is on the same tier, so the top one stands for it.
+ * `border-top-color` and three more — and every side is on the same tier, so the top one stands for it. A
+ * logical property runs as the physical one it resolves to: Switch's `inset-inline-start` is `left` in LTR and
+ * `right` in RTL.
  */
-const ownDuration = (byProperty, prop) => byProperty?.[kebab(prop)] ?? byProperty?.[kebab(prop).replace(/^border-/, "border-top-")];
+const ownDuration = (byProperty, prop) =>
+  byProperty?.[kebab(prop)] ??
+  byProperty?.[kebab(prop).replace(/^border-/, "border-top-")] ??
+  (kebab(prop) === "inset-inline-start" ? (byProperty?.left ?? byProperty?.right) : undefined);
 
 /** The end state under reduced motion must be the one normal motion reaches, within rounding. */
 function sameEndState(a, b) {
