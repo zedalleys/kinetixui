@@ -261,3 +261,268 @@ describe("story coverage drift fails CI", () => {
     expect(output).toMatch(/(\d+)\/\1 components covered by a story/);
   });
 });
+
+/* ── blocks ────────────────────────────────────────────────────────────────────────────────────────
+ *
+ * The block records are built by the same script, so they are broken the same way: a fixture repository
+ * with one block, and each test removes or forges one piece of evidence and asserts the level that results
+ * — or that the generator refuses. A block may only be as verified as ITS OWN file and ITS OWN tests show.
+ */
+const BLOCKS_MANIFEST = {
+  blocks: {
+    "sign-in": {
+      title: "Sign in",
+      status: "stable",
+      sources: { React: "apps/web/src/examples/blocks/sign-in.tsx", Angular: "packages/ui-angular/src/examples/blocks/sign-in.ts" },
+    },
+    "stat-cards": { title: "Stat cards", status: "stable", sources: { React: "apps/web/src/examples/blocks/stat-cards.tsx" } },
+  },
+};
+const RUNTIME_SCRIPT = "scripts/blocks-runtime-browser.mjs";
+
+/** A workflow that really runs both builds and every standalone evidence script, unless told to drop one. */
+function workflow({ drop = [] as string[], runtimeStep = `node ${RUNTIME_SCRIPT}`, buildWeb = "pnpm build:web" } = {}) {
+  const steps = [buildWeb, "pnpm build:angular", "pnpm --filter @kinetixui/web test", "pnpm test:angular", ...extraEvidenceScripts().map((s) => `node ${s}`), runtimeStep];
+  // a path filter naming the runtime script, as a real workflow has: a mention that is not a step
+  const on = `on:\n  pull_request:\n    paths:\n      - "${RUNTIME_SCRIPT}"\n`;
+  return `${on}jobs:\n  ci:\n    steps:\n${steps.filter((c) => !drop.some((d) => c.includes(d))).map((c) => `      - run: ${c}\n`).join("")}`;
+}
+
+function blockFixture(
+  files: Record<string, string> = {},
+  {
+    blocks = BLOCKS_MANIFEST,
+    drop = [] as string[],
+    runtimeStep = undefined as string | undefined,
+    buildWeb = undefined as string | undefined,
+    scripts = {} as Record<string, string>,
+  } = {},
+) {
+  return fixture({
+    "blocks.manifest.json": JSON.stringify(blocks),
+    "package.json": JSON.stringify({ scripts }),
+    "apps/web/src/examples/blocks/sign-in.tsx": "export function SignInBlock() { return null }\n",
+    "apps/web/src/examples/blocks/stat-cards.tsx": "export function StatCardsBlock() { return null }\n",
+    "packages/ui-angular/src/examples/blocks/sign-in.ts": "export class SignInBlock {}\n",
+    ".github/workflows/ci.yml": workflow({ drop, ...(runtimeStep ? { runtimeStep } : {}), ...(buildWeb ? { buildWeb } : {}) }),
+    [RUNTIME_SCRIPT]: "// no markers\n",
+    ...files,
+  });
+}
+
+type BlockOut = Record<string, { platforms: Record<string, { level: string; build?: unknown[]; interaction?: unknown[]; accessibility?: unknown[]; limitations?: string[] }> }>;
+const blocksOut = (dir: string) => (JSON.parse(readFileSync(join(dir, "verification.json"), "utf8")) as { blocks: BlockOut }).blocks;
+
+const chromium = (body: string) => ({ [RUNTIME_SCRIPT]: body });
+const BOTH_OBSERVED = `// kx-verify-block: accessibility\nblock(page, "sign-in");\n// kx-verify-block: interaction\nblock(page, "sign-in");\n`;
+
+describe("block evidence: negative controls", () => {
+  it("1. refuses a block whose manifest source does not exist", () => {
+    const blocks = structuredClone(BLOCKS_MANIFEST);
+    blocks.blocks["sign-in"].sources.Angular = "packages/ui-angular/src/examples/blocks/missing.ts";
+    const { ok, output } = run(script, [`--root=${blockFixture({}, { blocks })}`]);
+    expect(ok).toBe(false);
+    expect(output).toMatch(/sign-in: blocks\.manifest\.json names .*missing\.ts as its Angular source, which does not exist/);
+  });
+
+  it("2. records a platform the manifest does not implement as not implemented, and refuses a test that claims it", () => {
+    const dir = blockFixture();
+    expect(run(script, [`--root=${dir}`]).ok).toBe(true);
+    expect(blocksOut(dir)["stat-cards"]!.platforms.Angular!.level).toBe("not-implemented");
+    const claim = blockFixture({ "packages/ui-angular/src/x.spec.ts": `// kx-verify-block: interaction\nmount(StatCardsBlock);\n` });
+    const { ok, output } = run(script, [`--root=${claim}`]);
+    expect(ok).toBe(false);
+    expect(output).toMatch(/exercises stat-cards on Angular, which blocks\.manifest\.json does not implement there/);
+  });
+
+  it("3. gives no build record when the CI step that compiles the file is gone", () => {
+    const built = blockFixture();
+    expect(run(script, [`--root=${built}`]).ok).toBe(true);
+    expect(blocksOut(built)["sign-in"]!.platforms.React!.level).toBe("build");
+    const dir = blockFixture({}, { drop: ["build:web"] });
+    expect(run(script, [`--root=${dir}`]).ok).toBe(true);
+    expect(blocksOut(dir)["sign-in"]!.platforms.React!.level).toBe("source");
+    expect(blocksOut(dir)["sign-in"]!.platforms.React!.limitations).toContain("no CI step compiles this file");
+    // the command has to be what the step executes, not text inside it
+    for (const buildWeb of [
+      "echo 'pnpm build:web'",
+      "pnpm lint # pnpm build:web",
+      "pnpm build:web-docs",
+      "true || pnpm build:web", // skipped whenever the left side succeeds
+      ">\n          echo preparing\n          pnpm build:web", // folded: one command, `echo preparing pnpm build:web`
+      "pnpm build:web\n        if: false", // a step GitHub may skip
+      "pnpm build:web\n        continue-on-error: true", // a step whose failure is ignored
+      "pnpm build:web || true", // failure masked
+      "pnpm build:web | tee build.log", // the pipe's status is tee's
+      "pnpm build:web; true", // the sequence exits with the last command's status
+      "|\n          if false\n          then\n          pnpm build:web\n          fi", // never runs, and the step passes
+      "|\n          exit 0\n          pnpm build:web", // the step ends before it
+      "|\n          builtin exit 0\n          pnpm build:web", // the same exit, prefixed
+      "|\n          X=1 exit 0\n          pnpm build:web", // the same exit, behind an assignment
+      "CI=1 pnpm build:web", // not one of the programs a build is read from
+      "pnpm build:web --help", // an extra flag can make it a no-op
+      "|\n          set +e\n          pnpm build:web\n          true", // failure no longer stops the step
+      "|\n          pnpm build:web \\\n            --dry-run", // a continuation makes it another command
+    ]) {
+      const fake = blockFixture({}, { buildWeb });
+      expect(run(script, [`--root=${fake}`]).ok).toBe(true);
+      expect(blocksOut(fake)["sign-in"]!.platforms.React!.level, buildWeb).toBe("source");
+    }
+    // a condition on the job skips every step in it
+    const skippedJob = blockFixture({
+      ".github/workflows/ci.yml": `${workflow({ drop: ["build:web"] })}  web:\n    if: false\n    steps:\n      - run: pnpm build:web\n`,
+    });
+    expect(run(script, [`--root=${skippedJob}`]).ok).toBe(true);
+    expect(blocksOut(skippedJob)["sign-in"]!.platforms.React!.level).toBe("source");
+    const otherJob = blockFixture({ ".github/workflows/ci.yml": `${workflow({ drop: ["build:web"] })}  web:\n    steps:\n      - run: pnpm build:web\n` });
+    expect(run(script, [`--root=${otherJob}`]).ok).toBe(true);
+    expect(blocksOut(otherJob)["sign-in"]!.platforms.React!.level).toBe("build");
+    for (const buildWeb of ["pnpm install --frozen-lockfile && pnpm build:web", "|\n          pnpm install\n          pnpm build:web"]) {
+      const real = blockFixture({}, { buildWeb });
+      expect(run(script, [`--root=${real}`]).ok).toBe(true);
+      expect(blocksOut(real)["sign-in"]!.platforms.React!.level, buildWeb).toBe("build");
+    }
+  });
+
+  it("3b. does not credit the Angular package build to blocks it never compiles", () => {
+    // ng-packagr builds from public-api.ts, which imports no block: the step running is not evidence for them
+    const dir = blockFixture();
+    expect(run(script, [`--root=${dir}`]).ok).toBe(true);
+    expect(blocksOut(dir)["sign-in"]!.platforms.Angular!.level).toBe("source");
+    expect(blocksOut(dir)["sign-in"]!.platforms.Angular!.build).toBeUndefined();
+  });
+
+  it("4. is not runtime verified without observed interaction", () => {
+    const dir = blockFixture(chromium(`// kx-verify-block: accessibility\nblock(page, "sign-in");\n`));
+    expect(run(script, [`--root=${dir}`]).ok).toBe(true);
+    expect(blocksOut(dir)["sign-in"]!.platforms.React!.level).toBe("build");
+  });
+
+  it("5. is not runtime verified without observed accessibility", () => {
+    const dir = blockFixture(chromium(`// kx-verify-block: interaction\nblock(page, "sign-in");\n`));
+    expect(run(script, [`--root=${dir}`]).ok).toBe(true);
+    expect(blocksOut(dir)["sign-in"]!.platforms.React!.level).toBe("build");
+    // and both observed IS runtime: the control above is not failing for an unrelated reason
+    const both = blockFixture(chromium(BOTH_OBSERVED));
+    expect(run(script, [`--root=${both}`]).ok).toBe(true);
+    expect(blocksOut(both)["sign-in"]!.platforms.React!.level).toBe("runtime");
+  });
+
+  it("6. never reads a React test as Angular evidence", () => {
+    const dir = blockFixture({ ...chromium(BOTH_OBSERVED), "apps/web/src/x.test.tsx": `// kx-verify-block: interaction, accessibility\n<SignInBlock />\n` });
+    expect(run(script, [`--root=${dir}`]).ok).toBe(true);
+    const angular = blocksOut(dir)["sign-in"]!.platforms.Angular!;
+    expect(angular.level).toBe("source");
+    expect(angular.interaction).toBeUndefined();
+    expect(angular.accessibility).toBeUndefined();
+  });
+
+  it("6b. keeps headless evidence below runtime even when it covers both kinds", () => {
+    // React, which has a build record, so the only thing between this block and runtime is where the test ran
+    const dir = blockFixture({ "apps/web/src/x.test.tsx": `// kx-verify-block: interaction, accessibility\n<SignInBlock />\n` });
+    expect(run(script, [`--root=${dir}`]).ok).toBe(true);
+    const react = blocksOut(dir)["sign-in"]!.platforms.React!;
+    expect(react.interaction).toEqual([{ ref: "apps/web/src/x.test.tsx:1-2", environment: "jsdom" }]);
+    expect(react.accessibility).toEqual([{ ref: "apps/web/src/x.test.tsx:1-2", environment: "jsdom" }]);
+    expect(react.build).toBeDefined();
+    expect(react.level).toBe("build");
+  });
+
+  it("6c. records no test evidence from a suite that no workflow step runs", () => {
+    const files = { "packages/ui-angular/src/x.spec.ts": `// kx-verify-block: interaction, accessibility\nmount(SignInBlock);\n` };
+    const ran = blockFixture(files);
+    expect(run(script, [`--root=${ran}`]).ok).toBe(true);
+    expect(blocksOut(ran)["sign-in"]!.platforms.Angular!.interaction).toBeDefined();
+    const unrun = blockFixture(files, { drop: ["test:angular"] });
+    expect(run(script, [`--root=${unrun}`]).ok).toBe(true);
+    expect(blocksOut(unrun)["sign-in"]!.platforms.Angular!.interaction).toBeUndefined();
+    expect(blocksOut(unrun)["sign-in"]!.platforms.Angular!.accessibility).toBeUndefined();
+    // its markers are still checked: a bad claim in a suite that is not run is still an error
+    const bad = blockFixture({ "packages/ui-angular/src/x.spec.ts": `// kx-verify-block: interaction\nmount(StatCardsBlock);\n` }, { drop: ["test:angular"] });
+    expect(run(script, [`--root=${bad}`]).ok).toBe(false);
+  });
+
+  it("7. keeps component evidence and block evidence apart, in both directions", () => {
+    const dir = blockFixture({
+      // a component test that happens to render the block: evidence for Button, none for the block
+      "packages/ui/src/x.test.tsx": `// kx-verify: interaction\n<Button /><SignInBlock />\n`,
+      // a block test that happens to render Button: evidence for the block, none for Button
+      "packages/ui-angular/src/y.spec.ts": `// kx-verify-block: interaction\nmount(SignInBlock); KxButton;\n`,
+      // the one tree both scanners read: a component marker in an Angular spec that mounts the block
+      "packages/ui-angular/src/z.spec.ts": `// kx-verify: accessibility\nmount(SignInBlock); KxButton;\n`,
+    });
+    expect(run(script, [`--root=${dir}`]).ok).toBe(true);
+    expect(blocksOut(dir)["sign-in"]!.platforms.React!.interaction).toBeUndefined();
+    expect(blocksOut(dir)["sign-in"]!.platforms.Angular!.accessibility).toBeUndefined();
+    expect(blocksOut(dir)["sign-in"]!.platforms.Angular!.interaction).toEqual([{ ref: "packages/ui-angular/src/y.spec.ts:1-2", environment: "jsdom" }]);
+    expect(generated(dir).components.button?.Angular?.interaction).toBeUndefined();
+    expect(generated(dir).components.button?.React?.interaction).toBeDefined();
+  });
+
+  it("10. fails --check when a generated block level is inflated by hand", () => {
+    const dir = blockFixture();
+    run(script, [`--root=${dir}`]);
+    const file = join(dir, "verification.json");
+    const data = JSON.parse(readFileSync(file, "utf8"));
+    data.blocks["sign-in"].platforms.Angular.level = "runtime";
+    writeFileSync(file, JSON.stringify(data, null, 2) + "\n");
+    const { ok, output } = run(script, [`--root=${dir}`, "--check"]);
+    expect(ok).toBe(false);
+    expect(output).toMatch(/is stale/);
+  });
+
+  it("11. refuses stale or invalid evidence references", () => {
+    const unknownKind = run(script, [`--root=${blockFixture({ "packages/ui-angular/src/x.spec.ts": `// kx-verify-block: rtl\nmount(SignInBlock);\n` })}`]);
+    expect(unknownKind.ok).toBe(false);
+    expect(unknownKind.output).toMatch(/kx-verify-block names rtl/);
+    const badCovers = run(script, [`--root=${blockFixture(chromium(`// kx-verify-block: accessibility\n// kx-verify-covers: blocks/old.json\n`))}`]);
+    expect(badCovers.ok).toBe(false);
+    expect(badCovers.output).toMatch(/may only cover blocks\.manifest\.json/);
+    const coversNothing = run(script, [`--root=${blockFixture(chromium(`// kx-verify-block: interaction\nconst x = 1;\n`))}`]);
+    expect(coversNothing.ok).toBe(false);
+    expect(coversNothing.output).toMatch(/for a block but uses no block/);
+    // the browser suite is evidence only while a workflow runs it
+    const unrun = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { drop: [RUNTIME_SCRIPT] })}`]);
+    expect(unrun.ok).toBe(false);
+    expect(unrun.output).toMatch(/blocks-runtime-browser\.mjs: a React block evidence source that no workflow step/);
+    // through a package.json wrapper it counts, but only as that whole command
+    const scripts = { "check:blocks-runtime": `node ${RUNTIME_SCRIPT} --base http://127.0.0.1:3000` };
+    const wrapped = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "pnpm check:blocks-runtime" })}`]);
+    expect(wrapped.ok, wrapped.output).toBe(true);
+    const blockScalar = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "|\n          pnpm build:web\n          pnpm check:blocks-runtime" })}`]);
+    expect(blockScalar.ok, blockScalar.output).toBe(true);
+    const echoed = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "echo 'pnpm check:blocks-runtime'" })}`]);
+    expect(echoed.ok).toBe(false);
+    const commentedOut = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "|\n          # pnpm check:blocks-runtime\n          echo skipped" })}`]);
+    expect(commentedOut.ok).toBe(false);
+    // a wrapper that names the script without running it is not a run of it
+    const noop = { "check:blocks-runtime": `echo ${RUNTIME_SCRIPT}` };
+    const noopWrapper = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts: noop, runtimeStep: "pnpm check:blocks-runtime" })}`]);
+    expect(noopWrapper.ok).toBe(false);
+    expect(noopWrapper.output).toMatch(/no workflow step/);
+    const semicolon = { "check:blocks-runtime": `node ${RUNTIME_SCRIPT} --base http://127.0.0.1:3000; true` };
+    const masked = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts: semicolon, runtimeStep: "pnpm check:blocks-runtime" })}`]);
+    expect(masked.ok).toBe(false);
+    expect(masked.output).toMatch(/no workflow step/);
+    const maskedStep = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { runtimeStep: `node ${RUNTIME_SCRIPT}; true` })}`]);
+    expect(maskedStep.ok).toBe(false);
+    const help = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { runtimeStep: `node ${RUNTIME_SCRIPT} --help` })}`]);
+    expect(help.ok).toBe(false);
+    const based = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { runtimeStep: `node ${RUNTIME_SCRIPT} --base http://127.0.0.1:3000` })}`]);
+    expect(based.ok, based.output).toBe(true);
+    const otherCommand = run(script, [`--root=${blockFixture(chromium(BOTH_OBSERVED), { scripts, runtimeStep: "pnpm check:blocks-runtime-old" })}`]);
+    expect(otherCommand.ok).toBe(false);
+    expect(otherCommand.output).toMatch(/no workflow step/);
+  });
+
+  it("12. fails --check when a block leaves the manifest but its evidence stays", () => {
+    const dir = blockFixture();
+    run(script, [`--root=${dir}`]);
+    const blocks = structuredClone(BLOCKS_MANIFEST) as { blocks: Record<string, unknown> };
+    delete blocks.blocks["stat-cards"];
+    writeFileSync(join(dir, "blocks.manifest.json"), JSON.stringify(blocks));
+    const { ok, output } = run(script, [`--root=${dir}`, "--check"]);
+    expect(ok).toBe(false);
+    expect(output).toMatch(/is stale/);
+  });
+});

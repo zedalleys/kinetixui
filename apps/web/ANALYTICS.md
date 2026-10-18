@@ -240,6 +240,23 @@ drops anything else). `?kx_traffic=clear` removes it. The mark does not change a
 still be tested. Reporting drops every session holding a marked event; PostHog keeps the raw events. The policy and
 the probe checklist are in [`marketing/analytics.md`](../../marketing/analytics.md) §11 *Diagnostic traffic*.
 
+### Internal traffic
+
+The team's own browsing is marked once per browser, not per test: open any page with `?kx_traffic=internal`. The
+mark lives in `localStorage` (`kx_analytics_internal_v1`), so it survives new tabs and restarts of that browser, and
+every event carries `kx_traffic_type: "internal"`. A diagnostic mark in the same tab wins; `?kx_traffic=clear`
+removes both. Vercel Web Analytics drops internal page views for the same reason it drops diagnostic ones. Why a mark
+and not PostHog's "internal users" cohort: with `person_profiles: identified_only` and no sign-in, the site never
+identifies anyone, so a person cohort is always empty (marketing/analytics.md §11 *Traffic cohorts*).
+
+### Engagement (`page_engaged`)
+
+`AnalyticsProvider` sends `page_engaged` on the first trusted pointer, key, touch or wheel input after each page view,
+at most once per page view, with `source` where the page has one. Scroll, focus and mouse movement do not count, and
+neither do synthetic events (`isPersonInput` checks `isTrusted`). It is an arrival event and evidence that someone was
+there, never a Qualified Evaluation or Adoption Intent signal. Reporting uses it to tell a page that was only loaded
+from a page someone used (marketing/analytics.md §11 *Traffic cohorts*).
+
 ### Marketing metrics
 
 Defined in [`marketing/analytics.md`](../../marketing/analytics.md) — Qualified Evaluation Rate, Adoption Intent
@@ -288,7 +305,8 @@ Rules in [`src/lib/analytics-vercel.ts`](src/lib/analytics-vercel.ts); both SDKs
 - **Speed Insights sends measurements only** (`vital`); its `beforeSend` cancels anything else.
 - **URLs are cut to origin + path** in `beforeSend`, so no query string (`?q=`, `?filter=`, `utm_*`) or hash is sent.
   A path that is not identifier-shaped (`cleanPath`) is dropped, exactly as for PostHog page views.
-- **Do Not Track** cancels every page view and measurement. A tab marked `?kx_traffic=diagnostic` is also cancelled, because a
+- **Do Not Track** cancels every page view and measurement. A tab marked `?kx_traffic=diagnostic`, and a browser marked
+  `?kx_traffic=internal`, are also cancelled, because a
   Vercel event cannot carry the mark and so could not be filtered out afterwards. The check uses the same writer as
   PostHog, so the mark holds for the rest of the tab even when PostHog is off; with storage blocked it holds in
   memory until a full reload.

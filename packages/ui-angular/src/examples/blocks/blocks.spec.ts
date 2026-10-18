@@ -84,6 +84,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(submit.disabled).toBe(false);
   });
 
+  // kx-verify-block: accessibility
   it('settings-list names each switch from its own visible row, not from a hard-coded label', () => {
     const el = mount(SettingsListBlock).nativeElement as HTMLElement;
     const switches = [...el.querySelectorAll('kx-switch')];
@@ -95,12 +96,14 @@ describe('the semantics each block exists to demonstrate', () => {
     }
   });
 
+  // kx-verify-block: accessibility
   it('team-members distinguishes three identical "Remove" buttons by name', () => {
     const el = mount(TeamMembersBlock).nativeElement as HTMLElement;
     const names = [...el.querySelectorAll('button')].map((b) => b.getAttribute('aria-label'));
     expect(names).toEqual(['Remove Ada Lovelace', 'Remove Grace Hopper', 'Remove Alan Turing']);
   });
 
+  // kx-verify-block: end
   it('table-toolbar really filters, and says so when nothing matches', () => {
     const fixture = mount(TableToolbarBlock);
     const el = fixture.nativeElement as HTMLElement;
@@ -115,6 +118,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(el.querySelector('tbody')?.textContent).toContain('No invoices match');
   });
 
+  // kx-verify-block: accessibility
   it('table-toolbar ties every cell to a header, which is what a real table buys', () => {
     const el = mount(TableToolbarBlock).nativeElement as HTMLElement;
     expect([...el.querySelectorAll('thead th')].every((th) => th.getAttribute('scope') === 'col')).toBe(true);
@@ -122,6 +126,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(el.querySelector('caption')).not.toBeNull();
   });
 
+  // kx-verify-block: end
   it('comment-box disables the action while there is nothing to submit', () => {
     const fixture = mount(CommentBoxBlock);
     const el = fixture.nativeElement as HTMLElement;
@@ -154,6 +159,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(submit.disabled).toBe(false);
   });
 
+  // kx-verify-block: interaction, accessibility
   it('filter-panel keeps the tags and the checkboxes on ONE piece of state', () => {
     const fixture = mount(FilterPanelBlock);
     const el = fixture.nativeElement as HTMLElement;
@@ -168,6 +174,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(fixture.componentInstance.active()).toEqual([]);
   });
 
+  // kx-verify-block: accessibility
   it('editor-toolbar names each mark in text, and turns the marks off outside the editor', () => {
     const fixture = mount(EditorToolbarBlock);
     const el = fixture.nativeElement as HTMLElement;
@@ -181,6 +188,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect([...el.querySelectorAll('kx-toggle-group-item button')].every((b) => (b as HTMLButtonElement).disabled)).toBe(true);
   });
 
+  // kx-verify-block: accessibility
   it('order-summary names each stepper after its own line item', () => {
     const el = mount(OrderSummaryBlock).nativeElement as HTMLElement;
     const names = [...el.querySelectorAll('kx-number-input')].map((n) => n.getAttribute('aria-label'));
@@ -189,6 +197,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(el.querySelector('.totals')?.textContent).toContain('Free');
   });
 
+  // kx-verify-block: accessibility
   it('receipt states its status in words, and its breakdown is a <dl> ending in the total', () => {
     const el = mount(ReceiptBlock).nativeElement as HTMLElement;
     expect(el.querySelector('kx-tag')?.textContent?.trim()).toBe('Paid');
@@ -202,6 +211,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(el.querySelector('dl.breakdown .deduction dd')?.textContent?.trim()).toBe('−SAR 12.40');
   });
 
+  // kx-verify-block: accessibility
   it('receipt says honestly when the clipboard refuses the copy', async () => {
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: () => Promise.reject(new Error('denied')) },
@@ -220,6 +230,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(status.textContent).toContain("Couldn't copy automatically");
   });
 
+  // kx-verify-block: accessibility
   it('loading-state tells a screen reader that it is loading, which the shapes cannot', () => {
     const el = mount(LoadingStateBlock).nativeElement as HTMLElement;
     const region = el.querySelector('kx-card-content')!;
@@ -228,6 +239,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(region.querySelector('.kx-sr-only')?.textContent).toBe('Loading activity');
   });
 
+  // kx-verify-block: accessibility
   it('onboarding-checklist counts the progress in steps rather than in percent', () => {
     const fixture = mount(OnboardingChecklistBlock);
     const el = fixture.nativeElement as HTMLElement;
@@ -239,6 +251,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(el.querySelector('kx-progress [role="progressbar"], kx-progress')!.getAttribute('aria-valuetext')).toBe('3 of 5 complete');
   });
 
+  // kx-verify-block: end
   it('dashboard-tabs reserves the chart box before the chart exists', () => {
     const el = mount(DashboardTabsBlock).nativeElement as HTMLElement;
     const box = el.querySelector('kx-aspect-ratio') as HTMLElement;
@@ -246,6 +259,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(box.style.getPropertyValue('--kx-aspect-ratio')).toBe(String(16 / 9));
   });
 
+  // kx-verify-block: accessibility
   it('profile-form groups the visibility radios under a legend', () => {
     const el = mount(ProfileFormBlock).nativeElement as HTMLElement;
     expect(el.querySelector('fieldset legend')?.textContent?.trim()).toBe('Who can see your profile');
@@ -254,6 +268,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(checked.value).toBe('team');
   });
 
+  // kx-verify-block: accessibility
   it('account-security names the switch from its own visible heading', () => {
     const el = mount(AccountSecurityBlock).nativeElement as HTMLElement;
     const id = el.querySelector('kx-switch')!.getAttribute('aria-labelledby');
@@ -261,6 +276,7 @@ describe('the semantics each block exists to demonstrate', () => {
     expect(el.querySelector('button[aria-label="Revoke iPhone 15"]')).not.toBeNull();
   });
 
+  // kx-verify-block: accessibility
   it('pricing-tier renders its features as a real list', () => {
     const el = mount(PricingTierBlock).nativeElement as HTMLElement;
     expect(el.querySelectorAll('ul > li').length).toBe(4);

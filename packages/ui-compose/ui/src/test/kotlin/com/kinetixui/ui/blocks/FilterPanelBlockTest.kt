@@ -150,6 +150,7 @@ class FilterPanelBlockTest {
     @get:Rule
     val rule = createComposeRule()
 
+    // kx-verify-block: interaction, accessibility
     @Test
     fun a_tag_says_what_it_removes_and_removing_it_unticks_the_row() {
         rule.setContent { KinetixTheme(darkTheme = false) { FilterPanelBlock() } }

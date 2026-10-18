@@ -126,7 +126,7 @@ release is pending).
 - **Audience:** S4, P1, P2.
 - **Purpose:** demonstrate that the implementations are genuinely native by showing the differences, which
   simultaneously proves nothing is transpiled.
-- **Topics:** the same component in five idioms, side by side · why Angular is directives on native elements
+- **Topics:** the same component in five idioms, side by side · why Angular components are written in Angular
   rather than wrapped React · what a SwiftUI view does that a React component cannot · where the shared
   contract stops and platform convention takes over.
 - **Proof assets:** the five source trees; `native-*.yml` workflows; `check:angular-api`; `check:platform-code`

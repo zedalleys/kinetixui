@@ -126,6 +126,7 @@ class _FilterPanelBlockState extends State<FilterPanelBlock> {
 // kx-block:end
 
 void main() {
+  // kx-verify-block: interaction, accessibility
   testWidgets('a tag says what it removes, and removing it unticks the row', (WidgetTester tester) async {
     final SemanticsHandle handle = tester.ensureSemantics();
     await tester.pumpWidget(

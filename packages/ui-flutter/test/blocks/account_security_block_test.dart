@@ -105,6 +105,7 @@ class _AccountSecurityBlockState extends State<AccountSecurityBlock> {
 // kx-block:end
 
 void main() {
+  // kx-verify-block: accessibility
   testWidgets('the revoke action says which session it ends', (WidgetTester tester) async {
     final SemanticsHandle handle = tester.ensureSemantics();
     await tester.pumpWidget(

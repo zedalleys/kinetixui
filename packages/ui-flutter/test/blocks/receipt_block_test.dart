@@ -233,6 +233,7 @@ class _BreakdownRow extends StatelessWidget {
 // kx-block:end
 
 void main() {
+  // kx-verify-block: accessibility
   testWidgets('the status is a word, the amount is spoken, and each breakdown row is one node',
       (WidgetTester tester) async {
     final SemanticsHandle handle = tester.ensureSemantics();

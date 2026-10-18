@@ -50,8 +50,9 @@ source is named instead.
 ### A3 — Native, not wrapped
 
 - **Status:** APPROVED
-- **Evidence:** SwiftUI views, Compose composables, Flutter widgets, Angular directives on native elements
-  (`<button kxButton>`), React components. `check:angular-api`; the three native CI workflows.
+- **Evidence:** SwiftUI views, Compose composables, Flutter widgets, Angular components and directives written in Angular (a button is a directive on a real `<button kxButton>`; most selectors are `kx-*` elements),
+  React components. Corrected 2026-10-17 (M1): "Angular directives on native elements" was true of the button,
+  not of the package. `check:angular-api`; the three native CI workflows.
 - **Approved wording:** "Each platform's components are written in that platform's idiom."
 - **Forbidden interpretation:** that a runtime bridge, web view or abstraction layer is involved. None is.
 - **Review trigger:** any platform gains a wrapper-based implementation.
@@ -75,11 +76,12 @@ source is named instead.
 ### B2 — The catalogue count
 
 - **Status:** APPROVED WITH QUALIFICATION
-- **Evidence:** `pnpm marketing:stats` — 98 catalogue entries, of which one (`combobox`) is a documented
-  recipe the manifest says is not a component.
-- **Approved wording:** "98 catalogue entries — 97 components and one documented recipe." Or simply avoid the
+- **Evidence:** `pnpm marketing:stats` — N catalogue entries, of which one (`combobox`) is a documented
+  recipe the manifest says is not a component. N moves as components land (98 at Phase 4, 109 on 2026-10-17),
+  so this row names no number: read it from `marketing:stats` at the time of writing.
+- **Approved wording:** "N catalogue entries — N−1 components and one documented recipe." Or simply avoid the
   number; per `MESSAGING.md` the count is never the lead.
-- **Forbidden interpretation:** "98 components". It overstates by one, and `marketing:stats` says so out loud.
+- **Forbidden interpretation:** "N components". It overstates by one, and `marketing:stats` says so out loud.
 - **Review trigger:** the manifest's entry count or recipe count changes.
 
 ### B3 — Verification depth is published, including where it is thin

@@ -122,6 +122,7 @@ class AccountSecurityBlockTest {
     @get:Rule
     val rule = createComposeRule()
 
+    // kx-verify-block: accessibility
     @Test
     fun the_revoke_action_says_which_session_it_ends() {
         rule.setContent { KinetixTheme(darkTheme = false) { AccountSecurityBlock() } }
