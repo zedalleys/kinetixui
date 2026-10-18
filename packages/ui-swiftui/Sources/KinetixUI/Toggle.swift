@@ -23,6 +23,7 @@ public struct KinetixToggle<Label: View>: View {
     @Environment(\.kinetixColors) private var colors
     @Environment(\.kinetixRadii) private var radii
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @Binding private var isOn: Bool
     private let variant: KinetixToggleVariant
@@ -77,6 +78,9 @@ public struct KinetixToggle<Label: View>: View {
                             .strokeBorder(isOn ? colors.focus : colors.input, lineWidth: 1)
                     }
                 }
+                // selection-state (fast · standard): the background, the text colour and the border
+                // settle together. `nil` under Reduce Motion — the end state is the same either way.
+                .animation(KinetixSelectionMotion.animation(reduceMotion: reduceMotion), value: isOn)
         }
         .buttonStyle(.plain)
         .opacity(isEnabled ? 1 : 0.5)
