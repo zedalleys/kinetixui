@@ -138,10 +138,11 @@ sessions and Returning evaluators are all counted **among eligible sessions only
 `component_viewed`, `component_code_copied`, `platform_selected`, `component_code_viewed`, `github_clicked`, `npm_clicked`,
 `changelog_viewed`, `external_link_clicked`, `preset_shared`, `preset_code_copied`, `preset_loaded`,
 `preset_randomized`, `create_export_target_selected`, `create_export_copied`, `iot_example_copied`,
-`block_code_copied`, `search_result_selected`, `page_engaged`. A session with one of these and no `$pageview` is an
-arrival. (`search_result_selected`, added 2026-10-17, fires from the command menu of a page that has already sent
+`block_code_copied`, `search_result_selected`, `page_engaged`, `verification_inspected`. A session with one of these and
+no `$pageview` is an arrival. (`search_result_selected`, added 2026-10-17, fires from the command menu of a page that has already sent
 its `$pageview`, so it cannot add an arrival in practice; it is listed because the list is the contract. The same
-holds for `page_engaged`, added 2026-10-18 (M2), which fires on the first physical input after a page view.)
+holds for `page_engaged`, added 2026-10-18 (M2), which fires on the first physical input after a page view, and for
+`verification_inspected`, added 2026-10-18 (BD-W5), which fires on a click on a page that has already been viewed.)
 
 **Does not qualify on its own.** `$pageleave`, and any other event name: PostHog SDK events (`$autocapture`,
 `$identify`, `$web_vitals`, …) and names nobody declared. The list is an allowlist, so a new event cannot
@@ -289,6 +290,18 @@ platform setup page is still `docs_viewed`, which is neither QE nor Adoption Int
 change QER and needs an owner decision. Nothing here can show that an install succeeded, so activation stays
 unmeasured (§5). Events before 2026-10-18 have no `platform` on these three, so a per-platform breakdown starts
 that day.
+
+**2026-10-18, verification inspection (BD-W5).** One event, `verification_inspected`, so looking at the evidence
+behind a verification claim is visible where it happens, not only through the homepage `view_verification` CTA. It
+fires the first time a disclosure is opened on a page view: a component page's "Verification details"
+(`source: component_page`, `location: verification_details`, `component`) and a use-case workflow's "Evidence for each
+part" (`source: use_case_page`, `location: workflow_evidence`, `page`). Following the "how the levels are earned"
+link sends it once with `location: evidence_link`. Closing, re-opening and a disclosure that is merely on screen
+send nothing, and which parts or platforms were read is never sent. This replaces the BD-W3b2b note above that the
+workflow disclosure is untracked. It is in neither Qualified Evaluation nor Adoption Intent; counting it under QE
+alongside `view_verification` would widen QER and needs an owner decision. It joins the arrival list (§4) because
+the list is the contract; it cannot add an arrival in practice. The adoption funnel view (§11 "Adoption funnel") reads
+it as its verification stage.
 
 **Vocabulary health, audited:** no duplicate events; no event without a decision it supports; every
 documented event is emitted and every emitted event is documented. (`button_clicked` appears in the
@@ -603,6 +616,31 @@ each count's share of the arm's audience sessions once the arm's registered floo
 experiment started), all counted from the session's first arm-tagged event onward (`arm_*` columns; older exports without them
 still read, with no arm rows). A multi-week export is cut to `--from`/`--to` when read, so one
 export feeds every week's report. Warnings never change a number.
+
+### Adoption funnel (BD-W5, 2026-10-18)
+
+A view over existing signals, not a new measure: it changes neither QER nor Adoption Intent. Stages are defined once,
+as `ADOPTION_FUNNEL_STAGES` in `apps/web/src/lib/analytics-measurement.ts`, and counted by
+[`scripts/adoption-funnel-report.mjs`](../scripts/adoption-funnel-report.mjs) (`--print-query`, then `--sessions
+rows.json`), whose copy is pinned by `adoption-funnel-signals.test.ts`.
+
+| Stage | Signals (any one, in any order) |
+| --- | --- |
+| Exploration | `component_viewed` |
+| Platform selection | `platform_selected` |
+| Verification inspection | `verification_inspected`, `cta_clicked` with `view_verification` |
+| Installation interest | `installation_viewed`, `docs_viewed` carrying `platform` (a platform setup page), `cta_clicked` with `installation` |
+| Code copy | `component_code_copied`, `block_code_copied` |
+| Adoption Intent | the §4 list, unchanged |
+| Successful install | **not observable**, always |
+
+Each figure is distinct sessions that reached the stage, so a later stage can exceed an earlier one (a visitor can
+copy an install command without opening a component page). Sessions are split by the traffic cohorts above, using
+the weekly report's `classifySession`: audience, suspected automation and internal are separate columns; diagnostic
+and non-arrival sessions are counted and left out. Installation interest is also broken down by the `platform` its
+events carried, which exists from 2026-10-18 (BD-W4). No stage infers an install: reading a setup page, following a
+setup link or copying an install command shows interest or intent, and whether the install then worked happens where
+the site sends nothing (§5).
 
 ### Arrival eligibility and diagnostic exclusion, 2026-10-09
 

@@ -9,11 +9,15 @@ on:
       - "packages/ui-swiftui/**"
       - "tokens/**"
       - "style-dictionary/**"
+      - "apps/web/src/app/docs/swiftui/**"
+      - "scripts/adoption/swiftui-consumer.mjs"
   pull_request:
     paths:
       - "packages/ui-swiftui/**"
       - "tokens/**"
       - "style-dictionary/**"
+      - "apps/web/src/app/docs/swiftui/**"
+      - "scripts/adoption/swiftui-consumer.mjs"
 
 permissions:
   contents: read
@@ -44,3 +48,32 @@ jobs:
       # XCTest on the macOS runner: WCAG contrast of the shipped colour sets (light + dark) and the spatial scale.
       - name: Test
         run: swift test
+
+      # The /docs/swiftui setup and first screen, compiled in a clean SwiftPM consumer (macOS, no simulator).
+      - name: Documented SwiftUI setup in a clean consumer
+        working-directory: .
+        run: node scripts/adoption/swiftui-consumer.mjs
+
+  # Proves the consumer gate above can fail: each control breaks one documented step (an import, a
+  # constructor, an argument label, the package name or path, the platform floor, or a fence) and must
+  # fail the gate for that named reason. Compile only, no device or simulator.
+  consumer-negative-controls:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        control:
+          - missing-import
+          - wrong-constructor
+          - wrong-argument
+          - wrong-package
+          - wrong-path
+          - platform-floor-too-low
+          - fence-missing
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Negative control: ${{ matrix.control }}"
+        env:
+          CONTROL: ${{ matrix.control }}
+        run: node scripts/adoption/swiftui-consumer.mjs --negative="$CONTROL"
