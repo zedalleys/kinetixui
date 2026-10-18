@@ -80,8 +80,8 @@ dependencies:
     path: ../kinetixui/packages/ui-flutter
 ```
 
-CI analyzes and tests the package itself; neither dependency form is exercised
-in a separate app by CI. To update a `git:` dependency, change `ref:` to a newer
+CI builds a fresh app against the path form (see below after the first screen);
+it does not exercise the `git:` form. To update a `git:` dependency, change `ref:` to a newer
 commit and run `flutter pub get`.
 
 Wrap your app — or a screen — in `KinetixTheme`, then read colours with
@@ -120,8 +120,9 @@ Show it from your app, for example with
 You should see a **Save** button above a smaller outlined **Cancel** button, in
 light or dark to match the platform brightness.
 
-This sample is not compiled in CI either. The package's own `flutter analyze` and `flutter test` exercise the
-widgets it uses, so a constructor change fails there first, but `Demo` itself is not built in an app.
+CI builds this sample as written: `node scripts/adoption/flutter-consumer.mjs` puts the path dependency above,
+`Demo` and that `runApp` line into a fresh app, runs `flutter analyze`, and runs a headless widget test that finds
+**Save** above a smaller outlined **Cancel** in light and dark. Nothing runs it on a device, emulator or simulator.
 
 <FirstUseNextSteps platform="Flutter" />
 
