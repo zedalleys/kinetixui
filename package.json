@@ -97,6 +97,7 @@
     "check:platform-source": "node scripts/check-platform-source.mjs",
     "platform:matrix": "node scripts/check-platform-source.mjs --matrix",
     "report:beta": "node scripts/report-beta.mjs",
+    "report:block-parity": "node scripts/report-block-parity.mjs",
     "build:angular": "pnpm --filter @kinetixui/angular build",
     "test:angular": "pnpm --filter @kinetixui/angular test",
     "gen:blocks": "node scripts/gen-block-examples.mjs",
@@ -132,7 +133,8 @@
     "check:analytics-browser": "node scripts/analytics-browser.mjs --base http://127.0.0.1:3100",
     "gen:visuals": "node scripts/gen-marketing-visuals.mjs",
     "render:visuals": "node scripts/render-marketing-visuals.mjs",
-    "check:web-dogfooding": "node --test scripts/check-web-dogfooding.test.mjs && node scripts/check-web-dogfooding.mjs"
+    "check:web-dogfooding": "node --test scripts/check-web-dogfooding.test.mjs && node scripts/check-web-dogfooding.mjs",
+    "check:blocks-runtime": "node scripts/blocks-runtime-browser.mjs --base http://127.0.0.1:3000"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

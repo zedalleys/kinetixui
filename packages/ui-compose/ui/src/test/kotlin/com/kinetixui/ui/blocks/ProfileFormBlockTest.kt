@@ -146,6 +146,7 @@ class ProfileFormBlockTest {
     @get:Rule
     val rule = createComposeRule()
 
+    // kx-verify-block: interaction, accessibility
     @Test
     fun the_whole_row_selects_the_option_and_the_state_is_announced() {
         rule.setContent { KinetixTheme(darkTheme = false) { ProfileFormBlock() } }

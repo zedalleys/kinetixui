@@ -144,6 +144,7 @@ class OrderSummaryBlockTest {
     @get:Rule
     val rule = createComposeRule()
 
+    // kx-verify-block: accessibility
     @Test
     fun each_stepper_says_which_item_it_counts_and_free_shipping_is_a_word() {
         rule.setContent { KinetixTheme(darkTheme = false) { OrderSummaryBlock() } }

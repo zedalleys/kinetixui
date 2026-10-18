@@ -151,6 +151,7 @@ class _TotalRow extends StatelessWidget {
 // kx-block:end
 
 void main() {
+  // kx-verify-block: accessibility
   testWidgets('each stepper says which item it counts, and free shipping is a word', (WidgetTester tester) async {
     final SemanticsHandle handle = tester.ensureSemantics();
     await tester.pumpWidget(

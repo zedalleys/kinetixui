@@ -103,6 +103,7 @@ class EditorToolbarBlockTest {
     @get:Rule
     val rule = createComposeRule()
 
+    // kx-verify-block: interaction, accessibility
     @Test
     fun formatting_is_named_and_switches_off_with_the_editor() {
         rule.setContent { KinetixTheme(darkTheme = false) { EditorToolbarBlock() } }
