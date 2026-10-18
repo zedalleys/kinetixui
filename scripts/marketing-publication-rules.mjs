@@ -183,6 +183,23 @@ export function copyHash(text) {
 }
 
 /**
+ * Which span of its file an asset's copy is, so a pin cannot point at some other, stable text:
+ *  - `variant` on the asset names a lettered section (a01/linkedin.md holds LI-001 as A and LI-002 as B);
+ *  - otherwise a `## <asset id>` heading in the file is the asset's entry (content/linkedin.md, content/x.md);
+ *  - otherwise a file that is this asset's alone is pinned whole; a shared one needs a `variant`.
+ */
+export function expectedPin(asset, assets, body) {
+  if (asset.variant !== undefined) {
+    if (typeof asset.variant !== "string" || !asset.variant.trim()) return { problem: "variant must be a non-empty section name" };
+    return { section: asset.variant };
+  }
+  if (sectionText(body, asset.id) !== null) return { section: asset.id };
+  const shared = assets.some((o) => o !== asset && o.file === asset.file);
+  if (shared) return { problem: `${asset.file} holds other assets too — set "variant" to the section that is this asset's copy` };
+  return { section: undefined };
+}
+
+/**
  * brief -> drafted -> ready -> published, plus an optional, explicit owner approval on ready/published.
  *
  * `readFile` is injected so the rule stays pure for its tests. An approval given from COPY_PIN_REQUIRED_FROM must
@@ -230,12 +247,25 @@ export function approvalProblems(assets = [], readFile = null) {
       problems.push(`${where}: approval.copy needs a file, an optional non-empty section and a sha256 hex digest`);
       continue;
     }
+    if (file !== asset.file) {
+      problems.push(`${where}: approval.copy pins ${file}, but this asset's copy is ${asset.file ?? "(no file)"} — a pin must cover the words being approved`);
+      continue;
+    }
     if (!readFile) continue;
     let body;
     try {
       body = readFile(file);
     } catch {
       problems.push(`${where}: approval.copy file ${file} cannot be read`);
+      continue;
+    }
+    const expected = expectedPin(asset, assets, body);
+    if (expected.problem) {
+      problems.push(`${where}: ${expected.problem}`);
+      continue;
+    }
+    if (section !== expected.section) {
+      problems.push(`${where}: approval.copy pins ${section === undefined ? "the whole file" : `section "${section}"`}, but this asset's copy is ${expected.section === undefined ? "the whole file" : `section "${expected.section}"`} — a pin must cover the words being approved`);
       continue;
     }
     const text = section === undefined ? fileCopyText(body) : sectionText(body, section);

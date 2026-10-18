@@ -107,6 +107,8 @@ const files = (body = DRAFT) => (f) => {
 const pinned = (over = {}) => ({
   id: "LI-001",
   status: "ready",
+  file: "draft.md",
+  variant: "A",
   approval: { by: "Ziad", on: "2026-10-18", evidence: "project thread message", copy: { file: "draft.md", section: "A", sha256: copyHash("The approved words.\n\nSecond line.") } },
   ...over,
 });
@@ -134,7 +136,7 @@ test("sectionText reads a register entry up to its closing ---, never into the n
   assert.equal(sectionText(ENTRIES, "LI-008"), "**Campaign:** `c`\n\n> The post.");
   assert.equal(sectionText(ENTRIES, "LI-009"), "> Next post.");
   assert.equal(sectionText(ENTRIES, "LI-00"), null);
-  const pin = { id: "LI-008", status: "ready", approval: { by: "Ziad", on: "2026-10-19", evidence: "x", copy: { file: "draft.md", section: "LI-008", sha256: copyHash("**Campaign:** `c`\n\n> The post.") } } };
+  const pin = { id: "LI-008", status: "ready", file: "draft.md", approval: { by: "Ziad", on: "2026-10-19", evidence: "x", copy: { file: "draft.md", section: "LI-008", sha256: copyHash("**Campaign:** `c`\n\n> The post.") } } };
   assert.deepEqual(approvalProblems([pin], files(ENTRIES)), []);
   // editing the neighbouring entry leaves the approval intact; editing this one breaks it
   assert.deepEqual(approvalProblems([pin], files(ENTRIES.replace("Next post.", "Changed."))), []);
@@ -144,7 +146,7 @@ test("sectionText reads a register entry up to its closing ---, never into the n
 test("an approval with no section pins the whole file after its front matter (a thread file)", () => {
   const thread = "---\nid: a01\nstatus: ready\n---\n\n# X\n\n**1/**\n\nFirst.\n\n---\n\n**2/**\n\nSecond.\n";
   assert.equal(fileCopyText(thread).startsWith("# X"), true);
-  const pin = { id: "X-001", status: "ready", approval: { by: "Ziad", on: "2026-10-19", evidence: "x", copy: { file: "draft.md", sha256: copyHash(fileCopyText(thread)) } } };
+  const pin = { id: "X-001", status: "ready", file: "draft.md", approval: { by: "Ziad", on: "2026-10-19", evidence: "x", copy: { file: "draft.md", sha256: copyHash(fileCopyText(thread)) } } };
   assert.deepEqual(approvalProblems([pin], files(thread)), []);
   // front matter is metadata: changing status does not change the approved words
   assert.deepEqual(approvalProblems([pin], files(thread.replace("status: ready", "status: published"))), []);
@@ -165,6 +167,25 @@ test("negative control: an approval from 2026-10-18 without the approved words p
   assert.match(approvalProblems([unpinned], files()).join("\n"), /must pin the approved words/);
 });
 
+test("negative control: a pin must cover this asset's own words, not some other stable text", () => {
+  const p = pinned().approval.copy;
+  // another file, even one whose text matches the hash
+  const other = pinned({ approval: { ...pinned().approval, copy: { ...p, file: "notes.md" } } });
+  assert.match(approvalProblems([other], () => DRAFT).join("\n"), /pins notes\.md, but this asset's copy is draft\.md/);
+  // another section of the right file (B, the variant that is not being approved)
+  const b = pinned({ approval: { ...pinned().approval, copy: { ...p, section: "B", sha256: copyHash("Other words.") } } });
+  assert.match(approvalProblems([b], files()).join("\n"), /pins section "B", but this asset's copy is section "A"/);
+  // a register entry pinned to its neighbour
+  const entry = { id: "LI-008", status: "ready", file: "draft.md", approval: { by: "Ziad", on: "2026-10-19", evidence: "x", copy: { file: "draft.md", section: "LI-007", sha256: copyHash("> Old post.") } } };
+  assert.match(approvalProblems([entry], files(ENTRIES)).join("\n"), /pins section "LI-007", but this asset's copy is section "LI-008"/);
+  // a whole-file pin where the asset is one entry of the file
+  const whole = { ...entry, approval: { ...entry.approval, copy: { file: "draft.md", sha256: copyHash(fileCopyText(ENTRIES)) } } };
+  assert.match(approvalProblems([whole], files(ENTRIES)).join("\n"), /pins the whole file, but this asset's copy is section "LI-008"/);
+  // a shared file with no variant cannot say which section is this asset's
+  const { variant, ...noVariant } = pinned();
+  assert.match(approvalProblems([noVariant, { id: "LI-002", status: "ready", file: "draft.md" }], files()).join("\n"), /holds other assets too — set "variant"/);
+});
+
 test("negative control: copy edited after approval fails, even by one word", () => {
   const edited = DRAFT.replace("The approved words.", "The improved words.");
   assert.match(approvalProblems([pinned()], files(edited)).join("\n"), /changed after approval/);
@@ -173,8 +194,8 @@ test("negative control: copy edited after approval fails, even by one word", () 
 });
 
 test("negative control: a pin to a missing section or file fails", () => {
-  assert.match(approvalProblems([pinned({ approval: { ...pinned().approval, copy: { ...pinned().approval.copy, section: "Z" } } })], files()).join("\n"), /section "Z" is not in/);
-  assert.match(approvalProblems([pinned({ approval: { ...pinned().approval, copy: { ...pinned().approval.copy, file: "gone.md" } } })], files()).join("\n"), /cannot be read/);
+  assert.match(approvalProblems([pinned({ variant: "Z", approval: { ...pinned().approval, copy: { ...pinned().approval.copy, section: "Z" } } })], files()).join("\n"), /section "Z" is not in/);
+  assert.match(approvalProblems([pinned({ file: "gone.md", approval: { ...pinned().approval, copy: { ...pinned().approval.copy, file: "gone.md" } } })], files()).join("\n"), /cannot be read/);
   assert.match(approvalProblems([pinned({ approval: { ...pinned().approval, copy: { file: "draft.md", section: "A", sha256: "abc" } } })], files()).join("\n"), /sha256 hex digest/);
 });
 

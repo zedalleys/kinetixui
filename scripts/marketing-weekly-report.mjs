@@ -50,7 +50,12 @@ export const EXCLUDED_SESSION_IDS = ["01a120d7-2b07-7ed0-af0c-f96d32e4c5bd"];
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const list = (xs) => xs.map((x) => `'${x}'`).join(", ");
 
-/** The one query. One row per PostHog session in [from, to), UTC. */
+/**
+ * The one query. One row per PostHog session that STARTED in [from, to), UTC, aggregated over its complete event
+ * history: events are read from a day either side of the window (a PostHog session never exceeds 24 hours) and the
+ * window is applied to the session's first event, so a session crossing midnight on a boundary is counted once,
+ * in the week it began, and classified on all of its events.
+ */
 export function sessionQuery(from, to) {
   if (!DAY.test(from) || !DAY.test(to) || from >= to) throw new Error("--from and --to must be YYYY-MM-DD with from < to");
   return `SELECT
@@ -73,9 +78,10 @@ export function sessionQuery(from, to) {
   argMin(properties.kx_referrer, timestamp) AS kx_referrer,
   argMinIf(properties.$pathname, timestamp, event = '$pageview') AS landing
 FROM events
-WHERE timestamp >= toDateTime('${from} 00:00:00') AND timestamp < toDateTime('${to} 00:00:00')
+WHERE timestamp >= toDateTime('${from} 00:00:00') - INTERVAL 1 DAY AND timestamp < toDateTime('${to} 00:00:00') + INTERVAL 1 DAY
   AND $session_id IS NOT NULL AND $session_id NOT IN (${list(EXCLUDED_SESSION_IDS)})
 GROUP BY session_id
+HAVING started >= toDateTime('${from} 00:00:00') AND started < toDateTime('${to} 00:00:00')
 ORDER BY started`;
 }
 

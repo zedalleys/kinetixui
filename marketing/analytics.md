@@ -573,7 +573,8 @@ arrival event, not a QE or AI signal. Before it is deployed, automation and a pe
 alike; after, a reader who touches the page is human-evidenced.
 
 **Weekly report.** `pnpm marketing:weekly --from YYYY-MM-DD --to YYYY-MM-DD --print-query` prints the one HogQL
-query; save its rows as JSON and run `pnpm marketing:weekly --from … --to … --sessions rows.json` (optionally
+query (one row per session that started in the window, aggregated over all of its events, so a session crossing
+a week boundary is counted once, in the week it began); save its rows as JSON and run `pnpm marketing:weekly --from … --to … --sessions rows.json` (optionally
 `--platform p.json` with numbers copied from each platform). Reach, impressions and clicks print as "unavailable"
 unless supplied; nothing is estimated.
 

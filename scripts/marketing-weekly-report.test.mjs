@@ -106,4 +106,7 @@ test("sessionQuery validates its window and excludes the audited session", () =>
   assert.match(q, /toDateTime\('2026-10-12 00:00:00'\)/);
   assert.match(q, /01a120d7-2b07-7ed0-af0c-f96d32e4c5bd/);
   assert.match(q, /properties\.target IN/);
+  // a session belongs to the week it started in, and is aggregated over all of its events (sessions cap at 24 h)
+  assert.match(q, /timestamp >= toDateTime\('2026-10-12 00:00:00'\) - INTERVAL 1 DAY AND timestamp < toDateTime\('2026-10-19 00:00:00'\) \+ INTERVAL 1 DAY/);
+  assert.match(q, /HAVING started >= toDateTime\('2026-10-12 00:00:00'\) AND started < toDateTime\('2026-10-19 00:00:00'\)/);
 });

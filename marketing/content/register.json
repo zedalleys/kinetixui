@@ -145,7 +145,8 @@
           "section": "A",
           "sha256": "09a399477e8c537d48045fd2cc83a3faf77c33a467b3d046389c83e3f5d33cfb"
         }
-      }
+      },
+      "variant": "A"
     },
     {
       "id": "LI-002",
@@ -161,7 +162,8 @@
       "campaign": "kx_p1_a_parity_proof",
       "utm_content": "li_secondary",
       "url": "https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_parity_proof&utm_content=li_secondary",
-      "derived_from": "ART-001"
+      "derived_from": "ART-001",
+      "variant": "B"
     },
     {
       "id": "X-001",
