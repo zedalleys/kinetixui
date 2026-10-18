@@ -49,7 +49,8 @@ export const EVIDENCE_LEVEL_MEANING: Record<EvidenceLevel, string> = {
   "not-verified": "An implementation is declared, but no test or build records evidence for it.",
   source: "The source exists; no CI build records it. Any tests it has are listed but do not raise its level.",
   build: "CI compiles the package it ships in; interaction and accessibility are not both tested.",
-  runtime: "Tests record both interaction and accessibility for it. For a block, both were observed in a real browser or on a device.",
+  runtime:
+    "Tests record both interaction and accessibility for it. For a block, both were observed in a real browser or on a device; for a component, the note under it says where they ran.",
 };
 
 /** The kinds a part must hold, all of them, for a level. `build` is the manifest's own declaration, read through CI. */
@@ -94,6 +95,28 @@ export const RUNTIME_ENVIRONMENTS: readonly string[] = verification.runtimeEnvir
 /** A catalogue component on a platform: the manifest says whether it exists, verification.json what it proved. */
 export function componentLevel(slug: string, platform: Platform): EvidenceLevel {
   return levelFor(platformsFor(slug).includes(platform), evidenceFor(slug, platform), true);
+}
+
+type ComponentRecord = Partial<Record<Platform, Partial<Record<EvidenceKind, string[]>>>>;
+const COMPONENT_REFS = verification.components as unknown as Record<string, ComponentRecord>;
+/** Where each component evidence file runs (jsdom, chromium, xctest…), as gen:verification recorded it. */
+const SOURCE_ENVIRONMENT: Record<string, string> = Object.fromEntries(
+  Object.values(verification.sources as Record<string, { file: string; environment?: string }[]>)
+    .flat()
+    .map((s) => [s.file, s.environment ?? ""]),
+);
+
+/**
+ * A component's interaction and accessibility references on a platform, each tagged with where its suite runs, in
+ * the same shape as a block's record so the same note can describe both. It does not change the level: a
+ * component is still runtime verified when both kinds are recorded, whatever ran them (see
+ * docs/VERIFICATION-RUNTIME-DECISION.md). The note is what keeps that label from reading as more than it is.
+ */
+export function componentEvidence(slug: string, platform: Platform): BlockPlatformEvidence {
+  const refs = COMPONENT_REFS[slug]?.[platform] ?? {};
+  const tagged = (kind: "interaction" | "accessibility") =>
+    (refs[kind] ?? []).map((ref) => ({ ref, environment: SOURCE_ENVIRONMENT[ref.replace(/:\d+-\d+$/, "")] }));
+  return { level: componentLevel(slug, platform), interaction: tagged("interaction"), accessibility: tagged("accessibility") };
 }
 
 /**

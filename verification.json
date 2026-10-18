@@ -75,6 +75,7 @@
     "React": [
       {
         "file": "packages/ui/src/checkbox-radio-motion.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "interaction",
           "rtl"
@@ -88,6 +89,7 @@
       },
       {
         "file": "packages/ui/src/components-a11y.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "accessibility"
         ],
@@ -205,6 +207,7 @@
       },
       {
         "file": "packages/ui/src/components-behavior.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "interaction"
         ],
@@ -219,6 +222,7 @@
       },
       {
         "file": "packages/ui/src/components-business.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "accessibility",
           "interaction",
@@ -240,6 +244,7 @@
       },
       {
         "file": "packages/ui/src/components-direction-portal.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "rtl"
         ],
@@ -260,6 +265,7 @@
       },
       {
         "file": "packages/ui/src/components-form.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "interaction",
           "rtl"
@@ -278,6 +284,7 @@
       },
       {
         "file": "packages/ui/src/components-keyboard.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "interaction",
           "rtl"
@@ -315,6 +322,7 @@
       },
       {
         "file": "packages/ui/src/components-lifecycle.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "interaction"
         ],
@@ -327,6 +335,7 @@
       },
       {
         "file": "packages/ui/src/components-overlay.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "interaction",
           "rtl"
@@ -345,6 +354,7 @@
       },
       {
         "file": "packages/ui/src/components-rtl.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "rtl"
         ],
@@ -360,6 +370,7 @@
       },
       {
         "file": "packages/ui/src/components-selection.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "interaction",
           "rtl"
@@ -375,6 +386,7 @@
       },
       {
         "file": "packages/ui/src/components-transactional.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "accessibility",
           "interaction",
@@ -403,6 +415,7 @@
       },
       {
         "file": "packages/ui/src/toggle-motion.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "interaction",
           "rtl"
@@ -415,6 +428,7 @@
       },
       {
         "file": "scripts/a11y-browser.mjs",
+        "environment": "chromium",
         "kinds": [
           "accessibility"
         ],
@@ -532,6 +546,7 @@
       },
       {
         "file": "scripts/large-text.mjs",
+        "environment": "chromium",
         "kinds": [
           "largeText"
         ],
@@ -579,6 +594,7 @@
       },
       {
         "file": "scripts/motion.mjs",
+        "environment": "chromium",
         "kinds": [
           "reducedMotion"
         ],
@@ -597,6 +613,7 @@
     "Angular": [
       {
         "file": "packages/ui-angular/src/lib/content.spec.ts",
+        "environment": "jsdom",
         "kinds": [
           "accessibility",
           "interaction",
@@ -619,6 +636,7 @@
       },
       {
         "file": "packages/ui-angular/src/lib/display-forms.spec.ts",
+        "environment": "jsdom",
         "kinds": [
           "accessibility",
           "interaction"
@@ -648,6 +666,7 @@
       },
       {
         "file": "packages/ui-angular/src/lib/inputs.spec.ts",
+        "environment": "jsdom",
         "kinds": [
           "accessibility",
           "interaction"
@@ -661,6 +680,7 @@
       },
       {
         "file": "packages/ui-angular/src/lib/kinetix-angular.spec.ts",
+        "environment": "jsdom",
         "kinds": [
           "accessibility",
           "interaction",
@@ -682,6 +702,7 @@
       },
       {
         "file": "packages/ui-angular/src/lib/navigation.spec.ts",
+        "environment": "jsdom",
         "kinds": [
           "accessibility",
           "interaction"
@@ -701,6 +722,7 @@
       },
       {
         "file": "scripts/angular-browser.mjs",
+        "environment": "chromium",
         "kinds": [
           "accessibility",
           "interaction",
@@ -793,6 +815,7 @@
       },
       {
         "file": "scripts/angular-collections.mjs",
+        "environment": "chromium",
         "kinds": [
           "accessibility",
           "interaction",
@@ -813,6 +836,7 @@
       },
       {
         "file": "scripts/angular-layout.mjs",
+        "environment": "chromium",
         "kinds": [
           "accessibility",
           "interaction",
@@ -829,6 +853,7 @@
       },
       {
         "file": "scripts/angular-overlays.mjs",
+        "environment": "chromium",
         "kinds": [
           "accessibility",
           "interaction",
@@ -855,6 +880,7 @@
     "SwiftUI": [
       {
         "file": "packages/ui-swiftui/Tests/KinetixUITests/DisclosureMotionTests.swift",
+        "environment": "xctest",
         "kinds": [
           "reducedMotion"
         ],
@@ -865,6 +891,7 @@
       },
       {
         "file": "packages/ui-swiftui/Tests/KinetixUITests/LoopMotionTests.swift",
+        "environment": "xctest",
         "kinds": [
           "reducedMotion"
         ],
@@ -877,6 +904,7 @@
       },
       {
         "file": "packages/ui-swiftui/Tests/KinetixUITests/SlideMotionTests.swift",
+        "environment": "xctest",
         "kinds": [
           "reducedMotion"
         ],
@@ -886,6 +914,7 @@
       },
       {
         "file": "packages/ui-swiftui/Tests/KinetixUITests/SwitchMotionTests.swift",
+        "environment": "xctest",
         "kinds": [
           "reducedMotion"
         ],
@@ -897,6 +926,7 @@
     "Compose": [
       {
         "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/AdaptivityTest.kt",
+        "environment": "robolectric",
         "kinds": [
           "rtl"
         ],
@@ -906,6 +936,7 @@
       },
       {
         "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt",
+        "environment": "robolectric",
         "kinds": [
           "interaction",
           "reducedMotion"
@@ -917,6 +948,7 @@
       },
       {
         "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt",
+        "environment": "robolectric",
         "kinds": [
           "interaction"
         ],
@@ -930,6 +962,7 @@
       },
       {
         "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/LoopMotionTest.kt",
+        "environment": "robolectric",
         "kinds": [
           "reducedMotion"
         ],
@@ -942,6 +975,7 @@
       },
       {
         "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt",
+        "environment": "robolectric",
         "kinds": [
           "accessibility"
         ],
@@ -956,6 +990,7 @@
       },
       {
         "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt",
+        "environment": "robolectric",
         "kinds": [
           "interaction",
           "reducedMotion"
@@ -968,6 +1003,7 @@
     "Flutter": [
       {
         "file": "packages/ui-flutter/test/adaptivity_test.dart",
+        "environment": "flutter_test",
         "kinds": [
           "largeText",
           "rtl"
@@ -1035,6 +1071,7 @@
       },
       {
         "file": "packages/ui-flutter/test/disclosure_motion_test.dart",
+        "environment": "flutter_test",
         "kinds": [
           "reducedMotion"
         ],
@@ -1045,6 +1082,7 @@
       },
       {
         "file": "packages/ui-flutter/test/interaction_test.dart",
+        "environment": "flutter_test",
         "kinds": [
           "interaction"
         ],
@@ -1059,6 +1097,7 @@
       },
       {
         "file": "packages/ui-flutter/test/loop_motion_test.dart",
+        "environment": "flutter_test",
         "kinds": [
           "reducedMotion"
         ],
@@ -1071,6 +1110,7 @@
       },
       {
         "file": "packages/ui-flutter/test/semantics_test.dart",
+        "environment": "flutter_test",
         "kinds": [
           "accessibility"
         ],
@@ -1084,6 +1124,7 @@
       },
       {
         "file": "packages/ui-flutter/test/switch_motion_test.dart",
+        "environment": "flutter_test",
         "kinds": [
           "reducedMotion"
         ],
@@ -6595,8 +6636,8 @@
     },
     "Angular": {
       "not-implemented": 0,
-      "source": 21,
-      "build": 0,
+      "source": 0,
+      "build": 21,
       "runtime": 0
     },
     "SwiftUI": {
@@ -6645,14 +6686,18 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/sign-in.ts"
             }
           ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "no accessibility test"
           ]
@@ -6736,14 +6781,18 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/stat-cards.ts"
             }
           ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "no accessibility test"
           ]
@@ -6827,10 +6876,15 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/pricing-tier.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
             }
           ],
           "accessibility": [
@@ -6840,7 +6894,6 @@
             }
           ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "accessibility tested headless only (jsdom), not observed in a browser or on a device"
           ]
@@ -6924,14 +6977,18 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/cta-banner.ts"
             }
           ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "no accessibility test"
           ]
@@ -7015,10 +7072,15 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/table-toolbar.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
             }
           ],
           "accessibility": [
@@ -7028,7 +7090,6 @@
             }
           ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "accessibility tested headless only (jsdom), not observed in a browser or on a device"
           ]
@@ -7112,10 +7173,15 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/settings-list.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
             }
           ],
           "accessibility": [
@@ -7125,7 +7191,6 @@
             }
           ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "accessibility tested headless only (jsdom), not observed in a browser or on a device"
           ]
@@ -7209,10 +7274,15 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/team-members.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
             }
           ],
           "accessibility": [
@@ -7222,7 +7292,6 @@
             }
           ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "accessibility tested headless only (jsdom), not observed in a browser or on a device"
           ]
@@ -7306,14 +7375,18 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/comment-box.ts"
             }
           ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "no accessibility test"
           ]
@@ -7397,14 +7470,18 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/empty-state.ts"
             }
           ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "no accessibility test"
           ]
@@ -7488,14 +7565,18 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/alert-stack.ts"
             }
           ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "no accessibility test"
           ]
@@ -7579,14 +7660,18 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/testimonial.ts"
             }
           ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "no accessibility test"
           ]
@@ -7670,14 +7755,18 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/create-account.ts"
             }
           ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "no accessibility test"
           ]
@@ -7761,10 +7850,15 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/profile-form.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
             }
           ],
           "accessibility": [
@@ -7774,7 +7868,6 @@
             }
           ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "accessibility tested headless only (jsdom), not observed in a browser or on a device"
           ]
@@ -7882,10 +7975,15 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/account-security.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
             }
           ],
           "accessibility": [
@@ -7895,7 +7993,6 @@
             }
           ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "accessibility tested headless only (jsdom), not observed in a browser or on a device"
           ]
@@ -7991,10 +8088,15 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/onboarding-checklist.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
             }
           ],
           "accessibility": [
@@ -8004,7 +8106,6 @@
             }
           ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "accessibility tested headless only (jsdom), not observed in a browser or on a device"
           ]
@@ -8088,10 +8189,15 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/editor-toolbar.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
             }
           ],
           "accessibility": [
@@ -8101,7 +8207,6 @@
             }
           ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "accessibility tested headless only (jsdom), not observed in a browser or on a device"
           ]
@@ -8209,10 +8314,15 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/filter-panel.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
             }
           ],
           "interaction": [
@@ -8228,7 +8338,6 @@
             }
           ],
           "limitations": [
-            "no CI step compiles this file",
             "interaction tested headless only (jsdom), not observed in a browser or on a device",
             "accessibility tested headless only (jsdom), not observed in a browser or on a device"
           ]
@@ -8336,14 +8445,18 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/dashboard-tabs.ts"
             }
           ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "no accessibility test"
           ]
@@ -8439,10 +8552,15 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/loading-state.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
             }
           ],
           "accessibility": [
@@ -8452,7 +8570,6 @@
             }
           ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "accessibility tested headless only (jsdom), not observed in a browser or on a device"
           ]
@@ -8551,10 +8668,15 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/order-summary.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
             }
           ],
           "accessibility": [
@@ -8564,7 +8686,6 @@
             }
           ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "accessibility tested headless only (jsdom), not observed in a browser or on a device"
           ]
@@ -8663,10 +8784,15 @@
           ]
         },
         "Angular": {
-          "level": "source",
+          "level": "build",
           "source": [
             {
               "ref": "packages/ui-angular/src/examples/blocks/receipt.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
             }
           ],
           "accessibility": [
@@ -8680,7 +8806,6 @@
             }
           ],
           "limitations": [
-            "no CI step compiles this file",
             "no interaction test",
             "accessibility tested headless only (jsdom), not observed in a browser or on a device"
           ]

@@ -13,7 +13,8 @@
  *   React    STRUCTURAL — the file exists, carries the markers, and is compiled by the web app's own
  *                         typecheck and tests (the same fixture renders the live preview, so a broken block
  *                         breaks the page).
- *   Angular  STRUCTURAL — same, compiled by ng-packagr, when any block ever declares Angular.
+ *   Angular  STRUCTURAL — same; compiled by `pnpm check:angular-blocks` (tsconfig.blocks.json), not by ng-packagr,
+ *                         whose program starts at public-api.ts and reaches no block.
  *   SwiftUI  FILE + CI  — the file exists and carries markers here; it is compiled by native-swiftui.yml.
  *   Compose  FILE + CI  — likewise, by native-compose.yml.
  *   Flutter  FILE + CI  — likewise, by native-flutter.yml.

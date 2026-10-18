@@ -118,6 +118,7 @@
     "release:preflight": "node scripts/release-preflight.mjs",
     "test:release": "node scripts/release/test/run.mjs",
     "check:angular-package": "node scripts/angular-package/check.mjs",
+    "check:angular-blocks": "node scripts/angular-package/compile-blocks.mjs",
     "gen:angular-api": "node scripts/angular-package/api-snapshot.mjs",
     "gen:compose-api": "node scripts/compose-api-snapshot.mjs",
     "check:compose-api": "node scripts/compose-api-snapshot.mjs --check",

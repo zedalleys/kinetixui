@@ -97,13 +97,21 @@ const CLAIMABLE = KINDS.filter((k) => k !== "build" && k !== "published");
 const MARKER = /kx-verify:\s*([a-zA-Z, ]+)\s*$/;
 const COVERS = /kx-verify-covers:\s*(\S+)/;
 
-/** Where each platform's evidence lives. `extra` files are suites that are not themselves unit tests. */
+/**
+ * Where each platform's evidence lives. `extra` files are suites that are not themselves unit tests.
+ *
+ * `environment` is where a suite runs, recorded on its `sources` entry as provenance: jsdom and the native
+ * test hosts (XCTest, Robolectric, flutter_test) are headless; the `extra` browser suites run in Chromium. It is
+ * a fact about the file, not a claim in it. It does not change a component's level today — component runtime
+ * is still "interaction and accessibility evidence exist", whatever ran them; docs/VERIFICATION-RUNTIME-DECISION.md
+ * sets out the options for making it environment-aware, which is an owner decision.
+ */
 const TEST_SOURCES = {
-  React: { dirs: ["packages/ui/src"], match: /\.test\.tsx$/, extra: ["scripts/a11y-browser.mjs", "scripts/large-text.mjs", "scripts/motion.mjs"] },
-  Angular: { dirs: ["packages/ui-angular/src"], match: /\.spec\.ts$/, extra: ["scripts/angular-browser.mjs", "scripts/angular-overlays.mjs", "scripts/angular-collections.mjs", "scripts/angular-layout.mjs"] },
-  SwiftUI: { dirs: ["packages/ui-swiftui/Tests"], match: /\.swift$/ },
-  Compose: { dirs: ["packages/ui-compose/ui/src/test"], match: /\.kt$/ },
-  Flutter: { dirs: ["packages/ui-flutter/test"], match: /_test\.dart$/ },
+  React: { dirs: ["packages/ui/src"], match: /\.test\.tsx$/, environment: "jsdom", extra: ["scripts/a11y-browser.mjs", "scripts/large-text.mjs", "scripts/motion.mjs"], extraEnvironment: "chromium" },
+  Angular: { dirs: ["packages/ui-angular/src"], match: /\.spec\.ts$/, environment: "jsdom", extra: ["scripts/angular-browser.mjs", "scripts/angular-overlays.mjs", "scripts/angular-collections.mjs", "scripts/angular-layout.mjs"], extraEnvironment: "chromium" },
+  SwiftUI: { dirs: ["packages/ui-swiftui/Tests"], match: /\.swift$/, environment: "xctest" },
+  Compose: { dirs: ["packages/ui-compose/ui/src/test"], match: /\.kt$/, environment: "robolectric" },
+  Flutter: { dirs: ["packages/ui-flutter/test"], match: /_test\.dart$/, environment: "flutter_test" },
 };
 
 // The extractor lives in its own module so large-text.mjs can check its claim with the same function
@@ -348,7 +356,8 @@ for (const platform of platforms) {
       }
     }
     if (fileKinds.size) {
-      sources[platform].push({ file, kinds: [...fileKinds].sort(), components: [...fileSlugs].sort() });
+      const environment = (spec.extra ?? []).includes(file) ? spec.extraEnvironment : spec.environment;
+      sources[platform].push({ file, environment, kinds: [...fileKinds].sort(), components: [...fileSlugs].sort() });
     }
   }
 }
@@ -420,16 +429,53 @@ const BLOCK_TEST_SOURCES = {
 /** The CI step that compiles a platform's block files. `under` is the directory that step compiles. */
 const BLOCK_BUILD = {
   React: { under: "apps/web/src/", workflow: "ci.yml", run: "pnpm build:web", what: "Next.js production build of apps/web" },
-  // No Angular entry, deliberately. `pnpm build:angular` (ng-packagr) compiles from src/public-api.ts only, and
-  // nothing there imports src/examples/blocks: a type error planted in a block still builds. The block spec runs
-  // them through Vitest, which transpiles without type-checking. Until a CI step compiles the blocks themselves,
-  // Angular blocks are Source present. (A strict ngc pass over them today fails on create-account.ts.)
+  // `pnpm build:angular` (ng-packagr) compiles from src/public-api.ts only, and nothing there imports a block, so it
+  // is not this. check:angular-blocks compiles the blocks themselves, and only the files its tsconfig lists: a
+  // block left out of `program` is not compiled and stays Source present. Vitest transpiles without
+  // type-checking, so the block spec never counts as a build.
+  Angular: {
+    under: "packages/ui-angular/src/examples/blocks/",
+    workflow: "ci.yml",
+    run: "pnpm check:angular-blocks",
+    what: "ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json",
+    program: "packages/ui-angular/tsconfig.blocks.json",
+    script: "scripts/angular-package/compile-blocks.mjs",
+  },
   SwiftUI: { under: "packages/ui-swiftui/", workflow: "native-swiftui.yml", run: "swift test", what: "swift test compiles the test target" },
   Compose: { under: "packages/ui-compose/", workflow: "native-compose.yml", run: "./gradlew :ui:testDebugUnitTest", what: "Gradle compiles the unit-test source set" },
   Flutter: { under: "packages/ui-flutter/", workflow: "native-flutter.yml", run: "flutter test", what: "flutter test compiles the test directory" },
 };
 
-/** Does `workflow` exist and run `command` in a step? A comment that mentions it does not count. */
+/**
+ * Is `file` one the build compiles? Without a `program`, everything under `under` is. With one, only the
+ * tsconfig's `files` are: a glob `include` would let a block in by accident, so a program that has one
+ * compiles nothing as far as evidence goes.
+ */
+function inProgram(build, file) {
+  if (!build.program) return true;
+  if (!existsSync(`${root}/${build.program}`)) return false;
+  const tsconfig = JSON.parse(read(build.program));
+  if (tsconfig.include?.length) return false;
+  const dir = build.program.replace(/[^/]+$/, "");
+  return (tsconfig.files ?? []).some((f) => `${dir}${f.replace(/^\.\//, "")}` === file);
+}
+
+/**
+ * Does CI run this build? The step must run `build.run` exactly. When the build names a `script`, `run` is a
+ * package.json wrapper, and the wrapper must itself be exactly `node <script>`: a step that still says
+ * `pnpm check:angular-blocks` proves nothing once the wrapper is repointed at `echo` or `true`.
+ */
+function buildRuns(build) {
+  if (!workflowRuns(build.workflow, build.run)) return false;
+  if (!build.script) return true;
+  if (!existsSync(`${root}/${build.script}`)) return false;
+  const name = build.run.match(/^pnpm (\S+)$/)?.[1];
+  const wrapped = name && JSON.parse(read("package.json")).scripts?.[name];
+  if (typeof wrapped !== "string") return false;
+  const cmds = commandsOf([wrapped]);
+  return cmds.length === 1 && [`node ${build.script}`, `node ./${build.script}`].includes(cmds[0]);
+}
+
 /**
  * Does a workflow STEP run this script, directly or through a package.json wrapper? Stricter than runsInCI, which
  * accepts a mention anywhere in a workflow: a block evidence source can make a block Runtime verified, so a path
@@ -635,7 +681,7 @@ for (const [slug, b] of Object.entries(blocksManifest)) {
     }
     blockRecord(slug, platform, "source", { ref: file });
     const build = BLOCK_BUILD[platform];
-    if (build && file.startsWith(build.under) && workflowRuns(build.workflow, build.run)) {
+    if (build && file.startsWith(build.under) && inProgram(build, file) && buildRuns(build)) {
       blockRecord(slug, platform, "build", { ref: `.github/workflows/${build.workflow}: ${build.run} (${build.what})` });
     }
   }
