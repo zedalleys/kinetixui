@@ -54,11 +54,16 @@ The milestones are those in MX1B-1-PLAN §6:
 
 | Component | React | Angular (Preview) | SwiftUI | Compose | Flutter |
 | --- | --- | --- | --- | --- | --- |
-| Toggle | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| ToggleGroup | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| Checkbox | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| RadioGroup | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| Switch | ✓ ✓ ✓ | ○ (deviation) ○ ○ | ✓ ✓ ○ | ○ (thumb only) ✓ ○ | ✓ ✓ ○ |
+| Toggle | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
+| ToggleGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
+| Checkbox | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
+| RadioGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
+| Switch | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓ ○ | ○ (thumb only) ✓ ○ | ✓ ✓ ○ |
+
+Angular's five cells moved in MX1b-2 (PR for this slice): each component now uses its role's pairing and is
+a contract consumer (Impl), `scripts/angular-selection-motion.mjs` fails on nine negative controls (Auto),
+and that gate drives the package as a live Angular application in Chromium rather than in jsdom (Runtime).
+Angular stays Preview: these are motion and accessibility cells, not a graduation.
 
 Compose's Switch is not ticked for Impl: `selection-control` covers the thumb and the track colour, and
 `Switch.kt` animates only `thumbOffset` while the track colour is applied directly. Its Auto tick is for the
@@ -69,15 +74,51 @@ What is there today, by platform (file:line from the tree at 4980c21):
 
 | | Angular | SwiftUI | Compose | Flutter |
 | --- | --- | --- | --- | --- |
-| Toggle | fast · standard on background and colour (`styles.css:1074`). Has no instant layer. `aria-pressed` | none (fill swap). `.isSelected` trait | none. `toggleable(Role.Checkbox)`, because Compose has no toggle-button role | none. `Semantics(button, toggled)` |
-| ToggleGroup | items reuse `.kx-toggle`. Single mode is native radios (`toggles.ts:229-240`) | none. No group semantics | none. No group semantics | none. No group semantics |
-| Checkbox | **instant** on all properties (`styles.css:295-298`). Glyph mounted with `@if`. `aria-checked` `mixed` from the `indeterminate()` signal, so it does not have React's old glyph defect | none. Glyph mounted with `if`. **Mixed is not announced** (only `.isSelected`) | none. `triStateToggleable(Role.Checkbox)` | none. `Semantics(checked, mixed)` |
-| RadioGroup | **instant** border, and the dot as an inset shadow (`styles.css:698`). Native radios | none. No group semantics | none. `selectableGroup` + `selectable(Role.RadioButton)` | none. **No `Semantics` at all** (`radio_group.dart`) |
-| Switch | **base 300ms** on thumb and track (`styles.css:323-343`). This is a recorded deviation. `role="switch"`. **Forced colours: the thumb vanishes** (measured, §4) | `KinetixSwitchMotion`: instant · standard. `nil` when Reduce Motion is on. `accessibilityValue` On/Off, but **no toggle trait** | `animateDpAsState(tween(instant, standard))` for the thumb only (the track colour does not animate). `tween(0)` at animator scale 0. `Role.Switch` | `AnimatedContainer(instant, standard)`. Disabled-animations aware. `Semantics(toggled)` |
-| Auto evidence | `display-forms.spec.ts`, `kinetix-angular.spec.ts`, `selection-render.spec.ts` (vitest). None assert a duration token | `SwitchMotionTests.swift`: resolver values only, nothing rendered | `SwitchMotionTest.kt`, `SemanticsTest.kt` (Robolectric) | `switch_motion_test.dart`: rendered midpoint in a headless widget test |
-| Runtime evidence | headless Chromium: `check:angular-browser` (reduced-motion midpoint for the Switch thumb), `check:selection-visual` | none | none | none |
+| Toggle | fast · standard on background and colour, with an `instant` inset press layer (MX1b-2). `aria-pressed` | none (fill swap). `.isSelected` trait | none. `toggleable(Role.Checkbox)`, because Compose has no toggle-button role | none. `Semantics(button, toggled)` |
+| ToggleGroup | items reuse `.kx-toggle`, press layer included. Single mode is native radios | none. No group semantics | none. No group semantics | none. No group semantics |
+| Checkbox | fast on fill, edge and glyph colour, halo on `instant`; both glyphs rendered and the state shows one, fading in on fast (MX1b-2). `aria-checked` `mixed`, and activating a mixed box now resolves it to checked | none. Glyph mounted with `if`. **Mixed is not announced** (only `.isSelected`) | none. `triStateToggleable(Role.Checkbox)` | none. `Semantics(checked, mixed)` |
+| RadioGroup | fast border, halo on `instant`, and the dot on its own layer fading on fast (MX1b-2). Native radios | none. No group semantics | none. `selectableGroup` + `selectable(Role.RadioButton)` | none. **No `Semantics` at all** (`radio_group.dart`) |
+| Switch | instant · standard on thumb and track (MX1b-2); the deviation is removed. `role="switch"`. Forced colours: the thumb is `CanvasText`, `GrayText` when disabled | `KinetixSwitchMotion`: instant · standard. `nil` when Reduce Motion is on. `accessibilityValue` On/Off, but **no toggle trait** | `animateDpAsState(tween(instant, standard))` for the thumb only (the track colour does not animate). `tween(0)` at animator scale 0. `Role.Switch` | `AnimatedContainer(instant, standard)`. Disabled-animations aware. `Semantics(toggled)` |
+| Auto evidence | `check:angular-selection-motion` (245 checks, nine negative controls), plus `selection-motion.spec.ts` for the structure its selectors rely on | `SwitchMotionTests.swift`: resolver values only, nothing rendered | `SwitchMotionTest.kt`, `SemanticsTest.kt` (Robolectric) | `switch_motion_test.dart`: rendered midpoint in a headless widget test |
+| Runtime evidence | Chromium, the package as a live Angular application: `check:angular-selection-motion` (timing, travel, pointer, keyboard, forced colours, rapid input, 32-cell matrix), `check:angular-browser`, `check:selection-visual` | none | none | none |
 
 ## 4. MX1b-2: Angular selection-control parity (handoff)
+
+**Done in MX1b-2.** What was delivered, and the measurements behind it, are below; the handoff that follows is
+kept as written so the before state and the plan stay readable.
+
+| What | Before (measured on main at 984792b) | After |
+| --- | --- | --- |
+| Switch thumb and track | `background-color` 300ms, `inset-inline-start` 300ms | both 100ms · standard, and the `deviations` entry is gone |
+| Checkbox | fill, edge and halo all 100ms; glyph mounted with `@if` | fill, edge and glyph colour 200ms, halo 100ms, glyph fading in on 200ms from its own element and leaving at once |
+| Radio | border 100ms, dot inside the input's `box-shadow` | border 200ms, halo 100ms, dot on its own layer fading on 200ms |
+| Toggle, ToggleGroup | colour 200ms, no press layer; hover was a `--muted` background step | colour 200ms, an inset 8% / 14% press layer on 100ms |
+| Forced colours | every switch had track `rgb(255,255,255)` and thumb `rgb(255,255,255)` — no thumb at all | thumb `CanvasText` (`rgb(0,0,0)`), `GrayText` (`rgb(96,0,0)`) when disabled, both read back from the system; the radio dot likewise |
+| Mixed checkbox | activating a mixed box left `aria-checked="mixed"` for ever | it resolves to checked, and goes back to mixed when the caller writes the input again |
+
+**Negative controls** (each a real defect applied to the tree, the gate run, then restored; `git status` clean
+after every one). Nothing but the nine mutations was changed:
+
+| Mutation | Caught by `check:angular-selection-motion` | Failing checks |
+| --- | --- | --- |
+| Switch thumb retimed to 200ms | timing | 4 (declared tiers and the running thumb transition, both themes) |
+| Toggle retimed to 100ms | timing | 6 (Toggle and ToggleGroup declared tiers, the running colour transition) |
+| Reduced-motion block's switch entries removed | timing | 8 (reduced form, "runs no transition", and the thumb mid-travel at 0.456 instead of at the end) |
+| Thumb moved on `left` instead of `inset-inline-start` | travel | 4 (the RTL subtree jumps instead of travelling, and no longer moves leftward) |
+| Switch focus ring removed | keyboard | 2 |
+| `aria-checked` frozen at `false` | timing | 10 |
+| Radio arrow keys swallowed by `preventDefault()` | keyboard | 6 (ArrowDown, and ArrowRight in both page directions) |
+| Checkbox tick and dash swapped | timing | 4 (mixed shows the tick; the swap after activation is wrong) |
+| Disabled `GrayText` thumb removed | forced | 4 (a disabled thumb reads as enabled) |
+
+What the gate does **not** catch, recorded so it is not assumed: `check:angular-browser`'s axe pass sees none
+of these — a frozen `aria-checked`, a missing focus ring and a retimed transition are all invisible to it,
+exactly as MX1b-1c found on the React side.
+
+**Not changed, on purpose:** `scripts/gen-verification.mjs` and `scripts/evidence-levels.mjs`. Angular's levels
+in `verification.json` are untouched by this slice, so the new gate's evidence is cited in this document
+rather than published through the generator; registering it there is a separate decision.
+
 
 **Source**
 - `packages/ui-angular/src/lib/toggles.ts`: KxToggle, KxToggleGroup, KxCheckbox, KxSwitch

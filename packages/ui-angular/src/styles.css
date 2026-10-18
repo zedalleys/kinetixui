@@ -292,9 +292,14 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
   border: var(--border-width-default) solid hsl(var(--muted-foreground));
   border-radius: var(--radius-sm);
   cursor: pointer;
+  /* Two tiers on one element, told apart by property (MOTION.md, selection-state and press-feedback): the
+     box's fill, edge and glyph colour move on fast, the state layer answers on instant. A transition is
+     timed by the property that changes, not by what changed it, so the hover colour step rides on the
+     fast tier and the layer is the immediate answer. */
   transition:
-    background-color var(--duration-instant) var(--easing-standard),
-    border-color var(--duration-instant) var(--easing-standard),
+    background-color var(--duration-fast) var(--easing-standard),
+    border-color var(--duration-fast) var(--easing-standard),
+    color var(--duration-fast) var(--easing-standard),
     box-shadow var(--duration-instant) var(--easing-standard);
 }
 .kx-checkbox[aria-checked='true'],
@@ -307,7 +312,25 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 .kx-checkbox:enabled:active { box-shadow: 0 0 0 5px hsl(var(--foreground) / 0.14); }
 .kx-checkbox:enabled:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kx-checkbox:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
-.kx-checkbox > svg { inline-size: 0.875rem; block-size: 0.875rem; pointer-events: none; }
+/* Both glyphs are rendered and the checked state shows one, rather than the template mounting the glyph it
+   thinks is right: the glyph then stays in the DOM and can fade in on fast. It leaves at once
+   (`transition: none` while unchecked), because on the way out of mixed the glyph still on screen would be
+   the tick — the wrong one. `display` is not animatable, so the swap between tick and dash lands in the
+   same frame as `aria-checked`. */
+.kx-checkbox__glyph {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--easing-standard);
+}
+.kx-checkbox[aria-checked='true'] .kx-checkbox__glyph,
+.kx-checkbox[aria-checked='mixed'] .kx-checkbox__glyph { opacity: 1; }
+.kx-checkbox[aria-checked='false'] .kx-checkbox__glyph { transition: none; }
+.kx-checkbox__tick,
+.kx-checkbox__dash { display: none; }
+.kx-checkbox[aria-checked='true'] .kx-checkbox__tick { display: inline; }
+.kx-checkbox[aria-checked='mixed'] .kx-checkbox__dash { display: inline; }
 
 .kx-switch {
   display: inline-flex;
@@ -320,8 +343,11 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
   border: var(--border-width-default) solid transparent;
   border-radius: var(--radius-full);
   cursor: pointer;
+  /* selection-control, not selection-state: the thumb is a physical control, so its travel, the track
+     colour and the halo all run on instant (100ms). This is the one role that is deliberately quicker than
+     a selection colour change, and the two are not normalised (MOTION.md, owner decision 2026-10-17). */
   transition:
-    background-color var(--duration-base) var(--easing-standard),
+    background-color var(--duration-instant) var(--easing-standard),
     box-shadow var(--duration-instant) var(--easing-standard);
 }
 .kx-switch[aria-checked='true'] { background-color: hsl(var(--action)); }
@@ -340,7 +366,15 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
   border-radius: var(--radius-full);
   background-color: hsl(var(--static-white));
   box-shadow: var(--shadow-sm);
-  transition: inset-inline-start var(--duration-base) var(--easing-standard);
+  transition: inset-inline-start var(--duration-instant) var(--easing-standard);
+}
+/* Forced colours repaint every background as Canvas, which left a white thumb on a white track: the switch
+   showed no thumb at all and no on/off cue. A system colour keyword IS honoured, so the thumb is drawn in
+   `CanvasText` — and in `GrayText` when the switch is disabled, so a disabled switch still reads as
+   disabled. Shadows are dropped there, so the thumb's own fill is the only thing left to carry it. */
+@media (forced-colors: active) {
+  .kx-switch__thumb { background-color: CanvasText; }
+  .kx-switch:disabled .kx-switch__thumb { background-color: GrayText; }
 }
 /* The thumb travels along the inline axis of the switch's OWN direction: `inset-inline-start` is logical, so
    the browser resolves it against the nearest `dir`. It used to be `translate` flipped by `[dir='rtl'] …`,
@@ -679,6 +713,12 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 .kx-radio-group { display: flex; flex-direction: column; gap: var(--spacing-2); }
 .kx-radio-group[aria-orientation='horizontal'] { flex-direction: row; gap: var(--spacing-4); }
 .kx-radio { display: flex; align-items: center; gap: var(--spacing-2); }
+/* The dot is its own element over the input, not an inset ring inside the input's `box-shadow`. One
+   `box-shadow` is one transition, so a dot sharing the property with the hover and press layer could only
+   run at the layer's instant — selection would be as quick as press, which is the distinction the two
+   roles exist to draw. On its own layer the dot fades on fast and the layer still answers on instant
+   (React does the same with a mounted Indicator). */
+.kx-radio__control { position: relative; display: inline-flex; flex-shrink: 0; }
 /* the native control, kept in the accessibility tree and in the tab order — only its appearance is ours */
 .kx-radio__input {
   appearance: none;
@@ -692,16 +732,33 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
   background-color: hsl(var(--background));
   cursor: pointer;
   /* the selection-control contract (see checkbox): a 3:1 edge, an 8% / 14% state layer, focus on top */
-  --kx-radio-dot: 0 0 #0000;
   --kx-radio-layer: 0 0 #0000;
-  box-shadow: var(--kx-radio-dot), var(--kx-radio-layer);
-  transition: border-color var(--duration-instant) var(--easing-standard), box-shadow var(--duration-instant) var(--easing-standard);
+  box-shadow: var(--kx-radio-layer);
+  transition: border-color var(--duration-fast) var(--easing-standard), box-shadow var(--duration-instant) var(--easing-standard);
 }
-/* the dot is an inset ring rather than a pseudo-element, so it scales with the control — and it is its own
-   custom property so the hover and pressed layers add to it instead of replacing it */
-.kx-radio__input:checked {
-  border-color: hsl(var(--action));
-  --kx-radio-dot: inset 0 0 0 0.25rem hsl(var(--action));
+.kx-radio__input:checked { border-color: hsl(var(--action)); }
+/* The dot: a circle half the control's size, centred over it and out of the pointer's way. It is sized in
+   rem like the control, so it grows with the reader's default text size. Under forced colours a background
+   is repainted as Canvas, so it takes the system colours the way the Switch thumb does, or a chosen radio
+   would look exactly like an unchosen one. */
+.kx-radio__dot {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  translate: -50% -50%;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: var(--radius-full);
+  background-color: hsl(var(--action));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--easing-standard);
+}
+.kx-radio__input:checked + .kx-radio__dot { opacity: 1; }
+.kx-radio__input:checked:disabled + .kx-radio__dot { opacity: var(--opacity-disabled); }
+@media (forced-colors: active) {
+  .kx-radio__dot { background-color: CanvasText; }
+  .kx-radio__input:disabled + .kx-radio__dot { background-color: GrayText; }
 }
 @media (hover: hover) {
   .kx-radio__input:enabled:hover { --kx-radio-layer: 0 0 0 5px hsl(var(--foreground) / 0.08); }
@@ -1071,14 +1128,33 @@ label.kx-rating__item { cursor: pointer; }
   font-weight: var(--font-weight-medium);
   color: hsl(var(--foreground));
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--easing-standard), color var(--duration-fast) var(--easing-standard);
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    color var(--duration-fast) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
+  /* The resting layer is a transparent INSET shadow rather than none: a box-shadow interpolates only
+     between lists whose entries agree on `inset`, so a `none` rest would make the layer snap on instead of
+     moving on instant. */
+  box-shadow: inset 0 0 0 100vmax transparent;
 }
 /* the square is rem (--spacing-8 / 10 / 12 at the default text size): it holds the label, so it grows with it */
 .kx-toggle--sm { min-inline-size: 2rem; block-size: 2rem; padding-inline: var(--spacing-2); }
 .kx-toggle--md { min-inline-size: 2.5rem; block-size: 2.5rem; padding-inline: var(--spacing-3); }
 .kx-toggle--lg { min-inline-size: 3rem; block-size: 3rem; padding-inline: var(--spacing-4); }
 .kx-toggle--outline { border-color: hsl(var(--input)); }
-.kx-toggle:hover { background-color: hsl(var(--muted)); }
+/* Hover and press are a state layer, not a background step: a transition is timed by its property, so a
+   `--muted` hover fill would be background-color and could only run at selection's fast. The layer is the
+   same 8% / 14% `--foreground` pair the selection controls use, and it answers on instant. Hover is keyed
+   on a pointer that can hover so a tap does not leave it stuck on; `:not(:disabled)` rather than
+   `:enabled`, because the single-select ToggleGroup paints this class on a label. Focus is declared after
+   both, at the same specificity, so neither layer can cover the ring. */
+@media (hover: hover) {
+  .kx-toggle:not(:disabled):hover { box-shadow: inset 0 0 0 100vmax hsl(var(--foreground) / 0.08); }
+}
+.kx-toggle:not(:disabled):active { box-shadow: inset 0 0 0 100vmax hsl(var(--foreground) / 0.14); }
+@media (hover: hover) {
+  .kx-toggle:not(:disabled):active { box-shadow: inset 0 0 0 100vmax hsl(var(--foreground) / 0.14); }
+}
 .kx-toggle:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kx-toggle[aria-pressed='true'] { background-color: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
 .kx-toggle:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; pointer-events: none; }
@@ -1152,7 +1228,9 @@ label.kx-rating__item { cursor: pointer; }
   .kx-textarea,
   .kx-native-select,
   .kx-radio__input,
+  .kx-radio__dot,
   .kx-checkbox,
+  .kx-checkbox__glyph,
   .kx-switch,
   .kx-switch__thumb,
   .kx-input,

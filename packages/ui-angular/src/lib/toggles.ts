@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Directive, booleanAttribute, forwardRef, input, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, booleanAttribute, computed, forwardRef, input, linkedSignal, model, output, signal } from '@angular/core';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 import { NgTemplateOutlet } from '@angular/common';
 import type { KxToggleSize, KxToggleVariant } from './types';
@@ -81,6 +81,10 @@ abstract class KxToggleBase implements ControlValueAccessor {
  *
  * `indeterminate` renders `aria-checked="mixed"` — the tri-state a "select all" header needs. It is display
  * only: activating an indeterminate checkbox resolves it to checked, as it does everywhere else.
+ *
+ * Both glyphs are always rendered and the stylesheet shows the one the state calls for, rather than the
+ * template mounting one of them: a glyph that stays in the DOM can fade in on `fast` (MX1b-2), and the
+ * choice is keyed on the same `aria-checked` a reader is told, so the two can never disagree.
  */
 @Component({
   selector: 'kx-checkbox',
@@ -91,29 +95,54 @@ abstract class KxToggleBase implements ControlValueAccessor {
       type="button"
       role="checkbox"
       class="kx-checkbox"
-      [attr.aria-checked]="indeterminate() ? 'mixed' : checked()"
+      [attr.aria-checked]="mixed() ? 'mixed' : checked()"
       [attr.aria-label]="ariaLabel()"
       [attr.aria-labelledby]="ariaLabelledby()"
       [disabled]="isDisabled()"
       (click)="toggle()"
     >
-      @if (checked() || indeterminate()) {
-        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          @if (indeterminate()) {
-            <path d="M4 8h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          } @else {
-            <path d="M3.5 8.5l3 3 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          }
-        </svg>
-      }
+      <svg class="kx-checkbox__glyph" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path class="kx-checkbox__dash" d="M4 8h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <path
+          class="kx-checkbox__tick"
+          d="M3.5 8.5l3 3 6-6"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
     </button>
   `,
 })
 export class KxCheckbox extends KxToggleBase {
   readonly indeterminate = input(false, { transform: booleanAttribute });
+  /**
+   * Activating a mixed checkbox resolves it to checked, which is what the doc above promises and what every
+   * other implementation does — but `indeterminate` is an input the caller owns, so the component cannot
+   * clear it. It records that the reader has answered instead, and reports `mixed` only until they have.
+   * Writing the input again (a header recomputing "some of these are selected") puts it back to mixed.
+   */
+  private readonly answered = linkedSignal<boolean, boolean>({ source: this.indeterminate, computation: () => false });
+  protected readonly mixed = computed(() => this.indeterminate() && !this.answered());
   /** One of these is required when no visible `<label for>` points at the control. */
   readonly ariaLabel = input<string | null>(null, { alias: 'aria-label' });
   readonly ariaLabelledby = input<string | null>(null, { alias: 'aria-labelledby' });
+
+  /** Mixed resolves to checked: already-checked and mixed both end up checked, and both report it once. */
+  protected override toggle(): void {
+    if (this.isDisabled()) return;
+    if (!this.mixed()) {
+      super.toggle();
+      return;
+    }
+    this.answered.set(true);
+    if (this.checked()) {
+      this.toggled.emit(true);
+      return;
+    }
+    super.toggle();
+  }
 }
 
 /**
