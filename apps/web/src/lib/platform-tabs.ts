@@ -103,3 +103,15 @@ export const SETUP_HREF: Record<Platform, string> = {
   Compose: "/docs/compose",
   Flutter: "/docs/flutter",
 };
+
+/**
+ * Where a "Setup" link lands: the install section of each platform's setup page, not the top of a long page (BD-W5
+ * F-05). React's /docs/installation is all setup. `SETUP_HREF` stays the page, for anything that names the page itself.
+ */
+export const SETUP_SECTION_HREF: Record<Platform, string> = {
+  React: SETUP_HREF.React,
+  Angular: `${SETUP_HREF.Angular}#install`,
+  SwiftUI: `${SETUP_HREF.SwiftUI}#setup`,
+  Compose: `${SETUP_HREF.Compose}#setup`,
+  Flutter: `${SETUP_HREF.Flutter}#setup`,
+};

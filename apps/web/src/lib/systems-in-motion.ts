@@ -33,7 +33,7 @@ import {
   type Platform,
 } from "./platform-parity";
 import { componentTotal, platformCount } from "./platform-support";
-import { GUIDANCE_LABEL, SETUP_HREF, platformStateFor } from "./platform-tabs";
+import { GUIDANCE_LABEL, SETUP_SECTION_HREF, platformStateFor } from "./platform-tabs";
 import { repoRoot, tokenEvidence, type OutputBlock } from "./token-evidence";
 
 /** The token the homepage follows. One constant, so the hero, the pipeline and the tests cannot disagree. */
@@ -283,7 +283,7 @@ export function systemsInMotion(root = repoRoot()): SystemsInMotion {
         verification: verificationFor(STORY_COMPONENT, p),
         evidence: evidenceFor(STORY_COMPONENT, p),
       },
-      href: SETUP_HREF[p],
+      href: SETUP_SECTION_HREF[p],
     };
   });
 

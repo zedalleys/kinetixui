@@ -138,8 +138,9 @@ Show `ContentView` from your app's `WindowGroup` and run it. You should see a
 **Get started** button, a smaller outlined **Cancel** button and a destructive
 **Delete** button, in light or dark to match the system appearance.
 
-This sample is not compiled in CI. The package's own `swift build` and `swift test` build the views it uses,
-so a signature change fails there first, but `ContentView` itself is not built in an app.
+CI compiles this sample as written: `node scripts/adoption/swiftui-consumer.mjs` puts the `Package.swift` lines
+above and `ContentView` into a fresh Swift package that depends on this one by path, shows it from a `WindowGroup`,
+and runs `swift build` on macOS. That proves it compiles, not how it looks; nothing runs it on a device or simulator.
 
 <FirstUseNextSteps platform="SwiftUI" />
 

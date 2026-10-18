@@ -46,7 +46,7 @@ const CONTRACT: Record<Platform, Contract> = {
     install: /\.package\(path: "[^"]*packages\/ui-swiftui"\)/,
     imports: /^import KinetixUI$/m,
     next: /<FirstUseNextSteps platform="SwiftUI" \/>/,
-    compiledBy: null,
+    compiledBy: { workflow: ".github/workflows/native-swiftui.yml", run: "node scripts/adoption/swiftui-consumer.mjs" },
   },
   Compose: {
     install: /include\(":kinetixui-ui"\)/,
@@ -58,7 +58,7 @@ const CONTRACT: Record<Platform, Contract> = {
     install: /^\s+kinetix_ui:\s*$/m,
     imports: /^import 'package:kinetix_ui\/kinetix_ui\.dart';$/m,
     next: /<FirstUseNextSteps platform="Flutter" \/>/,
-    compiledBy: null,
+    compiledBy: { workflow: ".github/workflows/native-flutter.yml", run: "node scripts/adoption/flutter-consumer.mjs" },
   },
 };
 
@@ -73,8 +73,7 @@ const FALSE_SUCCESS = [
   /fully accessible/i,
 ];
 
-function firstUseViolations(platform: Platform, text: string, workflows: Record<string, string>): string[] {
-  const c = CONTRACT[platform];
+function firstUseViolations(platform: Platform, text: string, workflows: Record<string, string>, c = CONTRACT[platform]): string[] {
   const out: string[] = [];
   const at = (re: RegExp) => text.search(re);
   const install = at(c.install);
@@ -124,13 +123,15 @@ describe("first-use contract on every setup page", () => {
     expect(firstUseViolations(p, page(p).replace(new RegExp(c.imports.source, "gm"), ""), workflows).join()).toMatch(/2\/3 import/);
   });
 
-  it.each(["SwiftUI", "Flutter"] as const)("catches %s dropping the statement that CI does not compile its sample", (p) => {
-    expect(firstUseViolations(p, page(p).replace("This sample is not compiled in CI", "This sample is checked"), workflows).join()).toMatch(/does not say so/);
+  it.each(["SwiftUI", "Compose", "Flutter"] as const)("catches %s claiming a compiled sample whose CI step was removed", (p) => {
+    const gone = { ...workflows, [CONTRACT[p].compiledBy!.workflow]: "" };
+    expect(firstUseViolations(p, page(p), gone).join()).toMatch(/no longer runs/);
   });
 
-  it("catches a compiled claim whose CI step was removed", () => {
-    const gone = { ...workflows, ".github/workflows/native-compose.yml": "" };
-    expect(firstUseViolations("Compose", page("Compose"), gone).join()).toMatch(/no longer runs/);
+  it("catches a page with no gate that does not say its sample is uncompiled", () => {
+    const uncompiled = { ...CONTRACT.Flutter, compiledBy: null };
+    expect(firstUseViolations("Flutter", page("Flutter"), workflows, uncompiled).join()).toMatch(/does not say so/);
+    expect(firstUseViolations("Flutter", `${page("Flutter")}\nThis sample is not compiled in CI.\n`, workflows, uncompiled).join()).not.toMatch(/does not say so/);
   });
 
   it.each([
