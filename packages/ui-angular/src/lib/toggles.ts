@@ -129,11 +129,15 @@ export class KxCheckbox extends KxToggleBase {
   /**
    * Activating a mixed checkbox resolves it to checked, which is what the doc above promises and what every
    * other implementation does — but `indeterminate` is an input the caller owns, so the component cannot
-   * clear it. It records that the reader has answered instead, and reports `mixed` only until they have.
-   * Writing the input again (a header recomputing "some of these are selected") puts it back to mixed.
+   * clear it. It records the value the reader's own answer left behind instead, and reports `mixed` while
+   * `indeterminate` is set and the value is not theirs. So the caller stays authoritative: writing
+   * `indeterminate` again resets the record, and writing a different `checked` value — a form reset, a
+   * one-way binding, a header recomputing "some of these are selected" — makes the box mixed again, because
+   * that value is no longer the reader's answer. The reader's own later clicks keep the record current, so a
+   * second click unchecks the box rather than returning it to mixed.
    */
-  private readonly answered = linkedSignal<boolean, boolean>({ source: this.indeterminate, computation: () => false });
-  protected readonly mixed = computed(() => this.indeterminate() && !this.answered());
+  private readonly resolved = linkedSignal<boolean, boolean | null>({ source: this.indeterminate, computation: () => null });
+  protected readonly mixed = computed(() => this.indeterminate() && this.resolved() !== this.checked());
   /** One of these is required when no visible `<label for>` points at the control. */
   readonly ariaLabel = input<string | null>(null, { alias: 'aria-label' });
   readonly ariaLabelledby = input<string | null>(null, { alias: 'aria-labelledby' });
@@ -141,19 +145,18 @@ export class KxCheckbox extends KxToggleBase {
   /** Mixed resolves to checked: already-checked and mixed both end up checked, and both report it once. */
   protected override toggle(): void {
     if (this.isDisabled()) return;
-    if (!this.mixed()) {
-      super.toggle();
-      return;
-    }
-    this.answered.set(true);
-    if (this.checked()) {
-      // The value does not change, so there is nothing to write back — but the reader did act on the
-      // control, and a form that shows its errors on touch has to hear about it.
-      this.markTouched();
-      this.toggled.emit(true);
-      return;
+    if (this.mixed()) {
+      this.resolved.set(true);
+      if (this.checked()) {
+        // The value does not change, so there is nothing to write back — but the reader did act on the
+        // control, and a form that shows its errors on touch has to hear about it.
+        this.markTouched();
+        this.toggled.emit(true);
+        return;
+      }
     }
     super.toggle();
+    this.resolved.set(this.checked());
   }
 }
 

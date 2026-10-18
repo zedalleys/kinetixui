@@ -109,6 +109,29 @@ describe('KxCheckbox, mixed', () => {
     expect(touched).toBe(1);
   });
 
+  it('goes back to mixed when the caller writes a different value while indeterminate still holds', () => {
+    // A form reset, or a one-way [checked] binding: the caller is still saying "some of these are
+    // selected", so a value the reader did not choose puts the box back to mixed rather than rendering
+    // a boolean the caller never meant as the answer.
+    const { fixture, box, host: h } = host();
+    box.click();
+    fixture.detectChanges();
+    expect(box.getAttribute('aria-checked')).toBe('true');
+    h.checked.set(false);
+    fixture.detectChanges();
+    expect(box.getAttribute('aria-checked')).toBe('mixed');
+  });
+
+  it('lets the reader uncheck it after resolving, instead of returning it to mixed', () => {
+    const { fixture, box } = host();
+    box.click();
+    fixture.detectChanges();
+    expect(box.getAttribute('aria-checked')).toBe('true');
+    box.click();
+    fixture.detectChanges();
+    expect(box.getAttribute('aria-checked')).toBe('false');
+  });
+
   it('goes back to mixed when the caller writes the input again', () => {
     const { fixture, box, host: h } = host();
     box.click();
