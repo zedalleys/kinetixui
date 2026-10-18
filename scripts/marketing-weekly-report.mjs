@@ -246,9 +246,17 @@ function armCount(audienceRows) {
   return [...m.entries()].sort((a, b) => b[1].sessions - a[1].sessions);
 }
 
-/** A count, with its share of the arm's audience sessions once the arm's floor metric (QE or acted) reaches the evidence floor. */
-function armCell(n, g) {
-  return Math.max(g.qe, g.acted) >= MIN_QE_FOR_COMPARISON ? `${n} (${((100 * n) / g.sessions).toFixed(1)}%)` : `${n}`;
+/**
+ * The registered floor metric of an arm's experiment (distribution/M3-EXPERIMENTS.md): audience QE for A, whose arms
+ * share a destination; *acted after landing* for B and C, whose arms do not.
+ */
+export function armFloor(content, g) {
+  return /^[a-z]+_xa_/.test(content) ? g.qe : g.acted;
+}
+
+/** A count, with its share of the arm's audience sessions once the arm's registered floor metric reaches the evidence floor. */
+function armCell(n, content, g) {
+  return armFloor(content, g) >= MIN_QE_FOR_COMPARISON ? `${n} (${((100 * n) / g.sessions).toFixed(1)}%)` : `${n}`;
 }
 
 function groupCount(rows, key) {
@@ -311,8 +319,10 @@ export function publishedInWindow(distribution, from, to) {
     .map((r) => ({ asset: r.asset, channel: r.channel, date: r.date, liveUrl: r.liveUrl ?? null }));
 }
 
-export function renderReport({ from, to, rows, distribution, platform = null, generatedAt = null, history = [] }) {
+export function renderReport({ from, to, rows, distribution, platform = null, generatedAt = null, history = [], armRows = null, armsFrom = null }) {
   const s = summarise(rows);
+  // Arms accumulate since the experiment started (armRows); every other figure stays this week's.
+  if (armRows) s.byArm = armCount(armRows.filter((r) => classifySession(r) === "audience"));
   const published = publishedInWindow(distribution, from, to);
   const warnings = dataQualityWarnings(s, published);
   const trend = trendRows([...history, { from, to, rows }]);
@@ -385,10 +395,11 @@ ${table(s.byCampaign)}
 Read experiment arms here, never from the table above (distribution/M3-EXPERIMENTS.md). One row per arm tag, summed
 across every post that carried it. *Acted*: an event that is not fired on render, or a second page. *Copied*: an
 install or CLI copy, or an adopt CTA. Shares of the arm's audience sessions are printed in every column once the
-arm's floor metric (audience QE or *acted after landing*) reaches ${MIN_QE_FOR_COMPARISON}; arms are compared on those shares, never on raw
-counts. Every column counts only what happened at or after the arm-tagged arrival.
+arm's registered floor metric (audience QE for experiment A, *acted after landing* for B and C) reaches ${MIN_QE_FOR_COMPARISON}; arms are
+compared on those shares, never on raw counts. Every column counts only what happened at or after the arm-tagged
+arrival. ${armsFrom ? `Cumulative: audience sessions from ${armsFrom} to ${to}, not only this week, because an arm's floor is reached across weeks.` : "This week only; pass `--arms-from` to accumulate since an experiment started."}
 
-${s.byArm.length === 0 ? "_none_" : ["| Arm (utm_content) | Audience sessions | Audience QE | Acted after landing | Copied or adopt CTA |", "| --- | --- | --- | --- | --- |"].concat(s.byArm.map(([k, g]) => { const c = (n) => armCell(n, g); return `| ${k} | ${g.sessions} | ${c(g.qe)} | ${c(g.acted)} | ${c(g.copied)} |`; })).join("\n")}
+${s.byArm.length === 0 ? "_none_" : ["| Arm (utm_content) | Audience sessions | Audience QE | Acted after landing | Copied or adopt CTA |", "| --- | --- | --- | --- | --- |"].concat(s.byArm.map(([k, g]) => { const c = (n) => armCell(n, k, g); return `| ${k} | ${g.sessions} | ${c(g.qe)} | ${c(g.acted)} | ${c(g.copied)} |`; })).join("\n")}
 
 ### By source / medium
 ${table(s.bySource)}
@@ -444,7 +455,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   } else {
     const file = arg("--sessions");
     if (!file) {
-      console.error("usage: --from YYYY-MM-DD --to YYYY-MM-DD (--print-query | --sessions rows.json [--platform p.json] [--history weeks.json])");
+      console.error("usage: --from YYYY-MM-DD --to YYYY-MM-DD (--print-query | --sessions rows.json [--platform p.json] [--history weeks.json] [--arms-from YYYY-MM-DD])");
       process.exit(2);
     }
     sessionQuery(from, to); // validates the window
@@ -458,6 +469,10 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const platform = arg("--platform") ? JSON.parse(readFileSync(arg("--platform"), "utf8")) : null;
     // --history older-weeks.json: [{ from, to, rows }] for the trend table, oldest first
     const history = arg("--history") ? JSON.parse(readFileSync(arg("--history"), "utf8")) : [];
-    process.stdout.write(renderReport({ from, to, rows, distribution, platform, history, generatedAt: new Date().toISOString().slice(0, 10) }));
+    // --arms-from YYYY-MM-DD: the arm table counts from the experiment's start to --to, so a floor reached across weeks shows
+    const armsFrom = arg("--arms-from");
+    if (armsFrom && (!DAY.test(armsFrom) || armsFrom > from)) throw new Error("--arms-from must be YYYY-MM-DD, on or before --from");
+    const armRows = armsFrom ? all.filter((r) => r.started && String(r.started).slice(0, 10) >= armsFrom && String(r.started).slice(0, 10) < to) : null;
+    process.stdout.write(renderReport({ from, to, rows, distribution, platform, history, armRows, armsFrom, generatedAt: new Date().toISOString().slice(0, 10) }));
   }
 }

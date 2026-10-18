@@ -587,8 +587,9 @@ that cap results at 100 rows (the PostHog MCP tool), `--print-query --compact` r
 cell; save it as `.txt` and pass it to `--sessions`. Experiment arms (distribution/M3-EXPERIMENTS.md) are read only from its
 *Experiment arms (audience cohort only)* table: audience sessions, audience QE, *acted after landing* (an event not
 fired on render, or a second page) and *copied or adopt CTA*, one row per arm `utm_content` summed across posts, with
-each count's share of the arm's audience sessions once the arm's floor metric reaches 30 (arms are compared on
-shares), all counted from the session's first arm-tagged event onward (`arm_*` columns; older exports without them
+each count's share of the arm's audience sessions once the arm's registered floor metric (QE for `_xa_`, acted for
+`_xb_`/`_xc_`) reaches 30 (arms are compared on shares; `--arms-from` makes the arm table cumulative since an
+experiment started), all counted from the session's first arm-tagged event onward (`arm_*` columns; older exports without them
 still read, with no arm rows). A multi-week export is cut to `--from`/`--to` when read, so one
 export feeds every week's report. Warnings never change a number.
 

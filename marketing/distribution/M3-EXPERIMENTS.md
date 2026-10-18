@@ -32,7 +32,10 @@ would count as evidence, then waits for that evidence instead of reading a resul
   (audience QE where both arms land on the same page, *acted after landing* where they do not; analytics.md §10)
   **and** the gap has held across **two consecutive weekly reports**. **Arms are compared on rates, never on raw
   counts:** each outcome as a share of that arm's audience sessions, which the arm table prints in every column once the
-  arm's floor metric reaches 30 (so C's copy share appears as soon as its *acted* floor is met). Sequential posts deliver unequal traffic, so 60 actions from 1,000 sessions is a worse arm than 31 from 31. Below that, the
+  arm's registered floor metric reaches 30 (read from the tag: `_xa_` uses audience QE, `_xb_` and `_xc_` use *acted
+  after landing*, so C's copy share appears as soon as its *acted* floor is met). The floor is cumulative: each
+  Monday report for a running experiment is generated with `--arms-from <the experiment's first post date>`, so the
+  arm table counts every audience session since the experiment started while the rest of the report stays weekly. Sequential posts deliver unequal traffic, so 60 actions from 1,000 sessions is a worse arm than 31 from 31. Below that, the
   result is written as "no evidence yet", and the simpler option is kept (`../experiments.md`: an ambiguous result is
   negative).
 - **Never A/B a truth claim.** Both arms say only what `CLAIMS.md` allows; accuracy is not a variable.

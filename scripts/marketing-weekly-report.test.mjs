@@ -283,3 +283,24 @@ test("sessionQuery counts arm outcomes only from the first arm-tagged event, and
   assert.equal(old[0].arm_content, undefined);
   assert.deepEqual(summarise(old).byArm, []);
 });
+
+test("each arm's shares follow its experiment's registered floor: QE for A, acted for B and C", () => {
+  // 40 sessions that qualify on render and nobody acts in: A's floor is met, B's is not
+  const loads = (content) =>
+    Array.from({ length: 40 }, () => row({ kx_content: content, kx_referrer: "linkedin", pageviews: 1, interaction_events: 0 }));
+  const md = renderReport({ from: "2026-10-19", to: "2026-10-26", rows: [...loads("li_xa_infra"), ...loads("li_xb_relevant")], distribution: { rows: [] } });
+  assert.match(md, /\| li_xa_infra \| 40 \| 40 \(100\.0%\) \| 0 \(0\.0%\) \| 0 \(0\.0%\) \|/);
+  assert.match(md, /\| li_xb_relevant \| 40 \| 40 \| 0 \| 0 \|/);
+});
+
+test("--arms-from accumulates the arm table across weeks while every other figure stays this week's", () => {
+  const acted = (started) => row({ started, kx_content: "li_xb_relevant", kx_referrer: "linkedin" });
+  const earlier = Array.from({ length: 20 }, () => acted("2026-10-20T10:00:00Z"));
+  const week = Array.from({ length: 10 }, () => acted("2026-10-27T10:00:00Z"));
+  const md = renderReport({ from: "2026-10-26", to: "2026-11-02", rows: week, armRows: [...earlier, ...week], armsFrom: "2026-10-19", distribution: { rows: [] } });
+  assert.match(md, /\| li_xb_relevant \| 30 \| [^|]+ \| 30 \(100\.0%\) \|/);
+  assert.match(md, /Cumulative: audience sessions from 2026-10-19 to 2026-11-02/);
+  assert.equal(summarise(week).audience.sessions, 10);
+  const weekOnly = renderReport({ from: "2026-10-26", to: "2026-11-02", rows: week, distribution: { rows: [] } });
+  assert.match(weekOnly, /\| li_xb_relevant \| 10 \| [^|]+ \| 10 \|/);
+});

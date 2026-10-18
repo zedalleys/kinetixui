@@ -142,14 +142,23 @@ const evidence = { asset: override ? null : assetId, url: tagged.href, expected,
   const page = await context.newPage();
   await page.goto(localUrl("&kx_traffic=diagnostic"), { waitUntil: "networkidle" });
   await page.mouse.click(640, 450); // a real (trusted) input through CDP: page_engaged
-  // Docs landings have the sidebar; others (e.g. /components) link the installation page from the header or footer.
-  const sidebar = page.locator('aside a[href="/docs/installation"]');
-  await ((await sidebar.count()) > 0 ? sidebar : page.locator('a[href="/docs/installation"]:visible')).first().click();
-  await page.waitForURL("**/docs/installation");
-  const events = await settle(page, 5);
+  const landing = tagged.pathname.replace(/\/$/, "");
+  if (landing !== "/docs/installation") {
+    // Docs landings have the sidebar; others (e.g. /components) link the installation page from the header or footer.
+    const sidebar = page.locator('aside a[href="/docs/installation"]');
+    await ((await sidebar.count()) > 0 ? sidebar : page.locator('a[href="/docs/installation"]:visible')).first().click();
+    await page.waitForURL("**/docs/installation");
+  }
+  const events = await settle(page, landing === "/docs/installation" ? 3 : 5);
   const names = events.map((e) => e.event);
-  // docs_viewed fires only on a listed /docs/* landing; a /components landing fires component events instead.
-  const landingEvent = tagged.pathname.startsWith("/docs/") ? ["docs_viewed"] : [];
+  // The one route event the landing fires, in trackRouteView's order (analytics-surfaces.ts): the installation and
+  // changelog pages and component pages have their own; other /docs/* pages fire docs_viewed; the rest none.
+  const landingEvent =
+    landing === "/docs/installation" ? []
+    : landing === "/docs/changelog" ? ["changelog_viewed"]
+    : /^\/docs\/components\/[a-z0-9-]+$/.test(landing) ? ["component_viewed"]
+    : landing.startsWith("/docs/") ? ["docs_viewed"]
+    : [];
   for (const name of ["$pageview", ...landingEvent, "page_engaged", "installation_viewed"]) {
     if (!names.includes(name)) fail(flow, `no ${name} (got ${JSON.stringify(names)})`);
   }
