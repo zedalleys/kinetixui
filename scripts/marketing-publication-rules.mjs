@@ -149,19 +149,31 @@ export function publicationEvidenceProblems(rows = [], offCalendar = []) {
 export const COPY_PIN_REQUIRED_FROM = "2026-10-18";
 
 /**
- * The text of one lettered variant in a draft file: under a `## <section> — …` heading, between the first `---`
- * line after it and the next `---` line. That span is exactly what gets pasted into the post, so it is what an
- * approval pins. Returns null when the section or its delimiters are missing.
+ * The words an approval pins, in the two layouts the drafts use:
+ *  - a lettered variant (`a01/linkedin.md` § A): under the `## <section> — …` heading, the text between the first
+ *    two `---` lines before the next heading (the span above them is an editor's note, not copy);
+ *  - a register entry (`content/linkedin.md` § LI-008): a heading with no such pair, where everything from the
+ *    heading to the closing `---` (or the next heading) is the entry, its campaign line included.
+ * That is exactly what gets pasted, so it is what an approval pins. Returns null when the heading is missing.
  */
 export function sectionText(markdown, section) {
   const lines = String(markdown).split("\n");
   const start = lines.findIndex((l) => new RegExp(`^## ${section.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\s|$)`).test(l));
   if (start < 0) return null;
-  const open = lines.findIndex((l, i) => i > start && l.trim() === "---");
-  if (open < 0 || lines.slice(start + 1, open).some((l) => l.startsWith("## "))) return null;
-  const close = lines.findIndex((l, i) => i > open && l.trim() === "---");
-  if (close < 0) return null;
-  return lines.slice(open + 1, close).join("\n").trim();
+  let end = lines.findIndex((l, i) => i > start && l.startsWith("## "));
+  if (end < 0) end = lines.length;
+  const rules = [];
+  for (let i = start + 1; i < end; i++) if (lines[i].trim() === "---") rules.push(i);
+  const [from, to] = rules.length >= 2 ? [rules[0] + 1, rules[1]] : [start + 1, rules[0] ?? end];
+  const text = lines.slice(from, to).join("\n").trim();
+  return text === "" ? null : text;
+}
+
+/** A whole draft file without its front matter: what an approval pins when the asset is the file (a thread). */
+export function fileCopyText(markdown) {
+  const body = String(markdown).replace(/\r\n/g, "\n");
+  const m = body.match(/^---\n[\s\S]*?\n---\n/);
+  return (m ? body.slice(m[0].length) : body).trim();
 }
 
 /** sha256 of a section's text with line endings normalised and trailing whitespace removed from each line. */
@@ -174,7 +186,8 @@ export function copyHash(text) {
  * brief -> drafted -> ready -> published, plus an optional, explicit owner approval on ready/published.
  *
  * `readFile` is injected so the rule stays pure for its tests. An approval given from COPY_PIN_REQUIRED_FROM must
- * carry `copy: { file, section, sha256 }`, and the hash must match the section as it is now: an approval is for
+ * carry `copy: { file, section?, sha256 }` (no section: the whole file after its front matter), and the hash must
+ * match that text as it is now: an approval is for
  * exact words, so copy edited after approval fails until the owner approves again. An asset flagged `stale`
  * (current-state claims that no longer hold) cannot carry an approval at all.
  */
@@ -208,13 +221,13 @@ export function approvalProblems(assets = [], readFile = null) {
     }
     if (!a.copy) {
       if (DATE.test(a.on ?? "") && a.on >= COPY_PIN_REQUIRED_FROM && asset.status !== "published") {
-        problems.push(`${where}: approval from ${COPY_PIN_REQUIRED_FROM} must pin the approved words — add copy: { file, section, sha256 }`);
+        problems.push(`${where}: approval from ${COPY_PIN_REQUIRED_FROM} must pin the approved words — add copy: { file, section?, sha256 }`);
       }
       continue;
     }
     const { file, section, sha256 } = a.copy;
-    if (!file || !section || !/^[0-9a-f]{64}$/.test(sha256 ?? "")) {
-      problems.push(`${where}: approval.copy needs file, section and a sha256 hex digest`);
+    if (!file || (section !== undefined && (typeof section !== "string" || !section.trim())) || !/^[0-9a-f]{64}$/.test(sha256 ?? "")) {
+      problems.push(`${where}: approval.copy needs a file, an optional non-empty section and a sha256 hex digest`);
       continue;
     }
     if (!readFile) continue;
@@ -225,10 +238,11 @@ export function approvalProblems(assets = [], readFile = null) {
       problems.push(`${where}: approval.copy file ${file} cannot be read`);
       continue;
     }
-    const text = sectionText(body, section);
-    if (text === null) problems.push(`${where}: approval.copy section "${section}" is not in ${file} (heading, then text between --- lines)`);
+    const text = section === undefined ? fileCopyText(body) : sectionText(body, section);
+    const label = section === undefined ? file : `${file} § ${section}`;
+    if (text === null) problems.push(`${where}: approval.copy section "${section}" is not in ${file} (no "## ${section}" heading with copy under it)`);
     else if (copyHash(text) !== sha256) {
-      problems.push(`${where}: the approved copy (${file} § ${section}) changed after approval on ${a.on} — the owner approved different words; ask again`);
+      problems.push(`${where}: the approved copy (${label}) changed after approval on ${a.on} — the owner approved different words; ask again`);
     }
   }
   return problems;

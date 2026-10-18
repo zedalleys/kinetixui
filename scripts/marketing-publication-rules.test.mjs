@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { approvalProblems, copyHash, m1Status, postKey, publicationEvidenceProblems, sectionText } from "./marketing-publication-rules.mjs";
+import { approvalProblems, copyHash, fileCopyText, m1Status, postKey, publicationEvidenceProblems, sectionText } from "./marketing-publication-rules.mjs";
 
 /** A row that passes every rule. Each negative control below breaks exactly one thing. */
 const good = () => ({
@@ -125,6 +125,31 @@ test("sectionText takes exactly the span between the --- lines under the heading
   // trailing whitespace and CRLF do not change the hash; a changed word does
   assert.equal(copyHash("a  \r\nb"), copyHash("a\nb"));
   assert.notEqual(copyHash("a\nb"), copyHash("a\nc"));
+});
+
+/** The register-entry layout (content/linkedin.md): a heading, a campaign line, quoted copy, a closing ---. */
+const ENTRIES = "# LinkedIn\n\n## LI-007 · P2\n\n> Old post.\n\n---\n\n## LI-008 · P1 · Pillar D\n\n**Campaign:** `c`\n\n> The post.\n\n---\n\n## LI-009 · P2\n\n> Next post.\n\n---\n";
+
+test("sectionText reads a register entry up to its closing ---, never into the next entry", () => {
+  assert.equal(sectionText(ENTRIES, "LI-008"), "**Campaign:** `c`\n\n> The post.");
+  assert.equal(sectionText(ENTRIES, "LI-009"), "> Next post.");
+  assert.equal(sectionText(ENTRIES, "LI-00"), null);
+  const pin = { id: "LI-008", status: "ready", approval: { by: "Ziad", on: "2026-10-19", evidence: "x", copy: { file: "draft.md", section: "LI-008", sha256: copyHash("**Campaign:** `c`\n\n> The post.") } } };
+  assert.deepEqual(approvalProblems([pin], files(ENTRIES)), []);
+  // editing the neighbouring entry leaves the approval intact; editing this one breaks it
+  assert.deepEqual(approvalProblems([pin], files(ENTRIES.replace("Next post.", "Changed."))), []);
+  assert.match(approvalProblems([pin], files(ENTRIES.replace("The post.", "The edited post."))).join("\n"), /changed after approval/);
+});
+
+test("an approval with no section pins the whole file after its front matter (a thread file)", () => {
+  const thread = "---\nid: a01\nstatus: ready\n---\n\n# X\n\n**1/**\n\nFirst.\n\n---\n\n**2/**\n\nSecond.\n";
+  assert.equal(fileCopyText(thread).startsWith("# X"), true);
+  const pin = { id: "X-001", status: "ready", approval: { by: "Ziad", on: "2026-10-19", evidence: "x", copy: { file: "draft.md", sha256: copyHash(fileCopyText(thread)) } } };
+  assert.deepEqual(approvalProblems([pin], files(thread)), []);
+  // front matter is metadata: changing status does not change the approved words
+  assert.deepEqual(approvalProblems([pin], files(thread.replace("status: ready", "status: published"))), []);
+  assert.match(approvalProblems([pin], files(thread.replace("Second.", "Second, edited."))).join("\n"), /approved copy \(draft\.md\) changed after approval/);
+  assert.match(approvalProblems([{ ...pin, approval: { ...pin.approval, copy: { ...pin.approval.copy, section: " " } } }], files(thread)).join("\n"), /optional non-empty section/);
 });
 
 test("the real content register's approvals pin copy that still matches", () => {
