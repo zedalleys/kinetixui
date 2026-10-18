@@ -1,0 +1,97 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "result-state",
+  "title": "Result State",
+  "status": "beta",
+  "since": "0.25.0",
+  "platforms": [
+    "React"
+  ],
+  "variants": {
+    "status": [
+      "success",
+      "error",
+      "warning",
+      "pending",
+      "info",
+      "partial"
+    ]
+  },
+  "components": [
+    {
+      "name": "ResultState",
+      "props": [
+        {
+          "name": "status",
+          "type": "ResultStateStatus",
+          "required": true
+        },
+        {
+          "name": "title",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "States the outcome in words — \"Payment received\", \"We couldn't confirm your booking\". Required."
+        },
+        {
+          "name": "description",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "statusLabel",
+          "type": "string",
+          "required": false,
+          "description": "The accessible name of the status mark. Defaults to an English word per status; pass your own to localise."
+        },
+        {
+          "name": "icon",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Replaces the status glyph inside the mark. The mark keeps its shape, colour and `statusLabel`."
+        },
+        {
+          "name": "media",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Replaces the whole mark — an illustration, a product image. Decorative: the status is still announced through `statusLabel`."
+        },
+        {
+          "name": "reference",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Usually a `<ReferenceCode>`: the booking reference, order number or transaction ID the reader will need again."
+        },
+        {
+          "name": "primaryAction",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The one thing to do next. Rendered first in reading order."
+        },
+        {
+          "name": "secondaryAction",
+          "type": "React.ReactNode",
+          "required": false
+        },
+        {
+          "name": "align",
+          "type": "\"center\" | \"start\"",
+          "required": false,
+          "description": "`start` for a result inside a wider layout (a panel, a side sheet); `center` (default) for a full screen."
+        },
+        {
+          "name": "headingLevel",
+          "type": "HeadingLevel",
+          "required": false,
+          "description": "Heading level of the title. Default 2 — a result inside a page whose own h1 is the app's."
+        },
+        {
+          "name": "announce",
+          "type": "boolean",
+          "required": false,
+          "description": "Make the title and description a polite live region, for a result that changes in place."
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/result-state.tsx"
+}

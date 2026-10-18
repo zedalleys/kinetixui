@@ -1,16 +1,16 @@
-export const metadata = {
-  title: "Introduction",
-  description:
-    "How KinetixUI fits together: one design-token source compiled to CSS, TypeScript, Swift, Kotlin and Dart, and the component libraries implemented separately on top of it — which are installable today and which are source you compile is on Supported platforms.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs");
 
 # Introduction
 
-**KinetixUI** is a design system built to move. A single design source becomes
-living tokens and components that stay in sync across every platform it
-implements — the name comes from *kinetics*: change it once, and it propagates
-everywhere. Which platforms those are, and how complete each one is, is on
-[Supported platforms](/docs/platforms).
+**KinetixUI** is a cross-platform design system. One canonical DTCG token source is
+generated into each platform's native token output; the components on top of it are
+implemented by hand, natively, on each platform against a shared component contract.
+Nothing converts one platform's component code into another's. What keeps the
+implementations aligned is verification: CI checks every platform claim against real
+source, and the gaps are published. Which platforms exist, and how complete and how
+verified each one is, is on [Supported platforms](/docs/platforms).
 
 <Callout>
   **What you can install, and what you compile.** <PlatformAvailability /> Being undistributed is a
@@ -19,18 +19,24 @@ everywhere. Which platforms those are, and how complete each one is, is on
 </Callout>
 
 - **Tokens** — DTCG token files, compiled by Style Dictionary into CSS
-  variables, a TypeScript object, SwiftUI, Jetpack Compose, and Flutter.
-- **Components** — React + `class-variance-authority` + Radix primitives,
-  styled with Tailwind against the token contract.
+  variables, a TypeScript object, SwiftUI, Jetpack Compose, and Flutter. This is
+  the only part that is generated.
+- **Components** — a native implementation per platform of the same component
+  contract: React (Radix primitives and Tailwind), Angular, SwiftUI, Jetpack
+  Compose and Flutter, each idiomatic to its platform. React is one implementation,
+  not the definition the others are copied from.
+- **Verification** — a manifest declares which components exist on which platform,
+  and CI fails when a claim has no source behind it.
 - **Registry** — a component registry of our own, so you `npx @kinetixui/cli add` a
   component and own the code outright.
 - **This site** — built entirely on `@kinetixui/ui` and `@kinetixui/tokens`, in
   the same light and dark themes it documents.
 
 <Callout>
-  Nothing here has to be a runtime dependency you cannot patch. You copy components
-  into your app, along with the npm packages they import, and they become yours —
-  KinetixUI keeps them aligned with the design source.
+  On the web, nothing here has to be a runtime dependency you cannot patch. You copy
+  components into your app, along with the npm packages they import, and they become
+  yours. Copied code does not update itself: `npx @kinetixui/cli add <name> --overwrite`
+  replaces your copy, and any edits in it, with the current version.
 </Callout>
 
 ## Who it's for
@@ -63,10 +69,12 @@ verbatim into `tokens/primitives`.
 `pnpm build:tokens` runs once per theme and writes
 `packages/tokens/dist/{web,ios,android,flutter}`.
 
-<Step>Components consume the contract.</Step>
+<Step>Each platform's components consume the contract.</Step>
 
-`@kinetixui/ui` never hard-codes a hex — every colour is `bg-primary`,
-`text-muted-foreground`, `border-input`.
+The components are written separately per platform, and none of them hard-codes a
+value: `@kinetixui/ui` uses `bg-primary`, `text-muted-foreground`, `border-input`, and
+the native ports read the generated `KinetixColors`, spacing and radius. A token change
+reaches every platform; a component change is made on each platform that has it.
 
 </Steps>
 
@@ -81,6 +89,9 @@ npx @kinetixui/cli init
 ```
 
 Writes `kinetixui.json` and pulls the token contract into your `globals.css`.
+It does not configure Tailwind: the components need Tailwind CSS 3 and the
+preset from `@kinetixui/ui`, set up as in
+[Installation → Tailwind](/docs/installation#tailwind).
 
 <Step>Add a component</Step>
 

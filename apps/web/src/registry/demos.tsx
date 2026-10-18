@@ -115,6 +115,7 @@ import {
 } from "@kinetixui/ui";
 import { Bold, Italic, Terminal, Underline } from "lucide-react";
 import { Bell, Home, Mail, Plus, Search, Settings, User } from "lucide-react";
+import { FabSpeedDial } from "@/examples/fab-speed-dial";
 
 type Entry = { component: React.ComponentType; source: string };
 const reg: Record<string, Entry> = {};
@@ -1322,6 +1323,225 @@ add(
   ),
   `<Fab aria-label="Add">\n  <Plus />\n</Fab>\n\n<Fab extended>\n  <Plus />\n  New item\n</Fab>`,
 );
+// The Code tab shows the whole example file; fab-speed-dial.test.tsx fails if this copy drifts from it.
+add(
+  "fab-speed-dial",
+  FabSpeedDial,
+  String.raw`"use client";
+
+import * as React from "react";
+import { Fab } from "@kinetixui/ui";
+import { Camera, FileUp, FolderPlus, Image as ImageIcon, Plus } from "lucide-react";
+
+/**
+ * A speed dial: one Fab that opens a short list of related actions.
+ *
+ * Motion, open: the Plus turns into a close mark while each action's disc pulls out of the Fab and travels to its
+ * row, the furthest leaving first. A gooey SVG filter on a decorative layer keeps each disc joined to the Fab by a
+ * stretching neck until it breaks away. Once a disc lands its icon fades in, then the labels slide out from
+ * behind the discs, nearest first. Closing plays it back faster. Every timing is a motion token or a fraction of
+ * one; only transform and opacity animate; with reduced motion everything lands in its final state at once.
+ *
+ * The decorative layer is aria-hidden and ignores the pointer. The real controls are a Fab with aria-expanded and
+ * a list of ordinary buttons, named by their visible labels, reachable with Tab in order from the Fab outward.
+ * Escape, a click outside or choosing an action closes the list and returns focus to the Fab.
+ *
+ * Centred like the reference from the sm breakpoint up; on narrow screens the Fab moves to the inline start so the
+ * labels get the whole width to wrap into.
+ */
+const ACTIONS = [
+  // nearest the Fab first: this is both the reading order and the Tab order
+  { label: "Upload file", icon: FileUp },
+  { label: "Create folder", icon: FolderPlus },
+  { label: "Photo template", icon: ImageIcon },
+  { label: "Take photo or video", icon: Camera },
+];
+
+// one stagger step, derived from the motion tokens so the choreography scales with them
+const step = (n: number) => "calc(var(--duration-instant) * " + 0.6 * n + ")";
+const after = (token: string, n: number) => "calc(var(" + token + ") + var(--duration-instant) * " + 0.6 * n + ")";
+
+export function FabSpeedDial() {
+  const [open, setOpen] = React.useState(false);
+  const [last, setLast] = React.useState<string | null>(null);
+  // how far each disc sits above the Fab's centre, measured, so wrapped labels and 200% text stay aligned
+  const [rise, setRise] = React.useState<number[]>(() => ACTIONS.map(() => 0));
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const fabRef = React.useRef<HTMLButtonElement>(null);
+  const listRef = React.useRef<HTMLUListElement>(null);
+  const discRefs = React.useRef<(HTMLSpanElement | null)[]>([]);
+  const listId = React.useId();
+  const gooId = "kx-goo-" + listId.replace(/[^a-zA-Z0-9]/g, "");
+
+  React.useLayoutEffect(() => {
+    const measure = () => {
+      const fab = fabRef.current?.getBoundingClientRect();
+      if (!fab) return;
+      const centre = fab.top + fab.height / 2;
+      setRise(
+        discRefs.current.map((disc) => {
+          const r = disc?.getBoundingClientRect();
+          return r ? centre - (r.top + r.height / 2) : 0;
+        }),
+      );
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined" || !listRef.current) return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(listRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const close = React.useCallback((refocus: boolean) => {
+    setOpen(false);
+    if (refocus) fabRef.current?.focus();
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) close(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [open, close]);
+
+  const lastIndex = ACTIONS.length - 1;
+
+  return (
+    <div
+      ref={rootRef}
+      className="relative isolate grid w-full grid-cols-[0_auto_1fr] items-end gap-y-3 py-2 sm:grid-cols-[1fr_auto_1fr]"
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && open) {
+          event.stopPropagation();
+          close(true);
+        }
+      }}
+      onBlur={(event) => {
+        if (open && !event.currentTarget.contains(event.relatedTarget as Node | null)) close(false);
+      }}
+    >
+      <svg aria-hidden="true" className="absolute size-0">
+        <defs>
+          <filter id={gooId}>
+            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur" />
+            <feColorMatrix in="blur" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" result="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+          </filter>
+        </defs>
+      </svg>
+
+      <div className="relative col-start-2 row-start-2">
+        {/* Decorative: the discs that travel. The buttons below sit exactly on top of where they land. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-0 left-1/2 z-0 w-28 -translate-x-1/2 forced-colors:hidden"
+          style={{ height: "calc(" + Math.max(...rise) + "px + 5.5rem)", filter: "url(#" + gooId + ")" }}
+        >
+          <span className="absolute bottom-0 left-1/2 -ml-7 size-14 rounded-full bg-action" />
+          {ACTIONS.map((action, i) => (
+            <span
+              key={action.label}
+              className="absolute bottom-1.5 left-1/2 -ml-[1.375rem] size-11 rounded-full bg-action transition-transform motion-reduce:transition-none"
+              style={{
+                transform: open ? "translateY(" + -rise[i] + "px)" : "translateY(0)",
+                transitionDuration: open ? "var(--duration-slow)" : "var(--duration-base)",
+                transitionTimingFunction: open ? "var(--easing-emphasized)" : "var(--easing-exit)",
+                transitionDelay: open ? step(lastIndex - i) : after("--duration-fast", i * 0.5),
+              }}
+            />
+          ))}
+        </div>
+        <Fab
+          ref={fabRef}
+          aria-label="Create"
+          aria-expanded={open}
+          aria-controls={listId}
+          className="relative z-10"
+          onClick={() => setOpen((o) => !o)}
+        >
+          <Plus
+            className={"transition-transform motion-reduce:transition-none " + (open ? "rotate-45" : "rotate-0")}
+            style={{ transitionDuration: "var(--duration-base)", transitionTimingFunction: "var(--easing-emphasized)" }}
+          />
+        </Fab>
+      </div>
+
+      <ul
+        id={listId}
+        ref={listRef}
+        aria-label="Create"
+        className={
+          "relative z-10 col-span-2 col-start-2 row-start-1 flex flex-col-reverse gap-3 justify-self-start ps-1.5 " +
+          "transition-[visibility] motion-reduce:transition-none " +
+          (open ? "visible" : "invisible")
+        }
+        // hidden only once the closing motion has played, so nothing vanishes mid-animation
+        style={{ transitionDelay: open ? "0s" : "calc(var(--duration-fast) + var(--duration-base))" }}
+      >
+        {ACTIONS.map((action, i) => {
+          const Icon = action.icon;
+          return (
+            <li key={action.label}>
+              <button
+                type="button"
+                className="group flex items-center rounded-[1.375rem] text-start outline-none focus-visible:shadow-focus forced-colors:focus-visible:[outline:2px_solid_Highlight]"
+                onClick={() => {
+                  setLast(action.label);
+                  close(true);
+                }}
+              >
+                <span
+                  ref={(el) => {
+                    discRefs.current[i] = el;
+                  }}
+                  className={
+                    "relative z-10 grid size-11 shrink-0 place-items-center rounded-full bg-action text-action-foreground " +
+                    "transition-[opacity,transform] group-hover:bg-action/90 group-active:bg-action/85 motion-reduce:transition-none " +
+                    "forced-colors:border forced-colors:border-[ButtonText] [&_svg]:size-5 " +
+                    (open ? "scale-100 opacity-100" : "scale-75 opacity-0")
+                  }
+                  style={{
+                    transitionDuration: open ? "var(--duration-fast)" : "var(--duration-instant)",
+                    transitionTimingFunction: open ? "var(--easing-enter)" : "var(--easing-exit)",
+                    transitionDelay: open ? after("--duration-base", (lastIndex - i) * 0.5) : step(0.5),
+                  }}
+                >
+                  <Icon aria-hidden="true" />
+                </span>
+                {/* the label slides out from behind the disc; the clip is what makes it emerge rather than fade */}
+                <span className="-ms-2 overflow-hidden py-1 pe-2">
+                  <span
+                    className={
+                      "block rounded-[1.125rem] bg-card py-2 pe-4 ps-5 text-body-md font-medium text-card-foreground shadow-sm " +
+                      "transition-[opacity,transform] group-hover:bg-muted motion-reduce:transition-none " +
+                      "forced-colors:border forced-colors:border-[ButtonText] " +
+                      (open ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 rtl:translate-x-full")
+                    }
+                    style={{
+                      transitionDuration: open ? "var(--duration-base)" : "var(--duration-fast)",
+                      transitionTimingFunction: open ? "var(--easing-enter)" : "var(--easing-exit)",
+                      // starts once the nearest disc is opaque, so the label never shows through it
+                      transitionDelay: open ? after("--duration-slow", 2 + i) : "0s",
+                    }}
+                  >
+                    {action.label}
+                  </span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <p role="status" className="col-span-3 row-start-3 min-h-6 text-center text-body-md text-muted-foreground">
+        {last ? "Last action: " + last : ""}
+      </p>
+    </div>
+  );
+}`,
+);
 add(
   "tab-bar-demo",
   () => {
@@ -1351,9 +1571,9 @@ add(
       infoText="3 upcoming"
       onBack={() => {}}
       actions={
-        <button type="button" aria-label="Search" className="flex size-9 items-center justify-center rounded-full hover:bg-accent">
-          <Search className="size-5" />
-        </button>
+        <Button type="button" variant="Ghost" size="icon" aria-label="Search" className="size-9 rounded-full p-0">
+          <Search aria-hidden />
+        </Button>
       }
     />
   ),
@@ -1364,7 +1584,7 @@ add(
   () => (
     <AppBar className="w-full max-w-2xl rounded-md border">
       <AppBarBrand>
-        <span className="grid size-6 place-items-center rounded bg-primary text-[11px] font-bold text-primary-foreground">
+        <span className="grid size-6 place-items-center rounded bg-primary text-body-sm font-bold text-primary-foreground">
           A
         </span>
         Acme
@@ -1377,13 +1597,9 @@ add(
         <AppBarLink href="#">Team</AppBarLink>
       </AppBarNav>
       <AppBarActions>
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-        >
-          <Bell className="size-4" />
-        </button>
+        <Button type="button" variant="Ghost" size="icon" aria-label="Notifications" className="size-9 p-0 text-muted-foreground hover:text-foreground">
+          <Bell aria-hidden />
+        </Button>
         <span className="grid size-8 place-items-center rounded-full bg-muted text-xs font-medium">KZ</span>
       </AppBarActions>
     </AppBar>
@@ -1971,4 +2187,550 @@ add(
   `const rows = Array.from({ length: 10000 }, (_, i) => ({ id: i, label: \`Row \${i + 1}\` }));\n\n<VirtualList\n  items={rows}\n  itemHeight={36}\n  height={280}\n  getItemKey={(row) => row.id}\n  renderItem={(row) => <div>{row.label}</div>}\n/>`,
 );
 
+/* ---- transactional foundations (business capability roadmap, Phase 1) ---------------------------- */
+
+import {
+  ResultState,
+  ReferenceCode,
+  PriceBreakdown,
+  PriceBreakdownLine,
+  PriceBreakdownTotal,
+  PassCard,
+  PassCardHeader,
+  PassCardTitle,
+  PassCardDescription,
+  PassCardFields,
+  PassCardField,
+  PassCardDivider,
+  PassCardCode,
+  PassCardFooter,
+} from "@kinetixui/ui";
+
+/**
+ * A real QR code (encodes the text "KX-DEMO-K7Q2XP"), generated once offline and inlined as one path. PassCard
+ * never encodes anything — this stands in for the image a product's own code generator would supply. Dark modules
+ * on a white quiet zone in BOTH themes, because that is what a scanner needs; a code must never follow dark mode.
+ */
+const QR_DEMO = ({ size = 128 }: { size?: number }) => (
+  <svg viewBox="-4 -4 29 29" width={size} height={size} shapeRendering="crispEdges" aria-hidden>
+    <rect x="-4" y="-4" width="29" height="29" fill="white" />
+    <path fill="black" d="M0 0h7v1h-7zM8 0h1v1h-1zM10 0h3v1h-3zM14 0h7v1h-7zM0 1h1v1h-1zM6 1h1v1h-1zM8 1h1v1h-1zM12 1h1v1h-1zM14 1h1v1h-1zM20 1h1v1h-1zM0 2h1v1h-1zM2 2h3v1h-3zM6 2h1v1h-1zM10 2h2v1h-2zM14 2h1v1h-1zM16 2h3v1h-3zM20 2h1v1h-1zM0 3h1v1h-1zM2 3h3v1h-3zM6 3h1v1h-1zM9 3h1v1h-1zM14 3h1v1h-1zM16 3h3v1h-3zM20 3h1v1h-1zM0 4h1v1h-1zM2 4h3v1h-3zM6 4h1v1h-1zM9 4h3v1h-3zM14 4h1v1h-1zM16 4h3v1h-3zM20 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM9 5h2v1h-2zM14 5h1v1h-1zM20 5h1v1h-1zM0 6h7v1h-7zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h7v1h-7zM9 7h3v1h-3zM1 8h1v1h-1zM6 8h4v1h-4zM11 8h3v1h-3zM19 8h2v1h-2zM1 9h2v1h-2zM4 9h2v1h-2zM8 9h1v1h-1zM10 9h2v1h-2zM14 9h4v1h-4zM19 9h2v1h-2zM0 10h3v1h-3zM4 10h4v1h-4zM9 10h2v1h-2zM14 10h3v1h-3zM19 10h1v1h-1zM0 11h1v1h-1zM3 11h2v1h-2zM10 11h1v1h-1zM14 11h3v1h-3zM20 11h1v1h-1zM1 12h1v1h-1zM3 12h1v1h-1zM5 12h5v1h-5zM12 12h1v1h-1zM14 12h2v1h-2zM17 12h3v1h-3zM8 13h1v1h-1zM10 13h1v1h-1zM12 13h2v1h-2zM17 13h4v1h-4zM0 14h7v1h-7zM8 14h1v1h-1zM11 14h1v1h-1zM13 14h4v1h-4zM18 14h1v1h-1zM0 15h1v1h-1zM6 15h1v1h-1zM9 15h4v1h-4zM15 15h1v1h-1zM19 15h1v1h-1zM0 16h1v1h-1zM2 16h3v1h-3zM6 16h1v1h-1zM12 16h2v1h-2zM15 16h2v1h-2zM19 16h1v1h-1zM0 17h1v1h-1zM2 17h3v1h-3zM6 17h1v1h-1zM10 17h1v1h-1zM12 17h1v1h-1zM14 17h1v1h-1zM18 17h1v1h-1zM0 18h1v1h-1zM2 18h3v1h-3zM6 18h1v1h-1zM9 18h1v1h-1zM13 18h4v1h-4zM19 18h2v1h-2zM0 19h1v1h-1zM6 19h1v1h-1zM8 19h2v1h-2zM15 19h2v1h-2zM18 19h1v1h-1zM20 19h1v1h-1zM0 20h7v1h-7zM10 20h2v1h-2zM15 20h1v1h-1z" />
+  </svg>
+);
+
+add(
+  "result-state-demo",
+  () => (
+    <ResultState
+      className="max-w-lg"
+      status="success"
+      title="Payment received"
+      description="We've emailed a receipt to sam@example.com. Your card statement will show KINETIX*STUDIO."
+      reference={<ReferenceCode label="Transaction ID" value="TX-48C2-91QZ" size="lg" />}
+      primaryAction={<Button>View receipt</Button>}
+      secondaryAction={<Button variant="Outline">Back to dashboard</Button>}
+    >
+      <PriceBreakdown aria-label="Payment summary">
+        <PriceBreakdownLine label="Annual plan" description="5 seats × €96.00" value="€480.00" />
+        <PriceBreakdownLine label="Discount" description="Code LAUNCH20" value="−€96.00" kind="deduction" />
+        <PriceBreakdownLine label="VAT" description="20%" value="€76.80" />
+        <PriceBreakdownTotal label="Paid" description="Visa ending 4242" value="€460.80" />
+      </PriceBreakdown>
+    </ResultState>
+  ),
+  `<ResultState
+  status="success"
+  title="Payment received"
+  description="We've emailed a receipt to sam@example.com."
+  reference={<ReferenceCode label="Transaction ID" value="TX-48C2-91QZ" size="lg" />}
+  primaryAction={<Button>View receipt</Button>}
+  secondaryAction={<Button variant="Outline">Back to dashboard</Button>}
+>
+  <PriceBreakdown aria-label="Payment summary">
+    <PriceBreakdownLine label="Annual plan" description="5 seats × €96.00" value="€480.00" />
+    <PriceBreakdownLine label="Discount" description="Code LAUNCH20" value="−€96.00" kind="deduction" />
+    <PriceBreakdownLine label="VAT" description="20%" value="€76.80" />
+    <PriceBreakdownTotal label="Paid" description="Visa ending 4242" value="€460.80" />
+  </PriceBreakdown>
+</ResultState>`,
+);
+
+add(
+  "result-state-states",
+  () => (
+    <div className="grid w-full max-w-3xl gap-x-8 gap-y-10 sm:grid-cols-2">
+      <ResultState align="start" headingLevel={3} status="success" title="Booking confirmed" description="Two nights from 14 March. We've sent the details to your email." />
+      <ResultState align="start" headingLevel={3} status="error" title="Payment declined" description="Your bank declined the charge. Nothing was taken from your account." primaryAction={<Button size="sm">Try another card</Button>} />
+      <ResultState align="start" headingLevel={3} status="warning" title="Application submitted with a gap" description="We received it, but the proof of address is missing. Add it within 7 days." primaryAction={<Button size="sm" variant="Outline">Add document</Button>} />
+      <ResultState align="start" headingLevel={3} status="pending" title="Transfer processing" description="Transfers usually arrive within one business day. You can leave this page." />
+      <ResultState align="start" headingLevel={3} status="info" title="Request received" description="A specialist will review it and reply by Thursday." />
+      <ResultState align="start" headingLevel={3} status="partial" title="3 of 4 refunds issued" description="One refund needs your bank details before we can send it." primaryAction={<Button size="sm" variant="Outline">Review refunds</Button>} />
+    </div>
+  ),
+  `<ResultState status="success" title="Booking confirmed" description="…" />
+<ResultState status="error" title="Payment declined" description="…" primaryAction={<Button>Try another card</Button>} />
+<ResultState status="warning" title="Application submitted with a gap" description="…" />
+<ResultState status="pending" title="Transfer processing" description="…" />
+<ResultState status="info" title="Request received" description="…" />
+<ResultState status="partial" title="3 of 4 refunds issued" description="…" />`,
+);
+
+add(
+  "reference-code-demo",
+  () => (
+    <div className="flex w-full max-w-md flex-col gap-6">
+      <ReferenceCode label="Booking reference" value="K7Q2XP" size="lg" />
+      <ReferenceCode label="Order number" value="ORD-2026-004519" />
+      <ReferenceCode label="Ticket number" value="0742 1189 2201" copyable={false} />
+    </div>
+  ),
+  `<ReferenceCode label="Booking reference" value="K7Q2XP" size="lg" />
+<ReferenceCode label="Order number" value="ORD-2026-004519" onCopy={track} />
+<ReferenceCode label="Ticket number" value="0742 1189 2201" copyable={false} />`,
+);
+
+add(
+  "price-breakdown-demo",
+  () => (
+    <PriceBreakdown className="max-w-sm" aria-label="Price summary">
+      <PriceBreakdownLine label="Subtotal" description="3 items" value="€120.00" />
+      <PriceBreakdownLine label="Service fee" value="€4.50" />
+      <PriceBreakdownLine label="Discount" description="Code SPRING10" value="−€12.00" kind="deduction" />
+      <PriceBreakdownLine label="Shipping" description="Standard, 2–4 days" value="€5.95" />
+      <PriceBreakdownLine label="Tax" description="VAT 20%" value="€23.69" />
+      <PriceBreakdownLine label="Account credit" value="−€10.00" kind="deduction" />
+      <PriceBreakdownTotal label="Total" value="€132.14" />
+    </PriceBreakdown>
+  ),
+  `<PriceBreakdown aria-label="Price summary">
+  <PriceBreakdownLine label="Subtotal" description="3 items" value="€120.00" />
+  <PriceBreakdownLine label="Service fee" value="€4.50" />
+  <PriceBreakdownLine label="Discount" description="Code SPRING10" value="−€12.00" kind="deduction" />
+  <PriceBreakdownLine label="Shipping" description="Standard, 2–4 days" value="€5.95" />
+  <PriceBreakdownLine label="Tax" description="VAT 20%" value="€23.69" />
+  <PriceBreakdownLine label="Account credit" value="−€10.00" kind="deduction" />
+  <PriceBreakdownTotal label="Total" value="€132.14" />
+</PriceBreakdown>`,
+);
+
+add(
+  "price-breakdown-states",
+  () => (
+    <div className="grid w-full max-w-2xl gap-10 sm:grid-cols-2">
+      <PriceBreakdown aria-label="Transfer summary">
+        <PriceBreakdownLine label="You send" value="1,000.00 USD" />
+        <PriceBreakdownLine label="Transfer fee" value="−4.20 USD" kind="deduction" />
+        <PriceBreakdownLine label="Exchange rate" description="Guaranteed for 24 hours" value="1 USD = 0.9213 EUR" />
+        <PriceBreakdownTotal label="They receive" value="917.43 EUR" />
+      </PriceBreakdown>
+      {/* While a quote is recalculated: aria-busy on the list, and placeholders the same shape as the amounts. */}
+      <PriceBreakdown aria-label="Quote" aria-busy="true">
+        <PriceBreakdownLine label="2 nights" value={<Skeleton className="h-4 w-16" />} />
+        <PriceBreakdownLine label="Cleaning fee" value={<Skeleton className="h-4 w-12" />} />
+        <PriceBreakdownLine label="Taxes" value={<Skeleton className="h-4 w-12" />} />
+        <PriceBreakdownTotal label="Total" value={<Skeleton className="h-6 w-20" />} />
+      </PriceBreakdown>
+    </div>
+  ),
+  `<PriceBreakdown aria-label="Transfer summary">
+  <PriceBreakdownLine label="You send" value="1,000.00 USD" />
+  <PriceBreakdownLine label="Transfer fee" value="−4.20 USD" kind="deduction" />
+  <PriceBreakdownLine label="Exchange rate" description="Guaranteed for 24 hours" value="1 USD = 0.9213 EUR" />
+  <PriceBreakdownTotal label="They receive" value="917.43 EUR" />
+</PriceBreakdown>
+
+{/* while a quote is recalculated */}
+<PriceBreakdown aria-label="Quote" aria-busy="true">
+  <PriceBreakdownLine label="2 nights" value={<Skeleton className="h-4 w-16" />} />
+  <PriceBreakdownTotal label="Total" value={<Skeleton className="h-6 w-20" />} />
+</PriceBreakdown>`,
+);
+
+add(
+  "pass-card-demo",
+  () => (
+    <PassCard className="max-w-sm">
+      <PassCardHeader>
+        <div className="flex min-w-0 flex-col gap-1">
+          <PassCardTitle>Boarding pass</PassCardTitle>
+          <PassCardDescription>Lisbon (LIS) to Amsterdam (AMS)</PassCardDescription>
+        </div>
+        <Tag variant="secondary">On time</Tag>
+      </PassCardHeader>
+      <PassCardFields>
+        <PassCardField label="Passenger">Sam Rivera</PassCardField>
+        <PassCardField label="Flight">KX 1824</PassCardField>
+        <PassCardField label="Boards">
+          <time dateTime="2026-03-14T09:40">14 Mar, 09:40</time>
+        </PassCardField>
+        <PassCardField label="Gate" emphasis>B12</PassCardField>
+        <PassCardField label="Seat" emphasis>14C</PassCardField>
+        <PassCardField label="Group" emphasis>2</PassCardField>
+      </PassCardFields>
+      <PassCardDivider />
+      <PassCardCode label="Boarding pass QR code" value="K7Q2XP">
+        <QR_DEMO />
+      </PassCardCode>
+      <PassCardFooter>The gate closes 20 minutes before departure.</PassCardFooter>
+    </PassCard>
+  ),
+  `<PassCard>
+  <PassCardHeader>
+    <div>
+      <PassCardTitle>Boarding pass</PassCardTitle>
+      <PassCardDescription>Lisbon (LIS) to Amsterdam (AMS)</PassCardDescription>
+    </div>
+    <Tag variant="secondary">On time</Tag>
+  </PassCardHeader>
+  <PassCardFields>
+    <PassCardField label="Passenger">Sam Rivera</PassCardField>
+    <PassCardField label="Boards"><time dateTime="2026-03-14T09:40">14 Mar, 09:40</time></PassCardField>
+    <PassCardField label="Gate" emphasis>B12</PassCardField>
+    <PassCardField label="Seat" emphasis>14C</PassCardField>
+  </PassCardFields>
+  <PassCardDivider />
+  {/* the code is generated by your app or the issuer — PassCard never encodes anything */}
+  <PassCardCode label="Boarding pass QR code" value="K7Q2XP">
+    <img src={qrCodeUrl} alt="" width={128} height={128} />
+  </PassCardCode>
+  <PassCardFooter>The gate closes 20 minutes before departure.</PassCardFooter>
+</PassCard>`,
+);
+
+add(
+  "pass-card-variants",
+  () => (
+    <div className="grid w-full max-w-4xl items-start gap-6 md:grid-cols-3">
+      <PassCard>
+        <PassCardHeader>
+          <div className="flex min-w-0 flex-col gap-1">
+            <PassCardTitle>Northern Lights Live</PassCardTitle>
+            <PassCardDescription>Harbour Arena · General admission</PassCardDescription>
+          </div>
+        </PassCardHeader>
+        <PassCardFields>
+          <PassCardField label="Doors">
+            <time dateTime="2026-05-02T19:00">2 May, 19:00</time>
+          </PassCardField>
+          <PassCardField label="Entrance" emphasis>C</PassCardField>
+        </PassCardFields>
+        <PassCardDivider />
+        <PassCardCode label="Ticket QR code" value="0742 1189 2201">
+          <QR_DEMO size={112} />
+        </PassCardCode>
+      </PassCard>
+      <PassCard>
+        <PassCardHeader>
+          <div className="flex min-w-0 flex-col gap-1">
+            <PassCardTitle>Parking permit</PassCardTitle>
+            <PassCardDescription>Riverside Garage, level 2</PassCardDescription>
+          </div>
+          <Tag>Active</Tag>
+        </PassCardHeader>
+        <PassCardFields>
+          <PassCardField label="Plate" emphasis>KX 24 RTL</PassCardField>
+          <PassCardField label="Bay" emphasis>2-117</PassCardField>
+          <PassCardField label="Valid until">
+            <time dateTime="2026-12-31">31 Dec 2026</time>
+          </PassCardField>
+        </PassCardFields>
+        <PassCardFooter>Show this permit if asked. It is not transferable.</PassCardFooter>
+      </PassCard>
+      <PassCard>
+        <PassCardHeader>
+          <div className="flex min-w-0 flex-col gap-1">
+            <PassCardTitle>€25 gift voucher</PassCardTitle>
+            <PassCardDescription>Studio Kinetix</PassCardDescription>
+          </div>
+          <Tag variant="outline">Used</Tag>
+        </PassCardHeader>
+        <PassCardFields>
+          <PassCardField label="Redeemed">
+            <time dateTime="2026-02-11">11 Feb 2026</time>
+          </PassCardField>
+          <PassCardField label="Balance">€0.00</PassCardField>
+        </PassCardFields>
+        <PassCardDivider />
+        <PassCardCode label="Voucher code" value="GIFT-7KQ2-XP19">
+          <QR_DEMO size={96} />
+        </PassCardCode>
+      </PassCard>
+    </div>
+  ),
+  `{/* An event ticket, a parking permit and a voucher: the same parts, different words. */}
+<PassCard>
+  <PassCardHeader>
+    <PassCardTitle>Parking permit</PassCardTitle>
+    <Tag>Active</Tag>
+  </PassCardHeader>
+  <PassCardFields>
+    <PassCardField label="Plate" emphasis>KX 24 RTL</PassCardField>
+    <PassCardField label="Valid until"><time dateTime="2026-12-31">31 Dec 2026</time></PassCardField>
+  </PassCardFields>
+  <PassCardFooter>Show this permit if asked.</PassCardFooter>
+</PassCard>`,
+);
+
 export const demoRegistry = reg;
+
+/* ---- money, status and booking fields (business capability roadmap, Phase 2) ------------------------ */
+
+import {
+  AmountDisplay,
+  GuestPicker,
+  CountrySelect,
+  PhoneInput,
+  DateRangeInput,
+  TimeSlotPicker,
+  AddressFields,
+} from "@kinetixui/ui";
+
+/** Supplied data, as a product would: names in the reader's language, nothing bundled by the library. */
+const DEMO_COUNTRIES = [
+  { code: "SA", name: "Saudi Arabia", callingCode: "966" },
+  { code: "AE", name: "United Arab Emirates", callingCode: "971", keywords: ["UAE"] },
+  { code: "EG", name: "Egypt", callingCode: "20" },
+  { code: "GB", name: "United Kingdom", callingCode: "44", keywords: ["UK", "Britain"] },
+  { code: "US", name: "United States", callingCode: "1", keywords: ["USA"] },
+  { code: "JP", name: "Japan", callingCode: "81" },
+];
+
+add(
+  "amount-display-demo",
+  () => (
+    <div className="flex flex-col gap-4">
+      <AmountDisplay value="1,250.00" currency="SAR" />
+      <AmountDisplay value="42.50" currency="USD" size="compact" />
+      <AmountDisplay value="25.00" currency="SAR" sign="negative" tone="positive" accessibleLabel="Refund of 25 Saudi riyals" />
+      <AmountDisplay value="14.2%" sign="positive" tone="positive" size="compact" />
+      <AmountDisplay value="3.2" currency="kWh" currencyPosition="after" size="compact" />
+    </div>
+  ),
+  `<AmountDisplay value="1,250.00" currency="SAR" />
+<AmountDisplay value="42.50" currency="USD" size="compact" />
+<AmountDisplay value="25.00" currency="SAR" sign="negative" tone="positive" accessibleLabel="Refund of 25 Saudi riyals" />
+<AmountDisplay value="14.2%" sign="positive" tone="positive" size="compact" />
+<AmountDisplay value="3.2" currency="kWh" currencyPosition="after" size="compact" />`,
+);
+
+add(
+  "timeline-status",
+  () => (
+    <Timeline
+      className="w-full max-w-sm"
+      aria-label="Order history"
+      items={[
+        { time: "12 Mar, 09:14", title: "Order placed", status: "complete" },
+        { time: "12 Mar, 09:15", title: "Payment confirmed", status: "complete" },
+        { time: "13 Mar, 16:40", title: "Out for delivery", content: "Courier: Swift Logistics", status: "current", action: <Button size="sm" variant="Outline">Track parcel</Button> },
+        { title: "Delivered", status: "pending" },
+      ]}
+    />
+  ),
+  `<Timeline
+  aria-label="Order history"
+  items={[
+    { time: "12 Mar, 09:14", title: "Order placed", status: "complete" },
+    { time: "13 Mar, 16:40", title: "Out for delivery", status: "current", action: <Button size="sm">Track parcel</Button> },
+    { title: "Delivered", status: "pending" },
+  ]}
+/>`,
+);
+
+add(
+  "guest-picker-demo",
+  () => {
+    const [value, setValue] = React.useState<Record<string, number>>({ adults: 2, children: 0, infants: 0 });
+    return (
+      <GuestPicker
+        className="w-full max-w-xs"
+        label="Guests"
+        categories={[
+          { id: "adults", label: "Adults", description: "13 or older", min: 1 },
+          { id: "children", label: "Children", description: "Ages 2–12" },
+          { id: "infants", label: "Infants", description: "Under 2", max: 2 },
+        ]}
+        value={value}
+        onValueChange={setValue}
+        maxTotal={9}
+        totalHint="You can book up to 9 guests."
+        formatSummary={(v) =>
+          [
+            `${v.adults} ${v.adults === 1 ? "adult" : "adults"}`,
+            v.children ? `${v.children} ${v.children === 1 ? "child" : "children"}` : null,
+            v.infants ? `${v.infants} ${v.infants === 1 ? "infant" : "infants"}` : null,
+          ]
+            .filter(Boolean)
+            .join(", ")
+        }
+      />
+    );
+  },
+  `<GuestPicker
+  label="Guests"
+  categories={[
+    { id: "adults", label: "Adults", description: "13 or older", min: 1 },
+    { id: "children", label: "Children", description: "Ages 2–12" },
+    { id: "infants", label: "Infants", description: "Under 2", max: 2 },
+  ]}
+  value={guests}
+  onValueChange={setGuests}
+  maxTotal={9}
+  formatSummary={(v) => /* your plural rules */ \`\${v.adults} adults\`}
+/>`,
+);
+
+add(
+  "country-select-demo",
+  () => {
+    const [value, setValue] = React.useState<string>();
+    return (
+      <CountrySelect className="w-full max-w-xs" label="Country" countries={DEMO_COUNTRIES} value={value} onValueChange={setValue} showCode />
+    );
+  },
+  `// Names in the reader's language — e.g. from Intl.DisplayNames — supplied by the product.
+const countries = [{ code: "SA", name: "Saudi Arabia" }, { code: "AE", name: "United Arab Emirates", keywords: ["UAE"] }];
+
+<CountrySelect label="Country" countries={countries} value={country} onValueChange={setCountry} showCode />`,
+);
+
+add(
+  "phone-input-demo",
+  () => {
+    const [value, setValue] = React.useState({ country: "SA", national: "" });
+    const [raw, setRaw] = React.useState("");
+    return (
+      <div className="flex w-full max-w-xs flex-col gap-2">
+        <PhoneInput
+          label="Mobile number"
+          countries={DEMO_COUNTRIES}
+          value={value}
+          onValueChange={({ raw: next, ...rest }) => {
+            setValue(rest);
+            setRaw(next);
+          }}
+          placeholder="50 123 4567"
+        />
+        <p className="text-body-sm text-muted-foreground">
+          Sent to your server: <code translate="no">{raw || "—"}</code>
+        </p>
+      </div>
+    );
+  },
+  `<PhoneInput
+  label="Mobile number"
+  countries={[{ code: "SA", name: "Saudi Arabia", callingCode: "966" }]}
+  value={phone}
+  onValueChange={({ raw, ...value }) => { setPhone(value); setRaw(raw); }}
+/>`,
+);
+
+add(
+  "date-range-input-demo",
+  () => {
+    const [value, setValue] = React.useState<{ start?: string; end?: string }>({ start: "2026-03-14", end: "2026-03-16" });
+    return (
+      <DateRangeInput
+        className="w-full max-w-xs"
+        label="Stay"
+        value={value}
+        onValueChange={setValue}
+        min="2026-03-01"
+        isDateDisabled={(iso) => iso === "2026-03-20" || iso === "2026-03-21"}
+        locale="en-GB"
+      />
+    );
+  },
+  `// Calendar dates as "YYYY-MM-DD" — never a Date, so no time zone can move a check-in.
+<DateRangeInput
+  label="Stay"
+  value={{ start: "2026-03-14", end: "2026-03-16" }}
+  onValueChange={setStay}
+  min="2026-03-01"
+  isDateDisabled={(iso) => soldOut.has(iso)}
+/>`,
+);
+
+add(
+  "time-slot-picker-demo",
+  () => {
+    const [value, setValue] = React.useState<string>();
+    return (
+      <TimeSlotPicker
+        className="w-full max-w-md"
+        label="Pickup time"
+        timeZoneLabel="Times in Riyadh (GMT+3)"
+        value={value}
+        onValueChange={setValue}
+        groups={[
+          {
+            label: "Morning",
+            slots: [
+              { value: "09:00", label: "09:00" },
+              { value: "09:30", label: "09:30", unavailable: true },
+              { value: "10:00", label: "10:00", note: "2 left" },
+              { value: "10:30", label: "10:30" },
+            ],
+          },
+          {
+            label: "Afternoon",
+            slots: [
+              { value: "13:00", label: "13:00", unavailable: true },
+              { value: "13:30", label: "13:30" },
+              { value: "14:00", label: "14:00", note: "1 left" },
+            ],
+          },
+        ]}
+      />
+    );
+  },
+  `<TimeSlotPicker
+  label="Pickup time"
+  timeZoneLabel="Times in Riyadh (GMT+3)"
+  value={slot}
+  onValueChange={setSlot}
+  groups={[
+    { label: "Morning", slots: [{ value: "09:00", label: "09:00" }, { value: "09:30", label: "09:30", unavailable: true }] },
+    { label: "Afternoon", slots: [{ value: "14:00", label: "14:00", note: "1 left" }] },
+  ]}
+/>`,
+);
+
+add(
+  "address-fields-demo",
+  () => {
+    const [value, setValue] = React.useState<Record<string, string>>({});
+    return (
+      <AddressFields
+        className="w-full max-w-lg"
+        legend="Shipping address"
+        section="shipping"
+        value={value}
+        onValueChange={setValue}
+        fields={[
+          { name: "building", label: "Building number", required: true, width: "half", inputMode: "numeric" },
+          { name: "street", label: "Street", required: true, width: "half" },
+          { name: "district", label: "District", required: true, width: "half" },
+          { name: "locality", label: "City", required: true, width: "half" },
+          { name: "postalCode", label: "Postal code", required: true, width: "half", inputMode: "numeric" },
+          { name: "additional", label: "Additional number", width: "half", description: "The 4 digits on your national address" },
+        ]}
+      />
+    );
+  },
+  `// The field list is yours: this one follows a Saudi national address. Pass a different array per country.
+<AddressFields
+  legend="Shipping address"
+  section="shipping"
+  value={address}
+  onValueChange={setAddress}
+  fields={[
+    { name: "building", label: "Building number", required: true, width: "half" },
+    { name: "street", label: "Street", required: true, width: "half" },
+    { name: "district", label: "District", required: true, width: "half" },
+    { name: "locality", label: "City", required: true, width: "half" },
+    { name: "postalCode", label: "Postal code", required: true, width: "half" },
+    { name: "additional", label: "Additional number", width: "half" },
+  ]}
+/>`,
+);

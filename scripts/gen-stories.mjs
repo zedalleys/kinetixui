@@ -57,6 +57,8 @@ const GROUP = {
   "input-group": "Form Inputs", "password-input": "Form Inputs", "number-input": "Form Inputs",
   field: "Form Inputs", form: "Form Inputs", "file-upload": "Form Inputs", "date-picker": "Form Inputs",
   calendar: "Form Inputs", rating: "Form Inputs", "color-picker": "Form Inputs", "markdown-editor": "Form Inputs",
+  "guest-picker": "Form Inputs", "country-select": "Form Inputs", "phone-input": "Form Inputs",
+  "date-range-input": "Form Inputs", "time-slot-picker": "Form Inputs", "address-fields": "Form Inputs",
   button: "Controls & Actions", "button-group": "Controls & Actions", toggle: "Controls & Actions", "toggle-group": "Controls & Actions", "segmented-control": "Controls & Actions",
   fab: "Controls & Actions", pagination: "Controls & Actions", command: "Controls & Actions",
   combobox: "Controls & Actions", "comparison-slider": "Controls & Actions",
@@ -69,7 +71,7 @@ const GROUP = {
   "notification-center": "Overlays", tour: "Overlays",
   "context-menu": "Overlays", modal: "Overlays",
   alert: "Feedback", inform: "Feedback", banner: "Feedback", progress: "Feedback", "circular-progress": "Feedback",
-  empty: "Feedback",
+  empty: "Feedback", "result-state": "Feedback",
   sonner: "Feedback", badge: "Feedback", tag: "Feedback", metric: "Feedback",
   accordion: "Data Display", card: "Data Display", table: "Data Display", "data-table": "Data Display", "data-grid": "Data Display",
   carousel: "Data Display", chart: "Data Display", avatar: "Data Display", "avatar-group": "Data Display",
@@ -77,7 +79,8 @@ const GROUP = {
   quote: "Data Display", footer: "Data Display", "audio-player": "Data Display", "description-list": "Data Display",
   timeline: "Data Display", marquee: "Data Display", "message-bubble": "Data Display",
   "virtual-list": "Data Display", "json-viewer": "Data Display", "diff-viewer": "Data Display",
-  "kanban-board": "Data Display",
+  "kanban-board": "Data Display", "reference-code": "Data Display", "price-breakdown": "Data Display",
+  "pass-card": "Data Display", "amount-display": "Data Display",
 };
 
 const PADDED = new Set([
@@ -96,6 +99,12 @@ const PADDED = new Set([
   // wider than a 390px viewport at 2x text, measured by the large-text pass in Visual Slice 4 — which is a
   // property of the story frame, not of a form column on a page.
   "input-group",
+  // The transactional foundations are `w-full` with a max width — a column on a page, not a shrink-wrapped
+  // control — and the large-text pass measures them at 390px, where only a frame with a width is honest.
+  "result-state", "price-breakdown", "pass-card", "reference-code",
+  // The Phase 2 fields are form columns (`w-full` with a max width) for the same reason; GuestPicker,
+  // CountrySelect and DateRangeInput also open a popover the width of their trigger.
+  "guest-picker", "country-select", "phone-input", "date-range-input", "time-slot-picker", "address-fields",
 ]);
 
 /**
@@ -177,7 +186,7 @@ const CONTROLS = {
     imports: "Italic",
     args: `{ variant: "default", size: "default" }`,
     argTypes: `{
-    variant: { control: "inline-radio", options: ["default", "outline"] },
+    variant: { control: "inline-radio", options: ["default", "outline", "pill"] },
     size: { control: "inline-radio", options: ["default", "sm", "lg"] },
   }`,
     render: `(args) => (
@@ -444,6 +453,126 @@ const CONTROLS = {
  * assembled to make a rule fire. `imports` names identifiers the render needs beyond the demo's own.
  */
 const EXTRA = {
+  // Business capability roadmap, Phase 2: every timeline status (and the alternating layout, which is where
+  // text alignment has to mirror), so both axe passes and the large-text pass see the status markers.
+  timeline: [{ name: "Statuses", render: `() => (
+    <div className="grid w-full max-w-3xl gap-10 md:grid-cols-2">
+      <Timeline
+        aria-label="Refund history"
+        items={[
+          { time: "2 Mar", title: "Refund requested", status: "complete" },
+          { time: "3 Mar", title: "Bank details needed", content: "Add an IBAN to receive the refund.", status: "warning", action: <Button size="sm" variant="Outline">Add bank details</Button> },
+          { time: "4 Mar", title: "Card refund failed", content: "The card was closed.", status: "error" },
+          { title: "Note added by support", status: "neutral" },
+          { title: "Refund sent", status: "pending" },
+        ]}
+      />
+      <Timeline
+        alternating
+        aria-label="Shipment"
+        items={[
+          { time: "12 Mar", title: "Packed", status: "complete" },
+          { time: "13 Mar", title: "In transit", content: "Riyadh hub", status: "current" },
+          { title: "Delivered", status: "pending" },
+        ]}
+      />
+    </div>
+  )`, imports: "Button" }],
+  "time-slot-picker": [{ name: "FullyBooked", render: `() => (
+    <TimeSlotPicker
+      className="w-full max-w-md"
+      label="Pickup time"
+      emptyMessage="No pickup times are left today. Try tomorrow."
+      groups={[{ slots: [{ value: "09:00", label: "09:00", unavailable: true }, { value: "09:30", label: "09:30", unavailable: true }] }]}
+    />
+  )` }],
+  // Business capability roadmap, Phase 1: every status, composition and state the single demo does not
+  // reach, so both axe passes (light and dark) and the large-text pass see them.
+  "result-state": [{ name: "Statuses", render: `() => (
+    <div className="grid w-full max-w-3xl gap-x-8 gap-y-10 sm:grid-cols-2">
+      <ResultState align="start" headingLevel={3} status="success" title="Booking confirmed" description="Two nights from 14 March. We've sent the details to your email." />
+      <ResultState align="start" headingLevel={3} status="error" title="Payment declined" description="Your bank declined the charge. Nothing was taken from your account." primaryAction={<Button size="sm">Try another card</Button>} />
+      <ResultState align="start" headingLevel={3} status="warning" title="Application submitted with a gap" description="We received it, but the proof of address is missing. Add it within 7 days." primaryAction={<Button size="sm" variant="Outline">Add document</Button>} />
+      <ResultState align="start" headingLevel={3} status="pending" title="Transfer processing" description="Transfers usually arrive within one business day. You can leave this page." />
+      <ResultState align="start" headingLevel={3} status="info" title="Request received" description="A specialist will review it and reply by Thursday." />
+      <ResultState align="start" headingLevel={3} status="partial" title="3 of 4 refunds issued" description="One refund needs your bank details before we can send it." primaryAction={<Button size="sm" variant="Outline">Review refunds</Button>} />
+    </div>
+  )` }],
+  "price-breakdown": [{ name: "TransferAndLoading", render: `() => (
+    <div className="grid w-full max-w-2xl gap-10 sm:grid-cols-2">
+      <PriceBreakdown aria-label="Transfer summary">
+        <PriceBreakdownLine label="You send" value="1,000.00 USD" />
+        <PriceBreakdownLine label="Transfer fee" value="−4.20 USD" kind="deduction" />
+        <PriceBreakdownLine label="Exchange rate" description="Guaranteed for 24 hours" value="1 USD = 0.9213 EUR" />
+        <PriceBreakdownTotal label="They receive" value="917.43 EUR" />
+      </PriceBreakdown>
+      {/* While a quote is recalculated: aria-busy on the list, and placeholders the same shape as the amounts. */}
+      <PriceBreakdown aria-label="Quote" aria-busy="true">
+        <PriceBreakdownLine label="2 nights" value={<Skeleton className="h-4 w-16" />} />
+        <PriceBreakdownLine label="Cleaning fee" value={<Skeleton className="h-4 w-12" />} />
+        <PriceBreakdownLine label="Taxes" value={<Skeleton className="h-4 w-12" />} />
+        <PriceBreakdownTotal label="Total" value={<Skeleton className="h-6 w-20" />} />
+      </PriceBreakdown>
+    </div>
+  )`, imports: "Skeleton" }],
+  "pass-card": [{ name: "Compositions", render: `() => (
+    <div className="grid w-full max-w-4xl items-start gap-6 md:grid-cols-3">
+      <PassCard>
+        <PassCardHeader>
+          <div className="flex min-w-0 flex-col gap-1">
+            <PassCardTitle>Northern Lights Live</PassCardTitle>
+            <PassCardDescription>Harbour Arena · General admission</PassCardDescription>
+          </div>
+        </PassCardHeader>
+        <PassCardFields>
+          <PassCardField label="Doors">
+            <time dateTime="2026-05-02T19:00">2 May, 19:00</time>
+          </PassCardField>
+          <PassCardField label="Entrance" emphasis>C</PassCardField>
+        </PassCardFields>
+        <PassCardDivider />
+        <PassCardCode label="Ticket QR code" value="0742 1189 2201">
+          <QR_DEMO size={112} />
+        </PassCardCode>
+      </PassCard>
+      <PassCard>
+        <PassCardHeader>
+          <div className="flex min-w-0 flex-col gap-1">
+            <PassCardTitle>Parking permit</PassCardTitle>
+            <PassCardDescription>Riverside Garage, level 2</PassCardDescription>
+          </div>
+          <Tag>Active</Tag>
+        </PassCardHeader>
+        <PassCardFields>
+          <PassCardField label="Plate" emphasis>KX 24 RTL</PassCardField>
+          <PassCardField label="Bay" emphasis>2-117</PassCardField>
+          <PassCardField label="Valid until">
+            <time dateTime="2026-12-31">31 Dec 2026</time>
+          </PassCardField>
+        </PassCardFields>
+        <PassCardFooter>Show this permit if asked. It is not transferable.</PassCardFooter>
+      </PassCard>
+      <PassCard>
+        <PassCardHeader>
+          <div className="flex min-w-0 flex-col gap-1">
+            <PassCardTitle>€25 gift voucher</PassCardTitle>
+            <PassCardDescription>Studio Kinetix</PassCardDescription>
+          </div>
+          <Tag variant="outline">Used</Tag>
+        </PassCardHeader>
+        <PassCardFields>
+          <PassCardField label="Redeemed">
+            <time dateTime="2026-02-11">11 Feb 2026</time>
+          </PassCardField>
+          <PassCardField label="Balance">€0.00</PassCardField>
+        </PassCardFields>
+        <PassCardDivider />
+        <PassCardCode label="Voucher code" value="GIFT-7KQ2-XP19">
+          <QR_DEMO size={96} />
+        </PassCardCode>
+      </PassCard>
+    </div>
+  )`, imports: "Tag" }],
   // The surface model (TOKENS.md) in the three places a card actually lives, so both axe passes and
   // `check:card-visual` see the states a tidy single-card demo never reaches.
   card: [
@@ -570,6 +699,45 @@ const EXTRA = {
     </Card>
   )`,
     },
+    {
+      // MX1b-1b, selection motion: a box at rest off and on, the uncontrolled mixed box whose glyph was drawn as
+      // a tick, a box whose owner moves it through every state (each \`data-kx-action\` sets one), and a box in
+      // a right-to-left row. \`check:motion\` and \`check:checkbox-radio-motion\` drive these.
+      name: "Motion",
+      imports: "Button KinetixDirectionProvider Label",
+      render: `() => {
+    const [owned, setOwned] = React.useState<boolean | "indeterminate">(false);
+    return (
+      <div className="grid gap-4">
+        {([
+          ["off", "Email me about product updates", {}],
+          ["on", "Email me about security alerts", { defaultChecked: true }],
+          ["mixed-uncontrolled", "Select all regions", { defaultChecked: "indeterminate" }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="flex items-center gap-3">
+            <Checkbox id={\`cbm-\${key}\`} data-kx-case={key} {...props} />
+            <Label htmlFor={\`cbm-\${key}\`}>{label}</Label>
+          </div>
+        ))}
+        <div className="flex items-center gap-3">
+          <Checkbox id="cbm-owned" data-kx-case="owned" checked={owned} onCheckedChange={setOwned} />
+          <Label htmlFor="cbm-owned">All files</Label>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="Outline" data-kx-action="checked" onClick={() => setOwned(true)}>Select all</Button>
+          <Button size="sm" variant="Outline" data-kx-action="indeterminate" onClick={() => setOwned("indeterminate")}>Select some</Button>
+          <Button size="sm" variant="Outline" data-kx-action="unchecked" onClick={() => setOwned(false)}>Select none</Button>
+        </div>
+        <KinetixDirectionProvider dir="rtl">
+          <div dir="rtl" lang="ar" className="flex items-center gap-3">
+            <Checkbox id="cbm-rtl" data-kx-case="rtl" />
+            <Label htmlFor="cbm-rtl">أرسل لي التحديثات</Label>
+          </div>
+        </KinetixDirectionProvider>
+      </div>
+    );
+  }`,
+    },
   ],
   "radio-group": [
     {
@@ -605,6 +773,84 @@ const EXTRA = {
         </RadioGroup>
       </CardContent>
     </Card>
+  )`,
+    },
+    {
+      // MX1b-1b: a plan picker and its right-to-left twin, horizontal so the arrow keys follow reading order.
+      // \`check:motion\` and \`check:checkbox-radio-motion\` choose items here and measure the border and the dot.
+      name: "Motion",
+      imports: "KinetixDirectionProvider Label",
+      render: `() => (
+    <div className="grid gap-6">
+      <RadioGroup defaultValue="free" aria-label="Plan" data-kx-case="plan">
+        {([["free", "Free"], ["pro", "Pro"], ["team", "Team"]] as const).map(([v, label]) => (
+          <div key={v} className="flex items-center gap-3">
+            <RadioGroupItem value={v} id={\`rgm-\${v}\`} />
+            <Label htmlFor={\`rgm-\${v}\`}>{label}</Label>
+          </div>
+        ))}
+      </RadioGroup>
+      <KinetixDirectionProvider dir="rtl">
+        <div dir="rtl" lang="ar">
+          <RadioGroup defaultValue="free" orientation="horizontal" aria-label="الخطة" data-kx-case="rtl" className="flex flex-wrap gap-4">
+            {([["free", "مجاني"], ["pro", "احترافي"], ["team", "فريق"]] as const).map(([v, label]) => (
+              <div key={v} className="flex items-center gap-2">
+                <RadioGroupItem value={v} id={\`rgm-rtl-\${v}\`} />
+                <Label htmlFor={\`rgm-rtl-\${v}\`}>{label}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+      </KinetixDirectionProvider>
+    </div>
+  )`,
+    },
+  ],
+  // MX1b-1a, selection motion: every variant resting off, on and disabled, and a ToggleGroup in single, multiple
+  // and right-to-left form, so `check:motion` and `check:toggle-motion` measure the selection colour (fast) and
+  // the hover/press layer (instant) on a real element of each kind, and both axe passes see every state.
+  toggle: [
+    {
+      name: "States",
+      render: `() => (
+    <div className="grid gap-3">
+      {(["default", "outline", "pill"] as const).map((variant) => (
+        <div key={variant} className="flex flex-wrap items-center gap-2">
+          <Toggle variant={variant} data-kx-case={\`\${variant}-off\`}>Bold</Toggle>
+          <Toggle variant={variant} defaultPressed data-kx-case={\`\${variant}-on\`}>Italic</Toggle>
+          <Toggle variant={variant} disabled data-kx-case={\`\${variant}-disabled\`}>Underline</Toggle>
+        </div>
+      ))}
+    </div>
+  )`,
+    },
+  ],
+  "toggle-group": [
+    {
+      name: "States",
+      imports: "KinetixDirectionProvider",
+      render: `() => (
+    <div className="grid gap-4">
+      <ToggleGroup type="single" defaultValue="start" aria-label="Alignment" data-kx-case="single">
+        <ToggleGroupItem value="start">Start</ToggleGroupItem>
+        <ToggleGroupItem value="center">Center</ToggleGroupItem>
+        <ToggleGroupItem value="end">End</ToggleGroupItem>
+      </ToggleGroup>
+      <ToggleGroup type="multiple" variant="outline" defaultValue={["bold"]} aria-label="Formatting" data-kx-case="multiple">
+        <ToggleGroupItem value="bold">Bold</ToggleGroupItem>
+        <ToggleGroupItem value="italic">Italic</ToggleGroupItem>
+        <ToggleGroupItem value="underline" disabled>Underline</ToggleGroupItem>
+      </ToggleGroup>
+      <KinetixDirectionProvider dir="rtl">
+        <div dir="rtl" lang="ar">
+          <ToggleGroup type="single" variant="pill" defaultValue="day" aria-label="الفترة" data-kx-case="rtl">
+            <ToggleGroupItem value="day">يوم</ToggleGroupItem>
+            <ToggleGroupItem value="week">أسبوع</ToggleGroupItem>
+            <ToggleGroupItem value="month">شهر</ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      </KinetixDirectionProvider>
+    </div>
   )`,
     },
   ],
@@ -655,6 +901,51 @@ const EXTRA = {
       ))}
     </div>
   )`,
+    },
+    {
+      // MX1b-1c, selection-control motion: switches at rest off and on, one whose owner turns it on and off from
+      // outside (each \`data-kx-action\` sets one state), a required switch in a form with a reset, a disabled one,
+      // and a switch in a right-to-left row. \`check:switch-motion\` drives these.
+      name: "Motion",
+      imports: "Button KinetixDirectionProvider Label",
+      render: `() => {
+    const [owned, setOwned] = React.useState(false);
+    return (
+      <div className="grid w-full max-w-[22rem] gap-4">
+        {([
+          ["off", "Push notifications", {}],
+          ["on", "Weekly digest", { defaultChecked: true }],
+          ["disabled", "SMS alerts (add a phone first)", { disabled: true }],
+        ] as const).map(([key, label, props]) => (
+          <div key={key} className="flex flex-wrap items-center justify-between gap-4">
+            <Label htmlFor={\`swm-\${key}\`}>{label}</Label>
+            <Switch id={\`swm-\${key}\`} data-kx-case={key} {...props} />
+          </div>
+        ))}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <Label htmlFor="swm-owned">Sync over mobile data</Label>
+          <Switch id="swm-owned" data-kx-case="owned" checked={owned} onCheckedChange={setOwned} />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="Outline" data-kx-action="checked" onClick={() => setOwned(true)}>Turn on</Button>
+          <Button size="sm" variant="Outline" data-kx-action="unchecked" onClick={() => setOwned(false)}>Turn off</Button>
+        </div>
+        <form aria-label="Consent" className="flex flex-wrap items-center justify-between gap-4">
+          <Label htmlFor="swm-required">Accept the terms</Label>
+          <div className="flex flex-wrap items-center gap-2">
+            <Switch id="swm-required" name="terms" required data-kx-case="required" />
+            <Button size="sm" variant="Outline" type="reset" data-kx-action="reset">Reset</Button>
+          </div>
+        </form>
+        <KinetixDirectionProvider dir="rtl">
+          <div dir="rtl" lang="ar" className="flex flex-wrap items-center justify-between gap-4">
+            <Label htmlFor="swm-rtl">الإشعارات</Label>
+            <Switch id="swm-rtl" data-kx-case="rtl" />
+          </div>
+        </KinetixDirectionProvider>
+      </div>
+    );
+  }`,
     },
   ],
   "segmented-control": [
@@ -748,15 +1039,14 @@ const EXTRA = {
   )`,
     },
   ],
-  // The navigation state contract: a selected tab, an unselected one and a disabled one, on the page and
-  // inside a raised Card — the two places a tab list sits, and the arrangement that inverts in dark mode
-  // if the selected tab is the page colour.
+  // Selected, unselected and disabled content tabs, on the page and inside a raised Card.
+  // A zero-minimum grid track keeps large-text overflow inside the tab list instead of widening the fixture.
   tabs: [
     {
       name: "States",
       imports: "Card CardContent",
       render: `() => (
-    <div className="grid w-[26rem] max-w-full gap-6">
+    <div className="grid w-[26rem] max-w-full grid-cols-[minmax(0,1fr)] gap-6">
       {(["page", "card"] as const).map((where) => {
         const tabs = (
           <Tabs defaultValue="overview">
@@ -779,6 +1069,63 @@ const EXTRA = {
       })}
     </div>
   )`,
+    },
+    {
+      // The travelling indicator under the conditions a real strip meets: more tabs than fit, selection set
+      // from outside, labels that change, tabs added and removed, direction and orientation switched, and the
+      // whole strip hidden and shown, or unmounted. Each \`data-kx-action\` button is one of those; \`check:tabs-indicator\`
+      // presses them and measures the bar against the chosen tab.
+      name: "Indicator",
+      imports: "Button",
+      render: `() => {
+    const all = ["Overview", "Activity", "Deployments", "Analytics", "Logs", "Storage", "Preferences", "Members", "Billing", "Integrations"];
+    const [tabs, setTabs] = React.useState(all);
+    const [value, setValue] = React.useState("Overview");
+    const [dir, setDir] = React.useState<"ltr" | "rtl">("ltr");
+    const [orientation, setOrientation] = React.useState<"horizontal" | "vertical">("horizontal");
+    const [disabled, setDisabled] = React.useState<string | null>(null);
+    const [hidden, setHidden] = React.useState(false);
+    const [renamed, setRenamed] = React.useState(false);
+    const [mounted, setMounted] = React.useState(true);
+    const actions: [string, string, () => void][] = [
+      ["select-last", "Choose last", () => setValue(tabs[tabs.length - 1])],
+      ["select-second", "Choose second", () => setValue(tabs[1])],
+      ["add", "Add tab", () => setTabs((t) => [...t, "Tab " + (t.length + 1)])],
+      ["remove-first-inactive", "Remove first inactive", () => setTabs((t) => { const i = t.findIndex((x) => x !== value); return t.filter((_, k) => k !== i); })],
+      ["remove-selected", "Remove selected", () => setTabs((t) => t.filter((x) => x !== value))],
+      ["disable-selected", "Disable selected", () => setDisabled(value)],
+      // The second label carries a count. Changing it rewrites a text node in place (a characterData mutation),
+      // which resizes that tab and moves every tab after it without resizing the chosen one.
+      ["grow-count", "Grow a count", () => setRenamed((r) => !r)],
+      ["direction", "Flip direction", () => setDir((d) => (d === "ltr" ? "rtl" : "ltr"))],
+      ["orientation", "Flip orientation", () => setOrientation((o) => (o === "horizontal" ? "vertical" : "horizontal"))],
+      ["hidden", "Hide or show", () => setHidden((h) => !h)],
+      ["unmount", "Unmount or mount", () => setMounted((m) => !m)],
+    ];
+    return (
+      <div className="grid w-[22rem] max-w-full grid-cols-[minmax(0,1fr)] gap-4">
+        <div className="flex flex-wrap gap-2">
+          {actions.map(([key, label, run]) => (
+            <Button key={key} size="sm" variant="outline" data-kx-action={key} onClick={run}>{label}</Button>
+          ))}
+        </div>
+        <div hidden={hidden}>
+          {mounted ? (
+          <Tabs value={value} onValueChange={setValue} dir={dir} orientation={orientation} className={orientation === "vertical" ? "flex gap-4" : undefined}>
+            <TabsList data-kx-case="lab" aria-label="Project sections" className={orientation === "vertical" ? "w-auto" : undefined}>
+              {tabs.map((t, i) => (
+                <TabsTrigger key={t} value={t} disabled={disabled === t}>{t}{i === 1 ? " " + (renamed ? 1280 : 3) : null}</TabsTrigger>
+              ))}
+            </TabsList>
+            {tabs.map((t) => (
+              <TabsContent key={t} value={t} className="text-sm text-muted-foreground">{t} panel.</TabsContent>
+            ))}
+          </Tabs>
+          ) : null}
+        </div>
+      </div>
+    );
+  }`,
     },
   ],
   // Composite fields (TOKENS.md, "Composite fields"): one field whose parts — an add-on, a button, steppers,

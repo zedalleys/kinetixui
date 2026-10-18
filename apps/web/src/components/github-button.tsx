@@ -86,13 +86,13 @@ export function GitHubButton() {
         stats ? `GitHub — ${stats.stars} stars, ${stats.forks} forks` : "GitHub repository"
       }
       className={cn(
-        "inline-flex h-9 items-center gap-1.5 rounded-md px-2 text-muted-foreground transition-colors",
+        "kx-hit inline-flex h-9 items-center gap-1.5 rounded-md px-2 text-muted-foreground transition-colors",
         "hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
       )}
     >
       <GithubIcon className="size-4 shrink-0" />
       {stats && (
-        <span className="flex items-center gap-1 font-mono text-[11px] tabular-nums">
+        <span className="flex items-center gap-1 font-mono text-body-sm tabular-nums">
           <Star aria-hidden className="size-3 fill-current opacity-70" />
           {fmt(stats.stars)}
         </span>

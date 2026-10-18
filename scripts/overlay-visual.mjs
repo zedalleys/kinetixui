@@ -32,6 +32,19 @@
  *   forced      under `forced-colors: active` the tooltip (whose fill the palette flattens to Canvas) still
  *               draws its edge
  *
+ * Angular Wave C3 adds three on src/fixtures/notifications.ts:
+ *
+ *   notification center   the floating surface above: `popover` fill, readable text, full `border` edge, a
+ *               shadow in light and the surface step in dark
+ *   toast       the floating surface too (`popover`, not React's `background`: in dark that is the page's own
+ *               fill, and the edge alone, 2.70:1, would separate them), with a full `border` edge; a shadow in
+ *               light and the surface step in dark; title and description readable; each type's icon 3:1
+ *               against the toast; the action button's label readable on its `action` fill; the close
+ *               button's focus ring 3:1 on every side
+ *   tour        the spotlight's scrim sets the page back everywhere but the target, which is left exactly as it
+ *               was (the cut-out); the card is the floating surface (`popover` fill, `border` edge) with
+ *               readable text; with no target the whole page is set back and the card still reads
+ *
  * Light and dark. Thresholds appear only where a standard names one (3:1, SC 1.4.11; 4.5:1, SC 1.4.3); every
  * other assertion is a relation between two renderings in the same run.
  *
@@ -67,6 +80,7 @@ const FLOATING = [
   { slug: "popover", open: (p) => p.locator("#pop-trigger").click(), trigger: "#pop-trigger", surface: "#pop-content", token: "--popover", text: "#pop-content label" },
   { slug: "hover-card", open: (p) => keyboardFocus(p, "#hc-trigger"), trigger: "#hc-trigger", surface: "#hc-content", token: "--popover", text: "#hc-content p:nth-child(2)" },
   { slug: "tooltip", open: (p) => keyboardFocus(p, "#tip-trigger"), trigger: "#tip-trigger", surface: "#tip-content", token: "--action", text: "#tip-content" },
+  { slug: "notification-center", fixture: "notifications", open: (p) => p.locator("#nc-trigger").click(), trigger: "#nc-trigger", surface: "#nc-content", token: "--popover", text: "#nc-item-1 .kx-notification-item__description" },
 ];
 
 /* ── harness ──────────────────────────────────────────────────────────── */
@@ -75,7 +89,7 @@ const dir = buildAngularSubject("overlays", { name: "overlay-visual", layout: ""
 const server = await serveStatic(dir);
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 
-async function open(theme, { rtl = false, reduced = true, forced = false, dpr = DPR } = {}) {
+async function open(theme, { rtl = false, reduced = true, forced = false, dpr = DPR, fixture = null } = {}) {
   const context = await browser.newContext({
     viewport: VIEWPORT,
     deviceScaleFactor: dpr,
@@ -85,7 +99,8 @@ async function open(theme, { rtl = false, reduced = true, forced = false, dpr = 
   });
   const page = await context.newPage();
   await page.route((url) => !url.href.startsWith(server.base) && !url.href.startsWith("data:"), (route) => route.abort());
-  await page.goto(`${server.base}/${theme}.html${rtl ? "?dir=rtl" : ""}`, { waitUntil: "load" });
+  const q = new URLSearchParams({ ...(rtl ? { dir: "rtl" } : {}), ...(fixture ? { fixture } : {}) });
+  await page.goto(`${server.base}/${theme}.html${q.size ? `?${q}` : ""}`, { waitUntil: "load" });
   await waitForAngular(page);
   await page.mouse.move(0, 0);
   return { page, close: () => context.close() };
@@ -234,7 +249,7 @@ async function modal(theme, M) {
 
 async function floating(theme, F) {
   const name = `${theme} ${F.slug}`;
-  const { page, close } = await open(theme);
+  const { page, close } = await open(theme, { fixture: F.fixture });
   const pageBg = rgb(await page.evaluate(() => getComputedStyle(document.body).backgroundColor));
   const fill = await token(page, F.token);
   await F.open(page);
@@ -344,6 +359,115 @@ async function motion(theme) {
   }
 }
 
+async function toast(theme) {
+  const name = `${theme} sonner`;
+  const { page, close } = await open(theme, { fixture: "notifications" });
+  const pageBg = rgb(await page.evaluate(() => getComputedStyle(document.body).backgroundColor));
+  const fill = await token(page, "--popover");
+  const border = await token(page, "--border");
+  const sum = (p) => p.reduce((t, v) => t + v, 0);
+  /** The darkest pixel in the 8px strip under the toast's middle: where its shadow falls. */
+  const under = (f, r) => {
+    let best = null;
+    for (let y = r.bottom + 1; y <= r.bottom + 8; y += 1) {
+      const px = f.at(r.left + r.width / 2, y);
+      if (!best || sum(px) < sum(best)) best = px;
+    }
+    return best;
+  };
+  await page.locator("#toast-error").click();
+  await rest(page);
+  await page.mouse.move(0, 0);
+  const sel = "#toaster-main li.kx-toast";
+  const r = await box(page, sel);
+  const f = await frame(page, r);
+  const inner = f.at(r.right - 6, r.bottom - 6);
+  check(contrast(inner, fill) < 1.05, `${name} the toast is painted the popover token`, `${inner} vs ${fill}`);
+  const edgeAt = f.at(r.left + r.width / 2, r.top + 0.5);
+  check(contrast(edgeAt, border) < 1.1, `${name} its edge is drawn in the full border token`, `${edgeAt} vs ${border}`);
+  if (theme === "light") {
+    const withIt = under(f, r);
+    await page.locator("#toast-dismiss-all").click();
+    await rest(page);
+    const without = under(await frame(page, r), r);
+    check(sum(withIt) < sum(without), `${name} a shadow under the toast`, `${withIt} with it, ${without} without`);
+    await page.locator("#toast-error").click();
+    await rest(page);
+  } else {
+    check(sum(fill) > sum(pageBg), `${name} dark: the toast is lighter than the page (the surface step)`, `${r2(contrast(fill, pageBg))}:1`);
+  }
+  for (const [part, what] of [["#toaster-main .kx-toast__title", "title"], ["#toaster-main .kx-toast__description", "description"]]) {
+    const t = await textOn(page, part);
+    const tc = contrast(rgb(t.color), rgb(t.bg));
+    check(tc >= 4.5, `${name} its ${what} is readable (4.5:1)`, `${r2(tc)}:1`);
+  }
+  const a = await textOn(page, "#toaster-main .kx-toast__button--action");
+  check(contrast(rgb(a.color), rgb(a.bg)) >= 4.5, `${name} the action's label is readable on its fill (4.5:1)`, `${r2(contrast(rgb(a.color), rgb(a.bg)))}:1`);
+  await page.locator("#toast-dismiss-all").click();
+  for (const type of ["success", "error", "warning"]) {
+    await page.locator(`#toast-${type === "warning" ? "forever" : type}`).click();
+    await rest(page);
+    const icon = await page.locator(`${sel}[data-type="${type}"] .kx-toast__icon`).evaluate((el) => getComputedStyle(el).color);
+    const ic = contrast(rgb(icon), fill);
+    check(ic >= 3, `${name} a ${type} toast's icon stands out from the toast (3:1, SC 1.4.11)`, `${r2(ic)}:1`);
+    await page.locator("#toast-dismiss-all").click();
+  }
+  await page.locator("#toast-error").click();
+  await rest(page);
+  await keyboardFocus(page, "#toaster-main .kx-toast__close");
+  const b = await box(page, "#toaster-main .kx-toast__close");
+  const bf = await frame(page, b);
+  const ring = (from, to) => strongest(bf, fill, from, to);
+  const sides = {
+    top: ring([b.x + b.width / 2, b.y - 3.5], [b.x + b.width / 2, b.y - 0.5]),
+    bottom: ring([b.x + b.width / 2, b.y + b.height + 0.5], [b.x + b.width / 2, b.y + b.height + 3.5]),
+    start: ring([b.x - 3.5, b.y + b.height / 2], [b.x - 0.5, b.y + b.height / 2]),
+    end: ring([b.x + b.width + 0.5, b.y + b.height / 2], [b.x + b.width + 3.5, b.y + b.height / 2]),
+  };
+  check(Math.min(...Object.values(sides)) >= 3, `${name} close button: the focus ring clears 3:1 on every side`, Object.entries(sides).map(([k, v]) => `${k} ${r2(v)}`).join(", "));
+  await close();
+}
+
+async function tour(theme) {
+  const name = `${theme} tour`;
+  const { page, close } = await open(theme, { fixture: "notifications" });
+  const fill = await token(page, "--popover");
+  const border = await token(page, "--border");
+  const sum = (p) => p.reduce((t, v) => t + v, 0);
+  // the tour scrolls its target to the centre: put it there first, so "before" and "after" are the same place
+  await page.locator("#tour-a").evaluate((el) => el.scrollIntoView({ block: "center", inline: "nearest" }));
+  await rest(page);
+  const before = await screen(page);
+  const target = await box(page, "#tour-a");
+  await page.locator("#tour-start").click();
+  await rest(page);
+  const after = await screen(page);
+  const card = await box(page, "#tour .kx-tour__card");
+  const centre = [target.left + 3, target.top + target.height / 2];
+  const kept = contrast(before.at(...centre), after.at(...centre));
+  check(kept < 1.05, `${name} the target is left as it was (the cut-out)`, `${r2(kept)}:1 against no tour`);
+  const probes = PROBES.filter(([x, y]) => x < card.left - 8 || x > card.right + 8 || y < card.top - 8 || y > card.bottom + 8);
+  const dims = probes.map(([x, y]) => [contrast(before.at(x, y), after.at(x, y)), sum(after.at(x, y)) < sum(before.at(x, y))]);
+  const enough = theme === "dark" || Math.min(...dims.map((d) => d[0])) >= 1.5;
+  check(probes.length > 0 && dims.every((d) => d[1]) && enough, `${name} the rest of the page is set back`, dims.map((d) => `${r2(d[0])}:1`).join(", "));
+  const inner = after.at(card.left + card.width / 2, card.bottom - 6);
+  check(contrast(inner, fill) < 1.05, `${name} the card is painted the popover token`, `${inner} vs ${fill}`);
+  const edge = after.at(card.left + card.width / 2, card.bottom - 0.5);
+  check(contrast(edge, border) < 1.1, `${name} the card's edge is drawn in the full border token`, `${edge} vs ${border}`);
+  for (const [part, what] of [["#tour .kx-tour__title", "title"], ["#tour .kx-tour__content", "text"], ["#tour .kx-tour__counter", "step count"]]) {
+    const t = await textOn(page, part);
+    const tc = contrast(rgb(t.color), rgb(t.bg));
+    check(tc >= 4.5, `${name} its ${what} is readable (4.5:1)`, `${r2(tc)}:1`);
+  }
+  for (let i = 0; i < 4; i++) await page.locator("#tour .kx-tour__actions button:last-child").click();
+  await rest(page);
+  const lost = await screen(page);
+  const c2 = await box(page, "#tour .kx-tour__card");
+  const all = PROBES.filter(([x, y]) => x < c2.left - 8 || x > c2.right + 8 || y < c2.top - 8 || y > c2.bottom + 8).every(([x, y]) => sum(lost.at(x, y)) < sum(before.at(x, y)));
+  check(all && contrast(lost.at(c2.left + c2.width / 2, c2.bottom - 6), fill) < 1.05, `${name} with no target the whole page is set back and the card still reads`, `card ${lost.at(c2.left + c2.width / 2, c2.bottom - 6)}`);
+  await close();
+}
+
 async function forced(theme) {
   const { page, close } = await open(theme, { forced: true });
   const canvas = rgb(await page.evaluate(() => getComputedStyle(document.body).backgroundColor));
@@ -363,6 +487,8 @@ for (const theme of ["light", "dark"]) {
   if (COVERS.has("sheet")) await direction(theme);
   if (COVERS.has("dialog")) await motion(theme);
   if (COVERS.has("tooltip")) await forced(theme);
+  if (COVERS.has("sonner")) await toast(theme);
+  if (COVERS.has("tour")) await tour(theme);
 }
 
 await browser.close();

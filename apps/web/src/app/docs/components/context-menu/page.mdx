@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Context Menu",
-  description: "Displays a menu located at the pointer, triggered by a right click.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("context-menu", "Displays a menu located at the pointer, triggered by a right click.");
 
 # Context Menu
 
@@ -11,13 +10,13 @@ Displays a menu located at the pointer, triggered by a right click.
 
 <ComponentPreview name="context-menu-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add context-menu
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from "@kinetixui/ui";

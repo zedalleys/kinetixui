@@ -7,6 +7,7 @@ import {
   deriveAttribution,
   getAttributionContext,
   initAttribution,
+  isInternalBrowser,
   normalizeCampaign,
   normalizeContent,
   normalizeMedium,
@@ -613,3 +614,137 @@ describe("startAnalytics and attribution: only when analytics is on", () => {
 function everythingIn() {
   return JSON.stringify({ s: { ...window.sessionStorage }, l: { ...window.localStorage }, c: getAttributionContext() });
 }
+
+describe("diagnostic traffic marking", () => {
+  it("marks every event from a tab opened with ?kx_traffic=diagnostic, and keeps the mark on later pages of that tab", () => {
+    initAttribution(input("?kx_traffic=diagnostic", "", "/docs"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "diagnostic", kx_source: "direct" });
+    initAttribution(input("", "https://kinetixui.com/", "/components"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "diagnostic" });
+  });
+
+  it("removes the mark with ?kx_traffic=clear", () => {
+    initAttribution(input("?kx_traffic=diagnostic"), false);
+    initAttribution(input("?kx_traffic=clear"), false);
+    expect(getAttributionContext()).not.toHaveProperty("kx_traffic_type");
+  });
+
+  it("never marks genuine traffic, and ignores any other kx_traffic value", () => {
+    initAttribution(input("?utm_source=linkedin&utm_campaign=kx_p2_a_drift"), false);
+    expect(getAttributionContext()).not.toHaveProperty("kx_traffic_type");
+    for (const other of ["Diagnostic", "INTERNAL", "test", "bot", ""]) {
+      initAttribution(input(`?kx_traffic=${other}`), false);
+      expect(getAttributionContext(), other).not.toHaveProperty("kx_traffic_type");
+    }
+  });
+
+  it("is not a new session or first-touch source: marking leaves attribution as it was", () => {
+    initAttribution(input("?kx_traffic=diagnostic&utm_source=linkedin&utm_campaign=kx_p2_a_drift"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_source: "linkedin", kx_campaign: "kx_p2_a_drift", kx_first_campaign: "kx_p2_a_drift" });
+  });
+
+  it("lets only kx_traffic_type=diagnostic or internal out through sanitizeAttributionProps", () => {
+    for (const value of ["diagnostic", "internal"]) {
+      const ok: Record<string, unknown> = { kx_traffic_type: value };
+      sanitizeAttributionProps(ok);
+      expect(ok).toEqual({ kx_traffic_type: value });
+    }
+    for (const bad of ["Internal", "Diagnostic", "bot", "", 1, null]) {
+      const bag: Record<string, unknown> = { kx_traffic_type: bad };
+      sanitizeAttributionProps(bag);
+      expect(bag, String(bad)).toEqual({});
+    }
+  });
+
+  it("marks only the current page when storage is blocked", () => {
+    vi.spyOn(window, "sessionStorage", "get").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    initAttribution(input("?kx_traffic=diagnostic"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "diagnostic" });
+  });
+
+  it("sends nothing under Do Not Track, diagnostic or not", () => {
+    initAttribution(input("?kx_traffic=diagnostic"), true);
+    expect(getAttributionContext()).toEqual({});
+  });
+});
+
+describe("internal traffic marking", () => {
+  // The owner's own visits were indistinguishable from audience traffic: the PostHog "internal" cohort is
+  // person-based and, with person_profiles: "identified_only" and no login, can never have a member.
+  it("marks this browser, not just the tab, and keeps the mark into a new session", () => {
+    initAttribution(input("?kx_traffic=internal", "", "/"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "internal" });
+    window.sessionStorage.clear(); // a new tab or session on the same browser
+    initAttribution(input("?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_parity_proof", "", "/docs/platforms"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "internal", kx_campaign: "kx_p1_a_parity_proof" });
+  });
+
+  it("removes the browser mark with ?kx_traffic=clear", () => {
+    initAttribution(input("?kx_traffic=internal"), false);
+    initAttribution(input("?kx_traffic=clear"), false);
+    expect(getAttributionContext()).not.toHaveProperty("kx_traffic_type");
+    window.sessionStorage.clear();
+    initAttribution(input(""), false);
+    expect(getAttributionContext()).not.toHaveProperty("kx_traffic_type");
+  });
+
+  it("reports a diagnostic tab on an internal browser as diagnostic, the narrower fact", () => {
+    initAttribution(input("?kx_traffic=internal"), false);
+    initAttribution(input("?kx_traffic=diagnostic"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "diagnostic" });
+    // clearing removes both marks at once
+    initAttribution(input("?kx_traffic=clear"), false);
+    expect(getAttributionContext()).not.toHaveProperty("kx_traffic_type");
+  });
+
+  it("does not change attribution: an internal visit keeps its campaign", () => {
+    initAttribution(input("?kx_traffic=internal&utm_source=x&utm_medium=social&utm_campaign=kx_p1_a_parity_proof"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_source: "x", kx_campaign: "kx_p1_a_parity_proof", kx_traffic_type: "internal" });
+  });
+
+  it("marks only the current page load when localStorage is blocked", () => {
+    vi.spyOn(window, "localStorage", "get").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    initAttribution(input("?kx_traffic=internal"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "internal" });
+    expect(isInternalBrowser("")).toBe(true);
+  });
+
+  it("sends nothing under Do Not Track, internal or not", () => {
+    initAttribution(input("?kx_traffic=internal"), true);
+    expect(getAttributionContext()).toEqual({});
+  });
+});
+
+describe("the LI-001 stop-gate link (M2)", () => {
+  // The exact link the publish packet tells the owner to open once before posting: the register's URL plus
+  // &kx_traffic=diagnostic. It must arrive with the campaign intact AND marked, so it never counts as audience.
+  const LI001 = "?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_parity_proof&utm_content=li_primary";
+
+  it("keeps campaign, content, source and medium, and marks the visit diagnostic", () => {
+    initAttribution(input(`${LI001}&kx_traffic=diagnostic`, "", "/docs/platforms"), false);
+    expect(getAttributionContext()).toMatchObject({
+      kx_source: "linkedin",
+      kx_medium: "social",
+      kx_campaign: "kx_p1_a_parity_proof",
+      kx_content: "li_primary",
+      kx_landing_page: "/docs/platforms",
+      kx_traffic_type: "diagnostic",
+    });
+  });
+
+  it("keeps both after a client-side navigation to another page in the same tab", () => {
+    initAttribution(input(`${LI001}&kx_traffic=diagnostic`, "", "/docs/platforms"), false);
+    initAttribution(input("", "https://kinetixui.com/docs/platforms", "/components"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_campaign: "kx_p1_a_parity_proof", kx_traffic_type: "diagnostic" });
+  });
+
+  it("negative control: the same link without the diagnostic flag is audience traffic", () => {
+    initAttribution(input(LI001, "", "/docs/platforms"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_campaign: "kx_p1_a_parity_proof" });
+    expect(getAttributionContext()).not.toHaveProperty("kx_traffic_type");
+  });
+});

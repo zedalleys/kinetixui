@@ -112,10 +112,19 @@ Shared contract (every platform):
 | Rest | — | Unchecked checkbox / radio edge is `muted-foreground` (5.1:1 light, 8.1:1 dark on a card), not `input` (2.2:1). The box is the only thing that says the control is there, so it must clear SC 1.4.11's 3:1. The Switch's off track stays `tertiary` (a tracked exception in `check-contrast.mjs`): its thumb carries it | — |
 | Hover | a pointer that can hover | A **state layer**: `foreground` at 8% in a 5px halo around a checkbox, radio or switch, or filling an unchosen segment; an unchecked edge darkens to `foreground`; a checked fill steps to `action`/90 | a shape appears around the control |
 | Pressed | `:active` | The layer deepens to 14% (checked checkbox fill `action`/85) | layer depth |
-| Checked | `data-state` / `aria-checked` / `:checked` | `action` fill **and** a glyph (checkbox), a dot or ring (radio), the thumb's side (switch); a chosen segment is a small raised surface — `card`, the Card's half-strength `border` edge and `sm` depth — on a `surface-grouped` well | glyph / dot / position / surface + edge + depth |
+| Checked | `data-state` / `aria-checked` / `:checked` | `action` fill **and** a glyph (checkbox), a dot or ring (radio), the thumb's side (switch); a chosen segment is the inverse fill — `foreground` with `background` text (18.1:1 light, 17.7:1 dark against its track) — on a `surface-grouped` well with the Card's half-strength `border` edge; under forced colours it is the `SelectedItem` / `SelectedItemText` pair (React; Angular still uses a raised `card` segment, which forced colours flatten to 1.00:1 — a tracked follow-up) | glyph / dot / position / luminance |
 | Invalid | `aria-invalid="true"` | `destructive` edge (and fill when checked); hover does not replace it | the field's error text (SC 1.4.1) |
 | Focus | keyboard | The ring (`ring`, 2px, offset), declared so no hover or pressed layer can cover it | ring |
 | Disabled | `disabled` | `opacity-disabled`; hover and pressed are keyed on `:enabled`, so it never answers | inert |
+
+Toggle and ToggleGroup items use the same 8% / 14% `foreground` layer as a **fill** inside the control rather
+than a halo around it (a toggle is large enough to carry one), drawn as an inset `box-shadow` so it never
+touches the selected background colour. It is keyed on `(hover: hover)` and `:enabled` like the rest of the
+family (MOTION.md, "Toggle and ToggleGroup").
+
+From MX1b-1b the Checkbox and Radio halo moves on `instant`, and checking, unchecking and mixed move the
+box's fill and edge on `fast`, with the tick, dash or dot fading in (MOTION.md, "Checkbox and RadioGroup").
+The states in the table above are unchanged.
 
 Why a halo and not a fill: an 18px box has no room inside it for a hover fill that is distinguishable from
 checked, and a darker edge alone is hard to see on a checked box. The halo is the same on every value, so
@@ -124,7 +133,11 @@ hover means "this is the target" whether the control is on or off.
 Why the segment changed surface: the track was `muted` with a `background` segment. In dark mode
 `background` is the darkest surface, so the chosen segment sat *below* its track and read as a hole
 (measured: segment L 0.0031 vs track L 0.0160). It now follows the surface model — the track is an inset
-well (`surface-grouped`, below a Card in both themes) and the chosen segment is raised content on it.
+well (`surface-grouped`, below a Card in both themes). In React the chosen segment is the inverse fill:
+`foreground` with `background` text, near-black on the light well and near-white on the dark one, since a
+black fill would sink into the near-black dark track. A raised `card` segment differed from its light track
+by 1.09:1, which read as barely chosen, and forced colours flattened it to nothing. The focus ring is offset
+by 1px of the well, so in dark it stays apart from the near-white fill (6.11:1 light, 7.57:1 dark).
 
 Motion:
 
@@ -169,13 +182,26 @@ Text entry (Input, Textarea, Select's trigger, NativeSelect):
 A field is an inset, interactive control, not raised content: no elevation, at rest or on hover. There is no
 pressed state: pressing a text field places the caret and focuses it, and pressing a select opens it.
 
+Shape: every field, and every trigger that opens a picker from a field (DatePicker, DateRangeInput, GuestPicker,
+CountrySelect), is one shape: radius `field` (`--radius-field` → `radius.sm`, 4px), `background` fill,
+`spacing-3` block padding around `text-body-md`, so a single-line field is 46px at default text and lines up
+with Input in a row. The composites (below) and MarkdownEditor's shell take the same radius; InputOTP rounds its
+outer slots with it. Measured before (main at `dcda82a`, Chromium, docs previews, light and dark): GuestPicker,
+CountrySelect, DateRangeInput, NumberInput, PhoneInput, MarkdownEditor and InputOTP's ends were 8px beside a
+4px Input; the three picker triggers were 44px; DatePicker's trigger was an Outline button (`input` edge 2.2:1,
+transparent fill, an edge focus left unchanged); MarkdownEditor's shell had a `border` edge and no focus
+indicator; Angular's `kx-input` was 44px and focused with `ring` rather than `action`. After: one radius, edge,
+fill and 46px height across all of them, in both themes. Not yet held by a gate: `check:entry-visual` and
+`check:composite-visual` assert state, not shape. MultiSelect stays 44px: its padding is set by the 24px chip
+remove targets inside it.
+
 Navigation (Tabs):
 
 | State | Trigger | Change | Not carried by colour alone |
 |---|---|---|---|
-| Rest | — | One group: React's tabs sit in an inset `surface-grouped` well (below a Card in both themes); Angular's strip is underlined | — |
+| Rest | — | One group on a 1px `border` rail; Angular's strip is underlined the same way | — |
 | Hover | a pointer that can hover, unselected and enabled | The selection controls' `foreground` state layer at 8% (1.16–1.19:1 against rest) and `foreground` text | fill |
-| Selected | `aria-selected="true"` | React: a small raised surface on the well — `card`, the Card's half-strength `border` edge (1.33:1 light, 1.59:1 dark) and `sm` depth, above the well in both themes. Angular: a 2px `primary` indicator (6.66:1 light, 7.86:1 dark) | surface + edge + depth / indicator |
+| Selected | `aria-selected="true"` | React: `foreground` text and one 2px `foreground` indicator per list that travels to the chosen tab (19.8:1 light, 18.3:1 dark against the strip); before hydration and under forced colours each chosen tab draws its own 2px edge instead. The bar is 2px at any text size, the width of the trigger's reserved edge, so at 200% text it still covers only that edge and never the inset focus ring (`check:tabs-indicator`). Angular: a 2px `primary` indicator (6.66:1 light, 7.86:1 dark) | indicator |
 | Focus | keyboard | The ring (`ring`, 2px), drawn above the selected surface, which stays under it | ring |
 | Disabled | `disabled` | `opacity-disabled`, inert | inert |
 
@@ -197,10 +223,11 @@ Motion:
 | Control | Trigger | Property | Purpose | Duration | Easing | Reduced motion |
 |---|---|---|---|---|---|---|
 | Input, Textarea, Select, NativeSelect | hover, focus, invalid | `border-color`, `box-shadow`, `background-color` | affordance: this field is the target | `duration-instant` (100ms) | `ease-standard` | collapses (the library floor in React, `transition: none` in Angular); same end state |
-| Tabs | hover, select | `color`, `background-color`, `box-shadow` | navigation state | `duration-fast` (200ms) | `ease-standard` | collapses |
+| Tabs | hover, select | `color`, `background-color` | navigation state | `duration-fast` (200ms) | `ease-standard` | collapses |
+| Tabs indicator (React) | select | `inset-inline-start` / `inset-inline-end` (`inset-block-*` when vertical) | where the selection came from and went: the leading edge moves first and the trailing edge follows `duration-instant` later, so the bar stretches across and settles on the new tab | `duration-base` (300ms) per edge | `ease-emphasized` | collapses; lands on the same tab (`check:motion`). A resize, a text-size change or a change of direction snaps |
 | Switch thumb | on/off | `inset-inline-start` | where the value went | `duration-instant` | `ease-standard` | collapses; same side |
 
-Nothing scales or slides; no field or tab changes size between states.
+No field or tab changes size between states. The only thing that slides is the React tabs indicator.
 
 | Platform | Status |
 |---|---|
@@ -340,6 +367,124 @@ because it never depended on a transition ending.
 |---|---|
 | Angular | Implemented in `styles.css` and verified on rendered pixels by `check:overlay-visual` (light + dark): fills, edges, shadow or dark surface step, scrim, corners, description and tooltip contrast, the close button's focus ring on all four sides and its hover layer, a clipped popover escaping its container, the end sheet's edge in LTR and RTL, and the tooltip's forced-colours edge. Behaviour, direction, 200% text and motion are measured on the live application by `check:angular-overlays` |
 | React | Not changed by this contract. React's overlays keep their current styling (sheet sides are physical, the tooltip has no forced-colours edge, Modal reverses its footer); parity is not claimed |
+| SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
+
+### Menus
+
+Angular Wave C2a (`@kinetixui/angular`: dropdown menu, context menu, menubar). One set of item parts shared by
+all three, inside the floating surface of the Overlays contract above. No token is added.
+
+| Part | Token(s) | Notes |
+|---|---|---|
+| Menu surface | the floating surface above (`popover` fill, `border` edge, `shadow-lg`, radius `control`); padding `spacing-1`, text `text-body-md` | at least 12rem wide, capped to `--kx-available-width`; a submenu with no room on either inline side of its parent opens below it |
+| Item, resting | transparent, `foreground` text, radius `control` − 2px, 2rem minimum block size, `spacing-2` inline padding | grows with text; nothing is sized in px except the 2px ring |
+| Item, highlighted | `foreground` layer at 8% | focus is the highlight: the pointer moves it, so hover and the highlighted item are the same state |
+| Item, highlighted by the keyboard | the 8% layer plus an inset 2px `ring` | the gate requires the keyboard highlight to differ from the pointer's, so a keyboard reader can tell where they are |
+| Item, pressed | `foreground` layer at 12% | |
+| Item, disabled | `opacity-disabled`, cursor `not-allowed`, never highlighted | still announced (`aria-disabled`), skipped by arrows and typeahead |
+| Destructive item | `destructive` text; highlighted, the `destructive` layer at 10% | |
+| Checkbox / radio item | a check or a dot, 1rem, at the inline start | a shape, never colour alone; `aria-checked` carries the state |
+| Shortcut | `muted-foreground`, `text-body-sm`, pushed to the inline end | on a highlighted item it takes the item's colour (muted text under the state layer falls below 4.5:1) |
+| Label | `text-label-lg`, `font-weight-semibold` | names its group (`aria-labelledby`) |
+| Separator | `border`, `border-width-default`, bleeds to the surface's edge | |
+| Open submenu trigger | keeps the 8% layer while focus is inside the submenu | its chevron points toward the inline end and mirrors in RTL |
+| Menubar | `background`, `border` edge, `shadow-sm`, radius `control`; triggers `text-label-lg`, hover 8%, open 8%, pressed 12%, focus `--shadow-focus` | one Tab stop; arrows move between triggers and wrap |
+
+Forced colours: a highlighted item and an open menubar trigger draw a system outline (`Highlight`,
+`CanvasText`), because state layers vanish there. Motion: items and triggers change `background-color` and
+`box-shadow` over `duration-instant`; reduced motion removes the transition. The surface's own motion is the
+floating surface's, above.
+
+| Platform | Status |
+|---|---|
+| Angular | Implemented in `styles.css` and verified on rendered pixels by `check:menu-visual` (light + dark, LTR + RTL): each item state against the others, the keyboard ring against the pointer highlight, disabled and destructive, check and radio marks, shortcut contrast, the submenu's side, and forced colours. Behaviour, direction, 200% text and motion are measured on the live application by `check:angular-collections` |
+| React | Not changed by this contract; parity is not claimed |
+| SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
+
+### Listboxes
+
+Angular Wave C2b (`@kinetixui/angular`: select, command, multi-select, and the combobox recipe). One option part
+shared by all of them, on the menu item's states above, inside the floating surface of the Overlays contract
+(the command's list is inline when it is not in a popover or the command dialog). No token is added.
+
+| Part | Token(s) | Notes |
+|---|---|---|
+| Listbox surface | the floating surface (`popover` fill, `border` edge, `shadow-lg`, radius `control`); padding `spacing-1`, text `text-body-md` | at least as wide as the field it opens from, capped to `--kx-available-width`; scrolls inside itself when taller than the room |
+| Option, resting | transparent, `foreground` text, radius `control` − 2px, 2rem minimum block size | a long label wraps; nothing is cut |
+| Option, highlighted | `foreground` layer at 8% | the highlight is the active descendant: focus stays on the field |
+| Option, highlighted by the keyboard | the 8% layer plus an inset 2px `ring` | differs from the pointer's highlight, which draws no ring |
+| Option, selected | a check mark, 1rem, at the inline start, in the option's text colour | the CHOSEN value (`aria-selected`); a shape, never colour alone, and independent of the highlight — a chosen option that is not highlighted paints no layer |
+| Option, disabled | `opacity-disabled`, cursor `not-allowed`, never highlighted | announced (`aria-disabled`), never the active descendant |
+| Group label, separator, empty text | label `muted-foreground`, `text-label-md`, `font-weight-semibold`; the menu's separator; empty text `muted-foreground`, `text-body-sm` | a label names its group; a separator is decorative (`aria-hidden`) |
+| Select trigger | the Input contract (Text entry and navigation): `muted-foreground` edge at 80% at rest, full on hover, `action` edge and `--shadow-focus` on keyboard focus, `action` edge while open, `destructive` when invalid; placeholder `muted-foreground` | a chevron at the inline end; the value wraps at 200% text |
+| Multi-select field | the Composite fields contract: one edge around the chips and the input; the field draws the focus ring while its input has focus | chips are `secondary` tags; a chip's remove button is a 24px target and owns its focus ring (an inset 2px `ring` at full opacity), and the field's ring stays off |
+| Command | `popover` surface, `border` edge, radius `control` when standalone; borderless inside a popover or the command dialog | the search field draws an `action` rule along its block-end edge on focus; shortcuts are the menu's |
+
+Forced colours: the select trigger, the multi-select field, the command's search field and a highlighted option
+draw a system outline. Motion: the popup's motion is the floating surface's; option state changes are
+`duration-instant` and none under reduced motion.
+
+| Platform | Status |
+|---|---|
+| Angular | Implemented in `styles.css`. The option states are verified on rendered pixels by `check:menu-visual` (light + dark, LTR + RTL, select and multi-select); the select trigger by `check:entry-visual` and the multi-select field by `check:composite-visual`. Behaviour, the active descendant, direction, 200% text and motion are measured on the live application by `check:angular-collections` |
+| React | Not changed by this contract; parity is not claimed |
+| SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
+
+### Navigation menu, notifications and sidebar
+
+Angular Wave C3 (`@kinetixui/angular`: navigation menu, toaster (sonner), notification center, tour, sidebar).
+Each takes a contract above rather than starting its own. No token is added.
+
+| Part | Token(s) | Notes |
+|---|---|---|
+| Navigation menu trigger, top-level link | the menubar trigger's states (Menus): transparent at rest, `foreground` text, `text-label-lg`; hover 8%, open 8%, pressed 12% `foreground` layer; focus `--shadow-focus` | the chevron turns up while its panel is open; the indicator under the open trigger is `border`, decoration only |
+| Navigation menu panel | the floating surface (Overlays); its links `popover-foreground`, hover 8%, pressed 12% `popover-foreground` layer | the page you are on: `font-weight-semibold` and a 2px underline — weight and a shape, never colour alone |
+| Toast | the floating surface: `popover` fill, `popover-foreground` text, full `border` edge, `shadow-lg`, radius `control` | React paints `background`; in dark that is the page's own fill, and the edge alone (2.70:1) would separate the toast from the page. Title `text-label-lg` semibold, description `muted-foreground`; actions sit under the text, never beside it |
+| Toast type icon | `success`, `info`, `warning`, `destructive` | at least 3:1 against the toast (gate); the type is also said in text before the title |
+| Toast buttons | action `action` / `action-foreground`; cancel `muted` / `muted-foreground`; close the dialog close button's states | |
+| Toaster region | `--z-index-overlay`; logical corners (`bottom-end` is bottom right in LTR, bottom left in RTL) | the only overlay with a z-index: it is not a top-layer surface. It scrolls past the viewport at 200% text, and reaches `spacing-3` past its toasts so the scroll clip never cuts their shadows or the list's focus ring |
+| Notification center | the floating surface; unread dot `action`; Mark all read `link` | the dot is decoration; "Unread:" is in the item's text and the count is in the trigger's name |
+| Tour | the card is the floating surface; the scrim is the spotlight's own spread shadow in `scrim`, cut out around the target | with no target, a plain full scrim and a centred card |
+| Sidebar | `sidebar` surface, `sidebar-foreground` text, `sidebar-border` edge on the side facing the page; entries hover 8%, pressed 12% `sidebar-foreground` layer; focus a 2px `sidebar-ring` | the active entry: `sidebar-accent` fill and `font-weight-medium` (the fill is faint in light, 1.03:1; the weight is the cue that is not colour). On a phone it is the family's sheet |
+
+Forced colours: every focus stop draws an outline; the open navigation trigger, the current page and the active
+sidebar entry draw a `CanvasText` outline; the unread dots keep `Highlight`; the tour's spotlight draws a
+`Highlight` outline, since its scrim is a shadow and vanishes. Motion: the panel, the notification center and a
+toast arriving fade on the floating surface's timing; the tour's card and spotlight move between steps and the
+sidebar slides over `duration-fast`; reduced motion removes every one and lands on the same end state.
+
+| Platform | Status |
+|---|---|
+| Angular | Implemented in `styles.css`. Verified on rendered pixels by `check:navigation-visual` (navigation menu, sidebar) and `check:overlay-visual` (toast, notification center, tour), light and dark. Behaviour, direction, 200% text and motion are measured on the live application by `check:angular-collections` (navigation menu) and `check:angular-overlays` (the other four) |
+| React | Not changed by this contract; parity is not claimed |
+| SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
+
+### Layout and pointer
+
+The Angular layout, pointer and scroll tranche (`@kinetixui/angular`: scroll area, resizable, carousel,
+comparison slider). Each draws a POSITION a reader moves with a pointer, a key or a swipe, with logical properties
+so it mirrors with the reading direction. No token is added; the drag threshold is the existing
+`interaction-drag-threshold`.
+
+| Part | Token(s) | Notes |
+|---|---|---|
+| Scroll area thumb | `muted-foreground` at rest; `foreground` on hover and while dragged; radius `full`; bar `0.625rem`, thumb at least `1.25rem` | at least 3:1 against the page at rest. The bars sit in their own grid tracks beside the viewport, never over content; the vertical bar is at the inline end. rem sizes, so the bar grows with text |
+| Scroll area focus | a 2px `focus` outline inside the viewport's edge | the viewport is a Tab stop only while it overflows; the ring is drawn inside, so neither the area's radius nor an ancestor's overflow cuts it |
+| Resizable handle | a 1px `border` rule at rest; hover and drag a 3px `action` rule; focus `--shadow-focus`; disabled `opacity-disabled` | a 0.375rem hit area each side of the rule. The grip (`withHandle`) is a `background` chip with a `border` edge and `muted-foreground` dots (at least 3:1), turned 90° in a vertical group |
+| Carousel controls | the outline icon button (`input` edge, `foreground` glyph), 2rem; focus `--shadow-focus` | in the carousel's own grid columns, centred on the slides, never outside its box (React places them 3rem outside). At a non-looping end a control is `aria-disabled` (it keeps focus) at `opacity-disabled`, and hover paints no layer. The glyphs ‹ › mirror in RTL |
+| Carousel slide | a 2px `focus` outline inside the slide's edge when a slide takes focus | the track moves by `transform` over `duration-base` with `easing-standard`; none under reduced motion and none while dragging |
+| Comparison divider | a 2px `background` core with a 1px `foreground` edge at 70% | the edge clears 3:1 against the layers either side, in light and dark |
+| Comparison handle | `background` fill and edge, `foreground` grip, `shadow-md`; focus `--shadow-focus` | held 1.25rem inside the area's edges so it and its ring are never cut in half at 0 or 100; it is a picture of the range input's position and takes no focus of its own |
+| Comparison labels | `background` at 85% behind `foreground`, `text-label-sm` | at least 4.5:1; the before label at the inline start |
+
+Forced colours: the thumb, the handle rule and the divider are drawn in `CanvasText`; the viewport, the handle,
+the comparison handle, the carousel controls and a focused slide draw an outline. Motion: only the carousel moves
+(above); the thumb's and the handle's colour changes are `duration-fast`, and none under reduced motion.
+
+| Platform | Status |
+|---|---|
+| Angular | Implemented in `styles.css`. Verified on rendered pixels by `check:layout-visual` (light and dark, LTR and RTL, normal and 200% text). Behaviour, pointer lifecycle and teardown, direction, 200% text and the carousel's motion are measured on the live application by `check:angular-layout` |
+| React | Not changed by this contract; parity is not claimed |
 | SwiftUI, Compose, Flutter | Not changed. Parity is not claimed |
 
 ## Role tokens (added on top of `primary`)

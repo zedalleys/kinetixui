@@ -1,15 +1,15 @@
-export const metadata = {
-  title: "Contributing",
-  description: "The platform rule — every new component ships React, Jetpack Compose, SwiftUI and Flutter code, each CI-verified, and declares what its Angular tab shows.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/contributing");
 
 # Contributing
 
-KinetixUI is **one design source, one implementation per platform**. React
-(`@kinetixui/ui`) is the source of truth; Jetpack Compose
+KinetixUI is **one token source and one component contract, with a native
+implementation per platform**. React (`@kinetixui/ui`) is the reference
+implementation a new component usually starts from; Jetpack Compose
 (`packages/ui-compose`), SwiftUI (`packages/ui-swiftui`) and Flutter
-(`packages/ui-flutter`) each carry a 1:1 port of the same component
-surface on the same token contract. Angular (`packages/ui-angular`) is a
+(`packages/ui-flutter`) each implement the same component contract natively,
+on the same token contract. Angular (`packages/ui-angular`) is a
 fifth implementation, still in preview and rolling out in waves — see
 [Angular](/docs/angular).
 
@@ -20,8 +20,8 @@ catalogue-complete platforms** — React, SwiftUI, Jetpack Compose and Flutter �
 or is a documented, deliberate non-port on the ones where it has no native
 idiom. Each port:
 
-1. **Mirrors the React source 1:1** — the same variants, sizes, states
-   and prop names, adjusted only for platform idiom (`onPressed` /
+1. **Implements the same contract** — the same variants, sizes, states
+   and prop names as the reference implementation, adjusted for platform idiom (`onPressed` /
    `onChanged` callbacks instead of DOM events, `value` + `ValueChanged`
    instead of controlled inputs, etc.).
 2. **Resolves the same semantic tokens** — never a hard-coded colour.
@@ -60,7 +60,10 @@ they are worth printing.
 
 ### The standing non-ports
 
-These components are **not** ported to any native platform, by design. Each one
+These components are **not** ported to any native platform. Most are not ported by
+design; the four transactional foundations at the end of the table are React-first
+betas whose native port is an open roadmap decision
+([business capability roadmap](https://github.com/zedalleys/kinetixui/blob/main/docs/BUSINESS-CAPABILITY-ROADMAP.md)). Each one
 carries `composition` or `native-equivalent` guidance per platform in
 `components.manifest.json`, so this table cannot drift from what actually
 ships:
@@ -75,6 +78,17 @@ ships:
 | `DirectionProvider` | threads text direction through Radix on the web; SwiftUI (`environment(\.layoutDirection)`), Compose (`LocalLayoutDirection`) and Flutter (`Directionality`) already carry layout direction in the framework itself | the framework's own directionality value — there is nothing to wrap |
 | `Tour` | targets an arbitrary already-rendered element by CSS selector — no native platform has an equivalent live-tree query, only opt-in position reporting (`Modifier.onGloballyPositioned` + a shared registry, a `PreferenceKey`, a `GlobalKey`) | a sequence of `KinetixPopover`/`KinetixDropdownMenu` steps, each anchored to the element it explains |
 | `KanbanBoard` | built on `@dnd-kit`'s accessible multi-container drag-and-drop — no equivalent dependency exists in this repo's native packages, and hand-rolling pointer + touch + keyboard DnD with collision detection and live reordering from scratch on three more platforms is a much bigger lift than porting the component's own logic | each platform's own idiomatic drag primitive (Compose drag gestures + `LazyColumn`, SwiftUI `.draggable`/`.dropDestination`, Flutter `Draggable`/`DragTarget`), composed by hand for the specific board |
+| `ResultState` | React-first beta; the native port waits on a roadmap decision | `KinetixEmpty` with a status icon, title, description and action buttons |
+| `ReferenceCode` | React-first beta; the native port waits on a roadmap decision | selectable `Text` (`textSelection(.enabled)` / `SelectionContainer` / `SelectableText`) plus a `KinetixButton` that copies |
+| `PriceBreakdown` | React-first beta; the native port waits on a roadmap decision | `KinetixDescriptionList` rows with the total after a `KinetixSeparator` |
+| `PassCard` | React-first beta; the native port waits on a roadmap decision | `KinetixCard` + `KinetixDescriptionList` + the supplied code as an `Image` |
+| `AmountDisplay` | React-first beta (Phase 2); the native port waits on a roadmap decision | `Text` with monospaced/tabular digits, the sign written in the string and a full accessibility label |
+| `GuestPicker` | React-first beta (Phase 2); the native port waits on a roadmap decision | one `KinetixNumberInput` per category, named after it, in a `KinetixPopover` |
+| `CountrySelect` | React-first beta (Phase 2); the native port waits on a roadmap decision | `KinetixSelect` over the product's own country list, names in the reader's language |
+| `PhoneInput` | React-first beta (Phase 2); the native port waits on a roadmap decision | a calling-code `KinetixSelect` and a phone-keyboard text field in one left-to-right row |
+| `DateRangeInput` | React-first beta (Phase 2); the native port waits on a roadmap decision | the platform's own date or date-range picker, stored as calendar dates |
+| `TimeSlotPicker` | React-first beta (Phase 2); the native port waits on a roadmap decision | a wrapping grid of `KinetixToggle` slots (SwiftUI, Compose) or `ChoiceChip`s (Flutter) in one exclusive group |
+| `AddressFields` | React-first beta (Phase 2); the native port waits on a roadmap decision | `KinetixField` + an input per field, with the platform's address autofill hints |
 
 Anything else that can't be ported cleanly is **scoped down and
 documented**, not silently skipped — e.g. `KinetixSheet` is bottom-only,
@@ -298,7 +312,10 @@ one thing this architecture forbids.
    can never be two different pieces of code.
 
 2. **Declare it** in `blocks.manifest.json` under that block's
-   `sources`, with the explicit path. Platform names are validated
+   `sources`, with the explicit path. An Angular block also goes in
+   `packages/ui-angular/tsconfig.blocks.json`'s `files` list, by name:
+   that is the program `pnpm check:angular-blocks` compiles, and it
+   fails while a declared Angular block is missing from it. Platform names are validated
    against `components.manifest.json`'s `platformDefinitions`; there is
    no second platform list.
 
@@ -309,7 +326,9 @@ one thing this architecture forbids.
 
 5. CI runs both, and the native workflows compile the native sources —
    the file paths above sit inside `packages/ui-*`, which is what those
-   workflows watch.
+   workflows watch. Angular blocks are compiled by `pnpm check:angular-blocks`
+   (strict templates, in `ci.yml`); the package build does not reach
+   them, because `public-api.ts` exports no block.
 
 A React block is also its own live preview: `blockPreviews` imports the
 fixture, so the code on the page and the thing rendered above it are the

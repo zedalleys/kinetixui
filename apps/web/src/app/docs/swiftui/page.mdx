@@ -1,17 +1,17 @@
-export const metadata = {
-  title: "SwiftUI",
-  description: "The native iOS component library — a SwiftUI port on the KinetixUI token contract, mirroring the React component API.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/swiftui");
 
 # SwiftUI
 
-`packages/ui-swiftui` is the native **SwiftUI** port of KinetixUI — the
+`packages/ui-swiftui` is the native **SwiftUI** implementation of KinetixUI — the
 iOS counterpart to the [Jetpack Compose](/docs/compose) library.
 `Kinetix*` views for <PlatformCountInline platform="SwiftUI" /> of the
 <ComponentTotalInline /> React catalogue entries — **the full React component
 surface** bar the <NonPortCountInline /> deliberate non-ports, built in batches on a macOS `swift build` CI path;
-each mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with
-a doc comment stating anything not carried over.
+each is a native SwiftUI implementation of the same component contract as its
+`packages/ui/src/components/*.tsx` counterpart, with a doc comment stating
+anything not carried over.
 
 It's a **standalone SwiftPM package** inside this monorepo, not a
 pnpm/npm workspace package — there's no `package.json`, so it's invisible
@@ -21,15 +21,92 @@ source it's built from.
 <Callout>
   Not on the SwiftPM registry. Consume it from a repo checkout with
   `.package(path: "…/packages/ui-swiftui")` — the same "own the code"
-  model as the web CLI and the Compose library. A tagged release needs
-  repo/signing decisions and is deliberately not wired up.
+  model as the web CLI and the Compose library. A publication workflow
+  (`publish-swiftui.yml`, which mirrors the package to its own repository for
+  tagged releases) exists but has not been used for a real release.
 </Callout>
+
+<PlatformAtAGlance platform="SwiftUI" />
+
+## What differs from the React library
+
+- **SwiftUI views, written natively.** State is caller-owned through bindings, and overlays such as dialogs,
+  sheets and toasts are placed in an `.overlay` or a top-level `ZStack` and driven by an `isPresented` binding,
+  rather than managed by a provider the way Radix does on the web.
+- **System controls where they are strong.** Slider, date picker, calendar, scroll area, carousel and chart
+  wrap the SwiftUI control or the Charts framework, so they keep the system look. The calendar picks one date;
+  there is no range selection.
+- **Its own token set.** The library reads a SwiftUI `Color` set generated for it, with real dark values, not
+  the UIKit `UIColor` output (see [Tokens](#tokens-swiftui-color-not-uicolor) below).
+- **SF Symbols** replace the web's icon set.
+- **Distribution and evidence.** It is source you add from a pinned checkout, and the only compiler feedback
+  in CI is `swift build` on macOS. The evidence counts in the summary above say how much of the catalogue has
+  tests beyond that.
+
+## A first adoption path
+
+1. Pin a commit and [add the package from a checkout](#add-the-package-from-a-pinned-checkout).
+2. Build the [first screen](#first-screen) inside `KinetixTheme`.
+3. Apply your own colours with [a custom theme](#a-custom-theme).
+4. Read [Not ported](#not-ported-deliberate) and [Known gaps](#known-gaps) for the components your screens
+   need before you plan around them.
 
 ## Setup
 
 `Package.swift` declares one library target, `KinetixUI`, for
 `.iOS(.v16)` / `.macOS(.v13)` (the floor is 16 / 13 because
-`KinetixButton` uses the View-level `.tracking` text modifier).
+`KinetixButton` uses the View-level `.tracking` text modifier). It uses
+`swift-tools-version: 6.0`, so it needs Swift 6, which means Xcode 16 or newer.
+
+### Add the package from a pinned checkout
+
+There is no released version to depend on, so pin a commit instead. SwiftPM reads
+`Package.swift` from the root of a git repository and this one keeps it in
+`packages/ui-swiftui`, so `.package(url:)` pointed at this repository does not
+resolve. Add the repository as a submodule and check out the commit you want:
+
+```bash
+git submodule add https://github.com/zedalleys/kinetixui.git Vendor/kinetixui
+git -C Vendor/kinetixui checkout <commit-sha>
+git add .gitmodules Vendor/kinetixui
+git commit -m "Add KinetixUI at <commit-sha>"
+```
+
+The commit records `.gitmodules` and the pinned commit (the submodule's gitlink) in
+your repository. Anyone who clones it, CI included, gets exactly that commit with
+`git submodule update --init`.
+
+In an Xcode app project, choose **File › Add Package Dependencies… › Add Local…**,
+select `Vendor/kinetixui/packages/ui-swiftui`, and add the `KinetixUI` library to
+your app target. In a Swift package, depend on the local path:
+
+```swift
+// Package.swift
+dependencies: [
+    .package(path: "Vendor/kinetixui/packages/ui-swiftui"),
+],
+targets: [
+    .target(name: "App", dependencies: [
+        .product(name: "KinetixUI", package: "ui-swiftui"),
+    ]),
+]
+```
+
+Your repository now records exactly which commit you build against. To update,
+read what changed for this package, then move the pin:
+
+```bash
+git -C Vendor/kinetixui fetch
+git -C Vendor/kinetixui log --oneline <commit-sha>..origin/main -- packages/ui-swiftui
+git -C Vendor/kinetixui checkout <newer-commit-sha>
+git add Vendor/kinetixui
+git commit -m "Update KinetixUI to <newer-commit-sha>"
+```
+
+The last two lines record the new pin in your repository; without them a fresh
+clone still builds the old commit.
+
+### First screen
 
 Wrap a screen — or a `#Preview` — in `KinetixTheme` so every `Kinetix*`
 view resolves to the right light/dark token set:
@@ -56,6 +133,15 @@ struct ContentView: View {
     }
 }
 ```
+
+Show `ContentView` from your app's `WindowGroup` and run it. You should see a
+**Get started** button, a smaller outlined **Cancel** button and a destructive
+**Delete** button, in light or dark to match the system appearance.
+
+This sample is not compiled in CI. The package's own `swift build` and `swift test` build the views it uses,
+so a signature change fails there first, but `ContentView` itself is not built in an app.
+
+<FirstUseNextSteps platform="SwiftUI" />
 
 `@Environment(\.kinetixColors)` exposes the active `KinetixColors` set if
 you need a token directly.
@@ -232,10 +318,35 @@ are placed in an `.overlay { }` or a top-level `ZStack` and driven by an
   drag-and-drop; hand-rolling that from scratch is a much bigger lift
   than porting the component. Use `.draggable` / `.dropDestination`
   directly for the specific board.
+- **`ResultState`** — a React-first beta (business capability roadmap,
+  Phase 1); a native port is an open roadmap decision, not a refusal.
+  Compose `KinetixEmpty` with a status icon, title and actions.
+- **`ReferenceCode`** — React-first beta, same decision. Compose
+  `Text(…).textSelection(.enabled)` with a `KinetixButton` that copies.
+- **`PriceBreakdown`** — React-first beta, same decision. Compose
+  `KinetixDescriptionList` rows with the total after a `KinetixSeparator`.
+- **`PassCard`** — React-first beta, same decision. Compose `KinetixCard`,
+  `KinetixDescriptionList` and the supplied code as an `Image`.
+- **`AmountDisplay`** — a React-first beta (business capability roadmap,
+  Phase 2); same open decision. Compose a tabular-figure `Text` with the
+  sign in the string and a full accessibility label.
+- **`GuestPicker`** — React-first beta, same decision. Compose one
+  `KinetixNumberInput` per category, named after it, in a `KinetixPopover`.
+- **`CountrySelect`** — React-first beta, same decision. Compose
+  `KinetixSelect` over your own country list.
+- **`PhoneInput`** — React-first beta, same decision. Compose
+  a calling-code `KinetixSelect` and a `KinetixInput` with `.keyboardType(.phonePad)` in a left-to-right row.
+- **`DateRangeInput`** — React-first beta, same decision. Compose
+  two date-only `DatePicker`s, the end bounded by the start.
+- **`TimeSlotPicker`** — React-first beta, same decision. Compose
+  `KinetixToggle` tiles in an adaptive `LazyVGrid`.
+- **`AddressFields`** — React-first beta, same decision. Compose a
+  `KinetixField` per address field with the platform's autofill hints.
 
 ## Known gaps
 
-- **No remote publishing.** `swift build` on `macos-latest` (against the
+- **Not published yet.** The publication workflow has never run for real.
+  `swift build` on `macos-latest` (against the
   `.macOS(.v13)` target, no simulator) is the sole compiler feedback on
   every push that touches `packages/ui-swiftui`, `tokens/`, or
   `style-dictionary/`.

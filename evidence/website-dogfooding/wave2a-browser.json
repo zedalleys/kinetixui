@@ -1,0 +1,996 @@
+{
+  "base": "http://127.0.0.1:3000",
+  "rows": [
+    {
+      "surface": "command-menu",
+      "width": 390,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 1,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search…",
+      "dialog": {
+        "left": 0,
+        "right": 390,
+        "top": 168.796875,
+        "width": 390,
+        "vw": 390,
+        "vh": 844,
+        "sw": 388,
+        "cw": 388
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 390,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 2,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search…",
+      "dialog": {
+        "left": 0,
+        "right": 390,
+        "top": 168.796875,
+        "width": 390,
+        "vw": 390,
+        "vh": 844,
+        "sw": 388,
+        "cw": 388
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 390,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 1,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search…",
+      "dialog": {
+        "left": 0,
+        "right": 390,
+        "top": 168.796875,
+        "width": 390,
+        "vw": 390,
+        "vh": 844,
+        "sw": 388,
+        "cw": 388
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 390,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 2,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search…",
+      "dialog": {
+        "left": 0,
+        "right": 390,
+        "top": 168.796875,
+        "width": 390,
+        "vw": 390,
+        "vh": 844,
+        "sw": 388,
+        "cw": 388
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 390,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 1,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search…",
+      "dialog": {
+        "left": 0,
+        "right": 390,
+        "top": 168.796875,
+        "width": 390,
+        "vw": 390,
+        "vh": 844,
+        "sw": 388,
+        "cw": 388
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 390,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 2,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search…",
+      "dialog": {
+        "left": 0,
+        "right": 390,
+        "top": 168.796875,
+        "width": 390,
+        "vw": 390,
+        "vh": 844,
+        "sw": 388,
+        "cw": 388
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 390,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 1,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search…",
+      "dialog": {
+        "left": 0,
+        "right": 390,
+        "top": 168.796875,
+        "width": 390,
+        "vw": 390,
+        "vh": 844,
+        "sw": 388,
+        "cw": 388
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 390,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 2,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search…",
+      "dialog": {
+        "left": 0,
+        "right": 390,
+        "top": 168.796875,
+        "width": 390,
+        "vw": 390,
+        "vh": 844,
+        "sw": 388,
+        "cw": 388
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 1,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search… Ctrl K",
+      "dialog": {
+        "left": 384,
+        "right": 896,
+        "top": 168.796875,
+        "width": 512,
+        "vw": 1280,
+        "vh": 844,
+        "sw": 510,
+        "cw": 510
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 2,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search… Ctrl K",
+      "dialog": {
+        "left": 128,
+        "right": 1152,
+        "top": 168.796875,
+        "width": 1024,
+        "vw": 1280,
+        "vh": 844,
+        "sw": 1022,
+        "cw": 1022
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 1,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search… Ctrl K",
+      "dialog": {
+        "left": 384,
+        "right": 896,
+        "top": 168.796875,
+        "width": 512,
+        "vw": 1280,
+        "vh": 844,
+        "sw": 510,
+        "cw": 510
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 1280,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 2,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search… Ctrl K",
+      "dialog": {
+        "left": 128,
+        "right": 1152,
+        "top": 168.796875,
+        "width": 1024,
+        "vw": 1280,
+        "vh": 844,
+        "sw": 1022,
+        "cw": 1022
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 1,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search… Ctrl K",
+      "dialog": {
+        "left": 384,
+        "right": 896,
+        "top": 168.796875,
+        "width": 512,
+        "vw": 1280,
+        "vh": 844,
+        "sw": 510,
+        "cw": 510
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 2,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search… Ctrl K",
+      "dialog": {
+        "left": 128,
+        "right": 1152,
+        "top": 168.796875,
+        "width": 1024,
+        "vw": 1280,
+        "vh": 844,
+        "sw": 1022,
+        "cw": 1022
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 1,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search… Ctrl K",
+      "dialog": {
+        "left": 384,
+        "right": 896,
+        "top": 168.796875,
+        "width": 512,
+        "vw": 1280,
+        "vh": 844,
+        "sw": 510,
+        "cw": 510
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "command-menu",
+      "width": 1280,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 2,
+      "triggerText": "Search…CtrlK",
+      "triggerInnerText": "Search… Ctrl K",
+      "dialog": {
+        "left": 128,
+        "right": 1152,
+        "top": 168.796875,
+        "width": 1024,
+        "vw": 1280,
+        "vh": 844,
+        "sw": 1022,
+        "cw": 1022
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "selectedAfterArrowDown": "Components",
+      "focusAfterEscape": "button:Search…CtrlK",
+      "focusAfterRoute": "button:Search…CtrlK",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 390,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 1,
+      "panel": {
+        "left": 0,
+        "right": 292.5,
+        "width": 292.5,
+        "vw": 390,
+        "sw": 292,
+        "cw": 292,
+        "sh": 1281,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 390,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 2,
+      "panel": {
+        "left": 0,
+        "right": 292.5,
+        "width": 292.5,
+        "vw": 390,
+        "sw": 292,
+        "cw": 292,
+        "sh": 3009,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 390,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 1,
+      "panel": {
+        "left": 0,
+        "right": 292.5,
+        "width": 292.5,
+        "vw": 390,
+        "sw": 292,
+        "cw": 292,
+        "sh": 1281,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 390,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 2,
+      "panel": {
+        "left": 0,
+        "right": 292.5,
+        "width": 292.5,
+        "vw": 390,
+        "sw": 292,
+        "cw": 292,
+        "sh": 3009,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 390,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 1,
+      "panel": {
+        "left": 97.5,
+        "right": 390,
+        "width": 292.5,
+        "vw": 390,
+        "sw": 292,
+        "cw": 292,
+        "sh": 1281,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 390,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 2,
+      "panel": {
+        "left": 97.5,
+        "right": 390,
+        "width": 292.5,
+        "vw": 390,
+        "sw": 292,
+        "cw": 292,
+        "sh": 3009,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 390,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 1,
+      "panel": {
+        "left": 97.5,
+        "right": 390,
+        "width": 292.5,
+        "vw": 390,
+        "sw": 292,
+        "cw": 292,
+        "sh": 1281,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 390,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 2,
+      "panel": {
+        "left": 97.5,
+        "right": 390,
+        "width": 292.5,
+        "vw": 390,
+        "sw": 292,
+        "cw": 292,
+        "sh": 3009,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 900,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 1,
+      "panel": {
+        "left": 0,
+        "right": 384,
+        "width": 384,
+        "vw": 900,
+        "sw": 383,
+        "cw": 383,
+        "sh": 1281,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 900,
+      "dir": "ltr",
+      "theme": "light",
+      "textScale": 2,
+      "panel": {
+        "left": 0,
+        "right": 675,
+        "width": 675,
+        "vw": 900,
+        "sw": 674,
+        "cw": 674,
+        "sh": 2561,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 900,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 1,
+      "panel": {
+        "left": 0,
+        "right": 384,
+        "width": 384,
+        "vw": 900,
+        "sw": 383,
+        "cw": 383,
+        "sh": 1281,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 900,
+      "dir": "ltr",
+      "theme": "dark",
+      "textScale": 2,
+      "panel": {
+        "left": 0,
+        "right": 675,
+        "width": 675,
+        "vw": 900,
+        "sw": 674,
+        "cw": 674,
+        "sh": 2561,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 900,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 1,
+      "panel": {
+        "left": 516,
+        "right": 900,
+        "width": 384,
+        "vw": 900,
+        "sw": 383,
+        "cw": 383,
+        "sh": 1281,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 900,
+      "dir": "rtl",
+      "theme": "light",
+      "textScale": 2,
+      "panel": {
+        "left": 225,
+        "right": 900,
+        "width": 675,
+        "vw": 900,
+        "sw": 674,
+        "cw": 674,
+        "sh": 2561,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 900,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 1,
+      "panel": {
+        "left": 516,
+        "right": 900,
+        "width": 384,
+        "vw": 900,
+        "sw": 383,
+        "cw": 383,
+        "sh": 1281,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "surface": "mobile-nav",
+      "width": 900,
+      "dir": "rtl",
+      "theme": "dark",
+      "textScale": 2,
+      "panel": {
+        "left": 225,
+        "right": 900,
+        "width": 675,
+        "vw": 900,
+        "sw": 674,
+        "cw": 674,
+        "sh": 2561,
+        "ch": 844,
+        "overflowY": "auto",
+        "animation": "1e-05s"
+      },
+      "modal": {
+        "locked": true,
+        "exposedOutside": [],
+        "dialogs": 1,
+        "overflow": 0,
+        "scrolled": false,
+        "pageHidden": true
+      },
+      "tabStops": 30,
+      "focusAfterRoute": "button:Menu",
+      "axeViolations": 0
+    },
+    {
+      "forcedColors": {
+        "search": {
+          "outline": "solid",
+          "outlineWidth": "2px",
+          "boxShadow": "none"
+        },
+        "menu": {
+          "outline": "solid",
+          "outlineWidth": "2px",
+          "boxShadow": "none"
+        }
+      }
+    }
+  ],
+  "failures": []
+}

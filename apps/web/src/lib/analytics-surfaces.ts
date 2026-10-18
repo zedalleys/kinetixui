@@ -22,7 +22,8 @@ import {
   type AnalyticsSource,
 } from "./analytics";
 import { PACKAGE_NAMES, PACKAGES } from "./packages";
-import type { CodeTab } from "./platform-tabs";
+import { PLATFORMS, PLATFORM_DEFINITIONS, type Platform } from "./platform-parity";
+import { SETUP_HREF, type CodeTab } from "./platform-tabs";
 import { publicRoutes } from "./seo";
 import { componentDocs, siteConfig } from "./site";
 
@@ -47,10 +48,24 @@ export function sourceForPath(pathname: string): AnalyticsSource | null {
   if (pathname === "/components") return "components_gallery";
   if (pathname === "/blocks") return "blocks_gallery";
   if (pathname === "/iot") return "iot_page";
+  if (pathname === "/demos/building-operations") return "building_operations_demo";
+  if (pathname === "/capabilities") return "use_cases_hub";
+  // only a use-case page that exists: a 404 at a use-case-shaped URL is not a use-case page
+  if (pathname.startsWith("/use-cases/") && PUBLIC_ROUTES.has(pathname)) return "use_case_page";
   return null;
 }
 
 /* ------------------------------------------------------------------ route views (semantic classification) */
+
+/**
+ * A platform's own setup page → its platform, from the same `SETUP_HREF` every "Setup →" link uses. These pages keep
+ * emitting `docs_viewed` (neither QE nor AI, analytics.md §3/§4); the platform only makes setup interest per platform
+ * readable (BD-W4 F-06). React's setup page is /docs/installation, whose `installation_viewed` carries `react`.
+ */
+function setupPagePlatform(path: string): AnalyticsPlatform | null {
+  const platform = PLATFORMS.find((p) => SETUP_HREF[p] === path && path !== "/docs/installation");
+  return platform ? analyticsPlatformFor(platform) : null;
+}
 
 /**
  * The semantic view event for a route, fired once per navigation by `AnalyticsProvider`. Only real, listed public
@@ -60,15 +75,38 @@ export function trackRouteView(pathname: string): void {
   const path = cleanPath(pathname);
   if (!path) return;
 
-  if (path === "/docs/installation") return analytics.track("installation_viewed", { source: "installation_page" });
+  if (path === "/docs/installation") return analytics.track("installation_viewed", { source: "installation_page", platform: "react" });
   if (path === "/docs/changelog") return analytics.track("changelog_viewed", { source: "changelog_page" });
 
   const component = componentSlugFor(path);
   if (component) return analytics.track("component_viewed", { component, source: "component_page" });
 
   if ((path === "/docs" || path.startsWith("/docs/")) && PUBLIC_ROUTES.has(path)) {
-    return analytics.track("docs_viewed", { page: path, source: "docs_page" });
+    const platform = setupPagePlatform(path);
+    return analytics.track("docs_viewed", { page: path, source: "docs_page", ...(platform ? { platform } : {}) });
   }
+}
+
+/**
+ * The inputs that count as engagement: a person pressing, touching, typing or turning a wheel. `scroll` is not one:
+ * a browser restoring a scroll position or a script calling `scrollTo` fires it with nobody there.
+ */
+export const ENGAGEMENT_INPUTS = ["pointerdown", "keydown", "touchstart", "wheel"] as const;
+
+/** Only input the browser itself produced: `dispatchEvent` from a script creates events with `isTrusted` false. */
+export function isPersonInput(event: Event): boolean {
+  return event.isTrusted === true;
+}
+
+/**
+ * `page_engaged` for the page at `pathname`. The caller (the provider) guarantees once per page view and passes only
+ * trusted input; this decides the payload, which is the page's surface and nothing about the input.
+ */
+export function trackPageEngaged(pathname: string): void {
+  const path = cleanPath(pathname);
+  if (!path) return;
+  const source = sourceForPath(path);
+  analytics.track("page_engaged", source ? { source } : {});
 }
 
 /* ------------------------------------------------------------------ CTAs (declared in markup, read by the listener) */
@@ -167,7 +205,20 @@ const CLI_COMMAND = new RegExp(`^(?:npx|bunx|pnpm dlx|yarn dlx)\\s+(?:-{1,2}[\\w
 /** `npm i …`, `pnpm add …`, `yarn add …`, `bun add …` */
 const INSTALL_COMMAND = /^(?:npm|pnpm|yarn|bun)\s+(?:i|install|add)\b/;
 
-export type CommandCopy = { event: "cli_command_copied"; package: string } | { event: "install_command_copied"; package: string };
+export type CommandCopy = { event: "cli_command_copied"; package: string } | { event: "install_command_copied"; package: string; platform?: AnalyticsPlatform };
+
+/**
+ * A published platform package → its platform (`@kinetixui/ui` → react, `@kinetixui/angular` → angular), from the
+ * manifest's distribution coordinates. An npm install of one is that platform's install; tokens, the CLI and IoT
+ * belong to no single platform and carry none (BD-W4 F-07: an Angular npm copy used to arrive without a platform).
+ */
+const PACKAGE_PLATFORM: ReadonlyMap<string, AnalyticsPlatform> = new Map(
+  PLATFORMS.flatMap((p) => {
+    const { published, coordinate } = PLATFORM_DEFINITIONS[p].distribution;
+    const id = analyticsPlatformFor(p);
+    return published && coordinate && id ? [[coordinate, id] as const] : [];
+  }),
+);
 
 /**
  * Decide which command a copied shell snippet is. The text is only inspected; the result carries a package name
@@ -185,7 +236,10 @@ export function classifyCommand(text: string, language: string | undefined): Com
   for (const line of lines) {
     if (!INSTALL_COMMAND.test(line)) continue;
     const known = PACKAGE_NAMES.find((p) => new RegExp(`(?:^|\\s)${escape(p)}(?:@\\S+)?(?:\\s|$)`).test(line));
-    if (known) return { event: "install_command_copied", package: known };
+    if (known) {
+      const platform = PACKAGE_PLATFORM.get(known);
+      return platform ? { event: "install_command_copied", package: known, platform } : { event: "install_command_copied", package: known };
+    }
   }
   return null;
 }
@@ -222,13 +276,49 @@ export function analyticsPlatformFor(manifestPlatform: string | undefined): Anal
   return candidate && isMember(ANALYTICS_PLATFORMS, candidate) ? candidate : null;
 }
 
+/* ------------------------------------------------------------------ native installs (no command to recognise) */
+
+/**
+ * The native ports are not on SwiftPM, Maven Central or pub.dev, so installing one is not a shell command: it is a
+ * Package.swift dependency, a Gradle module registration, a pubspec dependency, or a git command that pins a
+ * checkout. `classifyCommand` never matches any of those, so copying them used to be silent — native install
+ * intent was invisible. Each rule below recognises one documented snippet shape. As with commands, the text is
+ * only inspected; the event carries the platform's package identifier from the manifest and nothing else.
+ */
+const NATIVE_INSTALL: readonly { platform: Platform; language: ReadonlySet<string>; test: (text: string) => boolean }[] = [
+  // .package(path: "Vendor/kinetixui/packages/ui-swiftui")
+  { platform: "SwiftUI", language: new Set(["swift"]), test: (t) => /\.package\s*\(/.test(t) && t.includes(PLATFORM_DEFINITIONS.SwiftUI.dir) },
+  // include(":kinetixui-ui") in settings, or implementation(project(":kinetixui-ui")) in the app module
+  { platform: "Compose", language: new Set(["kotlin", "kt", "kts"]), test: (t) => /(?:include|project)\(\s*":kinetixui-ui"\s*\)/.test(t) },
+  // a pubspec dependency on the package, by path or by git
+  { platform: "Flutter", language: new Set(["yaml", "yml"]), test: (t) => new RegExp(`^\\s+${escape(PLATFORM_DEFINITIONS.Flutter.package)}:\\s*$`, "m").test(t) },
+];
+
+/** A native setup page → its platform. A git command that clones or pins this repository there installs that port. */
+const SETUP_PAGE_PLATFORM: Readonly<Record<string, Platform>> = { "/docs/swiftui": "SwiftUI", "/docs/compose": "Compose", "/docs/flutter": "Flutter" };
+
+export type NativeInstallCopy = { package: string; platform: AnalyticsPlatform };
+
+/** Which native port a copied snippet installs, or null. Never reads anything from the snippet into the result. */
+export function classifyNativeInstall(text: string, language: string | undefined, pathname: string): NativeInstallCopy | null {
+  const lang = language?.toLowerCase();
+  if (!lang) return null;
+  let platform: Platform | undefined = NATIVE_INSTALL.find((r) => r.language.has(lang) && r.test(text))?.platform;
+  if (!platform && SHELL_LANGUAGES.has(lang) && /^\s*\$?\s*git\s/m.test(text) && text.includes(REPO_PATH.slice(1))) {
+    platform = SETUP_PAGE_PLATFORM[pathname];
+  }
+  if (!platform || !PLATFORMS.includes(platform)) return null;
+  const id = analyticsPlatformFor(platform);
+  return id ? { package: PLATFORM_DEFINITIONS[platform].package, platform: id } : null;
+}
+
 /** The docs code-block ids used by `platform-code.ts` mapped to analytics platforms. */
 export const PLATFORM_FROM_CODE_TAB = { react: "react", angular: "angular", swift: "swiftui", kotlin: "compose", dart: "flutter" } as const satisfies Record<CodeTab, AnalyticsPlatform>;
 
 /**
  * A fenced code block in the docs was copied. A KinetixUI command → the matching command event. Otherwise, on a
  * component's own page, a fence in a platform language → `component_code_copied`. Anything else (theme CSS, JSON,
- * an unrelated shell command) is not an activation signal and produces nothing.
+ * an unrelated shell command) is not a measured copy and produces nothing.
  */
 export function trackFenceCopy(text: string, language: string | undefined, pathname: string): void {
   const source = sourceForPath(pathname);
@@ -236,7 +326,13 @@ export function trackFenceCopy(text: string, language: string | undefined, pathn
   if (command) {
     if (!source) return;
     if (command.event === "cli_command_copied") analytics.track("cli_command_copied", { source, package: command.package });
-    else analytics.track("install_command_copied", { source, package: command.package });
+    else analytics.track("install_command_copied", { source, package: command.package, ...(command.platform ? { platform: command.platform } : {}) });
+    return;
+  }
+
+  const native = classifyNativeInstall(text, language, pathname);
+  if (native) {
+    if (source) analytics.track("install_command_copied", { source, package: native.package, platform: native.platform });
     return;
   }
 

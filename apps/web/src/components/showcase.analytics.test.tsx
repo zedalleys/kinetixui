@@ -31,7 +31,7 @@ describe("Showcase analytics", () => {
     render(<Showcase title="Pricing tier" sources={sources} analyticsBlock="pricing-tier">
       <div>preview</div>
     </Showcase>);
-    await userEvent.click(screen.getByRole("tab", { name: /code/i }));
+    await userEvent.click(screen.getByRole("radio", { name: /code/i }));
     await userEvent.click(screen.getByRole("tab", { name: "SwiftUI" }));
 
     expect(track).toHaveBeenCalledWith("platform_selected", {
@@ -49,7 +49,7 @@ describe("Showcase analytics", () => {
     render(<Showcase title="Pricing tier" sources={sources} analyticsBlock="pricing-tier">
       <div>preview</div>
     </Showcase>);
-    await user.click(screen.getByRole("tab", { name: /code/i }));
+    await user.click(screen.getByRole("radio", { name: /code/i }));
     await user.click(screen.getByRole("button", { name: /copy/i }));
 
     const call = track.mock.calls.find(([name]) => name === "block_code_copied");
@@ -66,7 +66,7 @@ describe("Showcase analytics", () => {
     render(<Showcase title="Area chart" sources={sources}>
       <div>preview</div>
     </Showcase>);
-    await user.click(screen.getByRole("tab", { name: /code/i }));
+    await user.click(screen.getByRole("radio", { name: /code/i }));
     await user.click(screen.getByRole("tab", { name: "SwiftUI" }));
     await user.click(screen.getByRole("button", { name: /copy/i }));
     expect(track).not.toHaveBeenCalled();
@@ -76,7 +76,7 @@ describe("Showcase analytics", () => {
     render(<Showcase title="Pricing tier" sources={sources} analyticsBlock="pricing-tier">
       <div>preview</div>
     </Showcase>);
-    await userEvent.click(screen.getByRole("tab", { name: /code/i }));
+    await userEvent.click(screen.getByRole("radio", { name: /code/i }));
     await userEvent.click(screen.getByRole("tab", { name: "Flutter" }));
     for (const [, props] of track.mock.calls) {
       expect(sanitizeProps(props as object)).toEqual(props ?? {});

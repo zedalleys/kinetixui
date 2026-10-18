@@ -4,6 +4,7 @@
  */
 import dimension from "../../../../tokens/primitives/dimension.json";
 import motion from "../../../../tokens/primitives/motion.json";
+import motionContract from "../../../../tokens/contracts/motion.json";
 
 type Token = { $value: string | number | number[]; $description?: string };
 const entries = (group: Record<string, unknown>) => Object.entries(group) as [string, Token][];
@@ -39,6 +40,38 @@ export const easings = entries(motion.easing).map(([name, t]) => ({
   name,
   curve: `cubic-bezier(${(t.$value as number[]).join(", ")})`,
   description: t.$description,
+}));
+
+/**
+ * Motion roles — duration + easing pairings with a named job — read from tokens/contracts/motion.json.
+ * `check:motion-tokens` holds that file to the token source and to the component files each role names,
+ * so a role's status here is the status the gate enforces, not a description of it.
+ */
+type MotionRole = {
+  status: "proven" | "observed" | "proposed";
+  duration: string[];
+  easing: string[];
+  reducedForm: string;
+  scope?: string;
+  consumers: { platform: string }[];
+  deviations: { platform: string }[];
+};
+const PLATFORM_LABEL: Record<string, string> = {
+  react: "React",
+  angular: "Angular",
+  swiftui: "SwiftUI",
+  compose: "Compose",
+  flutter: "Flutter",
+};
+export const motionRoles = Object.entries(motionContract.roles as Record<string, MotionRole>).map(([name, r]) => ({
+  name,
+  status: r.status,
+  duration: r.duration,
+  easing: r.easing,
+  reducedForm: r.reducedForm,
+  platforms: [...new Set(r.consumers.map((c) => PLATFORM_LABEL[c.platform] ?? c.platform))],
+  scope: r.scope,
+  deviations: r.deviations.map((d) => PLATFORM_LABEL[d.platform] ?? d.platform),
 }));
 
 /**

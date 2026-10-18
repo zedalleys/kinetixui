@@ -1,10 +1,14 @@
 import type { Type } from '@angular/core';
 import { BehaviourFixture } from './behaviour';
 import { CardStates } from './card';
+import { CollectionsFixture } from './collections';
 import { CompositeStates } from './composite';
 import { CompositionsFixture } from './compositions';
 import { EntryStates } from './entry';
+import { LayoutFixture } from './layout';
+import { ListboxesFixture } from './listboxes';
 import { NavigationFixture } from './navigation';
+import { NotificationsFixture } from './notifications';
 import { OverlayCompositionsFixture } from './overlay-compositions';
 import { OverlaysFixture } from './overlays';
 import { SelectionStates } from './selection';
@@ -20,10 +24,14 @@ import { UsageExamples } from './usage';
 export const FIXTURES: Record<string, Type<unknown>> = {
   behaviour: BehaviourFixture,
   card: CardStates,
+  collections: CollectionsFixture,
   composite: CompositeStates,
   compositions: CompositionsFixture,
   entry: EntryStates,
+  layout: LayoutFixture,
+  listboxes: ListboxesFixture,
   navigation: NavigationFixture,
+  notifications: NotificationsFixture,
   overlays: OverlaysFixture,
   'overlay-compositions': OverlayCompositionsFixture,
   selection: SelectionStates,

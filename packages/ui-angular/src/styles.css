@@ -243,7 +243,7 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
   display: block;
   inline-size: 100%;
   min-block-size: var(--interaction-target-minimum);
-  padding: var(--spacing-2) var(--spacing-3);
+  padding: var(--spacing-3);
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   border: var(--border-width-default) solid hsl(var(--muted-foreground) / 0.8);
@@ -256,7 +256,7 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
     background-color var(--duration-instant) var(--easing-standard);
 }
 .kx-input::placeholder { color: hsl(var(--muted-foreground)); }
-.kx-input:focus-visible { outline: none; border-color: hsl(var(--ring)); box-shadow: var(--shadow-focus); }
+.kx-input:focus-visible { outline: none; border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
 .kx-input:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 /* aria-invalid is the source of truth for the error state — the styling follows the semantics, not the reverse */
 .kx-input[aria-invalid='true'] { border-color: hsl(var(--destructive)); }
@@ -1001,8 +1001,8 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
     box-shadow var(--duration-instant) var(--easing-standard);
 }
 .kx-input-otp__slot:not(:first-child) { margin-inline-start: -1px; }
-.kx-input-otp__slot:first-child { border-start-start-radius: var(--radius-md); border-end-start-radius: var(--radius-md); }
-.kx-input-otp__slot:last-child { border-start-end-radius: var(--radius-md); border-end-end-radius: var(--radius-md); }
+.kx-input-otp__slot:first-child { border-start-start-radius: var(--radius-field); border-end-start-radius: var(--radius-field); }
+.kx-input-otp__slot:last-child { border-start-end-radius: var(--radius-field); border-end-end-radius: var(--radius-field); }
 @media (hover: hover) {
   .kx-input-otp:not(:has(.kx-input-otp__input:is(:focus, :disabled, [aria-invalid='true']))):hover .kx-input-otp__slot { border-color: hsl(var(--muted-foreground)); }
 }
@@ -2372,13 +2372,1156 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
 }
 .kx-tooltip:popover-open { transition-duration: var(--duration-instant); }
 
+/* ── menus: dropdown menu, context menu, menubar ─────────────────────────── */
+/* One surface and one set of items for all three (menu.ts). The surface is a floating surface (above) with a
+   tighter inset: a menu is a list of rows, not a card of content.
+
+   Item states (TOKENS.md, "Menus"), on the popover fill:
+     highlighted   focus IS the highlight (focus follows the pointer), drawn as the navigation hover layer,
+                   foreground at 8%. Arrived at by the keyboard (`data-highlighted="keyboard"`) it also draws
+                   the inset focus ring, so a keyboard reader can tell where they are from where a pointer rests.
+     pressed       foreground at 12%, the navigation pressed layer
+     disabled      `--opacity-disabled`, no highlight, `not-allowed`
+     destructive   the label in `--destructive`; highlighted, the destructive layer at 10% under it
+     checked       a check or a dot at the inline start — a shape, never colour alone
+     sub open      the trigger of an open submenu keeps the highlight layer while focus is in the submenu */
+.kx-menu {
+  min-inline-size: min(12rem, var(--kx-available-width, 12rem));
+  padding: var(--spacing-1);
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+}
+.kx-menu:popover-open { display: flex; flex-direction: column; }
+.kx-menu__group { display: flex; flex-direction: column; }
+.kx-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  inline-size: 100%;
+  min-block-size: 2rem;
+  margin: 0;
+  padding-block: var(--spacing-1);
+  padding-inline: var(--spacing-2);
+  border: 0;
+  border-radius: calc(var(--radius-control) - 2px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: default;
+  user-select: none;
+  outline: none;
+  transition:
+    background-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
+}
+.kx-menu__item--inset,
+.kx-menu__label--inset { padding-inline-start: calc(var(--spacing-2) + 1rem + var(--spacing-2)); }
+.kx-menu__item--inset { position: relative; }
+.kx-menu__item[data-highlighted] { background-color: hsl(var(--foreground) / 0.08); }
+.kx-menu__item[data-highlighted='keyboard'] { box-shadow: inset 0 0 0 2px hsl(var(--ring)); }
+.kx-menu__item:not([aria-disabled='true']):active { background-color: hsl(var(--foreground) / 0.12); }
+.kx-menu__item--sub[data-state='open']:not([data-highlighted]) { background-color: hsl(var(--foreground) / 0.08); }
+.kx-menu__item[aria-disabled='true'] { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.kx-menu__item[data-variant='destructive'] { color: hsl(var(--destructive)); }
+.kx-menu__item[data-variant='destructive'][data-highlighted] { background-color: hsl(var(--destructive) / 0.1); }
+.kx-menu__indicator {
+  position: absolute;
+  inset-inline-start: var(--spacing-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+.kx-menu__mark { inline-size: 1rem; block-size: 1rem; visibility: hidden; }
+[data-state='checked'] > .kx-menu__indicator > .kx-menu__mark { visibility: visible; }
+.kx-menu__shortcut {
+  margin-inline-start: auto;
+  padding-inline-start: var(--spacing-4);
+  color: hsl(var(--muted-foreground));
+  font: var(--text-body-sm);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+/* on a highlighted row the muted shortcut would fall under 4.5:1 against the state layer: it takes the row's colour */
+.kx-menu__item[data-highlighted] > .kx-menu__shortcut { color: inherit; }
+.kx-menu__chevron { margin-inline-start: auto; color: hsl(var(--muted-foreground)); line-height: 1; font-size: 1.125em; }
+.kx-menu__label {
+  display: block;
+  padding-block: var(--spacing-1);
+  padding-inline: var(--spacing-2);
+  font: var(--text-label-lg);
+  font-weight: var(--font-weight-semibold);
+}
+.kx-menu__separator {
+  display: block;
+  block-size: var(--border-width-default);
+  margin-block: var(--spacing-1);
+  margin-inline: calc(-1 * var(--spacing-1));
+  background-color: hsl(var(--border));
+}
+/* a menubar: one bordered row of triggers, a single Tab stop */
+.kx-menubar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1);
+  border: var(--border-width-default) solid hsl(var(--border));
+  border-radius: var(--radius-control);
+  background-color: hsl(var(--background));
+  box-shadow: var(--shadow-sm);
+}
+.kx-menubar__trigger {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2rem;
+  margin: 0;
+  padding-block: var(--spacing-1);
+  padding-inline: var(--spacing-3);
+  border: 0;
+  border-radius: calc(var(--radius-control) - 2px);
+  background: transparent;
+  color: hsl(var(--foreground));
+  font: var(--text-label-lg);
+  cursor: default;
+  outline: none;
+  transition: background-color var(--duration-instant) var(--easing-standard);
+}
+@media (hover: hover) {
+  .kx-menubar__trigger:hover { background-color: hsl(var(--foreground) / 0.08); }
+}
+.kx-menubar__trigger[data-state='open'] { background-color: hsl(var(--foreground) / 0.08); }
+.kx-menubar__trigger:active { background-color: hsl(var(--foreground) / 0.12); }
+.kx-menubar__trigger:focus-visible,
+.kx-context-menu__trigger:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+/* ── listboxes: select, command, multi-select (and the combobox recipe) ────── */
+/* One option row and one popup for all of them (listbox.ts). Focus never moves onto an option: the field keeps
+   it, and `aria-activedescendant` names the current option. So the option states are drawn, not focused —
+
+   Option states (TOKENS.md, "Listboxes"), on the popover fill:
+     highlighted   the current option, the navigation hover layer (foreground at 8%), as a menu item's. Arrived
+                   at by the keyboard (`data-highlighted="keyboard"`) it also draws the inset focus ring, so a
+                   keyboard reader can tell where the keys are from where a pointer happens to rest
+     selected      a check mark at the inline start — a shape, never colour alone — and `aria-selected`. In a
+                   select and a multi-select this is the CHOSEN value, independent of the highlight
+     disabled      `--opacity-disabled`, no highlight, `not-allowed`; announced, never operable
+   A command's options are actions: nothing stays chosen, so it has highlight and disabled only. */
+.kx-option-popup {
+  min-inline-size: max(8rem, min(var(--kx-field-width, 8rem), var(--kx-available-width, 100vw)));
+  padding: var(--spacing-1);
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+}
+.kx-option-popup:popover-open { display: flex; flex-direction: column; }
+.kx-option-group { display: flex; flex-direction: column; }
+.kx-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-block-size: 2rem;
+  padding-block: var(--spacing-1);
+  padding-inline: var(--spacing-2);
+  border-radius: calc(var(--radius-control) - 2px);
+  color: inherit;
+  cursor: default;
+  user-select: none;
+  overflow-wrap: anywhere;
+  transition:
+    background-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
+}
+.kx-option--inset { padding-inline-start: calc(var(--spacing-2) + 1rem + var(--spacing-2)); }
+.kx-option[data-highlighted] { background-color: hsl(var(--foreground) / 0.08); }
+.kx-option[data-highlighted='keyboard'] { box-shadow: inset 0 0 0 2px hsl(var(--ring)); }
+.kx-option[aria-disabled='true'] { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.kx-option__indicator {
+  position: absolute;
+  inset-inline-start: var(--spacing-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+.kx-option__mark { inline-size: 1rem; block-size: 1rem; visibility: hidden; }
+.kx-option[data-state='checked'] .kx-option__mark { visibility: visible; }
+.kx-option-label {
+  display: block;
+  padding-block: var(--spacing-1);
+  padding-inline: var(--spacing-2);
+  color: hsl(var(--muted-foreground));
+  font: var(--text-label-md);
+  font-weight: var(--font-weight-semibold);
+}
+.kx-option-separator {
+  display: block;
+  block-size: var(--border-width-default);
+  margin-block: var(--spacing-1);
+  margin-inline: calc(-1 * var(--spacing-1));
+  background-color: hsl(var(--border));
+}
+.kx-option-empty,
+.kx-command__empty {
+  display: block;
+  padding-block: var(--spacing-6);
+  padding-inline: var(--spacing-2);
+  color: hsl(var(--muted-foreground));
+  font: var(--text-body-sm);
+  text-align: center;
+}
+/* a filter hides options, groups, separators and the empty message with `hidden`; the rules above set `display` */
+:is(.kx-option, .kx-option-group, .kx-option-separator, .kx-option-empty, .kx-command__empty)[hidden] { display: none; }
+
+/* select: the trigger is a field — Input's text-entry contract (TOKENS.md, "Text entry and navigation"): an 80%
+   `--muted-foreground` edge at rest, full strength under a hovering pointer, the action edge and focus glow on
+   keyboard focus, the action edge while open, destructive when invalid, and hover never over focus, open,
+   invalid or disabled. The value wraps rather than being cut (200% text keeps all of it). */
+.kx-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  inline-size: 100%;
+  min-block-size: 44px;
+  margin: 0;
+  padding: var(--spacing-3);
+  border: var(--border-width-default) solid hsl(var(--muted-foreground) / 0.8);
+  border-radius: var(--radius-field);
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+  text-align: start;
+  cursor: default;
+  outline: none;
+  transition:
+    border-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
+}
+.kx-select__trigger[data-placeholder] { color: hsl(var(--muted-foreground)); }
+.kx-select__value { flex: 1 1 auto; min-inline-size: 0; overflow-wrap: anywhere; }
+.kx-select__chevron { flex: none; inline-size: 1rem; block-size: 1rem; color: hsl(var(--muted-foreground)); }
+@media (hover: hover) {
+  .kx-select__trigger:enabled:not(:focus-visible):not([aria-invalid='true']):not([data-state='open']):hover { border-color: hsl(var(--muted-foreground)); }
+}
+.kx-select__trigger[data-state='open'] { border-color: hsl(var(--action)); }
+.kx-select__trigger:focus-visible { border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
+.kx-select__trigger[aria-invalid='true'] { border-color: hsl(var(--destructive)); }
+.kx-select__trigger[aria-invalid='true']:focus-visible { box-shadow: var(--shadow-focus-destructive); }
+.kx-select__trigger:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+
+/* multi-select: ONE field (TOKENS.md, "Composite fields") whose chips sit inside its edge. The field draws the
+   edge and the focus ring while its INPUT has focus; a chip's remove button draws its own ring and the field's
+   stays off, so the ring always says which thing the keyboard is on. */
+.kx-multi-select { display: block; }
+.kx-multi-select__field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-block-size: 44px;
+  padding-block: var(--spacing-2);
+  padding-inline: var(--spacing-3);
+  border: var(--border-width-default) solid hsl(var(--muted-foreground) / 0.8);
+  border-radius: var(--radius-field);
+  background-color: hsl(var(--background));
+  cursor: text;
+  transition:
+    border-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard);
+}
+.kx-multi-select__chip { max-inline-size: 100%; overflow-wrap: anywhere; }
+/* the chip's remove button is a 24px target (WCAG 2.5.8) without making the chip taller: it reaches into the
+   chip's own padding */
+.kx-multi-select__chip .kx-tag__remove {
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 24px;
+  min-block-size: 24px;
+  margin-block: -4px;
+  margin-inline-end: -4px;
+  border-radius: var(--radius-full);
+}
+/* inside a field the chip's button owns the ring: an inset ring in the ring colour, drawn on the button itself
+   at full opacity (the button rests at the muted opacity, which would otherwise mute its ring too) */
+.kx-multi-select__chip .kx-tag__remove:focus-visible { opacity: var(--opacity-visible); box-shadow: inset 0 0 0 2px hsl(var(--ring)); }
+.kx-multi-select__input {
+  flex: 1 1 6rem;
+  /* a definite size, so the input's intrinsic width (about 20 characters) never props the field wider than
+     its container at large text */
+  inline-size: 6rem;
+  min-inline-size: 4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: hsl(var(--foreground));
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+  outline: none;
+}
+.kx-multi-select__input::placeholder { color: hsl(var(--muted-foreground)); }
+@media (hover: hover) {
+  .kx-multi-select:not([data-disabled]) .kx-multi-select__field:not(:has(.kx-multi-select__input:focus-visible)):not(:has([aria-invalid='true'])):not(:has([aria-expanded='true'])):hover {
+    border-color: hsl(var(--muted-foreground));
+  }
+}
+.kx-multi-select__field:has(.kx-multi-select__input[aria-expanded='true']) { border-color: hsl(var(--action)); }
+.kx-multi-select__field:has(.kx-multi-select__input:focus-visible) { border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
+.kx-multi-select__field:has(.kx-multi-select__input[aria-invalid='true']) { border-color: hsl(var(--destructive)); }
+.kx-multi-select__field:has(.kx-multi-select__input[aria-invalid='true']:focus-visible) { box-shadow: var(--shadow-focus-destructive); }
+.kx-multi-select[data-disabled] .kx-multi-select__field { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.kx-multi-select__input:disabled { cursor: not-allowed; }
+
+/* command: a search field over a list. Standalone it is a bordered surface; inside a popover or the command
+   dialog the surface around it already draws the edge. */
+.kx-command {
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  overflow: hidden;
+  border: var(--border-width-default) solid hsl(var(--border));
+  border-radius: var(--radius-control);
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+}
+:is(.kx-floating, .kx-command-dialog) .kx-command { border: 0; border-radius: 0; }
+.kx-popover:has(> .kx-command) { padding: 0; }
+.kx-command__input {
+  inline-size: 100%;
+  min-block-size: 44px;
+  margin: 0;
+  padding-inline: var(--spacing-3);
+  border: 0;
+  border-block-end: var(--border-width-default) solid hsl(var(--border));
+  background: transparent;
+  color: hsl(var(--foreground));
+  font: var(--text-body-md);
+  font-family: var(--font-family-sans);
+  outline: none;
+  transition: box-shadow var(--duration-instant) var(--easing-standard);
+}
+.kx-command__input::placeholder { color: hsl(var(--muted-foreground)); }
+/* the search field is where the keyboard is: an action rule along its block-end edge says so */
+.kx-command__input:focus-visible { box-shadow: inset 0 -2px 0 hsl(var(--action)); }
+.kx-command__list {
+  display: flex;
+  flex-direction: column;
+  max-block-size: min(300px, 60vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--spacing-1);
+}
+.kx-command__shortcut {
+  margin-inline-start: auto;
+  padding-inline-start: var(--spacing-4);
+  color: hsl(var(--muted-foreground));
+  font: var(--text-body-sm);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+/* on a highlighted row the muted shortcut would fall under 4.5:1 against the state layer: it takes the row's colour */
+.kx-option[data-highlighted] > .kx-command__shortcut { color: inherit; }
+.kx-command-dialog { padding: 0; gap: 0; overflow: hidden; }
+
 /* Overlay motion tells the reader where a surface came from; under reduced motion it simply appears and
    disappears, in the same open and closed states (the discrete `display` / `overlay` hand-off goes with it). */
 @media (prefers-reduced-motion: reduce) {
   .kx-dialog,
   .kx-dialog::backdrop,
   .kx-dialog__close,
-  .kx-floating { transition: none; }
+  .kx-floating,
+  .kx-menu__item,
+  .kx-menubar__trigger,
+  .kx-option,
+  .kx-select__trigger,
+  .kx-multi-select__field,
+  .kx-command__input { transition: none; }
+}
+
+/* ── navigation menu ─────────────────────────────────────────────────────── */
+/* navigation-menu.ts. Site navigation, not a menu: triggers and top-level links share one look (the menubar
+   trigger's states, on the page background), and a panel is a floating surface (above) of plain links. The
+   panel is placed by overlay.ts against the whole navigation, at its logical start, so nothing here names a
+   physical side. */
+.kx-navigation-menu { position: relative; display: flex; max-inline-size: max-content; font-family: var(--font-family-sans); }
+.kx-navigation-menu__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.kx-navigation-menu__item { position: static; }
+.kx-navigation-menu__trigger,
+.kx-navigation-menu__link--top {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-block-size: 2.5rem;
+  margin: 0;
+  padding-block: var(--spacing-2);
+  padding-inline: var(--spacing-4);
+  border: 0;
+  border-radius: var(--radius-control);
+  background-color: transparent;
+  color: hsl(var(--foreground));
+  font: var(--text-label-lg);
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--duration-instant) var(--easing-standard), box-shadow var(--duration-instant) var(--easing-standard);
+}
+@media (hover: hover) {
+  .kx-navigation-menu__trigger:hover,
+  .kx-navigation-menu__link--top:hover { background-color: hsl(var(--foreground) / 0.08); }
+}
+.kx-navigation-menu__trigger[data-state='open'] { background-color: hsl(var(--foreground) / 0.08); }
+.kx-navigation-menu__trigger:active,
+.kx-navigation-menu__link--top:active { background-color: hsl(var(--foreground) / 0.12); }
+.kx-navigation-menu__trigger:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.kx-navigation-menu__chevron {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  margin-inline-start: var(--spacing-1);
+  transition: rotate var(--duration-fast) var(--easing-standard);
+}
+.kx-navigation-menu__trigger[data-state='open'] .kx-navigation-menu__chevron { rotate: 180deg; }
+.kx-navigation-menu__content {
+  inline-size: max-content;
+  max-inline-size: min(40rem, var(--kx-available-width, 40rem));
+  padding: var(--spacing-2);
+}
+.kx-navigation-menu__content :is(ul, ol) { margin: 0; padding: 0; list-style: none; }
+.kx-navigation-menu__link:not(.kx-navigation-menu__link--top) {
+  display: block;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-control);
+  color: hsl(var(--popover-foreground));
+  font: var(--text-body-md);
+  text-decoration: none;
+  outline: none;
+  transition: background-color var(--duration-instant) var(--easing-standard), box-shadow var(--duration-instant) var(--easing-standard);
+}
+@media (hover: hover) {
+  .kx-navigation-menu__link:not(.kx-navigation-menu__link--top):hover { background-color: hsl(var(--popover-foreground) / 0.08); }
+}
+.kx-navigation-menu__link:not(.kx-navigation-menu__link--top):active { background-color: hsl(var(--popover-foreground) / 0.12); }
+/* "you are here": weight and an underline, never colour alone */
+.kx-navigation-menu__link[aria-current='page'] { font-weight: var(--font-weight-semibold); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.375em; }
+.kx-navigation-menu__trigger:focus-visible,
+.kx-navigation-menu__link:focus-visible { box-shadow: var(--shadow-focus); }
+/* The arrow under the open trigger: measured into place (navigation-menu.ts), decoration only. */
+.kx-navigation-menu__indicator {
+  position: absolute;
+  inset-block-start: 100%;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  block-size: 0.375rem;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: left var(--duration-fast) var(--easing-standard), width var(--duration-fast) var(--easing-standard), opacity var(--duration-fast) var(--easing-standard);
+}
+.kx-navigation-menu__indicator[data-state='visible'] { opacity: 1; }
+.kx-navigation-menu__arrow {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  margin-block-start: 0.125rem;
+  rotate: 45deg;
+  border-start-start-radius: 2px;
+  background-color: hsl(var(--border));
+  box-shadow: var(--shadow-md);
+}
+
+/* ── sonner: toasts ──────────────────────────────────────────────────────── */
+/* sonner.ts. The toaster is not a top-layer surface (it never takes focus or blocks the page), so it is the one
+   overlay here with a z-index: the overlay layer token. The region itself takes no pointer: only its toasts
+   do, so an empty corner never swallows a click. Positions are logical — `bottom-end` is the bottom right in
+   a left-to-right page and the bottom left in a right-to-left one. */
+.kx-toaster-host { display: contents; }
+/* The region scrolls when its toasts outgrow the viewport (200% text), and a scroll container clips what its
+   children paint outside it — the toasts' shadows. So it reaches `--kx-toaster-bleed` past the toasts on every
+   side, with padding to match: the toasts sit where the insets say, and their shadows are inside the region. */
+.kx-toaster {
+  --kx-toaster-bleed: var(--spacing-3);
+  position: fixed;
+  z-index: var(--z-index-overlay);
+  box-sizing: border-box;
+  inline-size: calc(min(22.25rem, 100vw - 2 * var(--spacing-4)) + 2 * var(--kx-toaster-bleed));
+  max-block-size: calc(100dvh - 2 * var(--spacing-4) + 2 * var(--kx-toaster-bleed));
+  padding: var(--kx-toaster-bleed);
+  overflow: auto;
+  pointer-events: none;
+  font-family: var(--font-family-sans);
+}
+.kx-toaster[data-position^='top'] { inset-block-start: calc(max(var(--spacing-4), env(safe-area-inset-top)) - var(--kx-toaster-bleed)); }
+.kx-toaster[data-position^='bottom'] { inset-block-end: calc(max(var(--spacing-4), env(safe-area-inset-bottom)) - var(--kx-toaster-bleed)); }
+.kx-toaster[data-position$='-start'] { inset-inline-start: calc(var(--spacing-4) - var(--kx-toaster-bleed)); }
+.kx-toaster[data-position$='-end'] { inset-inline-end: calc(var(--spacing-4) - var(--kx-toaster-bleed)); }
+.kx-toaster[data-position$='-center'] { inset-inline: 0; margin-inline: auto; }
+.kx-toaster__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  outline: none;
+}
+/* newest nearest the edge it enters from: at the bottom of a bottom toaster, at the top of a top one */
+.kx-toaster[data-position^='bottom'] .kx-toaster__list { flex-direction: column-reverse; }
+.kx-toaster__list:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+.kx-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  border: var(--border-width-default) solid hsl(var(--border));
+  border-radius: var(--radius-control);
+  /* the floating surface (Overlays): in dark, `background` would be the page's own fill and only the edge
+     would separate the toast from it; `popover` is the surface step every other floating surface takes */
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  box-shadow: var(--shadow-lg);
+  font: var(--text-body-md);
+  overflow-wrap: break-word;
+  pointer-events: auto;
+  opacity: 1;
+  translate: 0 0;
+  transition: opacity var(--duration-fast) var(--easing-enter), translate var(--duration-fast) var(--easing-enter);
+}
+@starting-style {
+  .kx-toaster[data-position^='bottom'] .kx-toast { opacity: 0; translate: 0 0.5rem; }
+  .kx-toaster[data-position^='top'] .kx-toast { opacity: 0; translate: 0 -0.5rem; }
+}
+.kx-toast__icon { display: inline-flex; flex: none; margin-block-start: 0.125rem; }
+.kx-toast__icon svg { inline-size: 1rem; block-size: 1rem; }
+.kx-toast[data-type='success'] .kx-toast__icon { color: hsl(var(--success)); }
+.kx-toast[data-type='info'] .kx-toast__icon { color: hsl(var(--info)); }
+.kx-toast[data-type='warning'] .kx-toast__icon { color: hsl(var(--warning)); }
+.kx-toast[data-type='error'] .kx-toast__icon { color: hsl(var(--destructive)); }
+.kx-toast__content { display: flex; flex: 1; flex-direction: column; gap: var(--spacing-1); min-inline-size: 0; }
+.kx-toast__title { font: var(--text-label-lg); font-weight: var(--font-weight-semibold); }
+.kx-toast__description { color: hsl(var(--muted-foreground)); font: var(--text-body-sm); }
+.kx-toast__actions { display: flex; flex-wrap: wrap; gap: var(--spacing-2); margin-block-start: var(--spacing-2); }
+.kx-toast__actions:empty { display: none; }
+.kx-toast__button {
+  min-block-size: 1.75rem;
+  padding-block: var(--spacing-1);
+  padding-inline: var(--spacing-3);
+  border: 0;
+  border-radius: calc(var(--radius-control) - 2px);
+  font: var(--text-label-md);
+  cursor: pointer;
+  outline: none;
+}
+.kx-toast__button--action { background-color: hsl(var(--action)); color: hsl(var(--action-foreground)); }
+.kx-toast__button--cancel { background-color: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+@media (hover: hover) {
+  .kx-toast__button--action:hover { background-color: hsl(var(--action-hover)); }
+}
+.kx-toast__close {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  margin-block: calc(-1 * var(--spacing-1));
+  margin-inline-end: calc(-1 * var(--spacing-2));
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  outline: none;
+}
+.kx-toast__close svg { inline-size: 0.875rem; block-size: 0.875rem; }
+@media (hover: hover) {
+  .kx-toast__close:hover { background-color: hsl(var(--foreground) / 0.08); color: hsl(var(--foreground)); }
+}
+.kx-toast__button:focus-visible,
+.kx-toast__close:focus-visible { box-shadow: var(--shadow-focus); }
+
+/* ── notification center ─────────────────────────────────────────────────── */
+/* notification-center.ts: popover content (above) holding a heading, "Mark all read" and a list. */
+.kx-notification-center__trigger { position: relative; }
+.kx-notification-center__bell { inline-size: 1.25rem; block-size: 1.25rem; }
+.kx-notification-center__dot {
+  position: absolute;
+  inset-block-start: 0.375rem;
+  inset-inline-end: 0.375rem;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: var(--radius-full);
+  background-color: hsl(var(--destructive));
+  box-shadow: 0 0 0 2px hsl(var(--background));
+}
+.kx-notification-center { inline-size: min(20rem, var(--kx-available-width, 20rem)); padding: 0; }
+.kx-notification-center:popover-open { gap: 0; }
+.kx-notification-center__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  padding-block: var(--spacing-3);
+  padding-inline: var(--spacing-4);
+  border-block-end: var(--border-width-default) solid hsl(var(--border));
+}
+.kx-notification-center__title { margin: 0; font: var(--text-title-sm); font-weight: var(--font-weight-medium); color: hsl(var(--foreground)); }
+.kx-notification-center__mark {
+  padding: var(--spacing-1);
+  border: 0;
+  border-radius: calc(var(--radius-control) - 2px);
+  background: transparent;
+  color: hsl(var(--link));
+  font: var(--text-label-md);
+  font-weight: var(--font-weight-medium);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  outline: none;
+}
+.kx-notification-center__mark:focus-visible { box-shadow: var(--shadow-focus); }
+.kx-notification-center__list { max-block-size: 20rem; overflow: auto; }
+.kx-notification-center__list > :not(.kx-notification-item) { margin: var(--spacing-4); }
+.kx-notification-item { display: block; }
+.kx-notification-item + .kx-notification-item { border-block-start: var(--border-width-default) solid hsl(var(--border)); }
+.kx-notification-item__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  inline-size: 100%;
+  margin: 0;
+  padding-block: var(--spacing-3);
+  padding-inline: var(--spacing-4);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  outline: none;
+}
+.kx-notification-item__row--pressable { cursor: pointer; transition: background-color var(--duration-instant) var(--easing-standard); }
+@media (hover: hover) {
+  .kx-notification-item__row--pressable:hover { background-color: hsl(var(--foreground) / 0.06); }
+}
+.kx-notification-item__row--pressable:focus-visible { box-shadow: inset 0 0 0 2px hsl(var(--ring)); }
+.kx-notification-item__dot { flex: none; inline-size: 0.5rem; block-size: 0.5rem; margin-block-start: 0.4375rem; border-radius: var(--radius-full); }
+.kx-notification-item[data-unread] .kx-notification-item__dot { background-color: hsl(var(--action)); }
+.kx-notification-item__text { display: flex; flex-direction: column; gap: var(--spacing-1); min-inline-size: 0; overflow-wrap: break-word; }
+.kx-notification-item__title { color: hsl(var(--muted-foreground)); font: var(--text-body-sm); }
+.kx-notification-item[data-unread] .kx-notification-item__title { color: hsl(var(--foreground)); font-weight: var(--font-weight-medium); }
+.kx-notification-item__description { color: hsl(var(--muted-foreground)); font: var(--text-body-sm); }
+.kx-notification-item__time { color: hsl(var(--muted-foreground)); font: var(--text-label-sm); }
+
+/* ── tour ────────────────────────────────────────────────────────────────── */
+/* tour.ts. The modal surface is the whole viewport, transparent: it holds the spotlight and the card, both
+   placed in viewport coordinates. The scrim is the spotlight's own spread shadow — the CSS-only cut-out React
+   uses — so there is no second layer to keep in step; with no target it is a plain full scrim. */
+.kx-tour {
+  position: fixed;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: none;
+  max-block-size: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: hsl(var(--popover-foreground));
+  font-family: var(--font-family-sans);
+  outline: none;
+}
+.kx-tour::backdrop { background: transparent; }
+.kx-tour__spotlight {
+  position: absolute;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 9999px hsl(var(--scrim, 0 0% 0% / 0.4));
+  pointer-events: none;
+  transition:
+    left var(--duration-fast) var(--easing-standard),
+    top var(--duration-fast) var(--easing-standard),
+    width var(--duration-fast) var(--easing-standard),
+    height var(--duration-fast) var(--easing-standard);
+}
+.kx-tour[data-target='missing'] .kx-tour__spotlight { inset: 0; border-radius: 0; box-shadow: none; background-color: hsl(var(--scrim, 0 0% 0% / 0.4)); }
+.kx-tour__card {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  inline-size: min(20rem, 100% - 2 * var(--spacing-2));
+  max-inline-size: var(--kx-available-width, calc(100% - 2 * var(--spacing-2)));
+  max-block-size: var(--kx-available-height, calc(100% - 2 * var(--spacing-2)));
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--spacing-4);
+  border: var(--border-width-default) solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  background-color: hsl(var(--popover));
+  box-shadow: var(--shadow-lg);
+  overflow-wrap: break-word;
+  transition: left var(--duration-fast) var(--easing-standard), top var(--duration-fast) var(--easing-standard);
+}
+.kx-tour[data-target='missing'] .kx-tour__card {
+  inset: 0;
+  block-size: fit-content;
+  max-inline-size: calc(100% - 2 * var(--spacing-2));
+  max-block-size: calc(100% - 2 * var(--spacing-2));
+  margin: auto;
+}
+.kx-tour:focus-visible .kx-tour__card { box-shadow: var(--shadow-lg), var(--shadow-focus); }
+.kx-tour__title { margin: 0; font: var(--text-title-sm); font-weight: var(--font-weight-medium); color: hsl(var(--foreground)); }
+.kx-tour__content { margin: 0; font: var(--text-body-sm); color: hsl(var(--muted-foreground)); }
+.kx-tour__footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-2); margin-block-start: var(--spacing-2); }
+.kx-tour__counter { font: var(--text-label-sm); color: hsl(var(--muted-foreground)); }
+.kx-tour__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-2); }
+
+/* ── sidebar ─────────────────────────────────────────────────────────────── */
+/* sidebar.ts. Desktop: a gap that the page flows around plus a fixed panel against the logical start or end
+   of its containing block (the viewport, or a frame with a transform). Collapsing slides it out or narrows it
+   to icons. Phone: the same content inside the family's Sheet, so the sheet's own rules apply there. */
+.kx-sidebar-wrapper {
+  --sidebar-width: 16rem;
+  --sidebar-width-icon: 3rem;
+  display: flex;
+  inline-size: 100%;
+  min-block-size: 100%;
+  font-family: var(--font-family-sans);
+}
+.kx-sidebar-wrapper:has(> .kx-sidebar[data-variant='inset']) { background-color: hsl(var(--sidebar)); }
+.kx-sidebar { display: block; flex: none; color: hsl(var(--sidebar-foreground)); }
+.kx-sidebar[data-mobile] { display: contents; }
+/* the gap goes on the same logical side as the panel, whatever the source order: `side="end"` comes after the inset */
+.kx-sidebar[data-side='end'] { order: 1; }
+.kx-sidebar[data-collapsible='none'] { display: flex; inline-size: var(--sidebar-width); background-color: hsl(var(--sidebar)); }
+.kx-sidebar__gap {
+  inline-size: var(--sidebar-width);
+  block-size: 100%;
+  transition: inline-size var(--duration-fast) var(--easing-standard);
+}
+.kx-sidebar[data-collapsible='offcanvas'] .kx-sidebar__gap { inline-size: 0; }
+.kx-sidebar[data-collapsible='icon'] .kx-sidebar__gap { inline-size: var(--sidebar-width-icon); }
+.kx-sidebar:is([data-variant='floating'], [data-variant='inset'])[data-collapsible='icon'] .kx-sidebar__gap { inline-size: calc(var(--sidebar-width-icon) + var(--spacing-4)); }
+.kx-sidebar__panel {
+  position: fixed;
+  inset-block: 0;
+  z-index: var(--z-index-docked);
+  display: flex;
+  inline-size: var(--sidebar-width);
+  transition:
+    inset-inline-start var(--duration-fast) var(--easing-standard),
+    inset-inline-end var(--duration-fast) var(--easing-standard),
+    inline-size var(--duration-fast) var(--easing-standard),
+    visibility 0s linear;
+}
+.kx-sidebar[data-side='start'] .kx-sidebar__panel { inset-inline-start: 0; }
+.kx-sidebar[data-side='end'] .kx-sidebar__panel { inset-inline-end: 0; }
+.kx-sidebar[data-variant='sidebar'][data-side='start'] .kx-sidebar__panel { border-inline-end: var(--border-width-default) solid hsl(var(--sidebar-border)); }
+.kx-sidebar[data-variant='sidebar'][data-side='end'] .kx-sidebar__panel { border-inline-start: var(--border-width-default) solid hsl(var(--sidebar-border)); }
+.kx-sidebar:is([data-variant='floating'], [data-variant='inset']) .kx-sidebar__panel { padding: var(--spacing-2); }
+/* collapsed off-canvas: out past its edge, and `visibility: hidden` once it has left (the panel is also inert) */
+.kx-sidebar[data-collapsible='offcanvas'][data-side='start'] .kx-sidebar__panel { inset-inline-start: calc(-1 * var(--sidebar-width)); }
+.kx-sidebar[data-collapsible='offcanvas'][data-side='end'] .kx-sidebar__panel { inset-inline-end: calc(-1 * var(--sidebar-width)); }
+.kx-sidebar[data-collapsible='offcanvas'] .kx-sidebar__panel { visibility: hidden; transition-delay: 0s, 0s, 0s, var(--duration-fast); }
+.kx-sidebar[data-collapsible='icon'] .kx-sidebar__panel { inline-size: var(--sidebar-width-icon); }
+.kx-sidebar:is([data-variant='floating'], [data-variant='inset'])[data-collapsible='icon'] .kx-sidebar__panel { inline-size: calc(var(--sidebar-width-icon) + var(--spacing-4) + 2px); }
+.kx-sidebar__inner {
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 0;
+  background-color: hsl(var(--sidebar));
+  color: hsl(var(--sidebar-foreground));
+}
+.kx-sidebar[data-variant='floating'] .kx-sidebar__inner {
+  border: var(--border-width-default) solid hsl(var(--sidebar-border));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.kx-sidebar__sheet.kx-sheet { --kx-sheet-size: min(18rem, 100% - 3rem); padding: 0; background-color: hsl(var(--sidebar)); }
+.kx-sidebar__header,
+.kx-sidebar__footer { display: flex; flex-direction: column; gap: var(--spacing-2); padding: var(--spacing-2); }
+.kx-sidebar__content { display: flex; flex: 1; flex-direction: column; gap: var(--spacing-2); min-block-size: 0; overflow: auto; }
+.kx-sidebar[data-collapsible='icon'] .kx-sidebar__content { overflow: hidden; }
+.kx-sidebar__group { position: relative; display: flex; flex-direction: column; inline-size: 100%; min-inline-size: 0; padding: var(--spacing-2); }
+.kx-sidebar__group-label {
+  display: flex;
+  align-items: center;
+  min-block-size: 2rem;
+  margin: 0;
+  padding-inline: var(--spacing-2);
+  border-radius: calc(var(--radius-control) - 2px);
+  color: hsl(var(--sidebar-foreground) / 0.7);
+  font: var(--text-label-md);
+  font-weight: var(--font-weight-medium);
+  transition: margin var(--duration-fast) var(--easing-standard), opacity var(--duration-fast) var(--easing-standard);
+}
+.kx-sidebar[data-collapsible='icon'] .kx-sidebar__group-label { margin-block-start: -2rem; opacity: 0; }
+.kx-sidebar__group-content { inline-size: 100%; font: var(--text-body-sm); }
+.kx-sidebar__separator-host { display: block; margin-inline: var(--spacing-2); }
+.kx-sidebar__separator-host .kx-separator { background-color: hsl(var(--sidebar-border)); }
+.kx-sidebar__menu { display: flex; flex-direction: column; gap: var(--spacing-1); inline-size: 100%; min-inline-size: 0; margin: 0; padding: 0; list-style: none; }
+.kx-sidebar__menu-item { position: relative; }
+.kx-sidebar__menu-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  inline-size: 100%;
+  min-block-size: 2rem;
+  margin: 0;
+  padding: var(--spacing-2);
+  overflow: hidden;
+  border: 0;
+  border-radius: calc(var(--radius-control) - 2px);
+  background: transparent;
+  color: hsl(var(--sidebar-foreground));
+  font: var(--text-body-sm);
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color var(--duration-instant) var(--easing-standard),
+    box-shadow var(--duration-instant) var(--easing-standard),
+    inline-size var(--duration-fast) var(--easing-standard),
+    padding var(--duration-fast) var(--easing-standard);
+}
+.kx-sidebar__menu-button > svg { flex: none; inline-size: 1rem; block-size: 1rem; }
+.kx-sidebar__menu-button > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kx-sidebar__menu-button[data-size='sm'] { min-block-size: 1.75rem; font: var(--text-label-sm); }
+.kx-sidebar__menu-button[data-size='lg'] { min-block-size: 3rem; }
+.kx-sidebar__menu-button[data-variant='outline'] { background-color: hsl(var(--background)); box-shadow: 0 0 0 1px hsl(var(--sidebar-border)); }
+/* the shared state language on the sidebar's own surface: hover an 8% layer of its text colour, pressed 12% */
+@media (hover: hover) {
+  .kx-sidebar__menu-button:hover { background-color: hsl(var(--sidebar-foreground) / 0.08); }
+}
+.kx-sidebar__menu-button:active { background-color: hsl(var(--sidebar-foreground) / 0.12); }
+.kx-sidebar__menu-button[data-active='true'] { background-color: hsl(var(--sidebar-accent)); color: hsl(var(--sidebar-accent-foreground)); font-weight: var(--font-weight-medium); }
+.kx-sidebar__menu-button:disabled,
+.kx-sidebar__menu-button[aria-disabled='true'] { opacity: var(--opacity-disabled); pointer-events: none; }
+.kx-sidebar__menu-button:focus-visible { box-shadow: 0 0 0 2px hsl(var(--sidebar-ring)); }
+.kx-sidebar[data-collapsible='icon'] .kx-sidebar__menu-button { inline-size: 2rem; min-block-size: 2rem; padding: var(--spacing-2); }
+.kx-sidebar__menu-skeleton { display: flex; align-items: center; gap: var(--spacing-2); min-block-size: 2rem; padding-inline: var(--spacing-2); }
+.kx-sidebar__skeleton-icon { inline-size: 1rem; block-size: 1rem; border-radius: var(--radius-sm); background-color: hsl(var(--muted)); }
+.kx-sidebar__skeleton-text { flex: 1; block-size: 1rem; border-radius: var(--radius-sm); background-color: hsl(var(--muted)); }
+.kx-sidebar__input.kx-input { block-size: 2rem; inline-size: 100%; background-color: hsl(var(--background)); box-shadow: none; }
+.kx-sidebar__trigger svg { inline-size: 1rem; block-size: 1rem; }
+.kx-sidebar-inset { position: relative; display: flex; flex: 1; flex-direction: column; min-inline-size: 0; background-color: hsl(var(--background)); }
+.kx-sidebar[data-variant='inset']:not([data-mobile]) ~ .kx-sidebar-inset {
+  margin: var(--spacing-2);
+  margin-inline-start: 0;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+.kx-sidebar[data-variant='inset'][data-collapsible]:not([data-collapsible='']):not([data-mobile]) ~ .kx-sidebar-inset { margin-inline-start: var(--spacing-2); }
+.kx-sidebar[data-variant='inset'][data-side='end']:not([data-mobile]) ~ .kx-sidebar-inset { margin-inline: var(--spacing-2) 0; }
+.kx-sidebar[data-variant='inset'][data-side='end'][data-collapsible]:not([data-collapsible='']):not([data-mobile]) ~ .kx-sidebar-inset { margin-inline-end: var(--spacing-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .kx-navigation-menu__trigger,
+  .kx-navigation-menu__link,
+  .kx-navigation-menu__chevron,
+  .kx-navigation-menu__indicator,
+  .kx-toast,
+  .kx-notification-item__row--pressable,
+  .kx-tour__spotlight,
+  .kx-tour__card,
+  .kx-sidebar__gap,
+  .kx-sidebar__panel,
+  .kx-sidebar__group-label,
+  .kx-sidebar__menu-button { transition: none; }
+  .kx-sidebar[data-collapsible='offcanvas'] .kx-sidebar__panel { transition-delay: 0s; }
+}
+
+/* ══ layout, pointer and scroll ═══════════════════════════════════════════
+   scroll area · resizable · carousel · comparison slider
+
+   Four components whose state is a POSITION — how far a view has scrolled, where a boundary sits, which slide
+   is showing, where a divider is — changed by a pointer, a key or a swipe. Each draws that position with logical
+   properties, so it mirrors with the reading direction (TOKENS.md, "Layout and pointer").
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── scroll area ────────────────────────────────────────────────────────── */
+/* The viewport scrolls natively with its own scrollbars hidden; the drawn bars sit in their own grid tracks,
+   so they never cover content, and the vertical bar's column is at the inline end (the left in RTL). The thumb
+   is two numbers from KxScrollArea — the visible fraction (`--kx-scroll-size`) and the logical progress
+   (`--kx-scroll-progress`) — turned into a length and an inline/block-start offset here. Sizes are rem, so a bar
+   and its thumb grow with text. */
+.kx-scroll-area {
+  --kx-scrollbar-size: 0.625rem;
+  --kx-scroll-thumb-min: 1.25rem;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-block-size: 0;
+  font-family: var(--font-family-sans);
+}
+.kx-scroll-area__viewport {
+  grid-area: 1 / 1;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: auto;
+  scrollbar-width: none;
+  border-radius: inherit;
+}
+.kx-scroll-area__viewport::-webkit-scrollbar { display: none; }
+/* drawn inside the viewport's own edge (an outline paints above its content and is not clipped by its own
+   scrolling), so neither the area's rounded edge nor an ancestor's overflow can cut it */
+.kx-scroll-area__viewport:focus { outline: none; }
+.kx-scroll-area__viewport:focus-visible { outline: 2px solid hsl(var(--focus)); outline-offset: -2px; }
+/* the content may be wider than the view (a wide table) but is never narrower */
+.kx-scroll-area__content { display: table; min-inline-size: 100%; }
+.kx-scroll-area__scrollbar { position: relative; touch-action: none; user-select: none; }
+.kx-scroll-area__scrollbar[data-orientation='vertical'] { grid-area: 1 / 2; inline-size: var(--kx-scrollbar-size); }
+.kx-scroll-area__scrollbar[data-orientation='horizontal'] { grid-area: 2 / 1; block-size: var(--kx-scrollbar-size); }
+.kx-scroll-area__corner { grid-area: 2 / 2; }
+.kx-scroll-area__thumb {
+  --kx-thumb: max(calc(var(--kx-scroll-size, 1) * 100%), var(--kx-scroll-thumb-min));
+  position: absolute;
+  border-radius: var(--radius-full);
+  /* rest: the muted foreground, 3:1 or more against the page in light and dark (check:layout-visual) */
+  background-color: hsl(var(--muted-foreground));
+  transition: background-color var(--duration-fast) var(--easing-standard);
+}
+.kx-scroll-area__scrollbar[data-orientation='vertical'] .kx-scroll-area__thumb {
+  inset-inline: 0.125rem;
+  block-size: var(--kx-thumb);
+  inset-block-start: calc((100% - var(--kx-thumb)) * var(--kx-scroll-progress, 0));
+}
+.kx-scroll-area__scrollbar[data-orientation='horizontal'] .kx-scroll-area__thumb {
+  inset-block: 0.125rem;
+  inline-size: var(--kx-thumb);
+  inset-inline-start: calc((100% - var(--kx-thumb)) * var(--kx-scroll-progress, 0));
+}
+/* hover and drag: the thumb takes the full foreground — a step a reader can see before and while pressing */
+@media (hover: hover) {
+  .kx-scroll-area__scrollbar:hover .kx-scroll-area__thumb { background-color: hsl(var(--foreground)); }
+}
+.kx-scroll-area[data-dragging] .kx-scroll-area__thumb { background-color: hsl(var(--foreground)); }
+.kx-scroll-area[data-dragging] { user-select: none; }
+
+/* ── resizable ──────────────────────────────────────────────────────────── */
+/* Panels are flex weights (KxResizablePanel sets `flex: <size> 1 0px`), so a group that changes size keeps its
+   proportions; a panel's content scrolls rather than being clipped once it no longer fits. A horizontal group is
+   laid out in the reading direction. The handle is a 1px rule in the `border` token with a 12px hit area either
+   side of it; hover and drag widen it to the action colour, focus is the ring. */
+.kx-resizable { display: flex; inline-size: 100%; block-size: 100%; min-inline-size: 0; font-family: var(--font-family-sans); }
+.kx-resizable[data-direction='vertical'] { flex-direction: column; }
+.kx-resizable[data-dragging] { user-select: none; cursor: col-resize; }
+.kx-resizable[data-direction='vertical'][data-dragging] { cursor: row-resize; }
+.kx-resizable__panel { display: block; min-inline-size: 0; min-block-size: 0; overflow: auto; }
+.kx-resizable__handle {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1px;
+  background-color: hsl(var(--border));
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    box-shadow var(--duration-fast) var(--easing-standard);
+}
+.kx-resizable[data-direction='vertical'] > .kx-resizable__handle { inline-size: auto; block-size: 1px; cursor: row-resize; }
+/* the hit area: 0.375rem (6px at the default size) beyond each side of the rule */
+.kx-resizable__handle::after { content: ''; position: absolute; inset-block: 0; inset-inline: -0.375rem; }
+.kx-resizable[data-direction='vertical'] > .kx-resizable__handle::after { inset-inline: 0; inset-block: -0.375rem; }
+@media (hover: hover) {
+  .kx-resizable__handle:not([aria-disabled='true']):hover { background-color: hsl(var(--action)); box-shadow: 0 0 0 1px hsl(var(--action)); }
+}
+.kx-resizable__handle[data-dragging] { background-color: hsl(var(--action)); box-shadow: 0 0 0 1px hsl(var(--action)); }
+.kx-resizable__handle:focus-visible { box-shadow: var(--shadow-focus); }
+.kx-resizable__handle[aria-disabled='true'] { cursor: default; opacity: var(--opacity-disabled); }
+.kx-resizable__grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: 0.75rem;
+  block-size: 1rem;
+  border: var(--border-width-default) solid hsl(var(--border));
+  border-radius: var(--radius-sm);
+  background-color: hsl(var(--background));
+  color: hsl(var(--muted-foreground));
+}
+.kx-resizable[data-direction='vertical'] > .kx-resizable__handle > .kx-resizable__grip { rotate: 90deg; }
+.kx-resizable__grip svg { inline-size: 0.375rem; block-size: 0.75rem; fill: currentColor; }
+
+/* ── carousel ───────────────────────────────────────────────────────────── */
+/* A grid: [previous] [viewport] [next], so the controls never sit outside the carousel's own box (React places
+   them 3rem outside it, off a 320px screen) and the columns mirror with the reading direction. The track moves
+   by `transform` (KxCarousel), which is the one transition here; under reduced motion it is none. The viewport
+   clips with `overflow: clip` — it cannot be scrolled by focusing something in it — and lets a focus ring
+   4px beyond its edge stay visible. */
+.kx-carousel {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--spacing-2);
+  font-family: var(--font-family-sans);
+}
+.kx-carousel[data-orientation='vertical'] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  justify-items: center;
+  row-gap: var(--spacing-2);
+}
+.kx-carousel__viewport {
+  display: block;
+  grid-column: 2;
+  grid-row: 1;
+  min-inline-size: 0;
+  overflow: clip;
+  overflow-clip-margin: var(--spacing-1);
+  touch-action: pan-y;
+}
+.kx-carousel[data-orientation='vertical'] > .kx-carousel__viewport { grid-column: 1; grid-row: 2; justify-self: stretch; block-size: 100%; touch-action: pan-x; }
+.kx-carousel__track {
+  display: flex;
+  gap: var(--kx-carousel-gap, var(--spacing-4));
+  transition: transform var(--duration-base) var(--easing-standard);
+}
+.kx-carousel[data-orientation='vertical'] .kx-carousel__track { flex-direction: column; block-size: 100%; }
+.kx-carousel[data-dragging] .kx-carousel__track { transition: none; }
+.kx-carousel[data-dragging] { cursor: grabbing; user-select: none; }
+.kx-carousel__item { display: block; flex: 0 0 var(--kx-carousel-item-size, 100%); min-inline-size: 0; min-block-size: 0; border-radius: var(--radius-md); }
+.kx-carousel__item:focus { outline: none; }
+.kx-carousel__item:focus-visible { outline: 2px solid hsl(var(--focus)); outline-offset: -2px; }
+.kx-carousel__viewport img { -webkit-user-drag: none; }
+.kx-carousel__control { inline-size: 2rem; block-size: 2rem; padding: 0; border-radius: var(--radius-full); }
+/* at a non-looping end a control is aria-disabled, not disabled, so it keeps focus: it must also keep the pointer,
+   or a press on it falls through to the page and focus goes with it (.kx-btn drops pointer events when disabled) */
+.kx-carousel__control[aria-disabled='true'] { pointer-events: auto; cursor: not-allowed; }
+.kx-carousel__control[aria-disabled='true']:is(:hover, :active) { border-color: hsl(var(--input)); background-color: transparent; color: hsl(var(--foreground)); }
+.kx-carousel__previous { grid-column: 1; grid-row: 1; }
+.kx-carousel__next { grid-column: 3; grid-row: 1; }
+.kx-carousel[data-orientation='vertical'] > .kx-carousel__previous { grid-column: 1; grid-row: 1; }
+.kx-carousel[data-orientation='vertical'] > .kx-carousel__next { grid-column: 1; grid-row: 3; }
+/* ‹ › are bidi-mirrored, so they point toward the inline start and end in either direction; a vertical carousel
+   turns them (and marks them ltr, so they do not also mirror) to point up and down */
+.kx-carousel__glyph { font-size: 1.25em; line-height: 1; }
+.kx-carousel[data-orientation='vertical'] .kx-carousel__glyph { rotate: 90deg; }
+
+/* ── comparison slider ──────────────────────────────────────────────────── */
+/* The before layer fills the area; the after layer is a window from the divider to the inline end, its picture
+   laid out at the area's full size (`100cqi`) and anchored to the inline end, so it never moves as the divider
+   does. Everything is placed by `--kx-comparison-position` (KxComparisonSlider) with logical properties. The
+   range input covers the area, transparent; its thumb is a 1px line so a press maps straight to a position.
+   The drawn handle is held 1.25rem inside the edges so it — and its focus ring — is never cut in half at 0 or
+   100; the divider itself goes all the way. */
+.kx-comparison-slider {
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  container-type: inline-size;
+  border-radius: var(--radius-md);
+  background-color: hsl(var(--muted));
+  font-family: var(--font-family-sans);
+  user-select: none;
+}
+.kx-comparison-slider__layer { position: absolute; inset: 0; }
+.kx-comparison-slider__layer > :is(img, video, picture, svg, canvas) { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; }
+.kx-comparison-slider__after {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: var(--kx-comparison-position, 50%);
+  inset-inline-end: 0;
+  overflow: hidden;
+}
+.kx-comparison-slider__after-layer { inset-inline-start: auto; inset-inline-end: 0; inline-size: 100cqi; }
+.kx-comparison-slider__divider {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: var(--kx-comparison-position, 50%);
+  inline-size: 2px;
+  margin-inline-start: -1px;
+  /* a light core with a dark edge (or the reverse, in dark) reads on any picture; the edge clears 3:1 against
+     both layers (check:layout-visual) */
+  background-color: hsl(var(--background));
+  box-shadow: 0 0 0 1px hsl(var(--foreground) / 0.7);
+  pointer-events: none;
+}
+.kx-comparison-slider__handle {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: clamp(1.25rem, var(--kx-comparison-position, 50%), 100% - 1.25rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  margin-block-start: -1rem;
+  margin-inline-start: -1rem;
+  border: 2px solid hsl(var(--background));
+  border-radius: var(--radius-full);
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+}
+.kx-comparison-slider__handle svg { inline-size: 1rem; block-size: 1rem; }
+.kx-comparison-slider:has(.kx-comparison-slider__input:focus-visible) .kx-comparison-slider__handle { box-shadow: var(--shadow-focus); }
+.kx-comparison-slider__input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  opacity: 0;
+  cursor: ew-resize;
+  touch-action: pan-y;
+}
+.kx-comparison-slider__input::-webkit-slider-runnable-track { block-size: 100%; background: transparent; }
+.kx-comparison-slider__input::-moz-range-track { block-size: 100%; background: transparent; }
+.kx-comparison-slider__input::-webkit-slider-thumb { appearance: none; inline-size: 1px; block-size: 100%; }
+.kx-comparison-slider__input::-moz-range-thumb { inline-size: 1px; block-size: 100%; border: 0; }
+.kx-comparison-slider__label {
+  position: absolute;
+  inset-block-start: var(--spacing-2);
+  max-inline-size: calc(50% - var(--spacing-4));
+  padding: 0.125rem var(--spacing-2);
+  border-radius: var(--radius-sm);
+  background-color: hsl(var(--background) / 0.85);
+  color: hsl(var(--foreground));
+  font: var(--text-label-sm);
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+.kx-comparison-slider__label--before { inset-inline-start: var(--spacing-2); }
+.kx-comparison-slider__label--after { inset-inline-end: var(--spacing-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .kx-carousel__track,
+  .kx-scroll-area__thumb,
+  .kx-resizable__handle { transition: none; }
 }
 
 /* ── forced colours ─────────────────────────────────────────────────────── */
@@ -2394,15 +3537,19 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
       .kx-slider__input, .kx-tab, .kx-tab-panel, .kx-toggle, .kx-tag__remove, .kx-banner [kxBannerAction],
       .kx-inform [kxInformAction], a.kx-card, button.kx-card, .kx-accordion__trigger, .kx-breadcrumb__link,
       .kx-pagination__link, .kx-toc__link, .kx-tab-bar__item, .kx-navigation-bar__back, .kx-app-bar__toggle,
-      .kx-app-bar__link, a.kx-app-bar__brand, .kx-footer__link, .kx-dialog__close
+      .kx-app-bar__link, a.kx-app-bar__brand, .kx-footer__link, .kx-dialog__close, .kx-menubar__trigger,
+      .kx-context-menu__trigger, .kx-select__trigger, .kx-navigation-menu__trigger, .kx-navigation-menu__link,
+      .kx-toast__button, .kx-toast__close, .kx-toaster__list, .kx-notification-center__mark, .kx-sidebar__menu-button
     ):focus-visible,
+  .kx-tour:focus-visible .kx-tour__card,
+  .kx-multi-select__field:has(.kx-multi-select__input:focus-visible),
   :is(.kx-segmented__radio, .kx-toggle-group__radio):focus-visible + label,
   .kx-rating__item:has(.kx-rating__radio:focus-visible),
   .kx-input-otp:has(.kx-input-otp__input:focus-visible) .kx-input-otp__slot[data-active] {
     outline: 2px solid Highlight;
     outline-offset: 2px;
   }
-  :is(.kx-number-input__input, .kx-password-input__input, .kx-password-input__reveal, .kx-input-group__input, .kx-input-group__button):focus-visible {
+  :is(.kx-number-input__input, .kx-password-input__input, .kx-password-input__reveal, .kx-input-group__input, .kx-input-group__button, .kx-command__input):focus-visible {
     outline: 2px solid Highlight;
     outline-offset: -2px;
   }
@@ -2416,4 +3563,36 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
   /* the slider's track and fill are plain elements, whose backgrounds the mode would flatten to Canvas */
   .kx-slider__track { forced-color-adjust: none; background-color: GrayText; }
   .kx-slider__fill { background-color: Highlight; }
+  /* a menu item's highlight is a fill and an inset shadow, both flattened: the highlighted row gets the outline */
+  .kx-menu__item[data-highlighted] { outline: 2px solid Highlight; outline-offset: -2px; }
+  /* the same for the current option of a listbox, which is drawn rather than focused */
+  .kx-option[data-highlighted] { outline: 2px solid Highlight; outline-offset: -2px; }
+  .kx-menubar__trigger[data-state='open'] { outline: 2px solid CanvasText; outline-offset: -2px; }
+  .kx-notification-item__row--pressable:focus-visible { outline: 2px solid Highlight; outline-offset: -2px; }
+  /* drawn states that are fills or shadows: the open trigger, the current page, the active entry, the unread dot,
+     and the spotlight's scrim, which is a shadow and would vanish (the dimmed page is a cue, the card is not) */
+  .kx-navigation-menu__trigger[data-state='open'],
+  .kx-navigation-menu__link[aria-current='page'],
+  .kx-sidebar__menu-button[data-active='true'] { outline: 2px solid CanvasText; outline-offset: -2px; }
+  .kx-notification-item[data-unread] .kx-notification-item__dot,
+  .kx-notification-center__dot { forced-color-adjust: none; background-color: Highlight; }
+  .kx-tour__spotlight { outline: 2px solid Highlight; }
+  /* the layout family's drawn positions are fills, which the mode would flatten: the scroll thumb, the
+     resizable rule and the comparison divider keep a system colour, and the focus rings become outlines */
+  .kx-scroll-area__thumb,
+  .kx-resizable__handle,
+  .kx-comparison-slider__divider { forced-color-adjust: none; background-color: CanvasText; }
+  .kx-resizable__handle:focus-visible,
+  .kx-comparison-slider:has(.kx-comparison-slider__input:focus-visible) .kx-comparison-slider__handle,
+  .kx-carousel__control:focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+  .kx-scroll-area__viewport:focus-visible,
+  .kx-carousel__item:focus-visible { outline-color: Highlight; }
+  /* the chosen segment is a raised surface and a shadow, both flattened to the same Canvas as its neighbours
+     (check:angular-browser, 1.00:1): it keeps the system's own selected pair, which the mode guarantees to
+     contrast with Canvas and with each other. The focus outline above stays outside it, in Highlight. */
+  .kx-segmented__radio:checked + .kx-segmented__label {
+    forced-color-adjust: none;
+    background-color: SelectedItem;
+    color: SelectedItemText;
+  }
 }

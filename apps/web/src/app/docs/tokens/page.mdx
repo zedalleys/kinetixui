@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Tokens",
-  description: "How the token engine works: one DTCG source compiled by Style Dictionary into CSS variables and a typed TypeScript object for the web, and colour, type, spacing and motion constants for SwiftUI, Compose and Flutter. Includes one token traced through every platform's generated output, and what you can install today.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/tokens");
 
 # Tokens
 
@@ -131,11 +130,14 @@ install exists for the web only.
 npm install @kinetixui/tokens
 ```
 
-Import the stylesheets once, globally. Light is the base; dark applies under a `.dark` ancestor.
+Import the stylesheets once, globally. Light is the base; dark applies under a `.dark` ancestor. The
+`extras` pair carries the shadow and type ramps and the focus ring, and its dark half the dark focus halo.
 
 ```css
 @import "@kinetixui/tokens/css";
 @import "@kinetixui/tokens/css/dark";
+@import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/tokens/css/extras/dark";
 ```
 
 Then refer to semantic roles, never to a raw value:
@@ -173,6 +175,21 @@ in the `kinetix_ui` package, which is consumed from a repository checkout, not f
 SwiftUI and Compose have no equivalent adapter for stock controls yet. Their `KinetixTheme` supplies the
 token colours to KinetixUI's own native components; see [SwiftUI](/docs/swiftui) and
 [Jetpack Compose](/docs/compose).
+
+## Why tokens are generated and components are not
+
+A token is a named value. Translating `color.primary` into a CSS custom property, a Swift `Color`, a Kotlin
+constant and a Dart `Color` is mechanical, and it is checkable: the test described
+[above](#one-token-on-every-platform) resolves every platform's value back to the source and fails if one
+disagrees. So the translation is generated, and nobody types a value twice.
+
+A component is behaviour as well as values: how focus moves, which gestures it answers, which accessibility
+API announces it, how it mirrors in a right-to-left layout. Those differ per platform, and a generator would
+have to pick one platform's answer for all of them. KinetixUI writes each platform's components by hand
+against the same token contract instead, and says how far each implementation is tested on
+[Supported platforms](/docs/platforms) rather than assuming that shared tokens mean shared behaviour.
+
+<FurtherReading guides={["generated-tokens-vs-generated-components"]} />
 
 ## See the tokens in a component
 
@@ -220,11 +237,14 @@ to carry. A handful of pre-existing values that don't cleanly match a token
 step (e.g. a couple of `opacity-40`/`opacity-60` icon dimmings) are left as
 literals with a comment, rather than silently changed to the nearest token.
 
-**Newly defined, not yet consumed by components:** `duration.instant` (100ms) and the `easing.enter`,
-`easing.exit` and `easing.emphasized` curves (standard decelerate / accelerate / expressive), plus the
-larger spacing steps (`spacing.10`–`spacing.32`, 40–128) and `radius.xxl` (24). They are part of the contract
-and generated for every platform, but no component reads them yet and there are no Tailwind utilities for
-the new curves — adopting them is incremental, component by component.
+**Motion tokens not yet consumed by components:** `easing.emphasized` (reserved for travelling selection
+indicators; see the motion roles in [Foundations](/docs/foundations)) and `duration.slower` (reserved for loop
+periods; no loop reads it yet). Both are generated for every platform and reachable as `ease-emphasized` and
+`duration-slower`. The other durations and easings are in use.
+
+**Newly defined, not yet consumed by components:** the larger spacing steps (`spacing.10`–`spacing.32`,
+40–128) and `radius.xxl` (24). They are part of the contract and generated for every platform, but no
+component reads them yet — adopting them is incremental, component by component.
 
 ### Interaction tokens
 

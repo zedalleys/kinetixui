@@ -1,23 +1,24 @@
-export const metadata = {
-  title: "Combobox",
-  description: "Autocomplete input and command palette — Popover + Command.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("combobox");
 
 # Combobox
 
 <ComponentMeta />
 
-Autocomplete input and command palette — Popover + Command.
+<ComponentIntro slug="combobox" />
 
 <ComponentPreview name="combobox-demo" />
 
-## Installation
+<ComponentGuide slug="combobox" />
+
+## React installation
 
 ```bash
 npx @kinetixui/cli add combobox
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Command, Popover, Button } from "@kinetixui/ui";

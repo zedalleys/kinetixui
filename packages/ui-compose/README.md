@@ -80,8 +80,11 @@ proximity to the token source it depends on.
 - `Field.kt` / `Fab.kt` / `Quote.kt` / `Slider.kt` / `PasswordInput.kt` —
   same pattern. `KinetixField`/`KinetixFieldLabel`/`KinetixFieldMessage`
   share an `invalid` flag through a `compositionLocalOf`, playing the role
-  the React source's `useField()` context does (the `id`/`aria-describedby`
-  wiring itself isn't ported — no Android equivalent). `KinetixSlider` is
+  the React source's `useField()` context does. Android has no
+  `aria-describedby`; instead a `KinetixInput` inside an invalid field
+  carries the error `KinetixFieldMessage` as its accessibility error.
+  `KinetixFieldDescription` is not linked to the input yet: the hint-text
+  semantics it needs are not in the pinned Compose BOM. `KinetixSlider` is
   the first component to wrap a Material3 control outright rather than
   hand-rolling interaction (`Modifier.toggleable`/`selectable` elsewhere) —
   a slider's drag/keyboard/RTL handling is real surface area worth reusing,
@@ -335,6 +338,11 @@ proximity to the token source it depends on.
   `vaul`-specific `shouldScaleBackground` has no `ModalBottomSheet`
   equivalent.
 
+For a visible field label, pass the same `accessibleLabel` to `KinetixInput` and clear
+the duplicate label semantics with `Modifier.clearAndSetSemantics {}` (import
+`androidx.compose.ui.semantics.clearAndSetSemantics`). The label names the editable
+node without replacing its text or editing actions.
+
 ## Try it
 
 ```kotlin
@@ -374,8 +382,8 @@ KinetixTheme {
         KinetixCircularProgress(value = 75f, showValue = true)
         KinetixRating(value = stars, onValueChange = { stars = it })
         KinetixField(invalid = emailError != null) {
-            KinetixFieldLabel(text = "Email")
-            KinetixInput(value = email, onValueChange = { email = it }, isError = emailError != null)
+            KinetixFieldLabel(text = "Email", modifier = Modifier.clearAndSetSemantics {})
+            KinetixInput(value = email, onValueChange = { email = it }, isError = emailError != null, accessibleLabel = "Email")
             emailError?.let { KinetixFieldMessage(text = it) }
         }
         KinetixFab(onClick = { /* ... */ }) { Text("+") }

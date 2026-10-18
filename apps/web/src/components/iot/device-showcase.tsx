@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { NativeSelect, NativeSelectOption, Slider } from "@kinetixui/ui";
 import {
   BatteryIndicator,
   DeviceStatusBadge,
@@ -9,7 +10,8 @@ import {
   SignalStrength,
 } from "@kinetixui/iot/react";
 import type { KinetixDeviceStatus, KinetixTelemetryQuality } from "@kinetixui/iot/functions";
-import { Label } from "@kinetixui/ui";
+import { Checkbox, Label } from "@kinetixui/ui";
+import { useDocumentDirection } from "@/lib/use-document-direction";
 
 /**
  * The interactive half of /iot: the five shipped primitives, driven by a handful of controls.
@@ -49,13 +51,13 @@ const QUALITIES: readonly { value: KinetixTelemetryQuality; label: string }[] = 
 ];
 
 /** Minutes-ago stops for the Last sync control. `null` is "never reported", which is not the same as "old". */
-const LAST_SEEN_STEPS: readonly { minutes: number | null; label: string }[] = [
-  { minutes: 0, label: "now" },
-  { minutes: 5, label: "5m" },
-  { minutes: 90, label: "90m" },
-  { minutes: 60 * 26, label: "26h" },
-  { minutes: 60 * 24 * 3, label: "3d" },
-  { minutes: null, label: "never" },
+const LAST_SEEN_STEPS: readonly { minutes: number | null; label: string; spoken: string }[] = [
+  { minutes: 0, label: "now", spoken: "now" },
+  { minutes: 5, label: "5m", spoken: "5 minutes ago" },
+  { minutes: 90, label: "90m", spoken: "90 minutes ago" },
+  { minutes: 60 * 26, label: "26h", spoken: "26 hours ago" },
+  { minutes: 60 * 24 * 3, label: "3d", spoken: "3 days ago" },
+  { minutes: null, label: "never", spoken: "never reported" },
 ];
 
 function instantFor(minutes: number | null): string | null {
@@ -63,11 +65,19 @@ function instantFor(minutes: number | null): string | null {
   return new Date(Date.parse(NOW) - minutes * 60_000).toISOString();
 }
 
-/** A labelled row in the control column. `htmlFor`/`id` are real, so every control has a name. */
-function Control({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
+/**
+ * A labelled row in the control column. Every control has a name: a native control through `htmlFor`/`id`, and a
+ * library `Slider` through `aria-labelledby` on the label's own id, because its named element is the thumb
+ * (`role="slider"`), not the root a `for` attribute would point at.
+ */
+function Control({ id, label, slider = false, children }: { id: string; label: string; slider?: boolean; children: React.ReactNode }) {
   return (
     <div className="grid gap-2">
-      <Label htmlFor={id} className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <Label
+        id={`${id}-label`}
+        htmlFor={slider ? undefined : id}
+        className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+      >
         {label}
       </Label>
       {children}
@@ -85,14 +95,6 @@ function Row({ name, children }: { name: string; children: React.ReactNode }) {
   );
 }
 
-const selectClass =
-  "h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground " +
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
-
-const rangeClass =
-  "h-9 w-full accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
-  "focus-visible:ring-offset-2 focus-visible:ring-offset-background";
-
 export function DeviceShowcase() {
   const [status, setStatus] = React.useState<KinetixDeviceStatus>("online");
   const [battery, setBattery] = React.useState(72);
@@ -104,6 +106,8 @@ export function DeviceShowcase() {
   const [signalReported, setSignalReported] = React.useState(true);
 
   const step = LAST_SEEN_STEPS[lastSeenStep] ?? LAST_SEEN_STEPS[1]!;
+  // Radix reads direction from context or `dir`; this page has no provider, so pass the document's.
+  const dir = useDocumentDirection();
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-10">
@@ -141,105 +145,102 @@ export function DeviceShowcase() {
       {/* ── controls ────────────────────────────────────────────── */}
       <div className="grid content-start gap-5">
         <Control id="iot-demo-status" label="Status">
-          <select
+          <NativeSelect
             id="iot-demo-status"
-            className={selectClass}
             value={status}
             onChange={(e) => setStatus(e.target.value as KinetixDeviceStatus)}
           >
             {STATUSES.map((s) => (
-              <option key={s} value={s}>
+              <NativeSelectOption key={s} value={s}>
                 {s}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </Control>
 
-        <Control id="iot-demo-battery" label={batteryReported ? `Battery — ${battery}%` : "Battery — not reported"}>
-          <input
+        {/* The library Slider: one thumb, so the value is a one-item array. `h-9` keeps the 36px pointer target the
+            native range had: Radix takes a press anywhere on the root, not only on the 16px thumb. Battery and
+            signal are disabled while the device reports no value; the Slider says so on its thumb. */}
+        <Control id="iot-demo-battery" slider label={batteryReported ? `Battery — ${battery}%` : "Battery — not reported"}>
+          <Slider
             id="iot-demo-battery"
-            type="range"
+            aria-labelledby="iot-demo-battery-label"
+            aria-valuetext={`${battery}%`}
+            dir={dir}
             min={0}
             max={100}
             step={1}
-            value={battery}
+            value={[battery]}
             disabled={!batteryReported}
-            onChange={(e) => setBattery(Number(e.target.value))}
-            className={rangeClass}
+            onValueChange={([next]) => setBattery(next!)}
+            className="h-9"
           />
-          <label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-xs text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={!batteryReported}
-              onChange={(e) => setBatteryReported(!e.target.checked)}
-              className="size-4 accent-primary"
-            />
+          <Label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-xs font-normal leading-normal text-muted-foreground">
+            <Checkbox checked={!batteryReported} onCheckedChange={(checked) => setBatteryReported(checked !== true)} />
             Device reports no battery
-          </label>
+          </Label>
         </Control>
 
-        <Control id="iot-demo-signal" label={signalReported ? `Signal — ${signal}` : "Signal — not reported"}>
-          <input
+        <Control id="iot-demo-signal" slider label={signalReported ? `Signal — ${signal}` : "Signal — not reported"}>
+          <Slider
             id="iot-demo-signal"
-            type="range"
+            aria-labelledby="iot-demo-signal-label"
+            dir={dir}
             min={0}
             max={100}
             step={1}
-            value={signal}
+            value={[signal]}
             disabled={!signalReported}
-            onChange={(e) => setSignal(Number(e.target.value))}
-            className={rangeClass}
+            onValueChange={([next]) => setSignal(next!)}
+            className="h-9"
           />
-          <label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-xs text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={!signalReported}
-              onChange={(e) => setSignalReported(!e.target.checked)}
-              className="size-4 accent-primary"
-            />
+          <Label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-xs font-normal leading-normal text-muted-foreground">
+            <Checkbox checked={!signalReported} onCheckedChange={(checked) => setSignalReported(checked !== true)} />
             Device reports no signal
-          </label>
+          </Label>
         </Control>
 
-        <Control id="iot-demo-last-seen" label={`Last sync — ${step.label}`}>
-          <input
+        <Control id="iot-demo-last-seen" label={`Last sync — ${step.label}`} slider>
+          <Slider
             id="iot-demo-last-seen"
-            type="range"
+            aria-labelledby="iot-demo-last-seen-label"
+            aria-valuetext={step.spoken}
+            dir={dir}
             min={0}
             max={LAST_SEEN_STEPS.length - 1}
             step={1}
-            value={lastSeenStep}
-            onChange={(e) => setLastSeenStep(Number(e.target.value))}
-            className={rangeClass}
+            value={[lastSeenStep]}
+            onValueChange={([next]) => setLastSeenStep(next!)}
+            className="h-9"
           />
         </Control>
 
-        <Control id="iot-demo-temperature" label={`Temperature — ${temperature.toFixed(1)} °C`}>
-          <input
+        <Control id="iot-demo-temperature" label={`Temperature — ${temperature.toFixed(1)} °C`} slider>
+          <Slider
             id="iot-demo-temperature"
-            type="range"
+            aria-labelledby="iot-demo-temperature-label"
+            dir={dir}
             min={-10}
             max={45}
             step={0.1}
-            value={temperature}
-            onChange={(e) => setTemperature(Number(e.target.value))}
-            className={rangeClass}
+            value={[temperature]}
+            onValueChange={([next]) => setTemperature(next!)}
+            className="h-9"
           />
         </Control>
 
         <Control id="iot-demo-quality" label="Reading quality">
-          <select
+          <NativeSelect
             id="iot-demo-quality"
-            className={selectClass}
             value={quality}
             onChange={(e) => setQuality(e.target.value as KinetixTelemetryQuality)}
           >
             {QUALITIES.map((q) => (
-              <option key={q.value} value={q.value}>
+              <NativeSelectOption key={q.value} value={q.value}>
                 {q.label}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </Control>
 
         <p className="text-xs leading-relaxed text-muted-foreground">

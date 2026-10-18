@@ -1,25 +1,22 @@
-export const metadata = {
-  title: "Date Picker",
-  description:
-    "A text-field trigger + calendar popover, with label / helper text / error states.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("date-picker", "A button that opens a calendar popover to choose one date, with label, helper text and error states.");
 
 # Date Picker
 
 <ComponentMeta />
 
-A text-field trigger + calendar popover, with label / helper text / error
-states. Composes `Popover` + `Calendar`.
+A button that opens a calendar popover to choose one date, with label, helper text and error states. Composes `Popover` + `Calendar`.
 
 <ComponentPreview name="date-picker-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add date-picker
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { DatePicker } from "@kinetixui/ui";

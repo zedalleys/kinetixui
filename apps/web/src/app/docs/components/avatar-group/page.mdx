@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Avatar Group",
-  description: "Stacked, overlapping avatars with a \"+N\" overflow marker.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("avatar-group", "Stacked, overlapping avatars with a \"+N\" overflow marker.");
 
 # Avatar Group
 
@@ -15,13 +14,13 @@ install as those.
 
 <ComponentPreview name="avatar-group-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add avatar
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Avatar, AvatarFallback, AvatarGroup } from "@kinetixui/ui";

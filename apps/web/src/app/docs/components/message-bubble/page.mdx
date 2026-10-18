@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Message Bubble",
-  description: "A sent/received chat bubble with grouping, timestamp, and a status tick, plus a typing indicator.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("message-bubble", "A sent/received chat bubble with grouping, timestamp, and a status tick, plus a typing indicator.");
 
 # Message Bubble
 
@@ -11,13 +10,13 @@ A sent/received chat bubble with grouping, timestamp, and a status tick, plus a 
 
 <ComponentPreview name="message-bubble-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add message-bubble
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { MessageBubble, TypingIndicator } from "@kinetixui/ui";

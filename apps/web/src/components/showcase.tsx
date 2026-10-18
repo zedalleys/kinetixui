@@ -1,13 +1,19 @@
 "use client";
 
 import * as React from "react";
-import * as Tabs from "@radix-ui/react-tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent, SegmentedControl, SegmentedControlItem } from "@kinetixui/ui";
 import { PLATFORMS, PLATFORM_DEFINITIONS, type Platform } from "@/lib/platform-parity";
 import { cn } from "@/lib/utils";
 import { CopyButton } from "./copy-button";
 import { analytics } from "@/lib/analytics";
 import { analyticsPlatformFor } from "@/lib/analytics-surfaces";
 import { useDocumentDirection } from "@/lib/use-document-direction";
+import {
+  manifestPlatformFor,
+  platformIdForManifest,
+  setPreferredPlatform,
+  usePreferredPlatform,
+} from "@/lib/platform-preference";
 
 /**
  * The real source for the same example on each platform that implements it, keyed by platform name. Only
@@ -56,6 +62,7 @@ export function Showcase({
   sources,
   analyticsBlock,
   platforms,
+  aside,
   children,
   className,
   contentClassName,
@@ -76,25 +83,43 @@ export function Showcase({
   analyticsBlock?: string;
   /** Platform labels to show as a coverage line — derived by the caller, never counted here. */
   platforms?: string[];
+  /** A line under the title, e.g. how to install this block on the reader's platform. */
+  aside?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
   contentClassName?: string;
 }) {
   const langs = React.useMemo(() => {
     if (sources) {
-      return PLATFORMS.filter((p) => sources[p]).map((p) => ({ key: p as string, label: PLATFORM_DEFINITIONS[p].label, value: sources[p]! }));
+      return PLATFORMS.filter((p) => sources[p]).map((p) => ({
+        key: p as string,
+        label: PLATFORM_DEFINITIONS[p].label,
+        value: sources[p]!,
+      }));
     }
     return code ? [{ key: "React", label: PLATFORM_DEFINITIONS.React.label, value: code }] : [];
   }, [code, sources]);
 
-  const [lang, setLang] = React.useState<string>(langs[0]?.key ?? "React");
+  // The reader's platform, shared with the component pages and the other showcases. A block with no source for
+  // it shows its first platform and leaves the choice alone, so one React-only block can't reset it.
+  const preferred = manifestPlatformFor(usePreferredPlatform());
+  const lang = langs.some((l) => l.key === preferred) ? preferred! : (langs[0]?.key ?? "React");
   const previewRef = React.useRef<HTMLDivElement>(null);
   const previewScrollable = useScrollable(previewRef);
   const active = langs.find((l) => l.key === lang) ?? langs[0];
   const multi = langs.length > 1;
   // The preview and the controls around it follow the page; only the source stays LTR (the <pre> below).
   // Without `dir`, Radix Tabs stamps dir="ltr" on its root and forces the whole showcase LTR on an RTL page.
+  const [mode, setMode] = React.useState("preview");
   const dir = useDocumentDirection();
+  const sourcePanel = (content: React.ReactNode) =>
+    multi ? (
+      <TabsContent value={active!.key} className="mt-0">
+        {content}
+      </TabsContent>
+    ) : (
+      content
+    );
 
   return (
     // min-w-0: this is a grid item, and grid items default to min-width:auto — a wide demo would otherwise stretch
@@ -108,59 +133,68 @@ export function Showcase({
         more useful and the only honest phrasing.
       */}
       {platforms && platforms.length > 0 && (
-        <p className="mt-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+        <p className="mt-1.5 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">
           <span className="sr-only">Available for: </span>
           {platforms.join(" · ")}
         </p>
       )}
+      {aside}
 
       <div className="mt-3 overflow-hidden rounded-xl border border-border">
-        <Tabs.Root defaultValue="preview" dir={dir}>
-          <Tabs.List className="flex items-center gap-1 bg-muted/30 px-2" aria-label={`${title} — preview or source`}>
+        <div dir={dir}>
+          <SegmentedControl
+            value={mode}
+            dir={dir}
+            onValueChange={(next) => {
+              if (!next) return;
+              setMode(next);
+            }}
+            aria-label={`${title} — preview or source`}
+          >
             {["preview", "code"].map((v) => (
-              <Tabs.Trigger
-                key={v}
-                value={v}
+              <SegmentedControlItem key={v} value={v} className="capitalize">
+                {v}
+              </SegmentedControlItem>
+            ))}
+          </SegmentedControl>
+
+          {mode === "preview" && (
+            <div role="region" aria-label={`${title}: preview`}>
+              <div
+                ref={previewRef}
+                data-showcase-preview
+                {...(previewScrollable
+                  ? { tabIndex: 0, role: "group", "aria-label": `${title} preview, scrollable` }
+                  : {})}
                 className={cn(
-                  "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
-                  "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-                  "data-[state=active]:border-primary data-[state=active]:text-foreground",
+                  // wide demos scroll inside their frame; `safe center` keeps overflowing content reachable (plain center
+                  // would clip its start edge), with `center` as the fallback for browsers without it
+                  "flex min-h-[280px] w-full items-center justify-center overflow-x-auto border-t border-border bg-background p-8 supports-[justify-content:safe_center]:[justify-content:safe_center]",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                  contentClassName,
                 )}
               >
-                {v}
-              </Tabs.Trigger>
-            ))}
-          </Tabs.List>
-
-          <Tabs.Content value="preview">
-            <div
-              ref={previewRef}
-              {...(previewScrollable ? { tabIndex: 0, role: "group", "aria-label": `${title} preview, scrollable` } : {})}
-              className={cn(
-                // wide demos scroll inside their frame; `safe center` keeps overflowing content reachable (plain center
-                // would clip its start edge), with `center` as the fallback for browsers without it
-                "flex min-h-[280px] w-full items-center justify-center overflow-x-auto border-t border-border bg-background p-8 supports-[justify-content:safe_center]:[justify-content:safe_center]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-                contentClassName,
-              )}
-            >
-              {children}
+                {children}
+              </div>
             </div>
-          </Tabs.Content>
+          )}
 
-          <Tabs.Content value="code">
-            <div className="relative border-t border-border bg-muted/40">
-              {/*
+          {mode === "code" && (
+            <div role="region" aria-label={`${title}: code`}>
+              <div className="relative border-t border-border bg-muted/40">
+                {/*
                 A real nested tablist, not a row of plain buttons. The platform switcher used to be bare
                 <button>s: no role, no selected state for assistive technology, no arrow-key movement. Radix
                 gives all three, and the code panel below is labelled by the selected tab.
               */}
-              {multi && (
-                <Tabs.Root
+                <Tabs
                   dir={dir}
                   value={lang}
                   onValueChange={(next) => {
-                    setLang(next);
+                    if (next === lang) return;
+                    const id = platformIdForManifest(next);
+                    // a repeated callback for the same click changes nothing, so it reports nothing
+                    if (id && !setPreferredPlatform(id)) return;
                     // Only a real platform the manifest knows, and only for a block. `isAnalyticsPlatform`
                     // rejects anything else, so a future non-platform tab cannot leak in as one.
                     const platform = analyticsPlatformFor(next);
@@ -174,56 +208,51 @@ export function Showcase({
                     }
                   }}
                 >
-                  <Tabs.List className="flex items-center gap-1 border-b border-border/60 px-3 pt-1.5" aria-label={`${title} — implementation platform`}>
-                    {langs.map((l) => (
-                      <Tabs.Trigger
-                        key={l.key}
-                        value={l.key}
-                        className={cn(
-                          "-mb-px border-b-2 border-transparent px-2 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
-                          "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-                          "data-[state=active]:border-primary data-[state=active]:text-foreground",
-                        )}
-                      >
-                        {l.label}
-                      </Tabs.Trigger>
-                    ))}
-                  </Tabs.List>
-                </Tabs.Root>
-              )}
-              {active && (
-                <>
-                  {/* rtl-ok: physical on purpose — the button sits over the source, which is always LTR */}
-                  <CopyButton
-                    value={active.value}
-                    onCopy={
-                      analyticsBlock && analyticsPlatformFor(active.key)
-                        ? () =>
-                            analytics.track("block_code_copied", {
-                              block: analyticsBlock,
-                              platform: analyticsPlatformFor(active.key)!,
-                              source: "blocks_gallery",
-                            })
-                        : undefined
-                    }
-                    className={cn("absolute right-3 z-10", multi ? "top-11" : "top-3")}
-                  />
-                  <pre
-                    // source code reads left to right whatever the page direction
-                    dir="ltr"
-                    // a code block scrolls sideways when a long Kotlin or Dart line overflows, so the keyboard
-                    // must be able to reach it (WCAG 2.1.1 / axe scrollable-region-focusable)
-                    tabIndex={0}
-                    aria-label={`${title} — ${active.label} source`}
-                    className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-                  >
-                    <code>{active.value}</code>
-                  </pre>
-                </>
-              )}
+                  {multi && (
+                    <TabsList className="px-3" aria-label={`${title} — implementation platform`}>
+                      {langs.map((l) => (
+                        <TabsTrigger key={l.key} value={l.key}>
+                          {l.label}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  )}
+                  {active &&
+                    sourcePanel(
+                      <>
+                        {/* rtl-ok: physical on purpose — the button sits over the source, which is always LTR */}
+                        <CopyButton
+                          value={active.value}
+                          onCopy={
+                            analyticsBlock && analyticsPlatformFor(active.key)
+                              ? () =>
+                                  analytics.track("block_code_copied", {
+                                    block: analyticsBlock,
+                                    platform: analyticsPlatformFor(active.key)!,
+                                    source: "blocks_gallery",
+                                  })
+                              : undefined
+                          }
+                          className={cn("absolute right-3 z-10", multi ? "top-11 coarse:top-14" : "top-3")}
+                        />
+                        <pre
+                          // source code reads left to right whatever the page direction
+                          dir="ltr"
+                          // a code block scrolls sideways when a long Kotlin or Dart line overflows, so the keyboard
+                          // must be able to reach it (WCAG 2.1.1 / axe scrollable-region-focusable)
+                          tabIndex={0}
+                          aria-label={`${title} — ${active.label} source`}
+                          className="overflow-x-auto p-4 font-mono text-code leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                        >
+                          <code>{active.value}</code>
+                        </pre>
+                      </>,
+                    )}
+                </Tabs>
+              </div>
             </div>
-          </Tabs.Content>
-        </Tabs.Root>
+          )}
+        </div>
       </div>
     </section>
   );

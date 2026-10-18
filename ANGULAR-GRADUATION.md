@@ -6,16 +6,16 @@ CI — and this document describes it; where the two disagree, the script is rig
 
 Publication is distribution, not maturity. The package is on npm and stays Preview.
 
-## Current truth (computed, 2026-10-04, main `dd9eed1` + Wave C1)
+## Current truth (computed, 2026-10-12, main `b3b9207` + the layout tranche)
 
 | | Count | Source |
 |---|---|---|
-| Implemented | 64 of 98 | `components.manifest.json` |
+| Implemented | 80 of 98 (79 components and one recipe, the combobox) | `components.manifest.json` |
 | Native-equivalent | 2 (`direction-provider`, `form`) | manifest `platformGuidance`, each with its reason |
-| Planned | 32 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
+| Planned | 16 | manifest `platformGuidance` (`type: "planned"`, with a `wave`) |
 | `catalogComplete` | false | manifest |
-| Evidence (verification.json) | build 64 · interaction 64 · accessibility 64 · rtl 31 · largeText 37 · reducedMotion 12 · visual 0 | generated from the tests |
-| Rendered visual/state gate | 29 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs; `check:composite-visual`: input-group, number-input, input-otp, password-input; `check:navigation-visual`, Angular only: breadcrumb, pagination, table-of-contents, tab-bar, app-bar, footer, accordion; `check:overlay-visual`, Angular only: dialog, alert-dialog, modal, sheet, drawer, popover, tooltip, hover-card), no `partial` marks | `scripts/visual-gates.mjs` |
+| Evidence (verification.json) | build 80 · interaction 80 · accessibility 80 · rtl 47 · largeText 53 · reducedMotion 23 · visual 0 | generated from the tests |
+| Rendered visual/state gate | 43 components, every row (`check:card-visual`: card; `check:selection-visual`: checkbox, radio-group, switch, segmented-control; `check:entry-visual`: input, textarea, native-select, tabs, select; `check:composite-visual`: input-group, number-input, input-otp, password-input, multi-select; `check:navigation-visual`, Angular only: breadcrumb, pagination, table-of-contents, tab-bar, app-bar, footer, accordion, navigation-menu, sidebar; `check:overlay-visual`, Angular only: dialog, alert-dialog, modal, sheet, drawer, popover, tooltip, hover-card, sonner, notification-center, tour; `check:menu-visual`, Angular only: dropdown-menu, context-menu, menubar, plus select and multi-select open; `check:layout-visual`, Angular only: scroll-area, resizable, carousel, comparison-slider), no `partial` marks | `scripts/visual-gates.mjs` |
 
 Wave A moved Angular's evidence into a real browser. `check:angular-browser` (scripts/angular-browser.mjs)
 builds the package's fixtures AOT and bootstraps them as a live, zoneless Angular application in Chromium,
@@ -41,28 +41,28 @@ maturity — they are statements about today, and CI fails the moment one is fal
 
 | Dimension | Criterion | Kind | Today |
 |---|---|---|---|
-| Catalogue | No Angular entry is still planned | gate | **open** — 32 planned |
+| Catalogue | No Angular entry is still planned | gate | **open** — 20 planned |
 | Catalogue | Every native-equivalent / composition entry carries its reason | always | met |
 | Catalogue | `catalogComplete` is true only when nothing is planned | always | met |
-| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 64/64 |
+| Build / distribution | Every implemented component compiles in CI (ng-packagr, strict templates) | gate | met — 76/76 |
 | Build / distribution | CI builds the package, checks the public API snapshot, runs the tests and this guard; the clean-consumer install + AOT build runs (`angular-package.yml`) | always | met |
-| Behaviour | Every implemented component has `interaction` evidence | gate | met — 64/64 (jsdom, and a real keyboard in Chromium for the 44 interactive components; the stepper, which is display, by its state following `current`) |
-| Behaviour | `interaction` wherever React has it | gate | met — 24/24 (dialog, alert dialog, modal, sheet, drawer, popover and tooltip added; React has no interaction evidence for the hover card, Angular does) |
-| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 64/64 |
-| Accessibility | `accessibility` wherever React has it | gate | met — 64/64 |
-| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | met — 64/64 (`angular-browser.mjs`: axe over every usage example and state fixture, light and dark, plus forced colours and reduced motion; `angular-overlays.mjs`: axe over every overlay OPEN, nested and composed) |
-| RTL | `rtl` wherever React has it | gate | met — 10/10 (alert dialog, popover and tooltip added; Angular measures 31 in four direction cases) |
-| Large text | `largeText` wherever React has it | gate | met — 21/21 (React's bar rose by the seven overlays it measures at 200%; Angular measures 37) |
-| Large text | …from a real browser (`large-text.mjs`) | gate | met — 21/21 |
+| Behaviour | Every implemented component has `interaction` evidence | gate | met — 76/76 (jsdom, and a real keyboard in Chromium for the interactive components, the five of Wave C3 among them; the stepper, which is display, by its state following `current`) |
+| Behaviour | `interaction` wherever React has it | gate | met — 30/30 (Wave C2a added dropdown menu, context menu and menubar, Wave C2b select and multi-select, Wave C3 the tour; React has no interaction evidence for the hover card, Angular does) |
+| Accessibility | Every implemented component has `accessibility` evidence | gate | met — 76/76 |
+| Accessibility | `accessibility` wherever React has it | gate | met — 76/76 |
+| Accessibility | …from a real browser wherever React's is (axe in Chromium, `a11y-browser.mjs`) | gate | met — 76/76 (`angular-browser.mjs`: axe over every usage example and state fixture, light and dark, plus forced colours and reduced motion; `angular-overlays.mjs`: axe over every overlay OPEN, nested and composed, and over a toast with focus in it, the notification center, the tour on and off its target and the sidebar on desktop and as a phone sheet; `angular-collections.mjs`: axe over every menu and listbox OPEN, submenus and empty lists included, and a navigation panel open) |
+| RTL | `rtl` wherever React has it | gate | met — 20/20 (this row read 10/10 after Wave C1 while the guard computed 13/13; Wave C2a added the three menus, Wave C2b select and multi-select, Wave C3 the navigation menu and the tour; Angular measures 43 in four direction cases) |
+| Large text | `largeText` wherever React has it | gate | met — 26/26 (Wave C2a added the three menus, Wave C2b select and multi-select; Angular measures 49) |
+| Large text | …from a real browser (`large-text.mjs`) | gate | met — 26/26 |
 | Motion | `reducedMotion` wherever React has it | gate | met — 3/3 (switch, accordion, collapsible) |
 | Motion | …from a real browser (`motion.mjs`) | gate | met — 3/3 (Angular's in `angular-browser.mjs`, which also measures the app bar's menu) |
-| Visual | A rendered visual/state gate covers Angular wherever one covers React | gate | met — 12/12: the interactive Card (`kxCard` on a link or button) and `kx-number-input`'s `readonly` closed the two `partial` marks, and input-group and input-otp arrived measured. password-input is measured too but not owed (React's PasswordInput is not separately gated) |
+| Visual | A rendered visual/state gate covers Angular wherever one covers React | gate | met — 14/14 (Wave C2b: select in `check:entry-visual`, multi-select in `check:composite-visual`): the interactive Card (`kxCard` on a link or button) and `kx-number-input`'s `readonly` closed the two `partial` marks, and input-group and input-otp arrived measured. password-input is measured too but not owed (React's PasswordInput is not separately gated) |
 | Visual | Every registered visual gate exists and runs in CI | always | met |
 | Visual | A visual gate claims Angular only for components Angular implements | always | met |
 | Documentation | The package README's counts, component list and Preview label match the manifest and evidence | always | met (it was stale — 31 components, 69 symbols — and is corrected in this change) |
 | CI | The guard itself: fails if `maturity` is `stable` with any gate criterion open | — | in `ci.yml` |
 
-12 of 13 gate criteria are met; only the catalogue is open (32 planned). Angular stays Preview.
+12 of 13 gate criteria are met; only the catalogue is open (20 planned). Angular stays Preview.
 
 `published` is reported but is not a criterion. Neither is `visual` from verification.json: that kind
 means comparison against stored reference images, which KinetixUI does not keep on any platform.
@@ -121,8 +121,8 @@ Run against deliberately broken inputs during this change (none committed):
 
 ## The waves
 
-Derived from the manifest's own `wave` tags (now `overlays` 9, `layout` 7, `data` 7, `advanced` 7,
-`navigation` 2 — the `inputs` tag closed with Wave A), reordered by dependency. The evidence instrument came
+Derived from the manifest's own `wave` tags (now `layout` 3, `data` 7, `advanced` 7, `overlays` 3,
+`navigation` 1 — the `inputs` tag closed with Wave A), reordered by dependency. The evidence instrument came
 first, before more unverified components were added; every later wave arrives through it.
 
 "Owed" below is computed from the current bar, not estimated: the evidence kinds React already has for that
@@ -233,21 +233,305 @@ was caught:
   on every side" (the surface clips two sides, 1.37:1 and 1.00:1).
 - The close button's focus ring removed → the same row, 1.00:1 on all four sides, light and dark.
 
-### What remains after Wave C1, ranked
+### Wave C2a — the collection core and the menus (done)
 
-32 planned. Ranked by what each group unblocks and by the evidence React already holds for it (which Angular
+**Components:** `dropdown-menu`, `context-menu`, `menubar` (3). 12/13 held; Angular 64 → 67. The listboxes
+(`select`, `combobox`, `multi-select`, `command`) are C2b and are not part of this wave.
+
+**One set of parts, three roots.** Every item part (`kxMenuItem`, `kx-menu-checkbox-item`,
+`kx-menu-radio-group` / `kx-menu-radio-item`, `kx-menu-label`, `kx-menu-group`, `kx-menu-separator`,
+`kx-menu-shortcut`, and submenus: `kx-menu-sub`, `kxMenuSubTrigger`, `kx-menu-sub-content`) is written once in
+`lib/menu.ts` and finds its menu through DI, so the dropdown menu, the context menu and the menubar differ
+only in their root and trigger. The menus are floating surfaces of the C1 layer (`popover="manual"`, the one
+stack, `computePlacement`); no second overlay system was added. Two additions to the layer: a virtual anchor
+(a rectangle and the element whose direction it reads), which is how a context menu opens at the pointer, and
+`reposition()`, which re-places an open surface when its anchor moves (a second right-click). Element anchors
+are unchanged, and the C1 gate still passes over them.
+
+**The collection core** (`lib/collection.ts`, internal, not exported): `moveIndex` (next, previous, first,
+last, skipping disabled items; wrapping is the caller's choice: menus stop at their ends, as React's tested
+contract does, and the menubar's triggers wrap), `moveForKey` and `inlineKey` (horizontal keys resolved
+against direction), `isRtl` (the nearest `[dir]`, else the computed style through the element's own window),
+the typeahead (a 500ms buffer, a repeated letter cycles, disabled items never match) and roving focus (one
+Tab stop). Tabs, accordion and the code block keep their own copies; moving them onto the core is a later,
+behaviour-neutral change.
+
+| | |
+|---|---|
+| Behavioural contracts | dropdown menu (Enter, Space, ArrowDown open on the first item, ArrowUp on the last; arrows stop at the ends; Home/End; typeahead; Enter/Space activate; Escape closes and returns focus; Tab closes and moves on; activating an item closes the tree and returns focus to the trigger; disabled items announced and skipped); submenus (two levels, nested in the parent's DOM; ArrowRight/Enter/Space open on the first item, ArrowLeft and Escape close ONE level with focus on that level's trigger; hover opens after 100ms; a grace triangle lets the pointer cross the parent's items on the way into the submenu); context menu (right-click opens at the pointer, a second right-click moves it there, the ContextMenu key and Shift+F10 open it at the focused element, Escape returns focus there); menubar (one Tab stop, ArrowLeft/Right wrap across triggers, with a menu open they open the neighbour's menu, ArrowRight past a submenu moves to the next menu, the pointer switches menus while one is open); checkbox and radio items (`aria-checked`, two-way `checked` and `value`) |
+| Accessibility | `menu`, `menuitem`, `menuitemcheckbox`, `menuitemradio`, `group` named by its label, `separator`, `menubar`; the trigger carries `aria-haspopup`, `aria-expanded`, `aria-controls`; the menu is named by its trigger; axe over every menu OPEN (submenus included) and the three usage examples, light and dark; forced colours (highlight and open-trigger outlines) |
+| RTL | 3 components in four direction cases (RTL page, LTR page, an RTL region in an LTR page and the reverse): submenus open toward the inline end, ArrowLeft opens and ArrowRight closes in RTL, the menubar's arrows follow reading order, a context menu's inline-start corner sits on the pointer |
+| Large text | 3 components at 2× text at 1024px and 390px: inside the viewport, no clipped text, 24px targets; a submenu with no room beside its parent opens below its trigger |
+| Motion | the surface's motion is the floating surface's (C1); item and trigger state changes are `duration-instant` and none under reduced motion |
+| Visual | `check:menu-visual` (new, Angular only): each item state against the others, the keyboard highlight against the pointer's, disabled, destructive, check and radio marks, shortcut contrast at rest and highlighted, the chevron and the submenu's side in LTR and RTL, the menubar's open trigger, and forced colours; light and dark |
+| Compositions | a data row's action menu (named by its row's trigger; a destructive action removes the row) and a menu inside a dialog (`check:angular-overlays`: Escape closes the menu, then the dialog, one layer at a time) |
+| Defects it found and fixed | a menu reopened during its own closing transition could not take focus for one frame (Chromium; focus now retries on the next frame if nothing else took it); at 390px and at 200% text a submenu was squeezed into the 10px beside its parent (it now opens below its trigger); a context menu's second right-click did not move the open menu; a muted shortcut fell below 4.5:1 on a highlighted item (axe; it now takes the item's colour); the native `disabled` attribute removed disabled items from the accessibility tree (they are now `aria-disabled`) |
+
+**Findings not fixed:** when a data row's action removes the row, its trigger goes with it and focus falls to
+`body`. Where focus should go (the next row, the table) is the data table's decision, which is Wave D.
+
+#### Negative controls (Wave C2a)
+
+10 controls, each a real break in the source, a fresh harness built from it, the gate run against it, and the
+file restored from git and checked by hash before the next (logs and `summary.json`:
+`/mnt/project-files/angular-wave-c2a/negative-controls/`). None committed. Every one was caught:
+
+- Vertical arrows wrap at the ends of a menu → `check:angular-collections`: "ArrowDown … stops at the end (no wrap)".
+- Typeahead includes disabled items → `check:angular-collections`: "typeahead never lands on the disabled item".
+- Submenu open/close keys not mirrored in RTL → `check:angular-collections`: RTL page: "ArrowLeft (the inline-end arrow) opens it", and its closing pair.
+- Submenu rendered outside the parent menu (portalled to body) → `check:angular-collections`: "submenus are nested in their parent menu in the DOM, two levels deep", and the tree no longer closing as one.
+- Escape closes the whole menu tree → `check:angular-collections`: "Escape closes one level: the deepest, the other two stay open", in the dropdown and the context menu.
+- No focus return after an item is activated → `check:angular-collections`: "focus returns to the trigger after an item runs" (focus was on `body`).
+- Context menu anchored to its trigger, not the pointer → `check:angular-collections`: "it opens AT the pointer" (point 88,144; menu at 48,276) and "a second secondary click moves it".
+- aria-checked not updated on a checkbox item → `check:angular-collections`: "a checkbox item is a menuitemcheckbox with its state", in the dropdown and the context menu.
+- Menubar horizontal movement does not open the neighbouring menu → `check:angular-collections`: "with a menu open, ArrowRight opens the next menu", and the wrap and ArrowLeft cases.
+- Keyboard highlight identical to the pointer highlight → `check:menu-visual`: "an inset focus ring clears 3:1 against the layer" (1.00:1) and "keyboard and pointer highlights look different", light and dark, LTR and RTL.
+
+### Wave C2b — the listboxes (done)
+
+**Catalogue entries:** `select`, `command`, `multi-select` (components) and `combobox` (a recipe). 12/13 held;
+Angular 67 → 71 implemented (70 components and one recipe), 69/98 → 73/98, 29 → 25 planned.
+
+**One listbox layer on the C2a core** (`lib/listbox.ts`, internal, not exported). The core gained
+`KxActiveDescendant` (`lib/collection.ts`) and `readableText`; the walk itself is C2a's (`moveIndex`, the
+disabled skip, the typeahead), extended rather than forked. On top of it, `KxOptionList` is the controller every
+owner holds (selection mode, vertical keys, typeahead, pointer highlight), `KxOptionBase` is what every option
+shares (`role="option"`, a stable id from the C1 id counter, `aria-selected`, `aria-disabled`, `hidden`),
+`KxOptionField` is the root of a field that opens a listbox (a C1 floating root that is also a
+`ControlValueAccessor`) and `KxOptionPopup` its C1 floating surface. Select and multi-select are fields; the
+command owns its list directly; the combobox recipe is a popover holding a command. No new portal, overlay
+system or focus stack: every popup is a `popover="manual"` surface on the one C1 stack, so Escape closes only
+the top layer.
+
+**`aria-activedescendant`.** Focus never moves into a listbox: it stays on the select's trigger, the command's
+search field or the multi-select's input, and the field names the current option. The current option is a
+computed value, not a stored id: `current` is the item last made active only while it is present, visible and
+enabled, so a filter that hides it, a change that disables it, or its removal drops it in the same change, and
+the field's attribute follows (`activeId` is null rather than stale). `set` refuses disabled and hidden items,
+so a disabled option can never become current, by arrow, Home/End, typeahead or pointer. Options are
+`mousedown`-prevented, so a press inside a popup keeps focus where typing reaches it. A command or multi-select
+search resets the highlight to the first match. `aria-selected` follows the selection mode, not the highlight:
+the chosen value in a select, every chosen value in a multi-select (`aria-multiselectable`), and the highlight
+in a command, whose items are actions (selection follows focus). A listbox whose filter leaves nothing drops
+its role, and the command field reads collapsed, because a listbox must own options.
+
+| | |
+|---|---|
+| Behavioural contracts | select (Enter, Space, ArrowDown, ArrowUp open on the chosen option or the first/last; arrows stop at the ends; Home/End; typeahead, disabled options never match; Enter/Space choose and close; Escape closes without changing the value; Tab closes and moves on; focus returns to the trigger; CVA value, touched and disabled); command (local, synchronous filtering by text, value and keywords; groups hide when empty; the empty text; disabled items skipped; Enter runs the highlighted item; the network is checked during a search: no request leaves the page); the combobox recipe (trigger, popover, command; choosing closes and returns focus; Escape closes only the popover); multi-select (typing filters, Enter toggles, Backspace in an empty input removes the last chip, every chip has a remove button named "Remove X", removal from the keyboard keeps focus in the field, `creatable` offers "Create “…”") |
+| Accessibility | combobox / listbox / option / group roles, `aria-expanded`, `aria-controls`, `aria-activedescendant`, `aria-selected`, `aria-multiselectable`, `aria-disabled`; axe over every listbox OPEN and with an empty filter, light and dark; ids unique on the page and never stale after close and reopen; a select and a multi-select inside a dialog (Escape closes the listbox first, then the dialog); a command palette in `kx-command-dialog` |
+| RTL | select and multi-select in four direction cases: popups align to the inline start, chips and remove buttons mirror, keys unchanged (vertical) |
+| Large text | select and multi-select at 2× text at 1024px and 390px: the popup stays inside the viewport, no clipped text, 24px targets, a long chosen label and a five-chip selection wrap rather than overflow |
+| Motion | select and multi-select: the surface's motion is C1's, none under reduced motion |
+| Visual | `check:entry-visual` (select: rest, filled, invalid, disabled), `check:composite-visual` (multi-select: the same, and the chip's remove button as a part), `check:menu-visual` (select and multi-select open: rest, hover, keyboard highlight distinct from hover, selected, disabled, the open surface; light and dark, LTR and RTL; forced colours) |
+| Defects it found and fixed | the published `.d.ts` typed `KxSelect.value` as `ModelSignal<string>`, so a consumer's strict AOT build rejected it (`check:angular-package` in CI; the field is now annotated); a bound `[disabled]` did not close an open popup (only a form's `setDisabledState` did), and an already-disabled field could still be opened through `[(open)]` (the effect now tracks both signals, and no option activates while its field is disabled); a select opened through `[(open)]` had no active descendant until the first key; `creatable` offered to create text that was already an option's value (Codex review); an empty command list kept `role="listbox"` with no options (axe `aria-required-children`); at 2× text the select popup was placed from a stale shrink-to-fit width and overflowed the viewport (the popup is now measured from the start edge and placed in one pass); at 390px the multi-select input's intrinsic width widened the page; chip remove buttons were under 24px; the chip remove button's focus ring was 2.77:1 because the button's muted opacity muted its ring (it is now an inset ring at full opacity inside a multi-select) |
+
+**Findings not fixed:** the base `KxTag` remove button's focus ring has the same muted-opacity weakness outside a
+multi-select (pre-existing, Tag is not in this wave). C1's shrink-to-fit popover can take one frame to converge
+on its placement; the listbox popup no longer depends on it, the popover still does. In this container
+`check:angular-browser` fails "KxBreadcrumb: nothing truncated inside it"; it fails identically on main
+`4a7a587` with no C2b change, so it is not this wave's.
+
+#### Negative controls (Wave C2b)
+
+8 controls (11–18), run after the implementation was committed (`b1f3b46`, and `294ad6c` for 17 after its guard
+fix): each a real break in the source, a fresh harness built from it, the gate run against it, and the file
+restored from git and checked by hash before the next (logs and `summary.json`:
+`/mnt/project-files/angular-wave-c2b/negative-controls/`). None committed. Every one was caught:
+
+- 11: the active descendant ignores disabled options (`set`, `current` and the typeahead skip removed together) → `check:angular-collections`: "closed typeahead never chooses a disabled option" (zucchini). Removing only `set`'s guard, then `set`'s and `current`'s, changed nothing observable: the walk, the typeahead and the option's pointer handler each skip disabled options on their own. Both runs are kept as `11-*-not-observable.log`.
+- 12: filtering or removal leaves the active descendant on an option that is not shown → "removing the highlighted item moves the highlight to one that remains" and "item removed: the active descendant is valid".
+- 13: `aria-selected` follows the keyboard highlight in a select → "nothing is chosen yet: every option is aria-selected=false" and "moving the highlight does not move the selection".
+- 14: removing a chip from the keyboard drops focus to the page → "Enter removes the chip; focus moves to the neighbouring chip's button" and "removing the last chip leaves focus in the input" (`body`).
+- 15: the listbox popup is not a layer on the stack → "in a dialog, Escape closes the select alone, focus on its trigger" (the dialog closed with it), and every Escape and outside-press case for select and multi-select.
+- 16: the command query is sent off the page on every keystroke → "the query never leaves the page: no request was made while searching" (it names each `/analytics/capture?q=…` request).
+- 17: `export { KxCommand as KxCombobox }` in the public API → `check:platform-completeness`: "combobox is a documented recipe … but Angular exports a component named after it". The first run passed: the guard only looked for a decorated class, so an alias slipped through. The guard now reads the public API too (`scripts/check-platform-completeness.mjs`), and the re-run is caught.
+- 18: keyboard highlight identical to the pointer highlight in a listbox → `check:menu-visual`: "keyboard highlight: an inset ring clears 3:1 against the layer" (1.00:1) and "keyboard and pointer highlights look different", for select and multi-select.
+- 19 (post-review regression, added after the Codex fixes): the disabled-close effect in `KxOptionField` reads `open()` untracked again, so an already-disabled field can be opened through `[(open)]` → `check:angular-collections`: "a disabled field cannot be externally reopened" (open=true), for select and multi-select.
+
+### Wave C3 — navigation menu, notifications and sidebar (done)
+
+**Catalogue entries:** `navigation-menu`, `sonner` (Angular source name `Toaster`: `kx-toaster` and
+`KxToasterService`), `notification-center`, `tour`, `sidebar`. 12/13 held; Angular 71 → 76 implemented
+(75 components and one recipe), 73/98 → 78/98, 25 → 20 planned. Wave C is complete.
+
+**Nothing new underneath.** Every part stands on what C1, C2a and C2b built: no new overlay stack, positioning
+engine, direction system or focus framework.
+
+- **Navigation menu** (`lib/navigation-menu.ts`) is site navigation, not a menu: a named `navigation` landmark,
+  plain buttons that disclose panels (`aria-expanded`, `aria-controls` while open) and links that stay links
+  (`aria-current="page"`). It uses the C2a core for movement (`moveIndex`, non-wrapping, and `inlineKey`, so
+  ArrowRight and ArrowLeft swap by the direction the navigation's own element resolves to); each item is a C1
+  hover root (open delay 200ms, a skip delay of 300ms while one is open, a close delay so the pointer can
+  cross to the panel) and each panel a C1 floating surface placed by `autoPlace` against the whole navigation
+  at its logical start. Escape is the stack's: it closes the panel and focus returns to its trigger. One
+  addition to the C1 layer: `autoPlace` takes an optional `placed` callback, run after its final write (the
+  tour uses it to light the spotlight on the same frame as the card).
+- **The toaster** (`lib/sonner.ts` over the internal `lib/toast-queue.ts`). One root queue with one clock per
+  toast (remaining time, started-at, at most one timer). A toaster attaches to its channel (its `id`); a
+  channel no toaster shows is held, so a toast nobody can see does not expire. Hold reasons are a set per
+  channel — hover, focus, a hidden document — so releasing one never releases another, and a pause keeps the
+  elapsed time: it resumes with what was left, never the full duration. An update with the same id replaces
+  the toast in place and keeps its clock (a changed duration restarts it). The region is a polite live region
+  (`aria-relevant="additions text"`), a toast never takes focus, Alt+T moves focus to the toasts and Escape
+  sends it back; dismissing the focused toast moves focus to the next, never to `<body>`. The toaster is not
+  a top-layer surface: it is the one overlay with a z-index (`--z-index-overlay`).
+- **Notification center** (`lib/notification-center.ts`) is a C1 popover: the trigger a button named with the
+  unread count (the dot is decoration), the content a non-modal dialog named by its heading, the items a list.
+  It is separate from the toaster and holds no state of its own: the count, read state and persistence are
+  the application's. React's subset: the trigger, the item (`title`, `description`, `time`, `unread`,
+  `pressable` → `(select)`), Mark all read.
+- **Tour** (`lib/tour.ts`) is a C1 dialog root with a C1 modal surface (`showModal()`, `aria-modal` by the
+  top layer, Tab held, scroll locked, focus restored). Its surface is the whole viewport, transparent; the
+  card is placed by `autoPlace` below the target at its inline start, flipped and shifted at the viewport
+  edges, and the spotlight's spread shadow is the scrim. A target is resolved by selector on every step and
+  watched (a `MutationObserver`, throttled to a frame, ignoring the tour's own nodes): removed while its step
+  shows, the step falls back to a centred card, and back, it points again — never at a stale place. A target
+  below the fold is scrolled into view (smoothly, unless reduced motion). Escape closes only the top layer,
+  so a tour opened from inside a dialog closes first.
+- **Sidebar** (`lib/sidebar.ts`): one state model (`KxSidebarProvider`: `[(open)]` for desktop, a separate
+  open state for the phone, Ctrl/⌘+B). Desktop is a persistent panel against the logical start or end, inert
+  and hidden once collapsed off-canvas. Below 768px the same content is rendered inside the family's
+  `kx-sheet` (one modal dialog, named, scroll-locked, focus inside). The body is one `ng-template` rendered in
+  exactly one place, so there are never two copies of the sidebar or of its ids; crossing the breakpoint
+  closes the phone sheet, so no sheet is left open behind a desktop panel.
+
+| | |
+|---|---|
+| Behavioural contracts | navigation menu (Tab reaches every trigger and top-level link and never a closed panel; arrows move between stops and stop at the ends; Home/End; ArrowDown into an open panel; Enter/Space toggle with focus kept; one panel at a time; Tab out, a link followed, a press outside and Escape each close; the hover delays; a panel closed by a press does not reopen under a resting pointer); toaster (real time, 1.5s: expiry through `onAutoClose`; hover and focus pause with the elapsed time kept; Alt+T and Escape; action, cancel, close, `preventDefault` to keep; update in place; three visible; `Infinity`; separate toasters); notification center (count in the name, list, pressable items, Mark all read, Escape, outside press); tour (modal, Tab held, steps, Back/Next/Done, edges, scrolled-to, missing and removed targets, a press behind is not a way out, Escape top layer only, focus restored); sidebar (desktop, Ctrl+B, inert when collapsed, phone sheet, breakpoint both ways, no duplicates) |
+| Accessibility | `navigation` named, no menu roles; region + polite live region; dialog named by heading (notification center) and by step title (tour); `aria-current`, `aria-expanded`, `aria-controls`; axe light and dark over a navigation panel open, a toast with focus in it, the notification center, the tour on and off its target, the sidebar on desktop and as a phone sheet, and the five usage examples; forced colours: focus outlines, the open trigger, the current page, the active entry, the unread dots, the spotlight |
+| RTL | all five in four direction cases: navigation keys and chevron mirror, panel at the navigation's inline start; toaster corners logical, toast icon and close at the inline start and end; notification center aligned to the trigger's inline end; tour card at the target's inline start; sidebar at the frame's inline start, phone sheet at the viewport's |
+| Large text | all five at 2× text at 1024px and 390px: inside the viewport, nothing cut off sideways, 24px targets, still operable |
+| Motion | navigation panel (opacity); toast arrival (opacity); notification center (opacity); tour card and spotlight between steps (position); sidebar slide (inline-start offset): each through a rendered midpoint with normal motion, and none under reduced motion, landing on the same value, LTR and RTL |
+| Visual | `check:navigation-visual` (navigation menu: trigger and top-level link hover 8%, pressed 12%, focus ring, open layer and chevron, the current page by weight and an underline; sidebar: its surface and edge, entry hover/pressed/focus, the active entry by weight); `check:overlay-visual` (notification center as a floating surface; toast surface, edge, shadow or dark surface step, text, icons 3:1, action label, close-button ring; tour cut-out, scrim, card, text, the no-target scrim) |
+| Defects it found and fixed | at 2× text at 390px the toast's action and cancel buttons squeezed its text to a few characters per line (the actions now sit under the text); in dark mode the toast was told apart from the page only by a 2.70:1 edge (it is now painted `popover`, a surface step); the toaster's list clipped the toasts' shadows and focus rings (it now has a bleed inside its padding); the navigation trigger, navigation panel links and sidebar entries had no pressed state deeper than hover (12% on `:active` now); a toast removed while hovered or focused left its channel held, so the next toast never expired (removal now releases the hold); a toaster kept counting down under a modal dialog that made it inert, so a toast raised there could expire unseen (it now holds while a modal outside it is open; Codex review); a toast removed by `KxToasterService.dismiss()` while focused dropped focus to `<body>` (the queue now tells toasters before any removal; Codex review); an end sidebar left its gap at the inline start and the page ran under the panel, and the icon collapse leaked into the phone Sheet (Codex review); a modal dialog that left the document still open (the phone sidebar's Sheet when the viewport widened) left the toaster's modal hold on, so no toast expired again (removals now re-check the hold; final review); the Angular docs page scrolled sideways at 200% text on a 320px phone, because the new "NotificationCenter" chip in its component list was wider than the page (the chips wrap now; `check:a11y-site`, final review); the tour's internal modal surface `KxTourSurface` was exported (it is internal now, like `KxModalSurface`; final review); the committed public-API snapshot was stale; `check:angular-browser` found `KxSidebarInput`, `KxSidebarSeparator` and `KxSidebarMenuSkeleton` exported but never rendered (the usage example now shows them) |
+
+**Not ported, by design or for later:** React's sidebar cookie persistence (persistence is the application's,
+through `[(open)]`) and the menu button's tooltip in icon mode (the label stays in the accessible name);
+sonner's promise toasts, swipe to dismiss, rich colours and the expanding stack; the notification center
+holds no persistence. The toast is painted `popover`, not React's `background` (see TOKENS.md).
+
+**Findings not fixed:** the pre-existing ones listed under C2b still stand (the base `KxTag` remove button's
+ring, C1's one-frame popover convergence, and the container-only "KxBreadcrumb: nothing truncated inside it"
+in `check:angular-browser`, which fails identically on main `eb6957f` and again on main `bc62ed7` in the final review).
+
+#### Negative controls (Wave C3)
+
+13 controls (20–32), four more after the Codex review (33–36) and one after the final review (37), run after the implementation was committed (`9eb32a8`): each a real break in the source, a
+fresh harness built from it, the gate run against it with `--only`, and the file restored from git and checked by
+hash against HEAD before the next (logs and `summary.json`: `/mnt/project-files/angular-wave-c3/negative-controls/`).
+None committed. Every one was caught, across ten classes (direction, disclosure, roles, timing, focus, layering,
+target tracking, viewport, sheet composition, duplication):
+
+- 20: the navigation menu's `inlineKey` ignores direction → `check:angular-collections --only=rtl`: "ArrowLeft (the inline-end arrow) moves to the next stop", in both RTL cases (8 failures, including the panel's and indicator's placement).
+- 21: opening a second navigation panel no longer closes the first → "opening a second trigger closes the first".
+- 22: `role="menubar"` / `menuitem` on the navigation list → "no menu, menubar or menuitem role anywhere inside", and axe `aria-required-children` in every open case (17 failures).
+- 23: the toast queue's `hold()` is a no-op → "paused, it outlives its duration", "with focus in the toaster, a toast outlives its duration", "hovering one toaster pauses it alone".
+- 24: resuming restarts the full duration → "it leaves with the time it had left (~0.5s), not a fresh 1.5s".
+- 25: the toaster focuses its list when a toast arrives → "a toast appears and focus stays where the reader is: it never steals focus".
+- 26: Escape on a tour also closes the dialog under it → "one Escape closes the tour alone, focus back on its starter inside the dialog".
+- 27: the tour's target watcher removed → "its target removed while it shows, the step falls back to a centred card — never pointing at a stale place".
+- 28: the tour card's inline position forced, unshifted → "against the viewport's inline end the card shifts to stay inside it" (card 917–1237 of 1024).
+- 29: the tour card aligned by the document's direction rather than the target's → `--only=rtl`: "the card below its target, aligned to the target's inline start", both mixed-direction cases.
+- 30: the phone sidebar rendered as a plain `div`, not the Sheet → "the trigger opens it as a Sheet: one modal dialog, the family's own", "named, the page locked behind it, focus inside", and axe/forced-colours "nothing opened".
+- 31: the phone open state not reset when the breakpoint is crossed → "narrowed again, the sheet does not reopen by itself".
+- 32: the desktop panel also rendered on a phone → "below the breakpoint the persistent panel is gone; its content is still rendered once" and the widening case.
+
+Codex review of the PR found four more, each fixed with a regression check in `check:angular-overlays` (and a
+queue unit test for the removal hook), and each proven by a control run after the fix was committed (`ee4e23b`):
+
+- 33: an end sidebar's gap left at the inline start (`side="end"` written before its inset) → "side=\"end\": the panel at the inline end, the page from the inline start up to it, no empty gutter and nothing underneath", and the icon-collapsed case.
+- 34: the desktop icon collapse carried into the phone Sheet → "an icon-collapsed sidebar opens on a phone as the full sidebar: labels shown, entries full width".
+- 35: a toast's clock running while a modal dialog makes the toaster inert → "a modal dialog open outside the toaster holds its clock" and "a toast raised under a modal outlives its duration while the modal is open".
+- 36: a toast removed by `KxToasterService.dismiss()` from code while it had focus → "dismiss(id) from code on the focused toast moves focus to the toast that stays, never to the page", and the dismiss-all case.
+- 37: the toaster re-checking its modal hold only on `open` changes, so a modal that leaves the document still open (the phone sidebar's Sheet when the viewport widens) keeps every toast paused → "the sheet that left with the breakpoint does not leave the toasts paused".
+
+### Layout, pointer and scroll (done)
+
+**Catalogue entries:** `scroll-area`, `resizable` (Angular source name `ResizablePanelGroup`: `kx-resizable-panel-group`,
+`kx-resizable-panel`, `kx-resizable-handle`), `carousel`, `comparison-slider`. 12/13 held; Angular 76 → 80 implemented
+(79 components and one recipe), 78/98 → 82/98, 20 → 16 planned, 249 → 260 exported symbols. `table` and
+`virtual-list` keep their `layout` tag and go with Wave D.
+
+**One new internal primitive.** `lib/pointer-drag.ts` (`KxPointerDrag`, not exported) is the pointer lifecycle every
+drag here shares: one pointer id, travel measured from the press, `end` called exactly once (release, cancel, lost
+capture, `cancel()`, destroy), and listeners that exist only while the drag runs. Two modes: `capture` (the handle,
+the scrollbar thumb, the comparison slider's pen) and `page` (no capture, listening on the element's own document:
+the carousel, whose slides keep their clicks). Direction is the C2a core's `isRtl`/`inlineKey`; nothing reads a
+global (`ownerDocument.defaultView` only, created after the first render).
+
+- **Scroll area** (`lib/scroll-area.ts`): native scrolling with the native bars hidden; bars drawn in their own grid
+  tracks (never over content, the vertical one at the inline end), thumb length and logical progress as two CSS
+  numbers. A ResizeObserver on the viewport and the content re-measures for content and container changes. A Tab
+  stop and a named region only while something overflows. A thumb drag and a track press (Radix's jump-then-drag).
+  Both axes scroll when they overflow (React draws only the vertical bar by default).
+- **Resizable** (`lib/resizable.ts`): flex weights, the window-splitter pattern (`separator`, `aria-orientation`,
+  `aria-valuenow/min/max` of the reachable range, `aria-controls`), arrows by 5, Home/End, F6/Shift+F6. Keys and
+  drag are LOGICAL in RTL; React's library reads physical arrows (a deliberate fix). Moves the adjacent pair only:
+  React's cascade and collapsible panels are not ported.
+- **Carousel** (`lib/carousel.ts`): a transform track over measured snap positions (Embla's trimmed snaps), loop
+  as a rewind, aria-disabled (never disabled) controls that keep focus and keep the pointer, inert off-view slides,
+  focus moved into the slide now in view, one polite announcement when a move lands (never during a drag), a drag
+  past the `interaction-drag-threshold` token with resistance at the ends and a swallowed click, logical arrow keys
+  and swipes in RTL (React's are physical). No autoplay. Reduced motion: no transition, same end position.
+- **Comparison slider** (`lib/comparison-slider.ts`): the browser's range input stretched transparent over two
+  layers — one focusable element, slider semantics, keyboard and touch from the browser — with the divider and the
+  after layer drawn logically (React's divider and clip are physical, and disagree with its slider in RTL).
+
+| | |
+|---|---|
+| Behavioural contracts | `check:angular-layout`: scroll area (Tab stop only when it overflows, keys and wheel natively with the thumb following, thumb drag released outside, track press, content growing and shrinking, box resized, nested, focus scrolling into view); resizable (keys and limits, F6, a mouse drag with no jump, released outside, past both limits, the group narrowed mid-drag, the handle disabled mid-drag, a lost capture, pen, touch and touch cancel, one `layoutChange` per change, vertical); carousel (buttons and ends with focus kept, keys, focus out of an inert slide, text fields keep their arrows, clicks inside slides, drag with travel / flick / settle-back, swallowed click, resistance, touch, cross-axis touch, pen, several to a view, loop, vertical, viewport resize, no autoplay); comparison slider (keys, press, drag, release outside, touch, pen, bound values out of range, the after picture still, a narrowed box). The page is instrumented: pointer listeners exist only during a drag, and removing a component mid-drag leaves no listener and no ResizeObserver watching a removed node |
+| Accessibility | region/`carousel`, group/`slide` "N of M", named controls, no tab roles; window splitter with value attributes; one slider named "Comparison position" (min 0, max 100, value, from the accessibility tree); a named region only while scrollable; axe light and dark; forced colours (thumbs, rule and divider in `CanvasText`, focus outlines kept) |
+| RTL | all four in four direction cases (LTR page, RTL page, LTR region in RTL, RTL region in LTR): bar side, logical thumb progress and drag, track press; first panel at the inline start, logical keys and drag; slide order, control placement, mirrored glyphs, logical keys and swipe; divider and labels from the inline start, logical keys and press |
+| Large text | all four at 320, 390, 768 and 1280px at 100% and 200% text: fits the width, text grows, still operable (bars grow, End scrolls, focus ring unclipped; arrows resize; controls ≥ 24px inside the box beside the slides; labels do not overlap) |
+| Motion | the carousel's track (horizontal LTR and RTL, vertical): a rendered midpoint over `duration-base` with motion allowed, none under reduced motion landing on the same position, and nothing transitioning during a drag |
+| Visual | `check:layout-visual` (new, Angular only, 232 checks): thumb 3:1 at rest and stronger on hover and drag, bars beside content, the viewport's ring on four edges; rule at rest / hover / drag / focus, grip, disabled; controls centred, inside the box, glyphs 3:1 and pointing logically, focus ring, an end control, a focused slide's ring; divider edge 3:1 against both layers, grip, focus ring, labels 4.5:1; light and dark, LTR and RTL, 100% and 200% |
+| Defects it found and fixed | a focused button inside a slide lost focus to `<body>` when an arrow moved the carousel (the target slide was still inert when focused; focus now moves after the render); a press on a carousel control at its end fell through to the page and took focus with it (`.kx-btn` drops pointer events when aria-disabled; the carousel's controls keep them); Chromium's range input sets a value where a pen presses but does not follow a pen drag (measured on a bare input), so the comparison slider handles a pen itself; the comparison divider's edge was 1.6:1 against its layers (now 7.4:1 / 7.8:1); `check:angular-package` rejected the string `'document'` in the bundle (the drag mode is `page`) |
+
+**Not ported, by design or for later:** resizable cascade and collapsible panels; carousel plugins (autoplay is not
+offered at all) and Embla's free drag; vertical comparison slider (React has none). React's physical RTL behaviour
+(carousel keys and glyphs, resizable arrows, comparison clip and divider) and its carousel controls 3rem outside the
+box (off a 320px screen) are recorded, not changed: React is out of this tranche's scope.
+
+**Findings not fixed:** the pre-existing ones still stand and were not touched (no tag, overlay or breadcrumb source
+changed): the base `KxTag` remove button's ring, C1's one-frame popover convergence, and the container-only
+"KxBreadcrumb: nothing truncated inside it" in `check:angular-browser`, reproduced identically on base `b3b9207`
+(1087 ok, 1 failure) and on this branch (1103 ok, the same 1 failure).
+
+#### Negative controls (layout tranche)
+
+12 controls (38–49), run after the implementation was committed (`79c1a11`): each a real break in the source, a
+fresh harness built from it, `check:angular-layout` run with `--only`, and the file restored from git and checked by
+hash against HEAD before the next (logs and `summary.json`: `/mnt/project-files/angular-layout/negative-controls/`).
+None committed. Every one was caught:
+
+- 38: the scroll area reads RTL `scrollLeft` physically → `--only=rtl`: "ArrowLeft scrolls toward the inline end and the thumb follows that way" (thumb 0.000 vs 0.115).
+- 39: the content is no longer observed → "content grows: the bar appears, sized to it" (no bar), and two more.
+- 40: the viewport's ring drawn outside it while the area clips its overflow → "its focus ring is painted on all four edges (not clipped)" (0.00 on every edge).
+- 41: the pointer is never captured → "released outside, past the end: at the end, the drag over, no listener left" (still dragging), 17 failures across the thumb, the handle and the slider.
+- 42: the keyboard ignores min and max → "arrows by 5, End and Home to the reachable limits, never past them" (End:150).
+- 43: the handle's drag delta is physical in RTL → `--only=rtl`: "a drag toward the inline end grows the first panel by the distance" (shrank 32px).
+- 44: the carousel track moves the LTR way in RTL → `--only=rtl`: slides aligned at the wrong edge, 4 failures.
+- 45: the end control drops the pointer again → "Next stops at the last slide, turns aria-disabled and keeps focus" (focus body), 13 failures.
+- 46: the track transitions under reduced motion → `--only=reducedMotion`: "no perceptible motion" (300ms).
+- 47: a bound comparison value is not held to 0–100 → "bound to 150: drawn and offered at 100".
+- 48: `aria-valuenow` stays at the default → the keyboard sequence reads 50 throughout, 7 failures.
+- 49: carousel arrows read physically in RTL → `--only=rtl`: "the arrow toward the inline end is Next, the other Previous".
+
+### What remains after the layout tranche, ranked
+
+16 planned. **Data and advanced (Wave D)** — `table`, `virtual-list` and the rest below; composes the layout
+tranche (a scroll area for dense tables, the drag lifecycle for a keyboard-alternative kanban). Not started.
+
+### What remains after Wave C3, ranked (superseded by the section above)
+
+20 planned. Ranked by what each group unblocks and by the evidence React already holds for it (which Angular
 will owe the moment it implements the component):
 
-1. **Overlays C2 (Wave C, below)** — 9 `overlays` + `menubar`, `navigation-menu` (`navigation`) + `sidebar`.
-   The layer exists now; C2 adds what menus and listboxes need on top of it: roving focus or
-   `aria-activedescendant`, typeahead, submenus that open toward the inline end, and a toast queue. Menus and
-   listboxes (`dropdown-menu`, `context-menu`, `menubar`, `navigation-menu`, `select`, `combobox`,
-   `multi-select`, `command`), notifications (`sonner`, `notification-center`, `tour`), then `sidebar`.
-2. **Layout, pointer and scroll** — `scroll-area`, `resizable`, `carousel`, `comparison-slider`. Owes only
+1. **Layout, pointer and scroll** — `scroll-area`, `resizable`, `carousel`, `comparison-slider`. Owes only
    browser axe, so it is cheap, but it brings drag with a keyboard alternative and direction-dependent
    handles, which no implemented Angular component has yet. `table` and `virtual-list` (also `layout`) go
    with the data wave.
-3. **Data and advanced (Wave D)** — composes 1 and 2.
+2. **Data and advanced (Wave D)** — composes 1. Not started.
 
 ### Wave C — overlays and complex interaction
 
@@ -270,10 +554,11 @@ below its breakpoint.
 | Visual | overlay elevation above raised cards (the slice 1 follow-up), focus ring inside overlays |
 | Proof it creates | a settings flow with dialogs and menus in Angular; overlay parity table |
 
-**C1 is done** (above): the layer and the eight dialog-family members. What follows is C2 and `sidebar`.
+**C1, C2a, C2b and C3 are done** (above): the layer, the eight dialog-family members, the three menus, the four
+listbox entries, and the navigation menu, the three notification entries and the sidebar. Wave C is complete.
 
-**Owed by the remaining 12 (React has it):** interaction 6 · rtl 6 · largeText 5 · browser axe 12 · visual gate
-2 (select and multi-select, in `check:entry-visual` and `check:composite-visual`).
+**Owed by Wave C (React has it):** nothing. C3 paid the last five entries' debts — the tour's interaction,
+the navigation menu's and the tour's rtl, and the five entries' browser axe.
 
 ### Wave D — data and advanced
 
@@ -281,8 +566,9 @@ below its breakpoint.
 `diff-viewer`, `message-bubble`, `calendar`, `date-picker`, `color-picker`, `file-upload`,
 `audio-player`, `kanban-board`, `markdown-editor` (16).
 
-**Why last:** they compose earlier waves — `date-picker` is popover + calendar, `data-table` uses
-dropdown-menu and pagination, `kanban-board` needs drag with a keyboard alternative.
+**Why last:** they compose earlier waves — `date-picker` is popover + calendar, `data-table` composes
+`table` and `button` (React's has its own previous/next paging, not the pagination component, and no
+dropdown menu), `kanban-board` needs drag with a keyboard alternative.
 
 | | |
 |---|---|

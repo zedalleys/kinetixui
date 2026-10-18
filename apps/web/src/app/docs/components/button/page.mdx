@@ -1,25 +1,31 @@
-export const metadata = {
-  title: "Button",
-  description:
-    "Trigger an action. Six variants, four sizes, five states — reconciled 1:1 with design source node 54863:351.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("button", "Trigger an action. Six variants, four sizes and five interaction states.");
 
 # Button
 
 <ComponentMeta />
 
-Trigger an action or event. Reconciled 1:1 with design source node `54863:351`
-(Figma `KinetixUI` › UI Components › 02. Controls &amp; Actions › Button).
+Trigger an action or event.
 
 <ComponentPreview name="button-demo" />
 
-## Installation
+## React installation
+
+Install the package the usage below imports from:
+
+```bash
+npm i @kinetixui/ui @kinetixui/tokens
+```
+
+The project also needs Tailwind CSS 3 and the KinetixUI preset; see [Installation](/docs/installation). To own
+the source instead, copy it into your project with the CLI and import from the folder it writes to:
 
 ```bash
 npx @kinetixui/cli add button
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Button } from "@kinetixui/ui";
@@ -52,3 +58,8 @@ for snapshots and this documentation.
 Plus all native `<button>` attributes.
 
 <ComponentApi slug="button" />
+
+## Design source
+
+Reconciled 1:1 with design source node `54863:351`
+(Figma `KinetixUI` › UI Components › 02. Controls &amp; Actions › Button).

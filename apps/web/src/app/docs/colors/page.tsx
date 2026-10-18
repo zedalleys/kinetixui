@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/route-seo";
 import { ColorsContent } from "./colors-content";
 
 /**
@@ -12,11 +13,7 @@ import { ColorsContent } from "./colors-content";
  * Interactive (copy-to-clipboard, colour-format toggle), so the UI is a client component and this server
  * wrapper carries the metadata.
  */
-export const metadata: Metadata = {
-  title: "Colors",
-  description:
-    "Every colour in the KinetixUI palette: the primitive ramps, the semantic tokens they back, and each pair's WCAG contrast in light and dark. Click a swatch to copy its value.",
-};
+export const metadata: Metadata = routeMetadata("/docs/colors");
 
 export default function ColorsDocsPage() {
   return <ColorsContent />;

@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Fab",
-  description: "A floating action button — circular or extended.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("fab", "A floating action button — circular or extended.");
 
 # Fab
 
@@ -11,13 +10,25 @@ A floating action button — circular or extended.
 
 <ComponentPreview name="fab-demo" />
 
-## Installation
+## Speed dial
+
+A Fab that opens a short list of related actions. It is an example composed from `Fab`, a list of buttons and an
+SVG filter, not a separate component: copy it from the Code tab and change the actions.
+
+<ComponentPreview name="fab-speed-dial" />
+
+The Fab carries `aria-expanded` and controls the list. Each action is a button named by its visible label, and Tab
+moves from the Fab outward through them. Escape, a click outside or choosing an action closes the list and puts
+focus back on the Fab. The motion uses the motion tokens and animates only transform and opacity; with reduced
+motion the list opens and closes without moving.
+
+## React installation
 
 ```bash
 npx @kinetixui/cli add fab
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Fab, fabVariants } from "@kinetixui/ui";

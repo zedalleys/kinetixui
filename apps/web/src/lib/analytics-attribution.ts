@@ -23,6 +23,17 @@
  *  campaign only a utm_campaign matching `kx_[a-z0-9][a-z0-9_-]{0,62}`; otherwise omitted, never inferred
  *  content  only a strict slug, and only alongside a valid campaign
  *
+ * DIAGNOSTIC TRAFFIC is marked here too, because it is the same kind of fact: what this tab's visit IS, decided
+ * once from the landing URL. `?kx_traffic=diagnostic` marks the tab (sessionStorage) and every event it sends
+ * then carries `kx_traffic_type: "diagnostic"`; `?kx_traffic=clear` removes the mark. Reporting drops any
+ * session holding a marked event (marketing/analytics.md §11 "Diagnostic traffic"); PostHog keeps the raw events.
+ *
+ * INTERNAL TRAFFIC is the same idea at device scope: `?kx_traffic=internal` marks this BROWSER (localStorage), so
+ * the owner's and contributors' own visits carry `kx_traffic_type: "internal"` until `?kx_traffic=clear`. It exists
+ * because a person-based "internal users" cohort can never have members on this site: with
+ * `person_profiles: "identified_only"` and no login, no visitor ever becomes a person. A diagnostic tab on an
+ * internal browser is reported as diagnostic, the narrower fact. Reporting drops both (analytics.md §11).
+ *
  * No cookies, no server, no dependency: only URLSearchParams and Web Storage. Storage that is blocked or full
  * degrades to "attribution missing" and never throws.
  */
@@ -276,6 +287,12 @@ const FIELD_VALID: Record<Field, (v: unknown) => boolean> = {
 
 const KX_KEY = /^kx_(first_)?(source|medium|campaign|content|referrer|landing_page)$/;
 
+/** Values `kx_traffic_type` may take. Genuine audience traffic carries no `kx_traffic_type` at all. */
+export const DIAGNOSTIC_TRAFFIC_TYPE = "diagnostic";
+export const INTERNAL_TRAFFIC_TYPE = "internal";
+const TRAFFIC_TYPES: ReadonlySet<unknown> = new Set([DIAGNOSTIC_TRAFFIC_TYPE, INTERNAL_TRAFFIC_TYPE]);
+const TRAFFIC_TYPE_KEY = "kx_traffic_type";
+
 /** A record → `kx_source`, … or `kx_first_source`, …; only the fields that are present. */
 export function toProps(a: Attribution, prefix: "kx_" | "kx_first_"): Record<string, string> {
   const out: Record<string, string> = { [`${prefix}source`]: a.source, [`${prefix}medium`]: a.medium, [`${prefix}referrer`]: a.referrer };
@@ -292,6 +309,10 @@ export function toProps(a: Attribution, prefix: "kx_" | "kx_first_"): Record<str
  */
 export function sanitizeAttributionProps(bag: Record<string, unknown>): void {
   for (const key of Object.keys(bag)) {
+    if (key === TRAFFIC_TYPE_KEY) {
+      if (!TRAFFIC_TYPES.has(bag[key])) delete bag[key];
+      continue;
+    }
     const m = KX_KEY.exec(key);
     if (key.startsWith("kx_") && !m) {
       delete bag[key];
@@ -308,6 +329,8 @@ export function sanitizeAttributionProps(bag: Record<string, unknown>): void {
 
 const SESSION_KEY = "kx_analytics_session_v1";
 const FIRST_TOUCH_KEY = "kx_analytics_first_touch_v1";
+const TRAFFIC_KEY = "kx_analytics_traffic_v1";
+const INTERNAL_KEY = "kx_analytics_internal_v1";
 
 type Where = "session" | "local";
 
@@ -353,10 +376,81 @@ function write(where: Where, key: string, a: Attribution): boolean {
   }
 }
 
+/** The mark for this page load when `sessionStorage` is blocked; a full reload forgets it. */
+let memoryMark = false;
+
+/**
+ * `?kx_traffic=diagnostic` marks this tab, `?kx_traffic=clear` unmarks it, anything else leaves the stored mark
+ * as it is. Returns whether the tab is marked. Blocked storage keeps the mark in memory for this page load, so it
+ * survives client-side navigation.
+ */
+function diagnosticMark(search: string): boolean {
+  const requested = new URLSearchParams(search).get("kx_traffic");
+  if (requested === DIAGNOSTIC_TRAFFIC_TYPE) memoryMark = true;
+  else if (requested === "clear") memoryMark = false;
+  try {
+    const s = store("session");
+    if (requested === DIAGNOSTIC_TRAFFIC_TYPE) s?.setItem(TRAFFIC_KEY, DIAGNOSTIC_TRAFFIC_TYPE);
+    else if (requested === "clear") s?.removeItem(TRAFFIC_KEY);
+    if (s) return s.getItem(TRAFFIC_KEY) === DIAGNOSTIC_TRAFFIC_TYPE;
+  } catch {
+    // fall through: storage is unavailable, so the in-memory mark is all there is
+  }
+  return memoryMark;
+}
+
+/** The device mark for this page load when `localStorage` is blocked; a full reload forgets it. */
+let memoryInternal = false;
+
+/**
+ * `?kx_traffic=internal` marks this browser, `?kx_traffic=clear` unmarks it (and the tab's diagnostic mark, in
+ * `diagnosticMark`), anything else leaves it as it is. Returns whether the browser is marked.
+ */
+function internalMark(search: string): boolean {
+  const requested = new URLSearchParams(search).get("kx_traffic");
+  if (requested === INTERNAL_TRAFFIC_TYPE) memoryInternal = true;
+  else if (requested === "clear") memoryInternal = false;
+  try {
+    const s = store("local");
+    if (requested === INTERNAL_TRAFFIC_TYPE) s?.setItem(INTERNAL_KEY, INTERNAL_TRAFFIC_TYPE);
+    else if (requested === "clear") s?.removeItem(INTERNAL_KEY);
+    if (s) return s.getItem(INTERNAL_KEY) === INTERNAL_TRAFFIC_TYPE;
+  } catch {
+    // fall through: storage is unavailable, so the in-memory mark is all there is
+  }
+  return memoryInternal;
+}
+
+/** This page load's traffic type: diagnostic (tab) wins over internal (browser); genuine traffic has none. */
+function trafficType(search: string): typeof DIAGNOSTIC_TRAFFIC_TYPE | typeof INTERNAL_TRAFFIC_TYPE | null {
+  // both marks are applied first, so `?kx_traffic=clear` clears both in one visit
+  const diagnostic = diagnosticMark(search);
+  const internal = internalMark(search);
+  return diagnostic ? DIAGNOSTIC_TRAFFIC_TYPE : internal ? INTERNAL_TRAFFIC_TYPE : null;
+}
+
+/**
+ * Whether this browser is marked as internal, applying `?kx_traffic=` from the current URL first. For
+ * analytics-vercel.ts, which drops such traffic for the same reason it drops a diagnostic tab.
+ */
+export function isInternalBrowser(search: string = typeof window === "undefined" ? "" : window.location.search): boolean {
+  return internalMark(search);
+}
+
+/**
+ * Whether this tab is marked as diagnostic, applying `?kx_traffic=` from the current URL first. For a second
+ * analytics tool (analytics-vercel.ts) that cannot carry a property and therefore drops marked traffic instead. It
+ * goes through the same writer as PostHog, so the mark holds even when PostHog is off (no config) and never ran
+ * `initAttribution`.
+ */
+export function isDiagnosticTab(search: string = typeof window === "undefined" ? "" : window.location.search): boolean {
+  return diagnosticMark(search);
+}
+
 /* ------------------------------------------------------------------ lifecycle */
 
 /** Mirrors PostHog's own `respect_dnt`: with Do Not Track on, nothing is persisted either. */
-function doNotTrack(): boolean {
+export function doNotTrack(): boolean {
   try {
     const w = window as unknown as { doNotTrack?: unknown };
     const n = navigator as unknown as { doNotTrack?: unknown; msDoNotTrack?: unknown };
@@ -404,7 +498,12 @@ export function initAttribution(input: AttributionInput | null = browserInput(),
     first = write("local", FIRST_TOUCH_KEY, session) ? session : null;
   }
 
-  context = Object.freeze({ ...toProps(session, "kx_"), ...(first ? toProps(first, "kx_first_") : {}) });
+  context = Object.freeze({
+    ...toProps(session, "kx_"),
+    ...(first ? toProps(first, "kx_first_") : {}),
+  });
+  const type = trafficType(input.search);
+  if (type) context = Object.freeze({ ...context, [TRAFFIC_TYPE_KEY]: type });
 }
 
 /** The attribution properties for every outgoing event. Empty until (and unless) `initAttribution` ran. */
@@ -415,4 +514,6 @@ export function getAttributionContext(): Readonly<Record<string, string>> {
 /** Test-only. */
 export function resetAttributionForTests() {
   context = Object.freeze({});
+  memoryMark = false;
+  memoryInternal = false;
 }

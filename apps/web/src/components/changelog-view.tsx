@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
+import { Button, Input, ToggleGroup, ToggleGroupItem } from "@kinetixui/ui";
+import { useDocumentDirection } from "@/lib/use-document-direction";
 import type { ChangeKind, ReleaseChange } from "@/lib/releases";
 import {
   FILTERS,
@@ -44,7 +46,7 @@ function Inline({ text }: { text: string }) {
     <>
       {text.split(/(`[^`]+`)/g).map((part, i) =>
         part.startsWith("`") && part.endsWith("`") && part.length > 2 ? (
-          <code key={i} className="rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.85em] text-foreground">
+          <code key={i} className="rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.875em] text-foreground">
             {part.slice(1, -1)}
           </code>
         ) : (
@@ -55,11 +57,11 @@ function Inline({ text }: { text: string }) {
   );
 }
 
-const PILL = "rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]";
+const PILL = "rounded-full border px-2 py-0.5 font-mono text-label-md uppercase tracking-[0.12em]";
 
 function KindTag({ kind }: { kind?: ChangeKind }) {
   if (!kind) return null;
-  return <span className={`${PILL} ${KIND_STYLE[kind]} mr-2 align-middle`}>{KIND_LABEL[kind]}</span>;
+  return <span data-changelog-pill className={`${PILL} ${KIND_STYLE[kind]} mr-2 align-middle`}>{KIND_LABEL[kind]}</span>;
 }
 
 function Packages({ packages }: { packages: NonNullable<ViewRelease["packages"]> }) {
@@ -69,7 +71,7 @@ function Packages({ packages }: { packages: NonNullable<ViewRelease["packages"]>
     { key: "cli", label: "CLI" },
   ];
   return (
-    <ul aria-label="Packages changed in this release" className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] uppercase tracking-[0.1em]">
+    <ul aria-label="Packages changed in this release" className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-label-md uppercase tracking-[0.1em]">
       <li className="text-muted-foreground">Packages</li>
       {items.map(({ key, label }) => (
         <li
@@ -90,7 +92,7 @@ function ComponentGroups({ groups }: { groups: NonNullable<ViewRelease["groups"]
     <div className="mt-4 space-y-3">
       {groups.map((g) => (
         <div key={g.group}>
-          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{g.group}</p>
+          <p data-changelog-group className="font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">{g.group}</p>
           <ul className="mt-1.5 flex flex-wrap gap-2 [&>li]:min-w-0 [&>li]:flex-wrap [&>li]:break-words">
             {g.items.map((c) => (
               <li key={c.slug} className="flex items-center gap-2 rounded-md border border-border px-2.5 py-1 text-sm">
@@ -101,7 +103,7 @@ function ComponentGroups({ groups }: { groups: NonNullable<ViewRelease["groups"]
                 ) : (
                   <span className="font-medium">{c.name}</span>
                 )}
-                <span role="img" className="flex gap-0.5 font-mono text-[10px]" aria-label={`Platforms: ${c.platforms.filter((p) => p.on).map((p) => p.name).join(", ")}`}>
+                <span role="img" className="flex gap-0.5 font-mono text-body-sm" aria-label={`Platforms: ${c.platforms.filter((p) => p.on).map((p) => p.name).join(", ")}`}>
                   {c.platforms.map((p) => (
                     <span
                       key={p.abbr}
@@ -166,7 +168,7 @@ function FullEntry({ release, changes }: { release: ViewRelease; changes: Releas
 
       {release.limitations?.length ? (
         <div className="mt-5">
-          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Known limitations</p>
+          <p className="font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">Known limitations</p>
           <ul className="mt-1.5 list-disc space-y-1 pl-5 text-sm leading-relaxed text-muted-foreground">
             {release.limitations.map((l) => (
               <li key={l}>
@@ -179,7 +181,7 @@ function FullEntry({ release, changes }: { release: ViewRelease; changes: Releas
 
       {audited ? (
         <div className="mt-5 text-sm leading-relaxed">
-          <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Breaking changes </span>
+          <span className="font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">Breaking changes </span>
           {hasBreaking ? (
             <ul className="mt-1.5 list-disc space-y-1 pl-5 text-foreground">
               {release.breaking!.map((b) => (
@@ -203,7 +205,7 @@ function FullEntry({ release, changes }: { release: ViewRelease; changes: Releas
         </details>
       ) : null}
 
-      <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+      <p className="mt-5 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">
         {/* A GitHub Release page exists only for some versions, so it is linked only when the data says so
             (`githubReleaseUrl`); every other version falls back to its git tag, which always exists. */}
         {release.githubReleaseUrl ? (
@@ -262,7 +264,7 @@ export function ReleaseList({
         <nav aria-label="Jump to a version" className="mt-6 space-y-2">
           {years.map((y) => (
             <div key={y} className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              <span className="w-10 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{y}</span>
+              <span className="w-10 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">{y}</span>
               {releases
                 .filter((r) => r.date.startsWith(y))
                 .map((r) => (
@@ -283,13 +285,9 @@ export function ReleaseList({
             {filter !== "all" && filterLabel ? <> in {filterLabel}</> : null}.
           </p>
           {onClear ? (
-            <button
-              type="button"
-              onClick={onClear}
-              className="mt-3 rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
+            <Button type="button" variant="Outline" size="md" onClick={onClear} className="mt-3 max-w-full whitespace-normal">
               Clear search and filters
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : null}
@@ -304,12 +302,12 @@ export function ReleaseList({
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border pb-2">
                 <h2 className="font-display text-2xl font-semibold">{release.version}</h2>
                 {release.isLatest ? (
-                  <span data-cp className={`${PILL} border-primary/40 bg-primary/10 text-primary`}>
+                  <span data-cp data-changelog-pill className={`${PILL} border-primary/40 bg-primary/10 text-primary`}>
                     Latest
                   </span>
                 ) : null}
-                <span className={`${PILL} border-border text-muted-foreground`}>{release.type}</span>
-                <time dateTime={release.date} className="ml-auto font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                <span data-changelog-pill className={`${PILL} border-border text-muted-foreground`}>{release.type}</span>
+                <time dateTime={release.date} className="ml-auto font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">
                   {release.dateLabel}
                 </time>
               </div>
@@ -345,6 +343,7 @@ export function ChangelogView({ releases }: { releases: ViewRelease[] }) {
   const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const filterRef = React.useRef(filter);
   filterRef.current = filter;
+  const dir = useDocumentDirection();
 
   // URL → UI: Back/Forward, or arriving on a shared link, changes the search from outside
   React.useEffect(() => {
@@ -411,10 +410,10 @@ export function ChangelogView({ releases }: { releases: ViewRelease[] }) {
     <div>
       <div className="mt-6 space-y-3">
         <div className="w-full sm:max-w-sm">
-          <label htmlFor="changelog-search" className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+          <label htmlFor="changelog-search" className="mb-1.5 block font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">
             Search releases
           </label>
-          <input
+          <Input
             id="changelog-search"
             type="search"
             value={draft}
@@ -425,30 +424,40 @@ export function ChangelogView({ releases }: { releases: ViewRelease[] }) {
             placeholder="Version, component, keyword…"
             autoComplete="off"
             spellCheck={false}
-            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-action focus-visible:shadow-focus"
+            className="py-2"
           />
         </div>
 
-        <div role="group" aria-label="Filter releases" className="flex flex-wrap gap-2">
+        {/* A single-choice filter: the library ToggleGroup is a named radiogroup with one tab stop, arrow keys
+            between filters (mirrored under RTL) and Space or Enter to choose. A chosen filter cannot be un-chosen
+            into "no filter"; "All" is the way back. The check mark keeps selection from being colour alone. */}
+        <ToggleGroup
+          type="single"
+          variant="pill"
+          dir={dir}
+          aria-label="Filter releases"
+          value={filter}
+          onValueChange={(next) => {
+            if (next) selectFilter(next as FilterId);
+          }}
+          className="flex-wrap justify-start gap-2"
+        >
           {FILTERS.map((f) => {
             const active = filter === f.id;
             return (
-              <button
+              <ToggleGroupItem
                 key={f.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => selectFilter(f.id)}
-                className={`rounded-full border px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                  active ? "border-primary bg-primary font-medium text-primary-foreground" : "border-border text-foreground hover:bg-accent"
-                }`}
+                value={f.id}
+                // In a narrow column (200% text) the label and count wrap inside the pill instead of spilling out.
+                className="min-w-0 flex-wrap gap-x-1.5 gap-y-0 text-sm [overflow-wrap:anywhere]"
               >
-                {active ? <span aria-hidden>✓ </span> : null}
-                {f.label}{" "}
+                {active ? <span aria-hidden>✓</span> : null}
+                <span className="min-w-0">{f.label}</span>{" "}
                 <span className={active ? "opacity-80" : "text-muted-foreground"}>{filterReleases(releases, f.id, query).length}</span>
-              </button>
+              </ToggleGroupItem>
             );
           })}
-        </div>
+        </ToggleGroup>
 
         {/* announced politely after typing settles or a filter changes; empty when nothing is active */}
         <p role="status" aria-live="polite" aria-atomic="true" className="min-h-5 text-sm text-muted-foreground">

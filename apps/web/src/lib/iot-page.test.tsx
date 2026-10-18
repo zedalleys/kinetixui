@@ -323,10 +323,10 @@ describe("/iot: hero and metadata", () => {
   });
 
   it("keeps the canonical URL and describes the new truth", () => {
-    expect(metadata.alternates?.canonical).toBe("/iot");
+    expect(metadata.alternates?.canonical).toBe("https://kinetixui.com/iot");
     expect(String(metadata.description)).toMatch(/React-only/);
     expect(String(metadata.description)).toMatch(/no transport/);
-    expect(String(metadata.openGraph?.url)).toBe("/iot");
+    expect(String(metadata.openGraph?.url)).toBe("https://kinetixui.com/iot");
     expect(String((metadata.twitter as { title?: string }).title)).toMatch(/tell the truth about device state/);
   });
 });

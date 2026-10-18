@@ -1,0 +1,194 @@
+{
+  "method": "First-load JS per route: distinct chunks of the root layout, nested layouts and the page (app-build-manifest), each gzipped (level 9) and summed. Lazy IoT example chunks: every static chunk containing a string unique to that example, gzipped on its own. Main 1893c9f vs this branch, same lockfile.",
+  "firstLoad": {
+    "/iot": {
+      "main": {
+        "files": 15,
+        "bytes": 1858899,
+        "gzipBytes": 535195
+      },
+      "branch": {
+        "files": 15,
+        "bytes": 1858899,
+        "gzipBytes": 535190
+      },
+      "delta": {
+        "files": 0,
+        "bytes": 0,
+        "gzipBytes": -5
+      }
+    },
+    "/": {
+      "main": {
+        "files": 14,
+        "bytes": 1603086,
+        "gzipBytes": 472098
+      },
+      "branch": {
+        "files": 14,
+        "bytes": 1603086,
+        "gzipBytes": 472091
+      },
+      "delta": {
+        "files": 0,
+        "bytes": 0,
+        "gzipBytes": -7
+      }
+    },
+    "/docs/iot": {
+      "main": {
+        "files": 19,
+        "bytes": 1955590,
+        "gzipBytes": 560725
+      },
+      "branch": {
+        "files": 19,
+        "bytes": 1955590,
+        "gzipBytes": 560717
+      },
+      "delta": {
+        "files": 0,
+        "bytes": 0,
+        "gzipBytes": -8
+      }
+    }
+  },
+  "lazyExamples": {
+    "pairing-flow": {
+      "main": {
+        "chunks": 1,
+        "bytes": 10058,
+        "gzipBytes": 3317
+      },
+      "branch": {
+        "chunks": 1,
+        "bytes": 9659,
+        "gzipBytes": 3250
+      },
+      "delta": {
+        "chunks": 0,
+        "bytes": -399,
+        "gzipBytes": -67
+      }
+    },
+    "alert-center": {
+      "main": {
+        "chunks": 1,
+        "bytes": 4421,
+        "gzipBytes": 1919
+      },
+      "branch": {
+        "chunks": 1,
+        "bytes": 4435,
+        "gzipBytes": 1941
+      },
+      "delta": {
+        "chunks": 0,
+        "bytes": 14,
+        "gzipBytes": 22
+      }
+    },
+    "alert-inbox": {
+      "main": {
+        "chunks": 2,
+        "bytes": 15238,
+        "gzipBytes": 5678
+      },
+      "branch": {
+        "chunks": 2,
+        "bytes": 14771,
+        "gzipBytes": 5620
+      },
+      "delta": {
+        "chunks": 0,
+        "bytes": -467,
+        "gzipBytes": -58
+      }
+    },
+    "automation-builder": {
+      "main": {
+        "chunks": 1,
+        "bytes": 2301,
+        "gzipBytes": 1040
+      },
+      "branch": {
+        "chunks": 1,
+        "bytes": 2283,
+        "gzipBytes": 1047
+      },
+      "delta": {
+        "chunks": 0,
+        "bytes": -18,
+        "gzipBytes": 7
+      }
+    },
+    "device-dashboard": {
+      "main": {
+        "chunks": 1,
+        "bytes": 9883,
+        "gzipBytes": 3436
+      },
+      "branch": {
+        "chunks": 1,
+        "bytes": 9568,
+        "gzipBytes": 3394
+      },
+      "delta": {
+        "chunks": 0,
+        "bytes": -315,
+        "gzipBytes": -42
+      }
+    },
+    "state-honesty": {
+      "main": {
+        "chunks": 1,
+        "bytes": 7927,
+        "gzipBytes": 2946
+      },
+      "branch": {
+        "chunks": 1,
+        "bytes": 8056,
+        "gzipBytes": 2995
+      },
+      "delta": {
+        "chunks": 0,
+        "bytes": 129,
+        "gzipBytes": 49
+      }
+    },
+    "operations-environment": {
+      "main": {
+        "chunks": 1,
+        "bytes": 16663,
+        "gzipBytes": 5490
+      },
+      "branch": {
+        "chunks": 1,
+        "bytes": 16603,
+        "gzipBytes": 5486
+      },
+      "delta": {
+        "chunks": 0,
+        "bytes": -60,
+        "gzipBytes": -4
+      }
+    },
+    "smart-space-environment": {
+      "main": {
+        "chunks": 1,
+        "bytes": 58505,
+        "gzipBytes": 17349
+      },
+      "branch": {
+        "chunks": 1,
+        "bytes": 58195,
+        "gzipBytes": 17214
+      },
+      "delta": {
+        "chunks": 0,
+        "bytes": -310,
+        "gzipBytes": -135
+      }
+    }
+  }
+}

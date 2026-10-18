@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Carousel",
-  description: "A carousel with motion and swipe, built on Embla.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("carousel", "A carousel with motion and swipe, built on Embla.");
 
 # Carousel
 
@@ -11,13 +10,13 @@ A carousel with motion and swipe, built on Embla.
 
 <ComponentPreview name="carousel-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add carousel
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@kinetixui/ui";

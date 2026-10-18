@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Banner",
-  description: "A full-bleed, page-level notice — dismissible, with an optional action, distinct from Alert (in-flow) and the toast (transient).",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("banner", "A full-bleed, page-level notice — dismissible, with an optional action, distinct from Alert (in-flow) and the toast (transient).");
 
 # Banner
 
@@ -11,13 +10,13 @@ A full-bleed, page-level notice — dismissible, with an optional action, distin
 
 <ComponentPreview name="banner-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add banner
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Banner } from "@kinetixui/ui";

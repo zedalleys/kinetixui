@@ -39,14 +39,30 @@ describe("smart space: connected space", () => {
 
   it("switches rooms from the rail and shows only what that room has", () => {
     render(<SmartSpaceEnvironmentExample />);
-    expect(screen.getByRole("radiogroup", { name: /Front door lock/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Unlock Front door lock" })).toBeInTheDocument();
     fireEvent.click(rail().getByRole("button", { name: /Living room/ }));
     expect(screen.getByRole("heading", { name: "Living room" })).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: /Living room lamp power/ })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Air · Living room/ })).toBeInTheDocument();
-    expect(screen.queryByRole("radiogroup", { name: /Front door lock/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Unlock Front door lock" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Hallway thermostat" })).toBeNull();
     expect(rail().getByRole("button", { name: /Living room/ })).toHaveAttribute("aria-current", "true");
+  });
+
+  it("gives the camera only actions that work in the demo, with its activity first and closed", () => {
+    render(<SmartSpaceEnvironmentExample />);
+    const camera = document.querySelector('[data-device="camera-hall"]') as HTMLElement;
+    // its own last activity, from the demo's activity log, in its own words
+    expect(camera.querySelector("[data-last-event]")!.textContent).toMatch(/^Firmware 6\.0\.1 installed/);
+    const summaries = [...camera.querySelectorAll("summary")].map((s) => s.textContent?.replace(/\s+/g, " ").trim());
+    expect(summaries[0]).toMatch(/^Activity/);
+    expect(summaries).toContain("Device details");
+    for (const d of camera.querySelectorAll("details")) expect((d as HTMLDetailsElement).open).toBe(false);
+    // no feed, recording, snapshot or talk controls, and privacy is a stated fact, not a switch
+    expect(within(camera).queryAllByRole("button")).toEqual([]);
+    expect(within(camera).queryByRole("switch")).toBeNull();
+    expect(within(camera).getByText("Privacy mode off")).toBeInTheDocument();
+    expect(within(camera).getByText("Online")).toHaveClass("sr-only");
   });
 
   it("draws the lock from the same confirmed value as its word, in the panel and in the whole-home tile", () => {
@@ -55,8 +71,9 @@ describe("smart space: connected space", () => {
     expect(panel.querySelector(".text-headline-lg")!.textContent).toBe("Locked");
     expect(panel.querySelector('svg[data-illustration="lock"]')!.getAttribute("data-state")).toBe("locked");
     // a request moves neither the word nor the bolt
-    fireEvent.click(within(panel as HTMLElement).getByRole("radio", { name: /Unlocked/ }));
+    fireEvent.click(within(panel as HTMLElement).getByRole("button", { name: "Unlock Front door lock" }));
     expect(panel.querySelector('svg[data-illustration="lock"]')!.getAttribute("data-state")).toBe("locked");
+    expect(panel.querySelector("[data-lock-state]")!.getAttribute("data-lock-state")).toBe("locked");
     fireEvent.click(screen.getByRole("button", { name: "Show the whole home" }));
     const tileArt = document.querySelector('svg[data-illustration="lock"]')!;
     let tile: Element | null = tileArt.parentElement;
@@ -104,7 +121,7 @@ describe("smart space: connected space", () => {
     expect(screen.queryByRole("radiogroup", { name: /Front door lock/ })).toBeNull();
   });
 
-  it("is reachable and operable by keyboard: rail item by Enter, device pills by arrow keys", async () => {
+  it("is reachable and operable by keyboard: rail item by Enter, device pills by arrow keys and Space", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<SmartSpaceEnvironmentExample />);
     const office = rail().getByRole("button", { name: /Office/ });
@@ -115,8 +132,13 @@ describe("smart space: connected space", () => {
     const group = screen.getByRole("radiogroup", { name: /Devices in Hallway/ });
     const whole = within(group).getByRole("radio", { name: "Whole room" });
     whole.focus();
+    // The library ToggleGroup: arrows move focus, Space chooses (the selection does not follow focus).
     await user.keyboard("{ArrowRight}");
-    expect(within(group).getByRole("radio", { name: /Hallway thermostat/ })).toBeChecked();
+    const thermostat = within(group).getByRole("radio", { name: /Hallway thermostat/ });
+    expect(thermostat).toHaveFocus();
+    expect(thermostat).not.toBeChecked();
+    await user.keyboard(" ");
+    expect(thermostat).toBeChecked();
   });
 
   it("keeps alerts visible, acknowledges without hiding them, and jumps to them from the header", () => {
@@ -261,11 +283,11 @@ describe("smart space: connected space", () => {
     expect(rail().getByRole("button", { name: /Bedroom/ })).toHaveAccessibleName(/offline/);
   });
 
-  it("keeps the room name larger than the room temperature on a phone, and the temperature as it was from `sm`", () => {
+  it("keeps the room temperature a context reading below the room name, never a second hero number", () => {
     render(<SmartSpaceEnvironmentExample />);
     const temperature = screen.getByText(/Room temperature ·/).previousElementSibling!;
     expect(temperature.className).toMatch(/text-headline-sm/);
-    expect(temperature.className).toMatch(/sm:text-display-sm/);
+    expect(temperature.className).not.toMatch(/display-/);
     expect(screen.getByRole("heading", { name: "Hallway" }).className).toMatch(/text-headline-lg/);
   });
 

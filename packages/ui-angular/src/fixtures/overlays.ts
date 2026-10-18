@@ -15,11 +15,15 @@ import {
   KxDialogTrigger,
   KxDrawer,
   KxDrawerContent,
+  KxDropdownMenu,
+  KxDropdownMenuContent,
+  KxDropdownMenuTrigger,
   KxHoverCard,
   KxHoverCardContent,
   KxHoverCardTrigger,
   KxInput,
   KxLabel,
+  KxMenuItem,
   KxModal,
   KxPopover,
   KxPopoverAnchor,
@@ -42,7 +46,7 @@ import {
  * changes is bound into an `<output data-kx-out="…">`, and the elements a gate drives carry ids. The nested
  * cases are written the way an application nests them — the inner surface declared inside the outer one's
  * content — because that is the case an overlay layer gets wrong: dialog → popover → tooltip, dialog →
- * tooltip, dialog → dialog, sheet → popover.
+ * tooltip, dialog → dialog, dialog → menu, sheet → popover.
  *
  * The page is taller than the viewport on purpose: a modal's scroll lock is measured against a page that
  * really scrolls.
@@ -65,11 +69,15 @@ import {
     KxDialogTrigger,
     KxDrawer,
     KxDrawerContent,
+    KxDropdownMenu,
+    KxDropdownMenuContent,
+    KxDropdownMenuTrigger,
     KxHoverCard,
     KxHoverCardContent,
     KxHoverCardTrigger,
     KxInput,
     KxLabel,
+    KxMenuItem,
     KxModal,
     KxPopover,
     KxPopoverAnchor,
@@ -126,6 +134,14 @@ import {
                   </kx-dialog-footer>
                 </dialog>
               </kx-dialog>
+              <!-- a menu inside the dialog: Escape closes the menu, and only the menu -->
+              <kx-dropdown-menu [(open)]="dialogMenu">
+                <button kxButton variant="Outline" size="sm" kxDropdownMenuTrigger id="dlg-menu-trigger">More</button>
+                <kx-dropdown-menu-content align="start" id="dlg-menu-content">
+                  <button kxMenuItem id="dlg-menu-first">Copy profile link</button>
+                  <button kxMenuItem id="dlg-menu-second">Reset avatar</button>
+                </kx-dropdown-menu-content>
+              </kx-dropdown-menu>
             </div>
             <kx-dialog-footer>
               <button kxButton kxDialogClose variant="Outline" id="dlg-cancel">Cancel</button>
@@ -137,6 +153,7 @@ import {
         <output data-kx-out="dialog">{{ dialog() }}</output>
         <output data-kx-out="dialog-popover">{{ dialogPopover() }}</output>
         <output data-kx-out="inner-dialog">{{ innerDialog() }}</output>
+        <output data-kx-out="dialog-menu">{{ dialogMenu() }}</output>
         <output data-kx-out="saves">{{ saves() }}</output>
       </section>
 
@@ -347,6 +364,7 @@ export class OverlaysFixture {
   readonly dialog = signal(false);
   readonly dialogPopover = signal(false);
   readonly innerDialog = signal(false);
+  readonly dialogMenu = signal(false);
   readonly saves = signal(0);
   readonly name = signal('Ada');
   readonly alert = signal(false);

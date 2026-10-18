@@ -42,6 +42,7 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  Toggle,
   type ChartConfig,
 } from "@kinetixui/ui";
 import { Showcase } from "@/components/showcase";
@@ -721,7 +722,7 @@ export function ChartsContent() {
               <p className="mt-1 font-mono text-xl font-semibold tabular-nums">{k.value}</p>
               <p
                 className={cn(
-                  "mt-0.5 font-mono text-[11px] tabular-nums",
+                  "mt-0.5 font-mono text-body-sm tabular-nums",
                   k.delta >= 0 ? "text-success" : "text-destructive",
                 )}
               >
@@ -959,7 +960,7 @@ export function ChartsContent() {
     <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
     <ReferenceArea y1={150} y2={250} fill="hsl(var(--chart-2))" fillOpacity={0.1} />
     <ReferenceLine y={200} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4"
-      label={{ value: "target", position: "insideTopRight", fontSize: 11 }} />
+      label={{ value: "target", position: "insideTopRight", fontSize: "0.75rem" }} />
     <ChartTooltip content={<ChartTooltipContent />} />
     <Line dataKey="desktop" stroke="var(--color-desktop)" strokeWidth={2} dot={false} isAnimationActive={false} />
   </LineChart>
@@ -978,7 +979,7 @@ export function ChartsContent() {
               y={200}
               stroke="hsl(var(--muted-foreground))"
               strokeDasharray="4 4"
-              label={{ value: "target", position: "insideTopRight", fontSize: 11 }}
+              label={{ value: "target", position: "insideTopRight", fontSize: "0.75rem" }}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Line
@@ -999,7 +1000,7 @@ export function ChartsContent() {
         code={`<div className="grid gap-1" style={{ gridTemplateColumns: \`auto repeat(\${cols.length}, 1fr)\` }}>
   {days.map((day, r) => (
     <Fragment key={day}>
-      <span className="pr-2 text-right font-mono text-[11px] text-muted-foreground">{day}</span>
+      <span className="pr-2 text-right font-mono text-body-sm text-muted-foreground">{day}</span>
       {cols.map((_, c) => (
         <div key={c} className="aspect-square rounded-[3px]"
           style={{ background: \`color-mix(in srgb, hsl(var(--chart-1)) \${(heat[r][c] / max) * 100}%, transparent)\` }} />
@@ -1019,7 +1020,7 @@ export function ChartsContent() {
           >
             {heatDays.map((day, r) => (
               <React.Fragment key={day}>
-                <span className="self-center pr-2 text-right font-mono text-[11px] text-muted-foreground">
+                <span className="self-center pr-2 text-right font-mono text-body-sm text-muted-foreground">
                   {day}
                 </span>
                 {heatCols.map((_, c) => (
@@ -1038,7 +1039,7 @@ export function ChartsContent() {
             ))}
             <span />
             {heatCols.map((h) => (
-              <span key={h} className="text-center font-mono text-[10px] text-muted-foreground">
+              <span key={h} className="text-center font-mono text-body-sm text-muted-foreground">
                 {h}
               </span>
             ))}
@@ -1587,7 +1588,7 @@ function ThemeParityChart() {
         {(["theme-light", "dark"] as const).map((scope) => (
           <div key={scope} className={scope}>
             <div className="rounded-xl border border-border bg-background p-4 text-foreground">
-              <p className="mb-2 font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+              <p className="mb-2 font-mono text-label-md uppercase tracking-[0.15em] text-muted-foreground">
                 {scope === "dark" ? "dark" : "light"}
               </p>
               <ChartContainer
@@ -1617,16 +1618,17 @@ function InteractiveLegendChart() {
   return (
     <Showcase
       title="Interactive legend"
-      description="Click a legend entry to mute or restore its series — state lives in the page, the legend is buttons."
+      description="Click a legend entry to mute or restore its series — state lives in the page, the legend is library Toggles (pressed = shown)."
       contentClassName="block p-4"
       code={`const [hidden, setHidden] = React.useState({})
 // …
 <div role="group" aria-label="Toggle series">
   {series.map((s) => (
-    <button key={s.key} type="button" aria-pressed={!hidden[s.key]}
-      onClick={() => setHidden((h) => ({ ...h, [s.key]: !h[s.key] }))}>
-      <span style={{ background: s.color }} /> {s.label}
-    </button>
+    <Toggle key={s.key} variant="outline" size="sm" pressed={!hidden[s.key]}
+      onPressedChange={(on) => setHidden((h) => ({ ...h, [s.key]: !on }))}
+      leadingIcon={<span style={{ background: s.color }} />}>
+      {s.label}
+    </Toggle>
   ))}
 </div>
 <BarChart data={months}>
@@ -1638,24 +1640,20 @@ function InteractiveLegendChart() {
           {series.map((s) => {
             const on = !hidden[s.key];
             return (
-              <button
+              <Toggle
                 key={s.key}
-                type="button"
-                aria-pressed={on}
-                onClick={() => setHidden((h) => ({ ...h, [s.key]: !h[s.key] }))}
+                variant="outline"
+                size="sm"
+                pressed={on}
+                onPressedChange={(next) => setHidden((h) => ({ ...h, [s.key]: !next }))}
+                leadingIcon={<span className="size-2 rounded-[2px]" style={{ background: s.color, opacity: on ? 1 : 0.3 }} />}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  on ? "border-border text-foreground" : "border-border/50 text-muted-foreground line-through",
+                  "gap-1.5 rounded-full px-2.5 font-mono text-label-md uppercase tracking-[0.1em]",
+                  !on && "text-muted-foreground line-through",
                 )}
               >
-                <span
-                  aria-hidden
-                  className="size-2 rounded-[2px]"
-                  style={{ background: s.color, opacity: on ? 1 : 0.3 }}
-                />
                 {s.label}
-              </button>
+              </Toggle>
             );
           })}
         </div>

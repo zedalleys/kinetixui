@@ -72,6 +72,10 @@ and that is a fact we want in the denominator of everything else.
 
 **Excluded on purpose:** homepage `$pageview`, scroll depth, time on page, `external_link_clicked`,
 `changelog_viewed`, and every `preset_*` event from `/create` (a theming toy, not product evaluation).
+`component_code_viewed` (opening a component's Code tab, or switching platform with it open) is excluded too:
+it only fires on a component page, which already qualifies through `component_viewed`, so adding it would
+change nothing today and would quietly redefine the signal later. It exists to tell "landed" from
+"inspected the code" inside sessions that already qualify.
 
 **A campaign landing is not a signal by itself.** Arriving on `/docs/platforms` or `/docs/tokens` emits
 `docs_viewed`, which is in neither list: "Read platform coverage" counts the homepage CTA *click*, not the page.
@@ -98,6 +102,13 @@ decision, made here, not in a query.
 **Adoption Intent is not activation.** It is the strongest on-site signal available and it stops well short
 of the claim.
 
+**Native install copies count since 2026-10.** Copying a SwiftUI, Compose or Flutter install snippet (a
+`Package.swift` dependency, the Gradle module lines, the `pubspec.yaml` entry, or the pinned-checkout `git`
+commands on that platform's setup page) now emits `install_command_copied` with the package and platform.
+Those copies were silent before, so Adoption Intent counts can rise from that date without any change in
+behaviour; read a step change across it as newly visible native intent, not growth. The signal list itself
+is unchanged.
+
 **Adoption Intent does not require evaluation.** The signal list above *is* the definition. A session that
 copies an install command without ever opening a component page is Adoption Intent, and that is deliberate —
 arriving already knowing what you want is a real behaviour and hiding it would flatter nothing. It is also
@@ -106,18 +117,64 @@ why the next two measures are separate, with different denominators, rather than
 ### Adoption Intent Rate
 
 > **Numerator** — sessions with ≥1 Adoption Intent signal.
-> **Denominator** — **eligible arriving sessions**: every session the site received events from at all. The
-> same denominator as Qualified Evaluation Rate (§2), so the two are readable side by side.
+> **Denominator** — **eligible arriving sessions** (next section). The same denominator as Qualified
+> Evaluation Rate (§2), so the two are readable side by side.
 
 *For:* how much of arriving traffic reaches adoption documentation at all. A share of arrivals — **not a
 conversion rate**, and nothing may present it as one.
 
+### Eligible arriving session
+
+> A session that holds at least one event proving the visitor was on a page of the site, and no event
+> marked as diagnostic traffic (§11 *Diagnostic traffic*).
+
+The denominator of Qualified Evaluation Rate and Adoption Intent Rate, and the population every other count
+on the dashboard is drawn from: Qualified Evaluation, Adoption Intent, Progression, campaign-attributed
+sessions and Returning evaluators are all counted **among eligible sessions only**.
+
+**Qualifies.** `$pageview`, and every event in the site's event contract (`AnalyticsEvents` in
+`apps/web/src/lib/analytics.ts`), each of which the site fires from a page, on render or on a click:
+`cta_clicked`, `docs_viewed`, `installation_viewed`, `cli_command_copied`, `install_command_copied`,
+`component_viewed`, `component_code_copied`, `platform_selected`, `component_code_viewed`, `github_clicked`, `npm_clicked`,
+`changelog_viewed`, `external_link_clicked`, `preset_shared`, `preset_code_copied`, `preset_loaded`,
+`preset_randomized`, `create_export_target_selected`, `create_export_copied`, `iot_example_copied`,
+`block_code_copied`, `search_result_selected`, `page_engaged`. A session with one of these and no `$pageview` is an
+arrival. (`search_result_selected`, added 2026-10-17, fires from the command menu of a page that has already sent
+its `$pageview`, so it cannot add an arrival in practice; it is listed because the list is the contract. The same
+holds for `page_engaged`, added 2026-10-18 (M2), which fires on the first physical input after a page view.)
+
+**Does not qualify on its own.** `$pageleave`, and any other event name: PostHog SDK events (`$autocapture`,
+`$identify`, `$web_vitals`, …) and names nobody declared. The list is an allowlist, so a new event cannot
+widen the denominator until someone adds it here and to `ARRIVAL_EVENTS` in `analytics-measurement.ts`
+(the code fails to compile if a contract event is missing from it). A session holding a `$pageleave` *and*
+a qualifying event is an arrival.
+
+**Why `$pageleave` is excluded: session rotation.** PostHog ends a session after 30 minutes without activity
+(posthog-js `SessionIdManager`, `DEFAULT_SESSION_IDLE_TIMEOUT_SECONDS`). The SDK sends `$pageleave` itself on
+`pagehide`, and that capture checks the session first: if the tab sat idle past the timeout, the
+`$pageleave` opens a **new** `$session_id` and is its only event. The visit it closes was already counted under
+the old session. Verified on the 2026-10-09 window: three of the four `$pageleave`-only sessions follow an
+earlier session of the same device by 51, 54 and 1,346 minutes, and each `$pageleave` reports a page-view
+duration matching that gap (3,018 s, 3,278 s, 80,799 s).
+
+**The known cost.** The fourth `$pageleave`-only session is different: the device's first, a LinkedIn
+`kx_p2_a_drift` landing on `/docs/platforms`, with a page-view duration of 3 s. Its `$pageview` was recorded
+by the SDK but never reached PostHog, most likely lost as the page closed. The rule above drops it, so the
+2026-10-09 window counts one campaign arrival fewer than really happened. Rescuing such sessions would mean
+reading an SDK-internal property (`$prev_pageview_duration` under the idle timeout), so it is not part of the
+definition; it is a limitation, recorded in §11.
+
+**Historical numbers keep their definition.** The 2026-10-09 checkpoint (98 / 15 / 12 / 9) was measured with
+"any event" eligibility and is reported as such. The same window under this definition is 94 / 15 / 12 / 9
+(§11). Neither replaces the other.
+
 ### Evaluation → Intent Progression
 
 > **Numerator** — sessions containing **both** a Qualified Evaluation signal (§3) and an Adoption Intent
-> signal, where the intent signal occurs **after or within** the evaluation: same session, intent timestamp
-> at or later than the session's first qualifying evaluation. `installation_viewed` is both signals at once
-> and counts as *within*.
+> signal, where **any** intent signal occurs **after or within** the evaluation: same session, at least one
+> intent timestamp at or later than the session's first qualifying evaluation. It need not be the session's
+> *first* intent signal — intent → evaluation → later intent progresses. `installation_viewed` is both signals
+> at once and counts as *within*.
 > **Denominator** — Qualified Evaluation sessions (§3).
 
 *For:* whether evaluation leads anywhere. This is the conversion measure, and it is bounded by 100% because
@@ -181,6 +238,11 @@ block interest (`block_code_copied` by block) · adoption-rung split (`adopt_*`)
 
 Sessions · pageviews · referrers · attribution source and medium.
 
+Vercel Web Analytics (page views, visitors, top pages, referrers, countries, devices) also lives here, as a
+cross-check on PostHog's traffic counts, and so does Vercel Speed Insights (Core Web Vitals per page). It is never a source for §3, §4 or any Tier 1 or Tier 2 metric: it has
+no sessions in PostHog's sense, no product events and no `kx_*` attribution, and the two tools count visitors
+differently, so their totals are not expected to match.
+
 ---
 
 ## 7. Event changes in this phase
@@ -196,6 +258,37 @@ Only one gap was worth code. Everything else the funnel needs already existed.
 | **`analyticsPlatformFor()`** | Maps a manifest platform name to the analytics vocabulary **and validates membership**, so a future platform that does not map produces *no* dimension rather than an unvalidated string |
 
 **No renames.** Historical continuity matters more than tidiness.
+
+**2026-10-17, global search (BD-W3b1).** One event, `search_result_selected`, when a result is chosen in the
+command menu (⌘K). It carries the kind of destination only (`target`: component, docs, link, block, use_case,
+workflow, capability, theme) with `source: header`, `location: command_menu`; never the search text, the result's
+title or its URL. It is in neither Qualified Evaluation nor Adoption Intent: a component chosen there still
+qualifies through the `component_viewed` its page sends, so the QE definition and its dashboard tiles are
+unchanged. Opening the menu is not an event (it answers no decision on its own).
+
+**2026-10-17, Use Cases hub (BD-W3b2a).** No new event. Two `source` values, `use_cases_hub` (/capabilities)
+and `use_case_page` (/use-cases/<domain>, only routes that exist), so a CTA or link followed from either page is
+attributed instead of dropped. The hub's next steps reuse existing CTA targets: `browse_components`,
+`installation` and `platform_coverage`. `platform_coverage` is already a Qualified Evaluation signal, and following
+it from the hub is the same act it measures on the homepage, so the QE definition is unchanged; only where the
+signal can come from widens. Viewing the hub or a use-case page is a pageview and qualifies nothing.
+
+**2026-10-17, domain journeys (BD-W3b2b).** Still no new event. Each /use-cases page ends with the same next steps
+as the hub, tagged `cta_clicked` with `source: use_case_page` and the existing targets `browse_components`,
+`platform_coverage` and `installation` (the blocks link carries no target, as on the hub). Opening a workflow's
+"Evidence for each part" disclosure is not tracked: it answers no decision on its own. The QE definition is
+unchanged, and a pageview still qualifies nothing.
+
+**2026-10-18, developer adoption (BD-W4).** No new event and no change to which events or targets count. Three
+additions of the existing `platform` property, so setup interest and installs can be read per platform:
+`installation_viewed` now carries `platform: react` (the page is React's setup); `docs_viewed` carries `platform` on
+the four platform setup pages (/docs/angular, /docs/swiftui, /docs/compose, /docs/flutter) and on no other page;
+an npm `install_command_copied` carries `platform` when the package is a platform's own published package
+(`@kinetixui/ui` → react, `@kinetixui/angular` → angular; tokens, the CLI and IoT carry none, as before). Viewing a
+platform setup page is still `docs_viewed`, which is neither QE nor Adoption Intent; counting it as either would
+change QER and needs an owner decision. Nothing here can show that an install succeeded, so activation stays
+unmeasured (§5). Events before 2026-10-18 have no `platform` on these three, so a per-platform breakdown starts
+that day.
 
 **Vocabulary health, audited:** no duplicate events; no event without a decision it supports; every
 documented event is emitted and every emitted event is documented. (`button_clicked` appears in the
@@ -218,6 +311,11 @@ tabs.** A page opened in a new tab from a campaign landing starts its own sessio
 `kx_campaign`** — never filter evaluation events on `kx_campaign` one by one, which drops the new-tab ones.
 Observed live on 2026-09-30, and the rule in code is `summarizeSessions` in
 `apps/web/src/lib/analytics-measurement.ts`.
+
+**Which value a session takes**, when its events carry more than one: the campaign is the `kx_campaign` of the
+session's earliest event that has one, and the source is its earliest `kx_source` other than `direct`, falling
+back to `direct` only when nothing else is present. A new tab always records `direct`, so it never overrides a
+real channel. Ties at the same instant take the lowest value, so every count is reproducible.
 
 ### Canonical campaign name
 
@@ -327,15 +425,223 @@ with explicit numerators and denominators. Neither of the two options previously
 making Adoption Intent require evaluation would have discarded a real behaviour, and simply swapping the
 denominator would have left the progression question unanswered.
 
-**The live dashboard has NOT been changed, and now disagrees with this specification.** Insight 8 still
-reports Adoption Intent and Qualified Evaluation as **counts** against each other, which is safe — no
-misleading percentage is displayed — but it is not either measure named above, and insight 10's `Both`
-column is the overlap Progression would use rather than Progression itself. **Manual follow-up:** rebuild
-insight 8 as Adoption Intent Rate over eligible arriving sessions, and add Evaluation → Intent Progression
-over Qualified Evaluation sessions, before either is read as a rate. Until that is done the spec is
-canonical and the tile is stale.
+**The dashboard was rebuilt on 2026-09-30** (tile 8 over eligible arriving sessions, new tile 8b for
+Progression). That rebuild left three query defects, found and reproduced on 2026-10-09 — next section.
 
-**11 insights.**
+### Query rules every tile must follow
+
+These are the §3, §4 and §8 definitions restated as query rules, because each one has been broken by a tile.
+The executable form is `summarizeSessions` in `apps/web/src/lib/analytics-measurement.ts`; its tests carry a
+case for each rule.
+
+1. **Count distinct `$session_id`s**, never events and never persons. A native funnel defaults to persons, so
+   it must be aggregated by `properties.$session_id`. The one exception is *Returning evaluators*, whose unit is
+   deliberately the anonymous ID (below).
+2. **Eligible arriving sessions = sessions with at least one `ARRIVAL_EVENTS` event** (§4 *Eligible arriving
+   session*): not `$pageview` sessions only, and not any event either. `$pageleave` alone never qualifies.
+3. **A session is campaign-attributed when any of its events carries `kx_campaign`** (§8), not only a
+   `$pageview`, and only if the session is eligible: a `$pageleave`-only session still carries its tab's
+   campaign.
+4. **Progression = any intent signal at or after the first Qualified Evaluation signal**: compare the
+   session's *last* intent timestamp with its *first* evaluation timestamp. Comparing first with first drops
+   intent → evaluation → later intent.
+5. **`installation_viewed` is in both signal lists**, in every tile that lists either.
+6. **Evaluation, adoption intent and verified adoption are different claims.** No tile here measures
+   adoption (§5).
+7. **Diagnostic sessions are excluded from every count**: any session holding an event with
+   `kx_traffic_type = 'diagnostic'`, plus the historical probe listed under *Diagnostic traffic*. The exclusion
+   is per session, so one marked event removes the whole session. On a tile that counts sessions, a session
+   belongs to the date range in which it **starts**, and all of its events are read, including those after the
+   range ends, so a marked event just outside the range still removes it. On a tile that counts events, each
+   event is placed by its own timestamp, so the two kinds of tile can disagree at a range's edges: that is the
+   cost of needing whole sessions for a session measure, and it is stated on the dashboard.
+
+### Defects found and corrected 2026-10-09
+
+Reproduced read-only against PostHog on a fixed window: 2026-09-09 00:00 to 2026-10-09 19:56 UTC, excluding
+the diagnostic probe window 2026-10-09 13:25–13:35 UTC (one session). The corrected queries reproduce the
+historical checkpoint exactly: **98** eligible arriving sessions, **15** Qualified Evaluation, **12**
+Adoption Intent, **9** Progression. A refresh to 20:13 UTC the same day returned the same four counts. These
+are bounded observations, not rates — §10's baseline is still open.
+
+| Tile | Defect | Fixed window, current query | Same window, corrected | Rule |
+| --- | --- | --- | --- | --- |
+| 5, 8 (and Tier 2 tile 4) | Denominator counts `$pageview` sessions | 94 | 98 | 2 |
+| 8b | Compares first intent with first evaluation | 9 | 9 | 4 |
+| Funnel 1 | Intent step omits `installation_viewed`; aggregates persons; unordered | 74 → 15 → 2 persons | 98 → 15 → 9 sessions | 1, 5 |
+| 2, Funnel 2 | Attribution read from `$pageview` only; Funnel 2 aggregates persons | 27 campaign sessions | 28 | 1, 3 |
+
+**8b** shows no difference in this window: every one of the nine progressing sessions contains
+`installation_viewed`, which satisfies both sides at its own timestamp. The defect is still real — run
+through PostHog's own SQL engine on synthetic sessions, the current query scores intent → evaluation → later
+intent as 0 and the corrected one as 1 — and it will start to miss sessions as soon as one progresses through
+a copy or an `adopt_*` CTA.
+
+**Funnel 1 cannot be fixed by adding the event alone.** A native PostHog funnel will not let one event fill
+two steps, so a session whose only qualifying event is `installation_viewed` can never complete a
+three-step funnel; and an *unordered* funnel's "completed 2 steps" is any two of the three, not the
+evaluation step. On the fixed window, adding `installation_viewed` and aggregating by session gives 4
+(unordered) or 2 (ordered) where Progression is 9. The fix replaced Funnel 1 with a session table
+(eligible arriving → Qualified Evaluation → Progression) computed by the same rules as tiles 5 and 8b. It
+was also never homepage-scoped despite its name: step 1 was any `$pageview`.
+
+**Applied 2026-10-09 ~20:25 UTC, on the owner's approval.** Tiles 4, 5 and 8 count eligible arriving sessions
+over any event; tile 2 attributes on any event; 8b compares the last intent with the first evaluation; Funnels
+1 and 2 are now HogQL session tables built by the same rules; the reading-notes text tile states the rules.
+Read back after the change, on the dashboard's rolling 30 days: 99 eligible, 16 Qualified Evaluation and 10
+Progression — the fixed-window counts plus the one probe session, which the dashboard does not exclude.
+
+**Observed then, decided since:** the four sessions a `$pageview` denominator misses each hold only
+`$pageleave`. §4 *Eligible arriving session* now excludes them; see the next two sections.
+
+### Diagnostic traffic
+
+**Policy.** Traffic generated to test the site or its analytics (probes, QA passes, demos) is kept in PostHog
+for debugging and excluded from every formal count (rule 7). It is never deleted and never re-labelled after
+the fact.
+
+**Marking future diagnostic traffic.** Open the first page of the test with `?kx_traffic=diagnostic`, for
+example `https://kinetixui.com/?kx_traffic=diagnostic`. The tab remembers the mark (sessionStorage) and every
+event it sends carries `kx_traffic_type: "diagnostic"` (`analytics-attribution.ts`). `?kx_traffic=clear`
+removes it. To run a probe safely:
+
+1. Use a fresh private window, so the probe has its own anonymous ID and session.
+2. Start every tab of the probe from a marked URL; the mark is per tab, and an unmarked tab's events are only
+   excluded if they share the marked tab's PostHog session.
+3. Before relying on the result, check in PostHog that the probe's events carry `kx_traffic_type`.
+4. Do not include a `utm_campaign` unless the campaign path is what is being tested; the exclusion already
+   keeps it out of campaign counts.
+
+**Historical probe (before marking existed).** One session, excluded by its id:
+`01a120d7-2b07-7ed0-af0c-f96d32e4c5bd`, 2026-10-09 13:25:35–13:28:59 UTC. Identified by the owner's report of a
+probe at 13:25–13:35 *and* by its own content: it is the only session in that window (±1 hour), and in 3.5
+minutes it fires every evaluation and intent signal type once or twice, including all four copy events, from a
+direct visit. The time window alone is not the rule; the session id is. **Uncertain and not excluded:** the
+same device's earlier session that day (04:05–04:14 UTC, homepage → components → installation) may also be
+the owner's, but nothing identifies it as a test, so it stays in the counts. No event property was added to
+past events.
+
+### Internal traffic
+
+**Policy.** The team's own browsing is real use of the site but not audience growth. It is kept, labelled and
+reported as its own cohort; it is not excluded from the canonical rate (only diagnostic traffic is, rule 7).
+
+**Marking.** Open any page once with `?kx_traffic=internal` in each browser the team uses (for example
+`https://kinetixui.com/?kx_traffic=internal`). The mark is stored per browser (localStorage), so every later visit
+from that browser, in any tab, carries `kx_traffic_type: "internal"`. A diagnostic mark in the same tab wins.
+`?kx_traffic=clear` removes both. Unmarked team visits are indistinguishable from audience visits; the mark is the
+only identification, and nothing is inferred after the fact.
+
+**Why not PostHog's "internal and test users" cohort.** Project 620385 filters test accounts with cohort 583396
+(`not_in`). That cohort can never contain anyone: the site uses `person_profiles: identified_only` and has no
+sign-in, so no visitor is ever identified and no person profile exists to match. Filtering on the event property
+`kx_traffic_type` is what works (below). Changing the project's test-account filter is a PostHog setting the owner
+changes; this repo does not.
+
+### Traffic cohorts (M2, 2026-10-18)
+
+Every session falls into exactly one cohort, decided in this order by `classifySession` in
+[`scripts/marketing-weekly-report.mjs`](../scripts/marketing-weekly-report.mjs) (unit-tested, and its signal lists
+are pinned to `analytics-measurement.ts` by `weekly-report-signals.test.ts`):
+
+| Cohort | Rule | In the canonical QER? |
+| --- | --- | --- |
+| Not an arrival | no arrival event (§4) | no (already the §4 rule) |
+| Diagnostic | any event with `kx_traffic_type = diagnostic` | no (rule 7) |
+| Internal | any event with `kx_traffic_type = internal` | yes; shown separately |
+| Suspected automation | at most one `$pageview`, no event a person causes (anything outside `$pageview`, `$pageleave`, `docs_viewed`, `component_viewed`, `installation_viewed`, `changelog_viewed`), under 5 seconds, `kx_referrer = direct` | yes; shown separately |
+| Audience | everything else | yes |
+
+"Human-evidenced" is a further label on audience sessions with a `page_engaged`, any event a person causes, or a
+second page view. It is a sensitivity figure only.
+
+**The canonical QER is unchanged.** It still counts every eligible arriving session except diagnostic ones (§2–§4).
+Reports print two sensitivities beside it, never instead of it: *audience-only QER* (canonical minus internal and
+suspected automation) and *human-evidenced evaluations*. Removing suspected automation from the metric itself would
+be a definition change, which needs the owner's explicit approval.
+
+**Why "suspected", and the evidence.** The rule describes a page that loaded and was left at once with nothing done
+on it. PostHog shows a stream of exactly that, with a consistent fingerprint: browser language zh-CN with a
+geolocation in the US, Mexico, Hong Kong, Singapore or Puerto Rico; near-square, unusual screen sizes; Chrome
+148–150; an unknown time zone; one component docs page per visit, roughly every 12 minutes. In 10–16 October 45 of
+46 sessions met the rule and they held all 38 Qualified Evaluation sessions (36 with that fingerprint, 2 from an AWS
+address in Dulles 9 ms apart). Up to 9 October the same fingerprint appears in 6 sessions (1 QE, 1 AI from a
+render-fired `installation_viewed`), and 32 other sessions meet the rule with no QE. The 17 October dev.to
+`art_pillar` arrival also matches the fingerprint. None of this proves a bot: the same rule catches a person who
+opens a deep link and closes it within five seconds, which is why the cohort is labelled, reported and never deleted.
+Raw events are never rewritten; cohorts exist only in queries and reports. Full numbers:
+[`measurement/M2-TRAFFIC-QUALITY.md`](./measurement/M2-TRAFFIC-QUALITY.md).
+
+**How the dashboard should split cohorts.** Each QER tile keeps its canonical definition and gains a breakdown, not
+a filter: diagnostic stays excluded (rule 7); internal is `kx_traffic_type = 'internal'`; suspected automation is
+the rule above computed per session in HogQL (the weekly report's query is the reference implementation). Do not use
+the project's test-account toggle for any of this until its filter is moved from the empty cohort to
+`kx_traffic_type`.
+
+**Engagement signal.** `page_engaged` (added 2026-10-18) fires on the first physical input after a page view: a
+pointer press, key, touch or wheel, never scroll, focus or mouse movement, and never a synthetic event. It is an
+arrival event, not a QE or AI signal. Before it is deployed, automation and a person who reads without clicking look
+alike; after, a reader who touches the page is human-evidenced.
+
+**Weekly report.** `pnpm marketing:weekly --from YYYY-MM-DD --to YYYY-MM-DD --print-query` prints the one HogQL
+query (one row per session that started in the window, aggregated over all of its events, so a session crossing
+a week boundary is counted once, in the week it began); save its rows as JSON and run `pnpm marketing:weekly --from … --to … --sessions rows.json` (optionally
+`--platform p.json` with numbers copied from each platform). Reach, impressions and clicks print as "unavailable"
+unless supplied; nothing is estimated.
+
+Since M3 (2026-10-18) the report also prints data-quality warnings computed from the rows (suspected automation at
+half or more of eligible sessions, audience evaluations under §10's ~30, no `page_engaged`, campaign sessions with no
+audience arrival, a published row without a live URL), platform interest (`platform` on `platform_selected`,
+`component_code_viewed` and `install_command_copied`), installation interest (installation page opened, which
+fires on render, versus a command copied), and an absolute-count trend from `--history weeks.json`. For SQL clients
+that cap results at 100 rows (the PostHog MCP tool), `--print-query --compact` returns the same sessions as one text
+cell; save it as `.txt` and pass it to `--sessions`. Experiment arms (distribution/M3-EXPERIMENTS.md) are read only from its
+*Experiment arms (audience cohort only)* table: audience sessions, audience QE, *acted after landing* (an event not
+fired on render, or a second page) and *copied or adopt CTA*, one row per arm `utm_content` summed across posts, with
+each count's share of the arm's audience sessions once the arm's registered floor metric (QE for `_xa_`, acted for
+`_xb_`/`_xc_`) reaches 30 (arms are compared on shares; `--arms-from` makes the arm table cumulative since an
+experiment started), all counted from the session's first arm-tagged event onward (`arm_*` columns; older exports without them
+still read, with no arm rows). A multi-week export is cut to `--from`/`--to` when read, so one
+export feeds every week's report. Warnings never change a number.
+
+### Arrival eligibility and diagnostic exclusion, 2026-10-09
+
+Same fixed window as above (2026-09-09 00:00 to 2026-10-09 19:56 UTC), with the probe excluded by session id
+instead of by time window. Measured read-only through PostHog SQL on 2026-10-09 ~21:00 UTC.
+
+| Count | Any-event rule (applied ~20:25) | §4 *Eligible arriving session* + rule 7 | Change |
+| --- | --- | --- | --- |
+| Eligible arriving sessions | 98 | 94 | 4 `$pageleave`-only sessions out |
+| Qualified Evaluation sessions | 15 | 15 | — |
+| Adoption Intent sessions | 12 | 12 | — |
+| Progression sessions | 9 | 9 | — |
+| Campaign-attributed sessions | 28 | 27 | the lost-pageview LinkedIn landing (§4) |
+| Sessions marked diagnostic | 0 | 0 | marking did not exist yet |
+| Eligible sessions with no `$pageview` | — | 0 | none observed yet; covered by tests |
+
+Without the probe exclusion the dashboard's rolling window read 99 / 16 / 10. Returning evaluators drops from 2
+to 1 on the same window: the probe's device had a Qualified Evaluation session earlier that day, so the probe made
+it "returning".
+
+**Dashboard: proposed, not applied.** Tiles 1, 2, 4, 5, 6, 8, 8b, 10, Funnels 1 and 2 and Returning evaluators
+move to one shared HogQL session CTE (§4 eligibility, §8 attribution, rule 7) whose window follows the
+dashboard's date controls and is clamped at the present, because an unset upper bound drops its comparison
+rather than resolving to now. Native tiles 3, 7, 9, 11 and Funnel 3 stay event counts, because what they answer
+is which CTA, platform or step was used, not how many sessions did something; they get one filter that is an
+**anti-join on `$session_id`** — every session holding a `kx_traffic_type = 'diagnostic'` event, plus the
+historical probe, is removed whole, which a filter on the event property alone could not do, since the property
+is written per tab and an unmarked tab can share a session with a marked one. Those tiles still place each event
+by its own timestamp, per rule 7. The exact per-tile queries are kept next to this project's analytics
+corrections, not in this repository; apply them only on the owner's approval, then read every changed tile back.
+
+**Decided 2026-10-10 (owner).** Tiles 3, 7, 9, 11 and Funnel 3 keep event-time windows and their per-event
+breakdowns; the whole-session diagnostic exclusion on them stays the `$session_id` anti-join. Putting them on
+session-start windows was considered and rejected: it would turn "which CTA target earned the click" into "how
+many sessions contained that click", losing the breakdown each of those tiles exists for, and Funnel 3's
+flexible-step ordering is itself the measure. The cost is the documented edge disagreement with the session
+tiles, which is why rule 7 names both rules and the dashboard's own text tile repeats them.
+
+**12 insights** (1–11, plus 8b).
 
 | # | Name | Event / filter | Breakdown | Range | Question |
 | --- | --- | --- | --- | --- | --- |
@@ -350,7 +656,8 @@ canonical and the tile is stale.
 | 6 | Evaluation entry point | first QE event in session | event name | 30d | What starts evaluation? |
 | 7 | Verification engagement | `cta_clicked` → `view_verification`, `platform_coverage` | `source` | 30d | Does the position get followed? |
 | **Adoption intent** |
-| 8 | **Adoption Intent Rate** | AI §4 and QE §3 as counts — **stale, see above**; §4 now specifies AI ÷ eligible arriving sessions, plus a second tile for Evaluation → Intent Progression | — | 30d | **Tier 1** |
+| 8 | **Adoption Intent Rate** | AI §4 ÷ eligible arriving sessions, as two counts — denominator defect above | — | 30d | **Tier 1** |
+| 8b | **Evaluation → Intent Progression** | §4, HogQL, ÷ Qualified Evaluation sessions — comparison defect above | — | 30d | **Tier 1** |
 | 9 | Adoption-rung split | `cta_clicked` → `adopt_*` | `target` | 30d | Which rung do people reach for? |
 | **ICP and content** |
 | 10 | **ICP hypothesis comparison** | QE and AI rates, with a `Both` overlap column | `kx_campaign` prefix (`kx_p1`/`kx_p2`) | 90d | **Tier 1** — which message converts? |
@@ -359,10 +666,13 @@ canonical and the tile is stale.
 Component and block interest are deliberately **not** dashboard insights. They are long-tail lists, better
 queried when a question arises than watched weekly.
 
-### Funnels (3, flexible-step)
+### Funnels (3; 1 and 2 are session tables)
 
-1. **Homepage → evaluation → intent:** `$pageview /` → any QE signal → any AI signal.
-2. **Campaign → evaluation:** session with `kx_campaign` → any QE signal, broken down by campaign.
+1. **Arrival → evaluation → intent** (originally specified as homepage-scoped, never built that way): eligible
+   arriving sessions → Qualified Evaluation sessions → Progression sessions. A HogQL session table since
+   2026-10-09, not a native funnel — see *Defects found and corrected 2026-10-09* above.
+2. **Campaign → evaluation:** sessions with any event carrying `kx_campaign` → Qualified Evaluation sessions,
+   by campaign. Also a HogQL session table since 2026-10-09.
 3. **Coverage → component:** `cta_clicked` → `platform_coverage` → `component_viewed`.
 
 All flexible-step: these are not journeys anyone must take in order, and forcing linearity would report a
@@ -372,7 +682,7 @@ funnel the product does not have.
 
 PostHog's anonymous distinct ID already supports this with `person_profiles: identified_only` — no identity
 collection, no new tracking. Counted as distinct anonymous IDs with a qualified evaluation in two or more
-sessions. Treat as directional: cleared cookies and multiple devices both undercount, and we will never know
+eligible, non-diagnostic sessions. Treat as directional: cleared cookies and multiple devices both undercount, and we will never know
 by how much.
 
 ---
@@ -400,3 +710,8 @@ permitted, including PostHog-injected `$session_entry_utm_*` / `gclid` / `ph_key
 **Do not** add invasive tracking, session recording, or any field carrying user text. No event in this
 specification carries anything but short identifiers from closed vocabularies — no URLs, no copied strings,
 no search terms, no names.
+
+Vercel Web Analytics and Speed Insights follow the same rules: page views and Web Vitals measurements only (no
+custom events), URLs cut to origin + path,
+the same production-hostname gate, Do Not Track honoured and diagnostic tabs dropped. Details in
+[`apps/web/ANALYTICS.md`](../apps/web/ANALYTICS.md) *Vercel Web Analytics and Speed Insights*.

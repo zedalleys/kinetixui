@@ -1,23 +1,24 @@
-export const metadata = {
-  title: "Sheet",
-  description: "Extends the Dialog component to display content that complements the main content of the screen.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("sheet");
 
 # Sheet
 
 <ComponentMeta />
 
-Extends the Dialog component to display content that complements the main content of the screen.
+<ComponentIntro slug="sheet" />
 
 <ComponentPreview name="sheet-demo" />
 
-## Installation
+<ComponentGuide slug="sheet" />
+
+## React installation
 
 ```bash
 npx @kinetixui/cli add sheet
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@kinetixui/ui";
@@ -29,6 +30,29 @@ with no extra config. Keyboard and ARIA behaviour is inherited from Radix where 
 component is built on a primitive; the hand-built widgets (DataGrid, TreeView,
 ColorPicker, MultiSelect, Tour, KanbanBoard) have their own documented interaction
 models — see [Accessibility](/docs/accessibility).
+
+### Sides that follow the reading direction
+
+`side="start"` and `side="end"` place the panel at the inline start or end of the nearest `dir`, so a
+navigation sheet opens from the left in LTR and from the right in RTL without the caller choosing an edge.
+`top`, `bottom`, `left` and `right` stay physical for panels that belong to a screen edge. Side panels scroll
+when their content is taller than the viewport.
+
+The built-in close button is named "Close"; `closeLabel` names what it closes, or translates it.
+
+```tsx
+<Sheet>
+  <SheetTrigger asChild>
+    <Button variant="Ghost" size="icon" aria-label="Menu">
+      <Menu />
+    </Button>
+  </SheetTrigger>
+  <SheetContent side="start" closeLabel="Close menu">
+    <SheetTitle>Menu</SheetTitle>
+    <nav aria-label="Mobile">…</nav>
+  </SheetContent>
+</Sheet>
+```
 
 <ComponentApi slug="sheet" />
 

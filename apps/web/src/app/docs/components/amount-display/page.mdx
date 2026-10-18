@@ -1,0 +1,45 @@
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("amount-display", "A formatted money-like or quantified value — SAR 1,250.00, −USD 25.00, +14.2% — with tabular figures, a spoken sign, its own bidi run and a full screen-reader label, without ever calculating it.");
+
+# Amount Display
+
+<ComponentMeta />
+
+A formatted money-like or quantified value — SAR 1,250.00, −USD 25.00, +14.2% — with tabular figures, a spoken sign, its own bidi run and a full screen-reader label, without ever calculating it.
+
+<ComponentPreview name="amount-display-demo" />
+
+## React installation
+
+```bash
+npx @kinetixui/cli add amount-display
+```
+
+## React usage
+
+```tsx
+import { AmountDisplay } from "@kinetixui/ui";
+
+<AmountDisplay value="1,250.00" currency="SAR" />
+<AmountDisplay value="25.00" currency="USD" sign="negative" tone="positive" accessibleLabel="Refund of 25 US dollars" />
+<AmountDisplay value="14.2%" sign="positive" size="compact" />
+```
+
+**It never calculates or formats.** `value` arrives formatted by your money layer, without its sign; the component
+lays it out. `sign` draws a real minus (U+2212) or plus and speaks it as a word (`signLabels`, default "minus" and
+"plus"), so the sign is never a colour. `tone` is separate on purpose: a refund is a negative amount that is good news.
+
+Use `accessibleLabel` when the visible run is not how it should be heard ("SAR 162.75" → "162.75 Saudi riyals"); the
+visible run is then hidden from assistive technology and the label is read instead.
+
+## Accessibility and RTL
+
+- The value is one inline run with `dir="auto"` by default, so "−SAR 25.00" keeps its order inside Arabic text.
+  Pass `dir` when you know the run's direction.
+- The sign is text plus a screen-reader word, never colour alone; `tone` is reinforcement.
+- Tabular figures keep columns of amounts aligned. The run does not wrap, so place long amounts where they can take
+  their own line at 200% text.
+- Screen-reader output was checked in jsdom (accessible names), not with VoiceOver or NVDA.
+
+<ComponentApi slug="amount-display" />

@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Empty",
-  description: "A placeholder for a zero-results state — an empty table, an empty search, a fresh workspace.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("empty", "A placeholder for a zero-results state — an empty table, an empty search, a fresh workspace.");
 
 # Empty
 
@@ -11,13 +10,13 @@ A placeholder for a zero-results state — an empty table, an empty search, a fr
 
 <ComponentPreview name="empty-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add empty
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "@kinetixui/ui";

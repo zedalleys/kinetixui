@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { analytics } from "./analytics";
 import {
+  isPersonInput,
   classifyCommand,
   classifyLink,
   componentSlugFor,
@@ -24,6 +25,7 @@ const anyComponent = componentDocs[0]!.href.split("/").pop()!;
 describe("packages come from the package.json files, not from this test or the site", () => {
   it("are the public packages the site can name", () => {
     expect(Object.values(PACKAGES).sort()).toEqual([
+      "@kinetixui/angular",
       "@kinetixui/cli",
       "@kinetixui/iot",
       "@kinetixui/tokens",
@@ -39,7 +41,7 @@ describe("packages come from the package.json files, not from this test or the s
    */
   it("recognises an install command for every one of them", () => {
     for (const pkg of Object.values(PACKAGES)) {
-      expect(classifyCommand(`pnpm add ${pkg}`, "bash"), `${pkg} install command should classify`).toEqual({
+      expect(classifyCommand(`pnpm add ${pkg}`, "bash"), `${pkg} install command should classify`).toMatchObject({
         event: "install_command_copied",
         package: pkg,
       });
@@ -62,18 +64,21 @@ describe("classifyCommand", () => {
   });
 
   it.each([
-    ["npm i @kinetixui/ui", "@kinetixui/ui"],
-    ["npm install @kinetixui/tokens", "@kinetixui/tokens"],
-    ["pnpm add @kinetixui/ui", "@kinetixui/ui"],
-    ["yarn add @kinetixui/ui", "@kinetixui/ui"],
-    ["bun add @kinetixui/tokens", "@kinetixui/tokens"],
-    ["npm i -g @kinetixui/cli", "@kinetixui/cli"],
-  ])("recognises %j as an install command for %s", (text, pkg) => {
-    expect(classifyCommand(text, "sh")).toEqual({ event: "install_command_copied", package: pkg });
+    ["npm i @kinetixui/ui", "@kinetixui/ui", "react"],
+    ["npm install @kinetixui/tokens", "@kinetixui/tokens", null],
+    ["pnpm add @kinetixui/ui", "@kinetixui/ui", "react"],
+    ["yarn add @kinetixui/ui", "@kinetixui/ui", "react"],
+    ["bun add @kinetixui/tokens", "@kinetixui/tokens", null],
+    ["npm i -g @kinetixui/cli", "@kinetixui/cli", null],
+    ["npm i @kinetixui/angular @kinetixui/tokens", "@kinetixui/angular", "angular"],
+  ])("recognises %j as an install command for %s (platform %s)", (text, pkg, platform) => {
+    expect(classifyCommand(text, "sh")).toEqual({ event: "install_command_copied", package: pkg, ...(platform ? { platform } : {}) });
   });
 
-  it("does not treat the package manager as a platform — the result has no platform at all", () => {
-    expect(classifyCommand("pnpm add @kinetixui/ui", "bash")).not.toHaveProperty("platform");
+  it("takes a platform only from a platform's own package, never from the package manager", () => {
+    // tokens, the CLI and IoT serve every platform: an install of one is not an install of any platform
+    for (const pkg of [PACKAGES.tokens, PACKAGES.cli, PACKAGES.iot]) expect(classifyCommand(`pnpm add ${pkg}`, "bash")).not.toHaveProperty("platform");
+    expect(classifyCommand("pnpm add @kinetixui/ui", "bash")).toHaveProperty("platform", "react");
   });
 
   it.each([
@@ -145,6 +150,12 @@ describe("classifyLink", () => {
   });
 });
 
+describe("isPersonInput", () => {
+  it("rejects an event a script created, which is how an automated page load would fake engagement", () => {
+    for (const type of ["pointerdown", "keydown", "touchstart", "wheel"]) expect(isPersonInput(new Event(type))).toBe(false);
+  });
+});
+
 describe("sourceForPath / componentSlugFor", () => {
   it.each([
     ["/", "homepage"],
@@ -156,6 +167,11 @@ describe("sourceForPath / componentSlugFor", () => {
     ["/components", "components_gallery"],
     ["/charts", null],
     ["/create", null],
+    ["/capabilities", "use_cases_hub"],
+    ["/use-cases/commerce", "use_case_page"],
+    // a use-case-shaped URL with no page is a 404, not a use-case page
+    ["/use-cases/healthcare", null],
+    ["/use-cases/not-a-domain", null],
   ])("%s → %s", (path, source) => {
     expect(sourceForPath(path)).toBe(source);
   });
@@ -174,7 +190,7 @@ describe("trackRouteView: one semantic view event per route", () => {
 
   it("classifies the installation page", () => {
     trackRouteView("/docs/installation");
-    expect(track.mock.calls).toEqual([["installation_viewed", { source: "installation_page" }]]);
+    expect(track.mock.calls).toEqual([["installation_viewed", { source: "installation_page", platform: "react" }]]);
   });
 
   it("classifies the changelog page, with no version invented", () => {
@@ -190,6 +206,27 @@ describe("trackRouteView: one semantic view event per route", () => {
   it.each(["/docs", "/docs/tokens", "/docs/foundations", "/docs/cli"])("classifies %s as a docs view with its path", (path) => {
     trackRouteView(path);
     expect(track.mock.calls).toEqual([["docs_viewed", { page: path, source: "docs_page" }]]);
+  });
+
+  it.each([
+    ["/docs/angular", "angular"],
+    ["/docs/swiftui", "swiftui"],
+    ["/docs/compose", "compose"],
+    ["/docs/flutter", "flutter"],
+  ])("classifies the setup page %s as a docs view that names its platform (still neither QE nor AI)", (path, platform) => {
+    trackRouteView(path);
+    expect(track.mock.calls).toEqual([["docs_viewed", { page: path, source: "docs_page", platform }]]);
+    track.mockClear();
+    trackRouteView(`${path}?platform=react#setup`);
+    expect(track.mock.calls).toEqual([["docs_viewed", { page: path, source: "docs_page", platform }]]);
+  });
+
+  it("names no platform on docs pages that serve every platform", () => {
+    for (const path of ["/docs/platforms", "/docs/tokens", "/docs/theming"]) {
+      track.mockClear();
+      trackRouteView(path);
+      expect(track.mock.calls[0]?.[1]).not.toHaveProperty("platform");
+    }
   });
 
   it("never fires two semantic events for one page", () => {
@@ -225,7 +262,7 @@ describe("trackFenceCopy", () => {
 
   it("reports an npm install as install_command_copied", () => {
     trackFenceCopy("npm i @kinetixui/ui", "bash", "/docs/installation");
-    expect(track.mock.calls).toEqual([["install_command_copied", { source: "installation_page", package: PACKAGES.ui }]]);
+    expect(track.mock.calls).toEqual([["install_command_copied", { source: "installation_page", package: PACKAGES.ui, platform: "react" }]]);
   });
 
   it("reports the CLI command on a component page too", () => {

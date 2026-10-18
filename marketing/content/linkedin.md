@@ -159,12 +159,12 @@ built the thing and made the decisions — not as a founder with a growth story.
 > edges — the places where a platform has an opinion your abstraction didn't anticipate.
 >
 > KinetixUI takes the second one. A SwiftUI view is a SwiftUI view. A Compose composable is a composable.
-> The Angular components are directives on real HTML elements, not React wrapped in a bridge. Nothing is
+> In Angular, a button is a directive on a real HTML button, not React wrapped in a bridge. Nothing is
 > converted from one source into five — the tokens are generated, the components are written.
 >
 > The honest cost: five implementations to maintain, and coverage that isn't identical everywhere. Today
-> React carries the full catalogue and the three native platforms carry most of it, with the gaps written
-> down and the reasons given.
+> React carries the full catalogue, the three native platforms carry most of it, and Angular is on npm in
+> preview as a deliberate subset — with the gaps written down and the reasons given.
 >
 > The honest benefit: nothing is standing between your design system and the platform.
 >
@@ -217,13 +217,13 @@ built the thing and made the decisions — not as a founder with a growth story.
 >
 > I think the entry point should be smaller than the product.
 >
-> With KinetixUI you can take the token layer and nothing else. Install the tokens package, generate your
-> platform's output, and keep every component you already have. On Flutter, the Material and Cupertino
+> With KinetixUI you can take the token layer and nothing else. Install the tokens package, which ships the
+> generated output for web, iOS, Android and Flutter, and keep every component you already have. On Flutter, the Material and Cupertino
 > adapters mean your existing stock widgets inherit the values — nothing of ours ends up in your widget
 > tree.
 >
-> That's a change one engineer can make in an afternoon, and it's reversible. It also happens to fix the
-> thing that actually drifts: the values, not the markup.
+> That's a small change, and it's reversible. It also happens to fix the thing that actually drifts: the
+> values, not the markup.
 >
 > If it's useful, the next rung is copying individual components into your repo, where you own and edit
 > them. If it isn't, you've still got a shared source for your spacing and colour and you can stop there.

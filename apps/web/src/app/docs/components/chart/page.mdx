@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Chart",
-  description: "Charts built on Recharts, themed with `--chart-1…5`.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("chart", "Charts built on Recharts, themed with the chart colour tokens.");
 
 # Chart
 
@@ -11,13 +10,13 @@ Charts built on Recharts, themed with `--chart-1…5`.
 
 <ComponentPreview name="chart-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add chart
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@kinetixui/ui";

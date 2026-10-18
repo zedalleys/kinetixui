@@ -18,3 +18,8 @@ Persistence and a device registry remain application concerns.
 
 See [LIVE-VALIDATION.md](./LIVE-VALIDATION.md) for the server-only operator CLI, synthetic evidence,
 security boundaries and the pending live-provider / physical proof checklist.
+
+## Real-device validation of the held changesets
+
+See [docs/iot/REAL-DEVICE-VALIDATION.md](../../../../docs/iot/REAL-DEVICE-VALIDATION.md): the case catalogue,
+operator runner, evidence records and release gate for the changesets held in `.changeset-held/iot/`.

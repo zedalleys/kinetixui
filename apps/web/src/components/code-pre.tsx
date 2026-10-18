@@ -2,12 +2,14 @@
 
 import * as React from "react";
 import { Check, Copy } from "lucide-react";
+import { Button } from "@kinetixui/ui";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { trackFenceCopy } from "@/lib/analytics-surfaces";
 
 /** MDX <pre>: always-visible mobile copy control, revealed by hover/focus on desktop. */
 export function CodePre({ className, children, ...props }: React.ComponentPropsWithoutRef<"pre">) {
+  const isTextDiagram = (props as { "data-language"?: string })["data-language"] === "text";
   const ref = React.useRef<HTMLPreElement>(null);
   const pathname = usePathname();
   const [copied, setCopied] = React.useState(false);
@@ -34,22 +36,26 @@ export function CodePre({ className, children, ...props }: React.ComponentPropsW
 
   return (
     <div className="group relative">
-      <button
+      <Button
+        variant="Ghost"
+        size="icon"
         type="button"
         onClick={copy}
         aria-label="Copy code"
-        className={cn(
-          "absolute right-2.5 top-2.5 z-10 inline-flex size-7 items-center justify-center rounded-md border border-border bg-background/80 text-muted-foreground opacity-100 md:opacity-0 backdrop-blur transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100",
-        )}
+        className="kx-hit absolute end-2.5 top-2.5 z-10 size-7 p-0 bg-background text-muted-foreground opacity-100 md:opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
       >
         {copied ? <Check className="size-3.5 text-primary" /> : <Copy className="size-3.5" />}
-      </button>
+      </Button>
       <span aria-live="polite" className="sr-only">{copied ? "Copied" : ""}</span>
       <pre
         ref={ref}
+        data-documentation-tree={isTextDiagram || undefined}
+        dir={isTextDiagram ? "ltr" : undefined}
+        role={isTextDiagram ? "group" : undefined}
+        aria-label={isTextDiagram ? "Scrollable text diagram" : undefined}
         // a code block scrolls sideways when a line is long, so the keyboard must be able to reach it
         tabIndex={0}
-        className={cn("my-4 overflow-x-auto rounded-lg border border-border bg-muted/40 text-[13px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}
+        className={cn("my-4 overflow-x-auto rounded-lg border border-border bg-muted/40 text-code focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}
         {...props}
       >
         {children}

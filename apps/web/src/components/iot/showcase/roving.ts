@@ -1,7 +1,7 @@
 import type * as React from "react";
 
 /**
- * Roving-focus keyboard handling for a radiogroup of buttons (`role="radio"`), shared by PillSelector and DateStrip.
+ * Roving-focus keyboard handling for a radiogroup of buttons (`role="radio"`), used by DateStrip (PillSelector is the library ToggleGroup now).
  * Arrow keys move focus and selection; under RTL the horizontal arrows reverse, so the key that points toward the
  * next item on screen is the one that advances. Home and End jump. Direction is read from the nearest `dir`
  * attribute (falling back to the document), never from layout, so it is deterministic.

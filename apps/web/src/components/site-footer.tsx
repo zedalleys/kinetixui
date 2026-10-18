@@ -17,6 +17,7 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: "Components", href: "/components" },
       { label: "Blocks", href: "/blocks" },
+      { label: "Use cases", href: "/capabilities" },
       { label: "Charts", href: "/charts" },
       { label: "Create", href: "/create" },
     ],
@@ -50,7 +51,7 @@ export function SiteFooter() {
               <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground">
                 <Layers className="size-[18px]" />
               </span>
-              <span className="font-display text-[15px] font-bold uppercase tracking-[0.18em]">
+              <span className="font-display text-wordmark font-bold uppercase tracking-[0.18em]">
                 Kinetix<span className="text-primary">ui</span>
               </span>
             </div>
@@ -91,7 +92,7 @@ export function SiteFooter() {
           <span className="block font-display text-[13vw] font-bold uppercase leading-[0.82] tracking-[-0.045em] text-muted-foreground/15 before:content-['Kinetixui']" />
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-border py-6 font-mono text-[11px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 border-t border-border py-6 font-mono text-body-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           {/* The licence line and the creator credit are one group, so the bar keeps its two-sided balance.
               A third top-level item would be centred by `justify-between`, which is more prominence than a
               by-line should take next to the product's own copyright. */}

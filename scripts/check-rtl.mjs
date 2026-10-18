@@ -1,5 +1,6 @@
 /**
- * check-rtl.mjs — RTL logical-property guardrail for packages/ui/src/components.
+ * check-rtl.mjs — RTL logical-property guardrail for packages/ui/src/components, and for the website
+ * files listed in WEB_CONVERTED.
  *
  *   node scripts/check-rtl.mjs
  *
@@ -61,7 +62,6 @@ const RULES = [
 const NOT_YET_CONVERTED = new Set([
   "audio-player.tsx",
   "button-group.tsx",
-  "calendar.tsx",
   "carousel.tsx",
   "code-block.tsx",
   "comparison-slider.tsx",
@@ -75,19 +75,32 @@ const NOT_YET_CONVERTED = new Set([
   "sidebar.tsx",
   "tab-bar.tsx",
   "table.tsx",
-  "timeline.tsx",
   "tree-view.tsx",
 ]);
+
+/**
+ * Website files held to the same rule. Unlike the library, apps/web is not converted file by file on a schedule;
+ * a file is listed here once a change has made it direction-correct, so that it stays that way. These are the
+ * surfaces the web quality pass touched for RTL — the gallery card and its thumbnails, platform badges, the
+ * section and page headers, the docs breadcrumb and the copy button.
+ */
+const WEB_CONVERTED = [
+  "apps/web/src/components/component-gallery.tsx",
+  "apps/web/src/components/component-thumbnails.tsx",
+  "apps/web/src/components/copy-button.tsx",
+  "apps/web/src/components/platform-badges.tsx",
+  "apps/web/src/components/site-header.tsx",
+  "apps/web/src/components/section-head.tsx",
+  "apps/web/src/components/docs-breadcrumb.tsx",
+];
 
 const files = readdirSync(componentsDir).filter((f) => f.endsWith(".tsx"));
 
 let failures = 0;
 const reportedNotYetConverted = new Set();
 
-for (const file of files) {
-  const path = `${componentsDir}/${file}`;
+function scan(path, label, skipWholeFile) {
   const lines = readFileSync(path, "utf8").split("\n");
-  const skipWholeFile = NOT_YET_CONVERTED.has(file);
   let inExemptBlock = false;
 
   for (let i = 0; i < lines.length; i++) {
@@ -107,15 +120,18 @@ for (const file of files) {
       if (exemptHere) continue;
 
       if (skipWholeFile) {
-        reportedNotYetConverted.add(file);
+        reportedNotYetConverted.add(label);
         continue;
       }
 
-      console.error(`${file}:${i + 1}  ${rule.name}\n  ${line.trim()}`);
+      console.error(`${label}:${i + 1}  ${rule.name}\n  ${line.trim()}`);
       failures += 1;
     }
   }
 }
+
+for (const file of files) scan(`${componentsDir}/${file}`, file, NOT_YET_CONVERTED.has(file));
+for (const rel of WEB_CONVERTED) scan(`${root}/${rel}`, rel, false);
 
 if (reportedNotYetConverted.size > 0) {
   console.log(`(skipped — already tracked in NOT_YET_CONVERTED): ${[...reportedNotYetConverted].sort().join(", ")}`);
@@ -123,7 +139,8 @@ if (reportedNotYetConverted.size > 0) {
 
 console.log(
   failures === 0
-    ? `\nPASS — no new physical-direction utility classes outside NOT_YET_CONVERTED (${NOT_YET_CONVERTED.size} files still pending conversion).`
+    ? `\nPASS — no new physical-direction utility classes outside NOT_YET_CONVERTED (${NOT_YET_CONVERTED.size} files still pending conversion), ` +
+        `and none in the ${WEB_CONVERTED.length} website files held to the rule.`
     : `\nFAIL (${failures}) — physical-direction utility class found in a converted file. Use the logical` +
         ` equivalent (see RULES above), or mark it with an inline \`// rtl-ok\` comment if it's deliberately physical.`,
 );

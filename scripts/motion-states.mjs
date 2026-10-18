@@ -105,8 +105,15 @@ export const SUPPRESSED_MS = 2;
  */
 export const DISCLOSURE_FAMILY = ["accordion", "collapsible"];
 
-/** The selection-control family. Switch only so far; the rest of it is not claimed. */
-export const SELECTION_FAMILY = ["switch"];
+/**
+ * The selection-control family. Switch moves its thumb on `selection-control` (instant); Toggle and
+ * ToggleGroup (MX1b-1a) and Checkbox and RadioGroup (MX1b-1b) move their selected colour, and the tick or dot,
+ * on `selection-state` (fast).
+ */
+export const SELECTION_FAMILY = ["switch", "toggle", "toggle-group", "checkbox", "radio-group"];
+
+/** The navigation family. Tabs only so far: its indicator travels to the chosen tab. */
+export const NAVIGATION_FAMILY = ["tabs"];
 
 /**
  * Every family this suite is responsible for exercising, by name.
@@ -120,6 +127,7 @@ export const SELECTION_FAMILY = ["switch"];
 export const MOTION_FAMILIES = {
   disclosure: DISCLOSURE_FAMILY,
   selection: SELECTION_FAMILY,
+  navigation: NAVIGATION_FAMILY,
 };
 
 /**
@@ -137,6 +145,9 @@ export const MOTION_FAMILIES = {
  *                   depend on a class name the component may not set. Otherwise a CSS selector.
  *   targetBefore    optional selector for reading STATE A when `target` only exists once open
  *   property        the computed property sampled
+ *   durationMs      optional: the tier this property must run on, read from the CSS transition of that
+ *                   property alone. Without it only "perceptible" is asserted, which a 150ms default
+ *                   passes as readily as the 200ms token; with it the gate tells the two apart.
  *
  * ── Why closing has its own entries ───────────────────────────────────────
  *
@@ -200,6 +211,8 @@ export const MOTION_STATES = [
     // The thumb's logical offset (it was a physical `translate-x`, which went the wrong way in an LTR
     // section of an RTL page — see switch.tsx).
     property: "insetInlineStart",
+    // selection-control, not selection-state: pinned so "aligning" Switch with the 200ms family fails here.
+    durationMs: 100,
   },
   {
     slug: "switch",
@@ -213,6 +226,30 @@ export const MOTION_STATES = [
     trigger: { action: "click", selector: "button[role=switch][data-state=checked]" },
     target: "button[role=switch] > span",
     property: "insetInlineStart",
+    durationMs: 100,
+  },
+  {
+    slug: "tabs",
+    story: "navigation-tabs--playground",
+    interaction: "indicator travel → inline end",
+    classification: MOTION_REQUIRED,
+    // Radix activates a tab on mousedown or key, not on a bare `click()`, so the trigger is a key press.
+    trigger: { action: "press", selector: '[role=tab][data-state=inactive]' },
+    // One bar per list, present before and after, so one selector reads both states. Its inline-start
+    // edge is the trailing one on this move: held back by `instant`, it is still on its way at the midpoint.
+    target: "[data-kx-tabs-bar]",
+    property: "insetInlineStart",
+  },
+  {
+    slug: "tabs",
+    story: "navigation-tabs--playground",
+    interaction: "indicator travel → inline start",
+    classification: MOTION_REQUIRED,
+    // Back again: the other edge leads, so this is a different pair of delays, not a replay.
+    prelude: { action: "press", selector: '[role=tab][data-state=inactive]' },
+    trigger: { action: "press", selector: '[role=tab][data-state=inactive]' },
+    target: "[data-kx-tabs-bar]",
+    property: "insetInlineStart",
   },
   {
     slug: "collapsible",
@@ -223,6 +260,143 @@ export const MOTION_STATES = [
     trigger: { action: "click", selector: "button[data-state=open]" },
     target: "@aria-controls",
     property: "height",
+  },
+  // MX1b-1a. A Toggle's selected colour is the change, so it is what is sampled, and its own transition is
+  // held to `fast`: the state layer on the same element runs on `instant`, and the longest-animation
+  // duration the other states rely on would hide a selection retimed to anything up to 200ms.
+  {
+    slug: "toggle",
+    story: "controls-actions-toggle--states",
+    interaction: "select OFF → ON",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="pill-off"]' },
+    target: '[data-kx-case="pill-off"]',
+    property: "backgroundColor",
+    durationMs: 200,
+  },
+  {
+    slug: "toggle",
+    story: "controls-actions-toggle--states",
+    interaction: "deselect ON → OFF",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="default-on"]' },
+    target: '[data-kx-case="default-on"]',
+    property: "backgroundColor",
+    durationMs: 200,
+  },
+  {
+    slug: "toggle-group",
+    story: "controls-actions-togglegroup--states",
+    interaction: "single: choose B",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="single"] > button:nth-child(2)' },
+    target: '[data-kx-case="single"] > button:nth-child(2)',
+    property: "backgroundColor",
+    durationMs: 200,
+  },
+  {
+    slug: "toggle-group",
+    story: "controls-actions-togglegroup--states",
+    interaction: "single: A released",
+    classification: MOTION_REQUIRED,
+    // Choosing B releases A in the same click. A's colour leaves on the same tier B's arrives on, so the
+    // two cross over rather than one snapping.
+    trigger: { action: "click", selector: '[data-kx-case="single"] > button:nth-child(2)' },
+    target: '[data-kx-case="single"] > button:nth-child(1)',
+    property: "backgroundColor",
+    durationMs: 200,
+  },
+  {
+    slug: "toggle-group",
+    story: "controls-actions-togglegroup--states",
+    interaction: "rtl: choose B",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="rtl"] > button:nth-child(2)' },
+    target: '[data-kx-case="rtl"] > button:nth-child(2)',
+    property: "backgroundColor",
+    durationMs: 200,
+  },
+  // MX1b-1b. The box's fill is the selection colour on a Checkbox, its border on a Radio. Each glyph is
+  // sampled too: the tick and the dot fade on `fast`, which is the one opacity transition in either control.
+  {
+    slug: "checkbox",
+    story: "form-inputs-checkbox--motion",
+    interaction: "check OFF → ON: fill",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="off"]' },
+    target: '[data-kx-case="off"]',
+    property: "backgroundColor",
+    durationMs: 200,
+  },
+  {
+    slug: "checkbox",
+    story: "form-inputs-checkbox--motion",
+    interaction: "check OFF → ON: tick fades in",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="off"]' },
+    target: '[data-kx-case="off"] > span',
+    property: "opacity",
+    durationMs: 200,
+  },
+  {
+    slug: "checkbox",
+    story: "form-inputs-checkbox--motion",
+    interaction: "uncheck ON → OFF: fill",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="on"]' },
+    target: '[data-kx-case="on"]',
+    property: "backgroundColor",
+    durationMs: 200,
+  },
+  {
+    slug: "checkbox",
+    story: "form-inputs-checkbox--motion",
+    interaction: "rtl: check, fill",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="rtl"]' },
+    target: '[data-kx-case="rtl"]',
+    property: "backgroundColor",
+    durationMs: 200,
+  },
+  {
+    slug: "radio-group",
+    story: "form-inputs-radiogroup--motion",
+    interaction: "choose Pro: border",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="plan"] [role=radio][value=pro]' },
+    target: '[data-kx-case="plan"] [role=radio][value=pro]',
+    property: "borderColor",
+    durationMs: 200,
+  },
+  {
+    slug: "radio-group",
+    story: "form-inputs-radiogroup--motion",
+    interaction: "choose Pro: dot fades in",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="plan"] [role=radio][value=pro]' },
+    target: '[data-kx-case="plan"] [role=radio][value=pro] > span',
+    property: "opacity",
+    durationMs: 200,
+  },
+  {
+    slug: "radio-group",
+    story: "form-inputs-radiogroup--motion",
+    interaction: "Free released: dot fades out",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="plan"] [role=radio][value=pro]' },
+    target: '[data-kx-case="plan"] [role=radio][value=free] > span',
+    property: "opacity",
+    durationMs: 200,
+  },
+  {
+    slug: "radio-group",
+    story: "form-inputs-radiogroup--motion",
+    interaction: "rtl: choose, border",
+    classification: MOTION_REQUIRED,
+    trigger: { action: "click", selector: '[data-kx-case="rtl"] [role=radio][value=pro]' },
+    target: '[data-kx-case="rtl"] [role=radio][value=pro]',
+    property: "borderColor",
+    durationMs: 200,
   },
 ];
 
@@ -314,6 +488,15 @@ export function isIntermediate(a, mid, b) {
     if (hi - lo < PERCEPTIBLE_PX) return false; // the ends are the same; there is nothing to move between
     return nm > lo + 0.01 && nm < hi - 0.01;
   }
+  // A unitless number (opacity): the same betweenness test as a length, on its own scale.
+  const unitless = (v) => /^-?\d*\.?\d+$/.test(String(v).trim());
+  if ([a, mid, b].every(unitless)) {
+    const [x, m, y] = [a, mid, b].map(Number);
+    const lo = Math.min(x, y);
+    const hi = Math.max(x, y);
+    if (hi - lo < PERCEPTIBLE_OPACITY) return false;
+    return m > lo + 0.001 && m < hi - 0.001;
+  }
   const asMatrix = (v) => (String(v).trim() === "none" ? IDENTITY : parseMatrix(v));
   const [ma, mm, mb] = [a, mid, b].map(asMatrix);
   if (ma && mm && mb) {
@@ -321,7 +504,31 @@ export function isIntermediate(a, mid, b) {
     if (dist(ma, mb) < 0.01) return false;
     return dist(ma, mm) > 0.001 && dist(mm, mb) > 0.001;
   }
+  // A colour is a point in RGBA; the midpoint must be away from both ends and closer to each end than the
+  // ends are to each other. Alpha is scaled to the channels so a fade from `transparent` counts.
+  const [ca, cm, cb] = [a, mid, b].map(parseColor);
+  if (ca && cm && cb) {
+    const dist = (x, y) => Math.hypot(...x.map((v, i) => v - y[i]));
+    const span = dist(ca, cb);
+    if (span < PERCEPTIBLE_COLOR) return false;
+    return dist(ca, cm) > 0.5 && dist(cm, cb) > 0.5 && dist(ca, cm) < span && dist(cm, cb) < span;
+  }
   // Anything unparseable is not evidence: calling `none` vs `matrix(...)` motion would count a state
   // change rendered in a single frame.
   return false;
+}
+
+/** Two opacities closer than this are the same to a reader. */
+export const PERCEPTIBLE_OPACITY = 0.05;
+
+/** Two colours closer than this, in 0–255 RGBA units, are the same colour to a reader. */
+export const PERCEPTIBLE_COLOR = 4;
+
+/** `rgb(…)` / `rgba(…)` as computed by the browser → [r, g, b, a×255]. Anything else is not a colour here. */
+export function parseColor(value) {
+  const m = /^rgba?\(([^)]+)\)$/.exec(String(value).trim());
+  if (!m) return null;
+  const parts = m[1].split(/[\s,/]+/).filter(Boolean).map(Number.parseFloat);
+  if (parts.length < 3 || parts.some((n) => !Number.isFinite(n))) return null;
+  return [parts[0], parts[1], parts[2], (parts[3] ?? 1) * 255];
 }

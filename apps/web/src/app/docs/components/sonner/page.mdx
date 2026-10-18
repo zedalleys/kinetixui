@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Sonner",
-  description: "An opinionated toast component for React.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("sonner", "An opinionated toast component for React.");
 
 # Sonner
 
@@ -11,13 +10,13 @@ An opinionated toast component for React.
 
 <ComponentPreview name="sonner-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add sonner
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Toaster, toast } from "@kinetixui/ui";

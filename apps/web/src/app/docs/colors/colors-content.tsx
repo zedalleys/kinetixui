@@ -4,7 +4,8 @@ import * as React from "react";
 import tokens from "@kinetixui/tokens";
 import { Check, Copy } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { Button, Card, SegmentedControl, SegmentedControlItem } from "@kinetixui/ui";
+import { useDocumentDirection } from "@/lib/use-document-direction";
 import { tokenNameForHex, hexToRgb, rgbToHsl, contrastRatio } from "@kinetixui/create-theme";
 import { SectionHead } from "@/components/section-head";
 
@@ -35,7 +36,7 @@ function formatValue(hex: string, fmt: Format) {
 export function ColorsContent() {
   const [copied, setCopied] = React.useState<string>("");
   const [format, setFormat] = React.useState<Format>("hex");
-  const [hoverStep, setHoverStep] = React.useState<string | null>(null);
+  const dir = useDocumentDirection();
 
   function copy(value: string) {
     navigator.clipboard.writeText(value).then(() => {
@@ -70,7 +71,8 @@ export function ColorsContent() {
 
       <Link
         href="/create"
-        className="group mt-6 flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/20 px-4 py-3 transition-colors hover:border-primary/40"
+        // flex-wrap: at 320px and 200% text the CTA needs its own line rather than pushing the page sideways
+        className="group mt-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-muted/20 px-4 py-3 transition-colors hover:border-primary/40"
       >
         <span>
           <span className="font-medium">Want your own palette?</span>{" "}
@@ -78,7 +80,7 @@ export function ColorsContent() {
             Pick a theme colour in Create and it derives the interactive roles, in OKLCH.
           </span>
         </span>
-        <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-primary transition-transform group-hover:translate-x-0.5">
+        <span className="font-mono text-label-md uppercase tracking-[0.1em] text-primary transition-transform group-hover:translate-x-0.5">
           Customize in Create →
         </span>
       </Link>
@@ -87,7 +89,7 @@ export function ColorsContent() {
       <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-y border-border py-3">
         <nav
           aria-label="Jump to a ramp"
-          className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground"
+          className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground"
         >
           {RAMPS.map((r) => (
             <a
@@ -99,23 +101,21 @@ export function ColorsContent() {
             </a>
           ))}
         </nav>
-        <div role="group" aria-label="Value format" className="inline-flex rounded-md border border-border p-0.5">
+        {/* One format at a time: the library SegmentedControl, a radiogroup with one tab stop. */}
+        <SegmentedControl
+          aria-label="Value format"
+          dir={dir}
+          value={format}
+          onValueChange={(f) => {
+            if (f) setFormat(f as Format);
+          }}
+        >
           {FORMATS.map((f) => (
-            <button
-              key={f}
-              type="button"
-              aria-pressed={format === f}
-              onClick={() => setFormat(f)}
-              className={cn(
-                "rounded px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                format === f ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
+            <SegmentedControlItem key={f} value={f} className="px-2.5 font-mono uppercase tracking-[0.1em]">
               {f}
-            </button>
+            </SegmentedControlItem>
           ))}
-        </div>
+        </SegmentedControl>
       </div>
 
       <div className="mt-4 space-y-16">
@@ -131,13 +131,16 @@ export function ColorsContent() {
               <p className="mt-3 max-w-2xl text-sm text-muted-foreground">{RAMP_NOTE[ramp]}</p>
 
               <div className="mt-5 flex justify-end">
-                <button
+                <Button
+                  type="button"
+                  variant="Outline"
+                  size="md"
                   onClick={() => copyRamp(ramp, steps)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground transition-colors hover:text-foreground"
+                  className="max-w-full gap-1.5 whitespace-normal px-2.5 py-1.5 font-mono uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground"
                 >
-                  <Copy className="size-3.5" />
+                  <Copy aria-hidden className="!size-3.5" />
                   Copy ramp as CSS
-                </button>
+                </Button>
               </div>
 
               <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -151,50 +154,48 @@ export function ColorsContent() {
                   const bestRatio = Math.max(onWhite, onBlack);
                   const aaTag = bestRatio >= 4.5 ? "AA" : bestRatio >= 3 ? "AA (large)" : null;
                   const tokenName = tokenNameForHex(hex);
-                  const active = hoverStep === step;
 
                   return (
-                    <button
-                      key={step}
-                      type="button"
-                      aria-label={`Copy ${ramp} ${step}${tokenName ? ` (--${tokenName})` : ""} — ${value}`}
-                      onClick={() => copy(value)}
-                      onMouseEnter={() => setHoverStep(step)}
-                      onMouseLeave={() => setHoverStep(null)}
-                      className={cn(
-                        "group flex flex-col overflow-hidden rounded-lg border text-left transition-colors",
-                        "focus-visible:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
-                        active ? "border-primary ring-1 ring-primary" : "border-border",
-                      )}
-                    >
-                      <span
-                        className="relative flex h-24 w-full flex-col justify-between p-2"
-                        style={{ background: hex, color: textHex }}
-                      >
-                        <span className="flex items-start justify-between gap-1">
-                          <span className="font-mono text-[11px] font-medium">{step}</span>
-                          {aaTag && (
-                            <span
-                              className="rounded px-1 py-0.5 font-mono text-[9px] uppercase leading-none"
-                              style={{ boxShadow: `inset 0 0 0 1px ${textHex}66` }}
-                            >
-                              {aaTag}
+                    // The library Card as its button: hover lifts it, press settles it and focus draws the shared ring,
+                    // which replaces the hand-rolled hover ring that needed mouse-enter/leave state.
+                    <Card key={step} asChild className="group overflow-hidden rounded-lg">
+                      <button type="button" onClick={() => copy(value)}>
+                        {/*
+                          Named by its own content, with only the verb and the ramp added out of sight: "Copy azure 50 AA
+                          --azure-50 #eff6ff". A separate aria-label reworded and reordered what the swatch shows, so the
+                          visible "50 AA --azure-50 #eff6ff" was not in the name and a speech-input user could not say it
+                          (WCAG 2.5.3).
+                        */}
+                        <span className="sr-only">Copy {ramp} </span>
+                        <span
+                          className="relative flex h-24 w-full flex-col justify-between p-2"
+                          style={{ background: hex, color: textHex }}
+                        >
+                          <span className="flex items-start justify-between gap-1">
+                            <span className="font-mono text-body-sm font-medium">{step}</span>
+                            {aaTag && (
+                              <span
+                                className="rounded px-1 py-0.5 font-mono text-label-md uppercase leading-none"
+                                style={{ boxShadow: `inset 0 0 0 1px ${textHex}66` }}
+                              >
+                                {aaTag}
+                              </span>
+                            )}
+                          </span>
+                          {tokenName && (
+                            <span className="max-w-full self-start rounded px-1.5 py-0.5 font-mono text-label-md uppercase leading-none [overflow-wrap:anywhere]" style={{ boxShadow: `inset 0 0 0 1px ${textHex}66` }}>
+                              --{tokenName}
                             </span>
                           )}
                         </span>
-                        {tokenName && (
-                          <span className="self-start rounded px-1.5 py-0.5 font-mono text-[9px] uppercase leading-none" style={{ boxShadow: `inset 0 0 0 1px ${textHex}66` }}>
-                            --{tokenName}
+                        <span className="flex items-center justify-between gap-1 px-2 py-1.5 text-body-sm">
+                          <span className="truncate font-mono text-muted-foreground">{value}</span>
+                          <span className="shrink-0 text-muted-foreground">
+                            {copied === value ? <Check className="size-3" /> : <Copy className="size-3 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />}
                           </span>
-                        )}
-                      </span>
-                      <span className="flex items-center justify-between gap-1 px-2 py-1.5 text-[11px]">
-                        <span className="truncate font-mono text-muted-foreground">{value}</span>
-                        <span className="shrink-0 text-muted-foreground">
-                          {copied === value ? <Check className="size-3" /> : <Copy className="size-3 opacity-0 transition-opacity group-hover:opacity-100" />}
                         </span>
-                      </span>
-                    </button>
+                      </button>
+                    </Card>
                   );
                 })}
               </div>

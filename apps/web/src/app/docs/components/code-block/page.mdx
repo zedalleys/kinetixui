@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Code Block",
-  description: "A code display with a copy button and, for more than one file, a tab strip.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("code-block", "A code display with a copy button and, for more than one file, a tab strip.");
 
 # Code Block
 
@@ -11,13 +10,13 @@ A code display with a copy button and, for more than one file, a tab strip.
 
 <ComponentPreview name="code-block-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add code-block
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { CodeBlock } from "@kinetixui/ui";

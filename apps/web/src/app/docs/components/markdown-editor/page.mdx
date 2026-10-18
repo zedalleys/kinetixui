@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Markdown Editor",
-  description: "A formatting toolbar over a plain textarea (not contenteditable) with an optional rendered preview pane.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("markdown-editor", "A formatting toolbar over a plain textarea (not contenteditable) with an optional rendered preview pane.");
 
 # Markdown Editor
 
@@ -11,13 +10,13 @@ A formatting toolbar over a plain textarea (not contenteditable) with an optiona
 
 <ComponentPreview name="markdown-editor-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add markdown-editor
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { MarkdownEditor } from "@kinetixui/ui";

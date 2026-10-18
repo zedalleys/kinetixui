@@ -1,0 +1,56 @@
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("guest-picker", "Several counts chosen together — adults, children, rooms, ticket types — as NumberInput steppers in a popover, with per-type and total limits and a summary on the trigger.");
+
+# Guest Picker
+
+<ComponentMeta />
+
+Several counts chosen together — adults, children, rooms, ticket types — as NumberInput steppers in a popover, with per-type and total limits and a summary on the trigger.
+
+<ComponentPreview name="guest-picker-demo" />
+
+## React installation
+
+```bash
+npx @kinetixui/cli add guest-picker
+```
+
+## React usage
+
+```tsx
+import { GuestPicker } from "@kinetixui/ui";
+
+const [guests, setGuests] = React.useState({ adults: 2, children: 0 });
+
+<GuestPicker
+  label="Guests"
+  categories={[
+    { id: "adults", label: "Adults", description: "13 and over", min: 1 },
+    { id: "children", label: "Children", description: "2 to 12" },
+  ]}
+  value={guests}
+  onValueChange={setGuests}
+  maxTotal={6}
+  totalHint="Up to 6 guests per room."
+/>
+```
+
+GuestPicker is a composition, not a new control: one [NumberInput](/docs/components/number-input) per category inside
+a [Popover](/docs/components/popover). Use it for travellers, rooms, ticket types or any set of counts chosen together.
+
+- **Limits.** Each category has `min` and `max`; `maxTotal` caps the sum, and a row's maximum shrinks to the room that
+  is left. When the total is reached, `totalHint` is announced.
+- **Summary.** The trigger shows `formatSummary(value)` (default "Adults: 2, Children: 1"); pass your own wording and
+  plural rules.
+- **Wording.** Every label is yours. The stepper buttons are named `Decrease Adults` and `Increase Adults` by default;
+  override `decrementLabel` and `incrementLabel` to localise.
+
+## Accessibility and RTL
+
+- The trigger's name is the label plus the summary, so a screen reader hears "Guests, Adults: 2, Children: 0".
+- Each stepper is named after its category. At a limit the button stays focusable and is marked `aria-disabled`, so
+  keyboard focus is not lost, and each change is announced politely.
+- The panel uses logical properties and mirrors under RTL. Checked in jsdom and in Chromium; no screen reader run.
+
+<ComponentApi slug="guest-picker" />

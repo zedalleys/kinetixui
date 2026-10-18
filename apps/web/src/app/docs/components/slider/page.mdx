@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Slider",
-  description: "An input where the user selects a value from within a given range.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("slider", "An input where the user selects a value from within a given range.");
 
 # Slider
 
@@ -11,13 +10,13 @@ An input where the user selects a value from within a given range.
 
 <ComponentPreview name="slider-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add slider
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Slider } from "@kinetixui/ui";
@@ -29,6 +28,21 @@ with no extra config. Keyboard and ARIA behaviour is inherited from Radix where 
 component is built on a primitive; the hand-built widgets (DataGrid, TreeView,
 ColorPicker, MultiSelect, Tour, KanbanBoard) have their own documented interaction
 models — see [Accessibility](/docs/accessibility).
+
+## Range (React)
+
+Pass more than one value and the React Slider draws one thumb per value, each
+with its own tab stop. One name cannot tell two thumbs apart, so `aria-label` or
+`aria-labelledby` names the group (`role="group"`) and each thumb keeps the name
+of its position: "Minimum" and "Maximum", or "Value 1 of 3" beyond two.
+`aria-valuetext` describes a single value, so it applies to a single-thumb
+Slider only.
+
+```tsx
+<Slider aria-label="Price" defaultValue={[20, 80]} max={100} step={1} />
+```
+
+The Angular, SwiftUI, Compose and Flutter Sliders take a single value today.
 
 <ComponentApi slug="slider" />
 

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-spec.json",
+  "name": "amount-display",
+  "title": "Amount Display",
+  "status": "beta",
+  "since": "0.25.0",
+  "platforms": [
+    "React"
+  ],
+  "variants": {},
+  "components": [
+    {
+      "name": "AmountDisplay",
+      "props": [
+        {
+          "name": "value",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "The formatted amount without its sign — \"1,250.00\". If your formatter already wrote the sign, leave `sign` unset."
+        },
+        {
+          "name": "currency",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A currency or unit label shown with the value, exactly as given — \"SAR\", \"USD\", \"€\", \"%\", \"kWh\"."
+        },
+        {
+          "name": "currencyPosition",
+          "type": "\"before\" | \"after\"",
+          "required": false,
+          "description": "Where the label sits relative to the value, in reading order. Default \"before\" (\"SAR 1,250.00\")."
+        },
+        {
+          "name": "sign",
+          "type": "\"positive\" | \"negative\"",
+          "required": false,
+          "description": "Writes a sign before the amount, plus a spoken word for it. Default: none."
+        },
+        {
+          "name": "tone",
+          "type": "\"positive\" | \"negative\" | \"neutral\"",
+          "required": false,
+          "description": "Colour reinforcement. Independent of `sign`; never the only signal. Default \"neutral\"."
+        },
+        {
+          "name": "size",
+          "type": "\"compact\" | \"standard\"",
+          "required": false,
+          "description": "`compact` inside lists and tables; `standard` (default) where the amount is the point."
+        },
+        {
+          "name": "accessibleLabel",
+          "type": "string",
+          "required": false,
+          "description": "What assistive technology hears instead of the visible text — \"minus 25 Saudi riyals\"."
+        },
+        {
+          "name": "signLabels",
+          "type": "{ positive?: string; negative?: string; }",
+          "required": false,
+          "description": "The spoken words for the sign glyphs. Defaults: { positive: \"plus\", negative: \"minus\" }."
+        }
+      ]
+    }
+  ],
+  "source": "packages/ui/src/components/amount-display.tsx"
+}

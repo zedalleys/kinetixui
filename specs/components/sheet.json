@@ -16,7 +16,9 @@
       "top",
       "bottom",
       "left",
-      "right"
+      "right",
+      "start",
+      "end"
     ]
   },
   "components": [
@@ -44,8 +46,14 @@
       "name": "SheetContent",
       "props": [
         {
+          "name": "closeLabel",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name of the built-in close button. Name what it closes (\"Close menu\") or translate it."
+        },
+        {
           "name": "side",
-          "type": "\"top\" | \"bottom\" | \"left\" | \"right\" | null",
+          "type": "\"start\" | \"top\" | \"bottom\" | \"end\" | \"left\" | \"right\" | null",
           "required": false
         }
       ]

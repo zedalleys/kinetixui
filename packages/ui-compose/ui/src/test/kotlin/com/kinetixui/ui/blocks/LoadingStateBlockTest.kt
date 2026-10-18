@@ -93,6 +93,7 @@ class LoadingStateBlockTest {
     @get:Rule
     val rule = createComposeRule()
 
+    // kx-verify-block: accessibility
     @Test
     fun the_placeholders_announce_as_one_thing_that_is_loading() {
         rule.setContent { KinetixTheme(darkTheme = false) { LoadingStateBlock() } }

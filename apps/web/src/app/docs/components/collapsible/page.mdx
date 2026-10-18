@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Collapsible",
-  description: "An interactive component which expands / collapses a panel.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("collapsible", "An interactive component which expands / collapses a panel.");
 
 # Collapsible
 
@@ -11,13 +10,13 @@ An interactive component which expands / collapses a panel.
 
 <ComponentPreview name="collapsible-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add collapsible
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@kinetixui/ui";

@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Quote",
-  description: "A blockquote with an optional attributed author (name, title, avatar).",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("quote", "A blockquote with an optional attributed author (name, title, avatar).");
 
 # Quote
 
@@ -11,13 +10,13 @@ A blockquote with an optional attributed author (name, title, avatar).
 
 <ComponentPreview name="quote-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add quote
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Quote } from "@kinetixui/ui";

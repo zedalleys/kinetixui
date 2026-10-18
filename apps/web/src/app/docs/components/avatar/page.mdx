@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Avatar",
-  description: "An image element with a fallback for representing the user.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("avatar", "An image element with a fallback for representing the user.");
 
 # Avatar
 
@@ -11,13 +10,13 @@ An image element with a fallback for representing the user.
 
 <ComponentPreview name="avatar-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add avatar
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Avatar, AvatarImage, AvatarFallback } from "@kinetixui/ui";

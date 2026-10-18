@@ -5,7 +5,7 @@ import { Pause, Play } from "lucide-react";
 import { PLATFORMS, PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
 import { usePersistedPause } from "@/lib/use-persisted-pause";
 import { cn } from "@/lib/utils";
-import { PlatformLogo } from "./platform-logo";
+import { PlatformMark } from "./systems/platform-marks";
 
 /**
  * How many times the platform list repeats inside each half of the moving strip. The loop translates the strip by
@@ -36,13 +36,16 @@ const SECONDS_PER_LIST = 30;
  *   to pause.
  * - Under `dir="rtl"` the strip runs towards inline-start in the other direction, so the loop stays seamless; the
  *   marks themselves are never mirrored.
+ * - The marks are `<use>` references to the page's `PlatformMarkSprite` (rendered once by the homepage, the only
+ *   page with a ticker), not inline paths: the loop draws every mark seven times, and inlined they cost about
+ *   28 KB of the homepage's HTML. A page that adds this ticker has to render the sprite too.
  */
 export function PlatformTicker({ className }: { className?: string }) {
   const [paused, togglePaused] = usePersistedPause("kx-platform-ticker");
 
   const items = PLATFORMS.map((p) => (
     <li key={p} className="flex shrink-0 items-center gap-2.5 px-6 font-display text-sm text-muted-foreground">
-      <PlatformLogo platform={p} className="size-[1.125em]" />
+      <PlatformMark platform={p} className="size-[1.125em]" />
       <span className="whitespace-nowrap">{PLATFORM_DEFINITIONS[p].label}</span>
     </li>
   ));

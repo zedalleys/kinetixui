@@ -1,11 +1,10 @@
-export const metadata = {
-  title: "Jetpack Compose",
-  description: "The native Android component library — Kotlin composables on the KinetixUI token contract, mirroring the React component API.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/compose");
 
 # Jetpack Compose
 
-`packages/ui-compose` is a native **Jetpack Compose** port of KinetixUI —
+`packages/ui-compose` is the native **Jetpack Compose** implementation of KinetixUI —
 `Kinetix*` composables for <PlatformCountInline platform="Compose" /> of the
 <ComponentTotalInline /> React catalogue entries, on the same token contract as the
 web library: one for every React component (or a documented reason it isn't).
@@ -16,40 +15,250 @@ to `pnpm install` / Turborepo. It lives here for proximity to the token
 source it's built from.
 
 <Callout>
-  Not on Maven Central yet. Consume it by cloning the repo and copying the
-  `packages/ui-compose/ui` module into your project (or `includeBuild`-ing
-  it), the same "own the code" model as the web CLI. Remote publishing
-  needs a signing key and is deliberately not wired up.
+  Not on Maven Central yet. Consume it by cloning the repo at a pinned commit
+  and copying the `packages/ui-compose/ui` module into your project, the same
+  "own the code" model as the web CLI. A publication workflow
+  (`publish-compose.yml`, staging to the Central Portal) exists but needs
+  signing credentials and has not been used for a real release.
 </Callout>
+
+<PlatformAtAGlance platform="Compose" />
+
+## What differs from the React library
+
+- **Composables, written natively.** State is caller-owned, and each file's doc comment states what it does
+  not carry over from the React component.
+- **Material 3 where it already does the job.** Slider, calendar, toaster, carousel and sidebar are Material 3
+  components re-themed onto the token contract instead of hand-built, so they behave like the Android
+  components your users know.
+- **Scoped ports, stated.** The sheet is bottom-only, the menus have no nested submenus, and the calendar and
+  date picker have no range selection. [Known gaps](#known-gaps) lists every one.
+- **Distribution and evidence.** You copy the module from a pinned checkout; it is not on Maven Central. CI
+  compiles and lints the package on every change, and the evidence counts in the summary above say how much
+  of the catalogue has behaviour, accessibility, RTL and large-text tests on top of that. There are no
+  screenshot tests.
+
+## A first adoption path
+
+1. [Copy the module and register it](#1-copy-the-module-and-register-it) from a commit you pin.
+2. Follow the steps to a [first working screen](#first-working-screen).
+3. Apply your own colours with [a custom theme](#a-custom-theme).
+4. Check [Known gaps](#known-gaps) for the components your screens need.
 
 ## Setup
 
-The `ui` module is `com.android.library`, `namespace com.kinetixui.ui`,
-`compileSdk 37` / `minSdk 24`, Compose enabled. It depends only on
-`compose-bom` + `androidx.compose.ui` / `material3`.
+KinetixUI for Compose is **source-integrated**: you copy the library module from
+a repository checkout into your app. There is no Maven Central dependency to add.
 
-Wrap your app (or a screen, or a `@Preview`) in `KinetixTheme` so every
-`Kinetix*` composable resolves to the right light/dark token set:
+### Before you start
+
+- An Android app that already builds, using Gradle Kotlin DSL (`.kts` files) and
+  `android.useAndroidX=true` in `gradle.properties`.
+- JDK 17 or newer and an Android SDK that Gradle can find.
+- Android Gradle Plugin 9.4.1, the Kotlin Compose compiler plugin 2.4.21 and
+  `compileSdk 37`. These are the versions the module builds with and that the
+  check below uses; other versions are not tested. That plugin version needs a
+  Gradle 9 wrapper (the repository uses 9.8.1).
+
+The `ui` module is `com.android.library`, `namespace com.kinetixui.ui`,
+`minSdk 24`. Its runtime dependencies are `compose-bom`, `androidx.compose.ui`, `material3` and
+`ui-tooling-preview`; `ui-tooling` is debug-only.
+
+### 1. Copy the module and register it
+
+There is no released version, so copy from a checkout pinned to a commit. From
+your project's root folder:
+
+```bash
+git clone https://github.com/zedalleys/kinetixui.git ../kinetixui
+git -C ../kinetixui checkout <commit-sha>
+cp -R ../kinetixui/packages/ui-compose/ui kinetixui-ui
+```
+
+Note the commit in your own repository (a line in your README or the commit
+message that adds the folder), so the next update knows where it started.
+
+To update, read what changed first:
+`git -C ../kinetixui log --oneline <commit-sha>..<newer-commit-sha> -- packages/ui-compose/ui`.
+Then replace the whole folder rather than copying over it: `cp -R` onto an
+existing `kinetixui-ui` nests the new copy inside it as `kinetixui-ui/ui`, and
+copying file by file would leave behind files the newer commit deleted. Replacing
+it also deletes any edits you made inside `kinetixui-ui`, so the first two lines
+save them as a patch against the commit you copied (skip them if you changed
+nothing), and the last line puts them back:
+
+```bash
+git -C ../kinetixui checkout <commit-sha>
+diff -ruN -x build -x .gradle ../kinetixui/packages/ui-compose/ui kinetixui-ui > kinetixui-local.patch
+git -C ../kinetixui fetch
+git -C ../kinetixui checkout <newer-commit-sha>
+rm -rf kinetixui-ui
+cp -R ../kinetixui/packages/ui-compose/ui kinetixui-ui
+patch -p1 -d kinetixui-ui < kinetixui-local.patch
+```
+
+`patch` reports each edit it could not apply and saves it beside the file as a
+`.rej`; resolve those by hand, then delete the `.rej` and `.orig` files it leaves.
+Build, and commit the folder together with the new commit SHA.
+
+That leaves `packages/ui-compose/ui` in your project as a folder named `kinetixui-ui`,
+next to your `app` folder. Register it:
 
 ```kotlin
+// settings.gradle.kts: add to your existing settings
+include(":kinetixui-ui")
+project(":kinetixui-ui").projectDir = file("kinetixui-ui")
+```
+
+### 2. Declare the plugin versions
+
+The copied module applies its plugins without versions, so your root build
+script declares them:
+
+```kotlin
+// build.gradle.kts (root)
+plugins {
+    id("com.android.application") version "9.4.1" apply false
+    id("com.android.library") version "9.4.1" apply false
+    id("org.jetbrains.kotlin.plugin.compose") version "2.4.21" apply false
+}
+```
+
+### 3. Add KinetixUI and Compose to your app module
+
+Your app module needs Compose enabled, the same `compileSdk`, and its own
+Compose dependencies. The KinetixUI module keeps `material3` internal, so `Text`,
+`Column` and `Modifier` come from your app's dependencies, not from KinetixUI.
+
+```kotlin
+// app/build.gradle.kts: add to your app module
+plugins {
+    id("org.jetbrains.kotlin.plugin.compose")
+}
+
+android {
+    compileSdk = 37
+    buildFeatures { compose = true }
+}
+
+dependencies {
+    implementation(project(":kinetixui-ui"))
+    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.activity:activity-compose:1.11.0")
+}
+```
+
+## First working screen
+
+### 4. Add the screen
+
+Add this file to your app module. `KinetixTheme` resolves every `Kinetix*`
+composable to the right light or dark token set; it defaults to
+`isSystemInDarkTheme()`, the same as the web "system" mode, and takes
+`darkTheme = …` to force one.
+
+```kotlin
+// FirstScreen.kt
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import com.kinetixui.ui.*
 
-KinetixTheme {
-    // KinetixTheme() defaults to isSystemInDarkTheme(),
-    // same as the web "system" mode. Pass darkTheme = … to force it.
-    Column(modifier = Modifier.padding(16.dp)) {
-        KinetixButton(onClick = { /* … */ }, variant = KinetixButtonVariant.Primary) {
-            Text("Get started")
+@Composable
+fun FirstScreen() {
+    KinetixTheme {
+        var email by rememberSaveable { mutableStateOf("") }
+        var submitted by rememberSaveable { mutableStateOf(false) }
+        var updates by rememberSaveable { mutableStateOf(true) }
+        val emailError = if (submitted && "@" !in email) "Enter an email address." else null
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(KinetixColorScheme.current.background)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            KinetixField(invalid = emailError != null) {
+                KinetixFieldLabel(text = "Email", modifier = Modifier.clearAndSetSemantics { })
+                KinetixInput(value = email, onValueChange = { email = it }, isError = emailError != null, accessibleLabel = "Email")
+                emailError?.let { KinetixFieldMessage(text = it) }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // KinetixSwitch has no label parameter: name the switch itself, and hide the
+                // visible text from assistive technology so it is not read twice.
+                KinetixLabel(text = "Product updates", modifier = Modifier.clearAndSetSemantics {})
+                KinetixSwitch(
+                    checked = updates,
+                    onCheckedChange = { updates = it },
+                    modifier = Modifier.semantics { contentDescription = "Product updates" },
+                )
+            }
+            KinetixButton(onClick = { submitted = true }, variant = KinetixButtonVariant.Primary) {
+                Text("Get started")
+            }
         }
-        KinetixField(invalid = emailError != null) {
-            KinetixFieldLabel(text = "Email")
-            KinetixInput(value = email, onValueChange = { email = it }, isError = emailError != null)
-            emailError?.let { KinetixFieldMessage(text = it) }
-        }
-        KinetixSwitch(checked = enabled, onCheckedChange = { enabled = it })
     }
 }
 ```
+
+### 5. Show it from your activity
+
+Call `FirstScreen()` from your launcher activity's `setContent`:
+
+```kotlin
+// MainActivity.kt
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent { FirstScreen() }
+    }
+}
+```
+
+Add a `package` line matching your app to both files if your sources use one.
+
+### 6. Run it
+
+Run the app from Android Studio, or build it with `./gradlew :app:assembleDebug`.
+You should see an Email field, a Product updates switch that starts on, and a
+**Get started** button. Tapping **Get started** while the email has no `@` shows
+"Enter an email address." under the field; typing an address clears it.
+While it shows, the same text is also the input's accessibility error, so
+assistive technology gets it on the field itself, not only as text below it. Tapping the
+switch turns it off.
+
+These steps are checked on every Compose change: CI copies the module into a
+new app, applies the fenced code above exactly, builds the app, and runs the
+screen's behaviour in a Robolectric test on the JVM. That is not a test on a
+device or emulator.
+
+<FirstUseNextSteps platform="Compose" />
 
 `KinetixColorScheme.current` exposes the active `KinetixColors` set if you
 need a token directly.
@@ -123,8 +332,9 @@ a comment).
 One per ported React component — Button, Input, Dialog, Popover, Sheet,
 DropdownMenu, DataTable, Calendar, Carousel, Sidebar, and the rest. The
 [components gallery](/components) is the master list; each Compose file
-mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with a
-doc comment stating exactly what wasn't carried over.
+is a native Compose implementation of the same component contract as its
+`packages/ui/src/components/*.tsx` counterpart, with a doc comment stating
+exactly what wasn't carried over.
 
 Reuse over re-derivation is the rule: `KinetixSlider` wraps Material3's
 `Slider`, `KinetixCalendar` its `DatePicker`, `KinetixToaster` its
@@ -136,10 +346,10 @@ different name.
 
 ## Known gaps
 
-- **`Chart` and `Form` aren't ported.** The React `Chart` is a `recharts`
-  theming shell with no rendering of its own — a Compose equivalent needs
-  a charting-library decision (Vico / YCharts) or hand-rolled `Canvas`.
-  The React `Form` is `react-hook-form` glue; `KinetixField` +
+- **`Chart` is ported but scoped.** `KinetixChart` draws bar and line
+  series with `Canvas` (no charting dependency) and requires a
+  `description` for TalkBack; anything richer is a charting-library
+  decision. **`Form` isn't ported.** The React `Form` is `react-hook-form` glue; `KinetixField` +
   `KinetixFieldLabel` / `Description` / `Message` **are** the Compose
   equivalent — Compose has no RHF-shaped context to wrap.
 - **`NavigationMenu` isn't ported** — a hover-triggered desktop mega-menu
@@ -155,6 +365,23 @@ different name.
   `@dnd-kit`'s accessible multi-container drag-and-drop, with no
   equivalent dependency in this repo's native packages — use Compose's
   own drag gestures + `LazyColumn` for the specific board.
+- **`ResultState`, `ReferenceCode`, `PriceBreakdown` and `PassCard` aren't
+  ported yet.** They are React-first betas from the business capability
+  roadmap's Phase 1, and a native port is an open roadmap decision. Compose
+  `KinetixEmpty` for a result, a `SelectionContainer` with a `KinetixButton`
+  that copies for a reference code, `KinetixDescriptionList` rows for a
+  price breakdown, and `KinetixCard` + `KinetixDescriptionList` + the
+  supplied code as an `Image` for a pass.
+- **`AmountDisplay`, `GuestPicker`, `CountrySelect`, `PhoneInput`,
+  `DateRangeInput`, `TimeSlotPicker` and `AddressFields` aren't ported
+  yet.** They are React-first betas from the roadmap's Phase 2, with the
+  same open decision. Compose a tabular-figure `Text` with a content
+  description for an amount, `KinetixNumberInput`s in a `KinetixPopover`
+  for guests, `KinetixSelectTrigger` + `KinetixSelectItem` for a country,
+  a calling-code select and a `KeyboardType.Phone` `KinetixInput` in a
+  left-to-right row for a phone number, Material 3's `DateRangePicker`
+  for dates, `KinetixToggle` chips in a `selectableGroup()` for time
+  slots, and `KinetixField`s for an address.
 - **Scoped ports:** `KinetixSheet` is bottom-only. `KinetixSidebar` drops
   rail/icon-collapse mode, `SidebarInset`, the cookie and the shortcut.
   `KinetixAppBar` drops the mobile menu-toggle collapse — the nav stays
@@ -165,7 +392,8 @@ different name.
   syntax highlighting. `KinetixCalendar` / `DatePicker` have no range
   select. `KinetixImage` / `FileUpload` / `AudioPlayer` are presentational
   — no Coil, file picker, or media playback; you wire those in.
-- **No remote publishing, no screenshot-test harness.** CI compiles the
+- **Not published yet, no screenshot-test harness.** The publication
+  workflow has never run for real. CI compiles the
   whole package (`assembleDebug` + `lintDebug`) on every push that
   touches it or the token source.
 

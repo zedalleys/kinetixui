@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Foundations",
-  description: "KinetixUI's spatial grid, radius, elevation and motion — one source, compiled to every supported platform.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/foundations");
 
 # Foundations
 
@@ -153,16 +152,21 @@ The native overlays other than the SwiftUI slides, and the native progress and f
 not covered by this statement. SwiftUI's `Dialog` only fades, and a fade is the accepted replacement for a
 slide, so nothing was changed there.
 
-### Pairings that are proven
+### Motion roles
 
-Only two duration and easing pairings have repeated use **and** a check behind them, so only those are
-documented as pairings. Everything else reads the tokens individually, and no semantic motion layer sits on
-top of them.
+A role is a duration and easing pairing with a named job. The table is read from
+`tokens/contracts/motion.json`, and `pnpm check:motion-tokens` holds it to the token source and to the
+component files each role names: a role is **proven** only when it repeats on at least two platforms and a
+check stands behind it, **observed** when the pairing repeats in source without a check of its own, and
+**proposed** when it is a direction, not yet something any component does. Everything that is not a role
+reads the tokens individually.
 
-- **Disclosure** — `fast` with `enter` to open and `exit` to close. Accordion and Collapsible on React,
-  SwiftUI, Compose and Flutter.
-- **Selection control** — `instant` with `standard`. Switch on React, SwiftUI, Compose and Flutter. Angular's
-  Switch thumb currently uses `base`, so it does not follow this pairing.
+<MotionRolesTable />
+
+Angular's Switch runs on `base` rather than `instant`, which the contract records as a deviation rather than
+hiding. Spring, stagger, delay and distance are deliberately not tokens yet: no component uses a spring, the
+only stagger is the typing indicator, delays reuse a duration tier, and travel distance reuses the spacing
+scale. [MOTION.md](https://github.com/zedalleys/kinetixui/blob/main/MOTION.md) says when each would be added.
 
 ## On every platform
 

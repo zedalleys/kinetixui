@@ -95,6 +95,7 @@ class _DashboardTabsBlockState extends State<DashboardTabsBlock> {
 // kx-block:end
 
 void main() {
+  // kx-verify-block: interaction
   testWidgets('switching tab swaps the panel and its reserved chart caption', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(

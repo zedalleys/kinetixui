@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Json Viewer",
-  description: "A collapsible, syntax-colored tree for arbitrary JSON data, with a copy-to-clipboard button.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("json-viewer", "A collapsible, syntax-colored tree for arbitrary JSON data, with a copy-to-clipboard button.");
 
 # Json Viewer
 
@@ -11,13 +10,13 @@ A collapsible, syntax-colored tree for arbitrary JSON data, with a copy-to-clipb
 
 <ComponentPreview name="json-viewer-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add json-viewer
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { JsonViewer } from "@kinetixui/ui";

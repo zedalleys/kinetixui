@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { KinetixDirectionProvider } from "@kinetixui/ui";
+import { KinetixDirectionProvider, SegmentedControl, SegmentedControlItem } from "@kinetixui/ui";
 import { cn } from "@/lib/utils";
 import { useDocumentDirection, type Direction } from "@/lib/use-document-direction";
 
@@ -71,14 +71,6 @@ function usePrefersReducedMotion() {
   );
 }
 
-const toggle = cn(
-  "min-h-8 rounded px-2 py-1 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors",
-  "text-muted-foreground hover:text-foreground",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-  "aria-pressed:bg-background aria-pressed:text-foreground aria-pressed:shadow-sm",
-  "motion-reduce:transition-none",
-);
-
 export function PreviewEnvironment({
   children,
   align = "center",
@@ -99,22 +91,26 @@ export function PreviewEnvironment({
       {/* Wraps rather than scrolls: on a 320px screen a toolbar that scrolls sideways hides its own
           controls behind an edge the reader has no reason to suspect. */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border bg-muted/20 px-3 py-2">
-        <div role="group" aria-label="Preview direction" className="flex items-center gap-0.5 rounded-md bg-muted/60 p-0.5">
+        {/* One of two directions, so the library SegmentedControl: a radiogroup with one tab stop, arrow keys between
+            the two, and the chosen one said by `aria-checked` as well as by its raised segment. It sits outside
+            this preview's provider, so it takes the page's direction explicitly. */}
+        <SegmentedControl
+          aria-label="Preview direction"
+          dir={pageDir}
+          value={dir}
+          onValueChange={(next) => {
+            if (next) setChosen(next as Direction);
+          }}
+        >
           {(["ltr", "rtl"] as const).map((d) => (
-            <button
-              key={d}
-              type="button"
-              aria-pressed={dir === d}
-              onClick={() => setChosen(d)}
-              className={toggle}
-            >
+            <SegmentedControlItem key={d} value={d} className="font-mono uppercase tracking-[0.1em]">
               {d}
               <span className="sr-only">
                 {d === "ltr" ? " — left to right" : " — right to left"}, this preview only
               </span>
-            </button>
+            </SegmentedControlItem>
           ))}
-        </div>
+        </SegmentedControl>
 
         {/*
           A status, not a control, and said in words rather than a dot: it is reporting the reader's own
@@ -122,7 +118,7 @@ export function PreviewEnvironment({
           changes only when the reader changes their own OS preference, and announcing it then would
           interrupt them to tell them what they just did.
         */}
-        <p className="m-0 font-mono text-[11px] text-muted-foreground">
+        <p className="m-0 font-mono text-body-sm text-muted-foreground">
           Reduced motion:{" "}
           <span className="text-foreground">{reduced ? "on" : "off"}</span>
           <span className="hidden sm:inline"> · your browser setting</span>

@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Table Of Contents",
-  description: "An anchor-link nav list with indent levels and an active-item state.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("table-of-contents", "An anchor-link nav list with indent levels and an active-item state.");
 
 # Table Of Contents
 
@@ -11,13 +10,13 @@ An anchor-link nav list with indent levels and an active-item state.
 
 <ComponentPreview name="table-of-contents-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add table-of-contents
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { TableOfContents } from "@kinetixui/ui";

@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Diff Viewer",
-  description: "A side-by-side or unified text diff with gutter line numbers, built on a hand-rolled LCS line diff.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("diff-viewer", "A side-by-side or unified text diff with gutter line numbers, built on a hand-rolled LCS line diff.");
 
 # Diff Viewer
 
@@ -11,13 +10,13 @@ A side-by-side or unified text diff with gutter line numbers, built on a hand-ro
 
 <ComponentPreview name="diff-viewer-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add diff-viewer
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { DiffViewer } from "@kinetixui/ui";

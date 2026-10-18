@@ -10,6 +10,7 @@ import {
   stablePlatformSentence,
 } from "./platform-prose";
 import { PLATFORMS } from "./platform-parity";
+import { ROUTE_SEO } from "./route-seo";
 import { siteConfig } from "./site";
 
 /**
@@ -44,11 +45,18 @@ const defs = manifest.platformDefinitions as Record<
 const COPY = {
   "homepage": homepage,
   "README.md": readme,
-  "docs landing": readFileSync("src/app/docs/page.mdx", "utf8"),
+  // A page's search snippet now lives in lib/route-seo.ts, not in the page file, so it is read from there and
+  // judged together with the page it describes.
+  "docs landing": readFileSync("src/app/docs/page.mdx", "utf8") + "\n" + ROUTE_SEO["/docs"].description,
   // Added in Phase 0.5: its `description` is a search snippet that said components "ship on" four
   // platforms, which a reader hears as four they can install. A snippet is top-of-funnel copy, so it
   // belongs under the same rules as the homepage.
-  "components page": readFileSync("src/app/components/page.tsx", "utf8"),
+  "components page": readFileSync("src/app/components/page.tsx", "utf8") + "\n" + ROUTE_SEO["/components"].description,
+  // Every title and search snippet on the site that is not a component page, as one surface: a snippet is the
+  // first copy most visitors read.
+  "search snippets": Object.values(ROUTE_SEO)
+    .map((r) => `${r.title}\n${r.description}`)
+    .join("\n"),
 };
 
 describe("platform lists are derived, not typed", () => {
@@ -584,5 +592,113 @@ describe("dependency claims are qualified", () => {
     expect("Components install through the kinetixui CLI and land in your repo. No runtime dependency, no lock-in").toMatch(unqualified);
     expect("so it adds no runtime dependency and no version lock").toMatch(unqualified);
     expect("so what lands is yours to edit — no runtime dependency you cannot patch.").not.toMatch(unqualified);
+  });
+});
+
+/* ------------------------------------------------------------------ evaluator-journey audit, track A */
+
+/**
+ * Four claims the evaluator-journey audit found contradicting the architecture on high-traffic pages. Each rule is
+ * the narrowest phrase that would have caught the wording that shipped, with a self-check proving it would, and the
+ * premise that made the wording false asserted from the repository rather than assumed.
+ */
+describe("the architecture is described as it is: tokens generated, components implemented per platform", () => {
+  /** Component code is not generated, so no surface may say one source becomes components or syncs them. */
+  const ONE_SOURCE_COMPONENTS: ReadonlyArray<readonly [RegExp, string]> = [
+    [/source becomes[^.]{0,40}tokens and components/i, "says one source becomes components; only tokens are generated"],
+    [/tokens and components[^.]{0,60}stay in sync/i, "promises component sync, which nothing performs"],
+    [/change it once[^.]{0,40}propagates everywhere/i, "implies a single edit reaches every platform's components"],
+    [/keeps them aligned with the design source/i, "implies copied components are kept aligned automatically"],
+  ];
+
+  it("never says one source becomes tokens and components, or keeps components in sync", () => {
+    for (const [where, text] of Object.entries(SITE)) {
+      for (const [pattern, why] of ONE_SOURCE_COMPONENTS) {
+        expect(pattern.exec(text)?.[0], `${where} ${why}`).toBeUndefined();
+      }
+    }
+  });
+
+  it("says, on the docs landing, that only tokens are generated and components are implemented per platform", () => {
+    const intro = SITE["src/app/docs/page.mdx"]!;
+    expect(intro).toMatch(/only part that is generated/i);
+    expect(intro).toMatch(/React is one implementation/i);
+  });
+
+  it("would catch the Introduction that shipped", () => {
+    const shipped =
+      "A single design source becomes living tokens and components that stay in sync across every platform it implements — the name comes from kinetics: change it once, and it propagates everywhere.";
+    expect(ONE_SOURCE_COMPONENTS.filter(([re]) => re.test(shipped)).length).toBeGreaterThanOrEqual(2);
+    expect(ONE_SOURCE_COMPONENTS.some(([re]) => re.test("KinetixUI keeps them aligned with the design source."))).toBe(true);
+  });
+});
+
+describe("snippet provenance is not overstated", () => {
+  const EVERY_SNIPPET_COMPILED = /every snippet comes from a compiled file|(?:every|all)[^.]{0,30}snippets?[^.]{0,30}(?:extracted from|comes? from) (?:a )?(?:compiled|source that)[^.]{0,60}(?:compiles|compiled)|not typed into a docs page/i;
+
+  /** The premise: hand-written snippets still exist, so an absolute "every snippet is compiled" is false. */
+  it("still has hand-written, symbol-checked native snippets — the premise of the rule below", () => {
+    const platformCode = readFileSync("src/registry/platform-code.ts", "utf8");
+    expect(platformCode).toMatch(/\n {4}(swift|kotlin|dart): `/);
+  });
+
+  it("claims no surface's every snippet is compiled", () => {
+    expect(hitsOf(EVERY_SNIPPET_COMPILED)).toEqual([]);
+  });
+
+  it("would catch the homepage wording that shipped", () => {
+    expect(EVERY_SNIPPET_COMPILED.test("Every snippet comes from a compiled file")).toBe(true);
+    expect(
+      EVERY_SNIPPET_COMPILED.test("The platform code on this site is extracted from source that platform's CI compiles — not typed into a docs page."),
+    ).toBe(true);
+    expect(EVERY_SNIPPET_COMPILED.test("Where a compiled example exists, the snippet is extracted from a file that platform's CI builds.")).toBe(false);
+  });
+});
+
+describe("native docs do not call an implemented component unported", () => {
+  /** The per-platform docs pages, keyed by the manifest platform each one documents. */
+  const PAGES = { Compose: "compose", SwiftUI: "swiftui", Flutter: "flutter" } as const;
+  const pascal = (slug: string) => slug.replace(/(^|-)([a-z])/g, (_m, _d, c: string) => c.toUpperCase());
+  const unported = (name: string) =>
+    new RegExp("`" + name + "`[^.]{0,40}(?:aren't|isn't|is not|are not|not yet|never) (?:ported|implemented)", "i");
+
+  it.each(Object.entries(PAGES))("%s: names no implemented component as missing", (platform, slug) => {
+    const text = SITE[`src/app/docs/${slug}/page.mdx`]!;
+    expect(text, `missing docs page for ${platform}`).toBeTruthy();
+    const implemented = Object.entries(manifest.components as Record<string, { platforms: string[] }>)
+      .filter(([, c]) => c.platforms.includes(platform))
+      .map(([s]) => pascal(s));
+    const stale = implemented.filter((name) => unported(name).test(text));
+    expect(stale, `/docs/${slug} says these are not ported, but the manifest lists ${platform} for them`).toEqual([]);
+  });
+
+  it("would catch the Compose Chart line that shipped, while Chart is on Compose", () => {
+    expect((manifest.components as Record<string, { platforms: string[] }>).chart!.platforms).toContain("Compose");
+    expect(unported("Chart").test("- **`Chart` and `Form` aren't ported.** The React `Chart` is a recharts shell")).toBe(true);
+  });
+});
+
+describe("native implementations are not framed as mechanical React copies", () => {
+  const ONE_TO_ONE = /1:1 port|port(?:ed)? 1:1|mirrors.{0,80}?\b1:1\b|mirroring the React component API/i;
+  const SURFACES = [
+    "README.md",
+    "src/app/docs/compose/page.mdx",
+    "src/app/docs/swiftui/page.mdx",
+    "src/app/docs/flutter/page.mdx",
+    "src/app/docs/contributing/page.mdx",
+  ];
+
+  it("uses no 1:1-port wording on the README or the platform pages", () => {
+    for (const where of SURFACES) {
+      const text = SITE[where]!;
+      expect(text, `${where} is not in the scanned sources`).toBeTruthy();
+      expect(ONE_TO_ONE.exec(text)?.[0], `${where} frames a native implementation as a 1:1 React port`).toBeUndefined();
+    }
+  });
+
+  it("would catch the wording that shipped, and not a legitimate ratio", () => {
+    expect(ONE_TO_ONE.test("each carry a 1:1 port of the React surface")).toBe(true);
+    expect(ONE_TO_ONE.test("each mirrors its packages/ui/src/components/*.tsx counterpart 1:1, with a doc comment")).toBe(true);
+    expect(ONE_TO_ONE.test("ratios 1:1 / 3:2 / 4:3")).toBe(false);
   });
 });

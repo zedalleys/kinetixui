@@ -51,6 +51,9 @@ jobs:
       - name: Publish allowlist and package metadata
         run: pnpm release:check
 
+      - name: Website component dogfooding (reviewed native-pattern ratchet)
+        run: pnpm check:web-dogfooding
+
       - name: Lint
         run: pnpm lint
 
@@ -64,6 +67,11 @@ jobs:
 
       - name: Token table matches the tokens
         run: pnpm check:token-contract
+
+      # Motion values agree across the source, web CSS and the six native files; no motion token name
+      # is referenced that does not exist; tokens/contracts/motion.json still matches the components it names.
+      - name: Motion tokens and contract agree
+        run: pnpm check:motion-tokens
 
       - name: Changelog page is current with the packages
         run: pnpm check:releases
@@ -118,6 +126,11 @@ jobs:
 
       - name: Component manifest check (status, platforms, guidance, maturity)
         run: pnpm check:manifest
+
+      # The business capability roadmap may only call something existing if the manifest, the IoT package,
+      # the blocks manifest or a file says so; its tables are generated from docs/business-capabilities.json.
+      - name: Business capability roadmap is truthful and current
+        run: pnpm check:capabilities
 
       # Keyboard documentation is derived from the keyboard tests, so a behaviour that stops being tested
       # stops being documented. This fails if the two have drifted apart.
@@ -209,6 +222,13 @@ jobs:
       - name: Build @kinetixui/angular (AOT + strict template typecheck)
         run: pnpm build:angular
 
+      # That build compiles only what src/public-api.ts reaches, and no block is reachable from there. This
+      # compiles every Angular block in blocks.manifest.json (tsconfig.blocks.json) with the same strict
+      # templates, after a negative control proves the gate rejects a wrong-typed binding. It is what makes
+      # Angular blocks Build verified in verification.json; remove it and they fall back to Source present.
+      - name: Compile the Angular blocks (strict templates)
+        run: pnpm check:angular-blocks
+
       # The Angular package's public surface — every exported symbol, selector, input and output —
       # as a file review can diff. Cheap here because the build above already produced the .d.ts it
       # reads; the expensive external-consumer proof lives in angular-package.yml.
@@ -253,6 +273,12 @@ jobs:
       - name: Distribution register (campaign results, baseline rule)
         run: pnpm check:distribution
 
+      # The content register: ids, statuses, campaign links analytics will keep, and explicit approvals. It
+      # existed since Phase 4 but ran only by hand, so a register edit that check:distribution does not read
+      # (a drafted asset's campaign, an approval with no evidence) could merge unchecked.
+      - name: Content register (campaign ids, attribution, approvals)
+        run: pnpm check:content
+
       - name: Generated files in sync
         run: |
           # The native packages carry vendored copies of packages/tokens/dist/{android,ios,flutter};
@@ -288,6 +314,18 @@ jobs:
 
       - name: Build site
         run: pnpm build:web
+
+      # Reads the prerendered HTML, sitemap.xml and robots.txt the build just wrote: titles, descriptions and
+      # canonicals on every page, sitemap ↔ pages, internal links, OG images, JSON-LD and breadcrumbs. Rules and
+      # negative controls: marketing/seo/SEO-BASELINE.md.
+      - name: SEO gate (built HTML, sitemap, robots)
+        run: pnpm check:seo
+
+      # The editorial layer on top: component intros and guides, typed counts on platform pages, one owner per
+      # search intent, near-duplicate titles/descriptions. Rules and negative controls: scripts/check-editorial.mjs,
+      # scripts/editorial-negative-controls.mjs.
+      - name: Editorial gate (intros, intent ownership, typed counts)
+        run: pnpm check:editorial
 
       # Every workspace with a `typecheck` script (@kinetixui/ui, @kinetixui/cli, @kinetixui/web) via turbo.
       # Was `--filter @kinetixui/ui` + `continue-on-error`, which let real apps/web type errors through unseen.

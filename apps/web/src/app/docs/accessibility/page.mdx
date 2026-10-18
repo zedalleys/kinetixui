@@ -1,9 +1,12 @@
-export const metadata = {
-  title: "Accessibility",
-  description: "How KinetixUI components meet WCAG, and the known trade-offs.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/accessibility");
 
 # Accessibility
+
+This page is about the React library, `@kinetixui/ui`, unless a line names another platform. What the
+Angular, SwiftUI, Compose and Flutter implementations are tested for (accessibility semantics, RTL and large
+text) is counted per platform, from the test files, on [Supported platforms](/docs/platforms).
 
 Accessibility is a build constraint here, not a review step. Most interactive
 components are a [Radix Primitive](https://www.radix-ui.com/primitives) underneath,
@@ -12,6 +15,24 @@ default — KinetixUI only styles them against the token contract. A handful of
 widgets have no Radix equivalent and are hand-built; their keyboard models are
 written out under [Hand-built widgets](#hand-built-widgets) below, and every one is covered by an automated keyboard test
 (`KanbanBoard`, which needs real layout, in the browser pass).
+
+## What "verified" means on this site
+
+Three kinds of evidence back the claims on this page, and they prove different things:
+
+- **Computed checks** run on values, not pixels: `check:contrast` resolves every token pair components render
+  and compares the ratios with WCAG thresholds. It proves the palette, in both themes.
+- **Unit and keyboard tests** run in jsdom: they prove roles, names, focus order and key handling, but jsdom
+  does no layout, so they prove nothing about what a page looks like.
+- **Browser passes** run real Chromium: axe over every Storybook story in light and dark, forced colours,
+  reduced motion and focus visibility. They prove what those tools can detect, on those stories.
+
+None of this is a certification or an audit by people using assistive technology, and none of it says a
+product built with KinetixUI is accessible: that depends on how the components are composed. Each native
+platform's accessibility-semantics, RTL and large-text tests are counted separately, per component, on
+[Supported platforms](/docs/platforms).
+
+<FurtherReading guides={["verify-design-system-parity"]} />
 
 ## What you get
 
@@ -80,6 +101,13 @@ documented here and pinned by tests in `packages/ui/src/components-keyboard.test
 
 The known gaps are deliberate omissions, not oversights.
 
+## Known exceptions
+
+The browser audit (`pnpm check:a11y-browser`, run in CI by `a11y-browser.yml`) scans every Storybook story with
+axe in light and dark. Each finding it accepts is listed with the reason it is accepted in
+[`a11y-baseline.json`](https://github.com/zedalleys/kinetixui/blob/main/a11y-baseline.json), and the run fails
+on any finding that is not listed there.
+
 ## The one trade-off
 
 On the darkest surface, a **subtle hover fill can't reach 3:1 on its own**.
@@ -117,3 +145,10 @@ WCAG AA (dark mode was already fine for both):
 Remaining: `check-contrast.mjs` doesn't yet assert the four `--shadow-focus*`
 composites (the dark set exists — `tokens/semantic/shadow.dark.json` →
 `@kinetixui/tokens/css/extras/dark` — it's just not in the script's checks).
+
+## Related guides
+
+- [Right-to-left layouts](/docs/rtl): direction handling on the web and on each native platform.
+- [Theming](/docs/theming): the contrast rules a custom theme must keep.
+- [Platform coverage](/docs/platforms): the accessibility test evidence counted per platform and component.
+- [Explore components](/components): each component page shows its own evidence per platform.

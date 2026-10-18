@@ -1,24 +1,23 @@
-export const metadata = {
-  title: "Textarea",
-  description: "A multi-line text field. Reconciled 1:1 with design source node 54855:13857.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("textarea", "A multi-line text field.");
 
 # Textarea
 
 <ComponentMeta />
 
 A multi-line text field — the same state matrix and tokens as `Input`, with
-`min-h-[100px]` and vertical resize. Figma `54855:13857`.
+`min-h-[100px]` and vertical resize. Reconciled 1:1 with design source node `54855:13857`.
 
 <ComponentPreview name="textarea-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add textarea
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Textarea } from "@kinetixui/ui";

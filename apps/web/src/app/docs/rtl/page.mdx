@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "RTL",
-  description: "Right-to-left support in KinetixUI components and layout — the two pieces a consuming app needs.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/rtl");
 
 # RTL
 
@@ -57,6 +56,28 @@ import { KinetixDirectionProvider } from "@kinetixui/ui";
 KinetixUI doesn't ship locale detection or persistence; it just mirrors
 correctly once told which direction to render.
 
+## Overlays and placement
+
+Popups are where direction most often breaks, because their content is portaled out of the element that set
+`dir`. On React the direction provider above is what carries it into the portal: menus, selects and popovers
+read the provider, not the page. One deliberate exception uses a physical side: a [Sheet](/docs/components/sheet)'s
+`side="left"` stays on the left in a right-to-left layout, because the caller chose a screen edge. The Angular
+library takes the other route to the same outcome: its overlays use the browser's top layer rather than a portal,
+so a surface stays inside the subtree that set its direction, and floating surfaces take a logical side (`start`,
+`end`). See [Angular](/docs/angular#accessibility).
+
+## What is checked
+
+- **Source.** `pnpm check:rtl` fails CI when a converted React file gains a physical-direction class, and
+  lists the files not converted yet (`RTL.md` has the current count).
+- **Keyboard.** Keyboard tests assert that arrow keys mirror under `dir="rtl"` for Tabs and Data Grid, among
+  others; a submenu's placement under RTL has its own test.
+- **Native platforms.** Each platform's RTL tests are counted per component on
+  [Supported platforms](/docs/platforms). A component without one is not audited, which is not the same as
+  broken.
+
+None of this is a visual-regression check of every component in right-to-left, which does not exist yet.
+
 ## Native platforms
 
 Each native port has its own, separate direction mechanism, independent
@@ -69,3 +90,10 @@ Directional icons (back, previous and next, breadcrumb separators) turn
 around with the direction on every platform; close marks, checks and media
 controls do not. [Icons](/docs/icons#icons-in-rtl-interfaces) lists which
 is which, and what to do for icons you pass in yourself.
+
+## Related guides
+
+- [Accessibility](/docs/accessibility): keyboard, focus and contrast evidence for the React library.
+- [Platform coverage](/docs/platforms): RTL test evidence counted per platform.
+- [Direction Provider](/docs/components/direction-provider): the component that sets direction for a subtree.
+- [Design tokens](/docs/tokens): the spacing scale the logical properties above are built on.

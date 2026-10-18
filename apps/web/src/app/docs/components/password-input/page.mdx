@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Password Input",
-  description: "An InputGroup recipe — a password field with a show / hide toggle.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("password-input", "An InputGroup recipe — a password field with a show / hide toggle.");
 
 # Password Input
 
@@ -11,13 +10,13 @@ An InputGroup recipe — a password field with a show / hide toggle.
 
 <ComponentPreview name="password-input-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add password-input
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { PasswordInput } from "@kinetixui/ui";

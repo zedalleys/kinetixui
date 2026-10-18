@@ -60,7 +60,18 @@ const angularDefined = (() => {
     .join("\n");
   // `@Component({...}) export class KxBanner` / `@Directive({...}) export class KxList`
   const decorated = new Set([...src.matchAll(/@(?:Component|Directive)\s*\(\{[\s\S]*?\}\)\s*export\s+class\s+(Kx[A-Za-z0-9]+)/g)].map((m) => m[1]));
-  return (slug) => decorated.has(`Kx${pascal(sourceName(slug, "Angular"))}`);
+  // …and a name the package exports is a component to its consumer however it got there: an alias
+  // (`export { KxCommand as KxCombobox }`) defines no class, so the decorated test alone would miss it.
+  const entry = `${root}/packages/ui-angular/src/public-api.ts`;
+  const exported = new Set(
+    existsSync(entry)
+      ? [...readFileSync(entry, "utf8").replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "").matchAll(/\b(Kx[A-Za-z0-9]+)\b/g)].map((m) => m[1])
+      : [],
+  );
+  return (slug) => {
+    const name = `Kx${pascal(sourceName(slug, "Angular"))}`;
+    return decorated.has(name) || exported.has(name);
+  };
 })();
 
 /** The native platforms are file-per-component, which is what check:platform-source already resolves. */

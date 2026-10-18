@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Navigation Menu",
-  description: "A collection of links for navigating websites.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("navigation-menu", "A collection of links for navigating websites.");
 
 # Navigation Menu
 
@@ -11,13 +10,13 @@ A collection of links for navigating websites.
 
 <ComponentPreview name="navigation-menu-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add navigation-menu
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuLink } from "@kinetixui/ui";

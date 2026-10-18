@@ -17,6 +17,11 @@ validates. This file stays the schedule.
 
 The machine-readable version of every row is `register.json`, which `pnpm check:content` validates.
 
+**Execution from 2026-10-19** follows the rolling 14-day plan in
+[`../distribution/execution-calendar.md`](../distribution/execution-calendar.md), which carries overdue assets
+forward without changing any day offset below. `pnpm marketing:inventory` prints every asset's status and
+planned date from the registers.
+
 ## Cadence
 
 **2–3 original assets a week, plus repurposing.** Twenty assets in thirty days, from six content families.
@@ -49,13 +54,13 @@ appears, which is why they carry no fixed day.
 | **Week 2 — architecture** |
 | 8 | **ART-002** | dev.to | article | NEUTRAL | B | Awareness | *Your design tokens stop at the web boundary* | Token contract → `/docs/tokens` | `kx_p2_b_token_boundary` | — | **Published** 2026-10-06 |
 | 9 | **LI-005** | LinkedIn | post | NEUTRAL | B | Awareness | The boundary, and the copies nobody maintains | Token contract → `/docs/tokens` | `kx_p2_b_token_boundary` | ART-002 | Ready; publication disputed — [correction](../distribution/october-7-correction.md) |
-| 11 | **X-004** | X | thread (5) | NEUTRAL | B | Awareness | The token boundary, in five | `/docs/tokens` | `kx_p2_b_token_boundary` | ART-002 | Ready |
-| 13 | **LI-007** | LinkedIn | post | P2 | F | Evaluation | Two trades: runtime vs native implementations | Catalogue → `/components` | `kx_p2_f_two_trades` | — | Ready |
+| 11 | **X-004** | X | thread (5) | NEUTRAL | B | Awareness | The token boundary, in five | `/docs/tokens` | `kx_p2_b_token_boundary` | ART-002 | **Published** 2026-10-09 |
+| 13 | **LI-007** | LinkedIn | post | P2 | F | Evaluation | Two trades: runtime vs native implementations | Catalogue → `/components` | `kx_p2_f_two_trades` | — | **Published** 2026-10-12 |
 | — | **COM-001** | community | comment | P2 | B | Awareness | Cross-platform token architecture | opportunistic | — | ART-002 | Brief |
 | **Week 3 — proof** |
-| 15 | **ART-001** | dev.to | article | P1 | A | Awareness | *Your cross-platform design system may be lying about parity* | Coverage → `/docs/platforms` | `kx_p1_a_parity_proof` | — | **Drafted** (existing) |
-| 16 | **LI-001** | LinkedIn | post | P1 | A | Awareness | Parity post A, with the article | Article, then `/docs/platforms` | `kx_p1_a_parity_proof` | ART-001 | **Drafted** (existing) |
-| 17 | **X-001** | X | thread | P1 | A | Awareness | Parity thread | `/docs/platforms` | `kx_p1_a_parity_proof` | ART-001 | **Drafted** (existing) |
+| 15 | **ART-001** | dev.to | article | P1 | A | Awareness | *Your cross-platform design system may be lying about parity* | Coverage → `/docs/platforms` | `kx_p1_a_parity_proof` | — | **Published** 2026-10-13 |
+| 16 | **LI-001** | LinkedIn | post | P1 | A | Awareness | Parity post A, with the article | Article, then `/docs/platforms` | `kx_p1_a_parity_proof` | ART-001 | Ready; tagged link as first comment |
+| 17 | **X-001** | X | thread | P1 | A | Awareness | Parity thread | `/docs/platforms` | `kx_p1_a_parity_proof` | ART-001 | Ready; tagged link as reply to post 9 |
 | 18 | **X-008** | X | thread (4) | P2 | F | Evaluation | Two trades | `/components` | `kx_p2_f_two_trades` | LI-007 | Ready |
 | 20 | **LI-008** | LinkedIn | post | P1 | D | Evaluation | A partial count is not a tick | Evidence → `/docs/platforms` | `kx_p1_d_partial_evidence` | — | Ready |
 | 21 | **X-007** | X | single | P1 | D | Evaluation | Fractions, not ticks | — | `kx_p1_d_partial_evidence` | LI-008 | Ready |

@@ -3,8 +3,8 @@ id: a01
 channel: x
 format: thread
 supports: article.md
-cta: <DEV_ARTICLE_URL>
-status: drafted
+cta: https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0
+status: ready
 ---
 
 # X — thread (9 posts)
@@ -122,7 +122,7 @@ When documentation turns out to be wrong, don't just fix the documentation.
 Ask what would have caught it, write that, and run it against everything you've
 already published.
 
-Mine found five more problems on its first run.
+Mine found four more problems.
 
 ---
 
@@ -134,7 +134,7 @@ extracted region. Six of a hundred-odd so far.
 Current coverage is generated from the manifest — edit it by hand and the build
 fails.
 
-<DEV_ARTICLE_URL>
+https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0
 
 ---
 

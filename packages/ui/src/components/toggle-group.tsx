@@ -15,7 +15,9 @@ const ToggleGroup = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> & VariantProps<typeof toggleVariants>
 >(({ className, variant, size, children, ...props }, ref) => (
-  <ToggleGroupPrimitive.Root ref={ref} className={cn("flex items-center gap-1", className)} {...props}>
+  // Items wrap rather than overflow: at 320px with 200% text a row of three labelled items is wider than
+  // the screen, and a group that scrolls the page sideways fails reflow (check:toggle-motion, "matrix").
+  <ToggleGroupPrimitive.Root ref={ref} className={cn("flex flex-wrap items-center gap-1", className)} {...props}>
     <ToggleGroupContext.Provider value={{ variant, size }}>{children}</ToggleGroupContext.Provider>
   </ToggleGroupPrimitive.Root>
 ));

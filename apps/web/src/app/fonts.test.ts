@@ -81,10 +81,16 @@ describe("the vendored fonts are complete and licensed", () => {
 
   it("carries a licence for every font", () => {
     // OFL 1.1 permits redistribution only while the licence travels with the font.
-    const licences = readdirSync(fontsDir).filter((f) => f.endsWith("-OFL.txt"));
-    expect(licences.length).toBeGreaterThanOrEqual(woff2.length);
-    for (const l of licences) {
-      expect(readFileSync(path.join(fontsDir, l), "utf8")).toContain("SIL Open Font License");
+    const licenceFor: Record<string, string> = {
+      "inter-latin.woff2": "Inter-OFL.txt",
+      "space-grotesk-latin.woff2": "SpaceGrotesk-OFL.txt",
+      "jetbrains-mono-latin.woff2": "JetBrainsMono-OFL.txt",
+      "jetbrains-mono-tree.woff2": "JetBrainsMono-OFL.txt",
+    };
+    for (const font of woff2) {
+      const licence = licenceFor[font];
+      expect(licence, `missing licence mapping for ${font}`).toBeDefined();
+      expect(readFileSync(path.join(fontsDir, licence!), "utf8")).toContain("SIL Open Font License");
     }
   });
 });

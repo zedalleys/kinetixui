@@ -2,11 +2,22 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import * as Dialog from "@radix-ui/react-dialog";
-import { Command } from "cmdk";
-import { Circle, FileText, Laptop, Moon, Search, Sun } from "lucide-react";
+import {
+  Button,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  Kbd,
+  KbdGroup,
+} from "@kinetixui/ui";
+import { Blocks, Circle, FileText, Laptop, Moon, Search, Sun, Workflow } from "lucide-react";
 import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
+import { analytics, type SearchResultType } from "@/lib/analytics";
+import { describe, rankCommand } from "@/lib/command-search";
+import type { SearchProjection } from "@/lib/search-projection";
 import { docsNav, mainNav } from "@/lib/site";
 
 /** "⌘" on Apple platforms, "Ctrl" everywhere else. Resolves after mount to keep
@@ -23,19 +34,101 @@ function useModKey() {
   return mod;
 }
 
-function Kbd({ children }: { children: React.ReactNode }) {
-  return (
-    <kbd className="inline-flex min-w-[1.5rem] items-center justify-center rounded border border-border bg-background px-1.5 py-0.5 font-mono text-[11px] font-medium leading-none text-muted-foreground">
-      {children}
-    </kbd>
-  );
+/**
+ * The library Kbd, at the site's 12px floor for readable compact text (`check:web-quality`'s type check). Kbd's
+ * own size is the library's 11px label step, which is right inside a component preview but below what this
+ * site holds its chrome to; `text-label-md` is the next step of the same scale.
+ */
+function Key(props: React.ComponentProps<typeof Kbd>) {
+  return <Kbd {...props} className="text-label-md" />;
+}
+
+/**
+ * The blocks, use cases and component business terms, from the static `/search-index.json` (lib/search-projection.ts),
+ * fetched once — when the reader first reaches for the menu — so no page's JavaScript carries them. Until it arrives,
+ * or if it never does, the menu is exactly what it was: navigation, docs and theme.
+ */
+let projection: Promise<SearchProjection | null> | null = null;
+function loadProjection(): Promise<SearchProjection | null> {
+  projection ??= fetch("/search-index.json")
+    .then((r) => {
+      if (!r.ok) throw new Error(`search-index.json: ${r.status}`);
+      return r.json() as Promise<SearchProjection>;
+    })
+    .catch(() => {
+      projection = null; // a failed request or an error status: let the next open try again
+      return null;
+    });
+  return projection;
+}
+/** Test seam: forget a loaded projection. */
+export function resetSearchProjectionForTests() {
+  projection = null;
+}
+
+function useSearchProjection(open: boolean) {
+  const [data, setData] = React.useState<SearchProjection | null>(null);
+  React.useEffect(() => {
+    if (!open || data) return;
+    let live = true;
+    void loadProjection().then((p) => {
+      if (live && p) setData(p);
+    });
+    return () => {
+      live = false;
+    };
+  }, [open, data]);
+  return data;
+}
+
+type CommandItemData = {
+  value: string;
+  title: string;
+  subtitle?: string;
+  keywords: string[];
+  icon: React.ReactNode;
+  /** the kind of destination, for `search_result_selected` — never the title or URL */
+  type: SearchResultType;
+  run: () => void;
+};
+type CommandGroupData = { heading: string; items: CommandItemData[] };
+
+/**
+ * Keeps `aria-activedescendant` on the input and the listbox pointing at the highlighted result.
+ *
+ * cmdk 1.1 records the highlighted item's id one step late: after a query change the attribute was either missing
+ * (the first result was never announced to a screen reader) or, once results remount as the menu reorders them, the
+ * id of an element that no longer exists, which axe reports as `aria-valid-attr-value`. The highlight itself
+ * (`aria-selected`) is right, so this follows it.
+ */
+function useActiveDescendant(list: HTMLElement | null) {
+  React.useEffect(() => {
+    const input = list?.closest("[cmdk-root]")?.querySelector<HTMLElement>("[cmdk-input]");
+    if (!list || !input) return;
+    const sync = () => {
+      const id = list.querySelector<HTMLElement>('[cmdk-item][aria-selected="true"]')?.id;
+      for (const el of [input, list]) {
+        if (id && el.getAttribute("aria-activedescendant") !== id) el.setAttribute("aria-activedescendant", id);
+        else if (!id && el.hasAttribute("aria-activedescendant")) el.removeAttribute("aria-activedescendant");
+      }
+    };
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(list, { subtree: true, childList: true, attributes: true, attributeFilter: ["aria-selected", "aria-activedescendant"] });
+    return () => observer.disconnect();
+  }, [list]);
 }
 
 export function CommandMenu() {
   const router = useRouter();
   const { setTheme } = useTheme();
   const [open, setOpen] = React.useState(false);
+  const openRef = React.useRef(open);
+  React.useEffect(() => {
+    openRef.current = open;
+  }, [open]);
   const mod = useModKey();
+  const extra = useSearchProjection(open);
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -46,6 +139,9 @@ export function CommandMenu() {
           e.target instanceof HTMLTextAreaElement
         )
           return;
+        // Not over another open dialog, such as the mobile menu: two stacked modals fight over focus, and closing
+        // this one handed focus to its trigger in the header behind the other, which that dialog hides from AT.
+        if (!openRef.current && document.querySelector('[role="dialog"][data-state="open"]')) return;
         e.preventDefault();
         setOpen((o) => !o);
       }
@@ -54,124 +150,161 @@ export function CommandMenu() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  const run = React.useCallback((fn: () => void) => {
+  const run = React.useCallback((item: Pick<CommandItemData, "type" | "run">) => {
     setOpen(false);
-    fn();
+    analytics.track("search_result_selected", { target: item.type, source: "header", location: "command_menu" });
+    item.run();
   }, []);
 
-  // A Radix modal, as in MobileNav: it traps Tab inside, makes the page behind inert, closes on Esc (which
-  // the footer below promises), names the dialog, and returns focus to the trigger on close. The hand-rolled
-  // overlay it replaces did none of those.
-  return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger className="inline-flex h-9 w-full items-center gap-2 rounded-md border border-input bg-muted/50 px-3 text-[13px] text-muted-foreground transition-colors hover:bg-muted sm:w-56">
-        <Search className="size-4" />
-        <span className="flex-1 text-left">Search…</span>
-        <span className="pointer-events-none hidden items-center gap-1 sm:flex">
-          <Kbd>{mod}</Kbd>
-          <Kbd>K</Kbd>
-        </span>
-      </Dialog.Trigger>
+  const [query, setQuery] = React.useState("");
+  const [list, setList] = React.useState<HTMLDivElement | null>(null);
+  useActiveDescendant(list);
+  React.useEffect(() => {
+    if (!open) setQuery("");
+  }, [open]);
 
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-scrim backdrop-blur-sm" />
-        <Dialog.Content
-          aria-describedby={undefined}
-          className="fixed inset-x-4 top-[20vh] z-50 mx-auto max-w-lg focus:outline-none"
+  /*
+    Every destination as data, so the groups can be ordered by their best match. cmdk ranks the items inside a group
+    with `rankCommand`, but its own group reordering does not take effect here (measured: an exact "Commerce" use case
+    stayed below two blocks that only mention commerce), and the first item is the one Enter runs. So a group with an
+    exact match moves up; with no query the order is the familiar one. Every item has a unique `value` (two groups may
+    share a title) and its title as `keywords[0]`, which is what `rankCommand` ranks on.
+  */
+  const groups = React.useMemo((): CommandGroupData[] => {
+    const go = (href: string) => () => router.push(href);
+    const list: CommandGroupData[] = [
+      { heading: "Links", items: mainNav.map((i) => ({ value: `link:${i.href}`, title: i.title, keywords: [i.title], icon: <Circle />, type: "link" as const, run: go(i.href) })) },
+      ...docsNav.map((g) => ({
+        heading: g.title,
+        items: g.items.map((i) => ({
+          value: `docs:${i.href}`,
+          title: i.title,
+          keywords: [i.title, ...(extra?.componentKeywords[i.href] ?? [])],
+          icon: <FileText />,
+          type: (i.href.startsWith("/docs/components/") ? "component" : "docs") as SearchResultType,
+          run: go(i.href),
+        })),
+      })),
+      ...(extra
+        ? [
+            { heading: "Blocks", entries: extra.blocks, icon: <Blocks /> },
+            { heading: "Use cases", entries: extra.useCases, icon: <Workflow /> },
+          ].map((g) => ({
+            heading: g.heading,
+            items: g.entries.map((e) => ({
+              value: e.id,
+              title: e.title,
+              subtitle: `${e.context} · ${e.description}`,
+              keywords: [e.title, e.context, ...e.keywords, describe(e.description)],
+              icon: g.icon,
+              type: (e.type === "use-case" ? "use_case" : e.type) as SearchResultType,
+              run: go(e.href),
+            })),
+          }))
+        : []),
+      {
+        heading: "Theme",
+        items: (
+          [
+            ["light", "Light", <Sun key="i" />],
+            ["dark", "Dark", <Moon key="i" />],
+            ["system", "System", <Laptop key="i" />],
+          ] as const
+        ).map(([id, title, icon]) => ({ value: `theme:${id}`, title, keywords: [title, "theme"], icon, type: "theme" as const, run: () => setTheme(id) })),
+      },
+    ];
+    const nonEmpty = list.filter((g) => g.items.length > 0);
+    if (!query.trim()) return nonEmpty;
+    const best = (g: CommandGroupData) => Math.max(...g.items.map((i) => rankCommand(i.value, query, i.keywords)));
+    return nonEmpty
+      .map((g, order) => ({ g, order, score: best(g) }))
+      .sort((x, y) => y.score - x.score || x.order - y.order)
+      .map((x) => x.g);
+  }, [extra, query, router, setTheme]);
+
+  // The library CommandDialog: a Radix modal that traps Tab, makes the page behind inert, closes on Esc (which the
+  // footer below promises), carries the dialog's name and returns focus to the trigger on close — the trigger is
+  // passed in so that it is the dialog's own, which is what focus returns to after ⌘K as well as after a click.
+  return (
+    <CommandDialog
+      open={open}
+      onOpenChange={setOpen}
+      title="Search the docs"
+      commandProps={{ label: "Command menu", filter: rankCommand }}
+      trigger={
+        /*
+          One trigger at every width. Below `sm` it collapses to a square icon button rather than being hidden: phones
+          had no site search at all, and a second trigger would have meant a second instance of this component and a
+          second global ⌘K listener, which toggles the dialog twice. The visible text becomes `sr-only` instead of
+          being removed, so the accessible name starts with the same "Search…" at every width (the shortcut keys join
+          it where they are shown, so the name always contains the visible label).
+        */
+        <Button
+          variant="Outline"
+          size="sm"
+          className="kx-hit size-9 p-0 text-body-md font-normal text-muted-foreground sm:h-9 sm:w-56 sm:justify-start sm:gap-2 sm:px-3"
+          // start fetching the search projection as soon as the reader heads for the menu
+          onPointerEnter={() => void loadProjection()}
+          onFocus={() => void loadProjection()}
         >
-          <Dialog.Title className="sr-only">Search the docs</Dialog.Title>
-          <Command
-            label="Command menu"
-            className="w-full overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl"
-          >
-            <div className="flex items-center gap-2 border-b border-border px-3">
-              <Search className="size-4 text-muted-foreground" />
-              <Command.Input
-                autoFocus
-                placeholder="Type a command or search…"
-                className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              />
-            </div>
-            <Command.List className="max-h-80 overflow-y-auto p-2">
-              <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
-                No results found.
-              </Command.Empty>
-
-              <Command.Group heading="Links" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground">
-                {mainNav.map((item) => (
-                  <Item key={item.href} onSelect={() => run(() => router.push(item.href))}>
-                    <Circle className="size-3" />
-                    {item.title}
-                  </Item>
-                ))}
-              </Command.Group>
-
-              {docsNav.map((group) => (
-                <Command.Group
-                  key={group.title}
-                  heading={group.title}
-                  className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground"
-                >
-                  {group.items.map((item) => (
-                    <Item key={item.href} onSelect={() => run(() => router.push(item.href))}>
-                      <FileText className="size-3" />
-                      {item.title}
-                    </Item>
-                  ))}
-                </Command.Group>
-              ))}
-
-              <Command.Group heading="Theme" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-muted-foreground">
-                <Item onSelect={() => run(() => setTheme("light"))}>
-                  <Sun className="size-3" /> Light
-                </Item>
-                <Item onSelect={() => run(() => setTheme("dark"))}>
-                  <Moon className="size-3" /> Dark
-                </Item>
-                <Item onSelect={() => run(() => setTheme("system"))}>
-                  <Laptop className="size-3" /> System
-                </Item>
-              </Command.Group>
-            </Command.List>
-
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border px-3 py-2 text-[11px] text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Kbd>↑</Kbd>
-                <Kbd>↓</Kbd>
-                to navigate
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Kbd>↵</Kbd>
-                to select
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Kbd>Esc</Kbd>
-                to close
-              </span>
-              <span className="ml-auto flex items-center gap-1.5">
-                <Kbd>{mod}</Kbd>
-                <Kbd>K</Kbd>
-                or
-                <Kbd>/</Kbd>
-              </span>
-            </div>
-          </Command>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
-  );
-}
-
-function Item({ children, onSelect }: { children: React.ReactNode; onSelect: () => void }) {
-  return (
-    <Command.Item
-      onSelect={onSelect}
-      className={cn(
-        "flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm",
-        "aria-selected:bg-accent aria-selected:text-accent-foreground",
-      )}
+          <Search aria-hidden />
+          <span className="sr-only sm:not-sr-only sm:flex-1 sm:text-start">Search…</span>
+          <KbdGroup className="pointer-events-none hidden sm:inline-flex">
+            <Key>{mod}</Key>
+            <Key>K</Key>
+          </KbdGroup>
+        </Button>
+      }
     >
-      {children}
-    </Command.Item>
+      <CommandInput placeholder="Type a command or search…" value={query} onValueChange={setQuery} />
+      <CommandList ref={setList}>
+        <CommandEmpty>No results found.</CommandEmpty>
+        {groups.map((g) => (
+          <CommandGroup key={g.heading} heading={g.heading}>
+            {g.items.map((item) => (
+              // cmdk reads `keywords` when an item mounts, so the key changes once when the projection's business
+              // terms arrive, and the component items re-register with them
+              <CommandItem key={`${item.value}${extra ? ":terms" : ""}`} value={item.value} keywords={item.keywords} onSelect={() => run(item)}>
+                {item.icon}
+                {item.subtitle ? (
+                  <span className="flex min-w-0 flex-col">
+                    <span>{item.title}</span>
+                    <span className="text-body-sm text-muted-foreground">{item.subtitle}</span>
+                  </span>
+                ) : (
+                  item.title
+                )}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        ))}
+      </CommandList>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border px-3 py-2 text-body-sm text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <KbdGroup>
+            <Key>↑</Key>
+            <Key>↓</Key>
+          </KbdGroup>
+          to navigate
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Key>↵</Key>
+          to select
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Key>Esc</Key>
+          to close
+        </span>
+        <span className="ms-auto flex items-center gap-1.5">
+          <KbdGroup>
+            <Key>{mod}</Key>
+            <Key>K</Key>
+          </KbdGroup>
+          or
+          <Key>/</Key>
+        </span>
+      </div>
+    </CommandDialog>
   );
 }

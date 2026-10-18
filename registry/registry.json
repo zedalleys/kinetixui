@@ -44,6 +44,33 @@
       ]
     },
     {
+      "name": "address-fields",
+      "type": "registry:ui",
+      "title": "Address Fields",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens",
+        "field",
+        "input"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/address-fields.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/address-fields.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "alert-dialog",
       "type": "registry:ui",
       "title": "Alert Dialog",
@@ -89,6 +116,31 @@
           "path": "registry/kinetixui/ui/alert.tsx",
           "type": "registry:ui",
           "target": "components/ui/alert.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "amount-display",
+      "type": "registry:ui",
+      "title": "Amount Display",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/amount-display.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/amount-display.tsx"
         },
         {
           "path": "registry/kinetixui/lib/utils.ts",
@@ -335,6 +387,7 @@
       "title": "Calendar",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
+        "@radix-ui/react-direction",
         "clsx",
         "lucide-react",
         "react-day-picker",
@@ -654,6 +707,34 @@
       ]
     },
     {
+      "name": "country-select",
+      "type": "registry:ui",
+      "title": "Country Select",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens",
+        "command",
+        "popover"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/country-select.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/country-select.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "data-grid",
       "type": "registry:ui",
       "title": "Data Grid",
@@ -719,7 +800,6 @@
       ],
       "registryDependencies": [
         "tokens",
-        "button",
         "calendar",
         "popover"
       ],
@@ -728,6 +808,35 @@
           "path": "registry/kinetixui/ui/date-picker.tsx",
           "type": "registry:ui",
           "target": "components/ui/date-picker.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "date-range-input",
+      "type": "registry:ui",
+      "title": "Date Range Input",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "clsx",
+        "lucide-react",
+        "react-day-picker",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens",
+        "calendar",
+        "popover"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/date-range-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-range-input.tsx"
         },
         {
           "path": "registry/kinetixui/lib/utils.ts",
@@ -1043,6 +1152,34 @@
           "path": "registry/kinetixui/ui/form.tsx",
           "type": "registry:ui",
           "target": "components/ui/form.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "guest-picker",
+      "type": "registry:ui",
+      "title": "Guest Picker",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens",
+        "number-input",
+        "popover"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/guest-picker.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/guest-picker.tsx"
         },
         {
           "path": "registry/kinetixui/lib/utils.ts",
@@ -1720,6 +1857,31 @@
       ]
     },
     {
+      "name": "pass-card",
+      "type": "registry:ui",
+      "title": "Pass Card",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/pass-card.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/pass-card.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "password-input",
       "type": "registry:ui",
       "title": "Password Input",
@@ -1747,6 +1909,33 @@
       ]
     },
     {
+      "name": "phone-input",
+      "type": "registry:ui",
+      "title": "Phone Input",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens",
+        "input-group"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/phone-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/phone-input.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "popover",
       "type": "registry:ui",
       "title": "Popover",
@@ -1765,6 +1954,31 @@
           "path": "registry/kinetixui/ui/popover.tsx",
           "type": "registry:ui",
           "target": "components/ui/popover.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "price-breakdown",
+      "type": "registry:ui",
+      "title": "Price Breakdown",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/price-breakdown.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/price-breakdown.tsx"
         },
         {
           "path": "registry/kinetixui/lib/utils.ts",
@@ -1879,6 +2093,32 @@
       ]
     },
     {
+      "name": "reference-code",
+      "type": "registry:ui",
+      "title": "Reference Code",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/reference-code.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/reference-code.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "resizable",
       "type": "registry:ui",
       "title": "Resizable",
@@ -1897,6 +2137,34 @@
           "path": "registry/kinetixui/ui/resizable.tsx",
           "type": "registry:ui",
           "target": "components/ui/resizable.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "result-state",
+      "type": "registry:ui",
+      "title": "Result State",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "class-variance-authority",
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens",
+        "spinner"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/result-state.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/result-state.tsx"
         },
         {
           "path": "registry/kinetixui/lib/utils.ts",
@@ -2378,12 +2646,40 @@
       ]
     },
     {
+      "name": "time-slot-picker",
+      "type": "registry:ui",
+      "title": "Time Slot Picker",
+      "description": "Ported onto the KinetixUI token contract.",
+      "dependencies": [
+        "@radix-ui/react-radio-group",
+        "clsx",
+        "lucide-react",
+        "tailwind-merge"
+      ],
+      "registryDependencies": [
+        "tokens"
+      ],
+      "files": [
+        {
+          "path": "registry/kinetixui/ui/time-slot-picker.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/time-slot-picker.tsx"
+        },
+        {
+          "path": "registry/kinetixui/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
       "name": "timeline",
       "type": "registry:ui",
       "title": "Timeline",
       "description": "Ported onto the KinetixUI token contract.",
       "dependencies": [
         "clsx",
+        "lucide-react",
         "tailwind-merge"
       ],
       "registryDependencies": [

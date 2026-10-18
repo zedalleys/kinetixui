@@ -2,13 +2,13 @@
    Source of truth: apps/web/src/registry/demos.tsx */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { AppBar, AppBarActions, AppBarBrand, AppBarLink, AppBarNav } from "@kinetixui/ui";
+import { AppBar, AppBarActions, AppBarBrand, AppBarLink, AppBarNav, Button } from "@kinetixui/ui";
 import { Bell } from "lucide-react";
 
 const Demo = () => (
     <AppBar className="w-full max-w-2xl rounded-md border">
       <AppBarBrand>
-        <span className="grid size-6 place-items-center rounded bg-primary text-[11px] font-bold text-primary-foreground">
+        <span className="grid size-6 place-items-center rounded bg-primary text-body-sm font-bold text-primary-foreground">
           A
         </span>
         Acme
@@ -21,13 +21,9 @@ const Demo = () => (
         <AppBarLink href="#">Team</AppBarLink>
       </AppBarNav>
       <AppBarActions>
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-        >
-          <Bell className="size-4" />
-        </button>
+        <Button type="button" variant="Ghost" size="icon" aria-label="Notifications" className="size-9 p-0 text-muted-foreground hover:text-foreground">
+          <Bell aria-hidden />
+        </Button>
         <span className="grid size-8 place-items-center rounded-full bg-muted text-xs font-medium">KZ</span>
       </AppBarActions>
     </AppBar>

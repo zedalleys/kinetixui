@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as Tabs from "@radix-ui/react-tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@kinetixui/ui";
 import { Check } from "lucide-react";
 import Link from "next/link";
 import { PreferencesPanel } from "@/examples/flagship-preferences";
@@ -9,10 +9,16 @@ import { flagshipExampleSource } from "@/registry/flagship-example.generated";
 import { analytics } from "@/lib/analytics";
 import { PLATFORM_FROM_CODE_TAB } from "@/lib/analytics-surfaces";
 import { catalogPlatformCount, documentedExceptionCount, fullCoverageCount } from "@/lib/project-stats";
+import { PLATFORMS, PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
 import { componentTotal } from "@/lib/platform-support";
 import { PLATFORM_TABS, type CodeTab } from "@/lib/platform-tabs";
+import { codeTabFor, platformIdForCodeTab, setPreferredPlatform, usePreferredPlatform } from "@/lib/platform-preference";
 import { CopyButton } from "./copy-button";
-import { cn } from "@/lib/utils";
+
+/** "Angular (preview)" — platforms whose catalogue is still rolling out, derived rather than typed. */
+const ROLLING_OUT = PLATFORMS.filter((p) => !PLATFORM_DEFINITIONS[p].catalogComplete).map(
+  (p) => `${PLATFORM_DEFINITIONS[p].label} (${PLATFORM_DEFINITIONS[p].maturity})`,
+);
 
 /** The recipe's identifier in analytics — not a real registry component, so it's not `componentSlugFor`-derived. */
 const FLAGSHIP_COMPONENT = "flagship-preferences";
@@ -42,19 +48,16 @@ const VERIFICATION: Partial<Record<CodeTab, string>> = {
 /** The tabs, in manifest order, restricted to the platforms this recipe really has a source file for. */
 const FLAGSHIP_TABS = PLATFORM_TABS.filter((t) => SOURCE_KEY[t.tab]);
 
-const tabTrigger = cn(
-  "-mb-px border-b-2 border-transparent px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors",
-  "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-  "data-[state=active]:border-primary data-[state=active]:text-foreground",
-);
 
 export function CrossPlatformFlagship() {
-  const [platform, setPlatform] = React.useState<CodeTab>("react");
+  // the reader's platform, shared with the docs; this recipe has no Angular copy, so Angular shows React here
+  const preferred = codeTabFor(usePreferredPlatform());
+  const platform: CodeTab = SOURCE_KEY[preferred] ? preferred : "react";
 
   const onPlatformChange = (value: string) => {
     const next = value as CodeTab;
     if (next === platform) return; // an explicit change only — the default React tab rendering is not a selection
-    setPlatform(next);
+    if (!setPreferredPlatform(platformIdForCodeTab(next))) return; // a repeated callback for the same click
     analytics.track("platform_selected", {
       platform: PLATFORM_FROM_CODE_TAB[next],
       component: FLAGSHIP_COMPONENT,
@@ -64,11 +67,11 @@ export function CrossPlatformFlagship() {
   };
 
   // NOTE: copying this recipe's source is deliberately NOT tracked. It is tempting to reuse
-  // `component_code_copied` here, but that event is one of the three Developer Activation signals and its
+  // `component_code_copied` here, but that event is a Qualified Evaluation signal (analytics.md §3) and its
   // `component` property is what the "Top Components Copied" breakdown groups by. `flagship-preferences` is a
   // composed example, not an entry in components.manifest.json, so emitting it would both pollute that
-  // breakdown with a non-component and inflate activation with a homepage interaction. If we ever want this
-  // measured, it needs its own event and its own deliberate decision about whether it counts as activation —
+  // breakdown with a non-component and inflate Qualified Evaluation with a homepage interaction. If we ever want this
+  // measured, it needs its own event and its own deliberate decision about whether it counts toward Qualified Evaluation —
   // not a borrowed one. `cross-platform-flagship.test.tsx` asserts the silence.
 
   return (
@@ -83,7 +86,7 @@ export function CrossPlatformFlagship() {
           </div>
           <ul className="mt-6 space-y-2 border-t border-border pt-4">
             {FLAGSHIP_TABS.map((t) => (
-              <li key={t.tab} className="flex items-start gap-2 text-[12px] text-muted-foreground">
+              <li key={t.tab} className="flex items-start gap-2 text-body-sm text-muted-foreground">
                 <Check aria-hidden className="mt-0.5 size-3.5 shrink-0 text-primary" />
                 <span>
                   <span className="font-medium text-foreground">{t.label}</span> — {VERIFICATION[t.tab]}
@@ -94,38 +97,41 @@ export function CrossPlatformFlagship() {
         </div>
 
         {/* platform tabs + real, CI-compiled source */}
-        <Tabs.Root value={platform} onValueChange={onPlatformChange} className="flex flex-col bg-background">
-          <Tabs.List aria-label="Implementation platform" className="flex flex-wrap items-center gap-x-1 border-b border-border px-4">
+        <Tabs value={platform} onValueChange={onPlatformChange} className="flex flex-col bg-background">
+          <TabsList aria-label="Implementation platform" className="px-4">
             {FLAGSHIP_TABS.map((t) => (
-              <Tabs.Trigger key={t.tab} value={t.tab} className={tabTrigger}>
+              <TabsTrigger key={t.tab} value={t.tab} >
                 {t.label}
-              </Tabs.Trigger>
+              </TabsTrigger>
             ))}
-          </Tabs.List>
+          </TabsList>
           {FLAGSHIP_TABS.map((t) => {
             const source = flagshipExampleSource[SOURCE_KEY[t.tab]!];
             return (
-              <Tabs.Content key={t.tab} value={t.tab} className="relative flex-1">
+              <TabsContent key={t.tab} value={t.tab} className="relative flex-1">
                 {/* copies fine; intentionally reports nothing — see the note above */}
                 <CopyButton value={source} className="absolute right-3 top-3 z-10" />
                 <pre
                   // a code block scrolls sideways/vertically when it overflows, so the keyboard must be able to reach it
                   tabIndex={0}
                   aria-label={`${t.label} source`}
-                  className="h-full max-h-[420px] overflow-auto p-4 font-mono text-[12.5px] leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                  className="h-full max-h-[420px] overflow-auto p-4 font-mono text-code leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                 >
                   <code>{source}</code>
                 </pre>
-              </Tabs.Content>
+              </TabsContent>
             );
           })}
-        </Tabs.Root>
+        </Tabs>
       </div>
 
-      <p className="mt-4 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+      <p className="mt-4 font-mono text-label-md uppercase tracking-wide text-muted-foreground">
         <Link href="/docs/platforms" className="underline-offset-4 hover:text-foreground hover:underline">
-          {fullCoverageCount}/{componentTotal} catalogue entries on all {catalogPlatformCount} platforms · {documentedExceptionCount} documented
-          exceptions
+          {/* "all 4" under a headline of 5 read as a miscount. These are the catalogue-complete platforms; the one
+              still rolling out is named rather than left for the reader to subtract. */}
+          {fullCoverageCount}/{componentTotal} catalogue entries on all {catalogPlatformCount} catalogue-complete platforms ·{" "}
+          {documentedExceptionCount} documented exceptions
+          {ROLLING_OUT.length > 0 ? ` · ${ROLLING_OUT.join(", ")} still rolling out` : ""}
         </Link>
       </p>
     </div>

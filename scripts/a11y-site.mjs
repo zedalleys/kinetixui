@@ -25,6 +25,7 @@
  */
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { resolve } from "node:path";
 import { chromium } from "playwright";
 
 const base = (process.argv.includes("--base") ? process.argv[process.argv.indexOf("--base") + 1] : "http://127.0.0.1:3100").replace(/\/$/, "");
@@ -33,9 +34,18 @@ const base = (process.argv.includes("--base") ? process.argv[process.argv.indexO
  * `--page /iot` (repeatable) sweeps only the named pages, for reproducing one finding locally. CI passes none, so it
  * always sweeps every page, and the ratchet check below still runs against the full list.
  */
-const ONLY_PAGES = process.argv.includes("--page")
-  ? process.argv.flatMap((arg, i) => (process.argv[i - 1] === "--page" ? [arg] : []))
-  : null;
+const { GUIDES } = await import(resolve("apps/web/src/lib/guides-data.ts"));
+/** Every registered guide, read from the registry so a guide added later is swept without editing this file. */
+const GUIDE_PAGES = GUIDES.map((g) => `/guides/${g.slug}`);
+
+/** `--guides` adds every registered guide to the `--page` list (the publication runbook uses it). */
+const ONLY_PAGES =
+  process.argv.includes("--page") || process.argv.includes("--guides")
+    ? [
+        ...(process.argv.includes("--guides") ? GUIDE_PAGES : []),
+        ...process.argv.flatMap((arg, i) => (process.argv[i - 1] === "--page" ? [arg] : [])),
+      ]
+    : null;
 
 /** One representative page per kind of layout, plus the pages with the densest custom UI. */
 const PAGES = [
@@ -63,8 +73,33 @@ const PAGES = [
   // selects, ranges, switches and a command strip — the densest set of custom controls outside /create, and
   // the only page whose components come from a different package. In the sweep for the same reason /create is.
   "/iot",
+  // The simulated Building Operations console linked from /iot: a dark shell with a floor plan, roving marker and
+  // floor groups, a zone table and live-updating totals. Custom layout throughout, so it is swept like /create.
+  "/demos/building-operations",
   "/docs/components/button",
   "/docs/components/data-grid",
+  // The three component pages the evaluator-journey audit found failing when it swept all 98: Accordion's trigger
+  // headings skipped a level under the page h1, and CodeBlock's and DiffViewer's scroll regions were unreachable by
+  // keyboard at 320px. Each is here because it was found failing off-sweep, which is the argument for sweeping it.
+  "/docs/components/accordion",
+  "/docs/components/code-block",
+  "/docs/components/diff-viewer",
+  // One page per remaining gallery category (Form Inputs, Navigation, Overlays, Feedback), so every category has
+  // at least one page under the gate. Button (Controls & Actions), Data Grid and the three above (Foundations,
+  // Data Display) cover the rest. A full 98-page sweep at this matrix is ~1,570 views; this is the bounded step.
+  "/docs/components/input",
+  "/docs/components/tabs",
+  "/docs/components/dialog",
+  "/docs/components/alert",
+  // The guides cluster (SEO Phase 3): long-form reading pages with their own layout, a status line, a wrapping CTA
+  // button and a related-reading footer. Swept in whichever publication state the registry is in, so the pages
+  // are already under the gate on the day they go live (marketing/seo/GUIDE-PUBLISH-RUNBOOK.md).
+  ...GUIDE_PAGES,
+  // Business discovery (W1): the capability index and the domain template, swept with the catalogue they filter. Both
+  // use-case pages share one template; each is listed because each renders different workflows and component cards.
+  "/capabilities",
+  "/use-cases/commerce",
+  "/use-cases/travel-booking",
 ];
 const WIDTHS = [
   // 320 is the narrowest width the site claims to support, and it is not a rounding of 375: a fixed-width
@@ -147,6 +182,19 @@ const LAYOUT_CONTRACTS = new Map([
   ],
 ]);
 
+/**
+ * Navigation contracts: what a reader must be able to reach on a page at every swept width, measured as rendered
+ * visibility rather than read from class names.
+ *
+ *   search   the site search trigger. It used to be `hidden` below 640px, so phones had no site search at all.
+ *   docs     on /docs/*, either the docs sidebar or the menu that carries the docs groups. The sidebar appears at
+ *            `lg` and the menu used to disappear at `md`, so 768–1023px had neither.
+ *
+ * Both are checked at every width and text size because both regressions were breakpoint arithmetic, and the
+ * band where they fail is exactly the one a desktop-only look never visits.
+ */
+const isDocsPage = (path) => path === "/docs" || path.startsWith("/docs/");
+
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const failures = [];
@@ -215,6 +263,26 @@ for (const scheme of SCHEMES) {
             };
           }, LAYOUT_CONTRACTS.get(path) ?? null);
           views++;
+          const reach = await page.evaluate(() => {
+            const shown = (el) => {
+              if (!el) return false;
+              const r = el.getBoundingClientRect();
+              const cs = getComputedStyle(el);
+              return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.display !== "none";
+            };
+            const header = document.querySelector("header");
+            const buttons = header ? [...header.querySelectorAll("button")] : [];
+            const named = (re) => buttons.some((b) => re.test((b.getAttribute("aria-label") || b.textContent || "").trim()) && shown(b));
+            return {
+              search: named(/^Search/),
+              menu: named(/^Menu$/),
+              sidebar: shown(document.querySelector('nav[aria-label="Documentation"]')),
+            };
+          });
+          if (!reach.search) failures.push(`${tag}: no visible site search trigger in the header`);
+          if (isDocsPage(path) && !reach.sidebar && !reach.menu) {
+            failures.push(`${tag}: no docs navigation — neither the sidebar nor the menu button is visible`);
+          }
           for (const v of result.violations) {
             failures.push(`${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")})`);
           }
@@ -271,7 +339,8 @@ if (failures.length) {
 }
 console.log(
   `a11y-site ok — ${(ONLY_PAGES ?? PAGES).length} pages × ${SCHEMES.length} themes × ${WIDTHS.length} widths × ${TEXT_SCALES.length} text sizes ` +
-    `(${views} views): no axe findings, no horizontal overflow, ${LAYOUT_CONTRACTS.size} layout contract(s) held.` +
+    `(${views} views): no axe findings, no horizontal overflow, ${LAYOUT_CONTRACTS.size} layout contract(s) held, ` +
+    `site search and docs navigation reachable at every width.` +
     (TEXT_SCALE_PENDING.size
       ? `\n  ${TEXT_SCALE_PENDING.size} page(s) pending at 200% text, each verified to still need it: ` +
         [...TEXT_SCALE_PENDING.keys()].join(", ")

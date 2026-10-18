@@ -3,7 +3,7 @@
 The React implementation of KinetixUI — CVA + Radix + Tailwind components styled only against the
 KinetixUI semantic token layer, never a raw hex.
 
-**Beta.** The catalogue is settled enough to build on (97 of 98 entries are lifecycle `stable`), but the
+**Beta.** The catalogue is settled enough to build on (97 of 109 entries are lifecycle `stable`; the rest are `beta`), but the
 package is pre-1.0 and minor versions can still move an API.
 
 ```bash
@@ -31,9 +31,11 @@ Three things have to be true: the token stylesheet is loaded, the Tailwind prese
 `.dark` is on an ancestor when you want the dark set.
 
 ```css
-/* your global stylesheet */
+/* your global stylesheet: all four, in this order */
 @import "@kinetixui/tokens/css";
 @import "@kinetixui/tokens/css/dark";
+@import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/tokens/css/extras/dark";
 ```
 
 ```ts
@@ -118,7 +120,7 @@ conversion is enforced forward in CI, but it is not complete — see
 - Pre-1.0: minor versions can move an API.
 - No per-component tree-shaking (above).
 - One catalogue entry, `combobox`, is a documented **recipe** over `Command` rather than a component —
-  there is no `Combobox` export. The catalogue is 98 entries, 97 of which are components.
+  there is no `Combobox` export. The catalogue is 109 entries, 108 of which are components.
 - No visual-regression suite exists yet, on any platform.
 
 ## Links

@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Navigation Bar",
-  description: "A mobile top app bar — back button, title, actions.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("navigation-bar", "A mobile top app bar — back button, title, actions.");
 
 # Navigation Bar
 
@@ -11,13 +10,13 @@ A mobile top app bar — back button, title, actions.
 
 <ComponentPreview name="navigation-bar-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add navigation-bar
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { NavigationBar } from "@kinetixui/ui";

@@ -40,7 +40,7 @@ const nativeSelectVariants = cva(
       },
       corners: {
         sharp: "rounded-none",
-        default: "rounded-sm",
+        default: "rounded-field",
         rounded: "rounded-md",
         pill: "rounded-full px-4",
       },

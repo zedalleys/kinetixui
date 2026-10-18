@@ -356,7 +356,7 @@ describe("The form family under RTL", () => {
     // Each slot is bordered on every side and pulled back a pixel, rather than sharing one neighbour's
     // divider, so that a row which wraps is still closed at the end it starts from — see the comment in
     // input-otp.tsx, and the geometry check in scripts/large-text.mjs.
-    expect(slot).toHaveClass("border", "[&:not(:first-child)]:-ms-px", "first:rounded-s-md", "last:rounded-e-md");
+    expect(slot).toHaveClass("border", "[&:not(:first-child)]:-ms-px", "first:rounded-s-field", "last:rounded-e-field");
     expect(slot.className).not.toMatch(/\bborder-[rl]\b|\brounded-[lr]-|\bborder-[ye]\b/);
   });
 
@@ -431,5 +431,131 @@ describe("The form family under RTL", () => {
     }
     await user.type(field, "مرحبا abc");
     expect(field.value).toBe("مرحبا abc");
+  });
+});
+
+describe("<Slider> describes itself on the thumb, the element with role=slider", () => {
+  it("reports a disabled Slider as disabled on the thumb, and draws it from data-disabled", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<Slider aria-label="Battery" defaultValue={[40]} disabled onValueChange={onValueChange} />);
+    const thumb = screen.getByRole("slider", { name: "Battery" });
+
+    // Radix puts aria-disabled on the role-less root only; a thumb does not inherit it
+    expect(thumb).toHaveAttribute("aria-disabled", "true");
+    expect(thumb).toHaveAttribute("data-disabled");
+    // the disabled look keys on data-disabled, because a span never matches :disabled
+    expect(thumb.closest("[data-orientation]:not([role])")?.className).toMatch(/data-\[disabled\]:opacity-disabled/);
+
+    await user.tab();
+    expect(thumb).not.toHaveFocus();
+    thumb.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("does not mark an enabled Slider's thumb disabled", () => {
+    render(<Slider aria-label="Volume" defaultValue={[50]} />);
+    expect(screen.getByRole("slider", { name: "Volume" })).not.toHaveAttribute("aria-disabled");
+  });
+
+  it("puts aria-valuetext on the thumb, where a screen reader reads the value", () => {
+    render(<Slider aria-label="Last sync" aria-valuetext="90 minutes ago" defaultValue={[2]} max={5} />);
+    const thumb = screen.getByRole("slider", { name: "Last sync" });
+    expect(thumb).toHaveAttribute("aria-valuetext", "90 minutes ago");
+    expect(thumb.closest("[data-orientation]:not([role])")).not.toHaveAttribute("aria-valuetext");
+  });
+  it("draws one thumb per value, so every end of a range can be reached, read and moved", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<Slider aria-label="Price" defaultValue={[20, 80]} max={100} onValueChange={onValueChange} />);
+
+    // One name cannot tell two thumbs apart, so it names the group and each thumb keeps its position's name
+    const group = screen.getByRole("group", { name: "Price" });
+    const [low, high] = screen.getAllByRole("slider");
+    expect(screen.getAllByRole("slider")).toHaveLength(2);
+    expect(group).toContainElement(high);
+    expect(low).toHaveAccessibleName("Minimum");
+    expect(high).toHaveAccessibleName("Maximum");
+    expect(low).toHaveAttribute("aria-valuenow", "20");
+    expect(high).toHaveAttribute("aria-valuenow", "80");
+
+    // The second value has its own tab stop and moves on its own
+    await user.tab();
+    await user.tab();
+    expect(high).toHaveFocus();
+    await user.keyboard("{ArrowLeft}");
+    expect(onValueChange).toHaveBeenLastCalledWith([20, 79]);
+  });
+
+  it("follows a controlled value's length and keeps a single-value Slider's name on its thumb", () => {
+    const { rerender } = render(<Slider aria-labelledby="lbl" value={[10, 40, 90]} max={100} />);
+    expect(screen.getAllByRole("slider").map((t) => t.getAttribute("aria-label"))).toEqual([
+      "Value 1 of 3",
+      "Value 2 of 3",
+      "Value 3 of 3",
+    ]);
+    rerender(<Slider aria-label="Volume" aria-valuetext="Loud" value={[90]} max={100} />);
+    const thumb = screen.getByRole("slider", { name: "Volume" });
+    expect(thumb).toHaveAttribute("aria-valuetext", "Loud");
+    expect(screen.queryByRole("group")).toBeNull();
+  });
+
+  it("follows a controlled value as it grows from one thumb to three and shrinks back", async () => {
+    const user = userEvent.setup();
+    function Controlled() {
+      const [value, setValue] = React.useState([50]);
+      return (
+        <>
+          <button onClick={() => setValue([20, 80])}>Two</button>
+          <button onClick={() => setValue([10, 50, 90])}>Three</button>
+          <button onClick={() => setValue([30])}>One</button>
+          <Slider aria-label="Price" aria-valuetext="Fifty" value={value} onValueChange={setValue} max={100} />
+        </>
+      );
+    }
+    render(<Controlled />);
+    const sliders = () => screen.getAllByRole("slider");
+    const names = () => sliders().map((t) => t.getAttribute("aria-label"));
+    const values = () => sliders().map((t) => t.getAttribute("aria-valuenow"));
+
+    expect(names()).toEqual(["Price"]);
+    expect(sliders()[0]).toHaveAttribute("aria-valuetext", "Fifty");
+    expect(screen.queryByRole("group")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Two" }));
+    expect(screen.getByRole("group", { name: "Price" })).toBeInTheDocument();
+    expect(names()).toEqual(["Minimum", "Maximum"]);
+    expect(values()).toEqual(["20", "80"]);
+    // one string cannot describe two values, so neither thumb keeps it
+    sliders().forEach((t) => expect(t).not.toHaveAttribute("aria-valuetext"));
+
+    await user.click(screen.getByRole("button", { name: "Three" }));
+    expect(names()).toEqual(["Value 1 of 3", "Value 2 of 3", "Value 3 of 3"]);
+    expect(values()).toEqual(["10", "50", "90"]);
+    // focus order follows the values, and the last thumb moves its own value
+    sliders()[0].focus();
+    await user.tab();
+    await user.tab();
+    expect(sliders()[2]).toHaveFocus();
+    await user.keyboard("{ArrowLeft}");
+    expect(values()).toEqual(["10", "50", "89"]);
+
+    await user.click(screen.getByRole("button", { name: "One" }));
+    expect(sliders()).toHaveLength(1);
+    expect(screen.getByRole("slider", { name: "Price" })).toHaveAttribute("aria-valuenow", "30");
+    expect(screen.queryByRole("group")).toBeNull();
+    screen.getByRole("slider").focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("slider")).toHaveAttribute("aria-valuenow", "31");
+  });
+
+  it("keeps an uncontrolled Slider's thumbs and name when defaultValue changes after mount", () => {
+    // Radix reads defaultValue once; a later one must not add a valueless thumb or move the name off the real one
+    const { rerender } = render(<Slider aria-label="Volume" defaultValue={[50]} max={100} />);
+    rerender(<Slider aria-label="Volume" defaultValue={[20, 80]} max={100} />);
+    expect(screen.getAllByRole("slider", { hidden: true })).toHaveLength(1);
+    expect(screen.getByRole("slider", { name: "Volume" })).toHaveAttribute("aria-valuenow", "50");
+    expect(screen.queryByRole("group")).toBeNull();
   });
 });

@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Installation",
-  description: "Install KinetixUI two ways: the registry, which copies component source into your repo with the CLI, or the npm packages as versioned dependencies. Both use the same tokens.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/installation");
 
 # Installation
 
@@ -13,6 +12,13 @@ KinetixUI is cross-platform design system infrastructure. Choose your platform f
 - **[Jetpack Compose](/docs/compose)** — the Android library module from a repository checkout; no Maven Central install yet.
 - **[Flutter](/docs/flutter)** — a local path dependency from a repository checkout; no pub.dev install yet.
 
+React is the reference implementation and the most complete library: every catalogue entry has a React
+implementation, and the other platforms are compared with it. In one place:
+
+<PlatformAtAGlance platform="React" />
+
+<FurtherReading guides={["evaluate-cross-platform-component-library"]} />
+
 The rest of this page covers **React with Tailwind CSS 3**. Tailwind 4 setup is not verified here.
 Start with an app that already renders React and loads a global stylesheet. The CLI adds component source
 and tokens; it does not create an app, configure Tailwind, or configure your import aliases.
@@ -23,6 +29,8 @@ React ships two ways. Both use the same tokens.
 | --- | --- | --- |
 | Components | `npx @kinetixui/cli add <name>` | `npm i @kinetixui/ui` |
 | Tokens | `npx @kinetixui/cli init` | `npm i @kinetixui/tokens` |
+
+<NpmLinks names={["@kinetixui/ui", "@kinetixui/tokens", "@kinetixui/cli"]} />
 
 The registry drops source into your repo (you edit it freely) via the
 [kinetixui CLI](/docs/cli). The npm packages update with `npm update`.
@@ -42,8 +50,14 @@ npx @kinetixui/cli init
 ```css
 @import "@kinetixui/tokens/css";
 @import "@kinetixui/tokens/css/dark";
-@import "@kinetixui/tokens/css/extras"; /* --shadow-* + --text-* */
+@import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/tokens/css/extras/dark";
 ```
+
+All four, in this order. `css` carries colour, spacing and radius; `css/extras`
+carries the shadow and type ramps, including the focus ring. Each `/dark` sheet
+redefines its half under `.dark`, so leaving one out keeps that half light in dark
+mode — `css/extras/dark` is where the stronger dark focus halo lives.
 
 ```ts
 import tokens from "@kinetixui/tokens";
@@ -139,6 +153,7 @@ For the **npm route**, load the token CSS and Tailwind layers in the global styl
 @import "@kinetixui/tokens/css";
 @import "@kinetixui/tokens/css/dark";
 @import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/tokens/css/extras/dark";
 
 @tailwind base;
 @tailwind components;
@@ -186,3 +201,9 @@ the Tailwind layers there; you do not need to import a second copy of the token 
 ## Dark mode
 
 KinetixUI's dark theme is a class toggle on `<html>`. See [Dark Mode](/docs/dark-mode).
+
+## Next steps
+
+- [Design tokens](/docs/tokens) and [theming](/docs/theming): change the look without forking components.
+- [Accessibility](/docs/accessibility): what the React library is tested for.
+- [Blocks](/blocks): sign-in, settings and dashboard sections built from the components.

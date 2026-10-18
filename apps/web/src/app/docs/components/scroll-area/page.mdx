@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Scroll Area",
-  description: "Augments native scroll functionality for custom, cross-browser styling.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("scroll-area", "Augments native scroll functionality for custom, cross-browser styling.");
 
 # Scroll Area
 
@@ -11,13 +10,13 @@ Augments native scroll functionality for custom, cross-browser styling.
 
 <ComponentPreview name="scroll-area-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add scroll-area
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { ScrollArea, ScrollBar } from "@kinetixui/ui";

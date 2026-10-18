@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Tour",
-  description: "Sequenced spotlight popovers over real elements (onboarding walkthroughs), with dismiss/skip/next.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("tour", "Sequenced spotlight popovers over real elements (onboarding walkthroughs), with dismiss/skip/next.");
 
 # Tour
 
@@ -11,13 +10,13 @@ Sequenced spotlight popovers over real elements (onboarding walkthroughs), with 
 
 <ComponentPreview name="tour-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add tour
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Tour } from "@kinetixui/ui";

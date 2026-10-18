@@ -63,8 +63,8 @@ explicit that installs are not measurable on-site, and there is deliberately no 
 
 | Event | Fires when | Owner |
 | --- | --- | --- |
-| `cli_command_copied` | a `npx @kinetixui/cli …` command is copied | `HeroCommand` (homepage) and `CodePre` (any docs fence) |
-| `install_command_copied` | an `npm i @kinetixui/…` (or pnpm / yarn / bun add) command is copied | `CodePre` |
+| `cli_command_copied` | a `npx @kinetixui/cli …` command is copied | `HeroCommand` (homepage), `CodePre` (any docs fence) and the install strip on component pages (`ComponentMeta`) |
+| `install_command_copied` | an `npm i @kinetixui/…` (or pnpm / yarn / bun add) command is copied, or a native port's install snippet is copied: a `Package.swift` dependency on `packages/ui-swiftui`, a Gradle `":kinetixui-ui"` registration, a `kinetix_ui:` pubspec entry, or a git command that clones or pins this repository on that port's setup page. Native copies carry the manifest package (`KinetixUI`, `com.kinetixui:ui-compose`, `kinetix_ui`) and `platform`; npm copies carry the package, plus `platform` when it is a platform's own package (`@kinetixui/ui` → react, `@kinetixui/angular` → angular) | `CodePre`, and the install strip on component pages (`ComponentMeta`) |
 | `component_code_copied` | a component's code is copied, with its component and platform | `ComponentPreview` code tabs and `CodePre` on a component page |
 | `block_code_copied` | a block's source is copied on `/blocks`, with its block and platform | `Showcase` (`analyticsBlock` set by the blocks gallery only) |
 
@@ -72,16 +72,18 @@ explicit that installs are not measurable on-site, and there is deliberately no 
 
 | Event | Fires when | Owner |
 | --- | --- | --- |
-| `docs_viewed` | a listed `/docs/*` page is viewed (not installation, changelog or a component page) | `AnalyticsProvider` |
-| `installation_viewed` | `/docs/installation` is viewed | `AnalyticsProvider` |
+| `docs_viewed` | a listed `/docs/*` page is viewed (not installation, changelog or a component page); on a platform's setup page (/docs/angular, /docs/swiftui, /docs/compose, /docs/flutter) it also carries that `platform` | `AnalyticsProvider` |
+| `installation_viewed` | `/docs/installation` is viewed, with `platform: react` | `AnalyticsProvider` |
 | `component_viewed` | a component's docs page is viewed | `AnalyticsProvider` |
 | `changelog_viewed` | `/docs/changelog` is viewed | `AnalyticsProvider` |
-| `cta_clicked` | a link marked with `ctaAttrs(source, target)` is clicked | `AnalyticsProvider` listener; markup on the homepage |
-| `platform_selected` | the user switches a platform tab: in a component's code view, a block's code view on `/blocks` (with `block`), or the homepage cross-platform example | `ComponentPreview`, `Showcase`, `CrossPlatformFlagship` |
+| `cta_clicked` | a link marked with `ctaAttrs(source, target)` is clicked | `AnalyticsProvider` listener; markup on the homepage, `/iot`, the Use cases hub (`/capabilities`, source `use_cases_hub`) and each use-case page's next steps (source `use_case_page`) |
+| `platform_selected` | the user switches a platform tab: in a component's code view, a block's code view on `/blocks` (with `block`), or the homepage cross-platform example. The choice is shared by every switcher and remembered between pages (`platform-preference.ts`); restoring it on a later page, or opening a page with `?platform=`, is not a selection and fires nothing | `ComponentPreview`, `Showcase`, `CrossPlatformFlagship` |
+| `component_code_viewed` | on a component page, the user opens the Code tab (`location: code_tab`) or, with it open, switches to another platform's code (`location: platform_tabs`). Carries `component`, the `platform` whose code is now on screen, and `source: component_page`; never the code. Not fired on render, on a restored platform, on a planned port (no code shown) or on a copy. Neither Qualified Evaluation nor Adoption Intent (analytics.md §3) | `ComponentPreview` |
 | `github_clicked` | a link into our GitHub repository is clicked | `AnalyticsProvider` listener |
 | `npm_clicked` | a link to one of our npm packages is clicked | `AnalyticsProvider` listener |
 | `external_link_clicked` | a link to a listed external host with no more specific event (today: the Figma file) | `AnalyticsProvider` listener |
 | `iot_example_copied` | an IoT example's source is copied from `/iot` | `IotExampleShowcase` |
+| `search_result_selected` | a result is chosen in the command menu (⌘K), by Enter or pointer. `target` is the kind of destination only (`SEARCH_RESULT_TYPES`: component, docs, link, block, use_case, workflow, capability, theme), with `source: header`, `location: command_menu`. Never the search text, the title or the URL. Neither Qualified Evaluation nor Adoption Intent | `CommandMenu` |
 
 `iot_example_copied` is deliberately **not** `component_code_copied`, and the distinction is the reason the
 component signal still means something. `component_code_copied` says code for a component from the 98-component
@@ -118,13 +120,18 @@ GitHub click is `github_clicked` and never also `external_link_clicked` or `cta_
 Copy buttons on `/charts`, `/docs/colors` and "copy page as markdown" (no component + platform to attribute, or not
 code), and the homepage cross-platform example's copy button (a composed example, not a catalogue component —
 `cross-platform-flagship.test.tsx` asserts the silence); `/create` reports only its own `preset_*` / `create_export_*`
-events; ordinary navigation, the docs search palette, gallery search and filters (their text must never be sent);
+events; the `/demos/building-operations` console's own controls (scenario, playback, floor, camera, zone and status
+filters, layers, fullscreen — demo state, and the one signal worth having from the demo is whether it is found, which
+`cta_clicked` with target `building_operations_demo` from `/iot` answers; the page itself is source
+`building_operations_demo`); ordinary navigation, what is typed into the search palette (only the kind of result chosen is reported, as
+`search_result_selected`), gallery search and filters (their text must never be sent);
 attribution links (Radix, Lucide, Recharts). `npm_clicked` has no surface yet — the site links to no npm page —
 but any link to one of our packages on npmjs.com is reported the moment it is added.
 
 ## Acquisition attribution
 
-Where did a developer come from, what did they do, and did they activate? Attribution answers the first part
+Where did a developer come from, what did they do, and did it reach Qualified Evaluation or Adoption Intent?
+Attribution answers the first part
 with a deliberately simple, inspectable model. **It is directional evidence, not causal truth**: referrers are
 stripped by many apps and privacy tools, a link can be shared beyond the audience it was made for, and a visit is
 credited to a channel, not to the effect of a post. Use it to compare channels, not to prove one caused an install.
@@ -141,7 +148,7 @@ adds the attribution to **every** event (including `$pageview`) centrally.
 | `kx_first_*` (first touch) | How was this *browser* first acquired? | `localStorage` (`kx_analytics_first_touch_v1`) | until cleared | **write-once**. Never overwritten, and never replaced by `direct` |
 
 Properties (each present only when known): `kx_source`, `kx_medium`, `kx_campaign`, `kx_content`, `kx_referrer`,
-`kx_landing_page`, and the same six as `kx_first_*`. Only normalised values are ever stored or sent — never a query
+`kx_landing_page`, and the same six as `kx_first_*`; plus `kx_traffic_type` on diagnostic traffic only (below). Only normalised values are ever stored or sent — never a query
 string, a referrer, a click id or a full URL. Storage is re-validated when read (it is user-editable).
 
 ### Source taxonomy (closed)
@@ -224,6 +231,32 @@ omitted (the source and medium still count).
   `src/lib/analytics-measurement.ts` is the rule in code, and `analytics-posthog.attribution.test.ts` pins the tab
   behaviour.
 
+### Diagnostic traffic
+
+A test of the site or its analytics is marked, not filtered at the source: open its first page with
+`?kx_traffic=diagnostic`. The tab stores the mark in `sessionStorage` (`kx_analytics_traffic_v1`) and every event it
+sends carries `kx_traffic_type: "diagnostic"`, the only value that property may take (`sanitizeAttributionProps`
+drops anything else). `?kx_traffic=clear` removes it. The mark does not change attribution, so a campaign link can
+still be tested. Reporting drops every session holding a marked event; PostHog keeps the raw events. The policy and
+the probe checklist are in [`marketing/analytics.md`](../../marketing/analytics.md) §11 *Diagnostic traffic*.
+
+### Internal traffic
+
+The team's own browsing is marked once per browser, not per test: open any page with `?kx_traffic=internal`. The
+mark lives in `localStorage` (`kx_analytics_internal_v1`), so it survives new tabs and restarts of that browser, and
+every event carries `kx_traffic_type: "internal"`. A diagnostic mark in the same tab wins; `?kx_traffic=clear`
+removes both. Vercel Web Analytics drops internal page views for the same reason it drops diagnostic ones. Why a mark
+and not PostHog's "internal users" cohort: with `person_profiles: identified_only` and no sign-in, the site never
+identifies anyone, so a person cohort is always empty (marketing/analytics.md §11 *Traffic cohorts*).
+
+### Engagement (`page_engaged`)
+
+`AnalyticsProvider` sends `page_engaged` on the first trusted pointer, key, touch or wheel input after each page view,
+at most once per page view, with `source` where the page has one. Scroll, focus and mouse movement do not count, and
+neither do synthetic events (`isPersonInput` checks `isTrusted`). It is an arrival event and evidence that someone was
+there, never a Qualified Evaluation or Adoption Intent signal. Reporting uses it to tell a page that was only loaded
+from a page someone used (marketing/analytics.md §11 *Traffic cohorts*).
+
 ### Marketing metrics
 
 Defined in [`marketing/analytics.md`](../../marketing/analytics.md) — Qualified Evaluation Rate, Adoption Intent
@@ -245,6 +278,43 @@ for us because our page views are manual, so it has to be set explicitly.)
 - **Attribution reaches it because it is attached in `before_send`**, for every event, not at the call sites. The SDK
   creates `$pageleave` itself and it never passes through our `capture` wrapper, so enrichment there would have missed it.
 - **Volume:** roughly one extra event per page view. Keep that in mind against your PostHog event quota.
-- **The marketing metrics are unaffected:** `$pageleave` is in neither definition, and it is not a product event.
-  Exclude it from any breakdown that counts "events per visitor".
+- **It does not make a session an arrival.** A tab left idle past PostHog's 30-minute session timeout sends its
+  `$pageleave` under a new `$session_id`, so that session holds nothing else. The marketing denominator counts only
+  sessions with a `$pageview` or a product event (`ARRIVAL_EVENTS` in `src/lib/analytics-measurement.ts`; marketing/
+  analytics.md §4 *Eligible arriving session*). Exclude it from any breakdown that counts "events per visitor".
 - Do Not Track still applies: with it on, nothing is captured, `$pageleave` included.
+
+## Vercel Web Analytics and Speed Insights (second view of traffic and performance)
+
+Two smaller Vercel tools next to PostHog: Web Analytics (page views, visitors, top pages, referrers, countries and
+devices) and Speed Insights (Core Web Vitals per page: LCP, INP, CLS, FCP, TTFB). Both are context only. Qualified Evaluation, Adoption Intent and attribution stay in PostHog,
+and nothing here feeds them; the two tools count visitors differently, so their totals will not match.
+
+Rules in [`src/lib/analytics-vercel.ts`](src/lib/analytics-vercel.ts); both SDKs are imported only by
+[`src/components/vercel-analytics.tsx`](src/components/vercel-analytics.tsx), mounted next to `AnalyticsProvider`.
+
+- **Same gate as PostHog.** Both scripts load only in a production build on `kinetixui.com` (or with
+  `NEXT_PUBLIC_ANALYTICS_ANY_HOST=true`), so `next dev`, tests and Vercel preview deployments never load them. They
+  need no environment variables. The React entry points are used, not `/next`, so nothing reads `useSearchParams`;
+  every route here is a literal path, so `/next`'s dynamic-route grouping would add nothing.
+- **A page view is a pathname change**, reported from `usePathname()`, not from the history API: passing `route`
+  turns the script's own `pushState` tracking off, so a query-only change (the changelog filter) is not counted as
+  another view of the same page.
+- **Page views only.** No custom events: `track` from `@vercel/analytics` is not used (the architecture test pins
+  it), and `beforeSend` cancels any `event` that arrives anyway. Never send copied code, commands or URLs to it.
+- **Speed Insights sends measurements only** (`vital`); its `beforeSend` cancels anything else.
+- **URLs are cut to origin + path** in `beforeSend`, so no query string (`?q=`, `?filter=`, `utm_*`) or hash is sent.
+  A path that is not identifier-shaped (`cleanPath`) is dropped, exactly as for PostHog page views.
+- **Do Not Track** cancels every page view and measurement. A tab marked `?kx_traffic=diagnostic`, and a browser marked
+  `?kx_traffic=internal`, are also cancelled, because a
+  Vercel event cannot carry the mark and so could not be filtered out afterwards. The check uses the same writer as
+  PostHog, so the mark holds for the rest of the tab even when PostHog is off; with storage blocked it holds in
+  memory until a full reload.
+- **What Vercel itself collects** (its documented behaviour, not something this code controls): Web Analytics gets
+  the page URL we pass, the referrer, the country from the request, browser, OS and device type, sets no cookie, and
+  counts a visitor by a request hash it resets daily. Speed Insights gets the page URL we pass, the Web Vitals
+  values, and browser, OS, device type, country and connection type; it identifies no visitor. Both scripts and
+  their ingest are same-origin (`/_vercel/insights/*`, `/_vercel/speed-insights/*`), so the CSP needs no change.
+- **To turn them on:** enable Web Analytics and Speed Insights on the Vercel project (each has its own tab), then
+  redeploy. Until then each script request 404s and nothing is collected. Speed Insights may be billed beyond the
+  plan's free allowance; check the project's plan.

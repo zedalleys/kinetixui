@@ -1,23 +1,24 @@
-export const metadata = {
-  title: "Native Select",
-  description: "A styled wrapper around the native `<select>` element — for the OS-native picker instead of Select's custom popover.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("native-select");
 
 # Native Select
 
 <ComponentMeta />
 
-A styled wrapper around the native `<select>` element — for the OS-native picker instead of Select's custom popover.
+<ComponentIntro slug="native-select" />
 
 <ComponentPreview name="native-select-demo" />
 
-## Installation
+<ComponentGuide slug="native-select" />
+
+## React installation
 
 ```bash
 npx @kinetixui/cli add native-select
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { NativeSelect, NativeSelectOption, NativeSelectOptGroup } from "@kinetixui/ui";

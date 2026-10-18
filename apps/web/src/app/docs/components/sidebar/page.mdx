@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Sidebar",
-  description: "A composable, themeable and customizable sidebar — uses `--sidebar-*` tokens.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("sidebar", "A composable, themeable and customizable sidebar, styled by its own sidebar tokens.");
 
 # Sidebar
 
@@ -11,13 +10,13 @@ A composable, themeable and customizable sidebar — uses `--sidebar-*` tokens.
 
 <ComponentPreview name="sidebar-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add sidebar
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, SidebarInset } from "@kinetixui/ui";

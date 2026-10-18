@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Accordion",
-  description: "A vertically stacked set of interactive headings that each reveal a section of content.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("accordion", "A vertically stacked set of interactive headings that each reveal a section of content.");
 
 # Accordion
 
@@ -9,15 +8,20 @@ export const metadata = {
 
 A vertically stacked set of interactive headings that each reveal a section of content.
 
+{/* An h2 above the preview, because each trigger in it is a real `h3` (Radix's Accordion.Header). Placed straight
+    under the page's h1, the demo skipped a heading level (axe `heading-order`); under this heading it does not. */}
+
+## Example
+
 <ComponentPreview name="accordion-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add accordion
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@kinetixui/ui";

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { CommandLifecycle, DevicePowerControl, DeviceStatusBadge } from "@kinetixui/iot/react";
+import { Checkbox, Label } from "@kinetixui/ui";
 import {
   advanceCommandLifecycle,
   canRetryLifecycle,
@@ -16,7 +17,8 @@ import { cn } from "@/lib/utils";
 /**
  * The hero's one live thing: a single simulated device and a command that has to earn its confirmation.
  *
- * **Deliberately cheap.** It imports two components and the lifecycle machine, not the simulation layer, so
+ * **Deliberately cheap.** It imports a few components (the IoT pair, and the library Checkbox and Label the
+ * whole site already ships) and the lifecycle machine, not the simulation layer, so
  * the hero does not pull the scenario data or the tick loop into the initial bundle. The "device" is a
  * `setTimeout` chain in this file: requested, then acknowledged, then confirmed — and, if the reader ticks the
  * box, never acknowledged, so the request times out and offers a Retry. That second path is the one that
@@ -142,20 +144,15 @@ export function HeroCommandStrip() {
         />
       </div>
 
-      <label className="flex items-start gap-2 text-sm text-muted-foreground">
-        <input
-          type="checkbox"
-          checked={silent}
-          onChange={(e) => setSilent(e.target.checked)}
-          className="mt-0.5 size-4 shrink-0 accent-primary"
-        />
+      <Label className="flex cursor-pointer items-start gap-2 text-sm font-normal leading-normal text-muted-foreground">
+        <Checkbox checked={silent} onCheckedChange={(checked) => setSilent(checked === true)} className="mt-0.5" />
         <span className="min-w-0">
           Make the device stop answering
           {/* Always said, never inserted mid-request: it is true of every request, and a line that
               appears only while one is in flight is a line that moves the card while it is in flight. */}
           <span className="block text-label-md">Takes effect from the next step of a request already in flight.</span>
         </span>
-      </label>
+      </Label>
 
       <p className="border-t border-border pt-3 text-xs leading-relaxed text-muted-foreground">{SIMULATION_DISCLOSURE}</p>
     </div>

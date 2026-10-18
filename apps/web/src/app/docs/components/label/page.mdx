@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Label",
-  description: "Renders an accessible label associated with controls.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("label", "Renders an accessible label associated with controls.");
 
 # Label
 
@@ -11,13 +10,13 @@ Renders an accessible label associated with controls.
 
 <ComponentPreview name="label-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add label
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Label } from "@kinetixui/ui";

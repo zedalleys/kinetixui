@@ -16,10 +16,11 @@
  *
  *   React     the `EntryStates` stories (Input, Textarea, Select, NativeSelect) and `States` (Tabs)
  *   Angular   the same states, live in the Angular browser harness (src/fixtures/entry.ts), painted with the
- *             package's own styles.css and the generated token CSS (visual-harness.mjs). Angular has no
- *             Select (its catalogue entry is NativeSelect), and its tabs are an underlined strip rather than
- *             React's segmented well — the SAME semantic assertions are made of both, through an adapter
- *             that says where each platform draws its selected cue.
+ *             package's own styles.css and the generated token CSS (visual-harness.mjs). Its Select is the
+ *             trigger of kx-select (a button: its placeholder is the trigger's own colour, as React's is), and
+ *             both platforms use an underlined tab strip — the SAME semantic
+ *             assertions are made of both, through an adapter that says where each platform draws its
+ *             selected cue.
  *
  * ── Method ───────────────────────────────────────────────────────────────
  *
@@ -102,8 +103,8 @@ const ADAPTERS = {
     field: (kind, c) => `[data-kx-case="${c}"]`,
     tabList: (where) => `[role=tablist][data-kx-case="${where}"]`,
     tab: (where, c) => `[role=tablist][data-kx-case="${where}"] [data-kx-case="${c}"]`,
-    // A segmented well: the selected tab is a raised surface on it — lighter than the strip, with an edge.
-    tabCue: "surface",
+    // Line navigation: the selected tab carries a 2px indicator along its block-end edge.
+    tabCue: "indicator",
   },
   Angular: {
     field: (kind, c) => `[data-kx-case="${c}"]`,

@@ -47,11 +47,18 @@ export const ANALYTICS_SOURCES = [
   // signal was `$pageview` — the rung of the adoption ladder we could see people reach for and then not
   // see them use.
   "blocks_gallery",
+  // The simulated Building Operations console. Its own source so a link followed from it (GitHub, docs) is
+  // attributed to the demo rather than dropped as an unlisted page.
+  "building_operations_demo",
+  // Business discovery (BD-W3b): the Use Cases hub (/capabilities) and the /use-cases/<domain> pages. Before these,
+  // a link or CTA followed from either page had no source, so it was dropped rather than attributed.
+  "use_cases_hub",
+  "use_case_page",
 ] as const;
 export type AnalyticsSource = (typeof ANALYTICS_SOURCES)[number];
 
 /** The position inside a surface. Stable identifiers, never visible text. */
-export const ANALYTICS_LOCATIONS = ["hero", "primary_nav", "sidebar", "installation", "code_example", "platform_tabs", "component_header", "footer", "content"] as const;
+export const ANALYTICS_LOCATIONS = ["hero", "primary_nav", "sidebar", "installation", "code_example", "platform_tabs", "code_tab", "component_header", "footer", "content", "command_menu"] as const;
 export type AnalyticsLocation = (typeof ANALYTICS_LOCATIONS)[number];
 
 /** What a product call-to-action is FOR — never its visible label and never its destination URL. */
@@ -81,8 +88,27 @@ export const ANALYTICS_CTA_TARGETS = [
   "adopt_tokens",
   "adopt_components",
   "adopt_blocks",
+  /*
+   * The /iot link to the full-page Building Operations demo. Not a Qualified Evaluation or Adoption Intent
+   * signal (analytics-measurement.ts lists those); it answers only whether the demo is found from /iot.
+   */
+  "building_operations_demo",
+  /*
+   * The homepage's "Explore IoT" link to the /iot module page. It was tagged `read_docs`, so a visit to a
+   * module showcase was counted as a docs CTA. Not a Qualified Evaluation or Adoption Intent signal: it
+   * answers only whether the homepage's module section sends anyone to the module.
+   */
+  "explore_iot",
 ] as const;
 export type AnalyticsCtaTarget = (typeof ANALYTICS_CTA_TARGETS)[number];
+
+/**
+ * The kind of destination a command-menu (⌘K) result is — never the query, the result's title or its URL. Eight
+ * values, so a breakdown by it stays readable: `component` is a component docs page, `docs` any other docs page,
+ * `link` a main-navigation page, `theme` a theme command.
+ */
+export const SEARCH_RESULT_TYPES = ["component", "docs", "link", "block", "use_case", "workflow", "capability", "theme"] as const;
+export type SearchResultType = (typeof SEARCH_RESULT_TYPES)[number];
 
 /**
  * Properties an event may carry. Every value is a short identifier — a slug, a package name, a hostname, a
@@ -126,13 +152,22 @@ type Shape<Required extends keyof EventProps, Optional extends keyof EventProps 
  */
 export interface AnalyticsEvents {
   cta_clicked: { source: AnalyticsSource; target: AnalyticsCtaTarget };
-  docs_viewed: Shape<"page", "source">;
+  docs_viewed: Shape<"page", "source" | "platform">;
   installation_viewed: Shape<never, "source" | "platform">;
   cli_command_copied: Shape<"source", "package">;
   install_command_copied: Shape<"source", "package" | "platform">;
   component_viewed: Shape<"component", "platform" | "source">;
   component_code_copied: Shape<"component" | "platform", "source">;
   platform_selected: Shape<"platform", "location" | "component" | "block" | "source">;
+  /*
+   * Someone looked at a component's source: opened the Code tab (`location: "code_tab"`) or, with it open,
+   * switched to another platform's code (`location: "platform_tabs"`). `platform` is the platform whose code is
+   * now on screen. Fired only from those two clicks — never on mount, and never because a remembered platform
+   * was restored — so "landed on the page" and "inspected the code" can be told apart. Separate from
+   * `component_code_copied` on purpose: looking is not wanting the source. In neither Qualified Evaluation nor
+   * Adoption Intent (analytics.md §3/§4); a component page already qualifies through `component_viewed`.
+   */
+  component_code_viewed: Shape<"component" | "platform" | "location", "source">;
   github_clicked: Shape<"source", "location">;
   npm_clicked: Shape<"source", "package">;
   changelog_viewed: Shape<never, "version" | "source">;
@@ -146,12 +181,12 @@ export interface AnalyticsEvents {
   // Export. `target` is one of the four stable exporter ids — "web-css", "swiftui", "compose",
   // "flutter" — and nothing else travels: not the preset, not the generated code, not the symbol
   // name the author typed. Deliberately separate from `component_code_copied`, which is about
-  // activating a component and would stop meaning anything if theme exports were folded into it.
+  // copying a catalogue component's code and would stop meaning anything if theme exports were folded into it.
   create_export_target_selected: Shape<"target", "source">;
   create_export_copied: Shape<"target", "source">;
   // IoT. One event, carrying only a surface and a position — never the example's slug as free text,
   // never the snippet. Deliberately NOT `component_code_copied`: that event means a component from
-  // the 98-component catalogue was activated and is the core activation metric, while an IoT example
+  // the catalogue was copied and is a Qualified Evaluation signal, while an IoT example
   // is a composition from a separate Experimental module. Folding the two together would inflate the
   // metric with a different kind of thing and make the trend unreadable in both directions.
   // The alternative considered was adding an `example` property to `component_code_copied`; rejected
@@ -163,6 +198,23 @@ export interface AnalyticsEvents {
    * `component_code_copied` for the reason above — a block is not a catalogue component.
    */
   block_code_copied: Shape<"block" | "platform", "source">;
+  /*
+   * A result was chosen in the command menu (⌘K), by Enter or by pointer. `target` is the kind of destination only
+   * (SEARCH_RESULT_TYPES); the search text, the result's title and its URL are never sent — what someone types into
+   * a search box is theirs. Fired once per selection, before the navigation that produces the next `$pageview`.
+   * Opening the menu is not an event: on its own it answers no decision. Neither Qualified Evaluation nor Adoption
+   * Intent (analytics.md §3/§4); a component chosen here still qualifies through the `component_viewed` it leads to.
+   */
+  search_result_selected: { target: SearchResultType; source: "header"; location: "command_menu" };
+  /*
+   * The visitor physically interacted with the page: the first trusted pointer press, key press, touch or wheel
+   * turn after a page view. At most once per page view, and never on render, a timer or a programmatic scroll, so a
+   * page that was only loaded never sends it. `source` is the page's surface when it has one; the input itself
+   * (which key, where) is never sent. It is evidence of a person, not a funnel step: in neither Qualified Evaluation
+   * nor Adoption Intent (analytics.md §3/§4), and it changes neither. Reporting uses it to tell evaluations that
+   * involved any interaction apart from render-only page loads (analytics.md §11 "Traffic cohorts").
+   */
+  page_engaged: Shape<never, "source">;
 }
 
 export type AnalyticsEventName = keyof AnalyticsEvents;

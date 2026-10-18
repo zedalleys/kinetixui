@@ -168,3 +168,85 @@ export {
   KxTooltipContent,
   KxTooltipTrigger,
 } from './lib/floating';
+export {
+  KxContextMenu,
+  KxContextMenuContent,
+  KxContextMenuTrigger,
+  KxDropdownMenu,
+  KxDropdownMenuContent,
+  KxDropdownMenuTrigger,
+  KxMenuCheckboxItem,
+  KxMenuGroup,
+  KxMenuItem,
+  KxMenuLabel,
+  KxMenuRadioGroup,
+  KxMenuRadioItem,
+  KxMenuSeparator,
+  KxMenuShortcut,
+  KxMenuSub,
+  KxMenuSubContent,
+  KxMenuSubTrigger,
+  KxMenubar,
+  KxMenubarContent,
+  KxMenubarMenu,
+  KxMenubarTrigger,
+} from './lib/menu';
+export { KxSelect, KxSelectContent, KxSelectGroup, KxSelectItem, KxSelectLabel, KxSelectSeparator, KxSelectTrigger, KxSelectValue } from './lib/select';
+export type { KxCommandFilter, KxCommandFilterItem } from './lib/command';
+export {
+  KxCommand,
+  KxCommandDialog,
+  KxCommandEmpty,
+  KxCommandGroup,
+  KxCommandInput,
+  KxCommandItem,
+  KxCommandList,
+  KxCommandSeparator,
+  KxCommandShortcut,
+} from './lib/command';
+export type { KxMultiSelectOption } from './lib/multi-select';
+export { KxMultiSelect } from './lib/multi-select';
+export {
+  KxNavigationMenu,
+  KxNavigationMenuContent,
+  KxNavigationMenuIndicator,
+  KxNavigationMenuItem,
+  KxNavigationMenuLink,
+  KxNavigationMenuList,
+  KxNavigationMenuTrigger,
+} from './lib/navigation-menu';
+export type { KxToast, KxToastButton, KxToastOptions, KxToastType } from './lib/toast-queue';
+export type { KxToasterPosition } from './lib/sonner';
+export { KxToaster, KxToasterService } from './lib/sonner';
+export {
+  KxNotificationCenter,
+  KxNotificationCenterContent,
+  KxNotificationCenterTrigger,
+  KxNotificationItem,
+} from './lib/notification-center';
+export type { KxTourStep } from './lib/tour';
+export { KxTour } from './lib/tour';
+export type { KxSidebarSide } from './lib/sidebar';
+export {
+  KxSidebar,
+  KxSidebarContent,
+  KxSidebarFooter,
+  KxSidebarGroup,
+  KxSidebarGroupContent,
+  KxSidebarGroupLabel,
+  KxSidebarHeader,
+  KxSidebarInput,
+  KxSidebarInset,
+  KxSidebarMenu,
+  KxSidebarMenuButton,
+  KxSidebarMenuItem,
+  KxSidebarMenuSkeleton,
+  KxSidebarProvider,
+  KxSidebarSeparator,
+  KxSidebarTrigger,
+} from './lib/sidebar';
+export { KxScrollArea } from './lib/scroll-area';
+export type { KxResizableDirection } from './lib/resizable';
+export { KxResizableHandle, KxResizablePanel, KxResizablePanelGroup } from './lib/resizable';
+export { KxCarousel, KxCarouselContent, KxCarouselItem, KxCarouselNext, KxCarouselPrevious } from './lib/carousel';
+export { KxComparisonSlider } from './lib/comparison-slider';

@@ -1,19 +1,22 @@
 import * as React from "react";
-import { durations, easings, elevation, platformUnits, radiusRoles, radiusScale, spacingScale } from "@/lib/foundations";
+import Link from "next/link";
+import { durations, easings, elevation, motionRoles, platformUnits, radiusRoles, radiusScale, spacingScale } from "@/lib/foundations";
 import manifest from "../../../../components.manifest.json";
 import {
   CATALOGUE_VERIFICATION,
-  EVIDENCE_COUNTS,
   EVIDENCE_KINDS,
   PLATFORMS,
   PLATFORM_DEFINITIONS,
   VERIFICATION_COUNTS,
   VERIFICATION_REQUIRES,
+  evidenceStatus,
   type EvidenceKind,
   type Platform,
 } from "@/lib/platform-parity";
 import { componentTotal, gaps, nonPorts, notSupported, platformCount, platforms, statusCounts } from "@/lib/platform-support";
 import { availabilitySentence } from "@/lib/platform-prose";
+import { siteConfig } from "@/lib/site";
+import { EVIDENCE_LEVEL_LABEL, componentLevelTotals } from "@/lib/workflow-readiness";
 
 const manifestComponents = manifest.components as Record<
   string,
@@ -35,7 +38,7 @@ function Table({ head, children, label }: { head: string[]; children: React.Reac
         <thead>
           <tr className="border-b border-border bg-muted/30 text-left">
             {head.map((h) => (
-              <th key={h} scope="col" className="px-4 py-2 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
+              <th key={h} scope="col" className="px-4 py-2 font-mono text-label-md uppercase tracking-[0.1em] text-muted-foreground">
                 {h}
               </th>
             ))}
@@ -48,7 +51,7 @@ function Table({ head, children, label }: { head: string[]; children: React.Reac
 }
 
 const Code = ({ children }: { children: React.ReactNode }) => (
-  <code className="rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.85em] text-foreground">{children}</code>
+  <code className="rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.875em] text-foreground">{children}</code>
 );
 const td = "px-4 py-2";
 
@@ -173,6 +176,39 @@ export function MotionTable() {
   );
 }
 
+const codeList = (names: string[]) =>
+  names.map((n, i) => (
+    <React.Fragment key={n}>
+      {i ? " / " : ""}
+      <span className="whitespace-nowrap">
+        <Code>{n}</Code>
+      </span>
+    </React.Fragment>
+  ));
+
+/** Roles from tokens/contracts/motion.json; the status column is what check:motion-tokens enforces. */
+export function MotionRolesTable() {
+  return (
+    <Table label="Motion roles" head={["Role", "Duration", "Easing", "Reduced motion", "Status", "Where"]}>
+      {motionRoles.map((r) => (
+        <tr key={r.name}>
+          <th scope="row" className={`${td} text-left font-medium`}>
+            {r.name}
+          </th>
+          <td className={td}>{r.duration.length ? codeList(r.duration) : "own period"}</td>
+          <td className={td}>{r.easing.length ? codeList(r.easing) : "own curve"}</td>
+          <td className={`${td} text-muted-foreground`}>{r.reducedForm}</td>
+          <td className={td}>{r.status}</td>
+          <td className={`${td} text-muted-foreground`}>
+            {r.platforms.join(", ") || r.scope || "—"}
+            {r.deviations.length ? ` (differs on ${r.deviations.join(", ")})` : ""}
+          </td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
 export function ElevationTable() {
   return (
     <Table label="Elevation as used by the components" head={["Level", "Token", "Used by"]}>
@@ -194,7 +230,7 @@ export function ElevationTable() {
  * horizontal scroll that readers had to discover. Cards wrap to the container and never scroll sideways.
  */
 export function PlatformSupportTable() {
-  const field = "text-[11px] font-mono uppercase tracking-[0.1em] text-muted-foreground";
+  const field = "text-label-md font-mono uppercase tracking-[0.1em] text-muted-foreground";
   return (
     <ul aria-label="Supported platforms" className="my-6 grid list-none gap-4 p-0">
       {platforms.map((p) => {
@@ -204,10 +240,12 @@ export function PlatformSupportTable() {
         return (
           <li key={p.id} className="min-w-0 rounded-lg border border-border">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border bg-muted/30 px-4 py-3">
-              <p className="m-0 text-base font-medium">
+              {/* a flex row, so the maturity tag can drop under the name at 200% text: there is no space between
+                  them for a line break, and together they were 8px wider than a 320px card */}
+              <p className="m-0 flex flex-wrap items-center gap-x-2 text-base font-medium">
                 {p.name}
                 {maturity && maturity !== "stable" && (
-                  <span className="ml-2 rounded-[3px] border border-border px-1 align-middle font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                  <span className="rounded-[3px] border border-border px-1 font-mono text-label-md uppercase tracking-wider text-muted-foreground">
                     {maturity}
                   </span>
                 )}
@@ -245,7 +283,20 @@ export function PlatformSupportTable() {
                 <dt className={field}>Automated verification</dt>
                 <dd className="m-0 mt-1">
                   <Inline text={p.verification} />
-                  <span className="mt-1 block font-mono text-[11px] text-muted-foreground">{p.workflow}</span>
+                  {/* each named workflow links to its run history, so the claim beside it can be checked */}
+                  <span className="mt-1 flex flex-wrap gap-x-2 font-mono text-body-sm text-muted-foreground">
+                    {p.workflow.split(/,\s*/).map((file) => (
+                      <a
+                        key={file}
+                        href={`${siteConfig.repo}/actions/workflows/${file}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary underline underline-offset-2"
+                      >
+                        {file} <span className="sr-only">runs</span>
+                      </a>
+                    ))}
+                  </span>
                 </dd>
               </div>
             </dl>
@@ -266,12 +317,25 @@ const EVIDENCE_LABEL: Record<EvidenceKind, string> = {
   published: "Published",
 };
 
+/** The verification cards name the metric as evidence, not as the capability ("Accessibility verification"). */
+const EVIDENCE_ROW_LABEL: Record<EvidenceKind, string> = {
+  build: "Build verification",
+  interaction: "Interaction verification",
+  accessibility: "Accessibility verification",
+  rtl: "RTL verification",
+  largeText: "Large-text verification",
+  visual: "Visual verification",
+  published: "Published",
+};
+
 /**
  * Per-platform verification summary: what the package promises, and separately what the tests prove.
  *
  * Every evidence row is a fraction, never a tick. "Interaction 21 / 98" and a green check are different
  * claims, and only one of them is true — a tick beside a partially covered catalogue is the single most
- * misleading thing this page could print.
+ * misleading thing this page could print. Each row leads with the evidence state in words ("Not yet verified",
+ * "Limited evidence", "Partial", "Verified"; see `evidenceStatus`), because "0 / 90" or "1 / 90" alone reads as a
+ * measured failure of the platform rather than as how much a test has recorded.
  */
 export function PlatformVerificationTable() {
   return (
@@ -279,44 +343,57 @@ export function PlatformVerificationTable() {
       {PLATFORMS.map((platform) => {
         const def = PLATFORM_DEFINITIONS[platform];
         const total = platformCount(platform);
-        const counts = EVIDENCE_COUNTS[platform];
         const rungs = VERIFICATION_COUNTS[platform] ?? {};
         return (
-          <section key={platform} className="rounded-lg border border-border p-4">
+          // min-w-0 and wrapping rows: a grid item sized by its widest unbroken row pushed the page sideways at 200%
+          // text; each label/value pair now wraps onto two lines instead of the card growing past the viewport
+          <section key={platform} className="min-w-0 rounded-lg border border-border p-4">
             <h3 className="font-mono text-sm text-foreground">{def.label}</h3>
-            <dl className="mt-2 space-y-1 font-mono text-[11px]">
-              <div className="flex justify-between gap-3">
+            <dl className="mt-2 space-y-1 font-mono text-body-sm">
+              <div className="flex flex-wrap justify-between gap-x-3">
                 <dt className="text-muted-foreground">Implementations</dt>
                 <dd className="tabular-nums">
                   {total} of {componentTotal}
                   {def.catalogComplete ? " · catalogue complete" : " · catalogue incomplete"}
                 </dd>
               </div>
-              <div className="flex justify-between gap-3">
+              <div className="flex flex-wrap justify-between gap-x-3">
                 <dt className="text-muted-foreground">Package maturity</dt>
                 <dd className="capitalize">{def.maturity}</dd>
               </div>
-              <div className="flex justify-between gap-3">
+              <div className="flex flex-wrap justify-between gap-x-3">
                 <dt className="text-muted-foreground">Distribution</dt>
                 <dd>{def.distribution.published ? def.distribution.channel : `${def.distribution.channel} — not published`}</dd>
               </div>
-              <div className="flex justify-between gap-3">
+              <div className="flex flex-wrap justify-between gap-x-3">
                 <dt className="text-muted-foreground">Catalogue verification</dt>
                 <dd className="capitalize text-foreground">{CATALOGUE_VERIFICATION[platform] ?? "—"}</dd>
               </div>
             </dl>
-            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Evidence</p>
-            <dl className="mt-1 grid gap-x-5 gap-y-0.5 font-mono text-[11px] sm:grid-cols-2">
-              {EVIDENCE_KINDS.map((kind) => (
-                <div key={kind} className="flex justify-between gap-3">
-                  <dt className="text-muted-foreground">{EVIDENCE_LABEL[kind]}</dt>
-                  <dd className="tabular-nums">
-                    {counts?.[kind] ?? 0} / {total}
-                  </dd>
-                </div>
-              ))}
+            <p className="mt-3 font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">Evidence</p>
+            <dl className="mt-1 grid gap-y-1 font-mono text-body-sm">
+              {EVIDENCE_KINDS.map((kind) => {
+                const e = evidenceStatus(platform, kind);
+                // the evidence state in words, the count as secondary detail, and the sentence: shown where there is
+                // no fraction worth reading ("Not yet verified", "Limited evidence"), heard by assistive technology
+                // everywhere. "0 / 90" or "1 / 90" alone reads as a failed score; the generator never records failures
+                return (
+                  <div key={kind} data-evidence-state={e.state} className="flex flex-wrap justify-between gap-x-3">
+                    <dt className="text-muted-foreground">{EVIDENCE_ROW_LABEL[kind]}</dt>
+                    <dd>
+                      {e.label}
+                      {e.count > 0 ? (
+                        <span aria-hidden="true" className="ms-1.5 tabular-nums text-muted-foreground">
+                          {e.count} / {e.of}
+                        </span>
+                      ) : null}
+                    </dd>
+                    <dd className={e.meter ? "sr-only" : "basis-full font-sans text-label-md text-muted-foreground"}>{e.summary}</dd>
+                  </div>
+                );
+              })}
             </dl>
-            <p className="mt-3 text-[11px] text-muted-foreground">
+            <p className="mt-3 text-body-sm text-muted-foreground">
               {Object.entries(rungs)
                 .map(([level, n]) => `${n} ${level}`)
                 .join(" · ")}
@@ -341,6 +418,30 @@ export function VerificationLadderTable() {
           <td className={td}>
             {VERIFICATION_REQUIRES[level].map((k) => EVIDENCE_LABEL[k]).join(" · ")}
           </td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
+/**
+ * Where the tests ran, per platform: how many components are build, headless and runtime verified. Read from
+ * verification.json `componentLevelTotals`, so it cannot describe a different ladder or a stale count.
+ */
+export function EvidenceTierTable() {
+  const tiers = ["build", "headless", "runtime"] as const;
+  return (
+    <Table label="Components by evidence tier" head={["Platform", ...tiers.map((t) => EVIDENCE_LEVEL_LABEL[t])]}>
+      {Object.entries(componentLevelTotals).map(([platform, n]) => (
+        <tr key={platform}>
+          <th scope="row" className={`${td} text-left font-medium`}>
+            {platform}
+          </th>
+          {tiers.map((t) => (
+            <td key={t} className={`${td} tabular-nums`}>
+              {n[t] ?? 0}
+            </td>
+          ))}
         </tr>
       ))}
     </Table>
@@ -491,10 +592,12 @@ export function PlatformComponentList({ platform }: { platform: Platform }) {
   return (
     <ul className="my-4 flex flex-wrap gap-2 p-0" aria-label={`Components available for ${platform}`}>
       {slugs.map((slug) => (
-        <li key={slug} className="list-none">
+        // max-w-full + overflow-wrap: at 200% text on a 320px phone a long name ("NotificationCenter") is wider than
+        // the page; it wraps inside its chip instead of scrolling the page sideways
+        <li key={slug} className="max-w-full list-none">
           <a
             href={`/docs/components/${slug}`}
-            className="inline-block rounded-md border border-border px-2 py-1 font-mono text-xs text-foreground no-underline hover:bg-muted"
+            className="inline-block max-w-full rounded-md border border-border px-2 py-1 font-mono text-xs text-foreground no-underline [overflow-wrap:anywhere] hover:bg-muted"
           >
             {componentName(slug)}
           </a>
@@ -529,3 +632,82 @@ export function NonPortNamesInline() {
 /** "navigation-menu" → "NavigationMenu". */
 export const componentName = (slug: string) =>
   slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("");
+
+/** "`dimens.xml` and …" → the backticked spans as <code>, the way the /docs/platforms table renders the same rows. */
+const withCode = (text: string) => text.split("`").map((part, i) => (i % 2 ? <code key={i}>{part}</code> : part));
+
+/** Where each platform page's own first-run section starts (its first `##`, slugged by rehype-slug). */
+const FIRST_STEP: Partial<Record<Platform, string>> = { Angular: "#install", SwiftUI: "#setup", Compose: "#setup", Flutter: "#setup" };
+
+/**
+ * The seven facts an evaluator needs before reading a platform page, in one place at its top: package maturity,
+ * distribution, catalogue coverage, what is not implemented, verification evidence, the token model and where to
+ * start. Every value is read from the manifest, the generated verification counts or the /docs/platforms rows, so
+ * the four platform pages differ exactly where the platforms do and cannot drift from the coverage table.
+ */
+export function PlatformAtAGlance({ platform }: { platform: Platform }) {
+  const def = PLATFORM_DEFINITIONS[platform];
+  const row = platforms.find((r) => r.id === platform.toLowerCase());
+  const shipped = platformCount(platform);
+  const missing = componentTotal - shipped;
+  // a kind no test records yet, or only a handful do, says so in words; "Interaction 0/90" reads as a failed score
+  const kinds = (["interaction", "accessibility", "rtl", "largeText"] as const).map((k) => {
+    const e = evidenceStatus(platform, k);
+    return e.meter ? `${EVIDENCE_LABEL[k]} ${e.count}/${e.of}` : `${EVIDENCE_LABEL[k]} ${e.label.toLowerCase()}${e.count ? ` (${e.count}/${e.of})` : ""}`;
+  });
+  const level = CATALOGUE_VERIFICATION[platform];
+  const link = "text-primary underline underline-offset-2";
+  return (
+    <dl aria-label={`${def.label} at a glance`} data-platform-glance={platform} className="my-6 divide-y divide-border rounded-lg border border-border bg-muted/20 text-sm">
+      {[
+        ["Package", <><code>{def.package}</code> · {def.maturity} package</>],
+        [
+          "Distribution",
+          def.distribution.published ? (
+            <>On {def.distribution.channel}.</>
+          ) : (
+            <>Not on {def.distribution.channel} yet: build it from a repository checkout pinned to a commit.</>
+          ),
+        ],
+        [
+          "Catalogue",
+          <>
+            {shipped} of {componentTotal} catalogue entries.{" "}
+            <Link href="/components" className={link}>Browse components</Link>
+          </>,
+        ],
+        [
+          "Not implemented",
+          missing === 0 ? (
+            <>Nothing in the catalogue.</>
+          ) : (
+            <>
+              {missing} entries, each with its reason on{" "}
+              <Link href="/docs/platforms#not-on-every-platform-on-purpose" className={link}>platform coverage</Link>.
+            </>
+          ),
+        ],
+        [
+          "Verification",
+          <>
+            {level ? <>Catalogue verified to <strong className="font-medium">{level}</strong> (the weakest component sets it). </> : null}
+            Components with test evidence: {kinds.join(" · ")}.{row ? <> CI: <code>{row.workflow}</code>.</> : null}
+          </>,
+        ],
+        [
+          "Tokens",
+          <>
+            {withCode(row?.tokens ?? "Generated from the canonical token source.")}{" "}
+            <Link href="/docs/tokens" className={link}>How tokens reach {def.label}</Link>
+          </>,
+        ],
+        ...(FIRST_STEP[platform] ? [["Start", <a key="start" href={FIRST_STEP[platform]} className={link}>{platform === "Angular" ? "Install" : "Set up"} {def.label}</a>] as const] : []),
+      ].map(([label, value]) => (
+        <div key={label as string} className="flex flex-wrap items-baseline gap-x-3 px-3.5 py-2">
+          <dt className="font-mono text-label-md uppercase tracking-[0.14em] text-muted-foreground sm:w-28 sm:shrink-0">{label}</dt>
+          <dd className="min-w-0 sm:flex-1 sm:basis-0">{value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}

@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { KxCard, KxCardContent, KxInput, KxLabel } from '../lib/primitives';
 import { KxNativeSelect, KxTextarea } from '../lib/forms';
+import { KxSelect, KxSelectContent, KxSelectItem, KxSelectTrigger, KxSelectValue } from '../lib/select';
 import { KxTab, KxTabList, KxTabPanel, KxTabs } from '../lib/tabs';
 
 /**
- * Input, Textarea, NativeSelect and Tabs, rendered by Angular, in every state the text-entry and navigation
+ * Input, Textarea, Select, NativeSelect and Tabs, rendered by Angular, in every state the text-entry and navigation
  * contract names (TOKENS.md, "Text entry and navigation") — the subject `scripts/entry-visual.mjs` paints in
  * Chromium.
  *
@@ -18,7 +19,23 @@ import { KxTab, KxTabList, KxTabPanel, KxTabs } from '../lib/tabs';
  */
 @Component({
   selector: 'kx-fixture',
-  imports: [KxCard, KxCardContent, KxLabel, KxInput, KxTextarea, KxNativeSelect, KxTabs, KxTabList, KxTab, KxTabPanel],
+  imports: [
+    KxCard,
+    KxCardContent,
+    KxLabel,
+    KxInput,
+    KxTextarea,
+    KxNativeSelect,
+    KxSelect,
+    KxSelectTrigger,
+    KxSelectValue,
+    KxSelectContent,
+    KxSelectItem,
+    KxTabs,
+    KxTabList,
+    KxTab,
+    KxTabPanel,
+  ],
   template: `
     <div class="kx-render-grid">
       <kx-card data-kx-kind="input">
@@ -66,6 +83,33 @@ import { KxTab, KxTabList, KxTabPanel, KxTabs } from '../lib/tabs';
               </select>
               @if (f.key === 'invalid') {
                 <p id="nsel-invalid-error" class="kx-render-error">Choose a plan to continue.</p>
+              }
+            </div>
+          }
+        </kx-card-content>
+      </kx-card>
+      <kx-card data-kx-kind="select">
+        <kx-card-content class="kx-render-stack">
+          @for (f of selects; track f.key) {
+            <div class="kx-render-field">
+              <label kxLabel [for]="'sel-' + f.key">{{ f.label }}</label>
+              <kx-select [value]="f.value || null" [disabled]="f.key === 'disabled'">
+                <button
+                  kxSelectTrigger
+                  [id]="'sel-' + f.key"
+                  [attr.data-kx-case]="f.key"
+                  [attr.aria-invalid]="f.key === 'invalid' ? 'true' : null"
+                  [attr.aria-describedby]="f.key === 'invalid' ? 'sel-invalid-error' : null"
+                >
+                  <kx-select-value placeholder="Choose one" />
+                </button>
+                <kx-select-content>
+                  <kx-select-item value="utc">UTC</kx-select-item>
+                  <kx-select-item value="cet">Central European Time</kx-select-item>
+                </kx-select-content>
+              </kx-select>
+              @if (f.key === 'invalid') {
+                <p id="sel-invalid-error" class="kx-render-error">Choose a plan to continue.</p>
               }
             </div>
           }

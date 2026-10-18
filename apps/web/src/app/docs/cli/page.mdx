@@ -1,12 +1,13 @@
-export const metadata = {
-  title: "CLI",
-  description: "The kinetixui CLI: init a project, add components from the registry, inspect a component's platform coverage, build a custom theme, and lint your code for hardcoded colours and spacing.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/cli");
 
 # CLI
 
 The `kinetixui` CLI drops component source straight into your project — no
 account, no build step to consume it, just files you own.
+
+<NpmLinks names={["@kinetixui/cli"]} />
 
 ## init
 
@@ -19,6 +20,15 @@ npx @kinetixui/cli init
 You'll be asked where your global CSS file lives and which import aliases to
 use for components and utils. Pass `-y` to accept the defaults and skip the
 prompts.
+
+<Callout>
+  `init` writes the token stylesheet; it does **not** set up Tailwind. The
+  components use Tailwind CSS 3 utilities that the KinetixUI preset maps onto the
+  tokens, and the preset ships in the npm package, so the registry route still
+  needs `npm i @kinetixui/ui` and the preset in `tailwind.config.ts`. Without it,
+  utilities such as `animate-in` and `duration-fast` do not exist. Tailwind 4 setup
+  is not verified. See [Installation → Tailwind](/docs/installation#tailwind).
+</Callout>
 
 ## add
 

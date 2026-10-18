@@ -4,44 +4,173 @@ import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { cn } from "@/lib/utils";
 
-/**
- * Tabs — one navigation group, following the navigation state contract (TOKENS.md, "Text entry and
- * navigation") and the surface model:
+/** Peer content navigation. Text-first tabs share a base rail and a foreground indicator.
+ * Stable weight avoids layout shifts. Radix retains selection, focus, keyboard and direction behavior.
+ * Horizontal lists scroll locally at narrow widths/large text; vertical lists use the inline-end rail.
  *
- *   list       an inset well, `--surface-grouped` — below a Card in both themes; at large text sizes the tabs
- *              wrap inside it rather than running off the page
- *   rest       unselected tabs in `--muted-foreground`
- *   hover      an unselected tab gets the selection controls' `--foreground` state layer at 8% and
- *              `--foreground` text
- *   selected   a small raised surface on the well — `--card`, the Card's half-strength `--border` edge and
- *              `sm` depth — and `--foreground` text, so it is surface + edge + depth, never colour alone. The
- *              list used to be `--muted` with a `--background` tab, which in dark mode put the selected tab
- *              BELOW its well (measured: tab L 0.0031, well L 0.0167) — the inversion SegmentedControl had
- *   focus      the 2px `--ring`, `!important` so the selected tab's edge cannot cover it; the selected
- *              surface stays under it
- *   disabled   `--opacity-disabled`, inert
- *
- * There is no pressed state: Radix selects a tab on pointer-down, so pressing IS selecting.
- * Motion: colour, background and box-shadow over `duration-fast` with `ease-standard`; nothing moves.
+ * The indicator is one bar per list that travels to the chosen tab. Its leading edge moves first and its
+ * trailing edge follows, so it stretches across the gap and settles on the new label: the motion says which
+ * tab the selection came from. It is drawn with logical insets, so it follows the list's own direction.
+ * Until the list has measured itself (server render, before hydration) and under forced colours, each
+ * chosen trigger draws its own 2px edge instead, which is the same mark without the travel.
  */
 const Tabs = TabsPrimitive.Root;
+
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
+
+/** Places the list's indicator on its chosen tab; a change of tab travels, anything else (resize, text size) snaps. */
+function useTabsIndicator(listRef: React.RefObject<HTMLDivElement | null>, indicatorRef: React.RefObject<HTMLSpanElement | null>) {
+  useIsomorphicLayoutEffect(() => {
+    const list = listRef.current;
+    const bar = indicatorRef.current;
+    if (!list || !bar) return;
+    let chosen: HTMLElement | null = null;
+    let start = 0;
+    let end = 0;
+    let axis = "";
+    // `reframed`: the list's direction or orientation changed. That moves the bar's physical edges without
+    // moving its logical ones, so transitions are off before anything is read, or the browser would animate it.
+    const place = (reframed = false) => {
+      if (reframed) bar.style.transition = "none";
+      // Any tab can resize (a label, a badge, a font arriving) and move the chosen one without resizing it, so
+      // every current tab is watched, and a removed one is released rather than held for the list's lifetime.
+      if (sizes) {
+        const tabs = new Set(list.querySelectorAll<HTMLElement>(':scope > [role="tab"]'));
+        for (const t of watched) {
+          if (tabs.has(t)) continue;
+          sizes.unobserve(t);
+          watched.delete(t);
+        }
+        for (const t of tabs) {
+          if (watched.has(t)) continue;
+          sizes.observe(t);
+          watched.add(t);
+        }
+      }
+      const tab = list.querySelector<HTMLElement>(':scope > [role="tab"][data-state="active"]');
+      if (!tab) {
+        list.removeAttribute("data-kx-tabs-indicator");
+        chosen = null;
+        bar.style.transition = "";
+        return;
+      }
+      const vertical = list.getAttribute("aria-orientation") === "vertical";
+      const rtl = getComputedStyle(list).direction === "rtl";
+      // Offsets are from the list's padding edge, so they hold while the list scrolls.
+      const nextStart = vertical ? tab.offsetTop : rtl ? list.clientWidth - tab.offsetLeft - tab.offsetWidth : tab.offsetLeft;
+      const nextEnd = vertical ? list.clientHeight - tab.offsetTop - tab.offsetHeight : list.clientWidth - nextStart - tab.offsetWidth;
+      // Observing a newly chosen tab reports its size at once; with nothing moved, leave the travel running.
+      const frame = `${vertical} ${rtl}`;
+      if (frame !== axis && axis !== "") {
+        reframed = true;
+        bar.style.transition = "none";
+      }
+      if (!reframed && chosen === tab && nextStart === start && nextEnd === end) return;
+      const travels = !reframed && chosen !== null && chosen !== tab;
+      // The edge on the side the bar is heading leads; the other waits for it.
+      const forward = nextStart > start;
+      bar.style.setProperty("--kx-tabs-start-delay", travels && forward ? "var(--duration-instant)" : "0ms");
+      bar.style.setProperty("--kx-tabs-end-delay", travels && !forward ? "var(--duration-instant)" : "0ms");
+      if (!travels) bar.style.transition = "none";
+      bar.style.setProperty("--kx-tabs-start", `${nextStart}px`);
+      bar.style.setProperty("--kx-tabs-end", `${nextEnd}px`);
+      if (!travels) {
+        void bar.offsetWidth; // commit the snapped position before transitions return
+        bar.style.transition = "";
+      }
+      chosen = tab;
+      start = nextStart;
+      end = nextEnd;
+      axis = frame;
+      list.setAttribute("data-kx-tabs-indicator", "");
+    };
+    const sizes = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => place());
+    const watched = new Set<HTMLElement>();
+    sizes?.observe(list);
+    place();
+    const mutations = new MutationObserver((records) =>
+      place(records.some((r) => r.attributeName === "dir" || r.attributeName === "aria-orientation")),
+    );
+    mutations.observe(list, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-state", "aria-orientation", "dir"] });
+    // Radix puts `dir` on the Tabs root, not the list: watch whichever element decides the list's direction.
+    const director = list.parentElement?.closest("[dir]");
+    const reframes = new MutationObserver(() => place(true));
+    if (director) reframes.observe(director, { attributes: true, attributeFilter: ["dir"] });
+    return () => {
+      mutations.disconnect();
+      reframes.disconnect();
+      sizes?.disconnect();
+      watched.clear();
+    };
+  }, [listRef, indicatorRef]);
+}
 
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.List
-    ref={ref}
-    className={cn(
-      // `min-h-9` and `flex-wrap`, not `h-9`: identical at the default text size, but at 200% text three
-      // tabs need 440px and a phone gives them 358 — the strip ran 82px off the page (large-text pass), and a
-      // fixed-height well would have clipped a second row. Now the tabs wrap inside the well and it grows.
-      "inline-flex min-h-9 max-w-full flex-wrap items-center justify-center rounded-lg bg-surface-grouped p-1 text-muted-foreground font-sans",
-      className,
-    )}
-    {...props}
-  />
-));
+>(({ className, onFocusCapture, asChild, children, ...props }, ref) => {
+  const listRef = React.useRef<HTMLDivElement | null>(null);
+  const indicatorRef = React.useRef<HTMLSpanElement | null>(null);
+  const setRefs = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      listRef.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
+  useTabsIndicator(listRef, indicatorRef);
+  // With `asChild` Radix's Slot takes exactly one child, so the bar goes inside the consumer's element.
+  const bar = (
+    <span
+      ref={indicatorRef}
+      aria-hidden="true"
+      data-kx-tabs-bar=""
+      className={cn(
+        "pointer-events-none absolute hidden bg-foreground group-data-[kx-tabs-indicator]/tabs:block forced-colors:!hidden",
+        // grid-ok: 2px is a stroke weight, not spacing: the trigger's border-b-2 at any text size
+        "bottom-0 h-[2px] [inset-inline-end:var(--kx-tabs-end,0px)] [inset-inline-start:var(--kx-tabs-start,0px)]", // grid-ok
+        "group-data-[orientation=vertical]/tabs:bottom-auto group-data-[orientation=vertical]/tabs:h-auto group-data-[orientation=vertical]/tabs:w-[2px] group-data-[orientation=vertical]/tabs:[inset-inline-start:auto] group-data-[orientation=vertical]/tabs:[inset-inline-end:0px] group-data-[orientation=vertical]/tabs:[inset-block-start:var(--kx-tabs-start,0px)] group-data-[orientation=vertical]/tabs:[inset-block-end:var(--kx-tabs-end,0px)]", // grid-ok
+        // Two edges on one curve, the trailing one held back by `instant`: a stretch, then a settle.
+        "[transition-duration:var(--duration-base)] [transition-property:inset-inline-start,inset-inline-end,inset-block-start,inset-block-end] [transition-timing-function:var(--easing-emphasized)]",
+        "[transition-delay:var(--kx-tabs-start-delay,0ms),var(--kx-tabs-end-delay,0ms),var(--kx-tabs-start-delay,0ms),var(--kx-tabs-end-delay,0ms)] motion-reduce:transition-none",
+      )}
+    />
+  );
+  return (
+    <TabsPrimitive.List
+      ref={setRefs}
+      data-kx-tabs-list=""
+      asChild={asChild}
+      onFocusCapture={(event) => {
+        onFocusCapture?.(event);
+        if (event.defaultPrevented) return;
+        const list = event.currentTarget;
+        const tab = event.target as HTMLElement;
+        const l = list.getBoundingClientRect();
+        const t = tab.getBoundingClientRect();
+        // Scroll this list only, without moving the page. Physical geometry works in either direction.
+        const delta = t.left < l.left ? t.left - l.left : t.right > l.right ? t.right - l.right : 0;
+        if (delta && typeof list.scrollBy === "function") list.scrollBy({ left: delta, behavior: "instant" });
+      }}
+      className={cn(
+        "group/tabs relative inline-flex min-h-11 w-full min-w-0 max-w-full items-stretch justify-start gap-1 overflow-x-auto overscroll-x-contain border-b border-border text-muted-foreground font-sans [scrollbar-width:thin]",
+        "data-[orientation=vertical]:flex-col data-[orientation=vertical]:border-b-0 data-[orientation=vertical]:[border-inline-end-width:1px]",
+        className,
+      )}
+      {...props}
+    >
+      {asChild && React.isValidElement<{ children?: React.ReactNode }>(children) ? (
+        React.cloneElement(children, undefined, children.props.children, bar)
+      ) : (
+        <>
+          {children}
+          {bar}
+        </>
+      )}
+    </TabsPrimitive.List>
+  );
+});
 TabsList.displayName = TabsPrimitive.List.displayName;
 
 const TabsTrigger = React.forwardRef<
@@ -51,11 +180,13 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium",
-      "transition-[color,background-color,box-shadow] duration-fast ease-standard",
+      "inline-flex min-h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium data-[orientation=vertical]:border-b-0 data-[orientation=vertical]:[border-inline-end-width:2px]",
+      "transition-colors duration-fast ease-standard motion-reduce:transition-none",
       "[@media(hover:hover)]:enabled:hover:data-[state=inactive]:bg-foreground/[0.08] [@media(hover:hover)]:enabled:hover:data-[state=inactive]:text-foreground",
-      "data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:[box-shadow:inset_0_0_0_1px_hsl(var(--border)/0.5),var(--shadow-sm)]",
-      "focus-visible:outline-none focus-visible:!ring-2 focus-visible:ring-ring",
+      "data-[state=active]:border-foreground data-[state=active]:text-foreground",
+      // The list's travelling indicator takes over the chosen edge once it has measured; forced colours keep this one.
+      "[@media(forced-colors:none)]:group-data-[kx-tabs-indicator]/tabs:data-[state=active]:border-transparent",
+      "focus-visible:outline-none focus-visible:!ring-2 focus-visible:ring-inset focus-visible:ring-ring forced-colors:focus-visible:[outline:2px_solid_Highlight] forced-colors:focus-visible:outline-offset-[-2px]",
       "disabled:pointer-events-none disabled:opacity-disabled",
       className,
     )}
@@ -70,7 +201,7 @@ const TabsContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
-    className={cn("mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}
+    className={cn("mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring forced-colors:focus-visible:[outline:2px_solid_Highlight] forced-colors:focus-visible:outline-offset-[-2px]", className)}
     {...props}
   />
 ));

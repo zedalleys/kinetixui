@@ -118,6 +118,7 @@ class DashboardTabsBlockTest {
     @get:Rule
     val rule = createComposeRule()
 
+    // kx-verify-block: interaction
     @Test
     fun switching_tab_swaps_the_panel_and_its_reserved_chart_caption() {
         rule.setContent { KinetixTheme(darkTheme = false) { DashboardTabsBlock() } }

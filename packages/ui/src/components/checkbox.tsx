@@ -23,9 +23,20 @@ import { cn } from "../lib/utils";
  *   focus     the 2px offset ring, `!important` so no hover or pressed layer can cover it
  *   disabled  `--opacity-disabled`, and the hover/pressed layers are keyed on `:enabled`, so it never answers
  *
- * Motion: colour and box-shadow over `duration-instant` (100ms, the press/toggle step) with `ease-standard`.
- * The checked state itself does not animate. Reduced motion collapses the transition (the library floor in
- * tailwind.config.ts) and lands on the same end state.
+ * Motion (MX1b-1b) has two tiers on one element, because a transition is timed by the property that changes:
+ *
+ *   selection-state  fill, border and text colour on `--duration-fast` (200ms): checking, unchecking and
+ *                    mixed all move the box's colour over the same 200ms
+ *   press-feedback   the state layer (box-shadow) on `--duration-instant` (100ms), so hover and press answer
+ *                    at once. The box's own hover/press colour step rides on the colour tier; the layer is the
+ *                    immediate answer
+ *
+ * The glyph is chosen by Radix's state, not by the `checked` prop. Choosing from the prop drew a tick under
+ * an uncontrolled `defaultChecked="indeterminate"` while announcing "mixed", because the prop is undefined
+ * there. Both glyphs are rendered and the Indicator's own `data-state` shows one; the Indicator stays
+ * mounted so it can fade in on `fast`. It leaves at once rather than fading: from mixed to unchecked the
+ * glyph left on screen would be the tick, the wrong one. Between checked and mixed the glyph swaps in the
+ * same frame as `aria-checked`. Reduced motion removes every transition and lands on the same end state.
  */
 const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
@@ -38,7 +49,9 @@ const Checkbox = React.forwardRef<
       // their browser's default font size scales rem and not px. At 200% the box stayed 18x18 beside a
       // label that doubled — the control shrank by half relative to its own text, and its hit target with it.
       "peer size-[1.125rem] shrink-0 rounded-sm border-2 border-muted-foreground outline-none",
-      "transition-[color,background-color,border-color,box-shadow] duration-instant ease-standard",
+      // One literal, so the property list and its per-property tiers cannot be separated by an edit.
+      "transition-[background-color,color,border-color,box-shadow] ease-standard [transition-duration:var(--duration-fast),var(--duration-fast),var(--duration-fast),var(--duration-instant)]",
+      "motion-reduce:transition-none",
       "data-[state=checked]:border-action data-[state=checked]:bg-action data-[state=checked]:text-action-foreground",
       "data-[state=indeterminate]:border-action data-[state=indeterminate]:bg-action data-[state=indeterminate]:text-action-foreground",
       // `aria-[invalid=true]:`, not `aria-invalid:` — Tailwind 3 has no `invalid` in its aria variants, so
@@ -62,8 +75,16 @@ const Checkbox = React.forwardRef<
     )}
     {...props}
   >
-    <CheckboxPrimitive.Indicator className="flex items-center justify-center text-current">
-      {props.checked === "indeterminate" ? <Minus className="size-3" /> : <Check className="size-3" strokeWidth={3} />}
+    <CheckboxPrimitive.Indicator
+      forceMount
+      className={cn(
+        "group/indicator flex items-center justify-center text-current",
+        "opacity-0 data-[state=checked]:opacity-100 data-[state=indeterminate]:opacity-100",
+        "transition-opacity duration-fast ease-standard data-[state=unchecked]:transition-none motion-reduce:transition-none",
+      )}
+    >
+      <Check className="size-3 group-data-[state=indeterminate]/indicator:hidden" strokeWidth={3} />
+      <Minus className="hidden size-3 group-data-[state=indeterminate]/indicator:block" />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
 ));

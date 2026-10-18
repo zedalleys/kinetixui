@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Tag",
-  description: "A container-tinted, dismissible chip. Reconciled 1:1 with design source node 54855:14021 (variants: default | secondary | destructive | warning | outline).",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("tag", "A container-tinted, dismissible chip in five variants: default, secondary, destructive, warning and outline.");
 
 # Tag
 
@@ -11,13 +10,13 @@ A container-tinted, dismissible chip. Reconciled 1:1 with design source node 548
 
 <ComponentPreview name="tag-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add tag
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Tag, tagVariants } from "@kinetixui/ui";

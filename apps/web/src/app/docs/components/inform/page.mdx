@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Inform",
-  description: "A persistent, dismissible, intent-tinted inline notice with an optional action (variant: information | warning | success | error | action).",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("inform", "A persistent, dismissible, intent-tinted inline notice with an optional action (variant: information | warning | success | error | action).");
 
 # Inform
 
@@ -11,13 +10,13 @@ A persistent, dismissible, intent-tinted inline notice with an optional action (
 
 <ComponentPreview name="inform-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add inform
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Inform, informVariants } from "@kinetixui/ui";

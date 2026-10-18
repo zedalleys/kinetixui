@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import { Pause, Play } from "lucide-react";
+import { Toggle } from "@kinetixui/ui";
 import { CopyButton } from "./copy-button";
 import { analytics } from "@/lib/analytics";
 import { PACKAGES } from "@/lib/packages";
 import { usePersistedPause } from "@/lib/use-persisted-pause";
-import { cn } from "@/lib/utils";
 
 const PREFIX = "npx @kinetixui/cli add ";
 const NAMES = ["button", "card", "dialog", "input", "tabs", "chart", "calendar", "command"];
@@ -73,23 +73,19 @@ export function HeroCommand() {
 
   return (
     <div className="group relative overflow-hidden rounded-lg border border-border bg-muted/40">
-      <div className="flex items-center justify-between border-b border-border px-4 py-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+      <div className="flex items-center justify-between border-b border-border px-4 py-1.5 text-label-md uppercase tracking-wide text-muted-foreground">
         <span>bash</span>
         <span className="flex items-center gap-1">
-          <button
-            type="button"
+          {/* The library Toggle: a button with aria-pressed, which is exactly what a pause control is. */}
+          <Toggle
             aria-label="Pause typing animation"
-            aria-pressed={paused}
+            pressed={paused}
+            onPressedChange={() => togglePaused()}
             data-hero-command-pause=""
-            onClick={togglePaused}
-            className={cn(
-              "inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              "motion-reduce:hidden",
-            )}
+            className="size-7 min-w-7 p-0 text-muted-foreground hover:text-foreground focus-visible:ring-2 motion-reduce:hidden"
           >
-            {paused ? <Play aria-hidden="true" className="size-3.5" /> : <Pause aria-hidden="true" className="size-3.5" />}
-          </button>
+            {paused ? <Play aria-hidden="true" className="!size-3.5" /> : <Pause aria-hidden="true" className="!size-3.5" />}
+          </Toggle>
           <CopyButton
             value={PREFIX + current}
             // which component is currently typed is not reported — only that the CLI command was copied
@@ -97,8 +93,9 @@ export function HeroCommand() {
           />
         </span>
       </div>
-      <pre className="overflow-x-auto p-4 text-[13px] leading-relaxed">
-        <code>
+      <pre className="overflow-x-auto whitespace-pre-wrap p-4 text-code leading-relaxed">
+        {/* globals.css puts `pre *` back to overflow-wrap: normal, so the wrap is set on the code and every span in it */}
+        <code className="[overflow-wrap:anywhere] [&_*]:[overflow-wrap:anywhere]">
           <span className="text-muted-foreground">{PREFIX}</span>
           <span className="text-foreground">{typed}</span>
           <span aria-hidden className="kx-caret" {...(paused ? { "data-paused": "" } : {})} />

@@ -1,0 +1,162 @@
+[
+  {
+    "case": "desktop-light",
+    "pass": true,
+    "focusGeometry": {
+      "left": 420.890625,
+      "right": -730.09375
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(5, 11, 16)",
+        "aligned": true
+      }
+    }
+  },
+  {
+    "case": "desktop-dark-rtl",
+    "pass": true,
+    "focusGeometry": {
+      "left": 730.09375,
+      "right": -420.890625
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(5, 11, 16)",
+        "aligned": true
+      }
+    }
+  },
+  {
+    "case": "phone",
+    "pass": true,
+    "focusGeometry": {
+      "left": 222.890625,
+      "right": -0.09375
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(5, 11, 16)",
+        "aligned": true
+      }
+    }
+  },
+  {
+    "case": "phone-rtl",
+    "pass": true,
+    "focusGeometry": {
+      "left": 0.09375,
+      "right": -292.890625
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(5, 11, 16)",
+        "aligned": true
+      }
+    }
+  },
+  {
+    "case": "phone-large",
+    "pass": true,
+    "focusGeometry": {
+      "left": 126.953125,
+      "right": 0.375
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(5, 11, 16)",
+        "aligned": true
+      }
+    }
+  },
+  {
+    "case": "phone-large-rtl",
+    "pass": true,
+    "focusGeometry": {
+      "left": -0.375,
+      "right": -196.953125
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(5, 11, 16)",
+        "aligned": true
+      }
+    }
+  },
+  {
+    "case": "tablet-large",
+    "pass": true,
+    "focusGeometry": {
+      "left": 542.953125,
+      "right": 0.375
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(29, 79, 215) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(5, 11, 16)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(5, 11, 16)",
+        "aligned": true
+      }
+    }
+  },
+  {
+    "case": "forced-colors",
+    "pass": true,
+    "focusGeometry": {
+      "left": 730.09375,
+      "right": -420.890625
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(255, 255, 255, 0)",
+      "border": "2px",
+      "shadow": "none",
+      "color": "rgb(0, 0, 0)",
+      "borderColor": "rgba(5, 0, 73, 0.8)",
+      "mark": {
+        "color": "rgba(5, 0, 73, 0.8)",
+        "aligned": true
+      }
+    }
+  }
+]

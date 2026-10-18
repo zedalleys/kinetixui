@@ -144,6 +144,7 @@ class _ProfileFormBlockState extends State<ProfileFormBlock> {
 // kx-block:end
 
 void main() {
+  // kx-verify-block: interaction, accessibility
   testWidgets('the whole row selects the option, and the selection is announced', (WidgetTester tester) async {
     final SemanticsHandle handle = tester.ensureSemantics();
     await tester.pumpWidget(

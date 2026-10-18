@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Button Group",
-  description: "Visually joins a row or column of buttons into a connected, segmented-control-style cluster.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("button-group", "Visually joins a row or column of buttons into a connected, segmented-control-style cluster.");
 
 # Button Group
 
@@ -11,13 +10,13 @@ Visually joins a row or column of buttons into a connected, segmented-control-st
 
 <ComponentPreview name="button-group-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add button-group
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from "@kinetixui/ui";

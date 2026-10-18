@@ -1,9 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Button, Label, Textarea } from "@kinetixui/ui";
+import { Button, Input, Label, Textarea } from "@kinetixui/ui";
 import { AlertTriangle, RotateCcw } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { ROLE_DEFAULTS, hexToOklch, type AcceptedToken } from "@kinetixui/create-theme";
 import type { CreateAction, CreateConfig } from "@/lib/create/config";
 import { overridesToText, textToOverrides, type CreateTheme } from "@/lib/create/theme-adapter";
@@ -139,11 +138,11 @@ function SemanticField({
       <div className="min-w-0 flex-1">
         <label htmlFor={id} className="flex items-baseline gap-2 text-sm">
           {label}
-          <span className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+          <span className="font-mono text-label-md uppercase tracking-wide text-muted-foreground">
             {manual ? "manual" : follows ? `from ${follows}` : "generated"}
           </span>
         </label>
-        <input
+        <Input
           id={id}
           value={shown}
           spellCheck={false}
@@ -154,10 +153,8 @@ function SemanticField({
             if (hexToOklch(e.target.value)) dispatch({ type: "set-override", token, hex: e.target.value.trim().toLowerCase() });
           }}
           onBlur={() => setDraft(null)}
-          className={cn(
-            "mt-1 w-full rounded-md border bg-background px-2 py-1 font-mono text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            invalid ? "border-destructive" : "border-border",
-          )}
+          // the library field draws the invalid edge from aria-invalid
+          className="mt-1 rounded-md px-2 py-1 font-mono text-xs"
         />
       </div>
       <Button

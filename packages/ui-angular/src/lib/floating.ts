@@ -24,6 +24,7 @@ import {
   isFocusTarget,
   tabbables,
   type KxAlign,
+  type KxAnchor,
   type KxDismissReason,
   type KxLayer,
   type KxSide,
@@ -63,8 +64,12 @@ import {
  * `--duration-instant` out (a tooltip `--duration-instant` both ways); `none` under reduced motion.
  */
 
-/** Why a floating surface closed — decides whether focus goes back to the trigger. */
-type CloseReason = KxDismissReason | 'close' | 'blur' | 'pointer' | 'press' | 'programmatic';
+/**
+ * Why a floating surface closed — decides whether focus goes back to the trigger. `select` (an item was
+ * activated), `tab` (Tab left the surface) and `switch` (a menubar moved to another of its menus) are the
+ * menus' (menu.ts); nothing in this file closes for them.
+ */
+export type CloseReason = KxDismissReason | 'close' | 'blur' | 'pointer' | 'press' | 'programmatic' | 'select' | 'tab' | 'switch';
 
 @Directive()
 export abstract class KxFloatingRoot {
@@ -91,7 +96,7 @@ export abstract class KxFloatingRoot {
 }
 
 /** The surface's root, following the surface's own `id` input as the id every reference uses. */
-function adopt<T extends KxFloatingRoot>(root: T, id: Signal<string | undefined>): T {
+export function adopt<T extends KxFloatingRoot>(root: T, id: Signal<string | undefined>): T {
   root.contentIdFrom.set(id);
   return root;
 }
@@ -145,6 +150,23 @@ export abstract class KxFloatingSurface implements KxLayer {
     this.root.hide(reason);
   }
 
+  /** What the surface is placed against: its anchor, else its trigger, else its parent. A member may place elsewhere. */
+  protected placementAnchor(): KxAnchor | null {
+    return this.root.anchor ?? this.root.trigger ?? this.el.parentElement;
+  }
+
+  /** Place the surface again, against whatever `placementAnchor()` now answers. Only while it is showing. */
+  protected reposition(): void {
+    if (this.shown) this.place();
+  }
+
+  private place(): void {
+    this.release?.();
+    this.release = null;
+    const anchor = this.placementAnchor();
+    if (anchor) this.release = autoPlace(anchor, this.el, { side: () => this.side(), align: () => this.align(), offset: () => this.offset() });
+  }
+
   protected afterShow(): void {}
   protected afterHide(_reason: CloseReason, _focusWasInside: boolean): void {}
 
@@ -154,8 +176,7 @@ export abstract class KxFloatingSurface implements KxLayer {
       this.root.reason = 'programmatic';
       if (typeof this.el.showPopover === 'function' && !this.isShowing()) this.el.showPopover();
       else this.el.setAttribute('data-kx-shown', '');
-      const anchor = this.root.anchor ?? this.root.trigger ?? this.el.parentElement;
-      if (anchor) this.release = autoPlace(anchor, this.el, { side: () => this.side(), align: () => this.align(), offset: () => this.offset() });
+      this.place();
       this.stack.add(this);
       this.afterShow();
     } else if (!open && this.shown) {

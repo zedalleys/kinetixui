@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Tab Bar",
-  description: "A mobile bottom navigation bar.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("tab-bar", "A mobile bottom navigation bar.");
 
 # Tab Bar
 
@@ -11,13 +10,13 @@ A mobile bottom navigation bar.
 
 <ComponentPreview name="tab-bar-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add tab-bar
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { TabBar, TabBarItem } from "@kinetixui/ui";

@@ -14,7 +14,7 @@
  * `check:platform-source` reads the public API to decide what the manifest may claim, and an example
  * appearing there would let a demo masquerade as a component.
  */
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { KxButton } from '../lib/button';
@@ -172,6 +172,84 @@ import {
   KxTooltipContent,
   KxTooltipTrigger,
 } from '../lib/floating';
+import {
+  KxContextMenu,
+  KxContextMenuContent,
+  KxContextMenuTrigger,
+  KxDropdownMenu,
+  KxDropdownMenuContent,
+  KxDropdownMenuTrigger,
+  KxMenuCheckboxItem,
+  KxMenuGroup,
+  KxMenuItem,
+  KxMenuLabel,
+  KxMenuRadioGroup,
+  KxMenuRadioItem,
+  KxMenuSeparator,
+  KxMenuShortcut,
+  KxMenuSub,
+  KxMenuSubContent,
+  KxMenuSubTrigger,
+  KxMenubar,
+  KxMenubarContent,
+  KxMenubarMenu,
+  KxMenubarTrigger,
+} from '../lib/menu';
+import {
+  KxSelect,
+  KxSelectContent,
+  KxSelectGroup,
+  KxSelectItem,
+  KxSelectLabel,
+  KxSelectSeparator,
+  KxSelectTrigger,
+  KxSelectValue,
+} from '../lib/select';
+import {
+  KxCommand,
+  KxCommandEmpty,
+  KxCommandGroup,
+  KxCommandInput,
+  KxCommandItem,
+  KxCommandList,
+  KxCommandSeparator,
+  KxCommandShortcut,
+} from '../lib/command';
+import { KxMultiSelect, type KxMultiSelectOption } from '../lib/multi-select';
+import {
+  KxNavigationMenu,
+  KxNavigationMenuContent,
+  KxNavigationMenuIndicator,
+  KxNavigationMenuItem,
+  KxNavigationMenuLink,
+  KxNavigationMenuList,
+  KxNavigationMenuTrigger,
+} from '../lib/navigation-menu';
+import { KxToaster, KxToasterService } from '../lib/sonner';
+import { KxScrollArea } from '../lib/scroll-area';
+import { KxResizableHandle, KxResizablePanel, KxResizablePanelGroup } from '../lib/resizable';
+import { KxCarousel, KxCarouselContent, KxCarouselItem, KxCarouselNext, KxCarouselPrevious } from '../lib/carousel';
+import { KxComparisonSlider } from '../lib/comparison-slider';
+import { KxNotificationCenter, KxNotificationCenterContent, KxNotificationCenterTrigger, KxNotificationItem } from '../lib/notification-center';
+import { KxTour, type KxTourStep } from '../lib/tour';
+import {
+  KxSidebar,
+  KxSidebarContent,
+  KxSidebarFooter,
+  KxSidebarGroup,
+  KxSidebarGroupContent,
+  KxSidebarGroupLabel,
+  KxSidebarHeader,
+  KxSidebarInput,
+  KxSidebarInset,
+  KxSidebarMenu,
+  KxSidebarMenuButton,
+  KxSidebarMenuSkeleton,
+  KxSidebarMenuItem,
+  KxSidebarProvider,
+  KxSidebarSeparator,
+  KxSidebarTrigger,
+} from '../lib/sidebar';
 
 /* ── primitives ─────────────────────────────────────────────────────────── */
 
@@ -1141,4 +1219,580 @@ export class TooltipDemo {}
   `,
 })
 export class HoverCardDemo {}
+// kx-usage:end
+
+// The three menus share one set of parts (`KxMenu…`); only the root differs.
+const MENU_PARTS = [
+  KxMenuItem,
+  KxMenuCheckboxItem,
+  KxMenuRadioGroup,
+  KxMenuRadioItem,
+  KxMenuLabel,
+  KxMenuGroup,
+  KxMenuSeparator,
+  KxMenuShortcut,
+  KxMenuSub,
+  KxMenuSubTrigger,
+  KxMenuSubContent,
+];
+
+// kx-usage:dropdown-menu-demo
+@Component({
+  selector: 'app-dropdown-menu-demo',
+  imports: [KxButton, KxDropdownMenu, KxDropdownMenuTrigger, KxDropdownMenuContent, ...MENU_PARTS],
+  template: `
+    <kx-dropdown-menu>
+      <button kxButton variant="Outline" kxDropdownMenuTrigger>Options</button>
+      <kx-dropdown-menu-content align="start">
+        <kx-menu-group>
+          <kx-menu-label>Document</kx-menu-label>
+          <button kxMenuItem (select)="last = 'rename'">Rename <kx-menu-shortcut>F2</kx-menu-shortcut></button>
+          <button kxMenuItem (select)="last = 'duplicate'">Duplicate <kx-menu-shortcut>Ctrl+D</kx-menu-shortcut></button>
+          <button kxMenuItem disabled>Move to archive</button>
+          <kx-menu-sub>
+            <button kxMenuSubTrigger>Share</button>
+            <kx-menu-sub-content>
+              <button kxMenuItem (select)="last = 'email'">Email link</button>
+              <button kxMenuItem (select)="last = 'copy'">Copy link</button>
+            </kx-menu-sub-content>
+          </kx-menu-sub>
+        </kx-menu-group>
+        <kx-menu-separator />
+        <kx-menu-checkbox-item [(checked)]="showRuler">Show ruler</kx-menu-checkbox-item>
+        <kx-menu-radio-group [(value)]="density">
+          <kx-menu-label inset>Density</kx-menu-label>
+          <kx-menu-radio-item value="compact">Compact</kx-menu-radio-item>
+          <kx-menu-radio-item value="comfortable">Comfortable</kx-menu-radio-item>
+        </kx-menu-radio-group>
+        <kx-menu-separator />
+        <button kxMenuItem variant="destructive" (select)="last = 'delete'">Delete document</button>
+      </kx-dropdown-menu-content>
+    </kx-dropdown-menu>
+  `,
+})
+export class DropdownMenuDemo {
+  last = '';
+  showRuler = true;
+  density = 'comfortable';
+}
+// kx-usage:end
+
+// kx-usage:context-menu-demo
+@Component({
+  selector: 'app-context-menu-demo',
+  imports: [KxContextMenu, KxContextMenuTrigger, KxContextMenuContent, ...MENU_PARTS],
+  template: `
+    <kx-context-menu>
+      <!-- right-click, the ContextMenu key or Shift+F10 inside the region opens the menu -->
+      <div kxContextMenuTrigger tabindex="0" role="group" aria-label="Canvas" class="canvas">
+        Right-click here, or focus and press Shift+F10
+      </div>
+      <kx-context-menu-content label="Canvas actions">
+        <button kxMenuItem>Back <kx-menu-shortcut>Alt+←</kx-menu-shortcut></button>
+        <button kxMenuItem disabled>Forward</button>
+        <button kxMenuItem>Reload <kx-menu-shortcut>Ctrl+R</kx-menu-shortcut></button>
+        <kx-menu-sub>
+          <button kxMenuSubTrigger>More tools</button>
+          <kx-menu-sub-content>
+            <button kxMenuItem>Save page as…</button>
+            <button kxMenuItem>Developer tools</button>
+          </kx-menu-sub-content>
+        </kx-menu-sub>
+        <kx-menu-separator />
+        <kx-menu-checkbox-item [(checked)]="showGuides">Show guides</kx-menu-checkbox-item>
+      </kx-context-menu-content>
+    </kx-context-menu>
+  `,
+  styles: `
+    .canvas {
+      display: grid;
+      place-items: center;
+      min-block-size: 9rem;
+      padding: var(--spacing-4);
+      border: 1px dashed hsl(var(--border));
+      border-radius: var(--radius-surface);
+      color: hsl(var(--muted-foreground));
+      text-align: center;
+    }
+  `,
+})
+export class ContextMenuDemo {
+  showGuides = true;
+}
+// kx-usage:end
+
+// kx-usage:menubar-demo
+@Component({
+  selector: 'app-menubar-demo',
+  imports: [KxMenubar, KxMenubarMenu, KxMenubarTrigger, KxMenubarContent, ...MENU_PARTS],
+  template: `
+    <kx-menubar aria-label="Editor">
+      <kx-menubar-menu value="file">
+        <button kxMenubarTrigger>File</button>
+        <kx-menubar-content>
+          <button kxMenuItem>New tab <kx-menu-shortcut>Ctrl+T</kx-menu-shortcut></button>
+          <button kxMenuItem>New window</button>
+          <kx-menu-sub>
+            <button kxMenuSubTrigger>Share</button>
+            <kx-menu-sub-content>
+              <button kxMenuItem>Email link</button>
+              <button kxMenuItem>Messages</button>
+            </kx-menu-sub-content>
+          </kx-menu-sub>
+          <kx-menu-separator />
+          <button kxMenuItem>Print… <kx-menu-shortcut>Ctrl+P</kx-menu-shortcut></button>
+        </kx-menubar-content>
+      </kx-menubar-menu>
+      <kx-menubar-menu value="edit">
+        <button kxMenubarTrigger>Edit</button>
+        <kx-menubar-content>
+          <button kxMenuItem>Undo <kx-menu-shortcut>Ctrl+Z</kx-menu-shortcut></button>
+          <button kxMenuItem disabled>Redo</button>
+          <kx-menu-separator />
+          <button kxMenuItem>Cut</button>
+          <button kxMenuItem>Copy</button>
+          <button kxMenuItem>Paste</button>
+        </kx-menubar-content>
+      </kx-menubar-menu>
+      <kx-menubar-menu value="view">
+        <button kxMenubarTrigger>View</button>
+        <kx-menubar-content>
+          <kx-menu-checkbox-item [(checked)]="bookmarks">Show bookmarks</kx-menu-checkbox-item>
+          <kx-menu-checkbox-item [(checked)]="fullUrls">Show full URLs</kx-menu-checkbox-item>
+          <kx-menu-separator />
+          <kx-menu-radio-group [(value)]="zoom">
+            <kx-menu-label inset>Zoom</kx-menu-label>
+            <kx-menu-radio-item value="90">90%</kx-menu-radio-item>
+            <kx-menu-radio-item value="100">100%</kx-menu-radio-item>
+            <kx-menu-radio-item value="125">125%</kx-menu-radio-item>
+          </kx-menu-radio-group>
+        </kx-menubar-content>
+      </kx-menubar-menu>
+    </kx-menubar>
+  `,
+})
+export class MenubarDemo {
+  bookmarks = true;
+  fullUrls = false;
+  zoom = '100';
+}
+// kx-usage:end
+
+// kx-usage:select-demo
+@Component({
+  selector: 'app-select-demo',
+  imports: [KxLabel, KxSelect, KxSelectTrigger, KxSelectValue, KxSelectContent, KxSelectGroup, KxSelectLabel, KxSelectItem, KxSelectSeparator],
+  template: `
+    <label kxLabel for="fruit">Fruit</label>
+    <kx-select [(value)]="fruit">
+      <button kxSelectTrigger id="fruit"><kx-select-value placeholder="Select a fruit" /></button>
+      <kx-select-content>
+        <kx-select-group>
+          <kx-select-label>Fruit</kx-select-label>
+          <kx-select-item value="apple">Apple</kx-select-item>
+          <kx-select-item value="banana">Banana</kx-select-item>
+          <kx-select-item value="blueberry">Blueberry</kx-select-item>
+        </kx-select-group>
+        <kx-select-separator />
+        <kx-select-group>
+          <kx-select-label>Out of season</kx-select-label>
+          <kx-select-item value="cherry" disabled>Cherry</kx-select-item>
+        </kx-select-group>
+      </kx-select-content>
+    </kx-select>
+  `,
+  styles: `
+    :host { display: grid; gap: var(--spacing-2); max-inline-size: 16rem; }
+  `,
+})
+export class SelectDemo {
+  fruit: string | null = null;
+}
+// kx-usage:end
+
+// kx-usage:command-demo
+@Component({
+  selector: 'app-command-demo',
+  imports: [KxCommand, KxCommandInput, KxCommandList, KxCommandEmpty, KxCommandGroup, KxCommandItem, KxCommandSeparator, KxCommandShortcut],
+  template: `
+    <kx-command label="Commands">
+      <input kxCommandInput placeholder="Type a command or search…" />
+      <kx-command-list>
+        <kx-command-empty>No results found.</kx-command-empty>
+        <kx-command-group heading="Suggestions">
+          <kx-command-item value="calendar" (select)="ran = $event">Calendar</kx-command-item>
+          <kx-command-item value="emoji" [keywords]="['smiley', 'face']" (select)="ran = $event">Search emoji</kx-command-item>
+          <kx-command-item value="launch" disabled>Launch</kx-command-item>
+        </kx-command-group>
+        <kx-command-separator />
+        <kx-command-group heading="Settings">
+          <kx-command-item value="profile" (select)="ran = $event">Profile <kx-command-shortcut>Ctrl+P</kx-command-shortcut></kx-command-item>
+          <kx-command-item value="billing" (select)="ran = $event">Billing <kx-command-shortcut>Ctrl+B</kx-command-shortcut></kx-command-item>
+        </kx-command-group>
+      </kx-command-list>
+    </kx-command>
+  `,
+  styles: `
+    :host { display: block; max-inline-size: 26rem; }
+  `,
+})
+export class CommandDemo {
+  ran = '';
+}
+// kx-usage:end
+
+// kx-usage:combobox-demo
+// Combobox is a recipe, not a component: a popover holding a command. There is no KxCombobox to import.
+@Component({
+  selector: 'app-combobox-demo',
+  imports: [KxButton, KxPopover, KxPopoverTrigger, KxPopoverContent, KxCommand, KxCommandInput, KxCommandList, KxCommandEmpty, KxCommandGroup, KxCommandItem],
+  template: `
+    <kx-popover [(open)]="open">
+      <button kxButton variant="Outline" kxPopoverTrigger class="combobox-trigger">
+        {{ labelOf(framework) ?? 'Select framework…' }}
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M5 6l3-3 3 3M5 10l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+      <kx-popover-content side="bottom" align="start" label="Frameworks">
+        <kx-command label="Frameworks">
+          <input kxCommandInput placeholder="Search framework…" />
+          <kx-command-list>
+            <kx-command-empty>No framework found.</kx-command-empty>
+            <kx-command-group>
+              @for (f of frameworks; track f.value) {
+                <kx-command-item [value]="f.value" (select)="choose($event)">
+                  <svg class="combobox-check" [class.combobox-check--on]="framework === f.value" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  {{ f.label }}
+                </kx-command-item>
+              }
+            </kx-command-group>
+          </kx-command-list>
+        </kx-command>
+      </kx-popover-content>
+    </kx-popover>
+  `,
+  styles: `
+    .combobox-trigger { inline-size: 15rem; justify-content: space-between; }
+    .combobox-trigger svg, .combobox-check { inline-size: 1rem; block-size: 1rem; flex: none; }
+    .combobox-check { visibility: hidden; }
+    .combobox-check--on { visibility: visible; }
+  `,
+})
+export class ComboboxDemo {
+  open = false;
+  framework: string | null = null;
+  readonly frameworks = [
+    { value: 'next', label: 'Next.js' },
+    { value: 'sveltekit', label: 'SvelteKit' },
+    { value: 'nuxt', label: 'Nuxt' },
+    { value: 'remix', label: 'Remix' },
+    { value: 'astro', label: 'Astro' },
+  ];
+  labelOf(value: string | null): string | null {
+    return this.frameworks.find((f) => f.value === value)?.label ?? null;
+  }
+  choose(value: string): void {
+    this.framework = value === this.framework ? null : value;
+    this.open = false;
+  }
+}
+// kx-usage:end
+
+// kx-usage:multi-select-demo
+@Component({
+  selector: 'app-multi-select-demo',
+  imports: [KxLabel, KxMultiSelect],
+  template: `
+    <label kxLabel for="platforms">Platforms</label>
+    <kx-multi-select inputId="platforms" [options]="platforms" [(value)]="chosen" placeholder="Select platforms…" />
+  `,
+  styles: `
+    :host { display: grid; gap: var(--spacing-2); max-inline-size: 24rem; }
+  `,
+})
+export class MultiSelectDemo {
+  chosen = ['react', 'swiftui'];
+  readonly platforms: KxMultiSelectOption[] = [
+    { value: 'react', label: 'React' },
+    { value: 'swiftui', label: 'SwiftUI' },
+    { value: 'compose', label: 'Jetpack Compose' },
+    { value: 'flutter', label: 'Flutter' },
+  ];
+}
+// kx-usage:end
+
+// kx-usage:navigation-menu-demo
+@Component({
+  selector: 'app-navigation-menu-demo',
+  imports: [
+    KxNavigationMenu,
+    KxNavigationMenuList,
+    KxNavigationMenuItem,
+    KxNavigationMenuTrigger,
+    KxNavigationMenuContent,
+    KxNavigationMenuLink,
+    KxNavigationMenuIndicator,
+  ],
+  template: `
+    <nav kxNavigationMenu aria-label="Docs">
+      <ul kxNavigationMenuList>
+        <li kxNavigationMenuItem value="getting-started">
+          <button kxNavigationMenuTrigger>Getting started</button>
+          <kx-navigation-menu-content>
+            <ul class="links">
+              <li><a kxNavigationMenuLink href="#introduction" [active]="true">Introduction</a></li>
+              <li><a kxNavigationMenuLink href="#installation">Installation</a></li>
+              <li><a kxNavigationMenuLink href="#theming">Theming</a></li>
+            </ul>
+          </kx-navigation-menu-content>
+        </li>
+        <li kxNavigationMenuItem value="components">
+          <button kxNavigationMenuTrigger>Components</button>
+          <kx-navigation-menu-content>
+            <ul class="links">
+              <li><a kxNavigationMenuLink href="#button">Button</a></li>
+              <li><a kxNavigationMenuLink href="#dialog">Dialog</a></li>
+              <li><a kxNavigationMenuLink href="#tabs">Tabs</a></li>
+            </ul>
+          </kx-navigation-menu-content>
+        </li>
+        <li kxNavigationMenuItem><a kxNavigationMenuLink href="#changelog">Changelog</a></li>
+      </ul>
+      <kx-navigation-menu-indicator />
+    </nav>
+  `,
+  styles: `
+    .links { display: grid; gap: var(--spacing-1); inline-size: min(20rem, 100%); }
+  `,
+})
+export class NavigationMenuDemo {}
+// kx-usage:end
+
+// kx-usage:sonner-demo
+@Component({
+  selector: 'app-sonner-demo',
+  imports: [KxButton, KxToaster],
+  template: `
+    <!-- once, in the application's root template -->
+    <kx-toaster />
+
+    <button kxButton variant="Outline" (click)="notify()">Show toast</button>
+  `,
+})
+export class SonnerDemo {
+  private readonly toast = inject(KxToasterService);
+
+  notify(): void {
+    this.toast.show('Event created', {
+      description: 'Sunday, December 03 at 9:00 AM',
+      action: { label: 'Undo', onClick: () => {} },
+    });
+  }
+}
+// kx-usage:end
+
+// kx-usage:notification-center-demo
+@Component({
+  selector: 'app-notification-center-demo',
+  imports: [KxNotificationCenter, KxNotificationCenterTrigger, KxNotificationCenterContent, KxNotificationItem],
+  template: `
+    <kx-notification-center>
+      <button kxNotificationCenterTrigger [unreadCount]="unread"></button>
+      <kx-notification-center-content showMarkAllRead (markAllRead)="unread = 0">
+        <kx-notification-item title="PR #106 merged" description="feat(ui): add PageHeader" time="2m ago" [unread]="unread > 0" />
+        <kx-notification-item title="Deploy succeeded" description="v0.11.0 is live" time="1h ago" [unread]="unread > 1" />
+        <kx-notification-item title="Welcome to KinetixUI" time="2d ago" />
+      </kx-notification-center-content>
+    </kx-notification-center>
+  `,
+})
+export class NotificationCenterDemo {
+  unread = 2;
+}
+// kx-usage:end
+
+// kx-usage:tour-demo
+@Component({
+  selector: 'app-tour-demo',
+  imports: [KxButton, KxTour],
+  template: `
+    <button kxButton size="sm" (click)="start()">Start tour</button>
+    <div class="row">
+      <button kxButton variant="Outline" size="sm" data-tour-demo="save">Save</button>
+      <button kxButton variant="Outline" size="sm" data-tour-demo="share">Share</button>
+      <button kxButton variant="Ghost" size="sm" data-tour-demo="settings">Settings</button>
+    </div>
+    <kx-tour [steps]="steps" [(open)]="open" [(stepIndex)]="step" />
+  `,
+  styles: `
+    :host { display: flex; flex-direction: column; align-items: flex-start; gap: var(--spacing-4); }
+    .row { display: flex; gap: var(--spacing-3); }
+  `,
+})
+export class TourDemo {
+  open = false;
+  step = 0;
+  readonly steps: KxTourStep[] = [
+    { target: '[data-tour-demo="save"]', title: 'Save your work', content: 'Changes save automatically, but you can force a save here.' },
+    { target: '[data-tour-demo="share"]', title: 'Invite others', content: 'Share this project with your team.' },
+    { target: '[data-tour-demo="settings"]', title: 'Fine-tune settings', content: 'Adjust preferences for this workspace.' },
+  ];
+
+  start(): void {
+    this.step = 0;
+    this.open = true;
+  }
+}
+// kx-usage:end
+
+// kx-usage:sidebar-demo
+@Component({
+  selector: 'app-sidebar-demo',
+  imports: [
+    KxSidebarProvider,
+    KxSidebar,
+    KxSidebarHeader,
+    KxSidebarContent,
+    KxSidebarFooter,
+    KxSidebarGroup,
+    KxSidebarGroupLabel,
+    KxSidebarGroupContent,
+    KxSidebarMenu,
+    KxSidebarMenuItem,
+    KxSidebarMenuButton,
+    KxSidebarInset,
+    KxSidebarTrigger,
+    KxSidebarInput,
+    KxSidebarSeparator,
+    KxSidebarMenuSkeleton,
+  ],
+  template: `
+    <kx-sidebar-provider [(open)]="open">
+      <kx-sidebar collapsible="icon">
+        <kx-sidebar-header>
+          <strong>Acme</strong>
+          <input kxSidebarInput type="search" placeholder="Search" aria-label="Search the workspace" />
+        </kx-sidebar-header>
+        <kx-sidebar-content>
+          <kx-sidebar-group>
+            <h2 kxSidebarGroupLabel>Platform</h2>
+            <kx-sidebar-group-content>
+              <ul kxSidebarMenu>
+                <li kxSidebarMenuItem><a kxSidebarMenuButton href="#home" [active]="true"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg><span>Home</span></a></li>
+                <li kxSidebarMenuItem><a kxSidebarMenuButton href="#projects"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg><span>Projects</span></a></li>
+                <li kxSidebarMenuItem><a kxSidebarMenuButton href="#settings"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg><span>Settings</span></a></li>
+              </ul>
+            </kx-sidebar-group-content>
+          </kx-sidebar-group>
+          <kx-sidebar-separator />
+          <kx-sidebar-group aria-busy="true">
+            <h2 kxSidebarGroupLabel>Recent</h2>
+            <kx-sidebar-group-content>
+              <!-- while the recent projects load -->
+              <kx-sidebar-menu-skeleton showIcon width="60%" />
+              <kx-sidebar-menu-skeleton showIcon width="80%" />
+            </kx-sidebar-group-content>
+          </kx-sidebar-group>
+        </kx-sidebar-content>
+        <kx-sidebar-footer><button kxSidebarMenuButton><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.5" /></svg><span>Sign out</span></button></kx-sidebar-footer>
+      </kx-sidebar>
+      <main kxSidebarInset>
+        <button kxSidebarTrigger></button>
+        <p>Page content</p>
+      </main>
+    </kx-sidebar-provider>
+  `,
+  styles: `
+    /* a frame for the demo: the panel is fixed to its containing block, which the transform makes this box */
+    :host { display: block; block-size: 20rem; overflow: hidden; border: 1px solid hsl(var(--border)); border-radius: var(--radius-lg); transform: translateZ(0); }
+    main { padding: var(--spacing-4); }
+  `,
+})
+export class SidebarDemo {
+  open = true;
+}
+// kx-usage:end
+
+// kx-usage:scroll-area-demo
+@Component({
+  selector: 'app-scroll-area-demo',
+  imports: [KxScrollArea],
+  template: `
+    <kx-scroll-area label="Tags" class="tags">
+      @for (tag of tags; track tag) {
+        <div class="tag">{{ tag }}</div>
+      }
+    </kx-scroll-area>
+  `,
+  styles: `
+    .tags { block-size: 10rem; inline-size: min(14rem, 100%); border: 1px solid hsl(var(--border)); border-radius: var(--radius-md); }
+    .tag { padding: var(--spacing-1) var(--spacing-4); font: var(--text-body-sm); }
+  `,
+})
+export class ScrollAreaDemo {
+  readonly tags = Array.from({ length: 20 }, (_, i) => `Tag ${i + 1}`);
+}
+// kx-usage:end
+
+// kx-usage:resizable-demo
+@Component({
+  selector: 'app-resizable-demo',
+  imports: [KxResizablePanelGroup, KxResizablePanel, KxResizableHandle],
+  template: `
+    <kx-resizable-panel-group direction="horizontal" class="frame">
+      <kx-resizable-panel [defaultSize]="50"><div class="pane">One</div></kx-resizable-panel>
+      <kx-resizable-handle withHandle />
+      <kx-resizable-panel [defaultSize]="50"><div class="pane">Two</div></kx-resizable-panel>
+    </kx-resizable-panel-group>
+  `,
+  styles: `
+    .frame { max-inline-size: 28rem; block-size: 8rem; border: 1px solid hsl(var(--border)); border-radius: var(--radius-lg); }
+    .pane { display: grid; place-items: center; block-size: 100%; padding: var(--spacing-6); font: var(--text-body-sm); }
+  `,
+})
+export class ResizableDemo {}
+// kx-usage:end
+
+// kx-usage:carousel-demo
+@Component({
+  selector: 'app-carousel-demo',
+  imports: [KxCarousel, KxCarouselContent, KxCarouselItem, KxCarouselPrevious, KxCarouselNext],
+  template: `
+    <kx-carousel aria-label="Featured" class="carousel">
+      <kx-carousel-content>
+        @for (n of slides; track n) {
+          <kx-carousel-item><div class="slide">{{ n }}</div></kx-carousel-item>
+        }
+      </kx-carousel-content>
+      <button kxCarouselPrevious></button>
+      <button kxCarouselNext></button>
+    </kx-carousel>
+  `,
+  styles: `
+    .carousel { inline-size: min(20rem, 100%); }
+    .slide { display: grid; place-items: center; aspect-ratio: 1; border: 1px solid hsl(var(--border)); border-radius: var(--radius-lg); background: hsl(var(--muted)); font: var(--text-title-lg); }
+  `,
+})
+export class CarouselDemo {
+  readonly slides = [1, 2, 3, 4, 5];
+}
+// kx-usage:end
+
+// kx-usage:comparison-slider-demo
+@Component({
+  selector: 'app-comparison-slider-demo',
+  imports: [KxComparisonSlider],
+  template: `
+    <kx-comparison-slider class="compare" beforeLabel="Before" afterLabel="After">
+      <div kxComparisonBefore class="layer before">Original</div>
+      <div kxComparisonAfter class="layer after">Redesign</div>
+    </kx-comparison-slider>
+  `,
+  styles: `
+    .compare { max-inline-size: 28rem; }
+    .layer { display: grid; place-items: center; block-size: 100%; font: var(--text-body-sm); }
+    .before { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+    .after { background: hsl(var(--primary) / 0.15); color: hsl(var(--primary)); }
+  `,
+})
+export class ComparisonSliderDemo {}
 // kx-usage:end

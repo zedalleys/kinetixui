@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Page Header",
-  description: "Title + optional breadcrumb + description + action cluster + optional tabs row — a recipe every docs/app screen re-lays out by hand.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("page-header", "Title + optional breadcrumb + description + action cluster + optional tabs row — a recipe every docs/app screen re-lays out by hand.");
 
 # Page Header
 
@@ -11,13 +10,13 @@ Title + optional breadcrumb + description + action cluster + optional tabs row �
 
 <ComponentPreview name="page-header-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add page-header
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { PageHeader } from "@kinetixui/ui";

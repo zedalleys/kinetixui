@@ -3,7 +3,7 @@
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Toggle } from "@kinetixui/ui";
-import { Italic } from "lucide-react";
+import { Bold, Italic, Underline } from "lucide-react";
 
 const Demo = () => (
     <Toggle aria-label="Toggle italic">
@@ -16,7 +16,7 @@ const meta = {
   component: Toggle,
   args: { variant: "default", size: "default" },
   argTypes: {
-    variant: { control: "inline-radio", options: ["default", "outline"] },
+    variant: { control: "inline-radio", options: ["default", "outline", "pill"] },
     size: { control: "inline-radio", options: ["default", "sm", "lg"] },
   },
   parameters: {
@@ -32,3 +32,15 @@ export const Playground: StoryObj<typeof meta> = { render: (args) => (
   ) };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const States: StoryObj<typeof meta> = { render: () => (
+    <div className="grid gap-3">
+      {(["default", "outline", "pill"] as const).map((variant) => (
+        <div key={variant} className="flex flex-wrap items-center gap-2">
+          <Toggle variant={variant} data-kx-case={`${variant}-off`}>Bold</Toggle>
+          <Toggle variant={variant} defaultPressed data-kx-case={`${variant}-on`}>Italic</Toggle>
+          <Toggle variant={variant} disabled data-kx-case={`${variant}-disabled`}>Underline</Toggle>
+        </div>
+      ))}
+    </div>
+  ) };

@@ -17,7 +17,7 @@ vi.stubGlobal(
 // animation static, which is irrelevant to what this file asserts.
 window.matchMedia = vi.fn().mockReturnValue({ matches: true, addEventListener() {}, removeEventListener() {} }) as never;
 import { componentTotal } from "./platform-support";
-import { PLATFORM_DEFINITIONS } from "./platform-parity";
+import { PLATFORMS, PLATFORM_DEFINITIONS } from "./platform-parity";
 import {
   SOURCE_ONLY_PLATFORMS,
   installableSentence,
@@ -144,7 +144,10 @@ describe("homepage rendering: matches the repository's current truth", () => {
   });
 
   it("renders the flagship cross-platform demo, not the old static button/input strip", () => {
-    expect(text()).toContain("Notifications"); // the flagship preview's real content
+    // the live preview mounts on the client as its tile nears the screen (MountNear); the server renders its
+    // tile, its compiled-copies strip and the reserved slot it mounts into
+    expect(text()).toContain("Notification preferences");
+    expect(text()).toContain("Compiled copies of this recipe");
     expect(text()).not.toContain("Rendered by @kinetixui/ui");
   });
 });
@@ -224,5 +227,40 @@ describe("hero hierarchy: action before architecture", () => {
     expect(text).toContain(sourceOnlySentence);
     expect(text).toContain("not yet distributed as packages");
     for (const p of SOURCE_ONLY_PLATFORMS) expect(text).toContain(PLATFORM_DEFINITIONS[p].label);
+  });
+});
+
+/**
+ * Evaluator-journey audit, F-12 and F-25. Behavioural: these read the rendered page, so a reworded label that keeps
+ * the meaning passes and a reverted target does not.
+ */
+describe("homepage platform wording and destinations", () => {
+  it("sends the closer's Get started to setup, not to the Introduction", () => {
+    const { getByRole } = render(<HomePage />);
+    expect(getByRole("link", { name: /^Get started/ })).toHaveAttribute("href", "/docs/installation");
+  });
+
+  it("names every platform in static hero text, so phones are told which platforms the headline counts", () => {
+    const { container } = render(<HomePage />);
+    const line = container.querySelector("[data-hero-platforms]");
+    expect(line, "the static platform line is gone from the hero").not.toBeNull();
+    for (const p of PLATFORMS) expect(line!.textContent).toContain(PLATFORM_DEFINITIONS[p].label);
+    // carried with Angular's maturity, not flattened
+    expect(line!.textContent).toContain(platformSentence);
+    // and it is not hidden at any breakpoint
+    expect(line!.className).not.toMatch(/(^|\s)(hidden|sr-only)(\s|$)|max-\w+:hidden/);
+  });
+
+  it("does not count React as a native implementation, or call four implementations the whole set", () => {
+    const { container } = render(<HomePage />);
+    const text = container.textContent ?? "";
+    expect(text).not.toMatch(/four native implementations/i);
+    expect(text).not.toMatch(/on all \d+ platforms/i);
+    expect(text).toMatch(/on all \d+ catalogue-complete platforms/);
+  });
+
+  it("does not file the IoT module link as a docs CTA", () => {
+    const { getByRole } = render(<HomePage />);
+    expect(getByRole("link", { name: /^Explore IoT/ })).toHaveAttribute("data-analytics-cta", "explore_iot");
   });
 });

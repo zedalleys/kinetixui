@@ -45,8 +45,8 @@ No number below is typed from memory. Run `pnpm marketing:stats` before quoting 
 > **Tokens are generated. Components are not.** One DTCG source in `tokens/` compiles through Style
 > Dictionary into every platform's native token output, including Swift, Kotlin and Dart constants and
 > Material and Cupertino theme adapters you can use with no Kinetix component at all. The components are five
-> independent implementations — SwiftUI views, Compose composables, Flutter widgets, Angular directives on
-> native elements, React components — sharing a contract, not a codebase. Nothing is transpiled from one
+> independent implementations — SwiftUI views, Compose composables, Flutter widgets, Angular components
+> written in Angular, React components — sharing a contract, not a codebase. Nothing is transpiled from one
 > component source into five, and we never say otherwise.
 >
 > Coverage is generated from a single manifest and published with its gaps: exact per-platform counts,
@@ -76,15 +76,21 @@ Current homepage hero: *"Copy a component, own the code"* — see §6 for the co
 
 ### G. Primary CTA
 
-**`npx @kinetixui/cli@latest add button`**
+**"Explore components" → `/components`**
 
-Note the constraint: activation copy around this command is **PENDING LIVE VERIFICATION** (`CLAIMS.md` D1).
-The command is correct and safe to show. What must not accompany it is a promise of the form "one command and
-you're running", until a repeatable production check exists.
+This is what the shipped homepage hero renders (`apps/web/src/app/page.tsx`, analytics target
+`browse_components`). It replaced the CLI command as the primary CTA: real components, rendered, are the
+lowest-friction thing that is also evidence, while a command asks a visitor who does not yet know what this is
+to install it.
+
+The CLI command (`npx @kinetixui/cli add <name>`, cycling through a few component names) stays in the hero,
+directly under the CTAs, as an example of adding one component — not as the call to action. The constraint
+on it is unchanged: copy around the command is **PENDING LIVE VERIFICATION** (`CLAIMS.md` D1). What must not accompany it is a promise of the
+form "one command and you're running", until a repeatable production check exists.
 
 ### H. Secondary CTA
 
-**"See what each platform actually covers" → `/docs/platforms`**
+**"See what each platform covers" → `/docs/platforms`**
 
 This is deliberately not "Read the docs". The secondary CTA should send a sceptic to the evidence, because
 credibility is the funnel's narrowest point.
@@ -116,7 +122,7 @@ Per-package, because the packages are not one product and do not version togethe
 | `@kinetixui/ui` | React components for the KinetixUI design system, on the shared token contract |
 | `@kinetixui/tokens` | The DTCG token contract, generated for web, iOS, Android and Flutter |
 | `@kinetixui/cli` | Add KinetixUI components and tokens to your project |
-| `@kinetixui/angular` | Angular directives on native elements for the KinetixUI token contract — preview |
+| `@kinetixui/angular` | Angular components and directives for the KinetixUI token contract, written in Angular — preview |
 | `@kinetixui/iot` | React primitives for device interfaces: connectivity, telemetry staleness, fleet state — experimental |
 
 Never imply one version number describes the product. Core (`ui`, `tokens`, `cli`) shares a line; Angular and
@@ -157,7 +163,7 @@ Canonical wording per platform, at three lengths. All derive from `pnpm marketin
 - **Medium:** "Angular is on npm and in preview — a deliberate subset of the catalogue, versioned
   independently of the core packages."
 - **Technical:** "Preview package, preview catalogue verification, `catalogComplete: false`, published on npm
-  in its own release cohort. Directives on native elements, not React wrapped."
+  in its own release cohort. Written in Angular, not React wrapped."
 
 **Both halves always travel together.** "Published" alone overstates; "preview" alone tells a reader they
 cannot install it, which is false.
@@ -314,7 +320,7 @@ oversold to before.
 | --- | --- | --- |
 | token **contract** | token system | A contract is checkable |
 | **implementation** per platform | port, wrapper | "Port" implies a translation of one original |
-| **catalogue entry** when counting | component | 98 entries include one documented recipe |
+| **catalogue entry** when counting | component | The entries include one documented recipe; read the count from `marketing:stats` |
 | **source you build** | not yet published | States what you can do, not what you cannot |
 | **preview** (Angular) | beta, early access | Matches the manifest's own field value |
 | catalogue **verification** | test coverage | It is claim-to-source verification, a different thing |
@@ -345,7 +351,7 @@ these are recommendations with reasons.
 | **Homepage subhead** | Token/platform sentence naming four platforms with Angular in preview | §F wording | Adds the verification clause, which is the position. Keeps the tokens-vs-components split explicit | **Change** |
 | **GitHub description** | "Multi-platform design system: one token contract, with React, SwiftUI, Jetpack Compose and Flutter components." | §I wording | Omits Angular entirely, and omits verification. A hard-coded platform enumeration also drifts — prefer durable wording | **Change** |
 | **README intro** | Token-contract-first framing | §J wording | Already close. The addition is "not transpiled" made explicit rather than implied | **Light edit** |
-| **Primary CTA** | `npx @kinetixui/cli@latest add button` | unchanged | Correct and verified as a command. Only surrounding promises are constrained (D1) | **Keep** |
+| **Primary CTA** | `npx @kinetixui/cli@latest add button` | "Explore components" (§G) | Superseded after this table was written: the hero now leads with rendered components and keeps the command beneath the CTAs as an example. The command is still correct; only surrounding promises are constrained (D1) | **Changed** (shipped) |
 | **npm descriptions** | Per-package, already accurate | §K table | Already good; the table makes them consistent and keeps the version caveat attached | **Light edit** |
 | **Old messaging headline** | "One token architecture, in motion across every platform." | §A / §E | "Every platform" invites the parity reading the whole position rejects, and "in motion" is decorative | **Replaced here** |
 

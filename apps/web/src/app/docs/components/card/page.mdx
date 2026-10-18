@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Card",
-  description: "Displays a card with header, content, and footer.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("card", "Displays a card with header, content, and footer.");
 
 # Card
 
@@ -11,13 +10,13 @@ Displays a card with header, content, and footer.
 
 <ComponentPreview name="card-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add card
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@kinetixui/ui";

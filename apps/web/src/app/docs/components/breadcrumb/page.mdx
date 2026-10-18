@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Breadcrumb",
-  description: "Displays the path to the current resource using a hierarchy of links.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("breadcrumb", "Displays the path to the current resource using a hierarchy of links.");
 
 # Breadcrumb
 
@@ -11,23 +10,28 @@ Displays the path to the current resource using a hierarchy of links.
 
 <ComponentPreview name="breadcrumb-demo" />
 
-## Installation
+## React installation
+
+Install the package the usage below imports from:
+
+```bash
+npm i @kinetixui/ui @kinetixui/tokens
+```
+
+The project also needs Tailwind CSS 3 and the KinetixUI preset; see [Installation](/docs/installation). To own
+the source instead, copy it into your project with the CLI and import from the folder it writes to:
 
 ```bash
 npx @kinetixui/cli add breadcrumb
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "@kinetixui/ui";
 ```
 
-Styled entirely from the KinetixUI token contract — `bg-action`,
-`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
-with no extra config. Keyboard and ARIA behaviour is inherited from Radix where the
-component is built on a primitive; the hand-built widgets (DataGrid, TreeView,
-ColorPicker, MultiSelect, Tour, KanbanBoard) have their own documented interaction
-models — see [Accessibility](/docs/accessibility).
+Styled from the KinetixUI token contract, in light and dark, with no extra configuration. See
+[Accessibility](/docs/accessibility) for how the React library is tested.
 
 <ComponentApi slug="breadcrumb" />

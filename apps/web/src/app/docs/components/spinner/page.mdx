@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Spinner",
-  description: "A lightweight loading indicator.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("spinner", "A lightweight loading indicator.");
 
 # Spinner
 
@@ -11,13 +10,13 @@ A lightweight loading indicator.
 
 <ComponentPreview name="spinner-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add spinner
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Spinner, spinnerVariants } from "@kinetixui/ui";

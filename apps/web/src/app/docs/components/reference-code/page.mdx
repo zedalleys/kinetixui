@@ -1,0 +1,43 @@
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("reference-code", "A code the reader will need again — a booking reference, order number or transaction ID — that is easy to select and copy, and says whether the copy worked.");
+
+# Reference Code
+
+<ComponentMeta />
+
+A code the reader will need again — a booking reference, order number or transaction ID — that is easy to select and copy, and says whether the copy worked.
+
+<ComponentPreview name="reference-code-demo" />
+
+## React installation
+
+```bash
+npx @kinetixui/cli add reference-code
+```
+
+## React usage
+
+```tsx
+import { ReferenceCode } from "@kinetixui/ui";
+
+<ReferenceCode label="Order number" value="ORD-2026-004519" />
+<ReferenceCode label="Booking reference" value="K7Q2XP" size="lg" />
+<ReferenceCode label="Ticket" value="0742 1189" copyable={false} />
+```
+
+The value is shown and copied exactly as given. The component does not format, mask, validate or generate codes.
+`copyLabel`, `copiedMessage` and `copyFailedMessage` localise the three strings it owns.
+
+## Accessibility
+
+- A group named by its label. One click or tap selects the whole code (`user-select: all`), and `translate="no"`
+  keeps browser page translation from rewriting it.
+- The copy button's name is its visible text plus the label — "Copy Order number" — so several codes on one page
+  have distinguishable buttons.
+- The result is announced through a polite status region that is always present. The button's own name never
+  changes.
+- **When copying fails** (no Clipboard API in an insecure context, or permission refused) the component says so and
+  selects the code, so a keyboard copy works. It never reports a copy that did not happen.
+
+<ComponentApi slug="reference-code" />

@@ -17,6 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
@@ -43,6 +46,16 @@ import androidx.compose.ui.unit.sp
  * `keyboardType`/`visualTransformation` exist for the same reason —
  * [KinetixPasswordInput] needs to mask input, which this bare control has
  * no other way to request.
+ *
+ * The overload taking `accessibleLabel` names the editable node itself,
+ * independently of its value. Pair it with a visible FieldLabel whose
+ * duplicate semantics are cleared. It comes after `trailing` so a positional
+ * call written against this signature can never bind to it.
+ *
+ * Inside a [KinetixField], while `isError` or the field is invalid, the
+ * editable node also carries the field's error [KinetixFieldMessage] as its
+ * error, so accessibility services get it on the input rather than only as
+ * loose text below it.
  */
 @Composable
 fun KinetixInput(
@@ -56,9 +69,31 @@ fun KinetixInput(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     trailing: (@Composable () -> Unit)? = null,
 ) {
+    KinetixInput(
+        value = value, onValueChange = onValueChange, modifier = modifier,
+        placeholder = placeholder, enabled = enabled, isError = isError,
+        keyboardType = keyboardType, visualTransformation = visualTransformation,
+        trailing = trailing, accessibleLabel = null,
+    )
+}
+
+@Composable
+fun KinetixInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: String? = null,
+    enabled: Boolean = true,
+    isError: Boolean = false,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailing: (@Composable () -> Unit)? = null,
+    accessibleLabel: String?,
+) {
     val colors = KinetixColorScheme.current
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
+    val errorMessage = LocalFieldError.current?.message?.takeIf { isError || LocalFieldInvalid.current }
 
     val borderColor = when {
         isError -> colors.destructive
@@ -86,7 +121,10 @@ fun KinetixInput(
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
-                modifier = Modifier,
+                modifier = Modifier.semantics {
+                    accessibleLabel?.takeIf { it.isNotBlank() }?.let { contentDescription = it }
+                    errorMessage?.let { error(it) }
+                },
                 enabled = enabled,
                 singleLine = true,
                 textStyle = textStyle,

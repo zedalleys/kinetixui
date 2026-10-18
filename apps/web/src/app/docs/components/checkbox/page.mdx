@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Checkbox",
-  description: "A control that allows the user to toggle between checked and not checked. Reconciled 1:1 with design source node 54863:483.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("checkbox", "A control that allows the user to toggle between checked and not checked.");
 
 # Checkbox
 
@@ -11,13 +10,13 @@ A control that allows the user to toggle between checked and not checked. Reconc
 
 <ComponentPreview name="checkbox-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add checkbox
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Checkbox } from "@kinetixui/ui";

@@ -3,8 +3,7 @@ import { DOCUMENT, Injectable, inject } from '@angular/core';
 /**
  * The overlay layer: one small set of primitives every floating or modal surface in this package stands on.
  * Nothing in this file is exported from `public-api.ts` — it is infrastructure the dialog family
- * (dialog.ts) and the floating family (floating.ts) share, and that Wave C2's menus and listboxes will
- * consume. Its contract is documented in TOKENS.md ("Overlays") and ANGULAR-GRADUATION.md.
+ * (dialog.ts), the floating family (floating.ts) and the menus (menu.ts) share. Its contract is documented in TOKENS.md ("Overlays") and ANGULAR-GRADUATION.md.
  *
  * ── Rendering: the browser's top layer, not a portal ───────────────────────
  *
@@ -367,10 +366,25 @@ export function computePlacement(i: KxPlacementInput): KxPlacement {
 /** Clamp into [min, max]; when the range is empty (the surface is wider than the room), the start wins. */
 const clamp = (n: number, min: number, max: number): number => Math.max(min, Math.min(n, max));
 
+/**
+ * What a floating surface is placed against when that is not an element: a box with no DOM of its own, such as
+ * the point a context menu was opened at. `contextElement` is the element it belongs to — the direction the
+ * placement is resolved in, and the element whose disconnection ends it. A rectangle of zero size is a point.
+ */
+export interface KxVirtualAnchor {
+  getBoundingClientRect(): { x: number; y: number; width: number; height: number };
+  readonly contextElement: Element;
+}
+/** An element, or a virtual box (above). An element anchor behaves exactly as it did before virtual ones existed. */
+export type KxAnchor = HTMLElement | KxVirtualAnchor;
+const isVirtual = (anchor: KxAnchor): anchor is KxVirtualAnchor => !('nodeType' in anchor);
+
 export interface KxAutoPlaceOptions {
   side: () => KxSide;
   align: () => KxAlign;
   offset: () => number;
+  /** Runs after every placement — for a member that draws something else against the same anchor (the tour's spotlight). */
+  placed?: () => void;
 }
 
 /** Viewport inset kept clear around a floating surface. */
@@ -380,15 +394,22 @@ export const VIEWPORT_PADDING = 8;
  * Position `floating` against `anchor` now, and again whenever either could have moved: the window resizes,
  * anything scrolls (one capturing listener catches every scroll container), or either element changes size.
  * Returns the function that removes every listener and observer it added.
+ *
+ * `anchor` may be virtual (`KxVirtualAnchor`): a context menu is placed at the pointer, not beside an element.
+ * Its box is read on every placement, so it is the anchor's own business whether that box moves with a scroll
+ * (a point in the viewport does not).
  */
-export function autoPlace(anchor: HTMLElement, floating: HTMLElement, o: KxAutoPlaceOptions): () => void {
+export function autoPlace(anchor: KxAnchor, floating: HTMLElement, o: KxAutoPlaceOptions): () => void {
   const view = floating.ownerDocument.defaultView!;
+  // A virtual anchor is measured through its own getBoundingClientRect and takes its direction (and its life)
+  // from the element it belongs to; an element anchor is its own context, as it always was.
+  const context = isVirtual(anchor) ? anchor.contextElement : anchor;
   let frame = 0;
   const place = () => {
     frame = 0;
-    if (!anchor.isConnected || !floating.isConnected) return;
+    if (!context.isConnected || !floating.isConnected) return;
     const viewport = { width: floating.ownerDocument.documentElement.clientWidth, height: view.innerHeight };
-    const rtl = view.getComputedStyle(anchor).direction === 'rtl';
+    const rtl = view.getComputedStyle(context).direction === 'rtl';
     const a = anchor.getBoundingClientRect();
     const input = (f: { width: number; height: number }): KxPlacementInput => ({
       anchor: { x: a.x, y: a.y, width: a.width, height: a.height },
@@ -407,6 +428,7 @@ export function autoPlace(anchor: HTMLElement, floating: HTMLElement, o: KxAutoP
     write(floating, first);
     const final = computePlacement(input(size()));
     write(floating, final);
+    o.placed?.();
   };
   const schedule = () => {
     if (!frame) frame = view.requestAnimationFrame(place);
@@ -417,7 +439,7 @@ export function autoPlace(anchor: HTMLElement, floating: HTMLElement, o: KxAutoP
   // through the element's own window, never the global: the package must load where there is no browser
   const Observer = (view as Window & typeof globalThis).ResizeObserver;
   const observer = typeof Observer === 'function' ? new Observer(schedule) : null;
-  observer?.observe(anchor);
+  if (!isVirtual(anchor)) observer?.observe(anchor);
   observer?.observe(floating);
   return () => {
     if (frame) view.cancelAnimationFrame(frame);

@@ -23,11 +23,20 @@
 //
 // kx-verify: reducedMotion
 // Subjects, named so the claim resolves to exactly what is proven rather than to every story:
-// <Accordion>, <Collapsible> and <Switch>. Adding an interaction to motion-states.mjs for another
-// component means naming it here too, which is the point — the evidence should not widen silently.
+// <Accordion>, <Checkbox>, <Collapsible>, <RadioGroup>, <Switch>, <Tabs>, <Toggle> and <ToggleGroup>. Adding an interaction to
+// motion-states.mjs for another component means naming it here too, which is the point — the evidence
+// should not widen silently.
 // <Switch> was added by the selection-control slice, whose two declared states measure the thumb's
 // rendered transform in both directions (100ms, matrix translate 0 → 24 and back) and confirm each
-// collapses under prefers-reduced-motion while landing on the same end state.
+// collapses under prefers-reduced-motion while landing on the same end state. <Tabs> was added when its
+// indicator became one travelling bar: both directions are driven, on its inline-start edge.
+// <Toggle> and <ToggleGroup> were added by MX1b-1a: the selected background colour is sampled at its
+// midpoint in both directions, in a single-choice group (the chosen item and the released one) and in
+// a right-to-left group, its own transition is held to 200ms, and under reduced motion each lands on
+// the same colour with no transition.
+// <Checkbox> and <RadioGroup> were added by MX1b-1b: the box's fill (Checkbox) or border (Radio) is sampled
+// on check and uncheck and in a right-to-left row, and the tick and the dot are sampled fading in (and the
+// released radio's dot fading out), each held to 200ms; under reduced motion each lands with no transition.
 import { chromium } from "playwright";
 import { createServer } from "node:http";
 import { existsSync, readFileSync, statSync } from "node:fs";
@@ -158,6 +167,11 @@ async function sample(page, state) {
 
             let longest = 0;
             for (const x of running) longest = Math.max(longest, Number(x.effect.getComputedTiming().activeDuration) || 0);
+            // Per property, for states that declare a tier: a CSS transition names the one property it moves.
+            const byProperty = {};
+            for (const x of running) {
+              if (x.transitionProperty) byProperty[x.transitionProperty] = Number(x.effect.getComputedTiming().activeDuration) || 0;
+            }
             for (const x of running) x.pause();
             for (const x of running) {
               try {
@@ -179,7 +193,7 @@ async function sample(page, state) {
             // before reading STATE B, or a collapse would be measured while its content is still
             // on screen at full height.
             requestAnimationFrame(() =>
-              requestAnimationFrame(() => resolve({ a, animations: running.length, mid, b: read(el), durationMs: longest })),
+              requestAnimationFrame(() => resolve({ a, animations: running.length, mid, b: read(el), durationMs: longest, byProperty })),
             );
           }),
         );
@@ -218,6 +232,20 @@ async function runPass({ reduced }) {
   await context.close();
   return out;
 }
+
+/** `backgroundColor` → `background-color`, the name a CSSTransition reports. */
+const kebab = (prop) => prop.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+
+/**
+ * How long the transition of `prop` ran. A shorthand runs as its longhands — `border-color` is reported as
+ * `border-top-color` and three more — and every side is on the same tier, so the top one stands for it. A
+ * logical property runs as the physical one it resolves to: Switch's `inset-inline-start` is `left` in LTR and
+ * `right` in RTL.
+ */
+const ownDuration = (byProperty, prop) =>
+  byProperty?.[kebab(prop)] ??
+  byProperty?.[kebab(prop).replace(/^border-/, "border-top-")] ??
+  (kebab(prop) === "inset-inline-start" ? (byProperty?.left ?? byProperty?.right) : undefined);
 
 /** The end state under reduced motion must be the one normal motion reaches, within rounding. */
 function sameEndState(a, b) {
@@ -263,8 +291,14 @@ for (let i = 0; i < MOTION_STATES.length; i++) {
         `      ${state.property}: A=${n.a} mid=${n.mid} B=${n.b}\n` +
         `      An animation that does not move the measured property is not evidence of motion.`,
     );
+  } else if (state.durationMs !== undefined && Math.abs((ownDuration(n.byProperty, state.property) ?? -1) - state.durationMs) > 1) {
+    failures.push(
+      `${label} normal: ${kebab(state.property)} runs for ${ownDuration(n.byProperty, state.property) ?? "no"}ms, but its tier is ${state.durationMs}ms.\n` +
+        `      Another property's transition on the same element does not time this one.`,
+    );
   } else {
-    lines.push(`  ${label.padEnd(30)} ${state.property}: ${n.a} → ${n.mid} → ${n.b}   ${Math.round(n.durationMs)}ms`);
+    const own = state.durationMs !== undefined ? `${Math.round(ownDuration(n.byProperty, state.property))}ms (${kebab(state.property)})` : `${Math.round(n.durationMs)}ms`;
+    lines.push(`  ${label.padEnd(30)} ${state.property}: ${n.a} → ${n.mid} → ${n.b}   ${own}`);
   }
 
   // REDUCED — the movement is gone, and the state change is not.

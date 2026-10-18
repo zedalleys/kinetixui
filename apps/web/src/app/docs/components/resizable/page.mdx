@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Resizable",
-  description: "Accessible resizable panel groups and layouts.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("resizable", "Accessible resizable panel groups and layouts.");
 
 # Resizable
 
@@ -11,13 +10,13 @@ Accessible resizable panel groups and layouts.
 
 <ComponentPreview name="resizable-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add resizable
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@kinetixui/ui";

@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Audio Player",
-  description: "Native `<audio>` playback with a scrubber, time labels and transport controls. `variant=\"full\" | \"mini\"`.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("audio-player", "Native audio playback with a scrubber, time labels and transport controls, in a full or mini layout.");
 
 # Audio Player
 
@@ -11,13 +10,13 @@ Native `<audio>` playback with a scrubber, time labels and transport controls. `
 
 <ComponentPreview name="audio-player-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add audio-player
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { AudioPlayer } from "@kinetixui/ui";

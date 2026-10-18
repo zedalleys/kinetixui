@@ -1,18 +1,19 @@
-export const metadata = {
-  title: "Flutter",
-  description: "The Flutter component library — a Dart port on the KinetixUI token contract, mirroring the React component API.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/flutter");
 
 # Flutter
 
-`packages/ui-flutter` is the **Flutter** port of KinetixUI — the fourth
-platform alongside React (`@kinetixui/ui`),
-[Jetpack Compose](/docs/compose) and [SwiftUI](/docs/swiftui).
+`packages/ui-flutter` is the **Flutter** implementation of KinetixUI, one of
+three native libraries alongside [Jetpack Compose](/docs/compose) and
+[SwiftUI](/docs/swiftui); the web implementations are React (`@kinetixui/ui`)
+and [Angular](/docs/angular).
 `Kinetix*` widgets for <PlatformCountInline platform="Flutter" /> of the
 <ComponentTotalInline /> React catalogue entries — **the full React component
 surface** bar the <NonPortCountInline /> deliberate non-ports, built in batches on a CI `flutter analyze` path;
-each mirrors its `packages/ui/src/components/*.tsx` counterpart 1:1, with
-a doc comment stating anything not carried over.
+each is a native Flutter implementation of the same component contract as its
+`packages/ui/src/components/*.tsx` counterpart, with a doc comment stating
+anything not carried over.
 
 It's a **standalone Flutter package** inside this monorepo, not a
 pnpm/npm workspace member — there's no `package.json`, so it's invisible
@@ -23,19 +24,65 @@ to the token source it depends on.
 <Callout>
   Not on pub.dev (`publish_to: none`). Consume it from a repo checkout
   with a `path:` dependency — the same "own the code" model as the other
-  ports.
+  ports. A publication workflow (`publish-flutter.yml`) exists but has not been
+  used for a real release.
 </Callout>
+
+<PlatformAtAGlance platform="Flutter" />
+
+## What differs from the React library
+
+- **Widgets, written natively.** State is caller-owned (`value` plus a change callback), and overlays are
+  placed in a top-level `Stack`.
+- **You can adopt the design language without the widgets.** Flutter is the one platform with ready-made
+  adapters for stock UI: `KinetixMaterialTheme` and `KinetixCupertinoTheme` put the same tokens behind
+  Material and Cupertino widgets. See
+  [Using KinetixUI without Kinetix widgets](#using-kinetixui-without-kinetix-widgets).
+- **Its own colour scheme output.** The token build writes a Flutter colour scheme with real dark values for
+  this package, beside the older light-only output (see [Tokens](#tokens-a-real-dark-pass-no-name-collision)).
+- **Distribution and evidence.** It is a git or path dependency pinned to a commit; it is not on pub.dev. CI
+  analyses and tests the package itself, and the evidence counts in the summary above say how much of the
+  catalogue those tests cover.
+
+## A first adoption path
+
+1. If you already have a Material or Cupertino app, start with the
+   [theme adapters](#using-kinetixui-without-kinetix-widgets): your existing widgets take the KinetixUI tokens
+   with no rewrite.
+2. Add `kinetix_ui` as a dependency [pinned to a commit](#setup).
+3. Replace screens with `Kinetix*` widgets where you want the components themselves, and apply
+   [a custom theme](#a-custom-theme).
+4. Read [Not ported](#not-ported-deliberate) and [Known gaps](#known-gaps) before planning around a component.
 
 ## Setup
 
 `pubspec.yaml` targets `sdk: ">=3.6.0 <4.0.0"` / `flutter: ">=3.27.0"`.
-Add it via a path dependency:
+
+There is no released version on pub.dev, so pin a commit. pub can fetch a
+package from a subfolder of a git repository at a given commit and records the
+resolved commit in `pubspec.lock`:
+
+```yaml
+dependencies:
+  kinetix_ui:
+    git:
+      url: https://github.com/zedalleys/kinetixui.git
+      path: packages/ui-flutter
+      ref: <commit-sha>
+```
+
+Or keep a checkout beside your app, pinned with
+`git -C ../kinetixui checkout <commit-sha>`, and use a path dependency:
 
 ```yaml
 dependencies:
   kinetix_ui:
     path: ../kinetixui/packages/ui-flutter
 ```
+
+CI analyzes and tests the package itself; neither dependency form is exercised
+in a separate app by CI. To update a `git:` dependency, change `ref:` to a newer
+commit and run `flutter pub get`.
 
 Wrap your app — or a screen — in `KinetixTheme`, then read colours with
 `KinetixTheme.of(context)`:
@@ -67,6 +114,16 @@ class Demo extends StatelessWidget {
   }
 }
 ```
+
+Show it from your app, for example with
+`runApp(const MaterialApp(home: Scaffold(body: Center(child: Demo()))))`.
+You should see a **Save** button above a smaller outlined **Cancel** button, in
+light or dark to match the platform brightness.
+
+This sample is not compiled in CI either. The package's own `flutter analyze` and `flutter test` exercise the
+widgets it uses, so a constructor change fails there first, but `Demo` itself is not built in an app.
+
+<FirstUseNextSteps platform="Flutter" />
 
 ## A custom theme
 
@@ -305,6 +362,30 @@ overlays and disclosures. Overlay widgets (`KinetixDialog`,
   drag-and-drop; hand-rolling that from scratch is a much bigger lift
   than porting the component. Use `Draggable` / `DragTarget` directly
   for the specific board.
+- **`ResultState`** — a React-first beta (business capability roadmap,
+  Phase 1); a native port is an open roadmap decision, not a refusal.
+  Compose `KinetixEmpty` with a status icon, title and actions.
+- **`ReferenceCode`** — React-first beta, same decision. Compose
+  `SelectableText` with a `KinetixButton` that copies.
+- **`PriceBreakdown`** — React-first beta, same decision. Compose
+  `KinetixDescriptionList` rows with the total after a `KinetixSeparator`.
+- **`PassCard`** — React-first beta, same decision. Compose `KinetixCard`,
+  `KinetixDescriptionList` and the supplied code as an `Image`.
+- **`AmountDisplay`** — a React-first beta (business capability roadmap,
+  Phase 2); same open decision. Compose a tabular-figure `Text` with the
+  sign in the string and a full accessibility label.
+- **`GuestPicker`** — React-first beta, same decision. Compose one
+  `KinetixNumberInput` per category, named after it, in a `KinetixPopover`.
+- **`CountrySelect`** — React-first beta, same decision. Compose
+  `KinetixSelect` over your own country list.
+- **`PhoneInput`** — React-first beta, same decision. Compose
+  a calling-code `KinetixSelect` and a `TextField` with `TextInputType.phone` in a left-to-right `Directionality`.
+- **`DateRangeInput`** — React-first beta, same decision. Compose
+  `showDateRangePicker`, keeping the results date-only.
+- **`TimeSlotPicker`** — React-first beta, same decision. Compose
+  `ChoiceChip`s in one mutually exclusive group.
+- **`AddressFields`** — React-first beta, same decision. Compose a
+  `KinetixField` per address field with the platform's autofill hints.
 
 ## Known gaps
 
@@ -319,7 +400,8 @@ overlays and disclosures. Overlay widgets (`KinetixDialog`,
   `KinetixSidebarMenuItem`) and drops the desktop shell: rail / icon-collapse
   mode, `SidebarInset`, the cookie and the keyboard shortcut. For a persistent
   desktop rail, use `NavigationRail` directly.
-- **No remote publishing.** `flutter analyze` on `ubuntu-latest`
+- **Not published yet.** The publication workflow has never run for real.
+  `flutter analyze` on `ubuntu-latest`
   (`subosito/flutter-action`) is the sole compiler feedback on every push
   that touches `packages/ui-flutter`, `tokens/`, or `style-dictionary/`.
 - **Platform widgets are reused where they're strong** — `KinetixSlider`,

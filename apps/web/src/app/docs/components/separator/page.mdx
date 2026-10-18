@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Separator",
-  description: "Visually or semantically separates content.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("separator", "Visually or semantically separates content.");
 
 # Separator
 
@@ -11,13 +10,13 @@ Visually or semantically separates content.
 
 <ComponentPreview name="separator-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add separator
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Separator } from "@kinetixui/ui";

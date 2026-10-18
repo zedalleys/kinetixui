@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Number Input",
-  description: "A numeric field with increment / decrement controls.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("number-input", "A numeric field with increment / decrement controls.");
 
 # Number Input
 
@@ -11,17 +10,43 @@ A numeric field with increment / decrement controls.
 
 <ComponentPreview name="number-input-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add number-input
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { NumberInput } from "@kinetixui/ui";
 ```
+
+## Quantities
+
+NumberInput is the quantity picker: a cart line, a ticket count, a number of nights. There is no separate
+QuantityPicker. For several counts chosen together, use [GuestPicker](/docs/components/guest-picker), which is built
+from NumberInputs.
+
+```tsx
+<NumberInput
+  aria-label="Quantity"
+  min={1}
+  max={10}
+  value={qty}
+  onChange={setQty}
+  decrementLabel="Remove one"
+  incrementLabel="Add one"
+  formatAnnouncement={(n) => `${n} in cart`}
+/>
+```
+
+- The stepper buttons are named "Decrease" and "Increase" by default; `decrementLabel` and `incrementLabel` localise
+  them or make them specific.
+- At `min` or `max` the button stays focusable and is marked `aria-disabled`, so a keyboard user pressing it
+  repeatedly does not lose focus.
+- A change made with the steppers is announced in a polite live region (`formatAnnouncement`); typing is not
+  announced, because the reader already hears what they type.
 
 Styled entirely from the KinetixUI token contract — `bg-action`,
 `text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark

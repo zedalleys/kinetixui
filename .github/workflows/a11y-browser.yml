@@ -27,6 +27,9 @@ on:
       - "scripts/large-text.mjs"
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
+      - "scripts/toggle-motion.mjs"
+      - "scripts/checkbox-radio-motion.mjs"
+      - "scripts/switch-motion.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
       - "scripts/iot-monitoring.mjs"
@@ -37,12 +40,16 @@ on:
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
       - "scripts/overlay-visual.mjs"
+      - "scripts/menu-visual.mjs"
+      - "scripts/layout-visual.mjs"
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/**"
       - "packages/ui-angular/browser/**"
       - "scripts/angular-browser.mjs"
       - "scripts/angular-overlays.mjs"
+      - "scripts/angular-collections.mjs"
+      - "scripts/angular-layout.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -58,6 +65,9 @@ on:
       - "scripts/large-text.mjs"
       - "scripts/motion.mjs"
       - "scripts/motion-states.mjs"
+      - "scripts/toggle-motion.mjs"
+      - "scripts/checkbox-radio-motion.mjs"
+      - "scripts/switch-motion.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
       - "scripts/iot-monitoring.mjs"
@@ -68,12 +78,16 @@ on:
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
       - "scripts/overlay-visual.mjs"
+      - "scripts/menu-visual.mjs"
+      - "scripts/layout-visual.mjs"
       - "scripts/visual-harness.mjs"
       - "scripts/visual-gates.mjs"
       - "packages/ui-angular/src/**"
       - "packages/ui-angular/browser/**"
       - "scripts/angular-browser.mjs"
       - "scripts/angular-overlays.mjs"
+      - "scripts/angular-collections.mjs"
+      - "scripts/angular-layout.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -88,7 +102,7 @@ concurrency:
 jobs:
   axe:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -129,6 +143,34 @@ jobs:
       # install above are exactly what it needs.
       - name: Motion pass (rendered intermediate states, normal and reduced)
         run: pnpm check:motion
+
+      # MX1b-1a: Toggle and ToggleGroup. The pass above proves the selected colour interpolates over 200ms;
+      # this proves the rest: the state layer on 100ms, hover that leaves the selection colour alone and
+      # does not stick after a tap on a device that cannot hover, a burst of clicks landing on the last
+      # one, the system's selection colours for the chosen item under forced colours, right-to-left order and keys, and no
+      # overflow at 320-1280px, 100% and 200% text, light and dark, LTR and RTL.
+      - name: Toggle motion (selection 200ms, state layer 100ms, touch, rapid input, forced colours, RTL)
+        run: pnpm check:toggle-motion
+      # MX1b-1b: Checkbox and RadioGroup. The glyph drawn must be the state announced on every move (the dash under
+      # an uncontrolled mixed box, which used to be a tick), fill and border on 200ms, the halo on 100ms, touch,
+      # rapid input, forced colours, right-to-left placement and keys, and the same 64-cell matrix.
+      - name: Checkbox and RadioGroup motion (glyph matches state, selection 200ms, halo 100ms, touch, rapid input, forced colours, RTL)
+        run: pnpm check:checkbox-radio-motion
+
+      # MX1b-1c: Switch stays on selection-control (instant), not selection-state. Its thumb, track and halo on
+      # 100ms standard, the thumb sampled every frame of a move (starts, only goes forward, no overshoot, lands,
+      # mirrored in RTL) with aria-checked already changed, touch, rapid input and mid-travel reversal, form
+      # reset, forced colours (the thumb is still drawn), and a 32-cell viewport, theme, direction and text matrix.
+      - name: Switch motion (thumb 100ms, no overshoot, semantics first, touch, rapid input, form, forced colours, RTL)
+        run: pnpm check:switch-motion
+
+      # The React Tabs indicator is one bar that travels to the chosen tab; the motion pass proves it moves.
+      # This proves it lands on the right tab where strips break: an overflowing strip scrolled by pointer,
+      # keyboard and code, a resize, a label that grows, tabs added and removed, the chosen tab disabled or
+      # removed, direction and orientation flipped, the strip hidden and shown, 200% text, reduced motion,
+      # forced colours, and the pre-hydration edge it takes over from.
+      - name: Tabs indicator geometry (scrolling, dynamic tabs, direction, orientation, text size)
+        run: pnpm check:tabs-indicator
 
       # Loops are the case the pass above cannot express: nothing to click, no destination to seek to.
       # This reads whether each loop is really running normally and really stopped under reduced motion
@@ -197,6 +239,23 @@ jobs:
       - name: Overlay visual contract (Angular, light and dark)
         run: pnpm check:overlay-visual
 
+      # The menu item state contract (TOKENS.md, "Menus") on rendered pixels, Angular only: the menu surface
+      # (popover fill, border edge, shadow or surface step), an item at rest, hovered (the state layer, no ring),
+      # keyboard-highlighted (the same layer AND an inset ring that clears 3:1, so the two never look the same),
+      # pressed, disabled, checked marks, destructive, the sub trigger's chevron and open state, the submenu
+      # toward the inline end, separators, labels and shortcuts, the menubar's triggers, in LTR and RTL.
+      - name: Menu visual contract (Angular, light and dark)
+        run: pnpm check:menu-visual
+
+      # The layout and pointer state contract (TOKENS.md, "Layout and pointer") on rendered pixels, Angular only:
+      # the scroll area's thumb (3:1 at rest, stronger on hover and drag), its bars beside the content and its
+      # focus ring on all four edges; the resizable rule at rest, hover and drag, its focus ring, grip and disabled
+      # state; the carousel's controls (placement, glyph direction, focus ring, an end control) and a focused
+      # slide's ring; the comparison divider at its value, its handle's grip, focus ring and labels; in light and
+      # dark, LTR and RTL, at normal and 200% text.
+      - name: Layout and pointer visual contract (Angular, light and dark)
+        run: pnpm check:layout-visual
+
       # Which way React's component-owned directional icons point, read from ink in LTR and in an RTL preview
       # scoped to the story root (never <html>): Back, Previous / Next and the breadcrumb separator mirror; a
       # collapsed disclosure mirrors; an expanded disclosure and the accordion chevron do not (/docs/icons).
@@ -217,3 +276,21 @@ jobs:
       # open/close motion with and without reduced motion. verification.json publishes this evidence.
       - name: Angular overlays in the browser (nesting, focus, axe open, RTL, 200% text, motion)
         run: pnpm check:angular-overlays
+
+      # The menus (dropdown menu, context menu, menubar) as a live Angular application on the collection core:
+      # arrows that stop or wrap, Home/End, typeahead, disabled items, activation and focus return, Escape one
+      # level at a time, Tab, outside presses, submenus by keyboard, hover intent and the diagonal grace area,
+      # context menus at the pointer and from the keyboard, the menubar's moves between menus; then axe with
+      # menus and submenus open (and inside a dialog), forced colours, four direction cases, 200% text at 1024px
+      # and 390px, and the open/close motion with and without reduced motion. verification.json publishes this.
+      - name: Angular menus in the browser (keyboard, pointer, submenus, axe open, RTL, 200% text, motion)
+        run: pnpm check:angular-collections
+
+      # Scroll area, resizable, carousel and comparison slider as a live Angular application: keyboard, mouse,
+      # pen and touch (DevTools input, so the pointer events are the browser's own); releases outside, a group
+      # resized and a handle disabled mid-drag, lost capture and touch cancel; content and containers that resize;
+      # the page instrumented so pointer listeners exist only while a drag runs and no ResizeObserver outlives its
+      # component; then axe (light and dark), forced colours, four direction cases, 320–1280px at normal and 200%
+      # text, and the carousel's motion with and without reduced motion. verification.json publishes this.
+      - name: Angular layout, pointer and scroll in the browser (keyboard, pointer, touch, teardown, RTL, 200% text, motion)
+        run: pnpm check:angular-layout

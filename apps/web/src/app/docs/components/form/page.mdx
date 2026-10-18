@@ -1,23 +1,24 @@
-export const metadata = {
-  title: "Form",
-  description: "Building forms with React Hook Form and Zod.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("form");
 
 # Form
 
 <ComponentMeta />
 
-Building forms with React Hook Form and Zod.
+<ComponentIntro slug="form" />
 
 <ComponentPreview name="form-demo" />
 
-## Installation
+<ComponentGuide slug="form" />
+
+## React installation
 
 ```bash
 npx @kinetixui/cli add form
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@kinetixui/ui";

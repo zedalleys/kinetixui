@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { AnalyticsProvider } from "@/components/analytics-provider";
+import { PlatformLocationSync } from "@/components/platform-location-sync";
+import { VercelAnalytics } from "@/components/vercel-analytics";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
@@ -57,17 +60,28 @@ const mono = localFont({
   adjustFontFallback: "Arial",
 });
 
+// Text diagrams need the full face: the Latin subset does not include box-drawing glyphs.
+const treeMono = localFont({
+  src: "./fonts/jetbrains-mono-tree.woff2",
+  variable: "--font-tree-mono",
+  preload: false,
+  weight: "400",
+  display: "block",
+  adjustFontFallback: false,
+});
+
 export const metadata: Metadata = {
   title: { default: `${siteConfig.name} — ${siteConfig.tagline}`, template: `%s — ${siteConfig.name}` },
   description: siteConfig.description,
   metadataBase: new URL(siteConfig.url),
   applicationName: siteConfig.name,
-  // Every page inherits these; a page only overrides what differs (title/description do, via its own
-  // `metadata` export, and Open Graph picks those up automatically from the resolved title/description).
+  // Fallbacks only. Every indexable page declares its own canonical, og:url and share card through
+  // `pageMetadata` (lib/seo.ts), because Next merges `openGraph` shallowly: a page that set any field here
+  // replaced the whole object. There is deliberately no `url` — it used to be the homepage, and every page that
+  // set nothing inherited it, so a shared docs link told LinkedIn and Slack it was the homepage.
   openGraph: {
     type: "website",
     siteName: siteConfig.name,
-    url: siteConfig.url,
     locale: "en",
   },
   twitter: {
@@ -84,7 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       dir="ltr"
       suppressHydrationWarning
-      className={`${sans.variable} ${display.variable} ${mono.variable}`}
+      className={`${sans.variable} ${display.variable} ${mono.variable} ${treeMono.variable}`}
     >
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
@@ -103,6 +117,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </ThemeProvider>
         <AnalyticsProvider />
+        <VercelAnalytics />
+        <Suspense fallback={null}>
+          <PlatformLocationSync />
+        </Suspense>
       </body>
     </html>
   );

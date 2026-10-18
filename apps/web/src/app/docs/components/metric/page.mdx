@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Metric",
-  description: "A stat / KPI display — label, value, an optional trend indicator and an optional chart or icon slot.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("metric", "A stat / KPI display — label, value, an optional trend indicator and an optional chart or icon slot.");
 
 # Metric
 
@@ -11,13 +10,13 @@ A stat / KPI display — label, value, an optional trend indicator and an option
 
 <ComponentPreview name="metric-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add metric
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Metric } from "@kinetixui/ui";

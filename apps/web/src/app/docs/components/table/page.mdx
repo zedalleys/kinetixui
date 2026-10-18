@@ -1,23 +1,24 @@
-export const metadata = {
-  title: "Table",
-  description: "A responsive table component.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("table");
 
 # Table
 
 <ComponentMeta />
 
-A responsive table component.
+<ComponentIntro slug="table" />
 
 <ComponentPreview name="table-demo" />
 
-## Installation
+<ComponentGuide slug="table" />
+
+## React installation
 
 ```bash
 npx @kinetixui/cli add table
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from "@kinetixui/ui";

@@ -1,0 +1,1736 @@
+{
+  "failures": [],
+  "report": {
+    "type": [
+      {
+        "path": "/",
+        "below": 0,
+        "sizes": []
+      },
+      {
+        "path": "/components",
+        "below": 0,
+        "sizes": []
+      },
+      {
+        "path": "/docs",
+        "below": 0,
+        "sizes": []
+      },
+      {
+        "path": "/docs/changelog",
+        "below": 0,
+        "sizes": []
+      },
+      {
+        "path": "/docs/components/button",
+        "below": 0,
+        "sizes": []
+      },
+      {
+        "path": "/docs/components/tabs",
+        "below": 0,
+        "sizes": []
+      },
+      {
+        "path": "/docs/tokens",
+        "below": 0,
+        "sizes": []
+      },
+      {
+        "path": "/docs/foundations",
+        "below": 0,
+        "sizes": []
+      }
+    ],
+    "contrast": [
+      {
+        "fixture": {
+          "pass": 4.54,
+          "fail": 4.48,
+          "alphaComposited": 3.98
+        }
+      },
+      {
+        "scheme": "light",
+        "path": "/components",
+        "label": "gallery category/primitive chip",
+        "min": 5.1,
+        "n": 40
+      },
+      {
+        "scheme": "light",
+        "path": "/components",
+        "label": "gallery status chip (beta)",
+        "min": 4.68,
+        "n": 1
+      },
+      {
+        "scheme": "light",
+        "path": "/components",
+        "label": "platform badge (on)",
+        "min": 19.78,
+        "n": 40
+      },
+      {
+        "scheme": "light",
+        "path": "/components",
+        "label": "platform badge (off)",
+        "min": 5.1,
+        "n": 40
+      },
+      {
+        "scheme": "light",
+        "path": "/components",
+        "label": "gallery result count",
+        "min": 4.54,
+        "n": 12
+      },
+      {
+        "scheme": "light",
+        "path": "/components",
+        "label": "filter chip (resting)",
+        "min": 5.1,
+        "n": 7
+      },
+      {
+        "scheme": "light",
+        "path": "/components",
+        "label": "filter chip (selected)",
+        "min": 6.17,
+        "n": 1
+      },
+      {
+        "scheme": "light",
+        "path": "/components",
+        "label": "section meta",
+        "min": 5.1,
+        "n": 7
+      },
+      {
+        "scheme": "light",
+        "path": "/docs/components/button",
+        "label": "showcase tab (resting)",
+        "min": 4.97,
+        "n": 3
+      },
+      {
+        "scheme": "light",
+        "path": "/docs/components/button",
+        "label": "showcase tab (selected)",
+        "min": 19.28,
+        "n": 3
+      },
+      {
+        "scheme": "light",
+        "path": "/docs/components/button",
+        "label": "breadcrumb",
+        "min": 5.1,
+        "n": 2
+      },
+      {
+        "scheme": "light",
+        "path": "/docs/components/button",
+        "label": "component meta term",
+        "min": 5.01,
+        "n": 5
+      },
+      {
+        "scheme": "light",
+        "path": "/docs/tokens",
+        "label": "token-table heading",
+        "min": 4.97,
+        "n": 17
+      },
+      {
+        "scheme": "light",
+        "path": "/docs/changelog",
+        "label": "changelog package/platform chip",
+        "min": 4.68,
+        "n": 40
+      },
+      {
+        "scheme": "light",
+        "path": "/docs/changelog",
+        "label": "changelog group label",
+        "min": 5.1,
+        "n": 10
+      },
+      {
+        "scheme": "light",
+        "path": "/",
+        "label": "site header version",
+        "min": 5.1,
+        "n": 1
+      },
+      {
+        "scheme": "dark",
+        "path": "/components",
+        "label": "gallery category/primitive chip",
+        "min": 8.08,
+        "n": 40
+      },
+      {
+        "scheme": "dark",
+        "path": "/components",
+        "label": "gallery status chip (beta)",
+        "min": 8.08,
+        "n": 1
+      },
+      {
+        "scheme": "dark",
+        "path": "/components",
+        "label": "platform badge (on)",
+        "min": 16.54,
+        "n": 40
+      },
+      {
+        "scheme": "dark",
+        "path": "/components",
+        "label": "platform badge (off)",
+        "min": 8.08,
+        "n": 40
+      },
+      {
+        "scheme": "dark",
+        "path": "/components",
+        "label": "gallery result count",
+        "min": 4.7,
+        "n": 12
+      },
+      {
+        "scheme": "dark",
+        "path": "/components",
+        "label": "filter chip (resting)",
+        "min": 8.95,
+        "n": 7
+      },
+      {
+        "scheme": "dark",
+        "path": "/components",
+        "label": "filter chip (selected)",
+        "min": 7.86,
+        "n": 1
+      },
+      {
+        "scheme": "dark",
+        "path": "/components",
+        "label": "section meta",
+        "min": 8.95,
+        "n": 7
+      },
+      {
+        "scheme": "dark",
+        "path": "/docs/components/button",
+        "label": "showcase tab (resting)",
+        "min": 8.52,
+        "n": 3
+      },
+      {
+        "scheme": "dark",
+        "path": "/docs/components/button",
+        "label": "showcase tab (selected)",
+        "min": 17.44,
+        "n": 3
+      },
+      {
+        "scheme": "dark",
+        "path": "/docs/components/button",
+        "label": "breadcrumb",
+        "min": 8.95,
+        "n": 2
+      },
+      {
+        "scheme": "dark",
+        "path": "/docs/components/button",
+        "label": "component meta term",
+        "min": 8.67,
+        "n": 5
+      },
+      {
+        "scheme": "dark",
+        "path": "/docs/tokens",
+        "label": "token-table heading",
+        "min": 8.52,
+        "n": 17
+      },
+      {
+        "scheme": "dark",
+        "path": "/docs/changelog",
+        "label": "changelog package/platform chip",
+        "min": 6.95,
+        "n": 40
+      },
+      {
+        "scheme": "dark",
+        "path": "/docs/changelog",
+        "label": "changelog group label",
+        "min": 8.95,
+        "n": 10
+      },
+      {
+        "scheme": "dark",
+        "path": "/",
+        "label": "site header version",
+        "min": 8.95,
+        "n": 1
+      }
+    ],
+    "touch": [
+      {
+        "label": "header search",
+        "path": "/docs/components/button",
+        "width": 390,
+        "n": 2,
+        "minHit": [
+          44,
+          44
+        ],
+        "visual": [
+          36,
+          36
+        ],
+        "sample": [
+          {
+            "name": "Search\u2026\u2318K",
+            "width": 44,
+            "height": 44,
+            "visual": [
+              36,
+              36
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "Menu",
+            "width": 44,
+            "height": 44,
+            "visual": [
+              36,
+              36
+            ],
+            "stolen": 0
+          }
+        ]
+      },
+      {
+        "label": "header theme toggle",
+        "path": "/docs/components/button",
+        "width": 390,
+        "n": 2,
+        "minHit": [
+          44,
+          44
+        ],
+        "visual": [
+          36,
+          36
+        ],
+        "sample": [
+          {
+            "name": "Search\u2026\u2318K",
+            "width": 44,
+            "height": 44,
+            "visual": [
+              36,
+              36
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "Select theme",
+            "width": 44,
+            "height": 44,
+            "visual": [
+              42,
+              42
+            ],
+            "stolen": 0
+          }
+        ]
+      },
+      {
+        "label": "header GitHub link",
+        "path": "/docs/components/button",
+        "width": 390,
+        "n": 1,
+        "minHit": [
+          62,
+          44
+        ],
+        "visual": [
+          61.2,
+          36
+        ],
+        "sample": [
+          {
+            "name": "GitHub \u2014 2 stars, 0 fork",
+            "width": 62,
+            "height": 44,
+            "visual": [
+              61.2,
+              36
+            ],
+            "stolen": 0
+          }
+        ]
+      },
+      {
+        "label": "header menu button",
+        "path": "/docs/components/button",
+        "width": 390,
+        "n": 1,
+        "minHit": [
+          44,
+          44
+        ],
+        "visual": [
+          36,
+          36
+        ],
+        "sample": [
+          {
+            "name": "Menu",
+            "width": 44,
+            "height": 44,
+            "visual": [
+              36,
+              36
+            ],
+            "stolen": 0
+          }
+        ]
+      },
+      {
+        "label": "showcase tabs",
+        "path": "/docs/components/button",
+        "width": 390,
+        "n": 6,
+        "minHit": [
+          60,
+          40
+        ],
+        "visual": [
+          84.5,
+          40
+        ],
+        "sample": [
+          {
+            "name": "preview",
+            "width": 86,
+            "height": 40,
+            "visual": [
+              84.5,
+              40
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "code",
+            "width": 60,
+            "height": 40,
+            "visual": [
+              58.6,
+              40
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "preview",
+            "width": 86,
+            "height": 40,
+            "visual": [
+              84.5,
+              40
+            ],
+            "stolen": 0
+          }
+        ]
+      },
+      {
+        "label": "copy buttons",
+        "path": "/docs/components/button",
+        "width": 390,
+        "n": 8,
+        "minHit": [
+          44,
+          44
+        ],
+        "visual": [
+          174.5,
+          44
+        ],
+        "sample": [
+          {
+            "name": "Copy this page as Markdo",
+            "width": 161,
+            "height": 44,
+            "visual": [
+              174.5,
+              44
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "Copy React CLI command",
+            "width": 44,
+            "height": 44,
+            "visual": [
+              24,
+              24
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "Copy React npm command",
+            "width": 44,
+            "height": 44,
+            "visual": [
+              24,
+              24
+            ],
+            "stolen": 0
+          }
+        ]
+      },
+      {
+        "label": "gallery Filters trigger",
+        "path": "/components",
+        "width": 390,
+        "n": 1,
+        "minHit": [
+          90,
+          44
+        ],
+        "visual": [
+          88.5,
+          44
+        ],
+        "sample": [
+          {
+            "name": "Filters",
+            "width": 90,
+            "height": 44,
+            "visual": [
+              88.5,
+              44
+            ],
+            "stolen": 0
+          }
+        ]
+      },
+      {
+        "label": "gallery chips (sheet)",
+        "path": "/components",
+        "width": 390,
+        "n": 14,
+        "minHit": [
+          76,
+          40
+        ],
+        "visual": [
+          75.2,
+          40
+        ],
+        "sample": [
+          {
+            "name": "All 98",
+            "width": 76,
+            "height": 40,
+            "visual": [
+              75.2,
+              40
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "Foundations 9",
+            "width": 136,
+            "height": 40,
+            "visual": [
+              135.7,
+              40
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "Form Inputs 21",
+            "width": 145,
+            "height": 40,
+            "visual": [
+              144.3,
+              40
+            ],
+            "stolen": 0
+          }
+        ]
+      },
+      {
+        "label": "gallery clear search",
+        "path": "/components",
+        "width": 390,
+        "n": 1,
+        "minHit": [
+          44,
+          42
+        ],
+        "visual": [
+          20,
+          20
+        ],
+        "sample": [
+          {
+            "name": "Clear search",
+            "width": 44,
+            "height": 42,
+            "visual": [
+              20,
+              20
+            ],
+            "stolen": 0
+          }
+        ]
+      },
+      {
+        "label": "gallery chips (inline)",
+        "path": "/components",
+        "width": 768,
+        "n": 14,
+        "minHit": [
+          76,
+          40
+        ],
+        "visual": [
+          75.2,
+          40
+        ],
+        "sample": [
+          {
+            "name": "All 98",
+            "width": 76,
+            "height": 40,
+            "visual": [
+              75.2,
+              40
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "Foundations 9",
+            "width": 136,
+            "height": 40,
+            "visual": [
+              135.7,
+              40
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "Form Inputs 21",
+            "width": 145,
+            "height": 40,
+            "visual": [
+              144.3,
+              40
+            ],
+            "stolen": 0
+          }
+        ]
+      },
+      {
+        "label": "showcase tabs (tablet)",
+        "path": "/docs/components/button",
+        "width": 768,
+        "n": 6,
+        "minHit": [
+          60,
+          40
+        ],
+        "visual": [
+          84.5,
+          40
+        ],
+        "sample": [
+          {
+            "name": "preview",
+            "width": 86,
+            "height": 40,
+            "visual": [
+              84.5,
+              40
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "code",
+            "width": 60,
+            "height": 40,
+            "visual": [
+              58.6,
+              40
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "preview",
+            "width": 86,
+            "height": 40,
+            "visual": [
+              84.5,
+              40
+            ],
+            "stolen": 0
+          }
+        ]
+      },
+      {
+        "label": "header controls (tablet)",
+        "path": "/docs/components/button",
+        "width": 768,
+        "n": 4,
+        "minHit": [
+          44,
+          44
+        ],
+        "visual": [
+          224,
+          36
+        ],
+        "sample": [
+          {
+            "name": "Search\u2026\u2318K",
+            "width": 161,
+            "height": 44,
+            "visual": [
+              224,
+              36
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "GitHub repository",
+            "width": 44,
+            "height": 44,
+            "visual": [
+              32,
+              36
+            ],
+            "stolen": 0
+          },
+          {
+            "name": "Select theme",
+            "width": 44,
+            "height": 44,
+            "visual": [
+              42,
+              42
+            ],
+            "stolen": 0
+          }
+        ]
+      }
+    ],
+    "thumbs": [
+      {
+        "dir": "ltr",
+        "total": 98,
+        "kinds": {
+          "mock": 26,
+          "demo": 72
+        },
+        "problems": 0
+      },
+      {
+        "dir": "rtl",
+        "total": 98,
+        "kinds": {
+          "mock": 26,
+          "demo": 72
+        },
+        "problems": 0
+      }
+    ],
+    "layout": [
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 320,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 375,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "ltr",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 1,
+        "dir": "rtl",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "ltr",
+        "path": "/docs/foundations",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/components",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/changelog",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/components/button",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/tokens",
+        "overflow": 0
+      },
+      {
+        "width": 1280,
+        "textScale": 2,
+        "dir": "rtl",
+        "path": "/docs/foundations",
+        "overflow": 0
+      }
+    ]
+  }
+}

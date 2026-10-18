@@ -50,8 +50,9 @@ source is named instead.
 ### A3 — Native, not wrapped
 
 - **Status:** APPROVED
-- **Evidence:** SwiftUI views, Compose composables, Flutter widgets, Angular directives on native elements
-  (`<button kxButton>`), React components. `check:angular-api`; the three native CI workflows.
+- **Evidence:** SwiftUI views, Compose composables, Flutter widgets, Angular components and directives written in Angular (a button is a directive on a real `<button kxButton>`; most selectors are `kx-*` elements),
+  React components. Corrected 2026-10-17 (M1): "Angular directives on native elements" was true of the button,
+  not of the package. `check:angular-api`; the three native CI workflows.
 - **Approved wording:** "Each platform's components are written in that platform's idiom."
 - **Forbidden interpretation:** that a runtime bridge, web view or abstraction layer is involved. None is.
 - **Review trigger:** any platform gains a wrapper-based implementation.
@@ -75,11 +76,12 @@ source is named instead.
 ### B2 — The catalogue count
 
 - **Status:** APPROVED WITH QUALIFICATION
-- **Evidence:** `pnpm marketing:stats` — 98 catalogue entries, of which one (`combobox`) is a documented
-  recipe the manifest says is not a component.
-- **Approved wording:** "98 catalogue entries — 97 components and one documented recipe." Or simply avoid the
+- **Evidence:** `pnpm marketing:stats` — N catalogue entries, of which one (`combobox`) is a documented
+  recipe the manifest says is not a component. N moves as components land (98 at Phase 4, 109 on 2026-10-17),
+  so this row names no number: read it from `marketing:stats` at the time of writing.
+- **Approved wording:** "N catalogue entries — N−1 components and one documented recipe." Or simply avoid the
   number; per `MESSAGING.md` the count is never the lead.
-- **Forbidden interpretation:** "98 components". It overstates by one, and `marketing:stats` says so out loud.
+- **Forbidden interpretation:** "N components". It overstates by one, and `marketing:stats` says so out loud.
 - **Review trigger:** the manifest's entry count or recipe count changes.
 
 ### B3 — Verification depth is published, including where it is thin
@@ -158,10 +160,11 @@ source is named instead.
 
 ### C4b — When main's source is ahead of what is on npm
 
-- **Status:** CONDITIONAL — applies only while `.changeset/` holds a pending changeset that names
-  `@kinetixui/iot`. With none pending, the version npm serves is the package source on `main`, and C4 alone
-  governs. Check `.changeset/` and `pnpm marketing:stats` at the moment of writing; never quote this row's state
-  from memory.
+- **Status:** CONDITIONAL — applies only while `.changeset/` or `.changeset-held/iot/` holds a pending changeset
+  that names `@kinetixui/iot`. A held changeset is unreleased work kept out of the Version Packages PR so another
+  cohort can ship alone; it is still pending. With none in either, the version npm serves is the package source
+  on `main`, and C4 alone governs. Check both directories and `pnpm marketing:stats` at the moment of writing;
+  never quote this row's state from memory.
 - **Evidence when it applies:** the pending changeset names what main carries beyond the published version.
   `/docs/iot` may mark exactly those sections as not yet released, and `current-truth.test.ts` refuses such a
   marker when no IoT changeset is pending, so the page cannot keep saying it after the release.
@@ -170,7 +173,8 @@ source is named instead.
 - **Forbidden interpretation:** presenting anything behind a pending changeset as *shipped* or *installable
   today*; implying the `/iot` demos talk to hardware; and the inverse, saying npm is behind main when no IoT
   changeset is pending.
-- **Review trigger:** a changeset for `@kinetixui/iot` is added, or the iot cohort publishes.
+- **Review trigger:** a changeset for `@kinetixui/iot` is added, held or released from `.changeset-held/iot/`, or
+  the iot cohort publishes.
 
 ### C5 — Wearables
 

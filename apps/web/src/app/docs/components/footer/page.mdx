@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Footer",
-  description: "A page footer shell — columns of nav links plus a bottom bar.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("footer", "A page footer shell — columns of nav links plus a bottom bar.");
 
 # Footer
 
@@ -11,13 +10,13 @@ A page footer shell — columns of nav links plus a bottom bar.
 
 <ComponentPreview name="footer-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add footer
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Footer, FooterColumn, FooterLink, FooterBottom } from "@kinetixui/ui";

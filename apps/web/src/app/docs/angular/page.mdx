@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Angular",
-  description: "KinetixUI for Angular — standalone components and directives on the shared KinetixUI token contract. Preview.",
-};
+import { routeMetadata } from "@/lib/route-seo";
+
+export const metadata = routeMetadata("/docs/angular");
 
 # Angular
 
@@ -12,6 +11,33 @@ export const metadata = {
 KinetixUI catalogue entries today — a foundation subset, not the full catalogue —
 and grows incrementally.
 
+<PlatformAtAGlance platform="Angular" />
+
+## What differs from the React library
+
+- **Written for Angular, not wrapped.** Standalone components and directives with signal inputs and
+  `ControlValueAccessor`, so a KinetixUI control drops into a reactive form like any other Angular control.
+- **Plain CSS, no Tailwind.** The component stylesheet only spends the token custom properties, so an app does
+  not adopt React's styling toolchain to get the design language.
+- **Overlays use the browser's top layer.** Dialogs are a native `<dialog>` and floating surfaces use the
+  `popover` attribute, where React uses Radix portals. The behaviour contract (focus, Escape, return focus) is
+  the same; the mechanism is Angular's and the DOM's own.
+- **Some gaps are answered by Angular itself.** Form is `ReactiveFormsModule` and Direction Provider is the
+  `dir` attribute, shown on each component page as a native equivalent rather than counted as coverage.
+- **The catalogue is still arriving**, which is why the package is
+  <PlatformMaturityInline platform="Angular" />. The unbuilt entries are listed by wave
+  [below](#what-is-left-by-wave), and nothing else on this page is promised for them.
+
+## A first adoption path
+
+1. [Install](#install) the package and load the token sheets before the component styles.
+2. Start where Angular already has a strong idiom: buttons, inputs, selects and switches in a reactive form,
+   as in the [example](#example).
+3. Before planning a screen, check each component it needs in [What's available](#whats-available); a
+   planned one shows its wave on its own page.
+4. Read [What Stable would require](#what-stable-would-require) before you commit a product to the API: a
+   Preview package can still change.
+
 ## Install
 
 ```bash
@@ -20,16 +46,25 @@ npm i @kinetixui/angular @kinetixui/tokens
 
 `@kinetixui/tokens` is a peer dependency, not a convenience: the components
 spend generated CSS custom properties and never define them, so the token
-contract has to be present for anything to render as designed. Load both
-stylesheets before the component styles — `globals.css` carries colour, spacing
-and radius, and `extras.css` carries the elevation and typography ramps the
-components also use:
+contract has to be present for anything to render as designed. Load the token
+sheets before the component styles. `css` carries colour, spacing and radius,
+and `css/extras` carries the elevation and typography ramps, including the
+focus ring every interactive component draws. Each has a `/dark` half that
+redefines it under the `.dark` class:
 
 ```css
 @import "@kinetixui/tokens/css";
+@import "@kinetixui/tokens/css/dark";
 @import "@kinetixui/tokens/css/extras";
+@import "@kinetixui/tokens/css/extras/dark";
 @import "@kinetixui/angular/styles.css";
 ```
+
+Leave out `css/extras` and a keyboard user gets no focus ring, because the
+component styles replace the browser outline with it. Leave out a `/dark`
+sheet and toggling `.dark` changes nothing it would have redefined.
+`check:angular-package` builds a clean Angular app from this exact block and
+checks both in Chromium.
 
 Angular 21 is the tested and supported range (`@angular/core` and
 `@angular/forms`, `^21.0.0`). Every export is standalone, so a template imports
@@ -125,6 +160,17 @@ export class PreferencesComponent {
 This exact template is compiled and exercised by the package's own test
 suite, so it can't drift from the real API.
 
+Put the five `@import` lines from [Install](#install) at the top of the global stylesheet your `angular.json`
+lists under `styles` (`src/styles.css` in a new app), then add `PreferencesComponent` to your root
+component's `imports`, render `<app-preferences />` in its template and run `ng serve`. You should see a switch that starts on and an outlined **Save**
+button; clicking the switch, or pressing Space while it has focus, turns it off.
+`save()` is empty, so **Save** does nothing yet.
+The switch has no visible label in this example, only an accessible name: give it a visible label in a real
+form. If the switch and **Save** look like default browser buttons, the component stylesheet is not
+loaded; if a focused control shows no ring, `css/extras` is missing.
+
+<FirstUseNextSteps platform="Angular" />
+
 ## Accessibility
 
 - **Native semantics first.** Buttons, inputs and labels stay real
@@ -162,6 +208,30 @@ suite, so it can't drift from the real API.
   Floating surfaces take a logical side (`start`, `end`), flip and shift to
   stay on screen, follow their trigger through scrolling containers, and
   scroll inside themselves at 200% text.
+- **Menus are one set of parts.** Dropdown menu, context menu and menubar
+  share the same items (`kxMenuItem`, checkbox and radio items, labels,
+  groups, separators, shortcuts, submenus), with `role="menu"`,
+  `menuitem`, `menuitemcheckbox` and `menuitemradio`. Exactly one item is a
+  Tab stop; the arrows stop at the ends of a menu and wrap across a menubar;
+  Home, End and typeahead move too; disabled items are announced with
+  `aria-disabled`, skipped and never run. Running an item closes the whole
+  menu and returns focus to its trigger; Escape closes one level at a time.
+  A submenu sits inside its parent menu in the DOM and opens toward the inline
+  end, by the inline-end arrow (ArrowRight, or ArrowLeft in right-to-left). A
+  context menu opens at the pointer, or from the ContextMenu key and
+  Shift+F10 at the focused element. A keyboard highlight draws a focus ring a
+  pointer highlight does not.
+- **Listboxes keep focus where you type.** Select, command and multi-select
+  share one listbox layer: the trigger, the search field or the input keeps
+  focus, and `aria-activedescendant` names the highlighted option, which is
+  never a disabled one and never one a filter has hidden. Select is the
+  select-only combobox (a `role="combobox"` button over a `role="listbox"`);
+  `aria-selected` marks the chosen option, apart from the highlight, and a
+  closed select chooses by typeahead. Command filters locally — the query is
+  never sent anywhere — and composes into a page, a popover or the command
+  dialog. Multi-select holds its choices as chips whose remove buttons are
+  named "Remove …", and keeps focus on a neighbour when one is removed.
+  Combobox is a recipe — a popover holding a command — not a component.
 
 These behaviours are covered by unit tests in jsdom and by
 `check:angular-browser`, which runs the package as a live Angular application
@@ -190,8 +260,12 @@ and it is not counted as Angular coverage.
 stacking, focus, dismissal, scroll locking and positioning. Building that
 separately per component would mean getting it subtly different each time, so
 it was built once, with the dialog family (dialog, alert dialog, modal, sheet,
-drawer, popover, tooltip, hover card), and the menus, listboxes and
-notifications still to come are built on it.
+drawer, popover, tooltip, hover card). The menus (dropdown menu, context menu,
+menubar) are built on it, with one shared collection core for keyboard
+navigation, and the listboxes (select, command, multi-select and the combobox
+recipe) on both. The notifications (toast, notification center, tour) are built
+on it too, and so are the navigation menu's panels and the sidebar's sheet on a
+phone.
 
 ## What Stable would require
 
@@ -202,9 +276,9 @@ not by itself change the label, and nothing here is graded on a curve:
 1. **Catalogue target reached** — the waves above complete, or every remaining
    gap reclassified as a native equivalent or a composition with a reason.
 2. **Overlays complete**, on one shared architecture with focus trapping,
-   scroll locking, dismissal and return-focus behaviour. The architecture and
-   the dialog family are in place; menus, listboxes and notifications are
-   not.
+   scroll locking, dismissal and return-focus behaviour. The architecture,
+   the dialog family, the menus, the listboxes and the notifications are in
+   place.
 3. **Forms complete** — every control a `ControlValueAccessor`, validation
    states wired to `aria-invalid`, and error messaging tested.
 4. **Documentation complete** — every shipped component reachable from its own

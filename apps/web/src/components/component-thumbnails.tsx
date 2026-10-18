@@ -17,7 +17,7 @@ const Bar = ({ w = "w-full", h = "h-2" }: { w?: string; h?: string }) => (
 );
 const Btn = ({ solid = false, children }: { solid?: boolean; children: React.ReactNode }) => (
   <span
-    className={`rounded-md px-2 py-1 text-[10px] font-medium ${
+    className={`rounded-md px-2 py-0.5 text-label-md ${
       solid ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground"
     }`}
   >
@@ -84,7 +84,7 @@ function MenuMock() {
       {["Profile", "Settings", "Team"].map((r, i) => (
         <div
           key={r}
-          className={`flex items-center gap-2 rounded px-2 py-1 text-[11px] ${
+          className={`flex items-center gap-2 rounded px-2 py-1 text-body-sm ${
             i === 1 ? "bg-accent text-accent-foreground" : "text-muted-foreground"
           }`}
         >
@@ -93,7 +93,7 @@ function MenuMock() {
         </div>
       ))}
       <div className="my-1 h-px bg-border" />
-      <div className="px-2 py-1 text-[11px] text-muted-foreground">Log out</div>
+      <div className="px-2 py-1 text-body-sm text-muted-foreground">Log out</div>
     </Panel>
   );
 }
@@ -103,14 +103,17 @@ function PopoverMock({ arrow = true }: { arrow?: boolean }) {
   return (
     <div className="relative">
       <Panel className="w-[180px]">
-        <p className="text-[11px] font-semibold text-foreground">Dimensions</p>
+        <p className="text-label-md font-semibold text-foreground">Dimensions</p>
         <div className="mt-2 space-y-1.5">
           <Bar w="w-full" />
           <Bar w="w-2/3" />
         </div>
       </Panel>
       {arrow && (
-        <div className="absolute left-6 top-full size-2 -translate-y-1/2 rotate-45 border-b border-r border-border bg-card" />
+        // the arrow points at a trigger on the inline-start side, so it follows the reading direction; the
+        // border pair is the rotated square's bottom and right edges, which rotate-45 turns into the point
+        // rtl-ok: physical on purpose — border-b/border-r name the square's own edges, not a reading side
+        <div className="absolute start-6 top-full size-2 -translate-y-1/2 rotate-45 border-b border-r border-border bg-card" />
       )}
     </div>
   );
@@ -119,13 +122,12 @@ function PopoverMock({ arrow = true }: { arrow?: boolean }) {
 function TooltipMock() {
   return (
     <div className="flex flex-col items-center gap-1">
-      <span className="rounded-md bg-foreground px-2.5 py-1 text-[10px] font-medium text-background shadow-lg">
+      <span className="rounded-md bg-foreground px-2.5 py-1 text-label-md text-background shadow-lg">
         Add to library
       </span>
       <span className="size-2 -translate-y-1 rotate-45 bg-foreground" />
-      <span className="mt-0.5 rounded-md border border-border px-2.5 py-1 text-[10px] text-muted-foreground">
-        Hover
-      </span>
+      {/* the trigger: a shape, not a word — "Hover" told the reader nothing the tooltip above does not */}
+      <span className="mt-0.5 h-6 w-16 rounded-md border border-border" />
     </div>
   );
 }
@@ -142,7 +144,7 @@ function CommandMock() {
         {["Calendar", "Search", "Settings"].map((r, i) => (
           <div
             key={r}
-            className={`rounded px-2 py-1 text-[11px] ${
+            className={`rounded px-2 py-1 text-body-sm ${
               i === 0 ? "bg-accent text-accent-foreground" : "text-muted-foreground"
             }`}
           >
@@ -157,7 +159,7 @@ function CommandMock() {
 /* — navigation ————————————————————————————————————————————————— */
 function BreadcrumbMock() {
   return (
-    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+    <div className="flex items-center gap-1.5 text-body-sm text-muted-foreground">
       <span>Home</span>
       <span className="opacity-40">/</span>
       <span>Docs</span>
@@ -170,11 +172,12 @@ function BreadcrumbMock() {
 function PaginationMock() {
   return (
     <div className="flex items-center gap-1">
-      <span className="rounded border border-border px-1.5 py-1 text-[11px] text-muted-foreground">‹</span>
+      {/* ‹ and › are bidi-mirrored characters: under dir="rtl" they draw pointing the other way on their own */}
+      <span className="rounded border border-border px-1.5 py-1 text-body-sm text-muted-foreground">‹</span>
       {["1", "2", "3"].map((n) => (
         <span
           key={n}
-          className={`rounded px-2 py-1 text-[11px] ${
+          className={`rounded px-2 py-1 text-body-sm ${
             n === "2"
               ? "bg-primary text-primary-foreground"
               : "border border-border text-muted-foreground"
@@ -183,18 +186,18 @@ function PaginationMock() {
           {n}
         </span>
       ))}
-      <span className="px-1 text-[11px] text-muted-foreground">…</span>
-      <span className="rounded border border-border px-1.5 py-1 text-[11px] text-muted-foreground">›</span>
+      <span className="px-1 text-body-sm text-muted-foreground">…</span>
+      <span className="rounded border border-border px-1.5 py-1 text-body-sm text-muted-foreground">›</span>
     </div>
   );
 }
 
 function TocMock() {
   return (
-    <div className="space-y-1.5 border-l border-border pl-3 text-[11px]">
+    <div className="space-y-1.5 border-s border-border ps-3 text-body-sm">
       <p className="font-medium text-primary">Overview</p>
       <p className="text-muted-foreground">Installation</p>
-      <p className="pl-3 text-muted-foreground">CLI</p>
+      <p className="ps-3 text-muted-foreground">CLI</p>
       <p className="text-muted-foreground">Usage</p>
     </div>
   );
@@ -227,7 +230,7 @@ function TableMock() {
     <div className="w-[230px] overflow-hidden rounded-lg border border-border">
       <div className="grid grid-cols-3 gap-2 border-b border-border bg-muted/40 px-2.5 py-1.5">
         {["Name", "Status", "Role"].map((h) => (
-          <span key={h} className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <span key={h} className="text-label-md uppercase tracking-wide text-muted-foreground">
             {h}
           </span>
         ))}
@@ -272,8 +275,9 @@ function ImageMock() {
 function AspectRatioMock() {
   return (
     <div className="w-[190px]">
-      <div className="flex aspect-video items-center justify-center rounded-lg border border-dashed border-border bg-muted/40 font-mono text-[11px] text-muted-foreground">
-        16 : 9
+      <div className="flex aspect-video items-center justify-center rounded-lg border border-dashed border-border bg-muted/40 font-mono text-body-sm text-muted-foreground">
+        {/* a ratio is read width-first in every script: without dir="ltr" an RTL page reorders it to "9 : 16" */}
+        <span dir="ltr">16 : 9</span>
       </div>
     </div>
   );
@@ -312,11 +316,40 @@ function ResizableMock() {
   );
 }
 
+/**
+ * PageHeader's live demo renders the component's real `<h1>`, and an inert, aria-hidden subtree is still DOM:
+ * the gallery page carried a second `h1` that any heading-structure check counts. The mock draws the same
+ * shape — breadcrumb, title, description, actions — with no heading element in it.
+ */
+function PageHeaderMock() {
+  // The breadcrumb is drawn as bars rather than words: at thumbnail scale it is the row's position, not its
+  // text, that says "page header", and three 10px words in 200px were the smallest text on the gallery.
+  return (
+    <div className="w-[210px] space-y-2 border-b border-border pb-2.5">
+      <div className="flex items-center gap-1.5">
+        <Bar w="w-10" h="h-1.5" />
+        <span className="text-body-sm text-muted-foreground/60">/</span>
+        <Bar w="w-12" h="h-1.5" />
+      </div>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 space-y-1.5">
+          <p className="truncate text-title-sm text-foreground">KinetixUI</p>
+          <Bar w="w-20" h="h-1.5" />
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <span className="size-6 rounded-md border border-border" />
+          <Btn solid>Deploy</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SeparatorMock() {
   return (
-    <div className="w-[170px] space-y-2 text-[11px] text-muted-foreground">
+    <div className="w-[190px] space-y-2 text-body-sm text-muted-foreground">
       <p className="font-medium text-foreground">KinetixUI</p>
-      <p>An open-source UI kit.</p>
+      <p>Cross-platform design system</p>
       <div className="h-px bg-border" />
       <div className="flex gap-3">
         <span>Blog</span>
@@ -354,4 +387,5 @@ export const THUMBNAIL_MOCKS: Record<string, React.ComponentType> = {
   "scroll-area": ScrollAreaMock,
   resizable: ResizableMock,
   separator: SeparatorMock,
+  "page-header": PageHeaderMock,
 };

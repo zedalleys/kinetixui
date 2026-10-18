@@ -1,5 +1,6 @@
 import { render, screen, cleanup, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import axe from "axe-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/docs/components/button" }));
@@ -10,9 +11,14 @@ import { analytics } from "@/lib/analytics";
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe("component onboarding", () => {
+  it("does not create duplicate page landmarks when multiple previews share a page", async () => {
+    const { container } = render(<><ComponentPreview name="button-demo" /><ComponentPreview name="button-demo" /></>);
+    const result = await axe.run(container, { runOnly: { type: "rule", values: ["landmark-unique"] } });
+    expect(result.violations).toEqual([]);
+  });
   it("connects the component CLI to full setup and distinguishes npm imports", () => {
     render(<ComponentMeta />);
-    expect(screen.getByRole("link", { name: "Installation and first component →" })).toHaveAttribute("href", "/docs/installation");
+    expect(screen.getByRole("link", { name: "React Setup →" })).toHaveAttribute("href", "/docs/installation");
     expect(screen.getByText(/Usage imports from @kinetixui\/ui require the npm package/)).toBeInTheDocument();
   });
 
@@ -20,7 +26,7 @@ describe("component onboarding", () => {
     const user = userEvent.setup();
     const track = vi.spyOn(analytics, "track").mockImplementation(() => {});
     render(<ComponentPreview name="button-demo" />);
-    await user.click(screen.getByRole("tab", { name: "code" }));
+    await user.click(screen.getByRole("radio", { name: "code" }));
     const platforms = [
       ["React", "/docs/installation", "react"],
       ["Angular", "/docs/angular", "angular"],

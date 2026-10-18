@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Pagination",
-  description: "Pagination with page navigation, next and previous links.",
-};
+import { componentMetadata } from "@/lib/seo";
+
+export const metadata = componentMetadata("pagination", "Pagination with page navigation, next and previous links.");
 
 # Pagination
 
@@ -11,13 +10,13 @@ Pagination with page navigation, next and previous links.
 
 <ComponentPreview name="pagination-demo" />
 
-## Installation
+## React installation
 
 ```bash
 npx @kinetixui/cli add pagination
 ```
 
-## Usage
+## React usage
 
 ```tsx
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis } from "@kinetixui/ui";

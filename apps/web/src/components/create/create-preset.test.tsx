@@ -91,7 +91,7 @@ describe("opening a shared link", () => {
     openWith(encodeConfig(sharedFromDark));
 
     expect(previewRoot().className).toContain("theme-light");
-    expect(within(sidebar()).getByRole("button", { name: "Light" })).toHaveAttribute("aria-pressed", "true");
+    expect(within(sidebar()).getByRole("radio", { name: "Light" })).toHaveAttribute("aria-checked", "true");
   });
 
   it("carries manual overrides, failing ones included", () => {
