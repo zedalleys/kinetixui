@@ -1,5 +1,5 @@
 {
-  "$comment": "Canonical register for the first 30 days. Validated by scripts/check-content-register.mjs (pnpm check:content). ONE CAMPAIGN PER IDEA (family), utm_content identifies the asset within it — so reporting shows which argument works, not which button. Names follow marketing/analytics.md §8. M1 (2026-10-17) added ART-003 and GH-001 and the optional `approval` field: { by, on, evidence }, set only by an explicit owner decision on ready copy.",
+  "$comment": "Canonical register for the first 30 days. Validated by scripts/check-content-register.mjs (pnpm check:content). ONE CAMPAIGN PER IDEA (family), utm_content identifies the asset within it — so reporting shows which argument works, not which button. Names follow marketing/analytics.md §8. M1 (2026-10-17) added ART-003 and GH-001 and the optional `approval` field: { by, on, evidence }, set only by an explicit owner decision on ready copy. M2 (2026-10-18): approvals from 2026-10-18 pin the approved words in approval.copy { file, section, sha256 }, and `stale: { reason, since }` marks copy whose current-state claims no longer hold (a stale draft cannot be approved).",
   "visuals": [
     "VIS-001",
     "VIS-002",
@@ -100,7 +100,11 @@
       "destination": "/docs/platforms",
       "campaign": "kx_p1_a_parity_proof",
       "utm_content": "art_primary",
-      "url": "https://kinetixui.com/docs/platforms?utm_source=devto&utm_medium=referral&utm_campaign=kx_p1_a_parity_proof&utm_content=art_primary"
+      "url": "https://kinetixui.com/docs/platforms?utm_source=devto&utm_medium=referral&utm_campaign=kx_p1_a_parity_proof&utm_content=art_primary",
+      "stale": {
+        "reason": "the live dev.to article's 'today' paragraph states 98 entries and Angular 64; the catalogue is 109 and Angular 80 (a01/verify-package.mjs, 2026-10-18). Historical before/after figures are unaffected",
+        "since": "2026-10-18"
+      }
     },
     {
       "id": "ART-001-PILLAR",
@@ -135,7 +139,12 @@
       "approval": {
         "by": "owner",
         "on": "2026-10-18",
-        "evidence": "Owner explicitly approved LI-001 draft A exactly as written in ChatGPT on 2026-10-18 for manual publication preparation on 2026-10-19; publication itself not authorized."
+        "evidence": "Owner explicitly approved LI-001 draft A exactly as written in ChatGPT on 2026-10-18 for manual publication preparation on 2026-10-19; publication itself not authorized.",
+        "copy": {
+          "file": "marketing/content/drafts/a01/linkedin.md",
+          "section": "A",
+          "sha256": "09a399477e8c537d48045fd2cc83a3faf77c33a467b3d046389c83e3f5d33cfb"
+        }
       }
     },
     {
@@ -183,7 +192,11 @@
       "destination": "/docs/platforms",
       "campaign": "kx_p1_a_count_isnt_coverage",
       "utm_content": "li_primary",
-      "url": "https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_count_isnt_coverage&utm_content=li_primary"
+      "url": "https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_count_isnt_coverage&utm_content=li_primary",
+      "stale": {
+        "reason": "current-state figures predate the catalogue at 109: the copy states 98 entries and Angular 31, and Blocks has moved (a02/verify-package.mjs, 2026-10-18)",
+        "since": "2026-10-18"
+      }
     },
     {
       "id": "X-002",
@@ -199,7 +212,11 @@
       "campaign": "kx_p1_a_count_isnt_coverage",
       "utm_content": "x_thread",
       "url": "https://kinetixui.com/docs/platforms?utm_source=x&utm_medium=social&utm_campaign=kx_p1_a_count_isnt_coverage&utm_content=x_thread",
-      "derived_from": "LI-010"
+      "derived_from": "LI-010",
+      "stale": {
+        "reason": "same a02 figures as LI-010: 98 entries and Angular 31 no longer hold (a02/verify-package.mjs, 2026-10-18)",
+        "since": "2026-10-18"
+      }
     },
     {
       "id": "ART-002",

@@ -105,7 +105,7 @@ for (const asset of register.assets) {
  * `ready` means the copy's own checks pass, not that anyone approved it (content/README.md). An approval is an
  * explicit owner decision recorded on the asset: who, when, and where it was given. Nothing sets it by default.
  */
-problems.push(...approvalProblems(register.assets));
+problems.push(...approvalProblems(register.assets, (f) => readFileSync(f, "utf8")));
 
 /* Families must reference real assets, or the repurposing map is decoration. */
 for (const [family, def] of Object.entries(register.families)) {

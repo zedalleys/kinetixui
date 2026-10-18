@@ -138,9 +138,10 @@ sessions and Returning evaluators are all counted **among eligible sessions only
 `component_viewed`, `component_code_copied`, `platform_selected`, `component_code_viewed`, `github_clicked`, `npm_clicked`,
 `changelog_viewed`, `external_link_clicked`, `preset_shared`, `preset_code_copied`, `preset_loaded`,
 `preset_randomized`, `create_export_target_selected`, `create_export_copied`, `iot_example_copied`,
-`block_code_copied`, `search_result_selected`. A session with one of these and no `$pageview` is an arrival.
-(`search_result_selected`, added 2026-10-17, fires from the command menu of a page that has already sent its
-`$pageview`, so it cannot add an arrival in practice; it is listed because the list is the contract.)
+`block_code_copied`, `search_result_selected`, `page_engaged`. A session with one of these and no `$pageview` is an
+arrival. (`search_result_selected`, added 2026-10-17, fires from the command menu of a page that has already sent
+its `$pageview`, so it cannot add an arrival in practice; it is listed because the list is the contract. The same
+holds for `page_engaged`, added 2026-10-18 (M2), which fires on the first physical input after a page view.)
 
 **Does not qualify on its own.** `$pageleave`, and any other event name: PostHog SDK events (`$autocapture`,
 `$identify`, `$web_vitals`, …) and names nobody declared. The list is an allowlist, so a new event cannot
