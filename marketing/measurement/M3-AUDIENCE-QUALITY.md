@@ -83,6 +83,19 @@ clicked; LinkedIn and X can strip or wrap links.
    08:26 the same day, so no visit has happened since the merge. Whether production runs the M2 build is not
    confirmed from here (kinetixui.com and the Vercel project are not reachable from this environment). Treat
    "human-evidenced" as relying on click events and second pages until a `page_engaged` event is seen.
+
+> **Correction, 2026-10-18 13:00 UTC.** The 10:00 UTC observation "no LI-001 diagnostic event; visit not done" was
+> made before the visit was ingested and is superseded. The owner's diagnostic visit happened: PostHog 620385 holds
+> `$pageview` 10:30:33.060, `docs_viewed` 10:30:33.066 and `page_engaged` 10:30:38.373 UTC (session
+> 01a14e90-2718-737d-affb-9d0d9a4ed40a, iOS Safari), all with kx_campaign kx_p1_a_parity_proof, kx_medium social,
+> kx_content li_primary, kx_traffic_type diagnostic, landing /docs/platforms. Source attribution was wrong:
+> kx_source=other, not linkedin. Cause under investigation (M3.1); the visit's `utm_source` value did not arrive as
+> `linkedin`. LI-001 gate remains BLOCKED.
+>
+> For this page: the one `page_engaged` event is the diagnostic visit, which is excluded from every count here, so
+> the audience and canonical `page_engaged` figures above (0) stand; what changes is that the M2 build is serving
+> in production and the event does fire.
+
 3. **No browser is marked internal.** The 18 October 07:47 session (64 page views, 36 QE signals, the only
    five-platform session) is unmarked and counts as audience; it is likely the owner reviewing the site, which is
    exactly what `?kx_traffic=internal` is for.
