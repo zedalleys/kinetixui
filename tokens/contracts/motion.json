@@ -181,7 +181,7 @@
       "properties": ["background-color", "color", "border-color", "opacity"],
       "reducedForm": "shorten",
       "evidence": ["scripts/motion.mjs", "scripts/toggle-motion.mjs", "packages/ui/src/toggle-motion.test.tsx", "scripts/checkbox-radio-motion.mjs", "packages/ui/src/checkbox-radio-motion.test.tsx"],
-      "note": "Colour and surface change when a control becomes selected or unselected: Toggle, ToggleGroup items, Checkbox and Radio indicators. Owner decision 2026-10-17: fast (200ms). The semantic state changes at once; only the paint interpolates. Switch keeps selection-control (instant) unless a defect is shown. Adopted component by component from MX1b-1. Observed on React Toggle and ToggleGroup (MX1b-1a, which share toggleVariants): background, text and border colour on fast, measured in a browser. Observed on React Checkbox and RadioGroup (MX1b-1b): box fill, border and glyph colour on fast, and the tick, dash or dot fading in on fast (opacity). The Checkbox glyph leaves at once rather than fading, so a box going from mixed to unchecked never shows the tick on its way out. Promoted to proven when a second platform consumes it.",
+      "note": "Colour and surface change when a control becomes selected or unselected: Toggle, ToggleGroup items, Checkbox and Radio indicators. Owner decision 2026-10-17: fast (200ms). The semantic state changes at once; only the paint interpolates. Switch keeps selection-control (instant) unless a defect is shown. Adopted component by component from MX1b-1. Observed on React Toggle and ToggleGroup (MX1b-1a, which share toggleVariants): background, text and border colour on fast, measured in a browser. Observed on React Checkbox and RadioGroup (MX1b-1b): box fill, border and glyph colour on fast, and the tick, dash or dot fading in on fast (opacity). The Checkbox glyph leaves at once rather than fading, so a box going from mixed to unchecked never shows the tick on its way out. Promoted to proven when a second platform consumes it. Compose joined in MX1d: KinetixSelectionMotion resolves fast/standard, collapses to tween(0) at animator scale 0, and Toggle, Checkbox and RadioButton read it through animateColorAsState. The status stays observed on purpose \u2014 a second CONSUMER is not a second OBSERVATION, and Compose's Robolectric suite reads the semantics tree rather than an interpolated colour.",
       "consumers": [
         {
           "platform": "react",
@@ -208,6 +208,11 @@
             "[transition-duration:var(--duration-fast),var(--duration-fast),",
             "transition-opacity duration-fast ease-standard"
           ]
+        },
+        {
+          "platform": "compose",
+          "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixSelectionMotion.kt",
+          "expects": ["KinetixDuration.fast", "KinetixEasing.standard"]
         }
       ],
       "deviations": []

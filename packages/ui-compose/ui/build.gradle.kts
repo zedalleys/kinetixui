@@ -56,6 +56,11 @@ android {
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     implementation("androidx.compose.ui:ui")
+    // `animateColorAsState` lives in androidx.compose.animation, not animation-core (which is where
+    // `animateDpAsState` and `tween` come from, and which arrives transitively). MX1d needs it for the
+    // selection-state colour specs, so it is declared rather than relied on through material3's own
+    // dependency graph. BOM-versioned and first-party: no new third-party dependency.
+    implementation("androidx.compose.animation:animation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")

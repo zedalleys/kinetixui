@@ -223,3 +223,32 @@ because a colour settling reads better slower. The two are not to be normalised 
 
 Hover's `action`/90 and selection share `background-color`, but both are on `instant`, so the "Hover and
 selection on the same property" problem does not arise here.
+
+### Selection controls (Compose, MX1d)
+
+Two things were wrong on Compose, and only one of them was reported. `Switch.kt` animated `thumbOffset`
+and handed `trackColor` straight to `.background`, so the track cut between `tertiary` and `action` in one
+frame while the thumb slid for 100ms — `selection-control` covers both, which is why Compose's Switch was
+not ticked for Impl. And Toggle, Checkbox and RadioButton did not animate at all.
+
+| | Switch track | Toggle / Checkbox / Radio |
+| --- | --- | --- |
+| Trigger | `checked`, and `enabled` (the disabled alpha is part of the animated target) | `pressed`, the `ToggleableState`, `selected` |
+| Property | `background-color` via `animateColorAsState` | container, text, border and fill colour via `animateColorAsState`; the radio dot's `alpha` via `animateFloatAsState` |
+| Tier · easing | `instant` 100ms · `standard` (`selection-control`), the same spec as the thumb | `fast` 200ms · `standard` (`selection-state`) |
+| Reduced form | `tween(0)` at `ANIMATOR_DURATION_SCALE` 0, through the one shared reader | the same |
+| Interruption | Compose retargets from the current colour | the same |
+| Final state | the state's colour; the semantics (`Role.Switch`, `triStateToggleable`, `selectable`) never wait for paint | the same |
+| Focus / SR | unchanged. ToggleGroup gains an optional `accessibleLabel`: a named traversal group, not a merged element, so each item still reports its own on/off | — |
+| RTL | the thumb's `Modifier.offset` resolves against layout direction, so travel mirrors; colour is direction-free | colour is direction-free |
+
+The Checkbox glyph still swaps in one frame while the fill settles — a stated difference from React, which
+fades the tick in on `fast` and removes it at once. Doing that properly here means composing both glyphs and
+animating their alpha so a box leaving mixed never shows a tick on the way out (the defect #400 fixed on the
+web); the fill already carries the state change, so it is recorded rather than half-built.
+
+Evidence, stated exactly: **Headless verified** for interaction and accessibility —
+`SelectionMotionTest.kt` composes each control through Robolectric and reads the semantics tree, and
+`./gradlew :ui:testDebugUnitTest` runs it in `native-compose.yml`. **No interpolated colour is measured**,
+and no emulator job exists, so Runtime stays open. Robolectric is a JVM host; it renders nothing a person
+could see.
