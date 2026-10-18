@@ -7,32 +7,35 @@
  *   catalogue availability   does an entry ship at all?                  → the roadmap row's status (discovery-index)
  *   stage coverage           how many of the workflow's stages ship?     → `Workflow.coverage`
  *   implementation coverage  how many of its parts exist on a platform?  → components.manifest.json, blocks.manifest.json
- *   verification             what has a test proved about each part?     → verification.json (via platform-parity.json)
+ *   verification             what has a test proved about each part?     → verification.json (componentLevels, blocks)
  *
- * Nothing here is typed by hand: every level is computed from the evidence records, and the aggregate is the WEAKEST
+ * Nothing here is typed by hand: every level is decided by gen:verification from the evidence, and the aggregate is the WEAKEST
  * part, never an average. A workflow on a platform where one part is missing is incomplete, however well the other
  * parts are tested.
  */
 import verification from "../../../../verification.json";
-import { PLATFORMS, evidenceFor, platformsFor, type EvidenceKind, type Platform } from "./platform-parity";
+import { PLATFORMS, type EvidenceKind, type Platform } from "./platform-parity";
 import { workflowParts, type Workflow } from "./business-discovery";
 
 /**
- * The evidence ladder, weakest first. Conservative by construction:
+ * The evidence ladder, weakest first (verification.json schema version 2). Every level is decided by
+ * gen:verification, for components and blocks alike, with one rule (scripts/evidence-levels.mjs); this file only
+ * reads it.
  *
  *   not-implemented   no implementation on this platform.
  *   not-verified      an implementation is declared, but no evidence record exists for it.
  *   source            the source exists; nothing records that it builds.
- *   build             a build record (gen:verification records one for every declared platform, as CI compiles
- *                     that package); no test records BOTH interaction and accessibility for this part.
- *   runtime           a test records interaction AND accessibility for this specific part on this platform.
- *                     For a block, both must have been OBSERVED: in a real browser for web, on a simulator,
- *                     emulator or device for native. Headless runs (jsdom, Robolectric, flutter_test) are
- *                     recorded and shown, and never lift a block above build.
+ *   build             a required CI step compiles it; interaction and accessibility are not both tested.
+ *   headless          compiled, and tests CI executes assert both interaction and accessibility, at least one of
+ *                     them only headless (jsdom, Robolectric, flutter_test, XCTest).
+ *   runtime           compiled, and both interaction and accessibility were OBSERVED: in a real browser for web, on
+ *                     a simulator, emulator or device for native.
  *
- * A package build is not runtime evidence, and source inspection is never build evidence.
+ * A package build is not runtime evidence, source inspection is never build evidence, and a headless run is never
+ * runtime evidence. A workflow is as verified as its weakest part, so adding a rung can never raise a floor that a
+ * weaker part holds down.
  */
-export const EVIDENCE_LEVELS = ["not-implemented", "not-verified", "source", "build", "runtime"] as const;
+export const EVIDENCE_LEVELS = ["not-implemented", "not-verified", "source", "build", "headless", "runtime"] as const;
 export type EvidenceLevel = (typeof EVIDENCE_LEVELS)[number];
 
 export const EVIDENCE_LEVEL_LABEL: Record<EvidenceLevel, string> = {
@@ -40,6 +43,7 @@ export const EVIDENCE_LEVEL_LABEL: Record<EvidenceLevel, string> = {
   "not-verified": "Not verified",
   source: "Source present",
   build: "Build verified",
+  headless: "Headless verified",
   runtime: "Runtime verified",
 };
 
@@ -48,34 +52,15 @@ export const EVIDENCE_LEVEL_MEANING: Record<EvidenceLevel, string> = {
   "not-implemented": "There is no implementation on this platform.",
   "not-verified": "An implementation is declared, but no test or build records evidence for it.",
   source: "The source exists; no CI build records it. Any tests it has are listed but do not raise its level.",
-  build: "CI compiles the package it ships in; interaction and accessibility are not both tested.",
-  runtime:
-    "Tests record both interaction and accessibility for it. For a block, both were observed in a real browser or on a device; for a component, the note under it says where they ran.",
-};
-
-/** The kinds a part must hold, all of them, for a level. `build` is the manifest's own declaration, read through CI. */
-export const LEVEL_REQUIRES: Record<"build" | "runtime", readonly EvidenceKind[]> = {
-  build: ["build"],
-  runtime: ["build", "interaction", "accessibility"],
+  build: "A CI step compiles it; interaction and accessibility are not both tested.",
+  headless:
+    "Tests CI runs assert both interaction and accessibility, but at least one ran only headless (jsdom, Robolectric, flutter_test or XCTest), not in a browser or on a device. The note under it says which.",
+  runtime: "Both interaction and accessibility were observed running: in a real browser for web, on a simulator, emulator or device for native.",
 };
 
 const rank = (l: EvidenceLevel) => EVIDENCE_LEVELS.indexOf(l);
 export const weakest = (levels: EvidenceLevel[]): EvidenceLevel =>
   levels.reduce((a, b) => (rank(b) < rank(a) ? b : a), "runtime" as EvidenceLevel);
-
-/**
- * The level a part's evidence earns. Pure, so tests can hold every rung to the rule with made-up evidence.
- * `implemented` false is always `not-implemented`, whatever evidence is passed: evidence for a part that does not
- * exist is a data fault, not a reason to claim it.
- */
-export function levelFor(implemented: boolean, evidence: readonly EvidenceKind[] | null, hasSource = true): EvidenceLevel {
-  if (!implemented) return "not-implemented";
-  if (evidence === null) return hasSource ? "source" : "not-verified";
-  const held = new Set(evidence);
-  if (LEVEL_REQUIRES.runtime.every((k) => held.has(k))) return "runtime";
-  if (LEVEL_REQUIRES.build.every((k) => held.has(k))) return "build";
-  return hasSource ? "source" : "not-verified";
-}
 
 /** One evidence reference, as gen:verification writes it: where, and (for a test) the environment it ran in. */
 export type BlockEvidenceRef = { ref: string; environment?: string };
@@ -92,9 +77,18 @@ const BLOCK_EVIDENCE = verification.blocks as unknown as Record<string, BlockRec
 /** The environments that count as observing a block run. Read from the generated file, never restated. */
 export const RUNTIME_ENVIRONMENTS: readonly string[] = verification.runtimeEnvironments;
 
-/** A catalogue component on a platform: the manifest says whether it exists, verification.json what it proved. */
+type ComponentLevelRecord = { level: EvidenceLevel; interaction?: string[]; accessibility?: string[] };
+const COMPONENT_LEVELS = verification.componentLevels as unknown as Record<string, Partial<Record<Platform, ComponentLevelRecord>>>;
+
+/** Components per level on each platform, as gen:verification counted them. */
+export const componentLevelTotals = verification.componentLevelTotals as Record<Platform, Partial<Record<EvidenceLevel, number>>>;
+
+/**
+ * A catalogue component on a platform, as gen:verification decided it. A slug or platform with no record is not
+ * implemented: nothing here can promote a part the generator did not.
+ */
 export function componentLevel(slug: string, platform: Platform): EvidenceLevel {
-  return levelFor(platformsFor(slug).includes(platform), evidenceFor(slug, platform), true);
+  return COMPONENT_LEVELS[slug]?.[platform]?.level ?? "not-implemented";
 }
 
 type ComponentRecord = Partial<Record<Platform, Partial<Record<EvidenceKind, string[]>>>>;
@@ -108,9 +102,7 @@ const SOURCE_ENVIRONMENT: Record<string, string> = Object.fromEntries(
 
 /**
  * A component's interaction and accessibility references on a platform, each tagged with where its suite runs, in
- * the same shape as a block's record so the same note can describe both. It does not change the level: a
- * component is still runtime verified when both kinds are recorded, whatever ran them (see
- * docs/VERIFICATION-RUNTIME-DECISION.md). The note is what keeps that label from reading as more than it is.
+ * the same shape as a block's record so the same note can describe both.
  */
 export function componentEvidence(slug: string, platform: Platform): BlockPlatformEvidence {
   const refs = COMPONENT_REFS[slug]?.[platform] ?? {};

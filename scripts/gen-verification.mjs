@@ -100,24 +100,51 @@ const COVERS = /kx-verify-covers:\s*(\S+)/;
 /**
  * Where each platform's evidence lives. `extra` files are suites that are not themselves unit tests.
  *
- * `environment` is where a suite runs, recorded on its `sources` entry as provenance: jsdom and the native
- * test hosts (XCTest, Robolectric, flutter_test) are headless; the `extra` browser suites run in Chromium. It is
- * a fact about the file, not a claim in it. It does not change a component's level today — component runtime
- * is still "interaction and accessibility evidence exist", whatever ran them; docs/VERIFICATION-RUNTIME-DECISION.md
- * sets out the options for making it environment-aware, which is an owner decision.
+ * `environment` is where a suite runs, recorded on its `sources` entry: jsdom and the native test hosts (XCTest,
+ * Robolectric, flutter_test) are headless; the `extra` browser suites run in Chromium. It is a fact about the
+ * file, not a claim in it, and it decides the tier (see EVIDENCE_LEVELS): interaction and accessibility observed
+ * in a runtime environment make a part Runtime verified, the same two run headless make it Headless verified.
+ *
+ * `runs` is the CI step that executes the `dirs` suites, matched exactly and only when the step is unconditional
+ * (the same rules as the block suites). A suite no step runs is not evidence: its markers are still checked, and
+ * it records nothing. `runs.scripts` are the package scripts that command goes through, each of which must be exactly
+ * the next command (see suiteRuns). An `extra` script must itself be run by a workflow step, directly or through its
+ * package script.
  */
+// `pnpm test:angular` reaches Vitest through two package scripts, and each must be exactly the next command.
+const ANGULAR_SUITE_SCRIPTS = [
+  { pkg: "package.json", name: "test:angular", is: "pnpm --filter @kinetixui/angular test" },
+  { pkg: "packages/ui-angular/package.json", name: "test", is: "vitest run" },
+];
 const TEST_SOURCES = {
-  React: { dirs: ["packages/ui/src"], match: /\.test\.tsx$/, environment: "jsdom", extra: ["scripts/a11y-browser.mjs", "scripts/large-text.mjs", "scripts/motion.mjs"], extraEnvironment: "chromium" },
-  Angular: { dirs: ["packages/ui-angular/src"], match: /\.spec\.ts$/, environment: "jsdom", extra: ["scripts/angular-browser.mjs", "scripts/angular-overlays.mjs", "scripts/angular-collections.mjs", "scripts/angular-layout.mjs"], extraEnvironment: "chromium" },
-  SwiftUI: { dirs: ["packages/ui-swiftui/Tests"], match: /\.swift$/, environment: "xctest" },
-  Compose: { dirs: ["packages/ui-compose/ui/src/test"], match: /\.kt$/, environment: "robolectric" },
-  Flutter: { dirs: ["packages/ui-flutter/test"], match: /_test\.dart$/, environment: "flutter_test" },
+  React: { dirs: ["packages/ui/src"], match: /\.test\.tsx$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm --filter @kinetixui/ui test", scripts: [{ pkg: "packages/ui/package.json", name: "test", is: "vitest run" }] }, extra: ["scripts/a11y-browser.mjs", "scripts/large-text.mjs", "scripts/motion.mjs"], extraEnvironment: "chromium" },
+  Angular: { dirs: ["packages/ui-angular/src"], match: /\.spec\.ts$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm test:angular", scripts: ANGULAR_SUITE_SCRIPTS }, extra: ["scripts/angular-browser.mjs", "scripts/angular-overlays.mjs", "scripts/angular-collections.mjs", "scripts/angular-layout.mjs"], extraEnvironment: "chromium" },
+  SwiftUI: { dirs: ["packages/ui-swiftui/Tests"], match: /\.swift$/, environment: "xctest", runs: { workflow: "native-swiftui.yml", command: "swift test" } },
+  Compose: { dirs: ["packages/ui-compose/ui/src/test"], match: /\.kt$/, environment: "robolectric", runs: { workflow: "native-compose.yml", command: "./gradlew :ui:testDebugUnitTest" } },
+  Flutter: { dirs: ["packages/ui-flutter/test"], match: /_test\.dart$/, environment: "flutter_test", runs: { workflow: "native-flutter.yml", command: "flutter test" } },
 };
+
+// Hoisted above the evidence passes, which call the workflow readers below before this point is reached.
+//
+// An allowlist, not a list of shell tricks to reject: a command counts only when it starts with one of these
+// programs. A builtin (`exit`, `set`, `builtin exit`), an assignment prefix (`X=1 exit 0`), a keyword or a
+// function definition starts with none of them, so it cannot pass.
+const PROGRAMS = new Set(["pnpm", "npm", "npx", "yarn", "corepack", "node", "swift", "xcodebuild", "./gradlew", "gradle", "flutter", "dart", "cd", "mkdir", "cp", "echo", "printf", "cat", "ls", "git", "curl", "tar", "sleep", "sed"]);
+const plainCommand = (c) => PROGRAMS.has(c.split(/\s+/)[0]);
+/** One run line that is nothing but plain commands: not rejected by commandsOf, and every command an allowed program. */
+const plainLine = (line) => {
+  const l = line.replace(/\s+#.*$/, "").trim();
+  return !l.endsWith("\\") && commandsOf([l]).length > 0;
+};
+const escapeRe = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // The extractor lives in its own module so large-text.mjs can check its claim with the same function
 // that awards the evidence, instead of a regex that resembles it. Re-exported here because
 // apps/web/src/lib/verification-guardrails.test.ts and this file's own callers import it from here.
 import { coverageForRoot, pascal, slugify } from "./covered-slugs.mjs";
+// The ladder and the rules that place evidence on it live in one module, shared with the tests that hold it.
+import { EVIDENCE_LEVELS, HEADLESS_ENVIRONMENTS, RUNTIME_ENVIRONMENTS, TIER_KINDS, levelFrom, skipIn } from "./evidence-levels.mjs";
+export { EVIDENCE_LEVELS, HEADLESS_ENVIRONMENTS, RUNTIME_ENVIRONMENTS, TIER_KINDS, levelFrom, skipIn };
 
 // Built from the manifest of the tree being scanned, which under `--root=<dir>` is the fixture's and not
 // this repository's. An extractor wired to the repo would answer questions about the fixture with the
@@ -284,6 +311,10 @@ const record = (slug, platform, kind, source) => {
 };
 /** platform → the files that contributed, and what each claims */
 const sources = {};
+/** file → the environment its suite runs in, for every file that recorded evidence */
+const fileEnvironment = {};
+/** Evidence a test states but that earns nothing: a skipped test, or a suite no CI step executes. */
+const uncredited = [];
 
 errors.push(...exportAttributionErrors());
 
@@ -295,6 +326,7 @@ for (const platform of platforms) {
     continue;
   }
   const files = [...spec.dirs.flatMap((d) => walk(d, spec.match)), ...(spec.extra ?? [])].sort();
+  const suitesRun = spec.runs ? suiteRuns(spec.runs) : false;
   for (const script of spec.extra ?? []) {
     // A standalone script is evidence only if CI runs it. The suites found by `dirs` are covered by
     // `pnpm test`; an `extra` script has no such home, and one was added here, published `largeText` for
@@ -316,6 +348,11 @@ for (const platform of platforms) {
     }
     const claims = passages(read(file));
     if (!claims.length) continue;
+    const isExtra = (spec.extra ?? []).includes(file);
+    // The unit suites run through their package's CI step, a browser script through a step of its own. An
+    // unexecuted suite's markers are still checked below; it just records nothing.
+    const executed = isExtra ? runsInWorkflowStep(file) : suitesRun;
+    if (!executed) uncredited.push({ ref: file, reason: isExtra ? "no unconditional CI step runs this script" : `no unconditional CI step runs \`${spec.runs?.command ?? "its suite"}\`` });
 
     const fileKinds = new Set();
     const fileSlugs = new Set();
@@ -349,6 +386,12 @@ for (const platform of platforms) {
           continue;
         }
       }
+      if (!executed) continue;
+      const skipped = skipIn(file, claim.body.join("\n"));
+      if (skipped) {
+        uncredited.push({ ref: where, reason: `skips a test (\`${skipped}\`)` });
+        continue;
+      }
       for (const k of claim.kinds) fileKinds.add(k);
       for (const slug of slugs) {
         fileSlugs.add(slug);
@@ -356,7 +399,8 @@ for (const platform of platforms) {
       }
     }
     if (fileKinds.size) {
-      const environment = (spec.extra ?? []).includes(file) ? spec.extraEnvironment : spec.environment;
+      const environment = isExtra ? spec.extraEnvironment : spec.environment;
+      fileEnvironment[file] = environment;
       sources[platform].push({ file, environment, kinds: [...fileKinds].sort(), components: [...fileSlugs].sort() });
     }
   }
@@ -409,17 +453,15 @@ for (const [slug, per] of Object.entries(evidence)) {
 const BLOCK_KINDS = ["interaction", "accessibility"];
 const PUBLISHED_BLOCK = new Set(["beta", "stable", "deprecated"]);
 const BLOCK_MARKER = /kx-verify-block:\s*([a-zA-Z, ]+)\s*$/;
-/** Environments that observe the running block the way a person would. Nothing else earns Runtime verified. */
-export const RUNTIME_ENVIRONMENTS = ["chromium"];
 /** Where block evidence lives per platform, and the environment each file runs in (derived, never claimed). */
 // `runs`: the workflow step that executes the suite. A test is evidence only while CI runs it, so a suite whose
 // step is gone keeps its markers checked but records nothing. The browser suite is gated by runsInWorkflowStep.
 const BLOCK_TEST_SOURCES = {
   React: [
-    { dir: "apps/web/src", match: /\.test\.tsx$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm --filter @kinetixui/web test" } },
+    { dir: "apps/web/src", match: /\.test\.tsx$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm --filter @kinetixui/web test", scripts: [{ pkg: "apps/web/package.json", name: "test", is: "vitest run" }] } },
     { file: "scripts/blocks-runtime-browser.mjs", environment: "chromium" },
   ],
-  Angular: [{ dir: "packages/ui-angular/src", match: /\.spec\.ts$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm test:angular" } }],
+  Angular: [{ dir: "packages/ui-angular/src", match: /\.spec\.ts$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm test:angular", scripts: ANGULAR_SUITE_SCRIPTS } }],
   SwiftUI: [{ dir: "packages/ui-swiftui/Tests", match: /\.swift$/, environment: "xctest", runs: { workflow: "native-swiftui.yml", command: "swift test" } }],
   Compose: [
     { dir: "packages/ui-compose/ui/src/test", match: /\.kt$/, environment: "robolectric", runs: { workflow: "native-compose.yml", command: "./gradlew :ui:testDebugUnitTest" } },
@@ -518,17 +560,6 @@ function commandsOf(lines) {
     .filter((cmds) => cmds.every(plainCommand))
     .flat();
 }
-// An allowlist, not a list of shell tricks to reject: a command counts only when it starts with one of these
-// programs. A builtin (`exit`, `set`, `builtin exit`), an assignment prefix (`X=1 exit 0`), a keyword or a
-// function definition starts with none of them, so it cannot pass.
-const PROGRAMS = new Set(["pnpm", "npm", "npx", "yarn", "corepack", "node", "swift", "xcodebuild", "./gradlew", "gradle", "flutter", "dart", "cd", "mkdir", "cp", "echo", "printf", "cat", "ls", "git", "curl", "tar", "sleep", "sed"]);
-const plainCommand = (c) => PROGRAMS.has(c.split(/\s+/)[0]);
-/** One run line that is nothing but plain commands: not rejected by commandsOf, and every command an allowed program. */
-const plainLine = (line) => {
-  const l = line.replace(/\s+#.*$/, "").trim();
-  return !l.endsWith("\\") && commandsOf([l]).length > 0;
-};
-const escapeRe = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
  * Is the `run:` at line `at` inside a step or a job that carries an `if:` or `continue-on-error:`? Read by indentation: the step is the
@@ -612,6 +643,21 @@ function runCommands(yaml) {
   return out;
 }
 
+/**
+ * Does CI run this test suite? The step must run `runs.command` exactly, and every package script it goes through
+ * (`runs.scripts`, in order) must itself be exactly the next command: a step that still says `pnpm test:angular`
+ * proves nothing once the wrapper is repointed at `echo`, `true` or `vitest run || true`.
+ */
+function suiteRuns(runs) {
+  if (!workflowRuns(runs.workflow, runs.command)) return false;
+  return (runs.scripts ?? []).every(({ pkg, name, is }) => {
+    if (!existsSync(`${root}/${pkg}`)) return false;
+    const script = JSON.parse(read(pkg)).scripts?.[name];
+    // exactly, as the CI step is matched: any chain, mask or extra flag (`vitest run --help`) is not a run of it
+    return typeof script === "string" && script.trim() === is;
+  });
+}
+
 function workflowRuns(workflow, command) {
   const path = `${root}/.github/workflows/${workflow}`;
   if (!existsSync(path)) return false;
@@ -693,7 +739,7 @@ for (const platform of platforms) {
     if (spec.file && files.length && spec.environment === "chromium" && !runsInWorkflowStep(spec.file)) {
       errors.push(`${spec.file}: a ${platform} block evidence source that no workflow step in .github/workflows runs`);
     }
-    const ran = spec.runs ? workflowRuns(spec.runs.workflow, spec.runs.command) : true;
+    const ran = spec.runs ? suiteRuns(spec.runs) : true;
     for (const file of files.sort()) {
       const claims = blockPassages(read(file));
       for (const claim of claims) {
@@ -725,6 +771,12 @@ for (const platform of platforms) {
           errors.push(`${where}: claims ${claim.kinds.join(", ")} for a block but uses no block`);
           continue;
         }
+        const skipped = skipIn(file, claim.body.join("\n"));
+        if (skipped) {
+          uncredited.push({ ref: where, reason: `skips a test (\`${skipped}\`)` });
+          continue;
+        }
+        if (!ran) uncredited.push({ ref: where, reason: `no unconditional CI step runs \`${spec.runs.command}\`` });
         for (const slug of slugs) {
           if (!blocksManifest[slug].sources?.[platform]) {
             errors.push(`${where}: exercises ${slug} on ${platform}, which blocks.manifest.json does not implement there`);
@@ -742,10 +794,23 @@ for (const platform of platforms) {
  * guardrail tests hold this function to the rule rather than to a copy of it.
  */
 export function blockLevelFrom(per) {
-  if (!per?.source?.length) return "not-implemented";
-  if (!per.build?.length) return "source";
-  const observed = (kind) => (per[kind] ?? []).some((e) => RUNTIME_ENVIRONMENTS.includes(e.environment));
-  return observed("interaction") && observed("accessibility") ? "runtime" : "build";
+  const envs = (kind) => (per?.[kind] ?? []).map((e) => e.environment);
+  return levelFrom({ implemented: !!per?.source?.length, build: !!per?.build?.length, interaction: envs("interaction"), accessibility: envs("accessibility") });
+}
+
+// Every environment must be classified, or a new test host could slip between the tiers unnoticed.
+const KNOWN_ENVIRONMENTS = new Set([...RUNTIME_ENVIRONMENTS, ...HEADLESS_ENVIRONMENTS]);
+for (const [file, env] of Object.entries(fileEnvironment)) {
+  if (!KNOWN_ENVIRONMENTS.has(env)) errors.push(`${file}: runs in "${env}", which is neither a runtime nor a headless environment — classify it before it can earn a tier`);
+}
+for (const [slug, per] of Object.entries(blockEvidence)) {
+  for (const [platform, kinds] of Object.entries(per)) {
+    for (const kind of TIER_KINDS) {
+      for (const e of kinds[kind] ?? []) {
+        if (!KNOWN_ENVIRONMENTS.has(e.environment)) errors.push(`${slug} (${platform}): ${e.ref} runs in "${e.environment}", which is neither a runtime nor a headless environment`);
+      }
+    }
+  }
 }
 
 if (errors.length) {
@@ -772,6 +837,27 @@ const totals = Object.fromEntries(
     Object.fromEntries(KINDS.map((k) => [k, Object.values(byComponent).filter((per) => per[p]?.[k]).length])),
   ]),
 );
+
+/**
+ * Every catalogue component's level on every platform, with the environments behind its interaction and
+ * accessibility evidence: the one place a component's level is decided. The site reads it; it never recomputes.
+ */
+const envsOf = (refs) => [...new Set((refs ?? []).map((r) => fileEnvironment[r.replace(/:\d+-\d+$/, "")]).filter(Boolean))].sort();
+const componentLevels = {};
+for (const slug of Object.keys(components).sort()) {
+  componentLevels[slug] = Object.fromEntries(
+    platforms.map((p) => {
+      const per = byComponent[slug]?.[p] ?? {};
+      const row = {};
+      for (const k of TIER_KINDS) if (envsOf(per[k]).length) row[k] = envsOf(per[k]);
+      const level = levelFrom({ implemented: components[slug].platforms.includes(p), build: !!per.build, interaction: row.interaction, accessibility: row.accessibility });
+      return [p, { level, ...row }];
+    }),
+  );
+}
+const levelTotals = (rows) =>
+  Object.fromEntries(platforms.map((p) => [p, Object.fromEntries(EVIDENCE_LEVELS.map((l) => [l, rows.filter((r) => r[p].level === l).length]))]));
+const componentLevelTotals = levelTotals(Object.values(componentLevels));
 
 /** What a reader should know is missing, said as facts derived from the records rather than written by hand. */
 function blockLimitations(per) {
@@ -806,14 +892,7 @@ for (const slug of blockSlugs) {
     ),
   };
 }
-const blockTotals = Object.fromEntries(
-  platforms.map((p) => [
-    p,
-    Object.fromEntries(
-      ["not-implemented", "source", "build", "runtime"].map((l) => [l, Object.values(byBlock).filter((b) => b.platforms[p].level === l).length]),
-    ),
-  ]),
-);
+const blockTotals = levelTotals(Object.values(byBlock).map((b) => b.platforms));
 
 const data = {
   $schema: "https://kinetixui.com/schema/verification.json",
@@ -824,13 +903,20 @@ const data = {
     "calls (or, for a shared suite, from the directory or fixture it names). Every value is a list of source " +
     "references, so any positive result can be traced. This is NOT package maturity and NOT component " +
     "lifecycle — see platformDefinitions and `status` in components.manifest.json for those.",
+  // 2: the Headless verified tier, generated component levels, and `uncredited`. See docs/VERIFICATION-EVIDENCE-TIERS.md.
+  schemaVersion: 2,
   kinds: KINDS,
   claimableKinds: CLAIMABLE,
+  evidenceLevels: EVIDENCE_LEVELS,
+  runtimeEnvironments: RUNTIME_ENVIRONMENTS,
+  headlessEnvironments: HEADLESS_ENVIRONMENTS,
   totals,
+  componentLevelTotals,
   sources,
   components: byComponent,
+  componentLevels,
+  uncredited: uncredited.sort((a, b) => a.ref.localeCompare(b.ref)),
   blockKinds: BLOCK_KINDS,
-  runtimeEnvironments: RUNTIME_ENVIRONMENTS,
   blockTotals,
   blocks: byBlock,
 };
@@ -849,10 +935,15 @@ if (CHECK) {
 const line = platforms
   .map((p) => `${p} ${KINDS.map((k) => `${k}:${totals[p][k]}`).join(" ")}`)
   .join("\n  ");
+const levelLine = platforms
+  .map((p) => `${p} ${Object.entries(componentLevelTotals[p]).map(([l, n]) => `${l}:${n}`).join(" ")}`)
+  .join("\n  ");
 const blockLine = platforms
   .map((p) => `${p} ${Object.entries(blockTotals[p]).map(([l, n]) => `${l}:${n}`).join(" ")}`)
   .join("\n  ");
 console.log(
   `${CHECK ? "check:verification ok" : "gen:verification"} — evidence for ${Object.keys(byComponent).length} components\n  ${line}\n` +
-    `blocks (${blockSlugs.length}):\n  ${blockLine}`,
+    `component levels (${Object.keys(componentLevels).length}):\n  ${levelLine}\n` +
+    `blocks (${blockSlugs.length}):\n  ${blockLine}` +
+    (uncredited.length ? `\nuncredited: ${uncredited.length}` : ""),
 );

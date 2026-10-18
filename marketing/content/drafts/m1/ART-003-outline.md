@@ -54,6 +54,9 @@ the article explains a mechanism that exists, not a plan.
    RTL 47 of 80; large text 53 of 80; reduced motion 23 of 80; visual 0 of 80. Graduation: 7 of 13 criteria
    met; the open ones name `timeline` (RTL, large text) and `tabs` (reduced motion) as the gaps against React,
    plus the planned catalogue entries.
+   *Note 2026-10-18 (ENG-2b-5):* "evidence on 80 of 80" counts tests, not where they ran. Under
+   `docs/VERIFICATION-EVIDENCE-TIERS.md`, 60 of 80 are Runtime verified (Chromium) and 20 are Headless
+   verified (jsdom). Re-derive from `verification.json` `componentLevelTotals` at writing time.
 5. **Real browser, not jsdom.** `check:angular-browser` builds the fixtures AOT and boots them as a live,
    zoneless Angular application in Chromium; every page proves it is Angular (the root carries
    `ng-version`) before it is measured. Explain why: jsdom performs no layout, so a layout claim measured in
