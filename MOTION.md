@@ -130,6 +130,11 @@ a disclosure). Avoid animating `box-shadow` on large surfaces and filters on scr
   fade a tick. Fade in on the new state and leave at once, unless the control has only one glyph (Radio).
 - Choosing what to draw from a prop the primitive may not have. `props.checked` is undefined when uncontrolled;
   key the drawing on the primitive's own `data-state`.
+- Leaving a state's only cue to an author colour. Forced colours repaint backgrounds as `Canvas`, so a
+  Switch thumb filled with `background` vanished into its track and on read the same as off. Draw that cue in
+  a system colour (`CanvasText`) under `forced-colors`, or give it an edge the system keeps.
+- Relying on the preset's floor for a component the registry ships. A registry install has no floor, so a
+  transition without `motion-reduce:transition-none` still runs for a reduced-motion reader.
 - Slowing a loop under reduced motion (`motion-reduce:animate-[spin_3s…]`): the floor freezes it instead.
 - Scale effects that shrink or clip a focus ring.
 - Sliding indicators where the platform's native control does not slide.
@@ -148,6 +153,7 @@ Different claims need different evidence; do not collapse them.
 | Motion is perceptible and reaches its end state; reduced motion removes it | `check:motion` (rendered midpoint and duration in Chromium; a state may also pin its property's own tier) |
 | Toggle and ToggleGroup: layer on instant, hover that leaves selection alone and does not stick on touch, rapid input, forced colours, RTL, 320–1280px at 100/200% text | `check:toggle-motion` |
 | Checkbox and RadioGroup: the glyph drawn is the state announced on every move, halo on instant, touch, rapid input, forced colours, RTL, 320–1280px at 100/200% text | `check:checkbox-radio-motion` |
+| Switch: thumb, track and halo on instant, the thumb sampled every frame (forward only, no overshoot, mirrored in RTL) with `aria-checked` already changed, touch, rapid input and mid-travel reversal, form reset, forced colours, 320–1280px at 100/200% text | `check:switch-motion` |
 | Loops rest under reduced motion | `check:loop-motion`, `check:registry-motion` |
 | Native components honour the reduced-motion setting | `check:native-motion` (source bookkeeping) and native tests in `native-*.yml` |
 
@@ -196,3 +202,24 @@ The box's own hover and press colour step (TOKENS.md, "Selection controls": an u
 it moves on `fast` with it; the halo, on `instant`, is the immediate answer. This is the one place the
 "Hover and selection on the same property" rule is knowingly relaxed, to keep the selection-control contract
 unchanged.
+
+### Switch (React, MX1b-1c)
+
+Switch keeps its own role, `selection-control`, on purpose. Its thumb is a physical control that should land
+with the finger, so everything on it runs on `instant`; Toggle, Checkbox and Radio change colour on `fast`
+because a colour settling reads better slower. The two are not to be normalised to one duration.
+
+| | Thumb | Track | Hover and press |
+| --- | --- | --- | --- |
+| Trigger | Radix `data-state` / `aria-checked` changes (click, tap, Space, Enter, a label, owner, form reset) | the same | pointer over (only where `(hover: hover)`), `:active` |
+| Property | `inset-inline-start` (relative, so nothing reflows) | `background-color` (`tertiary` → `action`; `action`/90 under the pointer when on) | the 5px `box-shadow` halo, `foreground` at 8% / 14% |
+| Tier · easing | `instant` 100ms · `standard` (`selection-control`) | `instant` 100ms · `standard` | `instant` 100ms · `standard` |
+| Reduced form | shorten (preset floor; `motion-reduce:transition-none` for registry installs) | shorten | shorten |
+| Interruption | retargets from where the thumb is; the last input wins; never passes either end | retargets from the current colour | follows the pointer; pressing does not move the thumb |
+| Final state | inline start when off, inline end when on | the state's colour | halo gone when the pointer leaves or the finger lifts |
+| Focus / SR | `role="switch"`, `aria-checked` changes before the first frame of travel; `aria-required` when required; ring never covered | — | none |
+| Forced colours | drawn in `CanvasText` (`GrayText` when disabled) so it stays visible against the `Canvas` track | the edge stays | the system removes the halo |
+| RTL | travels toward the inline end of the switch's own direction, so leftward in RTL | — | — |
+
+Hover's `action`/90 and selection share `background-color`, but both are on `instant`, so the "Hover and
+selection on the same property" problem does not arise here.
