@@ -7,7 +7,7 @@ import { trackFenceCopy } from "@/lib/analytics-surfaces";
 import { PACKAGES } from "@/lib/packages";
 import { PLATFORM_DEFINITIONS, type Platform } from "@/lib/platform-parity";
 import { manifestPlatformFor, usePreferredPlatform } from "@/lib/platform-preference";
-import { SETUP_HREF } from "@/lib/platform-tabs";
+import { SETUP_SECTION_HREF } from "@/lib/platform-tabs";
 import { componentDocs } from "@/lib/site";
 
 const link = "text-primary underline underline-offset-2";
@@ -24,7 +24,7 @@ export function BlocksInstallGuide() {
   const platform = manifestPlatformFor(usePreferredPlatform()) ?? "React";
   const def = PLATFORM_DEFINITIONS[platform];
   const setup = (
-    <Link href={SETUP_HREF[platform]} className={link}>
+    <Link href={SETUP_SECTION_HREF[platform]} className={link}>
       {def.label} setup
     </Link>
   );

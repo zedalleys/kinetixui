@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { analytics, startAnalytics } from "@/lib/analytics";
-import { ENGAGEMENT_INPUTS, isPersonInput, trackLinkClick, trackPageEngaged, trackRouteView } from "@/lib/analytics-surfaces";
+import { ENGAGEMENT_INPUTS, isPersonInput, trackInspection, trackLinkClick, trackPageEngaged, trackRouteView } from "@/lib/analytics-surfaces";
 
 /**
  * Starts analytics, reports one page view per route change, classifies that route (docs / installation /
@@ -21,6 +21,10 @@ import { ENGAGEMENT_INPUTS, isPersonInput, trackLinkClick, trackPageEngaged, tra
  * MDX stay server components. A product CTA opts in with `ctaAttrs(...)` data attributes; outbound links to our
  * GitHub repo, our npm packages and a short list of external hosts are recognised by their destination. The
  * rules, and why an ordinary internal link produces nothing, are in `lib/analytics-surfaces.ts`.
+ *
+ * VERIFICATION INSPECTION rides the same click listener: a click (or Enter / Space) on a `<summary>` marked with
+ * `inspectAttrs(...)` reports `verification_inspected` the first time it opens its disclosure on a page view, never on
+ * close and never for a disclosure that is only visible; a marked evidence link reports on its first click.
  *
  * ENGAGEMENT is one more listener: the first trusted press, key, touch or wheel after each page view sends
  * `page_engaged`, then the listener removes itself until the next navigation. Synthetic events (`isTrusted` false,
@@ -60,7 +64,9 @@ export function AnalyticsProvider() {
     const onClick = (event: MouseEvent) => {
       // the primary button (click) or the middle button (auxclick, "open in new tab"); never a right-click
       if (event.button !== 0 && event.button !== 1) return;
-      const anchor = (event.target as Element | null)?.closest?.("a[href]");
+      const target = event.target as Element | null;
+      if (event.button === 0 && trackInspection(target, window.location.pathname)) return;
+      const anchor = target?.closest?.("a[href]");
       if (anchor instanceof HTMLAnchorElement) trackLinkClick(anchor, window.location.pathname, window.location.origin);
     };
     document.addEventListener("click", onClick);

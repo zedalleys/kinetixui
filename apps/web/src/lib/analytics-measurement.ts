@@ -35,6 +35,28 @@ export const ADOPTION_INTENT_SIGNALS = [
 ] as const satisfies readonly MeasurementSignal[];
 
 /**
+ * analytics.md §11 "Adoption funnel" (BD-W5 F-14). The stages a developer can be seen to reach on the site, each a list
+ * of existing signals; a session is counted at a stage when it holds any of them, in any order. It is a view over the
+ * same events, not a new measure: it changes neither QE nor Adoption Intent, and its last stage IS the Adoption Intent
+ * signal list. `platformed: true` means only events carrying a `platform` count (a setup page's `docs_viewed` does, the
+ * docs home's does not). There is deliberately no "installed" stage: no web event can show that an install worked.
+ */
+export const ADOPTION_FUNNEL_STAGES = [
+  { stage: "exploration", signals: [{ event: "component_viewed" }] },
+  { stage: "platform_selection", signals: [{ event: "platform_selected" }] },
+  { stage: "verification_inspection", signals: [{ event: "verification_inspected" }, { event: "cta_clicked", targets: ["view_verification"] }] },
+  {
+    stage: "installation_interest",
+    signals: [{ event: "installation_viewed" }, { event: "docs_viewed", platformed: true }, { event: "cta_clicked", targets: ["installation"] }],
+  },
+  { stage: "code_copy", signals: [{ event: "component_code_copied" }, { event: "block_code_copied" }] },
+  { stage: "adoption_intent", signals: ADOPTION_INTENT_SIGNALS },
+] as const satisfies readonly { stage: string; signals: readonly (MeasurementSignal & { platformed?: boolean })[] }[];
+
+/** What the funnel says about a successful install, always: the site cannot observe one (analytics.md §5). */
+export const INSTALL_SUCCESS = "not observable" as const;
+
+/**
  * analytics.md §4 "Eligible arriving session". A session counts as an arrival only if it holds at least one of
  * these: our manual `$pageview`, or any event in the `AnalyticsEvents` contract. Every contract event is fired by
  * a page of this site, on render or on a click, so each one proves the visitor was on a page.
@@ -75,6 +97,8 @@ export const ARRIVAL_EVENTS = [
   // fired by an input on a page after that page's `$pageview`; like a click event it proves the visitor was on a
   // page, and like `search_result_selected` it cannot add an arrival that page did not already count
   "page_engaged",
+  // a click on a component or use-case page, after that page's `component_viewed` or `$pageview` (BD-W5 F-09)
+  "verification_inspected",
 ] as const satisfies readonly ("$pageview" | AnalyticsEventName)[];
 
 // A compile error here means an event was added to `AnalyticsEvents` without deciding whether it proves arrival.
