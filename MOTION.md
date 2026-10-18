@@ -223,3 +223,34 @@ because a colour settling reads better slower. The two are not to be normalised 
 
 Hover's `action`/90 and selection share `background-color`, but both are on `instant`, so the "Hover and
 selection on the same property" problem does not arise here.
+
+### Selection controls (Flutter, MX1d)
+
+Flutter's gap was accessibility, not motion: `KinetixRadioButton` declared **no `Semantics` at all**, so a
+selected radio was indistinguishable from an unselected one to a screen reader and neither was announced as
+a radio. Switch, Checkbox and Toggle already declared theirs. Motion was missing too — Checkbox, Radio and
+Toggle were plain `Container`s.
+
+| | Selection | Dot / glyph |
+| --- | --- | --- |
+| Trigger | `value`, `selected`, `pressed` | `selected` |
+| Property | fill, border and content colour through `AnimatedContainer` and one `ColorTween` | the radio dot's `opacity` through `AnimatedOpacity` |
+| Tier · easing | `fast` 200ms · `standard` (`selection-state`) | the same |
+| Reduced form | `KinetixDisclosureMotion.suppressed` through `MediaQuery.disableAnimationsOf` — one shared reader, one shared suppressed value | the same |
+| Interruption | the implicit widgets retarget from the current value | the same |
+| Final state | the state's colour; `Semantics` is set from the state and never waits for the paint | dot shown on the chosen radio |
+| Focus / SR | Radio announces `checked`, `inMutuallyExclusiveGroup`, `enabled` and an optional `label`; RadioGroup takes an optional `label` and keeps `explicitChildNodes` so the options stay choosable | the dot is decorative |
+| RTL | colour is direction-free | — |
+
+Evidence, stated exactly: **Headless verified**, and the strongest this family has on any native platform.
+`test/selection_motion_test.dart` stops the clock 100ms into a 200ms settle and reads the **interpolated**
+fill off the rendered tree — `AnimatedContainer` builds a `Container` whose decoration is the evaluated
+tween, so that is a measurement of what is painted, not of a duration variable. The same test asserts that
+a radio's announced state flips in the frame of the tap, while the edge colour is still interpolating.
+`flutter_test` has no device or screen, so none of it is Runtime evidence.
+
+Two stated gaps. The Checkbox glyph swaps in one frame while the fill settles (as on Compose). And an icon
+inside a Toggle shares the text's `ColorTween`, so it settles — but **none of these controls is focusable or
+keyboard-operable**: they are bare `GestureDetector`s, as every other control in the package is. That is a
+package-wide gap, not a selection-control one, and it is left to its own slice rather than fixed for four
+widgets out of ninety.

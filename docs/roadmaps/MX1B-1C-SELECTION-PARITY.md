@@ -54,11 +54,27 @@ The milestones are those in MX1B-1-PLAN §6:
 
 | Component | React | Angular (Preview) | SwiftUI | Compose | Flutter |
 | --- | --- | --- | --- | --- | --- |
-| Toggle | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| ToggleGroup | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| Checkbox | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| RadioGroup | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
+| Toggle | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ✓ ✓ ○ |
+| ToggleGroup | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ✓† ○ ○ |
+| Checkbox | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ✓‡ ✓ ○ |
+| RadioGroup | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ | ✓ ✓ ○ |
 | Switch | ✓ ✓ ✓ | ○ (deviation) ○ ○ | ✓ ✓ ○ | ○ (thumb only) ✓ ○ | ✓ ✓ ○ |
+
+MX1d moved the Flutter column (2026-10-18). What each tick means there:
+
+- **Impl ✓** — the control reads `KinetixSelectionMotion` (`fast` · `standard`), a `selection-state`
+  consumer in `tokens/contracts/motion.json`.
+- **Auto ✓** — `test/selection_motion_test.dart` measures a real interpolated fill at the midpoint of the
+  settle, asserts the suppressed form in both directions, and asserts the radio semantics that did not
+  exist before. `check:motion-tokens` and `check:native-motion` fail on negative controls watched to fire.
+- **†** — ToggleGroup's motion is its items': it is a pass-through to toggle.dart and animates nothing of
+  its own, so it is not a family member and has no gate of its own here.
+- **‡** — Checkbox's fill and edge settle; the glyph still swaps in one frame, unlike React's fade.
+- **Runtime ○** — `flutter test` is headless: no device, no emulator, no screen. No `integration_test` job
+  exists in this repository.
+
+On the strength of Flutter's measured midpoint, `selection-state` moves from **observed to proven** in
+`motion.json`, under that role's own rule: evidence cited, consumers on two platforms.
 
 Compose's Switch is not ticked for Impl: `selection-control` covers the thumb and the track colour, and
 `Switch.kt` animates only `thumbOffset` while the track colour is applied directly. Its Auto tick is for the
@@ -180,9 +196,23 @@ motion.
   - The roles are adopted and are contract consumers.
   - The emulator run shows the duration, the 0 scale, and RTL thumb direction.
 
-### Flutter
+### Flutter — DONE in MX1d (2026-10-18)
+
+1. **RadioGroup had no `Semantics` at all (confirmed, and the priority).** `KinetixRadioButton` was a bare
+   `GestureDetector`: a selected radio and an unselected one were identical to a screen reader, and neither
+   was announced as a radio. It now declares `checked`, `inMutuallyExclusiveGroup`, `enabled` and an
+   optional `label`. `KinetixRadioGroup` takes an optional `label` with `explicitChildNodes`, so naming the
+   group cannot merge the options into something announceable but not choosable.
+2. **No selection-state motion (confirmed).** Checkbox, Radio and Toggle were plain `Container`s. They now
+   use `AnimatedContainer`, `AnimatedOpacity` and one `ColorTween` on `fast` · `standard`, suppressed
+   through the one shared reader.
+3. **Focus: not done, and deliberately.** None of these controls is focusable or keyboard-operable — they
+   are bare `GestureDetector`s, as every control in the package is. Fixing it for four widgets out of
+   ninety would make the package inconsistent with itself; it is a package-wide slice of its own, and the
+   finding is recorded here and in MOTION.md rather than half-addressed.
+
 - **Source:** `toggle.dart`, `toggle_group.dart`, `checkbox.dart`, `radio_group.dart`, `switch.dart`,
-  `kinetix_switch_motion.dart`.
+  `kinetix_switch_motion.dart`, `kinetix_selection_motion.dart`.
 - **APIs:**
   - `AnimatedContainer` or `TweenAnimationBuilder` with `KinetixDuration.fast` and `KinetixEasing.standard`.
   - `MediaQuery.disableAnimationsOf(context)` for the reduced form, as Switch does.

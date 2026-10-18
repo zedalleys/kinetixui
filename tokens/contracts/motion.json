@@ -175,13 +175,20 @@
       "deviations": []
     },
     "selection-state": {
-      "status": "observed",
+      "status": "proven",
       "duration": ["fast"],
       "easing": ["standard"],
       "properties": ["background-color", "color", "border-color", "opacity"],
       "reducedForm": "shorten",
-      "evidence": ["scripts/motion.mjs", "scripts/toggle-motion.mjs", "packages/ui/src/toggle-motion.test.tsx", "scripts/checkbox-radio-motion.mjs", "packages/ui/src/checkbox-radio-motion.test.tsx"],
-      "note": "Colour and surface change when a control becomes selected or unselected: Toggle, ToggleGroup items, Checkbox and Radio indicators. Owner decision 2026-10-17: fast (200ms). The semantic state changes at once; only the paint interpolates. Switch keeps selection-control (instant) unless a defect is shown. Adopted component by component from MX1b-1. Observed on React Toggle and ToggleGroup (MX1b-1a, which share toggleVariants): background, text and border colour on fast, measured in a browser. Observed on React Checkbox and RadioGroup (MX1b-1b): box fill, border and glyph colour on fast, and the tick, dash or dot fading in on fast (opacity). The Checkbox glyph leaves at once rather than fading, so a box going from mixed to unchecked never shows the tick on its way out. Promoted to proven when a second platform consumes it.",
+      "evidence": [
+        "scripts/motion.mjs",
+        "scripts/toggle-motion.mjs",
+        "packages/ui/src/toggle-motion.test.tsx",
+        "scripts/checkbox-radio-motion.mjs",
+        "packages/ui/src/checkbox-radio-motion.test.tsx",
+        "packages/ui-flutter/test/selection_motion_test.dart"
+      ],
+      "note": "Colour and surface change when a control becomes selected or unselected: Toggle, ToggleGroup items, Checkbox and Radio indicators. Owner decision 2026-10-17: fast (200ms). The semantic state changes at once; only the paint interpolates. Switch keeps selection-control (instant) unless a defect is shown. Adopted component by component from MX1b-1. Observed on React Toggle and ToggleGroup (MX1b-1a, which share toggleVariants): background, text and border colour on fast, measured in a browser. Observed on React Checkbox and RadioGroup (MX1b-1b): box fill, border and glyph colour on fast, and the tick, dash or dot fading in on fast (opacity). The Checkbox glyph leaves at once rather than fading, so a box going from mixed to unchecked never shows the tick on its way out. Promoted to proven in MX1d under this role's own rule (evidence cited, consumers on two platforms). Flutter is the first platform after React to OBSERVE it: selection_motion_test.dart stops the clock halfway through a checkbox's settle and reads the interpolated fill off the rendered tree, and the same for a toggle's background and a radio's edge and dot. Headless (flutter_test has no device), so the status moves to proven on the strength of a measured intermediate value rather than a second consumer.",
       "consumers": [
         {
           "platform": "react",
@@ -208,6 +215,11 @@
             "[transition-duration:var(--duration-fast),var(--duration-fast),",
             "transition-opacity duration-fast ease-standard"
           ]
+        },
+        {
+          "platform": "flutter",
+          "file": "packages/ui-flutter/lib/src/kinetix_selection_motion.dart",
+          "expects": ["KinetixDuration.fast", "KinetixEasing.standard"]
         }
       ],
       "deviations": []

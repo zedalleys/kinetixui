@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'app_text.dart';
+import 'kinetix_selection_motion.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/toggle.tsx` (`toggleVariants`).
@@ -54,7 +55,15 @@ class KinetixToggle extends StatelessWidget {
       opacity: enabled ? 1 : 0.5,
       child: GestureDetector(
         onTap: enabled ? () => onChanged!(!pressed) : null,
-        child: Container(
+        // `selection-state` (fast, standard) on the background and the border, and on the
+        // content colour through one ColorTween that feeds both the text style and the icon
+        // theme. `DefaultTextStyle.merge` is kept rather than swapped for
+        // `AnimatedDefaultTextStyle`, which SETS a style instead of merging one: that would
+        // have dropped whatever the surrounding app contributes, a visual change nobody asked
+        // for in a motion slice.
+        child: AnimatedContainer(
+          duration: KinetixSelectionMotion.durationOf(context),
+          curve: KinetixSelectionMotion.curve,
           height: dim,
           constraints: BoxConstraints(minWidth: dim),
           padding: EdgeInsets.symmetric(horizontal: hPad),
@@ -64,12 +73,18 @@ class KinetixToggle extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             border: showBorder ? Border.all(color: pressed ? c.focus : c.input, width: 1) : null,
           ),
-          child: DefaultTextStyle.merge(
-            style: AppText.labelLg.copyWith(color: contentColor),
-            child: IconTheme.merge(
-              data: IconThemeData(color: contentColor, size: 16),
-              child: child,
+          child: TweenAnimationBuilder<Color?>(
+            tween: ColorTween(end: contentColor),
+            duration: KinetixSelectionMotion.durationOf(context),
+            curve: KinetixSelectionMotion.curve,
+            builder: (context, color, child) => DefaultTextStyle.merge(
+              style: AppText.labelLg.copyWith(color: color),
+              child: IconTheme.merge(
+                data: IconThemeData(color: color, size: 16),
+                child: child!,
+              ),
             ),
+            child: child,
           ),
         ),
       ),
