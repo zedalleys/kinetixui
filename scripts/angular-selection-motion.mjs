@@ -468,6 +468,21 @@ async function keyboard(theme) {
     await page.keyboard.press("Space");
     await settleAngular(page);
     check((await el.getAttribute(attr)) === "true", `${theme} Space activates ${label}`, `${attr}=${await el.getAttribute(attr)}`);
+    /* The ring has to survive a pointer resting on the focused control, and the moment it is held down.
+       Both are state layers declared before the focus rule, so only equal specificity keeps the order
+       meaningful — the hover and press layers carry one class more than a bare `:focus-visible` would.
+       Measured last, because pressing the control activates it. */
+    await page.locator(sel).first().hover();
+    await page.waitForTimeout(SETTLE);
+    const hovered = await style(page, sel, ["boxShadow"]);
+    check(hovered.boxShadow === token, `${theme} ${label} keeps its focus ring under the pointer`, hovered.boxShadow);
+    await page.mouse.down();
+    await page.waitForTimeout(SETTLE);
+    const held = await style(page, sel, ["boxShadow"]);
+    check(held.boxShadow === token, `${theme} ${label} keeps its focus ring while held down`, held.boxShadow);
+    await page.mouse.up();
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(SETTLE);
   }
   /* The radio group: the browser's own arrow-key selection. These are native radios, so the behaviour is
      the platform's — what is measured here is that the package has not taken it away, and that the group's

@@ -1151,8 +1151,10 @@ label.kx-rating__item { cursor: pointer; }
    `--muted` hover fill would be background-color and could only run at selection's fast. The layer is the
    same 8% / 14% `--foreground` pair the selection controls use, and it answers on instant. Hover is keyed
    on a pointer that can hover so a tap does not leave it stuck on; `:not(:disabled)` rather than
-   `:enabled`, because the single-select ToggleGroup paints this class on a label. Focus is declared after
-   both, at the same specificity, so neither layer can cover the ring. */
+   `:enabled`, because the single-select ToggleGroup paints this class on a label. Focus carries
+   `:not(:disabled)` too and is declared after both: source order only decides between selectors of equal
+   specificity, and a bare `.kx-toggle:focus-visible` would be one class short of these, so a keyboard ring
+   would disappear under the pointer and while Space holds the button `:active`. */
 @media (hover: hover) {
   .kx-toggle:not(:disabled):hover { box-shadow: inset 0 0 0 100vmax hsl(var(--foreground) / 0.08); }
 }
@@ -1160,7 +1162,7 @@ label.kx-rating__item { cursor: pointer; }
 @media (hover: hover) {
   .kx-toggle:not(:disabled):active { box-shadow: inset 0 0 0 100vmax hsl(var(--foreground) / 0.14); }
 }
-.kx-toggle:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.kx-toggle:not(:disabled):focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kx-toggle[aria-pressed='true'] { background-color: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
 .kx-toggle:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; pointer-events: none; }
 

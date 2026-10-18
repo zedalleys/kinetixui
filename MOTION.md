@@ -227,6 +227,11 @@ selection on the same property" problem does not arise here.
 
 ### The Angular selection controls (MX1b-2)
 
+With Angular consuming them, `selection-state` and `press-feedback` have consumers on two platforms and a
+check of their own, so both are **proven** rather than `observed`. `selection-control` was already proven and
+now records no deviation.
+
+
 React is first, not final: the same contracts, implemented the way Angular implements things, and measured in
 the same instrument. `check:angular-selection-motion` drives the package as a live Angular application in
 Chromium (the `selection-motion` fixture) and reads the transitions that actually run.

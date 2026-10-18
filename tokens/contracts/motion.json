@@ -259,7 +259,7 @@
       "deviations": []
     },
     "selection-state": {
-      "status": "observed",
+      "status": "proven",
       "duration": [
         "fast"
       ],
@@ -322,7 +322,7 @@
       "deviations": []
     },
     "press-feedback": {
-      "status": "observed",
+      "status": "proven",
       "duration": [
         "instant"
       ],
