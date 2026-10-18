@@ -122,7 +122,7 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
         <label htmlFor={inputId} className="text-label-md font-medium text-foreground">
           {label}
         </label>
-        <InputGroup dir="ltr" data-slot="phone-input" className="rounded-md">
+        <InputGroup dir="ltr" data-slot="phone-input">
           {/*
             The select is the full-size, transparent layer over its own compact face, so the hit target,
             focus and native picker are the select's while the face shows only "+966".
