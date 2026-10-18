@@ -13,6 +13,7 @@ const row = (over = {}) => ({
   qe_signals: 1,
   ai_signals: 0,
   ai_copy_or_rung: 0,
+  progressed: 0,
   diagnostic_events: 0,
   internal_events: 0,
   kx_source: "linkedin",
@@ -55,7 +56,7 @@ test("negative control: diagnostic traffic is never growth, whatever else it loo
 
 test("canonical QER keeps internal and suspected sessions; the audience figure removes them", () => {
   const s = summarise([row(), row({ internal_events: 1 }), renderOnly(), row({ qe_signals: 0 })]);
-  assert.deepEqual(s.canonical, { eligible: 4, qe: 3, ai: 0 });
+  assert.deepEqual(s.canonical, { eligible: 4, qe: 3, ai: 0, progressed: 0 });
   assert.equal(s.audience.sessions, 2);
   assert.equal(s.audience.qe, 1);
   assert.equal(s.cohorts.suspected_automation.qe, 1);
@@ -66,6 +67,17 @@ test("human-evidenced counts only audience QE sessions with an input, a click ev
   const s = summarise([row(), row({ engaged_events: 0, interaction_events: 0, pageviews: 1, duration_s: 30 })]);
   assert.equal(s.audience.qe, 2);
   assert.equal(s.audience.qeHuman, 1);
+});
+
+test("progression counts QE sessions with intent at or after the first evaluation, and says unavailable without the column", () => {
+  const s = summarise([row({ ai_signals: 1, progressed: 1 }), row({ ai_signals: 1, progressed: 0 }), row()]);
+  assert.equal(s.canonical.qe, 3);
+  assert.equal(s.canonical.progressed, 1);
+  assert.equal(s.audience.progressed, 1);
+  const md = renderReport({ from: "2026-10-19", to: "2026-10-26", rows: [row({ ai_signals: 1, progressed: 1 })], distribution: { rows: [] } });
+  assert.match(md, /Progression \(analytics\.md §4\), canonical: \*\*1\*\* of 1 Qualified Evaluation sessions \(100\.0%\)/);
+  const { progressed, ...old } = row();
+  assert.match(renderReport({ from: "2026-10-19", to: "2026-10-26", rows: [old], distribution: { rows: [] } }), /Progression[^\n]*unavailable \(these rows predate/);
 });
 
 test("unattributed means no campaign and a direct or unrecognised source", () => {
@@ -90,8 +102,8 @@ test("the report labels platform numbers unavailable and never prints a figure i
   const md = renderReport({ from: "2026-10-19", to: "2026-10-26", rows: [row()], distribution });
   assert.match(md, /\| LI-001 \| unavailable \| unavailable \| unavailable \|/);
   assert.doesNotMatch(md, /\breach\b.*\d/i);
-  const given = renderReport({ from: "2026-10-19", to: "2026-10-26", rows: [row()], distribution, platform: { "LI-001": { impressions: 120 } } });
-  assert.match(given, /\| LI-001 \| 120 \(platform-reported\) \| unavailable \| unavailable \|/);
+  const given = renderReport({ from: "2026-10-19", to: "2026-10-26", rows: [row()], distribution, platform: { "LI-001": { reach: 90, impressions: 120 } } });
+  assert.match(given, /\| LI-001 \| 90 \(platform-reported\) \| 120 \(platform-reported\) \| unavailable \| unavailable \|/);
 });
 
 test("an empty week reports zero sessions and no rate, not 0%", () => {
@@ -106,6 +118,7 @@ test("sessionQuery validates its window and excludes the audited session", () =>
   assert.match(q, /toDateTime\('2026-10-12 00:00:00'\)/);
   assert.match(q, /01a120d7-2b07-7ed0-af0c-f96d32e4c5bd/);
   assert.match(q, /properties\.target IN/);
+  assert.match(q, /maxIf\(timestamp, \(event IN \('installation_viewed'.*\) >= minIf\(timestamp, \(event IN \('component_viewed'.*\) AS progressed/s);
   // a session belongs to the week it started in, and is aggregated over all of its events (sessions cap at 24 h)
   assert.match(q, /timestamp >= toDateTime\('2026-10-12 00:00:00'\) - INTERVAL 1 DAY AND timestamp < toDateTime\('2026-10-19 00:00:00'\) \+ INTERVAL 1 DAY/);
   assert.match(q, /HAVING started >= toDateTime\('2026-10-12 00:00:00'\) AND started < toDateTime\('2026-10-19 00:00:00'\)/);

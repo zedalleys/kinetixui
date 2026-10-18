@@ -58,6 +58,9 @@ const list = (xs) => xs.map((x) => `'${x}'`).join(", ");
  */
 export function sessionQuery(from, to) {
   if (!DAY.test(from) || !DAY.test(to) || from >= to) throw new Error("--from and --to must be YYYY-MM-DD with from < to");
+  const qe = `(event IN (${list(QE_EVENTS)}) OR (event = 'cta_clicked' AND properties.target IN (${list(QE_CTA_TARGETS)})))`;
+  const ai = `(event IN (${list(AI_EVENTS)}) OR (event = 'cta_clicked' AND properties.target IN (${list(AI_CTA_TARGETS)})))`;
+  // Evaluation → Intent Progression (analytics.md §4): some intent signal at or after the first qualifying evaluation.
   return `SELECT
   $session_id AS session_id,
   min(timestamp) AS started,
@@ -66,8 +69,9 @@ export function sessionQuery(from, to) {
   countIf(event IN (${list(ARRIVAL_EVENTS)})) AS arrival_events,
   countIf(event NOT IN (${list(RENDER_EVENTS)})) AS interaction_events,
   countIf(event = 'page_engaged') AS engaged_events,
-  countIf(event IN (${list(QE_EVENTS)}) OR (event = 'cta_clicked' AND properties.target IN (${list(QE_CTA_TARGETS)}))) AS qe_signals,
-  countIf(event IN (${list(AI_EVENTS)}) OR (event = 'cta_clicked' AND properties.target IN (${list(AI_CTA_TARGETS)}))) AS ai_signals,
+  countIf(${qe}) AS qe_signals,
+  countIf(${ai}) AS ai_signals,
+  if(countIf(${qe}) > 0 AND countIf(${ai}) > 0 AND maxIf(timestamp, ${ai}) >= minIf(timestamp, ${qe}), 1, 0) AS progressed,
   countIf(event IN ('install_command_copied', 'cli_command_copied') OR (event = 'cta_clicked' AND properties.target IN (${list(AI_CTA_TARGETS)}))) AS ai_copy_or_rung,
   countIf(properties.kx_traffic_type = 'diagnostic') AS diagnostic_events,
   countIf(properties.kx_traffic_type = 'internal') AS internal_events,
@@ -117,6 +121,7 @@ export const humanEvidence = (row) => Number(row.engaged_events) > 0 || Number(r
 
 const isQE = (r) => Number(r.qe_signals) > 0;
 const isAI = (r) => Number(r.ai_signals) > 0;
+const isProgressed = (r) => Number(r.progressed) > 0;
 const rate = (n, d) => (d === 0 ? "n/a (no sessions)" : `${((100 * n) / d).toFixed(1)}%`);
 
 /** Every number the report prints, computed from the rows alone. */
@@ -128,12 +133,14 @@ export function summarise(rows) {
   return {
     raw: rows.length,
     cohorts: Object.fromEntries(Object.entries(by).map(([k, v]) => [k, { sessions: v.length, qe: v.filter(isQE).length, ai: v.filter(isAI).length }])),
-    canonical: { eligible: eligible.length, qe: eligible.filter(isQE).length, ai: eligible.filter(isAI).length },
+    canonical: { eligible: eligible.length, qe: eligible.filter(isQE).length, ai: eligible.filter(isAI).length, progressed: eligible.filter(isProgressed).length },
+    progressionKnown: rows.every((r) => r.progressed !== undefined && r.progressed !== null),
     audience: {
       sessions: audience.length,
       qe: audience.filter(isQE).length,
       qeHuman: audience.filter((r) => isQE(r) && humanEvidence(r)).length,
       ai: audience.filter(isAI).length,
+      progressed: audience.filter(isProgressed).length,
       engaged: audience.filter((r) => Number(r.engaged_events) > 0).length,
     },
     byCampaign: groupCount(eligible, (r) => (r.kx_campaign ? `${r.kx_campaign} / ${r.kx_content ?? "—"}` : null)),
@@ -225,6 +232,7 @@ silently inside it; changing the definition is the owner's decision (analytics.m
 ## Adoption Intent
 
 - Sessions with an Adoption Intent signal, canonical: **${s.canonical.ai}** of ${s.canonical.eligible} eligible; audience only: **${s.audience.ai}**.
+- Evaluation → Intent Progression (analytics.md §4), canonical: ${s.progressionKnown ? `**${s.canonical.progressed}** of ${s.canonical.qe} Qualified Evaluation sessions (${rate(s.canonical.progressed, s.canonical.qe)}); audience only: **${s.audience.progressed}** of ${s.audience.qe}` : `${UNAVAILABLE} (these rows predate the \`progressed\` column; re-run the query)`}.
 - Not an install count, and not activation (analytics.md §5).
 
 ## Campaigns and channels (eligible sessions)
@@ -245,7 +253,7 @@ ${table(s.byLanding)}
 
 Reach, impressions and clicks exist only in each platform's own analytics. They are never estimated here.
 
-${published.length === 0 ? "_No asset published in this window._" : ["| Asset | Impressions | Clicks | Reactions |", "| --- | --- | --- | --- |"].concat(published.map((p) => `| ${p.asset} | ${plat(p.asset, "impressions")} | ${plat(p.asset, "clicks")} | ${plat(p.asset, "reactions")} |`)).join("\n")}
+${published.length === 0 ? "_No asset published in this window._" : ["| Asset | Reach | Impressions | Clicks | Reactions |", "| --- | --- | --- | --- | --- |"].concat(published.map((p) => `| ${p.asset} | ${plat(p.asset, "reach")} | ${plat(p.asset, "impressions")} | ${plat(p.asset, "clicks")} | ${plat(p.asset, "reactions")} |`)).join("\n")}
 
 ## Limitations
 
