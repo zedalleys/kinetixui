@@ -11,7 +11,8 @@ import {
   type Platform,
   type VerificationLevel,
 } from "@/lib/platform-parity";
-import { GUIDANCE_LABEL, WAVE_LABEL, platformStateFor } from "@/lib/platform-tabs";
+import { inspectAttrs } from "@/lib/analytics-surfaces";
+import { GUIDANCE_LABEL, SETUP_SECTION_HREF, WAVE_LABEL, platformStateFor } from "@/lib/platform-tabs";
 
 /**
  * What each platform offers for one component, and — behind a disclosure — exactly what has been proved
@@ -130,7 +131,9 @@ export function PlatformVerification({ slug }: { slug: string }) {
         reproduce behaviour the element already has.
       */}
       <details className="group rounded-md border border-border bg-background/60">
-        <summary className="cursor-pointer list-none px-3 py-2 font-mono text-label-md uppercase tracking-[0.1em] text-muted-foreground marker:content-none hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background">
+        <summary
+          {...inspectAttrs("component_page", "verification_details", slug)}
+          className="cursor-pointer list-none px-3 py-2 font-mono text-label-md uppercase tracking-[0.1em] text-muted-foreground marker:content-none hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background">
           <span aria-hidden className="mr-1.5 inline-block transition-transform group-open:rotate-90">
             ›
           </span>
@@ -140,7 +143,11 @@ export function PlatformVerification({ slug }: { slug: string }) {
           <p className="text-body-sm text-muted-foreground">
             What automated tests prove about each implementation — separate from whether the package itself is
             a finished product. Derived from the test files;{" "}
-            <Link href="/docs/platforms#how-a-verification-level-is-earned" className="text-primary underline underline-offset-2">
+            <Link
+              href="/docs/platforms#how-a-verification-level-is-earned"
+              {...inspectAttrs("component_page", "evidence_link", slug)}
+              className="text-primary underline underline-offset-2"
+            >
               how the levels are earned
             </Link>
             .
@@ -149,8 +156,15 @@ export function PlatformVerification({ slug }: { slug: string }) {
             const def = PLATFORM_DEFINITIONS[platform];
             const level = verificationFor(slug, platform);
             return (
-              <div key={platform}>
-                <p className="font-mono text-body-sm text-foreground">{def.label}</p>
+              <div key={platform} data-verification-platform={platform}>
+                {/* the evidence leads somewhere: each platform's row ends at its own setup section (BD-W5 F-13) */}
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                  <p className="font-mono text-body-sm text-foreground">{def.label}</p>
+                  <Link href={SETUP_SECTION_HREF[platform]} className="text-body-sm text-primary underline underline-offset-2">
+                    {def.label} setup
+                    {def.maturity !== "stable" && <span className="text-muted-foreground"> · {def.maturity}</span>}
+                  </Link>
+                </div>
                 <p className="mt-0.5 font-mono text-body-sm text-muted-foreground">
                   Package maturity: <span className="capitalize text-foreground">{def.maturity}</span>
                   {" · "}
