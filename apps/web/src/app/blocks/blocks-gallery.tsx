@@ -151,7 +151,7 @@ export function BlocksGalleryView({
             <Label htmlFor="block-search" className="font-mono text-label-md uppercase tracking-[0.12em] text-muted-foreground">
               Search
             </Label>
-            <InputGroup className="h-11 rounded-md">
+            <InputGroup className="h-11">
               <InputGroupAddon>
                 <Search aria-hidden />
               </InputGroupAddon>

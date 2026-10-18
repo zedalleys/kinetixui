@@ -16,7 +16,7 @@ import { cn } from "../lib/utils";
  * Figma's component bundles a label + helper text; those live in the `Field`
  * composition (their colour tracks the control's state). This is the bare
  * control. Tokens: border `--muted-foreground`, focus `--ring`, error `--destructive`,
- * radius `--radius-sm` (Figma `input` = 4px), padding `--spacing-3`,
+ * radius `--radius-field` (→ `--radius-sm`, Figma `input` = 4px), padding `--spacing-3`,
  * text = Body Medium (14 / 20, +0.25).
  *
  * It follows the text-entry state contract (TOKENS.md, "Text entry and navigation"):
@@ -57,7 +57,7 @@ const inputVariants = cva(
       /** corner style — matches the design source's Corners property */
       corners: {
         sharp: "rounded-none",
-        default: "rounded-sm",
+        default: "rounded-field",
         rounded: "rounded-md",
         pill: "rounded-full px-4",
       },

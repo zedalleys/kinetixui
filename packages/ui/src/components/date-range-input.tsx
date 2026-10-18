@@ -138,7 +138,7 @@ const DateRangeInput = React.forwardRef<HTMLButtonElement, DateRangeInputProps>(
               aria-describedby={describedBy}
               aria-invalid={invalid || undefined}
               className={cn(
-                "flex min-h-11 w-full min-w-0 items-center gap-2 rounded-md border border-muted-foreground/80 bg-background px-3 py-2 text-start text-body-md outline-none transition-[border-color,box-shadow] duration-instant ease-standard focus-visible:border-action focus-visible:shadow-focus disabled:pointer-events-none disabled:opacity-disabled [@media(hover:hover)]:hover:border-muted-foreground",
+                "flex min-h-11 w-full min-w-0 items-center gap-2 rounded-field border border-muted-foreground/80 bg-background px-3 py-3 text-start text-body-md outline-none transition-[border-color,box-shadow] duration-instant ease-standard focus-visible:border-action focus-visible:shadow-focus disabled:pointer-events-none disabled:opacity-disabled [@media(hover:hover)]:hover:border-muted-foreground",
                 "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:shadow-focus-destructive",
               )}
             >

@@ -243,7 +243,7 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
   display: block;
   inline-size: 100%;
   min-block-size: var(--interaction-target-minimum);
-  padding: var(--spacing-2) var(--spacing-3);
+  padding: var(--spacing-3);
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   border: var(--border-width-default) solid hsl(var(--muted-foreground) / 0.8);
@@ -256,7 +256,7 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
     background-color var(--duration-instant) var(--easing-standard);
 }
 .kx-input::placeholder { color: hsl(var(--muted-foreground)); }
-.kx-input:focus-visible { outline: none; border-color: hsl(var(--ring)); box-shadow: var(--shadow-focus); }
+.kx-input:focus-visible { outline: none; border-color: hsl(var(--action)); box-shadow: var(--shadow-focus); }
 .kx-input:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 /* aria-invalid is the source of truth for the error state — the styling follows the semantics, not the reverse */
 .kx-input[aria-invalid='true'] { border-color: hsl(var(--destructive)); }
@@ -1001,8 +1001,8 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
     box-shadow var(--duration-instant) var(--easing-standard);
 }
 .kx-input-otp__slot:not(:first-child) { margin-inline-start: -1px; }
-.kx-input-otp__slot:first-child { border-start-start-radius: var(--radius-md); border-end-start-radius: var(--radius-md); }
-.kx-input-otp__slot:last-child { border-start-end-radius: var(--radius-md); border-end-end-radius: var(--radius-md); }
+.kx-input-otp__slot:first-child { border-start-start-radius: var(--radius-field); border-end-start-radius: var(--radius-field); }
+.kx-input-otp__slot:last-child { border-start-end-radius: var(--radius-field); border-end-end-radius: var(--radius-field); }
 @media (hover: hover) {
   .kx-input-otp:not(:has(.kx-input-otp__input:is(:focus, :disabled, [aria-invalid='true']))):hover .kx-input-otp__slot { border-color: hsl(var(--muted-foreground)); }
 }

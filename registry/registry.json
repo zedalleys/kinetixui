@@ -800,7 +800,6 @@
       ],
       "registryDependencies": [
         "tokens",
-        "button",
         "calendar",
         "popover"
       ],
