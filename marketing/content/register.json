@@ -1,5 +1,5 @@
 {
-  "$comment": "Canonical register for the first 30 days. Validated by scripts/check-content-register.mjs (pnpm check:content). ONE CAMPAIGN PER IDEA (family), utm_content identifies the asset within it \u2014 so reporting shows which argument works, not which button. Names follow marketing/analytics.md \u00a78. M1 (2026-10-17) added ART-003 and GH-001 and the optional `approval` field: { by, on, evidence }, set only by an explicit owner decision on ready copy.",
+  "$comment": "Canonical register for the first 30 days. Validated by scripts/check-content-register.mjs (pnpm check:content). ONE CAMPAIGN PER IDEA (family), utm_content identifies the asset within it — so reporting shows which argument works, not which button. Names follow marketing/analytics.md §8. M1 (2026-10-17) added ART-003 and GH-001 and the optional `approval` field: { by, on, evidence }, set only by an explicit owner decision on ready copy.",
   "visuals": [
     "VIS-001",
     "VIS-002",
@@ -131,7 +131,12 @@
       "campaign": "kx_p1_a_parity_proof",
       "utm_content": "li_primary",
       "url": "https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_parity_proof&utm_content=li_primary",
-      "derived_from": "ART-001"
+      "derived_from": "ART-001",
+      "approval": {
+        "by": "owner",
+        "on": "2026-10-18",
+        "evidence": "Owner explicitly approved LI-001 draft A exactly as written in ChatGPT on 2026-10-18 for manual publication preparation on 2026-10-19; publication itself not authorized."
+      }
     },
     {
       "id": "LI-002",
