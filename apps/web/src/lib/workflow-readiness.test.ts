@@ -6,6 +6,7 @@ import { WORKFLOWS, workflowParts, type Workflow } from "./business-discovery";
 import { PLATFORMS, type Platform } from "./platform-parity";
 import {
   blockEvidenceNote,
+  componentEvidence,
   blockLevel,
   componentLevel,
   levelFor,
@@ -120,11 +121,11 @@ describe("evidence levels: negative controls", () => {
 
   it("keeps the component floor apart from the block floor, so a weaker block does not hide component evidence", () => {
     const w = synthetic([{ title: "A", rows: [], status: "existing" }]);
-    // receipt on Angular has its source but no CI step that compiles it; number-input there is runtime verified
+    // receipt on Angular is compiled in CI but has no observed runtime; number-input there is runtime verified
     const r = readinessFor(w, "Angular", { components: ["number-input"], blocks: ["receipt"], iot: 0 });
     expect(r.weakestBlock).toBe(expectedBlock(RAW_BLOCKS.receipt!.platforms.Angular));
     expect(r.weakestComponent).toBe("runtime");
-    expect(r.weakestBlock).toBe("source");
+    expect(r.weakestBlock).toBe("build");
     expect(r.weakestImplemented).toBe(weakest([r.weakestBlock!, r.weakestComponent!])); // the overall floor counts both
   });
 
@@ -213,5 +214,19 @@ describe("evidence levels: the real data", () => {
         const allStages = w.stages.every((s) => s.status === "existing");
         expect(r.complete, `${w.id} on ${r.platform}`).toBe(allStages && r.total > 0 && r.parts.every((x) => x.level !== "not-implemented"));
       }
+  });
+});
+
+describe("component evidence notes", () => {
+  it("say where a component's tests ran without changing its level", () => {
+    // React button: interaction in jsdom (Vitest), accessibility also in Chromium (a11y-browser)
+    const e = componentEvidence("button", "React");
+    expect(e.level).toBe(componentLevel("button", "React"));
+    expect(e.interaction!.every((r) => r.environment === "jsdom")).toBe(true);
+    expect(e.accessibility!.some((r) => r.environment === "chromium")).toBe(true);
+    expect(blockEvidenceNote(e)).toBe("Accessibility observed in a browser; interaction tested headless");
+    // a native component's tests are headless, and the note says so
+    const flutter = Object.keys(verification.components).find((s) => componentLevel(s, "Flutter") === "runtime")!;
+    expect(blockEvidenceNote(componentEvidence(flutter, "Flutter"))).toBe("Interaction and accessibility tested headless");
   });
 });

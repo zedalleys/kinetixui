@@ -312,7 +312,10 @@ one thing this architecture forbids.
    can never be two different pieces of code.
 
 2. **Declare it** in `blocks.manifest.json` under that block's
-   `sources`, with the explicit path. Platform names are validated
+   `sources`, with the explicit path. An Angular block also goes in
+   `packages/ui-angular/tsconfig.blocks.json`'s `files` list, by name:
+   that is the program `pnpm check:angular-blocks` compiles, and it
+   fails while a declared Angular block is missing from it. Platform names are validated
    against `components.manifest.json`'s `platformDefinitions`; there is
    no second platform list.
 
@@ -323,7 +326,9 @@ one thing this architecture forbids.
 
 5. CI runs both, and the native workflows compile the native sources —
    the file paths above sit inside `packages/ui-*`, which is what those
-   workflows watch.
+   workflows watch. Angular blocks are compiled by `pnpm check:angular-blocks`
+   (strict templates, in `ci.yml`); the package build does not reach
+   them, because `public-api.ts` exports no block.
 
 A React block is also its own live preview: `blockPreviews` imports the
 fixture, so the code on the page and the thing rendered above it are the

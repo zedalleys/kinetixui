@@ -281,8 +281,8 @@ const BLOCKS_MANIFEST = {
 const RUNTIME_SCRIPT = "scripts/blocks-runtime-browser.mjs";
 
 /** A workflow that really runs both builds and every standalone evidence script, unless told to drop one. */
-function workflow({ drop = [] as string[], runtimeStep = `node ${RUNTIME_SCRIPT}`, buildWeb = "pnpm build:web" } = {}) {
-  const steps = [buildWeb, "pnpm build:angular", "pnpm --filter @kinetixui/web test", "pnpm test:angular", ...extraEvidenceScripts().map((s) => `node ${s}`), runtimeStep];
+function workflow({ drop = [] as string[], runtimeStep = `node ${RUNTIME_SCRIPT}`, buildWeb = "pnpm build:web", extraSteps = [] as string[] } = {}) {
+  const steps = [buildWeb, "pnpm build:angular", ...extraSteps, "pnpm --filter @kinetixui/web test", "pnpm test:angular", ...extraEvidenceScripts().map((s) => `node ${s}`), runtimeStep];
   // a path filter naming the runtime script, as a real workflow has: a mention that is not a step
   const on = `on:\n  pull_request:\n    paths:\n      - "${RUNTIME_SCRIPT}"\n`;
   return `${on}jobs:\n  ci:\n    steps:\n${steps.filter((c) => !drop.some((d) => c.includes(d))).map((c) => `      - run: ${c}\n`).join("")}`;
@@ -296,6 +296,7 @@ function blockFixture(
     runtimeStep = undefined as string | undefined,
     buildWeb = undefined as string | undefined,
     scripts = {} as Record<string, string>,
+    extraSteps = [] as string[],
   } = {},
 ) {
   return fixture({
@@ -304,7 +305,7 @@ function blockFixture(
     "apps/web/src/examples/blocks/sign-in.tsx": "export function SignInBlock() { return null }\n",
     "apps/web/src/examples/blocks/stat-cards.tsx": "export function StatCardsBlock() { return null }\n",
     "packages/ui-angular/src/examples/blocks/sign-in.ts": "export class SignInBlock {}\n",
-    ".github/workflows/ci.yml": workflow({ drop, ...(runtimeStep ? { runtimeStep } : {}), ...(buildWeb ? { buildWeb } : {}) }),
+    ".github/workflows/ci.yml": workflow({ drop, extraSteps, ...(runtimeStep ? { runtimeStep } : {}), ...(buildWeb ? { buildWeb } : {}) }),
     [RUNTIME_SCRIPT]: "// no markers\n",
     ...files,
   });
@@ -390,6 +391,35 @@ describe("block evidence: negative controls", () => {
     expect(run(script, [`--root=${dir}`]).ok).toBe(true);
     expect(blocksOut(dir)["sign-in"]!.platforms.Angular!.level).toBe("source");
     expect(blocksOut(dir)["sign-in"]!.platforms.Angular!.build).toBeUndefined();
+  });
+
+  it("3c. credits the Angular block compile only to the blocks its program lists, and only while CI runs it", () => {
+    const program = (tsconfig: object) => ({ "packages/ui-angular/tsconfig.blocks.json": JSON.stringify(tsconfig) });
+    const listed = program({ files: ["src/examples/blocks/sign-in.ts"], include: [] });
+    const angular = (files: Record<string, string>, extraSteps: string[]) => {
+      const dir = blockFixture(files, { extraSteps });
+      expect(run(script, [`--root=${dir}`]).ok).toBe(true);
+      return blocksOut(dir)["sign-in"]!.platforms.Angular!;
+    };
+    const compiled = angular(listed, ["pnpm check:angular-blocks"]);
+    expect(compiled.level).toBe("build");
+    expect(JSON.stringify(compiled.build)).toMatch(/check:angular-blocks/);
+    // omitted from the program: not compiled, whatever else the step compiles
+    expect(angular(program({ files: ["src/examples/blocks/other.ts"], include: [] }), ["pnpm check:angular-blocks"]).level).toBe("source");
+    // a glob include could let anything in; the program must name its files
+    expect(angular(program({ include: ["src/**/*.ts"] }), ["pnpm check:angular-blocks"]).level).toBe("source");
+    expect(angular({}, ["pnpm check:angular-blocks"]).level).toBe("source"); // no program at all
+    // the step has to run, unconditionally and with its failure intact
+    for (const step of [
+      [],
+      ["pnpm check:angular-blocks\n        if: github.event_name == 'push'"],
+      ["pnpm check:angular-blocks\n        continue-on-error: true"],
+      ["pnpm check:angular-blocks || true"],
+      ["echo pnpm check:angular-blocks"],
+      ["pnpm test:angular-blocks"],
+    ]) {
+      expect(angular(listed, step).level, step.join()).toBe("source");
+    }
   });
 
   it("4. is not runtime verified without observed interaction", () => {
@@ -524,5 +554,26 @@ describe("block evidence: negative controls", () => {
     const { ok, output } = run(script, [`--root=${dir}`, "--check"]);
     expect(ok).toBe(false);
     expect(output).toMatch(/is stale/);
+  });
+});
+
+describe("component evidence records where it ran", () => {
+  const real = JSON.parse(readFileSync(join(repoRoot, "verification.json"), "utf8")) as {
+    sources: Record<string, { file: string; environment?: string }[]>;
+  };
+  const HEADLESS = ["jsdom", "xctest", "robolectric", "flutter_test"];
+
+  it("labels every evidence source with a known environment, browser suites as chromium", () => {
+    for (const [platform, list] of Object.entries(real.sources)) {
+      for (const s of list) {
+        expect([...HEADLESS, "chromium"], `${platform} ${s.file}`).toContain(s.environment);
+        // a browser suite is a script that drives a browser; a unit test is never one
+        expect(s.environment === "chromium", s.file).toBe(s.file.startsWith("scripts/"));
+      }
+    }
+    // no native suite is labelled as anything but its headless test host: there is no device evidence
+    for (const platform of ["SwiftUI", "Compose", "Flutter"]) {
+      expect(real.sources[platform]!.every((s) => HEADLESS.includes(s.environment!)), platform).toBe(true);
+    }
   });
 });
