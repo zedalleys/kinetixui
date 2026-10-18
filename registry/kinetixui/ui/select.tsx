@@ -8,7 +8,7 @@ import { withDirectionalPortal } from "@/components/ui/direction-provider";
 
 /**
  * Select — reconciled 1:1 with the KinetixUI design source, node 54855:13882.
- * The trigger mirrors Input: `rounded-sm`, `--spacing-3` pad, Body Medium text, a soft `--shadow-focus`
+ * The trigger mirrors Input: `rounded-field` (`--radius-field`), `--spacing-3` pad, Body Medium text, a soft `--shadow-focus`
  * glow, `--destructive` on aria-invalid — and Input's text-entry state contract (TOKENS.md, "Text entry and
  * navigation"): an 80% `--muted-foreground` edge at rest, full strength under a hovering pointer, and hover
  * never over focus, an open list, invalid or disabled. Select has no read-only state.
@@ -25,7 +25,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex min-h-[44px] w-full items-center justify-between rounded-sm border border-muted-foreground/80 bg-background px-3 py-3",
+      "flex min-h-[44px] w-full items-center justify-between rounded-field border border-muted-foreground/80 bg-background px-3 py-3",
       "font-sans text-body-md text-foreground",
       // The value wraps rather than being clamped to one line. `line-clamp-1` was invisible while the
       // type scale was px — the value always fitted — but once text follows the reader's setting a

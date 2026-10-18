@@ -71,7 +71,7 @@ const InputOTPSlot = React.forwardRef<
         //   invalid   `aria-invalid="true"` on InputOTP → `--destructive` edges, kept under pointer and focus
         //   disabled  the container's `--opacity-disabled`; no hover
         "relative flex size-9 items-center justify-center border border-muted-foreground/80 bg-background text-sm",
-        "[&:not(:first-child)]:-ms-px first:rounded-s-md last:rounded-e-md",
+        "[&:not(:first-child)]:-ms-px first:rounded-s-field last:rounded-e-field",
         "transition-[color,border-color,box-shadow] duration-instant ease-standard",
         "[@media(hover:hover)]:group-[:hover:not(:has(input:is(:focus,:disabled,[aria-invalid=true])))]/otp:border-muted-foreground",
         "group-has-[input[aria-invalid=true]]/otp:border-destructive",
