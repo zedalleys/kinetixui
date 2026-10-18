@@ -72,7 +72,7 @@ describe("ComponentMeta install strip", () => {
     await user.click(screen.getByRole("button", { name: "Copy Angular npm command" }));
     expect(track.mock.calls).toEqual([
       ["cli_command_copied", { source: "component_page", package: "@kinetixui/cli" }],
-      ["install_command_copied", { source: "component_page", package: "@kinetixui/angular" }],
+      ["install_command_copied", { source: "component_page", package: "@kinetixui/angular", platform: "angular" }],
     ]);
     expect(JSON.stringify(track.mock.calls)).not.toContain("add button");
   });

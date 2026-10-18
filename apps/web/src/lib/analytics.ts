@@ -152,7 +152,7 @@ type Shape<Required extends keyof EventProps, Optional extends keyof EventProps 
  */
 export interface AnalyticsEvents {
   cta_clicked: { source: AnalyticsSource; target: AnalyticsCtaTarget };
-  docs_viewed: Shape<"page", "source">;
+  docs_viewed: Shape<"page", "source" | "platform">;
   installation_viewed: Shape<never, "source" | "platform">;
   cli_command_copied: Shape<"source", "package">;
   install_command_copied: Shape<"source", "package" | "platform">;

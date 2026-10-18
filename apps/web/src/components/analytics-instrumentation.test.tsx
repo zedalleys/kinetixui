@@ -106,7 +106,7 @@ describe("CodePre (fenced code in the MDX docs)", () => {
   it("reports an npm install command as install_command_copied", async () => {
     nav.pathname = "/docs/installation";
     await copy("npm i @kinetixui/ui", "bash");
-    expect(track.mock.calls).toEqual([["install_command_copied", { source: "installation_page", package: PACKAGES.ui }]]);
+    expect(track.mock.calls).toEqual([["install_command_copied", { source: "installation_page", package: PACKAGES.ui, platform: "react" }]]);
   });
 
   it("reports component code with its component and platform, and never the code", async () => {

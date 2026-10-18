@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
+import { PlatformSetupLink } from "@/components/platform-setup-link";
 import { SectionHead } from "@/components/section-head";
 import { ComponentCard, ComponentLinks, StatusTag, WorkflowStages, countsLine, linkClass, rowsOf } from "@/components/discovery-parts";
 import { EvidenceLevelLegend, WorkflowReadiness } from "@/components/workflow-readiness";
@@ -60,7 +61,7 @@ const BLOCK_DOMAINS = new Set(blockFacets().domains.map((d) => d.id));
 const ctaClass =
   "inline-flex items-center gap-1.5 text-body-sm font-medium text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-type Step = { title: string; body: string; href: string; label: string; target?: AnalyticsCtaTarget };
+type Step = { title: string; body: string; href: string; label: string; target?: AnalyticsCtaTarget; platformSetup?: boolean };
 
 /** Where a reader goes next, filtered to this domain where the destination offers the filter. No dead ends. */
 function nextSteps(id: string, title: string): Step[] {
@@ -87,10 +88,11 @@ function nextSteps(id: string, title: string): Step[] {
     },
     {
       title: "Installation",
-      body: "Add the tokens and the components to a project on the platform you chose.",
+      body: "Add the tokens and the components to a project on the platform you chose in a code tab (React until you choose).",
       href: "/docs/installation",
       label: "Read installation",
       target: "installation",
+      platformSetup: true,
     },
   ];
 }
@@ -254,10 +256,14 @@ export default async function UseCasePage({ params }: Props) {
               <h3 className="font-medium">{s.title}</h3>
               <p className="mt-1 text-body-sm text-muted-foreground">{s.body}</p>
               <div className="mt-auto pt-4">
-                <Link href={s.href} className={ctaClass} {...(s.target ? ctaAttrs("use_case_page", s.target) : {})}>
-                  {s.label}
-                  <ArrowRight aria-hidden className="size-4 rtl:-scale-x-100" />
-                </Link>
+                {s.platformSetup ? (
+                  <PlatformSetupLink source="use_case_page" className={ctaClass} />
+                ) : (
+                  <Link href={s.href} className={ctaClass} {...(s.target ? ctaAttrs("use_case_page", s.target) : {})}>
+                    {s.label}
+                    <ArrowRight aria-hidden className="size-4 rtl:-scale-x-100" />
+                  </Link>
+                )}
               </div>
             </li>
           ))}
