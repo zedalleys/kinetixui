@@ -2826,7 +2826,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259",
           "packages/ui/src/components-selection.test.tsx:138-208",
           "packages/ui/src/components-transactional.test.tsx:255-317",
-          "packages/ui/src/switch-motion.test.tsx:261-301",
+          "packages/ui/src/switch-motion.test.tsx:263-303",
           "packages/ui/src/toggle-motion.test.tsx:217-281"
         ],
         "published": [
@@ -3224,7 +3224,7 @@
         "interaction": [
           "packages/ui/src/checkbox-radio-motion.test.tsx:253-448",
           "packages/ui/src/components-form.test.tsx:39-310",
-          "packages/ui/src/switch-motion.test.tsx:27-260"
+          "packages/ui/src/switch-motion.test.tsx:27-262"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -3708,7 +3708,7 @@
         ],
         "interaction": [
           "packages/ui/src/components-form.test.tsx:39-310",
-          "packages/ui/src/switch-motion.test.tsx:27-260"
+          "packages/ui/src/switch-motion.test.tsx:27-262"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -5737,7 +5737,7 @@
           "packages/ui/src/components-keyboard.test.tsx:315-544",
           "packages/ui/src/components-selection.test.tsx:138-208",
           "packages/ui/src/components-selection.test.tsx:27-137",
-          "packages/ui/src/switch-motion.test.tsx:27-260"
+          "packages/ui/src/switch-motion.test.tsx:27-262"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -5745,7 +5745,7 @@
         ],
         "rtl": [
           "packages/ui/src/components-selection.test.tsx:138-208",
-          "packages/ui/src/switch-motion.test.tsx:261-301"
+          "packages/ui/src/switch-motion.test.tsx:263-303"
         ],
         "largeText": [
           "scripts/large-text.mjs:99-738"
