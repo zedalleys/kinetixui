@@ -145,6 +145,20 @@ interaction and accessibility 80/80. SwiftUI — source, CI build, almost no run
 7/90). Compose and Flutter — source, CI build, partial runtime evidence. **No two platforms have equivalent
 runtime verification**, and no copy may imply they do.
 
+> **Annotation, 2026-10-18 (ENG-2b-5, #407).** The paragraph above is left as it was audited on 2026-10-17. It
+> used the old ladder, where tests counted toward "runtime" wherever they ran. Under the evidence tiers in
+> `docs/VERIFICATION-EVIDENCE-TIERS.md` (Source present, Build, Headless, Runtime verified), the same evidence reads:
+> - **Angular:** 60 of 80 components are Runtime verified, with interaction and accessibility observed in Chromium.
+>   The other 20 are Headless verified (jsdom).
+> - **React:** the 48 components with interaction evidence are Headless verified. That interaction ran in jsdom,
+>   not in an observed browser, so no React component is Runtime verified.
+> - **Compose and Flutter:** the "partial runtime evidence" is headless (Robolectric, flutter_test). Compose has
+>   4 Headless verified components and Flutter has 5. Neither has simulator, emulator or device evidence, so
+>   neither is Runtime verified.
+> - **SwiftUI:** unchanged at Build verified.
+>
+> The conclusion stands: no two platforms have equivalent runtime verification.
+
 | Where | Claim | Finding | Action |
 | --- | --- | --- | --- |
 | `CLAIMS.md` B2, `STRATEGY.md` rule 4, `MESSAGING.md` glossary | "98 catalogue entries — 97 components" | stale (109 / 108) | **Fixed**: the rows now name no number and point at `marketing:stats` |

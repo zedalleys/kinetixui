@@ -18,6 +18,7 @@ const LABEL = {
   "not-verified": "Not verified",
   source: "Source present",
   build: "Build verified",
+  headless: "Headless verified",
   runtime: "Runtime verified",
 };
 
@@ -48,4 +49,7 @@ for (const [slug, b] of Object.entries(v.blocks))
   );
 lines.push("", "## Totals", "", `| Platform | ${Object.values(LABEL).join(" | ")} |`, `|---|${Object.keys(LABEL).map(() => "---").join("|")}|`);
 for (const p of PLATFORMS) lines.push(`| ${p} | ${Object.keys(LABEL).map((l) => v.blockTotals[p]?.[l] ?? 0).join(" | ")} |`);
+// the same ladder for the catalogue components, for comparison: a block never inherits these
+lines.push("", "## Component totals (for comparison)", "", `| Platform | ${Object.values(LABEL).join(" | ")} |`, `|---|${Object.keys(LABEL).map(() => "---").join("|")}|`);
+for (const p of PLATFORMS) lines.push(`| ${p} | ${Object.keys(LABEL).map((l) => v.componentLevelTotals[p]?.[l] ?? 0).join(" | ")} |`);
 console.log(lines.join("\n"));

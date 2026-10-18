@@ -16,6 +16,7 @@ import {
 import { componentTotal, gaps, nonPorts, notSupported, platformCount, platforms, statusCounts } from "@/lib/platform-support";
 import { availabilitySentence } from "@/lib/platform-prose";
 import { siteConfig } from "@/lib/site";
+import { EVIDENCE_LEVEL_LABEL, componentLevelTotals } from "@/lib/workflow-readiness";
 
 const manifestComponents = manifest.components as Record<
   string,
@@ -417,6 +418,30 @@ export function VerificationLadderTable() {
           <td className={td}>
             {VERIFICATION_REQUIRES[level].map((k) => EVIDENCE_LABEL[k]).join(" · ")}
           </td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
+/**
+ * Where the tests ran, per platform: how many components are build, headless and runtime verified. Read from
+ * verification.json `componentLevelTotals`, so it cannot describe a different ladder or a stale count.
+ */
+export function EvidenceTierTable() {
+  const tiers = ["build", "headless", "runtime"] as const;
+  return (
+    <Table label="Components by evidence tier" head={["Platform", ...tiers.map((t) => EVIDENCE_LEVEL_LABEL[t])]}>
+      {Object.entries(componentLevelTotals).map(([platform, n]) => (
+        <tr key={platform}>
+          <th scope="row" className={`${td} text-left font-medium`}>
+            {platform}
+          </th>
+          {tiers.map((t) => (
+            <td key={t} className={`${td} tabular-nums`}>
+              {n[t] ?? 0}
+            </td>
+          ))}
         </tr>
       ))}
     </Table>
