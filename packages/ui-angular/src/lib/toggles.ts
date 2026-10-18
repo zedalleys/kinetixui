@@ -134,13 +134,26 @@ export class KxCheckbox extends KxToggleBase {
    * `indeterminate` again resets the record, and writing a different `checked` value — a form reset, a
    * one-way binding, a header recomputing "some of these are selected" — makes the box mixed again, because
    * that value is no longer the reader's answer. The reader's own later clicks keep the record current, so a
-   * second click unchecks the box rather than returning it to mixed.
+   * second click unchecks the box rather than returning it to mixed. A form writing through the CVA clears
+   * the record outright, because `writeValue` is a call and not a signal write: a `reset()` to the value the
+   * reader happened to choose would otherwise be indistinguishable from no write at all.
    */
   private readonly resolved = linkedSignal<boolean, boolean | null>({ source: this.indeterminate, computation: () => null });
   protected readonly mixed = computed(() => this.indeterminate() && this.resolved() !== this.checked());
   /** One of these is required when no visible `<label for>` points at the control. */
   readonly ariaLabel = input<string | null>(null, { alias: 'aria-label' });
   readonly ariaLabelledby = input<string | null>(null, { alias: 'aria-labelledby' });
+
+  /**
+   * A write from a form supersedes the reader's answer whatever its value: `reset()` to the value they
+   * happened to choose is still the form speaking, and the equality check alone cannot see it, because
+   * writing a signal the value it already holds notifies nothing. The reader's own clicks do not come
+   * through here — `toggle()` writes `checked` directly — so their answer is safe.
+   */
+  override writeValue(value: boolean): void {
+    this.resolved.set(null);
+    super.writeValue(value);
+  }
 
   /** Mixed resolves to checked: already-checked and mixed both end up checked, and both report it once. */
   protected override toggle(): void {

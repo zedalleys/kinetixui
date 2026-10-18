@@ -107,12 +107,13 @@ changed; each has a check of its own now, listed in the negative controls below:
 | Mixed checkbox already checked | that branch resolves without a value change and so never called the CVA's `onTouched`: a form showing errors on touch did not hear the interaction | a `markTouched()` hook on the base, called on that branch |
 | The gate's focus check | `boxShadow !== "none"` is vacuous for the Checkbox and the Toggle, which now rest on a transparent shadow, and the browser's own default outline would satisfy "something is visible" | the focused shadow is compared against `--shadow-focus` read from a probe in the same page, and read after the transition lands |
 
-Two further passes over the merged head found three more, all real and all fixed in the same branch:
+Three further passes over the merged head found four more, all real and all fixed in the same branch:
 
 | Finding | What was wrong | Fix |
 | --- | --- | --- |
 | The Toggle's focus ring | `.kx-toggle:not(:disabled):hover` and `:active` are specificity 0,3,0 while `.kx-toggle:focus-visible` is 0,2,0, so source order never applied: a keyboard-focused Toggle lost its ring under the pointer and while Space held it `:active` | the focus rule carries `:not(:disabled)` too, so the three are tied and declared order decides |
 | The mixed-state latch | once the reader resolved a mixed box, the record stood until `indeterminate` itself changed: a form reset or a one-way `[checked]` binding writing a different value while the caller still said "some of these are selected" rendered that boolean instead of returning to `mixed` | the record holds the value the reader's answer left behind, so a value that is not theirs is mixed again, and their own later clicks keep it current |
+| The latch and a form write | the equality check catches a *different* value, but a `reset()` to the value the reader happened to choose writes the same boolean, and writing a signal the value it already holds notifies nothing — so a non-nullable `FormControl` resetting to `true` left the box announcing `true` | `writeValue` clears the record outright: a form write is a call, not a signal write, so it is visible whatever its value |
 | `selection-state` and `press-feedback` left `observed` | MOTION.md defines `observed` as "no check of its own yet"; adding the Angular consumers gave both roles two platforms and a named check, so the generated foundations tables published a claim that was no longer true | both promoted to `proven`; `check:motion-tokens` agrees (evidence cited, consumers on two platforms) |
 
 The role promotion is the one open question from the first push, now settled by the contract's own written
@@ -126,7 +127,7 @@ because only the Switch rests on no shadow. The strengthened check also found th
 same frame as the focus returns the transition's first frame, which is why it now settles first.
 
 **Negative controls** (each a real defect applied to the tree, the gate run, then restored; `git status` clean
-after every one). Nothing but the sixteen mutations was changed:
+after every one). Nothing but the seventeen mutations was changed:
 
 | Mutation | Caught by `check:angular-selection-motion` | Failing checks |
 | --- | --- | --- |
@@ -146,8 +147,9 @@ after every one). Nothing but the sixteen mutations was changed:
 | Checkbox focus ring removed | keyboard | 2 (the browser's default 1px outline is not `--shadow-focus`) |
 | The Toggle's focus rule put back one class short | keyboard | 4 (the ring is replaced by the 8% layer under the pointer and the 14% layer while held, both themes) |
 | The mixed latch keyed on "has answered" rather than on the value | `selection-motion.spec.ts` (jsdom) | 1 |
+| `writeValue` left without its latch reset | `selection-motion.spec.ts` (jsdom) | 1 (a non-nullable `FormControl` reset to `true`) |
 
-Two of the sixteen are jsdom tests rather than browser checks, and are marked as such: `onTouched` is a
+Three of the seventeen are jsdom tests rather than browser checks, and are marked as such: `onTouched` is a
 callback and the mixed latch answers a write from the caller, neither of which a page paints, so there is
 nothing in a browser to measure.
 

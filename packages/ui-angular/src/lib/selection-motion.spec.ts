@@ -1,6 +1,6 @@
 import { Component, provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import type { ControlValueAccessor } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, type ControlValueAccessor } from '@angular/forms';
 import { describe, expect, it } from 'vitest';
 
 import { SelectionMotion } from '../fixtures/selection-motion';
@@ -55,6 +55,15 @@ describe('selection motion — rendered subject for check:angular-selection-moti
     expect(at('kx-switch[data-kx-case="inherit-on"]').closest('[dir]')).toBeNull();
   });
 });
+
+@Component({
+  imports: [KxCheckbox, ReactiveFormsModule],
+  template: `<kx-checkbox [indeterminate]="true" [formControl]="control" aria-label="Select all" />`,
+})
+class MixedFormHost {
+  // Non-nullable, resetting to `true`: the one value the equality check alone cannot tell from no write.
+  readonly control = new FormControl(true, { nonNullable: true });
+}
 
 @Component({
   imports: [KxCheckbox],
@@ -130,6 +139,22 @@ describe('KxCheckbox, mixed', () => {
     box.click();
     fixture.detectChanges();
     expect(box.getAttribute('aria-checked')).toBe('false');
+  });
+
+  it('goes back to mixed when a form writes the value the reader chose', () => {
+    TestBed.configureTestingModule({ imports: [MixedFormHost], providers: [provideZonelessChangeDetection()] });
+    const fixture = TestBed.createComponent(MixedFormHost);
+    fixture.detectChanges();
+    const box = (fixture.nativeElement as HTMLElement).querySelector('button.kx-checkbox') as HTMLButtonElement;
+    expect(box.getAttribute('aria-checked')).toBe('mixed');
+    box.click();
+    fixture.detectChanges();
+    expect(box.getAttribute('aria-checked')).toBe('true');
+    // reset() writes `true` — the value the reader's own answer left behind. Writing a signal the value it
+    // already holds notifies nothing, so only clearing the record on `writeValue` catches this.
+    fixture.componentInstance.control.reset();
+    fixture.detectChanges();
+    expect(box.getAttribute('aria-checked')).toBe('mixed');
   });
 
   it('goes back to mixed when the caller writes the input again', () => {
