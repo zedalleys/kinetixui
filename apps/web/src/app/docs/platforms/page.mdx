@@ -55,6 +55,19 @@ platform's workflow above links to its CI runs.
 Nothing is verified **Stable** today: that rung additionally requires RTL, large-text and visual-regression
 evidence per component, and a published package.
 
+### Where the tests ran
+
+The levels above count what was tested. A second scale, used on the [use-case pages](/use-cases) and for blocks,
+says where it ran:
+
+- **Build verified**: a required CI step compiles it.
+- **Headless verified**: tests CI runs assert both its interaction and its accessibility, but at least one ran
+  only headless, in jsdom, Robolectric, flutter_test or XCTest.
+- **Runtime verified**: both were observed running in a real browser. No native component has simulator,
+  emulator or device evidence yet, so none is Runtime verified.
+
+<EvidenceTierTable />
+
 ## Reading the table
 
 - **Components** counts the components each platform implements, out of <ComponentTotalInline /> catalogue entries in the

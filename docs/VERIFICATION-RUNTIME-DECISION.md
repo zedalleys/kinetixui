@@ -1,6 +1,7 @@
 # What "Runtime verified" means: components vs blocks
 
-Status: **proposed. The owner decides.** Nothing in this document has changed any component's level.
+Status: **decided: Option B, approved by the owner and implemented in ENG-2b-5.** See
+`docs/VERIFICATION-EVIDENCE-TIERS.md` for the ladder as built. What follows is the decision record as proposed.
 
 ## The problem
 

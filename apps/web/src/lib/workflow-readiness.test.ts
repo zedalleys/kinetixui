@@ -9,13 +9,14 @@ import {
   componentEvidence,
   blockLevel,
   componentLevel,
-  levelFor,
+  EVIDENCE_LEVELS,
   readinessFor,
   weakest,
   workflowReadiness,
   type BlockPlatformEvidence,
   type EvidenceLevel,
 } from "./workflow-readiness";
+import { levelFrom, skipIn } from "../../../../scripts/evidence-levels.mjs";
 
 /**
  * The evidence model behind the /use-cases readiness tables. Two kinds of test:
@@ -34,14 +35,18 @@ const BLOCK_SOURCES = blocksManifest.blocks as unknown as Record<string, { sourc
 const RAW_BLOCKS = verification.blocks as unknown as Record<string, { platforms: Record<Platform, BlockPlatformEvidence> }>;
 
 /**
- * The block rule, restated against the raw refs: its own source, a CI build, and interaction AND accessibility
- * both OBSERVED (an environment in runtimeEnvironments). A headless ref never counts toward runtime.
+ * The tier rule, restated here rather than imported, so the generator and this file must agree: a CI build, then
+ * interaction AND accessibility both recorded for headless, and both OBSERVED (chromium) for runtime.
  */
+function tier(build: boolean, interaction: string[], accessibility: string[]): EvidenceLevel {
+  if (!build) return "source";
+  if (!interaction.length || !accessibility.length) return "build";
+  return interaction.includes("chromium") && accessibility.includes("chromium") ? "runtime" : "headless";
+}
 function expectedBlock(e: BlockPlatformEvidence | undefined): EvidenceLevel {
   if (!e?.source?.length) return "not-implemented";
-  if (!e.build?.length) return "source";
-  const seen = (k: "interaction" | "accessibility") => (e[k] ?? []).some((r) => r.environment === "chromium");
-  return seen("interaction") && seen("accessibility") ? "runtime" : "build";
+  const envs = (k: "interaction" | "accessibility") => (e[k] ?? []).map((r) => r.environment ?? "");
+  return tier(!!e.build?.length, envs("interaction"), envs("accessibility"));
 }
 const block = (over: Partial<BlockPlatformEvidence>): BlockPlatformEvidence => ({
   level: "build",
@@ -50,14 +55,16 @@ const block = (over: Partial<BlockPlatformEvidence>): BlockPlatformEvidence => (
   ...over,
 });
 
-/** The rule, restated against the raw records: runtime needs a recorded build, interaction AND accessibility source. */
+/** Where each evidence file runs, read from the raw `sources` list. */
+const ENV: Record<string, string> = Object.fromEntries(
+  Object.values(verification.sources as Record<string, { file: string; environment: string }[]>).flat().map((x) => [x.file, x.environment]),
+);
+/** The rule, restated against the RAW component records: the same tier, from the refs and where their files run. */
 function expectedComponent(slug: string, p: Platform): EvidenceLevel {
   if (!DECLARED[slug]?.platforms.includes(p)) return "not-implemented";
   const e = RAW[slug]?.[p] ?? {};
-  const has = (k: string) => (e[k]?.length ?? 0) > 0;
-  if (has("build") && has("interaction") && has("accessibility")) return "runtime";
-  if (has("build")) return "build";
-  return "source";
+  const envs = (k: string) => (e[k] ?? []).map((ref) => ENV[ref.replace(/:\d+-\d+$/, "")] ?? "");
+  return tier((e.build?.length ?? 0) > 0, envs("interaction"), envs("accessibility"));
 }
 
 const synthetic = (stages: Workflow["stages"]): Workflow => ({
@@ -74,27 +81,55 @@ const synthetic = (stages: Workflow["stages"]): Workflow => ({
 });
 
 describe("evidence levels: negative controls", () => {
-  it("never calls source-only evidence runtime or build", () => {
-    expect(levelFor(true, null)).toBe("source");
-    expect(levelFor(true, [])).toBe("source");
-    expect(levelFor(true, null, false)).toBe("not-verified");
+  // the generator's own rule (scripts/evidence-levels.mjs), held directly
+  type Evidence = { source?: boolean; build?: boolean; interaction?: string[]; accessibility?: string[] };
+  const L = (o: Evidence) => levelFrom({ implemented: true, build: true, ...o });
+
+  it("never calls source-only evidence build, headless or runtime", () => {
+    expect(L({ build: false })).toBe("source");
+    expect(L({ build: false, interaction: ["chromium"], accessibility: ["chromium"] })).toBe("source"); // tests without a recorded build
+    expect(L({ source: false, interaction: ["chromium"], accessibility: ["chromium"] })).toBe("source");
   });
 
-  it("never calls build-only evidence runtime", () => {
-    expect(levelFor(true, ["build"])).toBe("build");
-    expect(levelFor(true, ["build", "published"])).toBe("build");
+  it("never calls a build alone Headless verified", () => {
+    expect(L({})).toBe("build");
+    expect(L({ interaction: ["jsdom"] })).toBe("build");
+    expect(L({ accessibility: ["chromium"] })).toBe("build");
   });
 
-  it("needs interaction AND accessibility, on top of a build, for runtime", () => {
-    expect(levelFor(true, ["build", "accessibility"])).toBe("build");
-    expect(levelFor(true, ["build", "interaction"])).toBe("build");
-    expect(levelFor(true, ["build", "accessibility", "rtl", "largeText"])).toBe("build");
-    expect(levelFor(true, ["interaction", "accessibility"])).toBe("source"); // tests without a recorded build
-    expect(levelFor(true, ["build", "interaction", "accessibility"])).toBe("runtime");
+  it("needs interaction AND accessibility for headless, and both OBSERVED for runtime", () => {
+    expect(L({ interaction: ["jsdom"], accessibility: ["jsdom"] })).toBe("headless");
+    expect(L({ interaction: ["robolectric"], accessibility: ["robolectric"] })).toBe("headless");
+    expect(L({ interaction: ["flutter_test"], accessibility: ["flutter_test"] })).toBe("headless");
+    expect(L({ interaction: ["xctest"], accessibility: ["xctest"] })).toBe("headless");
+    // one observed kind is not runtime: the other ran headless
+    expect(L({ interaction: ["jsdom"], accessibility: ["chromium", "jsdom"] })).toBe("headless");
+    expect(L({ interaction: ["chromium"], accessibility: ["jsdom"] })).toBe("headless");
+    expect(L({ interaction: ["chromium", "jsdom"], accessibility: ["chromium"] })).toBe("runtime");
+    // an unknown environment is not a runtime one
+    expect(L({ interaction: ["simulator?"], accessibility: ["simulator?"] })).toBe("headless");
   });
 
   it("does not let evidence stand in for a missing implementation", () => {
-    expect(levelFor(false, ["build", "interaction", "accessibility"])).toBe("not-implemented");
+    expect(levelFrom({ implemented: false, build: true, interaction: ["chromium"], accessibility: ["chromium"] })).toBe("not-implemented");
+  });
+
+  it("orders headless between build and runtime, so a headless part lowers a runtime floor", () => {
+    expect(EVIDENCE_LEVELS.indexOf("headless")).toBe(EVIDENCE_LEVELS.indexOf("build") + 1);
+    expect(EVIDENCE_LEVELS.indexOf("runtime")).toBe(EVIDENCE_LEVELS.indexOf("headless") + 1);
+    expect(weakest(["runtime", "headless", "runtime"])).toBe("headless");
+    expect(weakest(["headless", "build"])).toBe("build");
+  });
+
+  it("reads a skipped test in any of the five test languages, and not a data value named skip", () => {
+    expect(skipIn("a.test.tsx", "it.skip('x', () => {})")).toBe("it.skip");
+    expect(skipIn("a.spec.ts", "xit('x', () => {})")).toBe("xit(");
+    expect(skipIn("a.spec.ts", "describe.skipIf(ci)('x', () => {})")).toBe("describe.skipIf");
+    expect(skipIn("A.swift", "throw XCTSkip(\"later\")")).toBe("XCTSkip");
+    expect(skipIn("A.kt", "@Ignore\n@Test fun x() {}")).toBe("@Ignore");
+    expect(skipIn("a_test.dart", "testWidgets('x', (t) async {}, skip: true);")).toBe("skip: true");
+    expect(skipIn("overlays.mjs", "return { skip: true };")).toBeNull();
+    expect(skipIn("a.test.tsx", "it('skips nothing', () => {})")).toBeNull();
   });
 
   it("aggregates by the weakest part, never an average", () => {
@@ -131,16 +166,36 @@ describe("evidence levels: negative controls", () => {
 
   it("never lets headless evidence make a block runtime verified", () => {
     const headless = block({ interaction: [{ ref: "a.spec.ts:1-9", environment: "jsdom" }], accessibility: [{ ref: "b_test.dart:1-9", environment: "flutter_test" }] });
-    expect(expectedBlock(headless)).toBe("build");
+    expect(expectedBlock(headless)).toBe("headless");
     expect(blockEvidenceNote(headless)).toBe("Interaction and accessibility tested headless");
     // one observed kind is not enough: runtime needs BOTH seen in a browser or on a device
     const half = block({ interaction: [{ ref: "r.mjs:1-9", environment: "chromium" }], accessibility: [{ ref: "c.kt:1-9", environment: "robolectric" }] });
-    expect(expectedBlock(half)).toBe("build");
+    expect(expectedBlock(half)).toBe("headless");
     expect(blockEvidenceNote(half)).toBe("Interaction observed in a browser; accessibility tested headless");
     expect(expectedBlock(block({}))).toBe("build");
     expect(blockEvidenceNote(block({}))).toBe("No interaction or accessibility test");
     expect(expectedBlock(block({ build: [] }))).toBe("source");
     expect(expectedBlock({ level: "build" })).toBe("not-implemented"); // no source of its own, whatever it says
+  });
+
+  it("never lets a headless part ride up to a runtime floor, so the new rung cannot raise readiness", () => {
+    const w = synthetic([{ title: "A", rows: [], status: "existing" }]);
+    // on Angular, number-input was observed in a browser and badge only headless
+    expect(componentLevel("number-input", "Angular")).toBe("runtime");
+    expect(componentLevel("badge", "Angular")).toBe("headless");
+    const r = readinessFor(w, "Angular", { components: ["number-input", "badge"], blocks: [], iot: 0 });
+    expect(r.weakestComponent).toBe("headless");
+    expect(r.weakestRequired).toBe("headless");
+    // and a block at build holds the overall floor at build, whatever its components reached
+    const withBlock = readinessFor(w, "Angular", { components: ["number-input"], blocks: ["receipt"], iot: 0 });
+    expect(withBlock.weakestRequired).toBe("build");
+    // every real floor is the minimum of its parts, read independently of the implementation
+    for (const wf of WORKFLOWS)
+      for (const x of workflowReadiness(wf)) {
+        if (!x.parts.length) continue; // a workflow with no parts yet has nothing to be ready
+        const lowest = x.parts.map((p) => EVIDENCE_LEVELS.indexOf(p.level)).reduce((a, b) => Math.min(a, b), EVIDENCE_LEVELS.length - 1);
+        expect(x.weakestRequired, `${wf.id} ${x.platform}`).toBe(EVIDENCE_LEVELS[lowest]);
+      }
   });
 
   it("does not let a block borrow its components' evidence", () => {
@@ -189,10 +244,9 @@ describe("evidence levels: negative controls", () => {
 });
 
 describe("evidence levels: the real data", () => {
-  it("every component level on every workflow matches the raw verification records", () => {
-    for (const w of WORKFLOWS)
-      for (const slug of workflowParts(w).components)
-        for (const p of PLATFORMS) expect(componentLevel(slug, p), `${slug} on ${p}`).toBe(expectedComponent(slug, p));
+  it("every component level on every platform matches the raw verification records", () => {
+    for (const slug of Object.keys(DECLARED))
+      for (const p of PLATFORMS) expect(componentLevel(slug, p), `${slug} on ${p}`).toBe(expectedComponent(slug, p));
   });
 
   it("every block level matches the rule applied to its raw evidence refs, and no generated level is inflated", () => {
@@ -218,15 +272,18 @@ describe("evidence levels: the real data", () => {
 });
 
 describe("component evidence notes", () => {
-  it("say where a component's tests ran without changing its level", () => {
+  it("say where a component's tests ran, and match its tier", () => {
     // React button: interaction in jsdom (Vitest), accessibility also in Chromium (a11y-browser)
     const e = componentEvidence("button", "React");
     expect(e.level).toBe(componentLevel("button", "React"));
     expect(e.interaction!.every((r) => r.environment === "jsdom")).toBe(true);
     expect(e.accessibility!.some((r) => r.environment === "chromium")).toBe(true);
     expect(blockEvidenceNote(e)).toBe("Accessibility observed in a browser; interaction tested headless");
-    // a native component's tests are headless, and the note says so
-    const flutter = Object.keys(verification.components).find((s) => componentLevel(s, "Flutter") === "runtime")!;
+    expect(e.level).toBe("headless");
+    // a native component's tests are headless, and the note says so; no native component is runtime verified
+    const flutter = Object.keys(verification.components).find((s) => componentLevel(s, "Flutter") === "headless")!;
     expect(blockEvidenceNote(componentEvidence(flutter, "Flutter"))).toBe("Interaction and accessibility tested headless");
+    for (const p of ["SwiftUI", "Compose", "Flutter"] as const)
+      for (const slug of Object.keys(verification.componentLevels)) expect(componentLevel(slug, p), `${slug} ${p}`).not.toBe("runtime");
   });
 });
