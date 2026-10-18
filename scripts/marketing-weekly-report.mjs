@@ -4,7 +4,9 @@
  *   node scripts/marketing-weekly-report.mjs --from 2026-10-12 --to 2026-10-19 --print-query
  *       prints the one HogQL query to run (PostHog → SQL, or the MCP `execute-sql` tool); save its rows as JSON
  *   node scripts/marketing-weekly-report.mjs --from 2026-10-12 --to 2026-10-19 --sessions rows.json [--platform p.json]
- *       renders the report as Markdown on stdout
+ *   node scripts/marketing-weekly-report.mjs --from … --to … --print-query --compact
+ *       the same query returning one text cell (for clients that cap rows); save it as .txt and pass it to --sessions
+ *       renders the report as Markdown on stdout; --history weeks.json ([{ from, to, rows }]) adds earlier weeks to the trend
  *
  * Why one query and a script rather than dashboard tiles: every number in the report comes from the same per-session
  * rows, classified by one function (`classifySession`) that is unit-tested, so the cohorts cannot disagree with each
@@ -44,6 +46,12 @@ export const RENDER_EVENTS = ["$pageview", "$pageleave", "docs_viewed", "compone
 /** The suspected-automation rule's duration bound, in seconds (analytics.md §11 "Traffic cohorts"). */
 export const RENDER_ONLY_MAX_SECONDS = 5;
 
+/** Events that name the platform a visitor chose or copied for (apps/web/ANALYTICS.md). */
+export const PLATFORM_EVENTS = ["platform_selected", "component_code_viewed", "install_command_copied"];
+
+/** analytics.md §10: fewer than ~30 qualified evaluations in a comparison is noise. */
+export const MIN_QE_FOR_COMPARISON = 30;
+
 /** Sessions the 2026-10-09 audit already excluded by id (analytics.md §11). */
 export const EXCLUDED_SESSION_IDS = ["01a120d7-2b07-7ed0-af0c-f96d32e4c5bd"];
 
@@ -56,10 +64,18 @@ const list = (xs) => xs.map((x) => `'${x}'`).join(", ");
  * window is applied to the session's first event, so a session crossing midnight on a boundary is counted once,
  * in the week it began, and classified on all of its events.
  */
+/** An experiment arm's `utm_content` (`li_xa_infra`, `x_xc_firstuse`): channel, experiment letter, arm name. */
+export const ARM_CONTENT = /^[a-z]+_x[a-z]_[a-z0-9-]+$/;
+
 export function sessionQuery(from, to) {
   if (!DAY.test(from) || !DAY.test(to) || from >= to) throw new Error("--from and --to must be YYYY-MM-DD with from < to");
   const qe = `(event IN (${list(QE_EVENTS)}) OR (event = 'cta_clicked' AND properties.target IN (${list(QE_CTA_TARGETS)})))`;
   const ai = `(event IN (${list(AI_EVENTS)}) OR (event = 'cta_clicked' AND properties.target IN (${list(AI_CTA_TARGETS)})))`;
+  const copy = `(event IN ('install_command_copied', 'cli_command_copied') OR (event = 'cta_clicked' AND properties.target IN (${list(AI_CTA_TARGETS)})))`;
+  // Experiment arms count only what happened at or after the first arm-tagged event: a PostHog session can already
+  // be open when the tagged link is followed (analytics-posthog.attribution.test.ts), and what came before is not the arm's.
+  const arm = `match(ifNull(toString(properties.kx_content), ''), '${ARM_CONTENT.source}')`;
+  const afterArm = (cond) => `arrayCount(x -> x.1 >= minIf(timestamp, ${arm}) AND ${cond}, groupArray((timestamp, event, if(${qe}, 1, 0), if(${copy}, 1, 0))))`;
   // Evaluation → Intent Progression (analytics.md §4): some intent signal at or after the first qualifying evaluation.
   return `SELECT
   $session_id AS session_id,
@@ -72,7 +88,10 @@ export function sessionQuery(from, to) {
   countIf(${qe}) AS qe_signals,
   countIf(${ai}) AS ai_signals,
   if(countIf(${qe}) > 0 AND countIf(${ai}) > 0 AND maxIf(timestamp, ${ai}) >= minIf(timestamp, ${qe}), 1, 0) AS progressed,
-  countIf(event IN ('install_command_copied', 'cli_command_copied') OR (event = 'cta_clicked' AND properties.target IN (${list(AI_CTA_TARGETS)}))) AS ai_copy_or_rung,
+  countIf(${copy}) AS ai_copy_or_rung,
+  countIf(event = 'installation_viewed') AS install_views,
+  countIf(event IN ('install_command_copied', 'cli_command_copied')) AS install_copies,
+  arrayStringConcat(arraySort(groupUniqArrayIf(toString(properties.platform), event IN (${list(PLATFORM_EVENTS)}) AND properties.platform IS NOT NULL)), ',') AS platforms,
   countIf(properties.kx_traffic_type = 'diagnostic') AS diagnostic_events,
   countIf(properties.kx_traffic_type = 'internal') AS internal_events,
   argMin(properties.kx_source, timestamp) AS kx_source,
@@ -80,13 +99,54 @@ export function sessionQuery(from, to) {
   argMin(properties.kx_campaign, timestamp) AS kx_campaign,
   argMin(properties.kx_content, timestamp) AS kx_content,
   argMin(properties.kx_referrer, timestamp) AS kx_referrer,
-  argMinIf(properties.$pathname, timestamp, event = '$pageview') AS landing
+  argMinIf(properties.$pathname, timestamp, event = '$pageview') AS landing,
+  argMinIf(properties.kx_content, timestamp, ${arm}) AS arm_content,
+  ${afterArm("x.2 = '$pageview'")} AS arm_pageviews,
+  ${afterArm(`x.2 NOT IN (${list(RENDER_EVENTS)})`)} AS arm_interactions,
+  ${afterArm("x.3 = 1")} AS arm_qe_signals,
+  ${afterArm("x.4 = 1")} AS arm_copies
 FROM events
 WHERE timestamp >= toDateTime('${from} 00:00:00') - INTERVAL 1 DAY AND timestamp < toDateTime('${to} 00:00:00') + INTERVAL 1 DAY
   AND $session_id IS NOT NULL AND $session_id NOT IN (${list(EXCLUDED_SESSION_IDS)})
 GROUP BY session_id
 HAVING started >= toDateTime('${from} 00:00:00') AND started < toDateTime('${to} 00:00:00')
 ORDER BY started`;
+}
+
+/** The columns `--compact` exports, in order. Everything `summarise` reads; the session id is left out. */
+export const COMPACT_COLUMNS = [
+  "started", "duration_s", "pageviews", "arrival_events", "interaction_events", "engaged_events", "qe_signals", "ai_signals",
+  "progressed", "ai_copy_or_rung", "install_views", "install_copies", "platforms", "diagnostic_events", "internal_events",
+  "kx_source", "kx_medium", "kx_campaign", "kx_content", "kx_referrer", "landing",
+  "arm_content", "arm_pageviews", "arm_interactions", "arm_qe_signals", "arm_copies",
+];
+/** Exports made before the arm columns existed end at `landing`; they are read with no arm data. */
+const BASE_COLUMNS = COMPACT_COLUMNS.slice(0, COMPACT_COLUMNS.indexOf("landing") + 1);
+const NUMERIC = new Set(COMPACT_COLUMNS.filter((c) => !["started", "platforms", "kx_source", "kx_medium", "kx_campaign", "kx_content", "kx_referrer", "landing", "arm_content"].includes(c)));
+
+/**
+ * The same query wrapped to return one cell: a header line, then one `|`-separated line per session. Some SQL
+ * clients (the PostHog MCP tool among them) cap a result at 100 rows; one cell is not capped, and is a fraction of
+ * the size. Same sessions, same columns, so `--sessions` reads either form.
+ */
+export function compactQuery(from, to) {
+  const cell = (c) => (c === "started" ? "formatDateTime(started, '%Y-%m-%dT%H:%i:%SZ')" : NUMERIC.has(c) ? `toString(${c})` : `ifNull(toString(${c}), '')`);
+  return `SELECT concat('${COMPACT_COLUMNS.join("|")}', '\\n', arrayStringConcat(groupArray(concat(${COMPACT_COLUMNS.map(cell).join(", '|', ")})), '\\n')) AS rows
+FROM (
+${sessionQuery(from, to)}
+)`;
+}
+
+/** Parses `compactQuery`'s cell back into rows; an empty text field is null, as in the JSON export. */
+export function parseCompact(text) {
+  const [head, ...lines] = text.trim().split(/\r?\n/);
+  const cols = head.split("|");
+  if (cols.join("|") !== COMPACT_COLUMNS.join("|") && cols.join("|") !== BASE_COLUMNS.join("|")) throw new Error("compact header does not match COMPACT_COLUMNS");
+  return lines.filter(Boolean).map((line) => {
+    const v = line.split("|");
+    if (v.length !== cols.length) throw new Error(`compact line has ${v.length} fields, expected ${cols.length}: ${line}`);
+    return Object.fromEntries(cols.map((c, i) => [c, NUMERIC.has(c) ? Number(v[i]) : v[i] === "" ? (c === "platforms" ? "" : null) : v[i]]));
+  });
 }
 
 /* ------------------------------------------------------------------ classification */
@@ -122,6 +182,7 @@ export const humanEvidence = (row) => Number(row.engaged_events) > 0 || Number(r
 const isQE = (r) => Number(r.qe_signals) > 0;
 const isAI = (r) => Number(r.ai_signals) > 0;
 const isProgressed = (r) => Number(r.progressed) > 0;
+const platformsOf = (r) => (r.platforms ? String(r.platforms).split(",").filter(Boolean) : []);
 const rate = (n, d) => (d === 0 ? "n/a (no sessions)" : `${((100 * n) / d).toFixed(1)}%`);
 
 /** Every number the report prints, computed from the rows alone. */
@@ -144,13 +205,58 @@ export function summarise(rows) {
       engaged: audience.filter((r) => Number(r.engaged_events) > 0).length,
     },
     byCampaign: groupCount(eligible, (r) => (r.kx_campaign ? `${r.kx_campaign} / ${r.kx_content ?? "—"}` : null)),
+    byArm: armCount(audience),
     bySource: groupCount(eligible, (r) => `${r.kx_source ?? "unknown"} / ${r.kx_medium ?? "unknown"}`),
     byLanding: groupCount(audience, (r) => r.landing ?? "(no page view)"),
+    byPlatform: groupCount(eligible.flatMap((r) => platformsOf(r).map((p) => ({ ...r, _platform: p }))), (r) => r._platform),
+    install: {
+      known: rows.every((r) => r.install_views !== undefined && r.install_views !== null),
+      viewed: { canonical: eligible.filter((r) => Number(r.install_views) > 0).length, audience: audience.filter((r) => Number(r.install_views) > 0).length },
+      copied: { canonical: eligible.filter((r) => Number(r.install_copies) > 0).length, audience: audience.filter((r) => Number(r.install_copies) > 0).length },
+    },
+    platformKnown: rows.every((r) => r.platforms !== undefined),
     unattributed: eligible.filter((r) => !r.kx_campaign && ["direct", "other", undefined, null].includes(r.kx_source)).length,
+    partiallyTagged: eligible.filter((r) => r.kx_campaign && (!r.kx_content || !r.kx_source || r.kx_source === "direct")).length,
     campaignSessions: eligible.filter((r) => r.kx_campaign).length,
     campaignAudience: audience.filter((r) => r.kx_campaign).length,
     eligibleRows: eligible,
   };
+}
+
+/**
+ * Per experiment arm, audience cohort only: the table experiment arms are read from (distribution/M3-EXPERIMENTS.md).
+ * An arm is its `utm_content`, summed across every post (campaign) that carried it, so an arm run through several
+ * assets is one row. Content that is not an arm tag is left out.
+ * "Acted" is a person doing something after the page rendered (an event that is not render-fired, or a second page),
+ * so it is comparable across destinations that fire different events on load. "Copied" is an install or CLI copy
+ * or an adopt CTA, never the render-fired `installation_viewed`.
+ */
+function armCount(audienceRows) {
+  const m = new Map();
+  for (const r of audienceRows) {
+    if (!ARM_CONTENT.test(r.arm_content ?? "")) continue;
+    const k = r.arm_content;
+    const g = m.get(k) ?? { sessions: 0, qe: 0, acted: 0, copied: 0 };
+    g.sessions += 1;
+    if (Number(r.arm_qe_signals) > 0) g.qe += 1;
+    if (Number(r.arm_interactions) > 0 || Number(r.arm_pageviews) > 1) g.acted += 1;
+    if (Number(r.arm_copies) > 0) g.copied += 1;
+    m.set(k, g);
+  }
+  return [...m.entries()].sort((a, b) => b[1].sessions - a[1].sessions);
+}
+
+/**
+ * The registered floor metric of an arm's experiment (distribution/M3-EXPERIMENTS.md): audience QE for A, whose arms
+ * share a destination; *acted after landing* for B and C, whose arms do not.
+ */
+export function armFloor(content, g) {
+  return /^[a-z]+_xa_/.test(content) ? g.qe : g.acted;
+}
+
+/** A count, with its share of the arm's audience sessions once the arm's registered floor metric reaches the evidence floor. */
+function armCell(n, content, g) {
+  return armFloor(content, g) >= MIN_QE_FOR_COMPARISON ? `${n} (${((100 * n) / g.sessions).toFixed(1)}%)` : `${n}`;
 }
 
 function groupCount(rows, key) {
@@ -158,8 +264,9 @@ function groupCount(rows, key) {
   for (const r of rows) {
     const k = key(r);
     if (k === null) continue;
-    const g = m.get(k) ?? { cohort: {}, sessions: 0, qe: 0, ai: 0 };
+    const g = m.get(k) ?? { cohort: {}, sessions: 0, qe: 0, ai: 0, engaged: 0 };
     g.sessions += 1;
+    if (Number(r.engaged_events) > 0) g.engaged += 1;
     if (isQE(r)) g.qe += 1;
     if (isAI(r)) g.ai += 1;
     const c = classifySession(r);
@@ -167,6 +274,38 @@ function groupCount(rows, key) {
     m.set(k, g);
   }
   return [...m.entries()].sort((a, b) => b[1].sessions - a[1].sessions);
+}
+
+/**
+ * Data-quality warnings, computed from the same rows and registers. Each one says what is wrong with reading the
+ * week's numbers at face value; none of them changes a number.
+ */
+export function dataQualityWarnings(s, published) {
+  const w = [];
+  const suspected = s.cohorts.suspected_automation.sessions;
+  if (s.canonical.eligible > 0 && suspected * 2 >= s.canonical.eligible)
+    w.push(`${suspected} of ${s.canonical.eligible} eligible sessions (${rate(suspected, s.canonical.eligible)}) are suspected automation; session and landing counts are mostly page loads.`);
+  if (s.cohorts.suspected_automation.qe > 0 && s.cohorts.suspected_automation.qe * 2 >= s.canonical.qe)
+    w.push(`${s.cohorts.suspected_automation.qe} of the ${s.canonical.qe} canonical Qualified Evaluation sessions are suspected automation, so the canonical QER mostly measures pages loading, not people evaluating. Read the audience rows.`);
+  if (s.audience.qe < MIN_QE_FOR_COMPARISON)
+    w.push(`Audience Qualified Evaluation sessions: ${s.audience.qe}, below the ~${MIN_QE_FOR_COMPARISON} analytics.md §10 needs for any comparison. Every split below is an observation, not a result.`);
+  if (s.raw > 0 && s.audience.engaged === 0 && s.audience.sessions > 0)
+    w.push("No audience session sent `page_engaged`. Either the M2 release is not deployed yet or nobody touched a page; human-evidenced figures rely on click events and second pages.");
+  if (s.campaignSessions > 0 && s.campaignAudience === 0)
+    w.push(`All ${s.campaignSessions} campaign-tagged sessions are outside the audience cohort; no tagged human arrival is evidenced.`);
+  if (s.partiallyTagged > 0) w.push(`${s.partiallyTagged} campaign session(s) arrived without a source or content tag; check the link that was posted.`);
+  if (!s.progressionKnown) w.push("Rows predate the `progressed` column; Progression is unavailable for this week.");
+  if (!s.install.known || !s.platformKnown) w.push("Rows predate the M3 installation and platform columns; those sections are unavailable for this week.");
+  for (const p of published.filter((x) => !x.liveUrl)) w.push(`${p.asset} is marked published without a live URL.`);
+  return w;
+}
+
+/** One line per week, absolute counts only (analytics.md §10: no percentage change before the baseline closes). */
+export function trendRows(weeks) {
+  return weeks.map(({ from, to, rows }) => {
+    const s = summarise(rows);
+    return { from, to, raw: s.raw, eligible: s.canonical.eligible, qe: s.canonical.qe, audience: s.audience.sessions, audienceQe: s.audience.qe, ai: s.canonical.ai, audienceAi: s.audience.ai, campaign: s.campaignSessions, campaignAudience: s.campaignAudience };
+  });
 }
 
 /* ------------------------------------------------------------------ rendering */
@@ -180,15 +319,19 @@ export function publishedInWindow(distribution, from, to) {
     .map((r) => ({ asset: r.asset, channel: r.channel, date: r.date, liveUrl: r.liveUrl ?? null }));
 }
 
-export function renderReport({ from, to, rows, distribution, platform = null, generatedAt = null }) {
+export function renderReport({ from, to, rows, distribution, platform = null, generatedAt = null, history = [], armRows = null, armsFrom = null }) {
   const s = summarise(rows);
+  // Arms accumulate since the experiment started (armRows); every other figure stays this week's.
+  if (armRows) s.byArm = armCount(armRows.filter((r) => classifySession(r) === "audience"));
   const published = publishedInWindow(distribution, from, to);
+  const warnings = dataQualityWarnings(s, published);
+  const trend = trendRows([...history, { from, to, rows }]);
   const cohortLine = (k, label) => `| ${label} | ${s.cohorts[k].sessions} | ${s.cohorts[k].qe} | ${s.cohorts[k].ai} |`;
   const table = (entries) =>
     entries.length === 0
       ? "_none_"
-      : ["| | Sessions | Qualified Evaluation | Adoption Intent | Of which suspected automation |", "| --- | --- | --- | --- | --- |"]
-          .concat(entries.map(([k, g]) => `| ${k} | ${g.sessions} | ${g.qe} | ${g.ai} | ${g.cohort.suspected_automation ?? 0} |`))
+      : ["| | Sessions | Qualified Evaluation | Adoption Intent | Engaged (`page_engaged`) | Of which suspected automation |", "| --- | --- | --- | --- | --- | --- |"]
+          .concat(entries.map(([k, g]) => `| ${k} | ${g.sessions} | ${g.qe} | ${g.ai} | ${g.engaged} | ${g.cohort.suspected_automation ?? 0} |`))
           .join("\n");
   const plat = (asset, field) => {
     const v = platform?.[asset]?.[field];
@@ -200,6 +343,10 @@ export function renderReport({ from, to, rows, distribution, platform = null, ge
 ${generatedAt ? `Generated ${generatedAt} from ` : "From "}one PostHog query (\`node scripts/marketing-weekly-report.mjs --from ${from} --to ${to} --print-query\`)
 and the distribution register. **Observed counts only.** Before the baseline in analytics.md §10 closes, read
 absolute counts, never a percentage change.
+
+## Data-quality warnings
+
+${warnings.length === 0 ? "_None raised by the automatic checks._" : warnings.map((x) => `- ${x}`).join("\n")}
 
 ## Published this week (live URLs from distribution/register.json)
 
@@ -238,16 +385,46 @@ silently inside it; changing the definition is the owner's decision (analytics.m
 ## Campaigns and channels (eligible sessions)
 
 Campaign-attributed sessions: **${s.campaignSessions}** (audience cohort: ${s.campaignAudience}).
-Unattributed (direct or unrecognised source, no campaign): **${s.unattributed}**.
+Unattributed (direct or unrecognised source, no campaign): **${s.unattributed}**. Campaign sessions missing a source or content tag: **${s.partiallyTagged}**.
 
 ### By campaign / content
 ${table(s.byCampaign)}
+
+### Experiment arms (audience cohort only)
+
+Read experiment arms here, never from the table above (distribution/M3-EXPERIMENTS.md). One row per arm tag, summed
+across every post that carried it. *Acted*: an event that is not fired on render, or a second page. *Copied*: an
+install or CLI copy, or an adopt CTA. Shares of the arm's audience sessions are printed in every column once the
+arm's registered floor metric (audience QE for experiment A, *acted after landing* for B and C) reaches ${MIN_QE_FOR_COMPARISON}; arms are
+compared on those shares, never on raw counts. Every column counts only what happened at or after the arm-tagged
+arrival. ${armsFrom ? `Cumulative: audience sessions from ${armsFrom} to ${to}, not only this week, because an arm's floor is reached across weeks.` : "This week only; pass `--arms-from` to accumulate since an experiment started."}
+
+${s.byArm.length === 0 ? "_none_" : ["| Arm (utm_content) | Audience sessions | Audience QE | Acted after landing | Copied or adopt CTA |", "| --- | --- | --- | --- | --- |"].concat(s.byArm.map(([k, g]) => { const c = (n) => armCell(n, k, g); return `| ${k} | ${g.sessions} | ${c(g.qe)} | ${c(g.acted)} | ${c(g.copied)} |`; })).join("\n")}
 
 ### By source / medium
 ${table(s.bySource)}
 
 ## Conversion by landing page (audience cohort)
 ${table(s.byLanding)}
+
+## Platform interest (eligible sessions)
+
+Sessions that chose a platform tab, opened a platform's code or copied a platform's install snippet. A session can name more than one platform.
+
+${s.platformKnown ? table(s.byPlatform) : UNAVAILABLE}
+
+## Installation interest
+
+${s.install.known ? `| | Canonical | Audience |
+| --- | --- | --- |
+| Opened an installation page (fires on render) | ${s.install.viewed.canonical} | ${s.install.viewed.audience} |
+| Copied an install or CLI command | ${s.install.copied.canonical} | ${s.install.copied.audience} |` : UNAVAILABLE}
+
+## Trend (absolute counts, oldest first)
+
+| Week | Raw | Eligible | Canonical QE | Audience | Audience QE | AI (canonical / audience) | Campaign (all / audience) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+${trend.map((t) => `| ${t.from} → ${t.to} | ${t.raw} | ${t.eligible} | ${t.qe} | ${t.audience} | ${t.audienceQe} | ${t.ai} / ${t.audienceAi} | ${t.campaign} / ${t.campaignAudience} |`).join("\n")}
 
 ## Platform-reported engagement
 
@@ -274,18 +451,28 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const from = arg("--from");
   const to = arg("--to");
   if (process.argv.includes("--print-query")) {
-    console.log(sessionQuery(from, to));
+    console.log(process.argv.includes("--compact") ? compactQuery(from, to) : sessionQuery(from, to));
   } else {
     const file = arg("--sessions");
     if (!file) {
-      console.error("usage: --from YYYY-MM-DD --to YYYY-MM-DD (--print-query | --sessions rows.json [--platform p.json])");
+      console.error("usage: --from YYYY-MM-DD --to YYYY-MM-DD (--print-query | --sessions rows.json [--platform p.json] [--history weeks.json] [--arms-from YYYY-MM-DD])");
       process.exit(2);
     }
     sessionQuery(from, to); // validates the window
-    const parsed = JSON.parse(readFileSync(file, "utf8"));
-    const rows = Array.isArray(parsed) ? parsed : parsed.rows; // the bare rows, or { rows, ...provenance }
+    const text = readFileSync(file, "utf8");
+    // the bare rows, { rows, ...provenance }, or the --compact cell saved as text
+    const parsed = file.endsWith(".json") ? JSON.parse(text) : parseCompact(text);
+    const all = Array.isArray(parsed) ? parsed : parsed.rows;
+    // a multi-week export is cut to this week here, so one export can feed several reports
+    const rows = all.filter((r) => !r.started || (String(r.started).slice(0, 10) >= from && String(r.started).slice(0, 10) < to));
     const distribution = JSON.parse(readFileSync("marketing/distribution/register.json", "utf8"));
     const platform = arg("--platform") ? JSON.parse(readFileSync(arg("--platform"), "utf8")) : null;
-    process.stdout.write(renderReport({ from, to, rows, distribution, platform, generatedAt: new Date().toISOString().slice(0, 10) }));
+    // --history older-weeks.json: [{ from, to, rows }] for the trend table, oldest first
+    const history = arg("--history") ? JSON.parse(readFileSync(arg("--history"), "utf8")) : [];
+    // --arms-from YYYY-MM-DD: the arm table counts from the experiment's start to --to, so a floor reached across weeks shows
+    const armsFrom = arg("--arms-from");
+    if (armsFrom && (!DAY.test(armsFrom) || armsFrom > from)) throw new Error("--arms-from must be YYYY-MM-DD, on or before --from");
+    const armRows = armsFrom ? all.filter((r) => r.started && String(r.started).slice(0, 10) >= armsFrom && String(r.started).slice(0, 10) < to) : null;
+    process.stdout.write(renderReport({ from, to, rows, distribution, platform, history, armRows, armsFrom, generatedAt: new Date().toISOString().slice(0, 10) }));
   }
 }

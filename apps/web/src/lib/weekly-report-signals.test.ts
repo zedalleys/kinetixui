@@ -3,6 +3,7 @@ import {
   AI_CTA_TARGETS,
   AI_EVENTS,
   ARRIVAL_EVENTS as REPORT_ARRIVAL_EVENTS,
+  PLATFORM_EVENTS,
   QE_CTA_TARGETS,
   QE_EVENTS,
   RENDER_EVENTS,
@@ -37,5 +38,9 @@ describe("weekly report signal lists match analytics-measurement.ts", () => {
     for (const e of RENDER_EVENTS) if (e !== "$pageleave") expect(ARRIVAL_EVENTS as readonly string[]).toContain(e);
     expect(RENDER_EVENTS).not.toContain("cta_clicked");
     expect(RENDER_EVENTS).not.toContain("page_engaged");
+  });
+
+  it("platform-interest events are real arrival events", () => {
+    for (const e of PLATFORM_EVENTS) expect(ARRIVAL_EVENTS as readonly string[]).toContain(e);
   });
 });

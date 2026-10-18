@@ -40,7 +40,16 @@ The sentence matches what the page says about itself ("Component counts and the 
 | --- | --- |
 | Source code | **Verified.** `campaign-links.test.ts` and `analytics-attribution.test.ts` (LI-001 link, diagnostic mark, negative controls). |
 | Real browser | **Verified, locally.** `scripts/marketing-stop-gate-browser.mjs` against a production build with an intercepted ingest: every event carries the campaign, source, medium, content and landing; the diagnostic mark arrives only when asked. Evidence: `/mnt/project-files/marketing/m2/stop-gate-browser-evidence.json`. |
-| PostHog delivery | **BLOCKED.** No LI-001 diagnostic event exists in project 620385, and this environment cannot open kinetixui.com. |
+| PostHog delivery | **BLOCKED.** No LI-001 diagnostic event exists in project 620385, and this environment cannot open kinetixui.com. Re-checked 2026-10-18 at about 10:00 UTC (M3): every diagnostic-marked event since 1 October is from 10 October (a `kx_p2_f_two_trades` and an `art_primary` probe); none carries `kx_p1_a_parity_proof` / `li_primary`. The project's last ingested event of any kind was 08:26 UTC, so the visit has simply not happened yet. Failure point: the owner's visit (step 1 below), not the pipeline. |
+
+> **Correction, 2026-10-18 13:00 UTC.** The 10:00 UTC observation "no LI-001 diagnostic event; visit not done" was
+> made before the visit was ingested and is superseded. The owner's diagnostic visit happened: PostHog 620385 holds
+> `$pageview` 10:30:33.060, `docs_viewed` 10:30:33.066 and `page_engaged` 10:30:38.373 UTC (session
+> 01a14e90-2718-737d-affb-9d0d9a4ed40a, iOS Safari), all with kx_campaign kx_p1_a_parity_proof, kx_medium social,
+> kx_content li_primary, kx_traffic_type diagnostic, landing /docs/platforms. Source attribution was wrong:
+> kx_source=other, not linkedin. Cause under investigation (M3.1); the visit's `utm_source` value did not arrive as
+> `linkedin`. LI-001 gate remains BLOCKED.
+
 
 To close it (two minutes, once, any time before Monday 14:00 UTC):
 

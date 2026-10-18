@@ -77,6 +77,11 @@ function extraEvidenceScripts(): string[] {
   return [...found];
 }
 
+/** The CI steps that run the component unit suites (TEST_SOURCES `runs` in gen-verification.mjs). */
+const UNIT_SUITE_STEPS = ["pnpm --filter @kinetixui/ui test", "pnpm test:angular"];
+/** The root wrapper `pnpm test:angular` goes through, as the real package.json has it. */
+const ROOT_SCRIPTS = { "test:angular": "pnpm --filter @kinetixui/angular test" };
+
 const temps: string[] = [];
 function fixture(files: Record<string, string>, manifest: unknown = MANIFEST) {
   const dir = mkdtempSync(join(tmpdir(), "kx-verify-"));
@@ -91,6 +96,14 @@ function fixture(files: Record<string, string>, manifest: unknown = MANIFEST) {
   for (const script of extraEvidenceScripts()) {
     writeFileSync(join(dir, script), "// no markers\n");
   }
+  // a test is evidence only while a CI step runs its suite, so the fixture runs them, as ci.yml does
+  writeFileSync(join(dir, "package.json"), JSON.stringify({ scripts: ROOT_SCRIPTS }));
+  for (const pkg of ["packages/ui", "packages/ui-angular", "apps/web"]) {
+    mkdirSync(join(dir, pkg), { recursive: true });
+    writeFileSync(join(dir, pkg, "package.json"), JSON.stringify({ scripts: { test: "vitest run" } }));
+  }
+  mkdirSync(join(dir, ".github/workflows"), { recursive: true });
+  writeFileSync(join(dir, ".github/workflows/ci.yml"), `jobs:\n  ci:\n    steps:\n${UNIT_SUITE_STEPS.map((c) => `      - run: ${c}\n`).join("")}${extraEvidenceScripts().map((s) => `      - run: node ${s}\n`).join("")}`);
   for (const [rel, body] of Object.entries(files)) {
     const full = join(dir, rel);
     mkdirSync(join(full, ".."), { recursive: true });
@@ -108,6 +121,8 @@ const reactTest = (body: string) => ({ "packages/ui/src/x.test.tsx": body });
 const generated = (dir: string) =>
   JSON.parse(readFileSync(join(dir, "verification.json"), "utf8")) as {
     components: Record<string, Record<string, Record<string, string[]>>>;
+    componentLevels: Record<string, Record<string, { level: string; interaction?: string[]; accessibility?: string[] }>>;
+    uncredited: { ref: string; reason: string }[];
   };
 
 describe("a marker cannot claim what its passage does not exercise", () => {
@@ -281,8 +296,8 @@ const BLOCKS_MANIFEST = {
 const RUNTIME_SCRIPT = "scripts/blocks-runtime-browser.mjs";
 
 /** A workflow that really runs both builds and every standalone evidence script, unless told to drop one. */
-function workflow({ drop = [] as string[], runtimeStep = `node ${RUNTIME_SCRIPT}`, buildWeb = "pnpm build:web" } = {}) {
-  const steps = [buildWeb, "pnpm build:angular", "pnpm --filter @kinetixui/web test", "pnpm test:angular", ...extraEvidenceScripts().map((s) => `node ${s}`), runtimeStep];
+function workflow({ drop = [] as string[], runtimeStep = `node ${RUNTIME_SCRIPT}`, buildWeb = "pnpm build:web", extraSteps = [] as string[] } = {}) {
+  const steps = [buildWeb, "pnpm build:angular", ...extraSteps, "pnpm --filter @kinetixui/ui test", "pnpm --filter @kinetixui/web test", "pnpm test:angular", ...extraEvidenceScripts().map((s) => `node ${s}`), runtimeStep];
   // a path filter naming the runtime script, as a real workflow has: a mention that is not a step
   const on = `on:\n  pull_request:\n    paths:\n      - "${RUNTIME_SCRIPT}"\n`;
   return `${on}jobs:\n  ci:\n    steps:\n${steps.filter((c) => !drop.some((d) => c.includes(d))).map((c) => `      - run: ${c}\n`).join("")}`;
@@ -296,15 +311,16 @@ function blockFixture(
     runtimeStep = undefined as string | undefined,
     buildWeb = undefined as string | undefined,
     scripts = {} as Record<string, string>,
+    extraSteps = [] as string[],
   } = {},
 ) {
   return fixture({
     "blocks.manifest.json": JSON.stringify(blocks),
-    "package.json": JSON.stringify({ scripts }),
+    "package.json": JSON.stringify({ scripts: { ...ROOT_SCRIPTS, ...scripts } }),
     "apps/web/src/examples/blocks/sign-in.tsx": "export function SignInBlock() { return null }\n",
     "apps/web/src/examples/blocks/stat-cards.tsx": "export function StatCardsBlock() { return null }\n",
     "packages/ui-angular/src/examples/blocks/sign-in.ts": "export class SignInBlock {}\n",
-    ".github/workflows/ci.yml": workflow({ drop, ...(runtimeStep ? { runtimeStep } : {}), ...(buildWeb ? { buildWeb } : {}) }),
+    ".github/workflows/ci.yml": workflow({ drop, extraSteps, ...(runtimeStep ? { runtimeStep } : {}), ...(buildWeb ? { buildWeb } : {}) }),
     [RUNTIME_SCRIPT]: "// no markers\n",
     ...files,
   });
@@ -392,6 +408,44 @@ describe("block evidence: negative controls", () => {
     expect(blocksOut(dir)["sign-in"]!.platforms.Angular!.build).toBeUndefined();
   });
 
+  it("3c. credits the Angular block compile only to the blocks its program lists, and only while CI runs it", () => {
+    const program = (tsconfig: object) => ({ "packages/ui-angular/tsconfig.blocks.json": JSON.stringify(tsconfig) });
+    const COMPILE = "scripts/angular-package/compile-blocks.mjs";
+    const wrapper = { "check:angular-blocks": `node ${COMPILE}` };
+    const listed = { ...program({ files: ["src/examples/blocks/sign-in.ts"], include: [] }), [COMPILE]: "// compiles\n" };
+    const angular = (files: Record<string, string>, extraSteps: string[], scripts: Record<string, string> = wrapper) => {
+      const dir = blockFixture(files, { extraSteps, scripts });
+      expect(run(script, [`--root=${dir}`]).ok).toBe(true);
+      return blocksOut(dir)["sign-in"]!.platforms.Angular!;
+    };
+    const compiled = angular(listed, ["pnpm check:angular-blocks"]);
+    expect(compiled.level).toBe("build");
+    expect(JSON.stringify(compiled.build)).toMatch(/check:angular-blocks/);
+    // omitted from the program: not compiled, whatever else the step compiles
+    expect(angular(program({ files: ["src/examples/blocks/other.ts"], include: [] }), ["pnpm check:angular-blocks"]).level).toBe("source");
+    // a glob include could let anything in; the program must name its files
+    expect(angular(program({ include: ["src/**/*.ts"] }), ["pnpm check:angular-blocks"]).level).toBe("source");
+    expect(angular({}, ["pnpm check:angular-blocks"]).level).toBe("source"); // no program at all
+    // the step has to run, unconditionally and with its failure intact
+    for (const step of [
+      [],
+      ["pnpm check:angular-blocks\n        if: github.event_name == 'push'"],
+      ["pnpm check:angular-blocks\n        continue-on-error: true"],
+      ["pnpm check:angular-blocks || true"],
+      ["echo pnpm check:angular-blocks"],
+      ["pnpm test:angular-blocks"],
+    ]) {
+      expect(angular(listed, step).level, step.join()).toBe("source");
+    }
+    // the step's wrapper has to run the compile itself: repointed, masked, flagged or missing, it proves nothing
+    for (const cmd of ["echo skipped", "true", `node ${COMPILE}; true`, `node ${COMPILE} || true`, `node ${COMPILE} --help`, `pnpm build:angular && node ${COMPILE}`]) {
+      expect(angular(listed, ["pnpm check:angular-blocks"], { "check:angular-blocks": cmd }).level, cmd).toBe("source");
+    }
+    expect(angular(listed, ["pnpm check:angular-blocks"], {}).level).toBe("source");
+    const { [COMPILE]: _gone, ...noScript } = listed;
+    expect(angular(noScript, ["pnpm check:angular-blocks"]).level).toBe("source");
+  });
+
   it("4. is not runtime verified without observed interaction", () => {
     const dir = blockFixture(chromium(`// kx-verify-block: accessibility\nblock(page, "sign-in");\n`));
     expect(run(script, [`--root=${dir}`]).ok).toBe(true);
@@ -417,7 +471,7 @@ describe("block evidence: negative controls", () => {
     expect(angular.accessibility).toBeUndefined();
   });
 
-  it("6b. keeps headless evidence below runtime even when it covers both kinds", () => {
+  it("6b. calls headless evidence for both kinds Headless verified, never runtime", () => {
     // React, which has a build record, so the only thing between this block and runtime is where the test ran
     const dir = blockFixture({ "apps/web/src/x.test.tsx": `// kx-verify-block: interaction, accessibility\n<SignInBlock />\n` });
     expect(run(script, [`--root=${dir}`]).ok).toBe(true);
@@ -425,7 +479,7 @@ describe("block evidence: negative controls", () => {
     expect(react.interaction).toEqual([{ ref: "apps/web/src/x.test.tsx:1-2", environment: "jsdom" }]);
     expect(react.accessibility).toEqual([{ ref: "apps/web/src/x.test.tsx:1-2", environment: "jsdom" }]);
     expect(react.build).toBeDefined();
-    expect(react.level).toBe("build");
+    expect(react.level).toBe("headless");
   });
 
   it("6c. records no test evidence from a suite that no workflow step runs", () => {
@@ -524,5 +578,134 @@ describe("block evidence: negative controls", () => {
     const { ok, output } = run(script, [`--root=${dir}`, "--check"]);
     expect(ok).toBe(false);
     expect(output).toMatch(/is stale/);
+  });
+});
+
+describe("component evidence records where it ran", () => {
+  const real = JSON.parse(readFileSync(join(repoRoot, "verification.json"), "utf8")) as {
+    sources: Record<string, { file: string; environment?: string }[]>;
+  };
+  const HEADLESS = ["jsdom", "xctest", "robolectric", "flutter_test"];
+
+  it("labels every evidence source with a known environment, browser suites as chromium", () => {
+    for (const [platform, list] of Object.entries(real.sources)) {
+      for (const s of list) {
+        expect([...HEADLESS, "chromium"], `${platform} ${s.file}`).toContain(s.environment);
+        // a browser suite is a script that drives a browser; a unit test is never one
+        expect(s.environment === "chromium", s.file).toBe(s.file.startsWith("scripts/"));
+      }
+    }
+    // no native suite is labelled as anything but its headless test host: there is no device evidence
+    for (const platform of ["SwiftUI", "Compose", "Flutter"]) {
+      expect(real.sources[platform]!.every((s) => HEADLESS.includes(s.environment!)), platform).toBe(true);
+    }
+  });
+});
+
+describe("component tiers: negative controls (ENG-2b-5)", () => {
+  const BOTH = `// kx-verify: interaction\n<Button />\n// kx-verify: accessibility\n<Button />\n`;
+  const ciWith = (steps: string[]) => ({
+    ".github/workflows/ci.yml": `jobs:\n  ci:\n    steps:\n${[...steps, ...extraEvidenceScripts().map((s) => `node ${s}`)].map((c) => `      - run: ${c}\n`).join("")}`,
+  });
+  const levels = (files: Record<string, string>) => {
+    const dir = fixture(files);
+    const { ok, output } = run(script, [`--root=${dir}`]);
+    expect(ok, output).toBe(true);
+    return generated(dir);
+  };
+
+  it("a. calls headless tests for both kinds Headless verified, never runtime", () => {
+    const out = levels(reactTest(BOTH));
+    expect(out.componentLevels.button!.React).toEqual({ level: "headless", interaction: ["jsdom"], accessibility: ["jsdom"] });
+  });
+
+  it("b. needs both kinds observed in a browser for runtime, and one observed kind is not enough", () => {
+    const observedA11y = levels({ ...reactTest(BOTH), "scripts/a11y-browser.mjs": `// kx-verify: accessibility\n<Button />\n` });
+    expect(observedA11y.componentLevels.button!.React!.level).toBe("headless");
+    const both = levels({ ...reactTest(BOTH), "scripts/a11y-browser.mjs": BOTH });
+    expect(both.componentLevels.button!.React).toEqual({ level: "runtime", interaction: ["chromium", "jsdom"], accessibility: ["chromium", "jsdom"] });
+  });
+
+  it("c. never calls a build alone Headless verified", () => {
+    const out = levels({});
+    expect(out.componentLevels.button!.React!.level).toBe("build");
+    expect(levels(reactTest(`// kx-verify: interaction\n<Button />\n`)).componentLevels.button!.React!.level).toBe("build");
+  });
+
+  it("d. takes the credit away from a skipped test, and says so", () => {
+    for (const skip of ["it.skip('x', () => {})", "xit('x', () => {})", "describe.skip('x', () => {})", "it.todo('x')"]) {
+      const out = levels(reactTest(`// kx-verify: interaction\n<Button />\n${skip}\n// kx-verify: accessibility\n<Button />\n`));
+      expect(out.componentLevels.button!.React!.level, skip).toBe("build");
+      expect(out.components.button!.React!.interaction, skip).toBeUndefined();
+      expect(out.uncredited, skip).toEqual([{ ref: "packages/ui/src/x.test.tsx:1-3", reason: expect.stringMatching(/^skips a test/) }]);
+    }
+  });
+
+  it("e. takes the credit away when CI would not fail on a failing test, or might not run it", () => {
+    for (const step of [
+      "pnpm --filter @kinetixui/ui test || true",
+      "pnpm --filter @kinetixui/ui test; true",
+      "pnpm --filter @kinetixui/ui test\n        continue-on-error: true",
+      "pnpm --filter @kinetixui/ui test\n        if: github.event_name == 'push'",
+      "echo pnpm --filter @kinetixui/ui test",
+    ]) {
+      const out = levels({ ...reactTest(BOTH), ...ciWith([step, "pnpm test:angular"]) });
+      expect(out.componentLevels.button!.React!.level, step).toBe("build");
+      expect(out.components.button!.React!.interaction, step).toBeUndefined();
+      expect(out.uncredited.map((u) => u.ref), step).toContain("packages/ui/src/x.test.tsx");
+    }
+    // the suite's step removed entirely
+    expect(levels({ ...reactTest(BOTH), ...ciWith(["pnpm test:angular"]) }).componentLevels.button!.React!.level).toBe("build");
+  });
+
+  it("e2. takes the credit away when a package script behind the CI step stops running the tests", () => {
+    for (const [pkg, script] of [
+      ["packages/ui/package.json", "echo vitest run"],
+      ["packages/ui/package.json", "vitest run || true"],
+      ["packages/ui/package.json", "true"],
+      ["packages/ui/package.json", "vitest run --help"],
+    ] as const) {
+      const out = levels({ ...reactTest(BOTH), [pkg]: JSON.stringify({ scripts: { test: script } }) });
+      expect(out.componentLevels.button!.React!.level, script).toBe("build");
+      expect(out.uncredited.map((u) => u.ref), script).toContain("packages/ui/src/x.test.tsx");
+    }
+    // the package script gone
+    expect(levels({ ...reactTest(BOTH), "packages/ui/package.json": "{}" }).componentLevels.button!.React!.level).toBe("build");
+    // the Angular root wrapper repointed: Angular unit evidence earns nothing, React is untouched
+    const angular = `// kx-verify: interaction\nKxButton;\n// kx-verify: accessibility\nKxButton;\n`;
+    const repointed = levels({ ...reactTest(BOTH), "packages/ui-angular/src/x.spec.ts": angular, "package.json": JSON.stringify({ scripts: { "test:angular": "echo skipped" } }) });
+    expect(repointed.componentLevels.button!.React!.level).toBe("headless");
+    expect(repointed.uncredited.map((u) => u.ref)).toContain("packages/ui-angular/src/x.spec.ts");
+  });
+
+  it("f. does not let a test of one component verify another", () => {
+    const out = levels(reactTest(BOTH));
+    expect(out.componentLevels.dialog!.React!.level).toBe("build");
+    expect(out.componentLevels.dialog!.React!.interaction).toBeUndefined();
+  });
+
+  it("g. does not let a test on one platform verify another", () => {
+    const out = levels(reactTest(BOTH));
+    expect(out.componentLevels.button!.React!.level).toBe("headless");
+    expect(out.componentLevels.button!.Angular).toEqual({ level: "build" });
+    expect(out.componentLevels.dialog!.Angular).toEqual({ level: "not-implemented" });
+  });
+
+  it("h. fails --check when a generated component level is inflated by hand", () => {
+    const dir = fixture(reactTest(BOTH));
+    run(script, [`--root=${dir}`]);
+    const file = join(dir, "verification.json");
+    const data = JSON.parse(readFileSync(file, "utf8"));
+    data.componentLevels.button.React.level = "runtime";
+    writeFileSync(file, JSON.stringify(data, null, 2) + "\n");
+    const { ok, output } = run(script, [`--root=${dir}`, "--check"]);
+    expect(ok).toBe(false);
+    expect(output).toMatch(/is stale/);
+  });
+
+  it("i. still checks the markers of a suite CI does not run", () => {
+    const { ok, output } = run(script, [`--root=${fixture({ ...reactTest(`// kx-verify: interaction\nconst x = 1;\n`), ...ciWith([]) })}`]);
+    expect(ok).toBe(false);
+    expect(output).toMatch(/uses no KinetixUI component/);
   });
 });

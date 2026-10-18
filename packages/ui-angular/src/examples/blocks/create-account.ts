@@ -76,7 +76,7 @@ export class CreateAccountBlock {
 
   readonly missing = computed(() => RULES.filter((rule) => !rule.met(this.password())));
   readonly percent = computed(() => ((RULES.length - this.missing().length) / RULES.length) * 100);
-  readonly strength = computed(() => STRENGTH[RULES.length - this.missing().length]);
+  readonly strength = computed(() => STRENGTH[RULES.length - this.missing().length] ?? 'Too weak');
   readonly hint = computed(() => {
     const missing = this.missing();
     return missing.length === 0 ? 'Strong password.' : `Still needs ${missing.map((rule) => rule.label).join(', ')}.`;

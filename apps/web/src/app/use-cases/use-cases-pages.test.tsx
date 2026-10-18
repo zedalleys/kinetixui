@@ -6,7 +6,7 @@ import { DOMAIN_PAGES, DOMAINS, WORKFLOWS, blockFacets, catalogueFacets } from "
 import { blocks } from "@/lib/blocks";
 import { publicRoutes } from "@/lib/seo";
 import { PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
-import { blockEvidence, blockEvidenceNote, EVIDENCE_LEVEL_LABEL, implementedLine, workflowReadiness } from "@/lib/workflow-readiness";
+import { blockEvidence, blockEvidenceNote, componentEvidence, EVIDENCE_LEVEL_LABEL, implementedLine, workflowReadiness } from "@/lib/workflow-readiness";
 
 /**
  * Navigation integrity of the Use Cases hub and the use-case pages, on the rendered markup: every internal link must
@@ -212,9 +212,14 @@ describe("use-case pages (/use-cases/<domain>)", () => {
         for (const [i, part] of r.parts.entries()) {
           const cell = table.querySelector(`tr[data-part="${part.kind}:${part.slug}"] td[data-platform="${r.platform}"]`)!;
           expect(cell.querySelector("[data-evidence-level]")!.textContent, `${part.slug} ${r.platform} (${i})`).toBe(EVIDENCE_LEVEL_LABEL[part.level]);
-          // a block cell also says what stands behind it, computed, never typed
-          const note = cell.querySelector("[data-block-evidence]")?.textContent ?? null;
-          expect(note, `${part.slug} ${r.platform} note`).toBe(part.kind === "block" ? blockEvidenceNote(blockEvidence(part.slug, r.platform)) : null);
+          // every cell also says what stands behind it, computed, never typed
+          const note = cell.querySelector(part.kind === "block" ? "[data-block-evidence]" : "[data-component-evidence]")?.textContent ?? null;
+          const record = part.kind === "block" ? blockEvidence(part.slug, r.platform) : componentEvidence(part.slug, r.platform);
+          expect(note, `${part.slug} ${r.platform} note`).toBe(blockEvidenceNote(record));
+          // the label and the note can never disagree: runtime means both kinds observed, headless says what ran headless
+          const observed = (k: "interaction" | "accessibility") => (record[k] ?? []).some((e) => e.environment === "chromium");
+          if (part.level === "runtime") expect(observed("interaction") && observed("accessibility"), `${part.slug} ${r.platform}`).toBe(true);
+          if (part.level === "headless") expect(note, `${part.slug} ${r.platform}`).toMatch(/tested headless/);
         }
       }
     }

@@ -602,6 +602,21 @@ a week boundary is counted once, in the week it began); save its rows as JSON an
 `--platform p.json` with numbers copied from each platform). Reach, impressions and clicks print as "unavailable"
 unless supplied; nothing is estimated.
 
+Since M3 (2026-10-18) the report also prints data-quality warnings computed from the rows (suspected automation at
+half or more of eligible sessions, audience evaluations under §10's ~30, no `page_engaged`, campaign sessions with no
+audience arrival, a published row without a live URL), platform interest (`platform` on `platform_selected`,
+`component_code_viewed` and `install_command_copied`), installation interest (installation page opened, which
+fires on render, versus a command copied), and an absolute-count trend from `--history weeks.json`. For SQL clients
+that cap results at 100 rows (the PostHog MCP tool), `--print-query --compact` returns the same sessions as one text
+cell; save it as `.txt` and pass it to `--sessions`. Experiment arms (distribution/M3-EXPERIMENTS.md) are read only from its
+*Experiment arms (audience cohort only)* table: audience sessions, audience QE, *acted after landing* (an event not
+fired on render, or a second page) and *copied or adopt CTA*, one row per arm `utm_content` summed across posts, with
+each count's share of the arm's audience sessions once the arm's registered floor metric (QE for `_xa_`, acted for
+`_xb_`/`_xc_`) reaches 30 (arms are compared on shares; `--arms-from` makes the arm table cumulative since an
+experiment started), all counted from the session's first arm-tagged event onward (`arm_*` columns; older exports without them
+still read, with no arm rows). A multi-week export is cut to `--from`/`--to` when read, so one
+export feeds every week's report. Warnings never change a number.
+
 ### Adoption funnel (BD-W5, 2026-10-18)
 
 A view over existing signals, not a new measure: it changes neither QER nor Adoption Intent. Stages are defined once,

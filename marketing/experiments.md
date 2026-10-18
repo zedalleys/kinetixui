@@ -37,3 +37,5 @@ noise, not results.
 - Change one thing. Measure for at least two weeks — traffic is too low for less.
 - If a result is ambiguous, it is negative. Keep the simpler version.
 - Never A/B a truth claim. Accuracy is not an experiment variable.
+- Distribution experiments (message, destination, developer intent), with their evidence floors and stop
+  conditions, are in [`distribution/M3-EXPERIMENTS.md`](./distribution/M3-EXPERIMENTS.md).

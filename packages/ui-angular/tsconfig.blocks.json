@@ -1,0 +1,35 @@
+{
+  "//": "Every published Angular block, compiled with the library's strict settings and full template type-checking. Read by scripts/angular-package/compile-blocks.mjs (which fails if a block is missing here) and by gen:verification (which credits Build verified only to the files listed). Listed one by one, never by glob.",
+  "extends": "./tsconfig.lib.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false
+  },
+  "angularCompilerOptions": {
+    "compilationMode": "full"
+  },
+  "files": [
+    "src/examples/blocks/account-security.ts",
+    "src/examples/blocks/alert-stack.ts",
+    "src/examples/blocks/comment-box.ts",
+    "src/examples/blocks/create-account.ts",
+    "src/examples/blocks/cta-banner.ts",
+    "src/examples/blocks/dashboard-tabs.ts",
+    "src/examples/blocks/editor-toolbar.ts",
+    "src/examples/blocks/empty-state.ts",
+    "src/examples/blocks/filter-panel.ts",
+    "src/examples/blocks/loading-state.ts",
+    "src/examples/blocks/onboarding-checklist.ts",
+    "src/examples/blocks/order-summary.ts",
+    "src/examples/blocks/pricing-tier.ts",
+    "src/examples/blocks/profile-form.ts",
+    "src/examples/blocks/receipt.ts",
+    "src/examples/blocks/settings-list.ts",
+    "src/examples/blocks/sign-in.ts",
+    "src/examples/blocks/stat-cards.ts",
+    "src/examples/blocks/table-toolbar.ts",
+    "src/examples/blocks/team-members.ts",
+    "src/examples/blocks/testimonial.ts"
+  ],
+  "include": []
+}
