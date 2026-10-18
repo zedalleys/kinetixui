@@ -216,9 +216,10 @@ describe("use-case pages (/use-cases/<domain>)", () => {
           const note = cell.querySelector(part.kind === "block" ? "[data-block-evidence]" : "[data-component-evidence]")?.textContent ?? null;
           const record = part.kind === "block" ? blockEvidence(part.slug, r.platform) : componentEvidence(part.slug, r.platform);
           expect(note, `${part.slug} ${r.platform} note`).toBe(blockEvidenceNote(record));
-          // a component shown as runtime verified on headless tests alone must say so beside the label
-          if (part.kind === "component" && part.level === "runtime" && !(record.interaction ?? []).some((e) => e.environment === "chromium"))
-            expect(note, `${part.slug} ${r.platform}`).toMatch(/tested headless/);
+          // the label and the note can never disagree: runtime means both kinds observed, headless says what ran headless
+          const observed = (k: "interaction" | "accessibility") => (record[k] ?? []).some((e) => e.environment === "chromium");
+          if (part.level === "runtime") expect(observed("interaction") && observed("accessibility"), `${part.slug} ${r.platform}`).toBe(true);
+          if (part.level === "headless") expect(note, `${part.slug} ${r.platform}`).toMatch(/tested headless/);
         }
       }
     }

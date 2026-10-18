@@ -32,7 +32,7 @@ function Level({ level }: { level: EvidenceLevel }) {
   return (
     <span
       data-evidence-level={level}
-      className={cn("whitespace-nowrap", level === "runtime" || level === "build" ? "text-foreground" : "text-muted-foreground")}
+      className={cn("whitespace-nowrap", level === "runtime" || level === "headless" || level === "build" ? "text-foreground" : "text-muted-foreground")}
     >
       {EVIDENCE_LEVEL_LABEL[level]}
     </span>
@@ -65,11 +65,10 @@ export function WorkflowReadiness({ workflow }: { workflow: Workflow }) {
       <h4 className="text-body-sm font-medium">Platform readiness</h4>
       <p className="mt-1 max-w-2xl text-body-sm text-muted-foreground">
         Over the {rows[0]!.total} components and blocks the shipping stages use. Each evidence column is the weakest part of
-        that kind on that platform, never an average, and a part missing there counts as not implemented. A block is
-        runtime verified only when its interaction and accessibility were observed in a real browser or on a device;
-        headless tests are listed with it and keep it below runtime verified. A component counts tests wherever they ran,
-        so each one says whether its tests ran in a browser or headless. A platform missing any part cannot build the
-        whole workflow.
+        that kind on that platform, never an average, and a part missing there counts as not implemented. A component or
+        block is runtime verified only when its interaction and accessibility were observed in a real browser or on a
+        device. When tests assert both but at least one ran headless, it is headless verified, and the note under it says
+        which. A platform missing any part cannot build the whole workflow.
       </p>
       {/* a phone cannot fit four columns at 200% text: the table scrolls in its own region, the page does not */}
       <div role="region" aria-label={`${workflow.title}: platform readiness`} tabIndex={0} className="mt-3 overflow-x-auto rounded-lg border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
