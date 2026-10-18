@@ -64,10 +64,18 @@ const list = (xs) => xs.map((x) => `'${x}'`).join(", ");
  * window is applied to the session's first event, so a session crossing midnight on a boundary is counted once,
  * in the week it began, and classified on all of its events.
  */
+/** An experiment arm's `utm_content` (`li_xa_infra`, `x_xc_firstuse`): channel, experiment letter, arm name. */
+export const ARM_CONTENT = /^[a-z]+_x[a-z]_[a-z0-9-]+$/;
+
 export function sessionQuery(from, to) {
   if (!DAY.test(from) || !DAY.test(to) || from >= to) throw new Error("--from and --to must be YYYY-MM-DD with from < to");
   const qe = `(event IN (${list(QE_EVENTS)}) OR (event = 'cta_clicked' AND properties.target IN (${list(QE_CTA_TARGETS)})))`;
   const ai = `(event IN (${list(AI_EVENTS)}) OR (event = 'cta_clicked' AND properties.target IN (${list(AI_CTA_TARGETS)})))`;
+  const copy = `(event IN ('install_command_copied', 'cli_command_copied') OR (event = 'cta_clicked' AND properties.target IN (${list(AI_CTA_TARGETS)})))`;
+  // Experiment arms count only what happened at or after the first arm-tagged event: a PostHog session can already
+  // be open when the tagged link is followed (analytics-posthog.attribution.test.ts), and what came before is not the arm's.
+  const arm = `match(ifNull(toString(properties.kx_content), ''), '${ARM_CONTENT.source}')`;
+  const afterArm = (cond) => `arrayCount(x -> x.1 >= minIf(timestamp, ${arm}) AND ${cond}, groupArray((timestamp, event, if(${qe}, 1, 0), if(${copy}, 1, 0))))`;
   // Evaluation → Intent Progression (analytics.md §4): some intent signal at or after the first qualifying evaluation.
   return `SELECT
   $session_id AS session_id,
@@ -80,7 +88,7 @@ export function sessionQuery(from, to) {
   countIf(${qe}) AS qe_signals,
   countIf(${ai}) AS ai_signals,
   if(countIf(${qe}) > 0 AND countIf(${ai}) > 0 AND maxIf(timestamp, ${ai}) >= minIf(timestamp, ${qe}), 1, 0) AS progressed,
-  countIf(event IN ('install_command_copied', 'cli_command_copied') OR (event = 'cta_clicked' AND properties.target IN (${list(AI_CTA_TARGETS)}))) AS ai_copy_or_rung,
+  countIf(${copy}) AS ai_copy_or_rung,
   countIf(event = 'installation_viewed') AS install_views,
   countIf(event IN ('install_command_copied', 'cli_command_copied')) AS install_copies,
   arrayStringConcat(arraySort(groupUniqArrayIf(toString(properties.platform), event IN (${list(PLATFORM_EVENTS)}) AND properties.platform IS NOT NULL)), ',') AS platforms,
@@ -91,7 +99,12 @@ export function sessionQuery(from, to) {
   argMin(properties.kx_campaign, timestamp) AS kx_campaign,
   argMin(properties.kx_content, timestamp) AS kx_content,
   argMin(properties.kx_referrer, timestamp) AS kx_referrer,
-  argMinIf(properties.$pathname, timestamp, event = '$pageview') AS landing
+  argMinIf(properties.$pathname, timestamp, event = '$pageview') AS landing,
+  argMinIf(properties.kx_content, timestamp, ${arm}) AS arm_content,
+  ${afterArm("x.2 = '$pageview'")} AS arm_pageviews,
+  ${afterArm(`x.2 NOT IN (${list(RENDER_EVENTS)})`)} AS arm_interactions,
+  ${afterArm("x.3 = 1")} AS arm_qe_signals,
+  ${afterArm("x.4 = 1")} AS arm_copies
 FROM events
 WHERE timestamp >= toDateTime('${from} 00:00:00') - INTERVAL 1 DAY AND timestamp < toDateTime('${to} 00:00:00') + INTERVAL 1 DAY
   AND $session_id IS NOT NULL AND $session_id NOT IN (${list(EXCLUDED_SESSION_IDS)})
@@ -105,8 +118,11 @@ export const COMPACT_COLUMNS = [
   "started", "duration_s", "pageviews", "arrival_events", "interaction_events", "engaged_events", "qe_signals", "ai_signals",
   "progressed", "ai_copy_or_rung", "install_views", "install_copies", "platforms", "diagnostic_events", "internal_events",
   "kx_source", "kx_medium", "kx_campaign", "kx_content", "kx_referrer", "landing",
+  "arm_content", "arm_pageviews", "arm_interactions", "arm_qe_signals", "arm_copies",
 ];
-const NUMERIC = new Set(COMPACT_COLUMNS.filter((c) => !["started", "platforms", "kx_source", "kx_medium", "kx_campaign", "kx_content", "kx_referrer", "landing"].includes(c)));
+/** Exports made before the arm columns existed end at `landing`; they are read with no arm data. */
+const BASE_COLUMNS = COMPACT_COLUMNS.slice(0, COMPACT_COLUMNS.indexOf("landing") + 1);
+const NUMERIC = new Set(COMPACT_COLUMNS.filter((c) => !["started", "platforms", "kx_source", "kx_medium", "kx_campaign", "kx_content", "kx_referrer", "landing", "arm_content"].includes(c)));
 
 /**
  * The same query wrapped to return one cell: a header line, then one `|`-separated line per session. Some SQL
@@ -125,7 +141,7 @@ ${sessionQuery(from, to)}
 export function parseCompact(text) {
   const [head, ...lines] = text.trim().split(/\r?\n/);
   const cols = head.split("|");
-  if (cols.join("|") !== COMPACT_COLUMNS.join("|")) throw new Error("compact header does not match COMPACT_COLUMNS");
+  if (cols.join("|") !== COMPACT_COLUMNS.join("|") && cols.join("|") !== BASE_COLUMNS.join("|")) throw new Error("compact header does not match COMPACT_COLUMNS");
   return lines.filter(Boolean).map((line) => {
     const v = line.split("|");
     if (v.length !== cols.length) throw new Error(`compact line has ${v.length} fields, expected ${cols.length}: ${line}`);
@@ -207,9 +223,6 @@ export function summarise(rows) {
   };
 }
 
-/** An experiment arm's `utm_content` (`li_xa_infra`, `x_xc_firstuse`): channel, experiment letter, arm name. */
-export const ARM_CONTENT = /^[a-z]+_x[a-z]_[a-z0-9-]+$/;
-
 /**
  * Per experiment arm, audience cohort only: the table experiment arms are read from (distribution/M3-EXPERIMENTS.md).
  * An arm is its `utm_content`, summed across every post (campaign) that carried it, so an arm run through several
@@ -221,21 +234,21 @@ export const ARM_CONTENT = /^[a-z]+_x[a-z]_[a-z0-9-]+$/;
 function armCount(audienceRows) {
   const m = new Map();
   for (const r of audienceRows) {
-    if (!r.kx_campaign || !ARM_CONTENT.test(r.kx_content ?? "")) continue;
-    const k = r.kx_content;
+    if (!ARM_CONTENT.test(r.arm_content ?? "")) continue;
+    const k = r.arm_content;
     const g = m.get(k) ?? { sessions: 0, qe: 0, acted: 0, copied: 0 };
     g.sessions += 1;
-    if (isQE(r)) g.qe += 1;
-    if (Number(r.interaction_events) > 0 || Number(r.pageviews) > 1) g.acted += 1;
-    if (Number(r.ai_copy_or_rung) > 0) g.copied += 1;
+    if (Number(r.arm_qe_signals) > 0) g.qe += 1;
+    if (Number(r.arm_interactions) > 0 || Number(r.arm_pageviews) > 1) g.acted += 1;
+    if (Number(r.arm_copies) > 0) g.copied += 1;
     m.set(k, g);
   }
   return [...m.entries()].sort((a, b) => b[1].sessions - a[1].sessions);
 }
 
-/** A count, with its share of the arm's audience sessions once the count reaches the evidence floor. */
-function armCell(n, sessions) {
-  return n >= MIN_QE_FOR_COMPARISON ? `${n} (${((100 * n) / sessions).toFixed(1)}%)` : `${n}`;
+/** A count, with its share of the arm's audience sessions once the arm's floor metric (QE or acted) reaches the evidence floor. */
+function armCell(n, g) {
+  return Math.max(g.qe, g.acted) >= MIN_QE_FOR_COMPARISON ? `${n} (${((100 * n) / g.sessions).toFixed(1)}%)` : `${n}`;
 }
 
 function groupCount(rows, key) {
@@ -371,10 +384,11 @@ ${table(s.byCampaign)}
 
 Read experiment arms here, never from the table above (distribution/M3-EXPERIMENTS.md). One row per arm tag, summed
 across every post that carried it. *Acted*: an event that is not fired on render, or a second page. *Copied*: an
-install or CLI copy, or an adopt CTA. A share of the arm's audience sessions is printed only once a count reaches
-${MIN_QE_FOR_COMPARISON}; arms are compared on those shares, never on raw counts.
+install or CLI copy, or an adopt CTA. Shares of the arm's audience sessions are printed in every column once the
+arm's floor metric (audience QE or *acted after landing*) reaches ${MIN_QE_FOR_COMPARISON}; arms are compared on those shares, never on raw
+counts. Every column counts only what happened at or after the arm-tagged arrival.
 
-${s.byArm.length === 0 ? "_none_" : ["| Arm (utm_content) | Audience sessions | Audience QE | Acted after landing | Copied or adopt CTA |", "| --- | --- | --- | --- | --- |"].concat(s.byArm.map(([k, g]) => `| ${k} | ${g.sessions} | ${armCell(g.qe, g.sessions)} | ${armCell(g.acted, g.sessions)} | ${armCell(g.copied, g.sessions)} |`)).join("\n")}
+${s.byArm.length === 0 ? "_none_" : ["| Arm (utm_content) | Audience sessions | Audience QE | Acted after landing | Copied or adopt CTA |", "| --- | --- | --- | --- | --- |"].concat(s.byArm.map(([k, g]) => { const c = (n) => armCell(n, g); return `| ${k} | ${g.sessions} | ${c(g.qe)} | ${c(g.acted)} | ${c(g.copied)} |`; })).join("\n")}
 
 ### By source / medium
 ${table(s.bySource)}

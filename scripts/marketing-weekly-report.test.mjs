@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { COMPACT_COLUMNS, classifySession, compactQuery, dataQualityWarnings, parseCompact, publishedInWindow, renderReport, sessionQuery, summarise, trendRows } from "./marketing-weekly-report.mjs";
+import { ARM_CONTENT, COMPACT_COLUMNS, classifySession, compactQuery, dataQualityWarnings, parseCompact, publishedInWindow, renderReport, sessionQuery, summarise, trendRows } from "./marketing-weekly-report.mjs";
 
 /** An audience session that qualifies. Each case below changes one thing. */
-const row = (over = {}) => ({
+// Arm columns default to the whole session, as if the tagged link opened it; tests override them for a session that
+// was already open when the link was followed.
+const row = (over = {}) => armDefaults({
   session_id: "s",
   duration_s: 40,
   pageviews: 2,
@@ -27,6 +29,16 @@ const row = (over = {}) => ({
   landing: "/docs/platforms",
   ...over,
 });
+function armDefaults(r) {
+  return {
+    arm_content: ARM_CONTENT.test(r.kx_content ?? "") ? r.kx_content : null,
+    arm_pageviews: r.pageviews,
+    arm_interactions: r.interaction_events,
+    arm_qe_signals: r.qe_signals,
+    arm_copies: r.ai_copy_or_rung,
+    ...r,
+  };
+}
 const renderOnly = (over = {}) => row({ duration_s: 0, pageviews: 1, arrival_events: 2, interaction_events: 0, engaged_events: 0, kx_source: "direct", kx_medium: "direct", kx_campaign: null, kx_content: null, ...over });
 
 test("classifySession puts each session in exactly one cohort", () => {
@@ -238,8 +250,36 @@ test("arm shares are printed only once a count reaches the floor, so unequal tra
       row({ kx_campaign: "kx_p2_b_relevant", kx_source: "linkedin", kx_content: content, kx_referrer: "linkedin",
             pageviews: 1, interaction_events: i < acted ? 1 : 0, ai_copy_or_rung: 0 }));
   const md = renderReport({ from: "2026-10-19", to: "2026-10-26", rows: [...tag("li_xb_coverage", 100, 60), ...tag("li_xb_relevant", 31, 31)], distribution: { rows: [] } });
-  assert.match(md, /\| li_xb_coverage \| 100 \| [^|]+ \| 60 \(60\.0%\) \| 0 \|/);
-  assert.match(md, /\| li_xb_relevant \| 31 \| [^|]+ \| 31 \(100\.0%\) \| 0 \|/);
+  assert.match(md, /\| li_xb_coverage \| 100 \| [^|]+ \| 60 \(60\.0%\) \| 0 \(0\.0%\) \|/);
+  assert.match(md, /\| li_xb_relevant \| 31 \| [^|]+ \| 31 \(100\.0%\) \| 0 \(0\.0%\) \|/);
   const few = renderReport({ from: "2026-10-19", to: "2026-10-26", rows: tag("li_xb_relevant", 5, 2), distribution: { rows: [] } });
   assert.match(few, /\| li_xb_relevant \| 5 \| [^|]+ \| 2 \| 0 \|/);
+});
+
+test("a copy count is shown as a share once the arm's acted floor is met, even below 30 copies (experiment C)", () => {
+  const rows = Array.from({ length: 100 }, (_, i) =>
+    row({ kx_campaign: "kx_p2_c_first_use", kx_source: "x", kx_content: "x_xc_firstuse", kx_referrer: "x", qe_signals: 0,
+          pageviews: 1, interaction_events: i < 40 ? 1 : 0, ai_copy_or_rung: i < 5 ? 1 : 0 }));
+  const md = renderReport({ from: "2026-10-19", to: "2026-10-26", rows, distribution: { rows: [] } });
+  assert.match(md, /\| x_xc_firstuse \| 100 \| 0 \(0\.0%\) \| 40 \(40\.0%\) \| 5 \(5\.0%\) \|/);
+});
+
+test("negative control: what a session did before following the arm link is not credited to the arm", () => {
+  // Browsing three pages and copying a command, then following an arm link and doing nothing after it.
+  const s = summarise([
+    row({ kx_content: "li_xb_relevant", kx_referrer: "linkedin", pageviews: 4, interaction_events: 3, qe_signals: 2, ai_copy_or_rung: 1,
+          arm_pageviews: 1, arm_interactions: 0, arm_qe_signals: 0, arm_copies: 0 }),
+  ]);
+  assert.deepEqual(Object.fromEntries(s.byArm)["li_xb_relevant"], { sessions: 1, qe: 0, acted: 0, copied: 0 });
+});
+
+test("sessionQuery counts arm outcomes only from the first arm-tagged event, and an export without arm columns still reads", () => {
+  const q = sessionQuery("2026-10-19", "2026-10-26");
+  assert.match(q, /argMinIf\(properties\.kx_content, timestamp, match\(/);
+  assert.match(q, /x\.1 >= minIf\(timestamp, match\(/);
+  for (const c of ["arm_pageviews", "arm_interactions", "arm_qe_signals", "arm_copies"]) assert.match(q, new RegExp(`AS ${c}\\b`));
+  const base = COMPACT_COLUMNS.slice(0, COMPACT_COLUMNS.indexOf("landing") + 1);
+  const old = parseCompact(base.join("|") + "\n" + base.map((c) => (c === "started" ? "2026-10-12T00:00:00Z" : c.startsWith("kx_") || c === "landing" || c === "platforms" ? "" : "0")).join("|"));
+  assert.equal(old[0].arm_content, undefined);
+  assert.deepEqual(summarise(old).byArm, []);
 });

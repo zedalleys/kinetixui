@@ -22,15 +22,17 @@ would count as evidence, then waits for that evidence instead of reading a resul
   (`^[a-z0-9][a-z0-9_-]{0,63}$`). Arms are read **only** from the weekly report's *Experiment arms (audience cohort
   only)* table. It has one row per arm tag (`<channel>_x<letter>_<arm>`), summed across every post that carried it,
   and counts the arm's audience sessions, audience QE, *acted after landing* (an event that is not fired on render,
-  or a second page) and *copied or adopt CTA*. The *By campaign / content* table includes suspected and internal
-  sessions and is never used for an arm.
+  or a second page) and *copied or adopt CTA*. Each column counts only events at or after the session's first
+  arm-tagged event, so a session that was already open when the link was followed does not credit the arm with what
+  came before it. The *By campaign / content* table includes suspected and internal sessions and is never used for an
+  arm.
 - **Every post still goes through approval** (copy pin, manual posting, live URL at close-out). An experiment never
   authorises a post.
 - **Evidence floor.** No arm is called better until **each arm has at least 30 sessions of its floor metric**
   (audience QE where both arms land on the same page, *acted after landing* where they do not; analytics.md §10)
   **and** the gap has held across **two consecutive weekly reports**. **Arms are compared on rates, never on raw
-  counts:** each outcome as a share of that arm's audience sessions, which the arm table prints once a count reaches
-  30. Sequential posts deliver unequal traffic, so 60 actions from 1,000 sessions is a worse arm than 31 from 31. Below that, the
+  counts:** each outcome as a share of that arm's audience sessions, which the arm table prints in every column once the
+  arm's floor metric reaches 30 (so C's copy share appears as soon as its *acted* floor is met). Sequential posts deliver unequal traffic, so 60 actions from 1,000 sessions is a worse arm than 31 from 31. Below that, the
   result is written as "no evidence yet", and the simpler option is kept (`../experiments.md`: an ambiguous result is
   negative).
 - **Never A/B a truth claim.** Both arms say only what `CLAIMS.md` allows; accuracy is not a variable.
