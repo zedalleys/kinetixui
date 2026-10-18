@@ -37,10 +37,12 @@ Sessions in which someone inspected the product rather than the pitch. Any one s
 - `installation_viewed`:
 - **Qualified Evaluation sessions (count):**
 - **Which event started it** most often:
-- **Automated-traffic check:** how many Qualified Evaluation sessions were one page, under 5 seconds, with no
-  referrer and a new device each time? Report them beside the count, never silently inside it. In the week of
-  12 to 14 October all 38 Qualified Evaluation sessions looked like this
-  ([`audits/M1-CAMPAIGN-RECONCILIATION.md`](./audits/M1-CAMPAIGN-RECONCILIATION.md) §8). Whether to exclude
+- **Automated-traffic check:** how many Qualified Evaluation sessions were *suspected automation*: one page
+  view, no event a person causes, under 5 seconds, arriving with `kx_referrer = direct` (the raw referrer is
+  never stored, so "no referrer" means that category)? `pnpm marketing:weekly` prints this cohort; the rule and
+  its evidence are in [`analytics.md`](./analytics.md) §11 *Traffic cohorts*. Report them beside the count,
+  never silently inside it. In the week of 12 to 19 October all 38 such Qualified Evaluation sessions came from
+  this cohort ([`measurement/M2-TRAFFIC-QUALITY.md`](./measurement/M2-TRAFFIC-QUALITY.md)). Whether to exclude
   them from the definition is the owner's decision in `analytics.md`, not a reviewer's in a query.
 
 ## Adoption Intent — Tier 1 ([`analytics.md`](./analytics.md) §4)

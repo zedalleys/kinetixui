@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { analytics } from "./analytics";
 import {
+  isPersonInput,
   classifyCommand,
   classifyLink,
   componentSlugFor,
@@ -143,6 +144,12 @@ describe("classifyLink", () => {
     [`${ORIGIN}/r/button.json`], // internal, even though it opens in a new tab
   ])("produces nothing for %s", (href) => {
     expect(classifyLink(href, ORIGIN)).toBeNull();
+  });
+});
+
+describe("isPersonInput", () => {
+  it("rejects an event a script created, which is how an automated page load would fake engagement", () => {
+    for (const type of ["pointerdown", "keydown", "touchstart", "wheel"]) expect(isPersonInput(new Event(type))).toBe(false);
   });
 });
 

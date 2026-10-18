@@ -148,3 +148,48 @@ describe("the ART-001 → pillar post-publication link (SEO Phase 3)", () => {
     expect(bag.kx_landing_page).toBe("/guides/cross-platform-design-systems");
   });
 });
+
+describe("every tagged link in the content register survives the parser (M2)", () => {
+  // The register is what the operator pastes from. check:content validates its names against the runtime's
+  // vocabularies; this runs each built URL through the parser itself, so a link the runtime would rewrite or drop
+  // fails here, before anything is posted.
+  const register = JSON.parse(readFileSync(`${ROOT}/marketing/content/register.json`, "utf8")) as {
+    assets: { id: string; url?: string; campaign?: string; utm_content?: string }[];
+  };
+  const rows = register.assets.filter((a) => a.url).map((a) => [a.id, a] as const);
+
+  it("finds the register's links rather than checking nothing", () => {
+    expect(rows.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it.each(rows)("%s keeps campaign, content, source and medium exactly as built", (_id, asset) => {
+    const bag = propsFor(asset.url!);
+    const q = new URL(asset.url!).searchParams;
+    expect(bag.kx_campaign).toBe(asset.campaign);
+    expect(bag.kx_content).toBe(asset.utm_content);
+    expect(bag.kx_source).toBe(q.get("utm_source"));
+    expect(bag.kx_medium).toBe(q.get("utm_medium"));
+  });
+
+  it("LI-001, the next post out, arrives as linkedin / social / kx_p1_a_parity_proof / li_primary", () => {
+    const li001 = register.assets.find((a) => a.id === "LI-001")!;
+    expect(propsFor(li001.url!)).toMatchObject({
+      kx_source: "linkedin",
+      kx_medium: "social",
+      kx_campaign: "kx_p1_a_parity_proof",
+      kx_content: "li_primary",
+      kx_landing_page: "/docs/platforms",
+    });
+  });
+
+  it("negative control: a wrong medium or a mistyped campaign on LI-001's link would not arrive as built", () => {
+    const li001 = new URL(register.assets.find((a) => a.id === "LI-001")!.url!);
+    const wrongMedium = new URL(li001);
+    wrongMedium.searchParams.set("utm_medium", "article");
+    expect(propsFor(wrongMedium.href).kx_medium).not.toBe("article");
+    const typo = new URL(li001);
+    typo.searchParams.set("utm_campaign", "kx-p1-a-parity-proof"); // hyphens after kx: fails the runtime pattern
+    expect(propsFor(typo.href)).not.toHaveProperty("kx_campaign");
+    expect(propsFor(typo.href)).not.toHaveProperty("kx_content");
+  });
+});
