@@ -147,6 +147,13 @@ adds the attribution to **every** event (including `$pageview`) centrally.
 | `kx_*` (session entry) | How did *this browsing session* begin? | `sessionStorage` (`kx_analytics_session_v1`) | the tab | derived on the first page of the session, then reused. Later pages, referrers and every client-side navigation leave it alone; a later arrival carrying a **different valid `kx_` campaign tag** starts a new session entry. Only the values the query string carries are compared (campaign, content, and a tagged source or medium), never a source inferred from the referrer, so a reload keeps the channel |
 | `kx_first_*` (first touch) | How was this *browser* first acquired? | `localStorage` (`kx_analytics_first_touch_v1`) | until cleared | **write-once**. Never overwritten, and never replaced by `direct` |
 
+A second tagged arrival changes the record each later event carries; it does **not** start a new PostHog session.
+Session-level reporting takes one campaign per `$session_id` — the earliest tagged one
+(`argMin(properties.kx_campaign, timestamp)` in `scripts/marketing-weekly-report.mjs`, the rule in
+`marketing/analytics.md`) — so a tab that arrives on two campaigns inside one PostHog session is still counted
+under the first. Per-event attribution is right; the session rollup is unchanged, deliberately, because changing
+it would break comparability with every week already reported.
+
 Properties (each present only when known): `kx_source`, `kx_medium`, `kx_campaign`, `kx_content`, `kx_referrer`,
 `kx_landing_page`, and the same six as `kx_first_*`; plus `kx_traffic_type` on diagnostic traffic only (below). Only normalised values are ever stored or sent — never a query
 string, a referrer, a click id or a full URL. Storage is re-validated when read (it is user-editable).
