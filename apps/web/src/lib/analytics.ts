@@ -206,6 +206,15 @@ export interface AnalyticsEvents {
    * Intent (analytics.md §3/§4); a component chosen here still qualifies through the `component_viewed` it leads to.
    */
   search_result_selected: { target: SearchResultType; source: "header"; location: "command_menu" };
+  /*
+   * The visitor physically interacted with the page: the first trusted pointer press, key press, touch or wheel
+   * turn after a page view. At most once per page view, and never on render, a timer or a programmatic scroll, so a
+   * page that was only loaded never sends it. `source` is the page's surface when it has one; the input itself
+   * (which key, where) is never sent. It is evidence of a person, not a funnel step: in neither Qualified Evaluation
+   * nor Adoption Intent (analytics.md §3/§4), and it changes neither. Reporting uses it to tell evaluations that
+   * involved any interaction apart from render-only page loads (analytics.md §11 "Traffic cohorts").
+   */
+  page_engaged: Shape<never, "source">;
 }
 
 export type AnalyticsEventName = keyof AnalyticsEvents;

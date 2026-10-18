@@ -4,6 +4,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const nav = vi.hoisted(() => ({ pathname: "/" as string | null }));
 vi.mock("next/navigation", () => ({ usePathname: () => nav.pathname }));
+// jsdom cannot produce a trusted event, so trust is decided by a flag here; isPersonInput itself is tested in
+// analytics-surfaces.test.ts against a real (untrusted) event
+const trust = vi.hoisted(() => ({ value: false }));
+vi.mock("@/lib/analytics-surfaces", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/analytics-surfaces")>()),
+  isPersonInput: () => trust.value,
+}));
 
 import { AnalyticsProvider } from "./analytics-provider";
 import { analytics, attachAnalytics, resetAnalyticsForTests, sanitizeProps } from "@/lib/analytics";
@@ -27,6 +34,8 @@ beforeEach(() => {
   window.history.pushState({}, "", "/"); // the click handler reads the real URL, which Next keeps in step with usePathname
   track.mockClear();
   pageview.mockClear();
+  // off by default, so the click tests below see exactly the events they assert; the engagement tests turn it on
+  trust.value = false;
 });
 
 /** Anchors would try to navigate jsdom; the analytics listener is on `document` and ignores defaultPrevented. */
@@ -110,6 +119,70 @@ describe("AnalyticsProvider — semantic view events (one per navigation)", () =
     nav.pathname = "/docs/components/definitely-not-a-component";
     render(<AnalyticsProvider />);
     expect(track).not.toHaveBeenCalled();
+  });
+});
+
+describe("AnalyticsProvider — engagement (page_engaged)", () => {
+  const engaged = () => track.mock.calls.filter(([e]) => e === "page_engaged");
+  beforeEach(() => {
+    trust.value = true;
+  });
+
+  it("sends nothing for a page that was only loaded", () => {
+    nav.pathname = "/docs/components/button";
+    render(<AnalyticsProvider />);
+    expect(engaged()).toEqual([]);
+    expect(track.mock.calls.map(([e]) => e)).toEqual(["component_viewed"]);
+  });
+
+  it("sends page_engaged once, on the first input, with the page's surface and nothing about the input", () => {
+    nav.pathname = "/docs/components/button";
+    render(<AnalyticsProvider />);
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "j" }));
+    window.dispatchEvent(new Event("pointerdown"));
+    window.dispatchEvent(new Event("wheel"));
+    expect(engaged()).toEqual([["page_engaged", { source: "component_page" }]]);
+    expectSanitary();
+  });
+
+  it.each(["pointerdown", "keydown", "touchstart", "wheel"])("counts %s", (type) => {
+    render(<AnalyticsProvider />);
+    window.dispatchEvent(new Event(type));
+    expect(engaged()).toEqual([["page_engaged", { source: "homepage" }]]);
+  });
+
+  it("ignores scroll, focus and mousemove: a browser or script produces those with nobody there", () => {
+    render(<AnalyticsProvider />);
+    for (const type of ["scroll", "focus", "mousemove", "visibilitychange"]) window.dispatchEvent(new Event(type));
+    expect(engaged()).toEqual([]);
+  });
+
+  it("ignores untrusted (scripted) input", () => {
+    trust.value = false;
+    render(<AnalyticsProvider />);
+    window.dispatchEvent(new Event("pointerdown"));
+    expect(engaged()).toEqual([]);
+  });
+
+  it("re-arms on each client-side navigation, and sends no source for a page without one", () => {
+    nav.pathname = "/docs/platforms";
+    const { rerender } = render(<AnalyticsProvider />);
+    window.dispatchEvent(new Event("pointerdown"));
+    nav.pathname = "/guides/cross-platform-design-systems";
+    rerender(<AnalyticsProvider />);
+    window.dispatchEvent(new Event("pointerdown"));
+    window.dispatchEvent(new Event("pointerdown"));
+    expect(engaged()).toEqual([
+      ["page_engaged", { source: "docs_page" }],
+      ["page_engaged", {}],
+    ]);
+  });
+
+  it("stops listening when unmounted", () => {
+    const { unmount } = render(<AnalyticsProvider />);
+    unmount();
+    window.dispatchEvent(new Event("pointerdown"));
+    expect(engaged()).toEqual([]);
   });
 });
 

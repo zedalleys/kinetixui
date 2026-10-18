@@ -32,6 +32,8 @@ const inventory = content.assets.map((a) => {
   if (a.visual && !produced.has(a.visual)) flags.push(`visual ${a.visual} not produced`);
   if (a.kind !== "brief" && !a.url) flags.push("no tracked link");
   if (status !== "PUBLISHED" && status !== "CANCELLED" && planned && planned < today) flags.push("past planned date");
+  if (a.stale) flags.push(`stale since ${a.stale.since}`);
+  if (a.approval) flags.push(`approved ${a.approval.on}${a.approval.copy ? ", copy pinned" : ""}`);
   if (row?.blockedBy) flags.push(`blocked: ${row.blockedBy.slice(0, 60)}${row.blockedBy.length > 60 ? "…" : ""}`);
   return {
     id: a.id,

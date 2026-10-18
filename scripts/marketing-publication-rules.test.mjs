@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { approvalProblems, m1Status, postKey, publicationEvidenceProblems } from "./marketing-publication-rules.mjs";
+import { approvalProblems, copyHash, fileCopyText, m1Status, postKey, publicationEvidenceProblems, sectionText } from "./marketing-publication-rules.mjs";
 
 /** A row that passes every rule. Each negative control below breaks exactly one thing. */
 const good = () => ({
@@ -98,10 +98,116 @@ test("negative control: a planned row carrying a live URL fails", () => {
   assert.match(publicationEvidenceProblems([row]).join("\n"), /a live post means the row is published/);
 });
 
-test("approval: absent is fine, a complete approval on ready copy is fine", () => {
+/** A draft file with two variants, read through the injected reader so the rule stays pure. */
+const DRAFT = "# LI-X\n\n## A — default\n\nHook.\n\n---\n\nThe approved words.\n\nSecond line.\n\n---\n\n## B — alternative\n\n---\n\nOther words.\n\n---\n";
+const files = (body = DRAFT) => (f) => {
+  if (f !== "draft.md") throw new Error("missing");
+  return body;
+};
+const pinned = (over = {}) => ({
+  id: "LI-001",
+  status: "ready",
+  file: "draft.md",
+  variant: "A",
+  approval: { by: "Ziad", on: "2026-10-18", evidence: "project thread message", copy: { file: "draft.md", section: "A", sha256: copyHash("The approved words.\n\nSecond line.") } },
+  ...over,
+});
+
+test("approval: absent is fine, a complete approval that pins its words is fine", () => {
   assert.deepEqual(approvalProblems([{ id: "LI-001", status: "ready" }]), []);
-  const approved = { id: "LI-001", status: "ready", approval: { by: "Ziad", on: "2026-10-18", evidence: "project thread message" } };
-  assert.deepEqual(approvalProblems([approved]), []);
+  assert.deepEqual(approvalProblems([pinned()], files()), []);
+  // an approval from before the pin rule needs no pin
+  assert.deepEqual(approvalProblems([{ id: "LI-001", status: "ready", approval: { by: "Ziad", on: "2026-10-17", evidence: "x" } }]), []);
+});
+
+test("sectionText takes exactly the span between the --- lines under the heading", () => {
+  assert.equal(sectionText(DRAFT, "A"), "The approved words.\n\nSecond line.");
+  assert.equal(sectionText(DRAFT, "B"), "Other words.");
+  assert.equal(sectionText(DRAFT, "C"), null);
+  // trailing whitespace and CRLF do not change the hash; a changed word does
+  assert.equal(copyHash("a  \r\nb"), copyHash("a\nb"));
+  assert.notEqual(copyHash("a\nb"), copyHash("a\nc"));
+});
+
+/** The register-entry layout (content/linkedin.md): a heading, a campaign line, quoted copy, a closing ---. */
+const ENTRIES = "# LinkedIn\n\n## LI-007 · P2\n\n> Old post.\n\n---\n\n## LI-008 · P1 · Pillar D\n\n**Campaign:** `c`\n\n> The post.\n\n---\n\n## LI-009 · P2\n\n> Next post.\n\n---\n";
+
+test("sectionText reads a register entry up to its closing ---, never into the next entry", () => {
+  assert.equal(sectionText(ENTRIES, "LI-008"), "**Campaign:** `c`\n\n> The post.");
+  assert.equal(sectionText(ENTRIES, "LI-009"), "> Next post.");
+  assert.equal(sectionText(ENTRIES, "LI-00"), null);
+  const pin = { id: "LI-008", status: "ready", file: "draft.md", approval: { by: "Ziad", on: "2026-10-19", evidence: "x", copy: { file: "draft.md", section: "LI-008", sha256: copyHash("**Campaign:** `c`\n\n> The post.") } } };
+  assert.deepEqual(approvalProblems([pin], files(ENTRIES)), []);
+  // editing the neighbouring entry leaves the approval intact; editing this one breaks it
+  assert.deepEqual(approvalProblems([pin], files(ENTRIES.replace("Next post.", "Changed."))), []);
+  assert.match(approvalProblems([pin], files(ENTRIES.replace("The post.", "The edited post."))).join("\n"), /changed after approval/);
+});
+
+test("an approval with no section pins the whole file after its front matter (a thread file)", () => {
+  const thread = "---\nid: a01\nstatus: ready\n---\n\n# X\n\n**1/**\n\nFirst.\n\n---\n\n**2/**\n\nSecond.\n";
+  assert.equal(fileCopyText(thread).startsWith("# X"), true);
+  const pin = { id: "X-001", status: "ready", file: "draft.md", approval: { by: "Ziad", on: "2026-10-19", evidence: "x", copy: { file: "draft.md", sha256: copyHash(fileCopyText(thread)) } } };
+  assert.deepEqual(approvalProblems([pin], files(thread)), []);
+  // front matter is metadata: changing status does not change the approved words
+  assert.deepEqual(approvalProblems([pin], files(thread.replace("status: ready", "status: published"))), []);
+  assert.match(approvalProblems([pin], files(thread.replace("Second.", "Second, edited."))).join("\n"), /approved copy \(draft\.md\) changed after approval/);
+  assert.match(approvalProblems([{ ...pin, approval: { ...pin.approval, copy: { ...pin.approval.copy, section: " " } } }], files(thread)).join("\n"), /optional non-empty section/);
+});
+
+test("the real content register's approvals pin copy that still matches", () => {
+  const register = JSON.parse(readFileSync("marketing/content/register.json", "utf8"));
+  assert.deepEqual(approvalProblems(register.assets, (f) => readFileSync(f, "utf8")), []);
+  const li001 = register.assets.find((a) => a.id === "LI-001");
+  assert.ok(li001.approval?.copy, "LI-001's approval pins its words");
+});
+
+test("negative control: an approval from 2026-10-18 without the approved words pinned fails", () => {
+  const unpinned = pinned();
+  delete unpinned.approval.copy;
+  assert.match(approvalProblems([unpinned], files()).join("\n"), /must pin the approved words/);
+  // publishing the asset does not lift the requirement
+  assert.match(approvalProblems([{ ...unpinned, status: "published" }], files()).join("\n"), /must pin the approved words/);
+});
+
+test("negative control: a pin must cover this asset's own words, not some other stable text", () => {
+  const p = pinned().approval.copy;
+  // another file, even one whose text matches the hash
+  const other = pinned({ approval: { ...pinned().approval, copy: { ...p, file: "notes.md" } } });
+  assert.match(approvalProblems([other], () => DRAFT).join("\n"), /pins notes\.md, but this asset's copy is draft\.md/);
+  // another section of the right file (B, the variant that is not being approved)
+  const b = pinned({ approval: { ...pinned().approval, copy: { ...p, section: "B", sha256: copyHash("Other words.") } } });
+  assert.match(approvalProblems([b], files()).join("\n"), /pins section "B", but this asset's copy is section "A"/);
+  // a register entry pinned to its neighbour
+  const entry = { id: "LI-008", status: "ready", file: "draft.md", approval: { by: "Ziad", on: "2026-10-19", evidence: "x", copy: { file: "draft.md", section: "LI-007", sha256: copyHash("> Old post.") } } };
+  assert.match(approvalProblems([entry], files(ENTRIES)).join("\n"), /pins section "LI-007", but this asset's copy is section "LI-008"/);
+  // a whole-file pin where the asset is one entry of the file
+  const whole = { ...entry, approval: { ...entry.approval, copy: { file: "draft.md", sha256: copyHash(fileCopyText(ENTRIES)) } } };
+  assert.match(approvalProblems([whole], files(ENTRIES)).join("\n"), /pins the whole file, but this asset's copy is section "LI-008"/);
+  // a shared file with no variant cannot say which section is this asset's
+  const { variant, ...noVariant } = pinned();
+  assert.match(approvalProblems([noVariant, { id: "LI-002", status: "ready", file: "draft.md" }], files()).join("\n"), /holds other assets too — set "variant"/);
+});
+
+test("negative control: copy edited after approval fails, even by one word", () => {
+  const edited = DRAFT.replace("The approved words.", "The improved words.");
+  assert.match(approvalProblems([pinned()], files(edited)).join("\n"), /changed after approval/);
+  // editing ANOTHER variant in the same file does not touch the approval
+  assert.deepEqual(approvalProblems([pinned()], files(DRAFT.replace("Other words.", "New words."))), []);
+});
+
+test("negative control: a pin to a missing section or file fails", () => {
+  assert.match(approvalProblems([pinned({ variant: "Z", approval: { ...pinned().approval, copy: { ...pinned().approval.copy, section: "Z" } } })], files()).join("\n"), /section "Z" is not in/);
+  assert.match(approvalProblems([pinned({ file: "gone.md", approval: { ...pinned().approval, copy: { ...pinned().approval.copy, file: "gone.md" } } })], files()).join("\n"), /cannot be read/);
+  assert.match(approvalProblems([pinned({ approval: { ...pinned().approval, copy: { file: "draft.md", section: "A", sha256: "abc" } } })], files()).join("\n"), /sha256 hex digest/);
+});
+
+test("negative control: copy flagged stale cannot be approved, and a stale flag must say why and since when", () => {
+  const stale = pinned({ stale: { reason: "states 98 entries; the catalogue is 109", since: "2026-10-18" } });
+  assert.match(approvalProblems([stale], files()).join("\n"), /approval on copy flagged stale/);
+  assert.equal(m1Status(stale, []), "READY FOR REVIEW");
+  assert.match(approvalProblems([{ id: "X-002", status: "drafted", stale: { reason: "" } }]).join("\n"), /stale must be/);
+  // a published asset can be flagged stale (the live copy aged) without that being an approval problem
+  assert.deepEqual(approvalProblems([{ id: "ART-001", status: "published", stale: { reason: "today paragraph", since: "2026-10-18" } }]), []);
 });
 
 test("negative control: approval needs a person, a date, evidence, and ready copy", () => {

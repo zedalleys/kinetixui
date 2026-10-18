@@ -41,6 +41,11 @@ describe("vercelBeforeSend", () => {
     expect(vercelBeforeSend({ type: "pageview", url: "https://kinetixui.com/" }, { dnt: true, diagnostic: false })).toBeNull();
   });
 
+  it("drops an internal browser, for the same reason", () => {
+    expect(vercelBeforeSend({ type: "pageview", url: "https://kinetixui.com/" }, { dnt: false, diagnostic: false, internal: true })).toBeNull();
+    expect(speedInsightsBeforeSend({ type: "vital" as const, url: "https://kinetixui.com/" }, { dnt: false, diagnostic: false, internal: true })).toBeNull();
+  });
+
   it("drops a diagnostic tab, which Vercel could not filter out later", () => {
     expect(vercelBeforeSend({ type: "pageview", url: "https://kinetixui.com/" }, { dnt: false, diagnostic: true })).toBeNull();
   });

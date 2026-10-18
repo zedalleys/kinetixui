@@ -1,8 +1,8 @@
 ---
 type: rolling 14-day execution calendar
 window: Monday 2026-10-19 to Sunday 2026-11-01
-status: proposed. Nothing here is approved or scheduled, and no tool posts anything. Every slot waits on the
-  owner's approval of that asset; the dates are a plan, not a commitment
+status: proposed. Only LI-001 is approved (editorially, 2026-10-18); nothing is scheduled, and no tool posts
+  anything. Every other slot waits on the owner's approval of that asset; the dates are a plan, not a commitment
 ---
 
 # Rolling 14-day execution calendar
@@ -36,7 +36,7 @@ and blockers from the registers.
 
 | Date | Time (UTC / UTC+3) | Asset | Channel | Audience | Objective | Destination | Approval | Required assets | Dependencies | Tracking (`utm_campaign` / `utm_content`) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Mon 19 Oct | 14:00 / 17:00 | **LI-001** | LinkedIn | P1 | Awareness: carry ART-001's parity argument to LinkedIn | dev.to article in body; `/docs/platforms` in first comment | READY FOR REVIEW | none (ships without a visual) | Owner approval; a01 stop gate (tagged link opened once with `&kx_traffic=diagnostic`, `kx_campaign` seen in PostHog) | `kx_p1_a_parity_proof` / `li_primary` |
+| Mon 19 Oct | 14:00 / 17:00 | **LI-001** | LinkedIn | P1 | Awareness: carry ART-001's parity argument to LinkedIn | dev.to article in body; `/docs/platforms` in first comment | APPROVED 2026-10-18 (editorial only; the owner posts it by hand) | none (ships without a visual) | a01 stop gate still OPEN: source and local-browser checks pass, but no PostHog event yet. Owner opens the tagged link once with `&kx_traffic=diagnostic` on kinetixui.com and the event is confirmed in PostHog before posting. Packet: [`../content/drafts/m2/LI-001-publish-packet.md`](../content/drafts/m2/LI-001-publish-packet.md) | `kx_p1_a_parity_proof` / `li_primary` |
 | Tue 20 Oct | 15:00 / 18:00 | **X-001** | X | P1 | Awareness: the same argument as a thread | dev.to in post 9; `/docs/platforms` as reply | READY FOR REVIEW | none | LI-001 posted the day before | `kx_p1_a_parity_proof` / `x_thread` |
 | Wed 21 Oct | 13:00 / 16:00 | **GH-001** | GitHub | neutral | Evaluation: a one-screen status note for visitors arriving from posts | `/docs/platforms` | DRAFTED | none | Owner enables Discussions (disabled on 2026-10-17); numbers re-derived on the day | `kx_neutral_g_project_status` / `gh_discussion` |
 | Thu 22 Oct | 14:00 / 17:00 | **LI-008** | LinkedIn | P1 | Evaluation: fractions, not ticks | `/docs/platforms` | READY FOR REVIEW | VIS-006 (regenerated 2026-10-17) | Owner approval; re-run `pnpm marketing:stats` | `kx_p1_d_partial_evidence` / `li_primary` |
@@ -60,10 +60,10 @@ target is a draft ready for review by Friday 30 October, for the next window.
 | Asset | Why not now |
 | --- | --- |
 | LI-005 | BLOCKED. Whether it ever went out is the owner's open question (the 7 Oct post was IoT). If the owner confirms it never published, it can take a week-3 slot; X-004 and ART-002 already cover the family |
-| LI-010, X-002 | DRAFTED and stale: both state "98" and "Angular 31" as today's figures; `../content/drafts/a02/verify-package.mjs` fails. Refresh first |
+| LI-010, X-002 | DRAFTED and stale: both state "98" and "Angular 31" as today's figures; `../content/drafts/a02/verify-package.mjs` fails. Flagged `stale` in the content register (2026-10-18), which blocks approval until refreshed |
 | LI-002 | Held by design until about three weeks after LI-001, so not before 9 November |
 | X-009, X-010, X-011 | Ready, next window. X-010 follows LI-009 |
-| ART-001-PILLAR | PLANNED until the owner confirms the dev.to pillar-link edit is live. A tagged `art_pillar` arrival on 2026-10-17 03:51 UTC suggests it may be; that is an inference, not a confirmation |
+| ART-001-PILLAR | PLANNED until the owner confirms the dev.to pillar-link edit is live. The one tagged `art_pillar` arrival (2026-10-17 03:51 UTC) matches the suspected-automation fingerprint (M2, `../measurement/M2-TRAFFIC-QUALITY.md`), so it is no longer evidence that the edit is live |
 | COM-001 … COM-003 | BLOCKED on a live rule check; opportunistic only |
 
 ## After each post

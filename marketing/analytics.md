@@ -138,9 +138,10 @@ sessions and Returning evaluators are all counted **among eligible sessions only
 `component_viewed`, `component_code_copied`, `platform_selected`, `component_code_viewed`, `github_clicked`, `npm_clicked`,
 `changelog_viewed`, `external_link_clicked`, `preset_shared`, `preset_code_copied`, `preset_loaded`,
 `preset_randomized`, `create_export_target_selected`, `create_export_copied`, `iot_example_copied`,
-`block_code_copied`, `search_result_selected`. A session with one of these and no `$pageview` is an arrival.
-(`search_result_selected`, added 2026-10-17, fires from the command menu of a page that has already sent its
-`$pageview`, so it cannot add an arrival in practice; it is listed because the list is the contract.)
+`block_code_copied`, `search_result_selected`, `page_engaged`. A session with one of these and no `$pageview` is an
+arrival. (`search_result_selected`, added 2026-10-17, fires from the command menu of a page that has already sent
+its `$pageview`, so it cannot add an arrival in practice; it is listed because the list is the contract. The same
+holds for `page_engaged`, added 2026-10-18 (M2), which fires on the first physical input after a page view.)
 
 **Does not qualify on its own.** `$pageleave`, and any other event name: PostHog SDK events (`$autocapture`,
 `$identify`, `$web_vitals`, …) and names nobody declared. The list is an allowlist, so a new event cannot
@@ -519,6 +520,74 @@ direct visit. The time window alone is not the rule; the session id is. **Uncert
 same device's earlier session that day (04:05–04:14 UTC, homepage → components → installation) may also be
 the owner's, but nothing identifies it as a test, so it stays in the counts. No event property was added to
 past events.
+
+### Internal traffic
+
+**Policy.** The team's own browsing is real use of the site but not audience growth. It is kept, labelled and
+reported as its own cohort; it is not excluded from the canonical rate (only diagnostic traffic is, rule 7).
+
+**Marking.** Open any page once with `?kx_traffic=internal` in each browser the team uses (for example
+`https://kinetixui.com/?kx_traffic=internal`). The mark is stored per browser (localStorage), so every later visit
+from that browser, in any tab, carries `kx_traffic_type: "internal"`. A diagnostic mark in the same tab wins.
+`?kx_traffic=clear` removes both. Unmarked team visits are indistinguishable from audience visits; the mark is the
+only identification, and nothing is inferred after the fact.
+
+**Why not PostHog's "internal and test users" cohort.** Project 620385 filters test accounts with cohort 583396
+(`not_in`). That cohort can never contain anyone: the site uses `person_profiles: identified_only` and has no
+sign-in, so no visitor is ever identified and no person profile exists to match. Filtering on the event property
+`kx_traffic_type` is what works (below). Changing the project's test-account filter is a PostHog setting the owner
+changes; this repo does not.
+
+### Traffic cohorts (M2, 2026-10-18)
+
+Every session falls into exactly one cohort, decided in this order by `classifySession` in
+[`scripts/marketing-weekly-report.mjs`](../scripts/marketing-weekly-report.mjs) (unit-tested, and its signal lists
+are pinned to `analytics-measurement.ts` by `weekly-report-signals.test.ts`):
+
+| Cohort | Rule | In the canonical QER? |
+| --- | --- | --- |
+| Not an arrival | no arrival event (§4) | no (already the §4 rule) |
+| Diagnostic | any event with `kx_traffic_type = diagnostic` | no (rule 7) |
+| Internal | any event with `kx_traffic_type = internal` | yes; shown separately |
+| Suspected automation | at most one `$pageview`, no event a person causes (anything outside `$pageview`, `$pageleave`, `docs_viewed`, `component_viewed`, `installation_viewed`, `changelog_viewed`), under 5 seconds, `kx_referrer = direct` | yes; shown separately |
+| Audience | everything else | yes |
+
+"Human-evidenced" is a further label on audience sessions with a `page_engaged`, any event a person causes, or a
+second page view. It is a sensitivity figure only.
+
+**The canonical QER is unchanged.** It still counts every eligible arriving session except diagnostic ones (§2–§4).
+Reports print two sensitivities beside it, never instead of it: *audience-only QER* (canonical minus internal and
+suspected automation) and *human-evidenced evaluations*. Removing suspected automation from the metric itself would
+be a definition change, which needs the owner's explicit approval.
+
+**Why "suspected", and the evidence.** The rule describes a page that loaded and was left at once with nothing done
+on it. PostHog shows a stream of exactly that, with a consistent fingerprint: browser language zh-CN with a
+geolocation in the US, Mexico, Hong Kong, Singapore or Puerto Rico; near-square, unusual screen sizes; Chrome
+148–150; an unknown time zone; one component docs page per visit, roughly every 12 minutes. In 10–16 October 45 of
+46 sessions met the rule and they held all 38 Qualified Evaluation sessions (36 with that fingerprint, 2 from an AWS
+address in Dulles 9 ms apart). Up to 9 October the same fingerprint appears in 6 sessions (1 QE, 1 AI from a
+render-fired `installation_viewed`), and 32 other sessions meet the rule with no QE. The 17 October dev.to
+`art_pillar` arrival also matches the fingerprint. None of this proves a bot: the same rule catches a person who
+opens a deep link and closes it within five seconds, which is why the cohort is labelled, reported and never deleted.
+Raw events are never rewritten; cohorts exist only in queries and reports. Full numbers:
+[`measurement/M2-TRAFFIC-QUALITY.md`](./measurement/M2-TRAFFIC-QUALITY.md).
+
+**How the dashboard should split cohorts.** Each QER tile keeps its canonical definition and gains a breakdown, not
+a filter: diagnostic stays excluded (rule 7); internal is `kx_traffic_type = 'internal'`; suspected automation is
+the rule above computed per session in HogQL (the weekly report's query is the reference implementation). Do not use
+the project's test-account toggle for any of this until its filter is moved from the empty cohort to
+`kx_traffic_type`.
+
+**Engagement signal.** `page_engaged` (added 2026-10-18) fires on the first physical input after a page view: a
+pointer press, key, touch or wheel, never scroll, focus or mouse movement, and never a synthetic event. It is an
+arrival event, not a QE or AI signal. Before it is deployed, automation and a person who reads without clicking look
+alike; after, a reader who touches the page is human-evidenced.
+
+**Weekly report.** `pnpm marketing:weekly --from YYYY-MM-DD --to YYYY-MM-DD --print-query` prints the one HogQL
+query (one row per session that started in the window, aggregated over all of its events, so a session crossing
+a week boundary is counted once, in the week it began); save its rows as JSON and run `pnpm marketing:weekly --from … --to … --sessions rows.json` (optionally
+`--platform p.json` with numbers copied from each platform). Reach, impressions and clicks print as "unavailable"
+unless supplied; nothing is estimated.
 
 ### Arrival eligibility and diagnostic exclusion, 2026-10-09
 

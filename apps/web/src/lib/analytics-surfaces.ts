@@ -87,6 +87,28 @@ export function trackRouteView(pathname: string): void {
   }
 }
 
+/**
+ * The inputs that count as engagement: a person pressing, touching, typing or turning a wheel. `scroll` is not one:
+ * a browser restoring a scroll position or a script calling `scrollTo` fires it with nobody there.
+ */
+export const ENGAGEMENT_INPUTS = ["pointerdown", "keydown", "touchstart", "wheel"] as const;
+
+/** Only input the browser itself produced: `dispatchEvent` from a script creates events with `isTrusted` false. */
+export function isPersonInput(event: Event): boolean {
+  return event.isTrusted === true;
+}
+
+/**
+ * `page_engaged` for the page at `pathname`. The caller (the provider) guarantees once per page view and passes only
+ * trusted input; this decides the payload, which is the page's surface and nothing about the input.
+ */
+export function trackPageEngaged(pathname: string): void {
+  const path = cleanPath(pathname);
+  if (!path) return;
+  const source = sourceForPath(path);
+  analytics.track("page_engaged", source ? { source } : {});
+}
+
 /* ------------------------------------------------------------------ CTAs (declared in markup, read by the listener) */
 
 /**

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { analytics, startAnalytics } from "@/lib/analytics";
-import { trackLinkClick, trackRouteView } from "@/lib/analytics-surfaces";
+import { ENGAGEMENT_INPUTS, isPersonInput, trackLinkClick, trackPageEngaged, trackRouteView } from "@/lib/analytics-surfaces";
 
 /**
  * Starts analytics, reports one page view per route change, classifies that route (docs / installation /
@@ -21,6 +21,10 @@ import { trackLinkClick, trackRouteView } from "@/lib/analytics-surfaces";
  * MDX stay server components. A product CTA opts in with `ctaAttrs(...)` data attributes; outbound links to our
  * GitHub repo, our npm packages and a short list of external hosts are recognised by their destination. The
  * rules, and why an ordinary internal link produces nothing, are in `lib/analytics-surfaces.ts`.
+ *
+ * ENGAGEMENT is one more listener: the first trusted press, key, touch or wheel after each page view sends
+ * `page_engaged`, then the listener removes itself until the next navigation. Synthetic events (`isTrusted` false,
+ * as from `dispatchEvent`) do not count.
  */
 export function AnalyticsProvider() {
   const pathname = usePathname();
@@ -35,6 +39,21 @@ export function AnalyticsProvider() {
     if (!pathname) return;
     analytics.pageview(pathname);
     trackRouteView(pathname);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!pathname) return;
+    const onInput = (event: Event) => {
+      if (!isPersonInput(event)) return;
+      stop();
+      trackPageEngaged(pathname);
+    };
+    const options = { capture: true, passive: true } as const;
+    const stop = () => {
+      for (const type of ENGAGEMENT_INPUTS) window.removeEventListener(type, onInput, options);
+    };
+    for (const type of ENGAGEMENT_INPUTS) window.addEventListener(type, onInput, options);
+    return stop;
   }, [pathname]);
 
   useEffect(() => {
