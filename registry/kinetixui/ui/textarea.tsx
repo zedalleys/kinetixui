@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
  */
 const textareaVariants = cva(
   [
-    "flex w-full min-h-[100px] resize-y rounded-sm border border-muted-foreground/80 bg-background px-3 py-3",
+    "flex w-full min-h-[100px] resize-y rounded-field border border-muted-foreground/80 bg-background px-3 py-3",
     "font-sans text-body-md text-foreground",
     "placeholder:text-muted-foreground",
     "outline-none transition-[border-color,box-shadow,background-color] duration-instant ease-standard",

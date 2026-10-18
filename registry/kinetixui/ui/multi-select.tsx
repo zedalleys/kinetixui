@@ -86,8 +86,8 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
             }}
             className={cn(
               // The text-entry state contract (TOKENS.md, "Composite fields"): one field, whose chips sit inside
-              // its edge. `rounded-sm` is the field radius Input and Select already use; this was square.
-              "flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-sm border border-muted-foreground/80 bg-background px-3 py-2 font-sans",
+              // its edge. `rounded-field` (`--radius-field`) is the field radius Input and Select already use; this was square.
+              "flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-field border border-muted-foreground/80 bg-background px-3 py-2 font-sans",
               "outline-none transition-[border-color,box-shadow] duration-instant ease-standard",
               "[@media(hover:hover)]:hover:[&:not(:focus):not([aria-expanded=true]):not([aria-invalid=true])]:border-muted-foreground",
               "focus-visible:border-action focus-visible:shadow-focus",
