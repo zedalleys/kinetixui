@@ -28,7 +28,7 @@ const NEGATIVES = {
   'wrong-constructor': { fence: 'ContentView', from: 'size: .sm', to: 'size: .small',
     expect: /has no member 'small'/ },
   'wrong-argument': { fence: 'ContentView', from: 'KinetixButton(action: {}) { Text("Get started") }',
-    to: 'KinetixButton(onTap: {}) { Text("Get started") }', expect: /incorrect argument label|extraneous argument label|no exact matches in call/ },
+    to: 'KinetixButton(onTap: {}) { Text("Get started") }', expect: /missing arguments? for parameters? 'action'[^\n]* in call|incorrect argument label/ },
   'wrong-package': { fence: 'Package.swift', from: 'package: "ui-swiftui"', to: 'package: "kinetixui"',
     expect: /unknown package 'kinetixui'/ },
   'wrong-path': { fence: 'Package.swift', from: '.package(path: "Vendor/kinetixui/packages/ui-swiftui")',

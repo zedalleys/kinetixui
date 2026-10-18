@@ -31,7 +31,7 @@ describe("native consumer gates", () => {
     expect(matrix(workflow).sort()).toEqual(controls.sort());
     const text = read(workflow);
     expect(text).toContain(`run: node ${script}\n`);
-    expect(text.match(new RegExp(`- "${script.replace(/\./g, "\\.")}"`, "g"))).toHaveLength(2);
+    expect(text.split(`- "${script}"`)).toHaveLength(3); // in the push and the pull_request path filters
   });
 
   const fixture = (script: string) => {

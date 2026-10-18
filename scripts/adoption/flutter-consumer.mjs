@@ -32,9 +32,10 @@ const NEGATIVES = {
     to: "KinetixButton(onTap: () {}, child: const Text('Save'))", expect: /flutter analyze failed[\s\S]*named parameter 'onTap' isn't defined/ },
   'wrong-dependency': { fence: 'pubspec', from: '  kinetix_ui:\n', to: '  kinetixui:\n',
     expect: /flutter pub get failed[\s\S]*kinetixui/ },
-  // A consumer whose SDK constraint the toolchain cannot satisfy: the docs' stated constraint is what the app declares.
-  'unsupported-sdk': { prose: true, from: '`sdk: ">=3.6.0 <4.0.0"`', to: '`sdk: ">=2.19.0 <3.0.0"`',
-    expect: /flutter pub get failed[\s\S]*requires SDK version >=2\.19\.0 <3\.0\.0/ },
+  // A stated SDK floor the toolchain cannot meet: the docs' constraint is what the app declares, so a wrong floor fails
+  // resolution. (A Dart 2 range would not do: Dart 3 widens `<3.0.0` to `<4.0.0` for any floor of 2.12 or later.)
+  'unsupported-sdk': { prose: true, from: '`sdk: ">=3.6.0 <4.0.0"`', to: '`sdk: ">=9.0.0 <10.0.0"`',
+    expect: /flutter pub get failed[\s\S]*requires SDK version >=9\.0\.0 <10\.0\.0/ },
   'label-changed': { fence: 'Demo', from: "const Text('Cancel')", to: "const Text('Close')",
     expect: /flutter test failed[\s\S]*Demo shows Save above a smaller outlined Cancel/ },
   'run-line-missing': { prose: true, from: '`runApp(const MaterialApp(home: Scaffold(body: Center(child: Demo()))))`',
