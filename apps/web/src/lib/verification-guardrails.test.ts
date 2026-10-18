@@ -395,9 +395,11 @@ describe("block evidence: negative controls", () => {
 
   it("3c. credits the Angular block compile only to the blocks its program lists, and only while CI runs it", () => {
     const program = (tsconfig: object) => ({ "packages/ui-angular/tsconfig.blocks.json": JSON.stringify(tsconfig) });
-    const listed = program({ files: ["src/examples/blocks/sign-in.ts"], include: [] });
-    const angular = (files: Record<string, string>, extraSteps: string[]) => {
-      const dir = blockFixture(files, { extraSteps });
+    const COMPILE = "scripts/angular-package/compile-blocks.mjs";
+    const wrapper = { "check:angular-blocks": `node ${COMPILE}` };
+    const listed = { ...program({ files: ["src/examples/blocks/sign-in.ts"], include: [] }), [COMPILE]: "// compiles\n" };
+    const angular = (files: Record<string, string>, extraSteps: string[], scripts: Record<string, string> = wrapper) => {
+      const dir = blockFixture(files, { extraSteps, scripts });
       expect(run(script, [`--root=${dir}`]).ok).toBe(true);
       return blocksOut(dir)["sign-in"]!.platforms.Angular!;
     };
@@ -420,6 +422,13 @@ describe("block evidence: negative controls", () => {
     ]) {
       expect(angular(listed, step).level, step.join()).toBe("source");
     }
+    // the step's wrapper has to run the compile itself: repointed, masked, flagged or missing, it proves nothing
+    for (const cmd of ["echo skipped", "true", `node ${COMPILE}; true`, `node ${COMPILE} || true`, `node ${COMPILE} --help`, `pnpm build:angular && node ${COMPILE}`]) {
+      expect(angular(listed, ["pnpm check:angular-blocks"], { "check:angular-blocks": cmd }).level, cmd).toBe("source");
+    }
+    expect(angular(listed, ["pnpm check:angular-blocks"], {}).level).toBe("source");
+    const { [COMPILE]: _gone, ...noScript } = listed;
+    expect(angular(noScript, ["pnpm check:angular-blocks"]).level).toBe("source");
   });
 
   it("4. is not runtime verified without observed interaction", () => {

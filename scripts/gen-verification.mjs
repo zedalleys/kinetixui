@@ -439,6 +439,7 @@ const BLOCK_BUILD = {
     run: "pnpm check:angular-blocks",
     what: "ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json",
     program: "packages/ui-angular/tsconfig.blocks.json",
+    script: "scripts/angular-package/compile-blocks.mjs",
   },
   SwiftUI: { under: "packages/ui-swiftui/", workflow: "native-swiftui.yml", run: "swift test", what: "swift test compiles the test target" },
   Compose: { under: "packages/ui-compose/", workflow: "native-compose.yml", run: "./gradlew :ui:testDebugUnitTest", what: "Gradle compiles the unit-test source set" },
@@ -459,7 +460,22 @@ function inProgram(build, file) {
   return (tsconfig.files ?? []).some((f) => `${dir}${f.replace(/^\.\//, "")}` === file);
 }
 
-/** Does `workflow` exist and run `command` in a step? A comment that mentions it does not count. */
+/**
+ * Does CI run this build? The step must run `build.run` exactly. When the build names a `script`, `run` is a
+ * package.json wrapper, and the wrapper must itself be exactly `node <script>`: a step that still says
+ * `pnpm check:angular-blocks` proves nothing once the wrapper is repointed at `echo` or `true`.
+ */
+function buildRuns(build) {
+  if (!workflowRuns(build.workflow, build.run)) return false;
+  if (!build.script) return true;
+  if (!existsSync(`${root}/${build.script}`)) return false;
+  const name = build.run.match(/^pnpm (\S+)$/)?.[1];
+  const wrapped = name && JSON.parse(read("package.json")).scripts?.[name];
+  if (typeof wrapped !== "string") return false;
+  const cmds = commandsOf([wrapped]);
+  return cmds.length === 1 && [`node ${build.script}`, `node ./${build.script}`].includes(cmds[0]);
+}
+
 /**
  * Does a workflow STEP run this script, directly or through a package.json wrapper? Stricter than runsInCI, which
  * accepts a mention anywhere in a workflow: a block evidence source can make a block Runtime verified, so a path
@@ -665,7 +681,7 @@ for (const [slug, b] of Object.entries(blocksManifest)) {
     }
     blockRecord(slug, platform, "source", { ref: file });
     const build = BLOCK_BUILD[platform];
-    if (build && file.startsWith(build.under) && inProgram(build, file) && workflowRuns(build.workflow, build.run)) {
+    if (build && file.startsWith(build.under) && inProgram(build, file) && buildRuns(build)) {
       blockRecord(slug, platform, "build", { ref: `.github/workflows/${build.workflow}: ${build.run} (${build.what})` });
     }
   }
