@@ -71,7 +71,18 @@ changed, in order. Nothing is removed: the failed diagnostic is evidence, not a 
 >
 > What this gate now certifies: the tracked LI-001 link, opened on kinetixui.com, delivers the full attribution
 > quartet to PostHog. The diagnostic visit itself is excluded from every count (analytics.md rule 7) and is not a
-> LinkedIn arrival.
+> LinkedIn arrival. It does not certify every browser: one visit on one browser is not a claim that attribution is
+> reliable everywhere.
+>
+> **Recommended, and not a blocker: one iOS Safari retest.** The failure was on iOS and most LinkedIn readers tap
+> through in an in-app or mobile browser, so that is the path worth re-testing — on an iPhone, from the LinkedIn
+> app if possible, opening the same URL with `&kx_traffic=diagnostic` appended and tapping once. It can be done
+> after Monday's post as easily as before it: a diagnostic visit is excluded from every count whenever it happens,
+> so it cannot contaminate the campaign's figures. If it reads `linkedin`, the anomaly was a one-off on a link that
+> is now proven on two browsers. If it reads `other` again, the cause is on the iOS path and M3.1's next step
+> applies: a diagnostic-only property recording why a source was rejected. Publication is not held for it —
+> nothing currently indicates an active failure, and holding a post for an unexplained past event with no present
+> symptom would mean never posting.
 
 
 If the gate ever has to be re-run (two minutes, once):
@@ -108,6 +119,10 @@ is unaffected.
 ## 6. Manual checklist on the day
 
 - [x] Stop gate closed (§4): PostHog delivery passed 2026-10-18 19:07 UTC, confirmed in the thread
+- [x] Approved copy still pinned: section A is 1,538 characters and hashes to `09a3994…3cfb`, re-computed
+      2026-10-18 on `984792b` (`check:content` enforces it on every run)
+- [ ] The first comment's URL carries **no** `kx_traffic` parameter — that mark belongs only to the owner's own
+      diagnostic visits, never to a public link
 - [ ] ART-001 decision made (§5)
 - [ ] dev.to article opens and is the right article
 - [ ] Section A pasted unchanged; preview shows the dev.to link card

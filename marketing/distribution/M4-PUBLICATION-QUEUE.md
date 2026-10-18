@@ -23,9 +23,9 @@ difference is named.
 | Asset | Date (UTC / Riyadh) | State | The one outstanding thing |
 | --- | --- | --- | --- |
 | **LI-001** | Mon 19 Oct, 14:00 / 17:00 | **READY TO PUBLISH** | Nothing gating. One optional owner decision: the stale "today" paragraph in the dev.to article it links to |
-| **X-001** | Tue 20 Oct, 15:00 / 18:00 | **READY WITH NOTES** | The owner's approval reply, and LI-001 live the day before |
-| **LI-008** | Thu 22 Oct, 14:00 / 17:00 | **READY WITH NOTES** | The owner's approval reply |
-| **X-008** | Fri 23 Oct, 15:00 / 18:00 | **READY WITH NOTES** | The owner's approval reply, and a link check the day after posting |
+| **X-001** | Tue 20 Oct, 15:00 / 18:00 | **READY WITH NOTES** — ready for owner approval | The owner's approval reply, and LI-001 live the day before |
+| **LI-008** | Thu 22 Oct, 14:00 / 17:00 | **READY WITH NOTES** — ready for owner approval | The owner's approval reply |
+| **X-008** | Fri 23 Oct, 15:00 / 18:00 | **READY WITH NOTES** — ready for owner approval | The owner's approval reply, and a link check the day after posting |
 
 Approving all three outstanding assets is one reply in the thread. The decision packet, with the exact copy and the
 pins, is [`../content/drafts/m3/APPROVAL-QUEUE-2026-10-20.md`](../content/drafts/m3/APPROVAL-QUEUE-2026-10-20.md);
@@ -68,6 +68,18 @@ was desktop Chrome, nothing was deployed between them, and PR #409 is unmerged a
 earlier failed diagnostic (10:30 UTC, `kx_source=other`) stands in the record as evidence. Full history, both
 corrections in order: [`../content/drafts/m2/LI-001-publish-packet.md`](../content/drafts/m2/LI-001-publish-packet.md) §4.
 
+**The publishing sequence, in order.** Nothing here is automated; each step is the owner's own.
+
+1. Post section A unchanged on LinkedIn, at about 14:00 UTC. The copy was re-hashed on `984792b` and still
+   matches its pin: 1,538 characters, sha256 `09a3994…3cfb`.
+2. Immediately add the tracked `/docs/platforms` URL as the **first comment**, in full. It carries no `kx_traffic`
+   parameter: that mark belongs only to the owner's diagnostic visits, never to a public link.
+3. Copy the post's own URL (it contains `/feed/update/urn:li:activity:` or `/posts/`).
+4. Close out both registers from that URL — `status: "published"`, the real date, `liveUrl`, and a first result
+   line of absolute counts only. Until that is done with a real URL, LI-001 is approved, not published.
+5. Start the post-publication checklist at T+1 hour
+   ([`../measurement/M4-POST-PUBLICATION-CHECKLIST.md`](../measurement/M4-POST-PUBLICATION-CHECKLIST.md)).
+
 **The one optional decision.** The post sends readers to ART-001 on dev.to, whose "today" paragraph still says 98
 catalogue entries and Angular 64; both are now 109 and 80. It **understates** current coverage rather than
 overstating it, and the LinkedIn copy quotes none of those figures, so it is not a launch blocker. Updating that
@@ -83,7 +95,7 @@ Correction text ready to paste: [`../content/drafts/m3/ART-001-CORRECTION.md`](.
 | Tracking URL | `https://kinetixui.com/docs/platforms?utm_source=x&utm_medium=social&utm_campaign=kx_p1_a_parity_proof&utm_content=x_thread` |
 | Target audience | P1 — multi-platform design-system engineers |
 | Positioning pillar | Primary: infrastructure. Pillar **a** |
-| Approval status | **READY FOR REVIEW.** Recommended: approve, post only after LI-001 is live |
+| Approval status | **READY FOR OWNER APPROVAL.** Recommended: approve, post only after LI-001 is live |
 | Claims | Every figure historical and pinned to a commit, except "six of a hundred-odd so far": 6 of **113** demo keys today, which `verify-package.mjs` flags against its own `< 110` bound. "A hundred-odd" at 113 is a judgement call, not a wrong number; the alternative is re-pinning the copy for a word |
 
 Same campaign as LI-001 with a different `utm_content`, which is what separates the two posts' arrivals. X can wrap
@@ -99,7 +111,7 @@ or strip the reply link, so no tagged session afterwards means "no tagged arriva
 | Target audience | P1 — design-system engineers. Message: a partial count is not a tick |
 | Positioning pillar | Primary: infrastructure, verification as published evidence. Pillar **d** |
 | Visual | VIS-006, regenerated 2026-10-17 from the generator (109 / Angular 80) |
-| Approval status | **READY FOR REVIEW.** Recommended: approve |
+| Approval status | **READY FOR OWNER APPROVAL.** Recommended: approve |
 | Claims | Re-run 2026-10-18 against `pnpm marketing:stats`: direction-aware testing "from most of the catalogue on one platform to a single component on another, and none at all on a third" holds — Flutter RTL 58/90, Compose 1/90, SwiftUI 0/90. "Contrast is gated in CI" and "accessibility checked in a real browser across the site and every Storybook story" are `CLAIMS.md` B-claims with live gates (`check:contrast`, `check:a11y-site`, `check:a11y-browser`). The copy quotes no number, so the fractions moving does not stale it |
 
 First post on `kx_p1_d_partial_evidence`, so there is no earlier arrival on this campaign to compare against.
@@ -114,7 +126,7 @@ First post on `kx_p1_d_partial_evidence`, so there is no earlier arrival on this
 | Target audience | P2 — product teams shipping web and native |
 | Positioning pillar | Secondary: multi-platform component library, with the infrastructure argument underneath. Pillar **f** |
 | Visual | VIS-005. Known nit: its alt text says "presented as equals" while one column is accent-styled — fix the alt text when posting |
-| Approval status | **READY FOR REVIEW.** Recommended: approve, and check the link the day after |
+| Approval status | **READY FOR OWNER APPROVAL.** Recommended: approve, and check the link the day after |
 | Claims | Re-checked 2026-10-18: "five implementations" holds (React 109, Angular 80, SwiftUI / Compose / Flutter 90 each). "An Angular button is a directive on a real HTML button" holds (`packages/ui-angular/src/lib/button.ts`, `@Directive({ selector: 'button[kxButton], a[kxButton]' })`). "We publish the gaps" holds: `/docs/platforms` lists the 19 documented exceptions with reasons. The copy does not call Angular complete |
 
 Its LinkedIn sibling LI-007 shares this campaign and produced no tagged audience arrival, so the `x_thread` content

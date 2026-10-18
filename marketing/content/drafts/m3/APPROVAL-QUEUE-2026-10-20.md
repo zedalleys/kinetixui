@@ -2,7 +2,7 @@
 type: owner editorial decisions
 window: 20 to 23 October 2026
 prepared: 2026-10-18 (M3); supersedes the per-asset tables in ../m2/REVIEW-PACKET-2026-10-19.md, which stays as the record
-status: for the owner's decision. Nothing here is approved, scheduled or published by preparing it
+status: READY FOR OWNER APPROVAL. Nothing here is approved, scheduled or published by preparing it; the owner approves each asset explicitly or it stays unapproved
 ---
 
 # Approval queue — X-001, LI-008, X-008

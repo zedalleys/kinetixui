@@ -88,6 +88,9 @@ from the first post of this window, so an arm's floor accumulates across weeks i
       36 QE signals) is unmarked and still counts as audience.
 - [ ] **Attribution arrived intact**: campaign, medium and content present, and `kx_source` not `other`. Record any
       `other` with its browser and device — the 10:30 cause is still unknown and iOS Safari has not been re-tested.
+      A single `other` on one browser is a data point to log, not a reason to stop the campaign; the same signature
+      on several arrivals is a live defect and goes to the attribution thread. One iOS Safari diagnostic visit,
+      whenever convenient, would settle which it is (packet §4); it is excluded from counts whenever it is made.
 - [ ] **QER's definition is untouched.** No event is added to it without an owner decision made in analytics.md,
       not in a query. `search_result_selected` (⌘K) and the per-platform properties from BD-W4 changed nothing;
       `verification_inspected` arrives with PR #408, which is unmerged, and is explicitly in neither QE nor
