@@ -111,7 +111,7 @@ const GuestPicker = React.forwardRef<HTMLButtonElement, GuestPickerProps>(
               type="button"
               disabled={disabled}
               aria-labelledby={`${labelId} ${summaryId}`}
-              className="flex min-h-11 w-full min-w-0 items-center justify-between gap-2 rounded-md border border-muted-foreground/80 bg-background px-3 py-2 text-start text-body-md text-foreground outline-none transition-[border-color,box-shadow] duration-instant ease-standard focus-visible:border-action focus-visible:shadow-focus disabled:pointer-events-none disabled:opacity-disabled [@media(hover:hover)]:hover:border-muted-foreground"
+              className="flex min-h-11 w-full min-w-0 items-center justify-between gap-2 rounded-field border border-muted-foreground/80 bg-background px-3 py-3 text-start text-body-md text-foreground outline-none transition-[border-color,box-shadow] duration-instant ease-standard focus-visible:border-action focus-visible:shadow-focus disabled:pointer-events-none disabled:opacity-disabled [@media(hover:hover)]:hover:border-muted-foreground"
             >
               <span id={summaryId} className="min-w-0 [overflow-wrap:anywhere]">
                 {formatSummary(Object.fromEntries(categories.map((c) => [c.id, countOf(c)])), categories)}
