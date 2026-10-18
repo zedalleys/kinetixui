@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { classifySession, publishedInWindow, renderReport, sessionQuery, summarise } from "./marketing-weekly-report.mjs";
+import { COMPACT_COLUMNS, classifySession, compactQuery, dataQualityWarnings, parseCompact, publishedInWindow, renderReport, sessionQuery, summarise, trendRows } from "./marketing-weekly-report.mjs";
 
 /** An audience session that qualifies. Each case below changes one thing. */
 const row = (over = {}) => ({
@@ -14,6 +14,9 @@ const row = (over = {}) => ({
   ai_signals: 0,
   ai_copy_or_rung: 0,
   progressed: 0,
+  install_views: 0,
+  install_copies: 0,
+  platforms: "",
   diagnostic_events: 0,
   internal_events: 0,
   kx_source: "linkedin",
@@ -122,4 +125,73 @@ test("sessionQuery validates its window and excludes the audited session", () =>
   // a session belongs to the week it started in, and is aggregated over all of its events (sessions cap at 24 h)
   assert.match(q, /timestamp >= toDateTime\('2026-10-12 00:00:00'\) - INTERVAL 1 DAY AND timestamp < toDateTime\('2026-10-19 00:00:00'\) \+ INTERVAL 1 DAY/);
   assert.match(q, /HAVING started >= toDateTime\('2026-10-12 00:00:00'\) AND started < toDateTime\('2026-10-19 00:00:00'\)/);
+});
+
+test("platform interest counts each platform a session named, with its cohort", () => {
+  const s = summarise([row({ platforms: "Flutter,SwiftUI" }), row({ platforms: "Flutter" }), renderOnly({ platforms: "React" }), row({ diagnostic_events: 1, platforms: "Compose" })]);
+  const m = Object.fromEntries(s.byPlatform);
+  assert.equal(m.Flutter.sessions, 2);
+  assert.equal(m.SwiftUI.sessions, 1);
+  assert.equal(m.React.cohort.suspected_automation, 1);
+  assert.equal(m.Compose, undefined, "diagnostic sessions name no platform interest");
+});
+
+test("installation interest separates a page that loaded from a command someone copied", () => {
+  const s = summarise([row({ install_views: 1 }), row({ install_views: 1, install_copies: 1 }), renderOnly({ install_views: 1 })]);
+  assert.deepEqual(s.install.viewed, { canonical: 3, audience: 2 });
+  assert.deepEqual(s.install.copied, { canonical: 1, audience: 1 });
+  const { install_views, install_copies, platforms, ...old } = row();
+  const md = renderReport({ from: "2026-10-19", to: "2026-10-26", rows: [old], distribution: { rows: [] } });
+  assert.match(md, /## Installation interest\n\nunavailable/);
+  assert.match(md, /## Platform interest[\s\S]*?\nunavailable/);
+});
+
+test("data-quality warnings fire on a mostly automated week and stay quiet on a clean one", () => {
+  const bot = Array.from({ length: 3 }, () => renderOnly());
+  const noisy = dataQualityWarnings(summarise([...bot, row()]), [{ asset: "X-1", liveUrl: null }]);
+  assert.ok(noisy.some((w) => /3 of 4 eligible sessions .* suspected automation/.test(w)));
+  assert.ok(noisy.some((w) => /below the ~30/.test(w)));
+  assert.ok(noisy.some((w) => /X-1 is marked published without a live URL/.test(w)));
+  const clean = dataQualityWarnings(summarise(Array.from({ length: 30 }, () => row())), []);
+  assert.deepEqual(clean, []);
+});
+
+test("negative control: a tagged campaign that only automation reached is flagged, never counted as a human arrival", () => {
+  const s = summarise([renderOnly({ kx_campaign: "kx_p1_a_parity_proof", kx_source: "linkedin", kx_content: "li_primary" }), row({ kx_campaign: null, kx_source: "direct" })]);
+  assert.equal(s.campaignSessions, 1);
+  assert.equal(s.campaignAudience, 0);
+  assert.ok(dataQualityWarnings(s, []).some((w) => /no tagged human arrival is evidenced/.test(w)));
+});
+
+test("the trend lists absolute counts per week, oldest first, and no percentage change", () => {
+  const t = trendRows([{ from: "2026-10-05", to: "2026-10-12", rows: [row()] }, { from: "2026-10-12", to: "2026-10-19", rows: [row(), renderOnly()] }]);
+  assert.deepEqual(t.map((x) => [x.raw, x.qe, x.audienceQe]), [[1, 1, 1], [2, 2, 1]]);
+  const md = renderReport({ from: "2026-10-12", to: "2026-10-19", rows: [row()], distribution: { rows: [] }, history: [{ from: "2026-10-05", to: "2026-10-12", rows: [row()] }] });
+  assert.match(md, /\| 2026-10-05 → 2026-10-12 \| 1 \|/);
+  const trend = md.split("## Trend")[1].split("\n## ")[0];
+  assert.doesNotMatch(trend, /%/);
+});
+
+test("sessionQuery carries the installation and platform columns", () => {
+  const q = sessionQuery("2026-10-12", "2026-10-19");
+  assert.match(q, /countIf\(event = 'installation_viewed'\) AS install_views/);
+  assert.match(q, /AS install_copies/);
+  assert.match(q, /groupUniqArrayIf\(toString\(properties\.platform\), event IN \('platform_selected', 'component_code_viewed', 'install_command_copied'\)/);
+});
+
+test("the compact export carries every column summarise reads and parses back to the same summary", () => {
+  const q = compactQuery("2026-10-12", "2026-10-19");
+  assert.ok(q.includes(sessionQuery("2026-10-12", "2026-10-19")), "wraps the canonical query unchanged");
+  for (const c of COMPACT_COLUMNS) assert.match(q, new RegExp(`\\b${c}\\b`));
+  const rows = [row({ started: "2026-10-12T09:00:00Z", platforms: "flutter,react" }), renderOnly({ started: "2026-10-13T01:00:00Z", kx_campaign: null, kx_content: null })];
+  const text = [COMPACT_COLUMNS.join("|"), ...rows.map((r) => COMPACT_COLUMNS.map((c) => r[c] ?? "").join("|"))].join("\n");
+  const back = parseCompact(text);
+  assert.equal(back[1].kx_campaign, null);
+  assert.deepEqual(summarise(back).cohorts, summarise(rows).cohorts);
+  assert.deepEqual(summarise(back).byPlatform, summarise(rows).byPlatform);
+});
+
+test("negative control: a compact export with a missing or reordered column is refused, not misread", () => {
+  assert.throws(() => parseCompact(COMPACT_COLUMNS.slice(1).join("|") + "\n1|2"), /header/);
+  assert.throws(() => parseCompact(COMPACT_COLUMNS.join("|") + "\n2026-10-12T00:00:00Z|0"), /fields/);
 });

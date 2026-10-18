@@ -40,7 +40,7 @@ The sentence matches what the page says about itself ("Component counts and the 
 | --- | --- |
 | Source code | **Verified.** `campaign-links.test.ts` and `analytics-attribution.test.ts` (LI-001 link, diagnostic mark, negative controls). |
 | Real browser | **Verified, locally.** `scripts/marketing-stop-gate-browser.mjs` against a production build with an intercepted ingest: every event carries the campaign, source, medium, content and landing; the diagnostic mark arrives only when asked. Evidence: `/mnt/project-files/marketing/m2/stop-gate-browser-evidence.json`. |
-| PostHog delivery | **BLOCKED.** No LI-001 diagnostic event exists in project 620385, and this environment cannot open kinetixui.com. |
+| PostHog delivery | **BLOCKED.** No LI-001 diagnostic event exists in project 620385, and this environment cannot open kinetixui.com. Re-checked 2026-10-18 at about 10:00 UTC (M3): every diagnostic-marked event since 1 October is from 10 October (a `kx_p2_f_two_trades` and an `art_primary` probe); none carries `kx_p1_a_parity_proof` / `li_primary`. The project's last ingested event of any kind was 08:26 UTC, so the visit has simply not happened yet. Failure point: the owner's visit (step 1 below), not the pipeline. |
 
 To close it (two minutes, once, any time before Monday 14:00 UTC):
 
