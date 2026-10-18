@@ -87,14 +87,13 @@ class _RadioHostState extends State<_RadioHost> {
 
 /// A toggle that owns its pressed state.
 class _ToggleHost extends StatefulWidget {
-  const _ToggleHost({this.initial = false});
-  final bool initial;
+  const _ToggleHost();
   @override
   State<_ToggleHost> createState() => _ToggleHostState();
 }
 
 class _ToggleHostState extends State<_ToggleHost> {
-  late bool pressed = widget.initial;
+  bool pressed = false;
   @override
   Widget build(BuildContext context) => KinetixToggle(
         pressed: pressed,
@@ -333,7 +332,7 @@ void main() {
             .first,
       );
       expect(group.properties.label, 'Payment method');
-      expect(group.properties.explicitChildNodes, isTrue,
+      expect(group.explicitChildNodes, isTrue,
           reason: 'a merged group would be announceable but not choosable');
       // And the options are still there, with their own states.
       expect(props(tester, find.byType(KinetixRadioButton).first).checked, isTrue);
