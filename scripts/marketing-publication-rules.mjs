@@ -237,7 +237,7 @@ export function approvalProblems(assets = [], readFile = null) {
       problems.push(`${where}: approval has no "evidence" — link the message or PR where it was given`);
     }
     if (!a.copy) {
-      if (DATE.test(a.on ?? "") && a.on >= COPY_PIN_REQUIRED_FROM && asset.status !== "published") {
+      if (DATE.test(a.on ?? "") && a.on >= COPY_PIN_REQUIRED_FROM) {
         problems.push(`${where}: approval from ${COPY_PIN_REQUIRED_FROM} must pin the approved words — add copy: { file, section?, sha256 }`);
       }
       continue;

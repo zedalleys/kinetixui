@@ -165,6 +165,8 @@ test("negative control: an approval from 2026-10-18 without the approved words p
   const unpinned = pinned();
   delete unpinned.approval.copy;
   assert.match(approvalProblems([unpinned], files()).join("\n"), /must pin the approved words/);
+  // publishing the asset does not lift the requirement
+  assert.match(approvalProblems([{ ...unpinned, status: "published" }], files()).join("\n"), /must pin the approved words/);
 });
 
 test("negative control: a pin must cover this asset's own words, not some other stable text", () => {

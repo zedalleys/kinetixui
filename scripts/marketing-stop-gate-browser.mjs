@@ -185,6 +185,7 @@ const evidence = { asset: override ? null : assetId, url: tagged.href, expected,
   await page.goto(localUrl(), { waitUntil: "networkidle" });
   const events = await settle(page, 2);
   expectAttributed(flow, events);
+  if (!events.some((e) => e.event === "$pageview")) fail(flow, "no $pageview from the tagged tab, so cross-tab marking was not observed");
   for (const e of events) if (e.properties.kx_traffic_type !== "internal") fail(flow, `${e.event} is not marked internal in a new tab of a marked browser`);
   evidence.flows[flow] = events.map(pick);
   await context.close();
