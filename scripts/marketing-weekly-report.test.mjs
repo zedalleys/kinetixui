@@ -150,6 +150,7 @@ test("data-quality warnings fire on a mostly automated week and stay quiet on a 
   const bot = Array.from({ length: 3 }, () => renderOnly());
   const noisy = dataQualityWarnings(summarise([...bot, row()]), [{ asset: "X-1", liveUrl: null }]);
   assert.ok(noisy.some((w) => /3 of 4 eligible sessions .* suspected automation/.test(w)));
+  assert.ok(noisy.some((w) => /canonical QER mostly measures pages loading/.test(w)));
   assert.ok(noisy.some((w) => /below the ~30/.test(w)));
   assert.ok(noisy.some((w) => /X-1 is marked published without a live URL/.test(w)));
   const clean = dataQualityWarnings(summarise(Array.from({ length: 30 }, () => row())), []);
@@ -194,4 +195,30 @@ test("the compact export carries every column summarise reads and parses back to
 test("negative control: a compact export with a missing or reordered column is refused, not misread", () => {
   assert.throws(() => parseCompact(COMPACT_COLUMNS.slice(1).join("|") + "\n1|2"), /header/);
   assert.throws(() => parseCompact(COMPACT_COLUMNS.join("|") + "\n2026-10-12T00:00:00Z|0"), /fields/);
+});
+
+test("the QER warning follows the suspected share of qualifying sessions, not of all sessions", () => {
+  const loads = Array.from({ length: 6 }, () => renderOnly({ qe_signals: 0 }));
+  const w = dataQualityWarnings(summarise([...loads, ...Array.from({ length: 4 }, () => row())]), []);
+  assert.ok(w.some((x) => /6 of 10 eligible sessions/.test(x)), "the volume warning still fires");
+  assert.ok(!w.some((x) => /canonical QER mostly measures/.test(x)), "but every qualifying session is audience");
+});
+
+test("experiment arms are counted from the audience cohort, with a destination-neutral action and copy-only intent", () => {
+  const tag = (content, over = {}) => ({ kx_campaign: "kx_p1_d_partial_evidence", kx_source: "linkedin", kx_content: content, ...over });
+  const s = summarise([
+    // B2-style: a component landing qualifies on render, and with a LinkedIn referrer stays audience, but nobody acted
+    row(tag("li_xb_relevant", { pageviews: 1, interaction_events: 0, engaged_events: 0, kx_referrer: "linkedin" })),
+    row(tag("li_xb_relevant", { ai_copy_or_rung: 1 })),
+    // C2-style: an installation page load is Adoption Intent but not a copy
+    row(tag("x_xc_firstuse", { pageviews: 1, interaction_events: 0, ai_signals: 1, install_views: 1, kx_referrer: "x" })),
+    // automation on the same tag never reaches the arm table
+    renderOnly(tag("li_xb_relevant")),
+    row(tag("li_xb_relevant", { internal_events: 1 })),
+  ]);
+  const arms = Object.fromEntries(s.byArm);
+  assert.deepEqual(arms["kx_p1_d_partial_evidence / li_xb_relevant"], { sessions: 2, qe: 2, acted: 1, copied: 1 });
+  assert.deepEqual(arms["kx_p1_d_partial_evidence / x_xc_firstuse"], { sessions: 1, qe: 1, acted: 0, copied: 0 });
+  const md = renderReport({ from: "2026-10-19", to: "2026-10-26", rows: [row(tag("li_xb_relevant"))], distribution: { rows: [] } });
+  assert.match(md, /\| kx_p1_d_partial_evidence \/ li_xb_relevant \| 1 \| 1 \| 1 \| 0 \|/);
 });

@@ -189,6 +189,7 @@ export function summarise(rows) {
       engaged: audience.filter((r) => Number(r.engaged_events) > 0).length,
     },
     byCampaign: groupCount(eligible, (r) => (r.kx_campaign ? `${r.kx_campaign} / ${r.kx_content ?? "—"}` : null)),
+    byArm: armCount(audience),
     bySource: groupCount(eligible, (r) => `${r.kx_source ?? "unknown"} / ${r.kx_medium ?? "unknown"}`),
     byLanding: groupCount(audience, (r) => r.landing ?? "(no page view)"),
     byPlatform: groupCount(eligible.flatMap((r) => platformsOf(r).map((p) => ({ ...r, _platform: p }))), (r) => r._platform),
@@ -204,6 +205,27 @@ export function summarise(rows) {
     campaignAudience: audience.filter((r) => r.kx_campaign).length,
     eligibleRows: eligible,
   };
+}
+
+/**
+ * Per campaign / content, audience cohort only: the table experiment arms are read from (distribution/M3-EXPERIMENTS.md).
+ * "Acted" is a person doing something after the page rendered (an event that is not render-fired, or a second page),
+ * so it is comparable across destinations that fire different events on load. "Copied" is an install or CLI copy
+ * or an adopt CTA, never the render-fired `installation_viewed`.
+ */
+function armCount(audienceRows) {
+  const m = new Map();
+  for (const r of audienceRows) {
+    if (!r.kx_campaign) continue;
+    const k = `${r.kx_campaign} / ${r.kx_content ?? "—"}`;
+    const g = m.get(k) ?? { sessions: 0, qe: 0, acted: 0, copied: 0 };
+    g.sessions += 1;
+    if (isQE(r)) g.qe += 1;
+    if (Number(r.interaction_events) > 0 || Number(r.pageviews) > 1) g.acted += 1;
+    if (Number(r.ai_copy_or_rung) > 0) g.copied += 1;
+    m.set(k, g);
+  }
+  return [...m.entries()].sort((a, b) => b[1].sessions - a[1].sessions);
 }
 
 function groupCount(rows, key) {
@@ -231,9 +253,9 @@ export function dataQualityWarnings(s, published) {
   const w = [];
   const suspected = s.cohorts.suspected_automation.sessions;
   if (s.canonical.eligible > 0 && suspected * 2 >= s.canonical.eligible)
-    w.push(`${suspected} of ${s.canonical.eligible} eligible sessions (${rate(suspected, s.canonical.eligible)}) are suspected automation, so the canonical QER mostly measures pages loading, not people evaluating. Read the audience rows.`);
+    w.push(`${suspected} of ${s.canonical.eligible} eligible sessions (${rate(suspected, s.canonical.eligible)}) are suspected automation; session and landing counts are mostly page loads.`);
   if (s.cohorts.suspected_automation.qe > 0 && s.cohorts.suspected_automation.qe * 2 >= s.canonical.qe)
-    w.push(`${s.cohorts.suspected_automation.qe} of the ${s.canonical.qe} canonical Qualified Evaluation sessions are in the suspected-automation cohort.`);
+    w.push(`${s.cohorts.suspected_automation.qe} of the ${s.canonical.qe} canonical Qualified Evaluation sessions are suspected automation, so the canonical QER mostly measures pages loading, not people evaluating. Read the audience rows.`);
   if (s.audience.qe < MIN_QE_FOR_COMPARISON)
     w.push(`Audience Qualified Evaluation sessions: ${s.audience.qe}, below the ~${MIN_QE_FOR_COMPARISON} analytics.md §10 needs for any comparison. Every split below is an observation, not a result.`);
   if (s.raw > 0 && s.audience.engaged === 0 && s.audience.sessions > 0)
@@ -334,6 +356,13 @@ Unattributed (direct or unrecognised source, no campaign): **${s.unattributed}**
 
 ### By campaign / content
 ${table(s.byCampaign)}
+
+### Experiment arms (audience cohort only)
+
+Read experiment arms here, never from the table above (distribution/M3-EXPERIMENTS.md). *Acted*: an event that is not
+fired on render, or a second page. *Copied*: an install or CLI copy, or an adopt CTA.
+
+${s.byArm.length === 0 ? "_none_" : ["| Campaign / content | Audience sessions | Audience QE | Acted after landing | Copied or adopt CTA |", "| --- | --- | --- | --- | --- |"].concat(s.byArm.map(([k, g]) => `| ${k} | ${g.sessions} | ${g.qe} | ${g.acted} | ${g.copied} |`)).join("\n")}
 
 ### By source / medium
 ${table(s.bySource)}

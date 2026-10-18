@@ -584,7 +584,9 @@ audience arrival, a published row without a live URL), platform interest (`platf
 `component_code_viewed` and `install_command_copied`), installation interest (installation page opened, which
 fires on render, versus a command copied), and an absolute-count trend from `--history weeks.json`. For SQL clients
 that cap results at 100 rows (the PostHog MCP tool), `--print-query --compact` returns the same sessions as one text
-cell; save it as `.txt` and pass it to `--sessions`. A multi-week export is cut to `--from`/`--to` when read, so one
+cell; save it as `.txt` and pass it to `--sessions`. Experiment arms (distribution/M3-EXPERIMENTS.md) are read only from its
+*Experiment arms (audience cohort only)* table: audience sessions, audience QE, *acted after landing* (an event not
+fired on render, or a second page) and *copied or adopt CTA* per campaign / content. A multi-week export is cut to `--from`/`--to` when read, so one
 export feeds every week's report. Warnings never change a number.
 
 ### Arrival eligibility and diagnostic exclusion, 2026-10-09
