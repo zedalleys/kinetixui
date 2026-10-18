@@ -17,9 +17,10 @@ import { cn } from "../lib/utils";
  * Motion (MOTION.md, "Switch"): `selection-control`, on purpose not Toggle's or Checkbox's `selection-state`.
  * The thumb's travel, the track colour and the 5px halo all run on `instant` (100ms) `standard`, because the
  * thumb is a physical control that should land with the finger, not a colour settling. `aria-checked` and
- * `data-state` change at once; only paint follows. `motion-reduce:transition-none` is the reduced form for a
- * registry install, which does not get the preset's global reduced-motion floor (check-registry-motion.mjs):
- * without it, such a reader's thumb still slid on Tailwind's default 150ms.
+ * `data-state` change at once; only paint follows. The reduced-motion `transition-none` on the track and the
+ * thumb is for a registry install, which does not get the preset's global floor (check-registry-motion.mjs):
+ * without it, such a reader's thumb still slid on Tailwind's default 150ms. (The contract's `expects` look for
+ * the full class, so this comment is worded not to satisfy them by itself.)
  */
 const Switch = React.forwardRef<
   React.ElementRef<typeof SwitchPrimitive.Root>,
