@@ -17,6 +17,7 @@ import { PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
 import type { Workflow } from "@/lib/business-discovery";
 import {
   blockEvidence,
+  componentEvidence,
   blockEvidenceNote,
   EVIDENCE_LEVEL_LABEL,
   EVIDENCE_LEVEL_MEANING,
@@ -66,7 +67,8 @@ export function WorkflowReadiness({ workflow }: { workflow: Workflow }) {
         Over the {rows[0]!.total} components and blocks the shipping stages use. Each evidence column is the weakest part of
         that kind on that platform, never an average, and a part missing there counts as not implemented. A block is
         runtime verified only when its interaction and accessibility were observed in a real browser or on a device;
-        headless tests are listed with it and keep it below runtime verified. A platform missing any part cannot build the
+        headless tests are listed with it and keep it below runtime verified. A component counts tests wherever they ran,
+        so each one says whether its tests ran in a browser or headless. A platform missing any part cannot build the
         whole workflow.
       </p>
       {/* a phone cannot fit four columns at 200% text: the table scrolls in its own region, the page does not */}
@@ -128,12 +130,15 @@ export function WorkflowReadiness({ workflow }: { workflow: Workflow }) {
                     </Link>
                   </th>
                   {rows.map((r) => {
-                    const note = p.kind === "block" ? blockEvidenceNote(blockEvidence(p.slug, r.platform)) : null;
+                    const note = blockEvidenceNote(p.kind === "block" ? blockEvidence(p.slug, r.platform) : componentEvidence(p.slug, r.platform));
                     return (
                       <td key={r.platform} className="px-3 py-2 align-top" data-platform={r.platform}>
                         <Level level={r.parts[i]!.level} />
                         {note && (
-                          <span className="mt-0.5 block text-label-md text-muted-foreground" data-block-evidence>
+                          <span
+                            className="mt-0.5 block text-label-md text-muted-foreground"
+                            {...(p.kind === "block" ? { "data-block-evidence": "" } : { "data-component-evidence": "" })}
+                          >
                             {note}
                           </span>
                         )}
