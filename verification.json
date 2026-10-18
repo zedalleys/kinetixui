@@ -402,6 +402,7 @@
       },
       {
         "file": "packages/ui/src/switch-motion.test.tsx",
+        "environment": "jsdom",
         "kinds": [
           "interaction",
           "rtl"
