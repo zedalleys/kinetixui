@@ -40,21 +40,17 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
   `foreground` (18.2:1) and the secondary text is `foreground` at 70% (7.3:1) — `muted-foreground` would drop
   to 4.3:1 once dark mode dims the sheet. Dark mode dims it to 85% rather than inverting it (an inverted
   engraving reads as a photographic negative); the dimmed pairs stay at 13.0:1 and 6.3:1.
+
+  The sheet itself — the `accent` panel, the grain tile over it and that dim — is `.kx-paper` in globals.css,
+  shared so the next surface to print on this paper cannot drift from this one. `pnpm check:engraving`
+  measures it, and this comment's four ratios are what that gate reproduces.
 */
 const focusRing =
   "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-accent";
 
 export function SiteFooter() {
   return (
-    <footer className="kx-print-surface relative overflow-hidden bg-accent text-foreground dark:brightness-[0.85]">
-      {/* Paper grain: a seamless 384px tile under everything, so the plain panel and the plate read as one sheet.
-          `overlay` against mid-grey is neutral on average, so it textures the parchment without dulling it. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.22] mix-blend-overlay"
-        style={{ backgroundImage: "url(/footer/paper-grain.webp)", backgroundSize: "384px" }}
-      />
-
+    <footer className="kx-print-surface kx-paper overflow-hidden">
       <div className="relative z-10 mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
         {/*
           Four columns from `lg`, not `md`, and `minmax(0,1fr)` rather than `1fr`.

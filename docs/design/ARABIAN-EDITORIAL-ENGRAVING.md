@@ -176,3 +176,81 @@ started because the previous one landed.
 - Whether the direction gets a gate of its own (for example, one that fails if decorative art enters the
   accessibility tree, or if a decorative surface ships without a dark-mode check) is a stage-3 question, not
   a stage-1 one.
+
+---
+
+## 10. Decorative primitives (AE-2A)
+
+Stage 1 of §8 established the direction. AE-2A establishes the parts of it that are the same on every
+surface, so that stages 3 onward compose them rather than re-deriving them. It adopts no new surface: the
+footer is still the only one printing on the direction.
+
+### 10.1 Shipped
+
+**`.kx-paper`** — the printed sheet, in `apps/web/src/app/globals.css`. It is the `accent` panel, the
+384px grain tile at 0.22 blended `overlay`, and the dark-mode dim to 85%, in one class. Those three values
+were inline on `site-footer.tsx`; a second surface would have copied them and the copies would have
+drifted. It adds no token, no colour and no asset — the tile is the one PR #432 already ships — and it is
+composed with `.kx-print-surface`, which keeps saying *which* tokens stay light while `.kx-paper` says what
+the paper looks like.
+
+The footer now carries `kx-print-surface kx-paper overflow-hidden` and no grain `<div>`. **Its rendering is
+unchanged**: 0.000% of pixels differ between the two forms, in both themes. *(rendered — `check:engraving`,
+`parity`.)*
+
+### 10.2 Specified, and deliberately not shipped
+
+Three further primitives are specified here and will land in the stage that first uses them:
+
+| Primitive | What it is |
+| --- | --- |
+| `.kx-hatch` | the plate's tonal system as CSS — one hairline of `--foreground` every `--kx-hatch-step` at `--kx-hatch-ink` alpha. Tone from line density is what makes the art an engraving rather than a gradient, and it is the one part of the plate CSS can reproduce at zero bytes. A backdrop, never a bed for copy. |
+| `.kx-rule-engraved` | the site's `border-b border-border` section seam in the plate's vocabulary: a hairline ink rule with the hatch above it fading off both ends. |
+| `.kx-plate-crop` | the framing contract the footer worked out — declared intrinsic ratio so nothing shifts on load, `object-cover`, and a top fade into the paper instead of a cut line. |
+
+They are not in `globals.css` because **they would not reach a visitor.** Tailwind's content scan removes a
+hand-written `@layer components` rule that no file under the content globs names. This was measured, not
+assumed: with all four primitives in `globals.css` and only `.kx-paper` referenced, the built stylesheet
+under `apps/web/.next/static/css` carried `.kx-paper` three times and `.kx-hatch`, `.kx-rule-engraved` and
+`.kx-plate-crop` not at all. *(rendered.)*
+
+So a decorative primitive in this codebase ships with its first consumer, and a stage that adds one adds
+its CSS in the same change. Safelisting them instead would put CSS no visitor uses into every page, which
+§5 of this document treats as an accessibility concern and not only a performance one.
+
+### 10.3 The gate
+
+`pnpm check:engraving` (`scripts/engraving-visual.mjs`) measures the sheet in Chromium against the built
+site. It is **not** wired into CI: §9 above makes a gate of its own a stage-3 question, and
+`.github/workflows/ci.yml` is contested by PRs #427 and #430. It is run by hand and its output recorded in
+the PR that changes a decorative surface.
+
+| Row | What it proves |
+| --- | --- |
+| `ships` | `.kx-paper` and `.kx-print-surface` survive the content scan into the built stylesheet |
+| `paper` | dark DIMS the sheet and does not invert it — the dark footer is darker than the light footer and still lighter than the dark page behind it |
+| `grain` | suppressing `.kx-paper::before` moves pixels on a patch of plain paper, in both themes. The comparison is its own negative control |
+| `text` | the footer's headings and 70% secondary text clear 4.5:1 against the paper, composited through the text's own alpha and scaled through the sheet's brightness filter |
+| `tree` | the plate is an `aria-hidden` `<img alt="">` with nothing focusable in it, and the grain is a pseudo-element, which cannot enter the tree at all |
+| `layout` | no sideways scroll at 320/390/768/1280/1440, LTR and RTL, at 100% and 200% text — 20 combinations |
+| `motion` | the sheet is static with and without `prefers-reduced-motion` (§5.7) |
+| `parity` | `.kx-paper` paints what the inline declarations painted |
+
+Two things the instrument had to learn, recorded so a later gate does not relearn them:
+
+1. `.kx-print-surface` pins the footer's tokens to their light aliases, so `getComputedStyle` returns the
+   same colours in dark mode; the dimming is a `filter`, which the cascade never folds into a computed
+   colour. A contrast row that reads computed colours alone reports the light ratio for dark mode and can
+   never see a dark-mode regression. With the filter and the text's alpha both applied, the measured
+   ratios reproduce the four the footer's own comment records (18.2, 7.3, 13.0, 6.3) to within 0.1.
+2. Playwright's `addStyleTag` takes no `id`. Removing an injected tag by a guessed id removes nothing, and
+   the next theme then measures a page that still has the previous theme's override applied. The handle it
+   returns is the only way back to the tag.
+
+### 10.4 What AE-2A did not do
+
+- No page adopted the direction. The homepage, catalogue, marketing and documentation surfaces are
+  untouched; they are §8 stages 3 to 5 and each needs its own authorization.
+- No image asset was added. Site image payload is unchanged.
+- No token moved, no component changed, no claim moved.
+- The canonical screenshots of §2 are still unavailable, so every **pending reference** above stands.
