@@ -48,6 +48,29 @@ export const fragmentOf = (href) => {
  */
 export const isInternalHref = (href) => href.startsWith("/") && !href.startsWith("//");
 
+/** The production origin. The one place it is written for the site is `siteConfig.url` in apps/web/src/lib/site.ts. */
+export const SITE_ORIGIN = "https://kinetixui.com";
+
+/**
+ * The site path a href points at, however it was written, or null when it leads somewhere else.
+ *
+ * A link on this site can be written `/docs/tokens` or `https://kinetixui.com/docs/tokens`, and the
+ * second reaches the reader just as the first does — `scripts/release-notes.mjs` passes an already
+ * absolute href straight through, and the changelog page renders it verbatim. So a dead route is dead
+ * either way, and both have to be resolved. The origin is parsed, not prefix-matched:
+ * `https://kinetixui.com.evil.example/docs` is a different site.
+ */
+export function sitePath(href, origin = SITE_ORIGIN) {
+  if (isInternalHref(href)) return href;
+  if (!/^https?:\/\//i.test(href)) return null;
+  try {
+    const url = new URL(href);
+    return url.origin === origin ? `${url.pathname}${url.hash}` || "/" : null;
+  } catch {
+    return null;
+  }
+}
+
 export class MissingBuildError extends Error {
   constructor(appDir) {
     super(`No built site at ${appDir}. Run \`pnpm build:web\` first.`);

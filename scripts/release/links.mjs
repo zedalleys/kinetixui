@@ -19,10 +19,10 @@
  * can be tested against fixtures, including the cases that must fail.
  */
 import { existsSync, readdirSync } from "node:fs";
-import { fragmentOf, isInternalHref, pathOf } from "../site-inventory.mjs";
+import { fragmentOf, pathOf, sitePath } from "../site-inventory.mjs";
 
-/** Markdown inline links: `[text](/docs/tokens)`. */
-const MARKDOWN_LINK = /\]\((\/[^)\s]*)\)/g;
+/** Markdown inline links: `[text](/docs/tokens)`, and the absolute form of the same link. */
+const MARKDOWN_LINK = /\]\(([^)\s]+)\)/g;
 
 /** The fields that carry a route. `href` is the only one on `ReleaseChange`; see the `Release` type. */
 export const LINK_KEYS = ["href"];
@@ -36,8 +36,12 @@ export const LINK_KEYS = ["href"];
  *
  * Two shapes count as a link, and nothing else does:
  *
- *   - a value of one of `LINK_KEYS` that is a site-relative path (`"href": "/docs/cli#inspect"`)
- *   - a Markdown inline link to a site-relative path
+ *   - a value of one of `LINK_KEYS` that points at this site (`"href": "/docs/cli#inspect"`)
+ *   - a Markdown inline link that points at this site
+ *
+ * Either may be written relative or as an absolute URL on the production origin; both reach the reader
+ * the same way, so both are normalised to a path and resolved. Each link keeps the href as written, for
+ * the error message, and the path it resolves to.
  *
  * A path merely mentioned in prose is not a link. Release notes talk about routes — a breaking-change
  * line reads "`/colors` — azure ramp listed first" — and a reader cannot click those, so resolving them
@@ -48,8 +52,9 @@ export function internalLinksIn(text, source, { keys = LINK_KEYS } = {}) {
   const keyed = new RegExp(String.raw`"?(?:${keys.join("|")})"?\s*:\s*"((?:\\.|[^"\\])*)"`, "g");
   const found = new Map();
   const add = (href, line) => {
-    if (!isInternalHref(href) || found.has(href)) return;
-    found.set(href, { source, href, line });
+    const path = sitePath(href);
+    if (path === null || found.has(href)) return;
+    found.set(href, { source, href, path, line });
   };
   for (const [i, line] of text.split("\n").entries()) {
     for (const m of line.matchAll(keyed)) add(m[1], i + 1);
@@ -69,20 +74,21 @@ export function auditLinks(links, { pathUnresolved, idsFor }) {
   const errors = [];
   const at = (l) => `${l.source}:${l.line}`;
   for (const link of links) {
-    const reason = pathUnresolved(link.href);
+    const target = link.path ?? link.href;
+    const reason = pathUnresolved(target);
     if (reason) {
       errors.push(`${at(link)}: ${link.href} → ${reason}`);
       continue;
     }
-    const fragment = fragmentOf(link.href);
+    const fragment = fragmentOf(target);
     if (fragment === null) continue;
-    const ids = idsFor(link.href);
+    const ids = idsFor(target);
     if (ids === null) {
-      errors.push(`${at(link)}: ${link.href} → ${pathOf(link.href)} resolves, but no page HTML could be read to check #${fragment}`);
+      errors.push(`${at(link)}: ${link.href} → ${pathOf(target)} resolves, but no page HTML could be read to check #${fragment}`);
       continue;
     }
     if (!ids.has(fragment)) {
-      errors.push(`${at(link)}: ${link.href} → ${pathOf(link.href)} has no element with id "${fragment}"`);
+      errors.push(`${at(link)}: ${link.href} → ${pathOf(target)} has no element with id "${fragment}"`);
     }
   }
   return errors;

@@ -12,7 +12,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { LINK_KEYS, auditLinks, internalLinksIn, releaseContentSources } from "../links.mjs";
-import { MissingBuildError, fragmentOf, idsForHref, isInternalHref, pathOf, siteInventory, unresolvedPath } from "../../site-inventory.mjs";
+import { MissingBuildError, SITE_ORIGIN, fragmentOf, idsForHref, isInternalHref, pathOf, siteInventory, sitePath, unresolvedPath } from "../../site-inventory.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 
@@ -61,6 +61,20 @@ it("leaves alone everything that names no route in this repository", () => {
 
 it("accepts a page, a public file, a built route and a redirect source", () => {
   for (const href of ["/docs/foundations", "/brand/logo.svg", "/sitemap.xml", "/colors"]) assert.deepEqual(check(href), [], href);
+});
+
+it("resolves an absolute URL on the production origin as the path it is", () => {
+  // `scripts/release-notes.mjs` passes an already absolute href through unchanged and the changelog
+  // page renders it verbatim, so https://kinetixui.com/docs/motion is as dead as /docs/motion.
+  assert.equal(sitePath(`${SITE_ORIGIN}/docs/foundations#motion`), "/docs/foundations#motion");
+  assert.equal(sitePath(`${SITE_ORIGIN}`), "/");
+  assert.equal(sitePath("https://kinetixui.com.evil.example/docs/foundations"), null, "the origin is parsed, not prefix-matched");
+  assert.equal(sitePath("https://example.com/docs/foundations"), null);
+  assert.deepEqual(check(`${SITE_ORIGIN}/docs/foundations#motion`), []);
+  const errors = check(`${SITE_ORIGIN}/docs/motion`);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /no built page, public file or redirect for \/docs\/motion/);
+  assert.match(errors[0], /https:\/\/kinetixui\.com\/docs\/motion/, "the error names the href as written");
 });
 
 it("accepts a fragment that names an element on the page", () => {
@@ -126,6 +140,11 @@ it("resolves every internal link in this repository's release content", async (t
   );
 });
 
+it("uses the origin the site itself declares", () => {
+  const site = readFileSync(`${root}apps/web/src/lib/site.ts`, "utf8");
+  assert.match(site, new RegExp(`url:\\s*"${SITE_ORIGIN}"`), "SITE_ORIGIN has drifted from siteConfig.url");
+});
+
 it("keeps one route inventory: check:seo resolves links through the same module", () => {
   const seo = readFileSync(`${root}scripts/check-seo.mjs`, "utf8");
   assert.match(seo, /from "\.\/site-inventory\.mjs"/);
@@ -140,5 +159,7 @@ it("states which fields carry a route, so a new one is a deliberate change", () 
   assert.equal(fragmentOf("/docs/tokens#"), null);
   assert.equal(fragmentOf("/docs/tokens"), null);
   assert.equal(isInternalHref("//evil.example/x"), false);
+  assert.equal(sitePath("//evil.example/x"), null);
+  assert.equal(sitePath("mailto:hi@example.com"), null);
   assert.ok(existsSync(`${root}scripts/check-release-links.mjs`));
 });
