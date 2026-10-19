@@ -61,30 +61,41 @@ class KinetixToggle extends StatelessWidget {
         // `AnimatedDefaultTextStyle`, which SETS a style instead of merging one: that would
         // have dropped whatever the surrounding app contributes, a visual change nobody asked
         // for in a motion slice.
-        child: AnimatedContainer(
-          duration: KinetixSelectionMotion.durationOf(context),
-          curve: KinetixSelectionMotion.curve,
+        // The geometry that `size` decides — height, minimum width and the horizontal padding —
+        // stays OUTSIDE the animated box on purpose. Inside it, a caller moving `size` at a
+        // breakpoint would interpolate all three over `fast`, and `selection-state` is a colour and
+        // surface role: it sanctions no layout movement, which is the one thing Reduce Motion exists
+        // to remove. Only the decoration settles.
+        child: SizedBox(
           height: dim,
-          constraints: BoxConstraints(minWidth: dim),
-          padding: EdgeInsets.symmetric(horizontal: hPad),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: pressed ? c.accent : const Color(0x00000000),
-            borderRadius: BorderRadius.circular(8),
-            border: showBorder ? Border.all(color: pressed ? c.focus : c.input, width: 1) : null,
-          ),
-          child: TweenAnimationBuilder<Color?>(
-            tween: ColorTween(end: contentColor),
-            duration: KinetixSelectionMotion.durationOf(context),
-            curve: KinetixSelectionMotion.curve,
-            builder: (context, color, child) => DefaultTextStyle.merge(
-              style: AppText.labelLg.copyWith(color: color),
-              child: IconTheme.merge(
-                data: IconThemeData(color: color, size: 16),
-                child: child!,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: dim),
+            child: AnimatedContainer(
+              duration: KinetixSelectionMotion.durationOf(context),
+              curve: KinetixSelectionMotion.curve,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: pressed ? c.accent : const Color(0x00000000),
+                borderRadius: BorderRadius.circular(8),
+                border: showBorder ? Border.all(color: pressed ? c.focus : c.input, width: 1) : null,
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: hPad),
+                child: TweenAnimationBuilder<Color?>(
+                  tween: ColorTween(end: contentColor),
+                  duration: KinetixSelectionMotion.durationOf(context),
+                  curve: KinetixSelectionMotion.curve,
+                  builder: (context, color, child) => DefaultTextStyle.merge(
+                    style: AppText.labelLg.copyWith(color: color),
+                    child: IconTheme.merge(
+                      data: IconThemeData(color: color, size: 16),
+                      child: child!,
+                    ),
+                  ),
+                  child: child,
+                ),
               ),
             ),
-            child: child,
           ),
         ),
       ),

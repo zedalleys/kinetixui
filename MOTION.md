@@ -272,7 +272,11 @@ Evidence, stated exactly: **Headless verified**, and the strongest this family h
 fill off the rendered tree — `AnimatedContainer` builds a `Container` whose decoration is the evaluated
 tween, so that is a measurement of what is painted, not of a duration variable. The same test asserts that
 a radio's announced state flips in the frame of the tap, while the edge colour is still interpolating.
-`flutter_test` has no device or screen, so none of it is Runtime evidence.
+`flutter_test` has no device or screen, so none of it is Runtime evidence. The `reducedMotion`
+kind is claimed for the **checkbox only**: this repository defines it as suppression measured with both
+directions exercised, and the radio's reduced-motion test is an RTL end-state check that the full settle
+would also satisfy, while the toggle has no reduced-motion test at all. The marked passage was narrowed to
+match, so the ledger credits what the tests hold and nothing more.
 
 Two stated gaps. The Checkbox glyph swaps in one frame while the fill settles (as on Compose). And an icon
 inside a Toggle shares the text's `ColorTween`, so it settles — but **none of these controls is focusable or

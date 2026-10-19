@@ -153,7 +153,13 @@ void main() {
     });
   });
 
-  // kx-verify: interaction, reducedMotion
+  // kx-verify: interaction
+  //
+  // `reducedMotion` is claimed lower down, over the two checkbox tests alone. This repository
+  // defines that kind as suppression evidence with BOTH directions exercised (see the header of
+  // scripts/gen-verification.mjs), and only the checkbox has it: the radio's reduced-motion test is
+  // an RTL end-state check that a full 200ms settle would also satisfy, and the toggle has no
+  // reduced-motion test at all. Crediting either would put a claim in the ledger no test holds up.
   group('normal motion — the colour settles', () {
     testWidgets('unchecked → checked renders a real intermediate fill', (tester) async {
       await tester.pumpWidget(_host(child: const _CheckboxHost()));
@@ -227,6 +233,24 @@ void main() {
   });
 
   group('reduced motion — the colour arrives', () {
+    testWidgets('a radio still reaches its selected end state under RTL with motion reduced',
+        (tester) async {
+      await tester.pumpWidget(
+        _host(reduce: true, direction: TextDirection.rtl, child: const _RadioHost(initial: 1)),
+      );
+      final unselected = find.byType(KinetixRadioButton).first;
+      await tester.tap(unselected);
+      await tester.pumpAndSettle();
+      final opacity = tester.widgetList<FadeTransition>(
+        find.descendant(of: unselected, matching: find.byType(FadeTransition)),
+      ).first.opacity.value;
+      expect(opacity, 1.0, reason: 'the dot is fully shown whatever the direction or the setting');
+    });
+
+    // kx-verify: interaction, reducedMotion
+    //
+    // From here: the checkbox is the one control with suppression measured at the midpoint in both
+    // directions, which is what this kind means.
     testWidgets('unchecked → checked arrives with no midpoint', (tester) async {
       await tester.pumpWidget(_host(reduce: true, child: const _CheckboxHost()));
       await tester.tap(find.byType(KinetixCheckbox));
@@ -251,20 +275,6 @@ void main() {
           reason: 'turning off is suppressed too, not just turning on');
       expect(_fill(tester, KinetixCheckbox), isNot(before),
           reason: 'suppression removes the settle, never the state change');
-    });
-
-    testWidgets('a radio still reaches its selected end state under RTL with motion reduced',
-        (tester) async {
-      await tester.pumpWidget(
-        _host(reduce: true, direction: TextDirection.rtl, child: const _RadioHost(initial: 1)),
-      );
-      final unselected = find.byType(KinetixRadioButton).first;
-      await tester.tap(unselected);
-      await tester.pumpAndSettle();
-      final opacity = tester.widgetList<FadeTransition>(
-        find.descendant(of: unselected, matching: find.byType(FadeTransition)),
-      ).first.opacity.value;
-      expect(opacity, 1.0, reason: 'the dot is fully shown whatever the direction or the setting');
     });
   });
 

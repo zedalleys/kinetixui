@@ -3691,7 +3691,6 @@
         "build",
         "interaction",
         "largeText",
-        "reducedMotion",
         "rtl"
       ]
     },
@@ -4322,7 +4321,6 @@
         "build",
         "interaction",
         "largeText",
-        "reducedMotion",
         "rtl"
       ]
     },
@@ -4483,7 +4481,7 @@
       "accessibility": 6,
       "rtl": 58,
       "largeText": 58,
-      "reducedMotion": 10,
+      "reducedMotion": 8,
       "visual": 0,
       "published": 0
     }
