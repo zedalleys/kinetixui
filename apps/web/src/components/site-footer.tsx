@@ -33,9 +33,9 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
 ];
 
 /*
-  The footer is a print surface set entirely in the site's semantic tokens: the engraving (design-assets/) is
-  inked in `foreground` and `brand` on `accent` paper, highlights in `background`, and the panel is that
-  same token, so the plate's sky is the panel. `.kx-print-surface` pins these tokens to their light values
+  The footer is a print surface: the panel is the `accent` token, and the engraving (design-assets/) is printed
+  on that same `accent` paper — highlights in `background` — in the `azure` ramp that `primary` comes from
+  (`azure.1000`/`950` ink, `azure.900` mid-tones), so the plate's sky is the panel and its ink is the brand blue. `.kx-print-surface` pins these tokens to their light values
   because the paper stays light in both themes. The mark matches the header (`primary`), headings are
   `foreground` (18.2:1) and the secondary text is `foreground` at 70% (7.3:1) — `muted-foreground` would drop
   to 4.3:1 once dark mode dims the sheet. Dark mode dims it to 85% rather than inverting it (an inverted
