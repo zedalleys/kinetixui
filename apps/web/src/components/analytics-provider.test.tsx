@@ -14,7 +14,7 @@ vi.mock("@/lib/analytics-surfaces", async (importOriginal) => ({
 
 import { AnalyticsProvider } from "./analytics-provider";
 import { analytics, attachAnalytics, resetAnalyticsForTests, sanitizeProps } from "@/lib/analytics";
-import { ctaAttrs } from "@/lib/analytics-surfaces";
+import { ctaAttrs, inspectAttrs } from "@/lib/analytics-surfaces";
 import { PACKAGES } from "@/lib/packages";
 import { siteConfig } from "@/lib/site";
 
@@ -414,5 +414,101 @@ describe("AnalyticsProvider — outbound links", () => {
     document.body.innerHTML = `<footer><a href="${repo}">Source</a></footer>`;
     await userEvent.click(document.querySelector("a")!);
     expect(track).not.toHaveBeenCalled();
+  });
+});
+
+describe("AnalyticsProvider — verification inspection (verification_inspected)", () => {
+  const Disclosure = ({ slug }: { slug?: string }) => (
+    <details>
+      <summary {...inspectAttrs("component_page", "verification_details", slug)}>Verification details</summary>
+      <a href="/docs/platforms#how-a-verification-level-is-earned" onClick={stop} {...inspectAttrs("component_page", "evidence_link", slug)}>
+        how the levels are earned
+      </a>
+    </details>
+  );
+  const inspections = () => track.mock.calls.filter(([e]) => e === "verification_inspected");
+
+  it("sends nothing for a disclosure that is only on screen", () => {
+    nav.pathname = "/docs/components/button";
+    render(<><AnalyticsProvider /><Disclosure slug="button" /></>);
+    expect(inspections()).toEqual([]);
+  });
+
+  it("reports the first opening once, with the component, and nothing on close or re-open", async () => {
+    nav.pathname = "/docs/components/button";
+    window.history.pushState({}, "", "/docs/components/button");
+    render(<><AnalyticsProvider /><Disclosure slug="button" /></>);
+    const summary = document.querySelector("summary")!;
+    await userEvent.click(summary);
+    expect(document.querySelector("details")!.open).toBe(true);
+    await userEvent.click(summary); // close
+    await userEvent.click(summary); // re-open
+    expect(inspections()).toEqual([["verification_inspected", { source: "component_page", location: "verification_details", component: "button" }]]);
+    expectSanitary();
+  });
+
+  it("does not report a click that closes a disclosure opened some other way", async () => {
+    render(<><AnalyticsProvider /><Disclosure slug="button" /></>);
+    document.querySelector("details")!.open = true;
+    await userEvent.click(document.querySelector("summary")!);
+    expect(inspections()).toEqual([]);
+  });
+
+  it("reports the evidence link once per page view, and nothing else for that click", async () => {
+    const { container } = render(<><AnalyticsProvider /><Disclosure slug="button" /></>);
+    container.querySelector("details")!.open = true;
+    const link = container.querySelector("a")!;
+    await userEvent.click(link);
+    await userEvent.click(link);
+    expect(track.mock.calls.filter(([e]) => e !== "page_engaged")).toEqual([
+      ["verification_inspected", { source: "component_page", location: "evidence_link", component: "button" }],
+    ]);
+  });
+
+  it("carries the page, not a component, for a use-case workflow, and reports each workflow's disclosure", async () => {
+    nav.pathname = "/use-cases/operations";
+    window.history.pushState({}, "", "/use-cases/operations");
+    render(
+      <>
+        <AnalyticsProvider />
+        {[1, 2].map((i) => (
+          <details key={i}>
+            <summary {...inspectAttrs("use_case_page", "workflow_evidence")}>Evidence for each part</summary>
+          </details>
+        ))}
+      </>,
+    );
+    for (const s of document.querySelectorAll("summary")) await userEvent.click(s);
+    expect(inspections()).toEqual([
+      ["verification_inspected", { source: "use_case_page", location: "workflow_evidence", page: "/use-cases/operations" }],
+      ["verification_inspected", { source: "use_case_page", location: "workflow_evidence", page: "/use-cases/operations" }],
+    ]);
+    expectSanitary();
+  });
+
+  it("re-arms on the next page view, so returning to a page can report again", async () => {
+    nav.pathname = "/docs/components/button";
+    const { rerender } = render(<><AnalyticsProvider /><Disclosure slug="button" /></>);
+    const summary = document.querySelector("summary")!;
+    await userEvent.click(summary);
+    await userEvent.click(summary);
+    nav.pathname = "/docs/components/badge";
+    rerender(<><AnalyticsProvider /><Disclosure slug="button" /></>);
+    nav.pathname = "/docs/components/button";
+    rerender(<><AnalyticsProvider /><Disclosure slug="button" /></>);
+    await userEvent.click(summary);
+    expect(inspections()).toHaveLength(2);
+  });
+
+  it("ignores an unknown location or source in the markup rather than sending it", async () => {
+    render(
+      <>
+        <AnalyticsProvider />
+        <details><summary data-analytics-inspect="hero" data-analytics-source="component_page">a</summary></details>
+        <details><summary data-analytics-inspect="verification_details" data-analytics-source="nowhere">b</summary></details>
+      </>,
+    );
+    for (const s of document.querySelectorAll("summary")) await userEvent.click(s);
+    expect(inspections()).toEqual([]);
   });
 });

@@ -23,10 +23,14 @@
  *  4. TOKENS BRIDGE — land on the ART-002 destination, which alone must send nothing that qualifies; copy its
  *     install command; follow the in-page evaluation link (not the sidebar) to the component it names. The
  *     campaign must survive the navigation, and each action must produce exactly one semantic event.
+ *  5. DIAGNOSTIC — a marked probe; every event, $pageleave included, carries the mark.
+ *  6. VERIFICATION INSPECTION — open a component's "Verification details" by keyboard, close and re-open it, then
+ *     open and close two workflow evidence disclosures on a use-case page: one event per first opening, none else.
  * Each asserts the exact event sequence, so a duplicate capture or an event fired on render fails the run. Since M2
  * (2026-10-18) that sequence includes `page_engaged`: one per page that received a real click, key or touch, and
  * none for a page that was only loaded (flow 4's landing proves the second half).
  */
+import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import { chromium, devices } from "playwright";
 
@@ -244,6 +248,56 @@ const evidence = {};
   await context.close();
 }
 
+/* ---------------------------------------------------------------- 6. verification evidence, keyboard and pointer */
+{
+  // BD-W5 F-09: opening a verification disclosure is reported once per page view, by keyboard or pointer; closing and
+  // re-opening it is silent, and a disclosure that is only on screen sends nothing.
+  const flow = "verification-inspection";
+  const { context, page, settle } = await visitor(browser, { viewport: { width: 1280, height: 900 } });
+  await page.goto(base + "/docs/components/button", { waitUntil: "networkidle" });
+  const summary = page.locator('summary[data-analytics-inspect="verification_details"]');
+  await summary.focus();
+  await page.keyboard.press("Enter"); // open
+  if (!(await summary.evaluate((el) => el.parentElement.open))) fail(flow, "Enter did not open the verification details");
+  await page.keyboard.press("Space"); // close
+  await page.keyboard.press("Enter"); // re-open: silent
+  const events = await settle(4);
+  expectSequence(flow, events, ["$pageview", "component_viewed", "page_engaged", "verification_inspected"]);
+  const inspected = events.find((e) => e.event === "verification_inspected");
+  if (inspected) {
+    const p = inspected.properties;
+    if (p.source !== "component_page" || p.location !== "verification_details" || p.component !== "button" || "page" in p) {
+      fail(flow, `payload ${JSON.stringify({ source: p.source, location: p.location, component: p.component, page: p.page })}`);
+    }
+  }
+  expectClean(flow, events);
+  evidence[flow] = events.map((e) => ({ event: e.event, source: e.properties.source, location: e.properties.location, component: e.properties.component }));
+
+  // A use-case page: each workflow's evidence disclosure reports on its own first opening, with the page, by pointer.
+  const { domains } = JSON.parse(readFileSync(new URL("../discovery-index.json", import.meta.url), "utf8"));
+  let domain;
+  for (const d of domains) if ((await fetch(`${base}/use-cases/${d.id}`)).ok) { domain = d.id; break; }
+  const before = (await settle(0)).length;
+  await page.goto(`${base}/use-cases/${domain}`, { waitUntil: "networkidle" });
+  const disclosures = page.locator('summary[data-analytics-inspect="workflow_evidence"]');
+  const n = Math.min(2, await disclosures.count());
+  if (n === 0) fail(flow, `no workflow evidence disclosure on /use-cases/${domain}`);
+  for (let i = 0; i < n; i++) {
+    await disclosures.nth(i).click(); // open
+    await disclosures.nth(i).click(); // close: silent
+  }
+  const after = (await settle(before + 2 + n)).slice(before);
+  expectSequence(`${flow} (use case)`, after, ["$pageview", "page_engaged", ...Array(n).fill("verification_inspected")]);
+  for (const e of after.filter((x) => x.event === "verification_inspected")) {
+    const p = e.properties;
+    if (p.source !== "use_case_page" || p.location !== "workflow_evidence" || p.page !== `/use-cases/${domain}` || "component" in p) {
+      fail(flow, `use-case payload ${JSON.stringify({ source: p.source, location: p.location, page: p.page, component: p.component })}`);
+    }
+  }
+  expectClean(flow, after);
+  await context.close();
+}
+
 await browser.close();
 
 console.log(JSON.stringify(evidence, null, 2));
@@ -251,4 +305,4 @@ if (problems.length) {
   console.error(`\nanalytics-browser: ${problems.length} problem(s)\n  - ${problems.join("\n  - ")}`);
   process.exit(1);
 }
-console.log("\nanalytics-browser: OK — campaign → evaluation → intent, keyboard CTA, touch block copy, the /docs/tokens bridge and a diagnostic probe all sent exactly the expected events");
+console.log("\nanalytics-browser: OK — campaign → evaluation → intent, keyboard CTA, touch block copy, the /docs/tokens bridge, a diagnostic probe and verification evidence opened by keyboard and pointer all sent exactly the expected events");
