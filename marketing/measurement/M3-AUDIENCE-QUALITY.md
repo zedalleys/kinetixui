@@ -95,6 +95,13 @@ clicked; LinkedIn and X can strip or wrap links.
 > For this page: the one `page_engaged` event is the diagnostic visit, which is excluded from every count here, so
 > the audience and canonical `page_engaged` figures above (0) stand; what changes is that the M2 build is serving
 > in production and the event does fire.
+>
+> **Second correction, 2026-10-18 19:20 UTC.** A further owner diagnostic at 19:07 UTC arrived with
+> `kx_source=linkedin` and the full quartet, so `page_engaged` has now fired twice. Both events are diagnostic and
+> excluded, so every figure on this page still stands unchanged; the window this page covers also ends 18 October,
+> and both visits fall inside it as diagnostic sessions. What changes is only the attribution gate for LI-001,
+> which closed. The 10:30 anomaly is not explained by this pass and no attribution code has been merged
+> (`marketing/content/drafts/m2/LI-001-publish-packet.md` §4).
 
 3. **No browser is marked internal.** The 18 October 07:47 session (64 page views, 36 QE signals, the only
    five-platform session) is unmarked and counts as audience; it is likely the owner reviewing the site, which is

@@ -186,8 +186,11 @@ browser zoom, and no committed baseline — every number is one run.
 - **Surface:** `/components`, cards `dialog`, `modal`, `alert-dialog`, and the same defect in `popover`/
   `hover-card` and `dropdown-menu`/`context-menu`/`menubar`.
 - **Evidence (CAT-1, before):** `dialog` vs `alert-dialog` **3.51%** of pixels differed; `dialog` vs `modal`
-  2.76%; `dropdown-menu` vs `context-menu` **1.20%**; `popover` vs `hover-card` **0.40%**. All of them rendered
-  one shared mock parameterised by copy.
+  2.21%; `dropdown-menu` vs `context-menu` **0.65%**; `popover` vs `hover-card` **0.40%**. All of them rendered
+  one shared mock parameterised by copy. The last two figures were first published as 1.20% and 2.76%; review
+  found that `catalogue-preview-audit.mjs` screenshotted cards wherever Playwright's scroll left them, so the
+  sticky filter bar covered one card of a pair and not the other and invented a difference. Re-measured on a
+  rebuilt pre-CAT-QF baseline with the corrected script, both pairs were closer to one picture than reported.
 - **Root cause:** shared mocks parameterised by wording rather than by what actually differs between the
   components.
 - **User impact:** the gallery could not be scanned; the cards did not teach which component to pick.

@@ -89,23 +89,34 @@ const CARD_PROBE = () => {
     const body = frame.querySelector("[data-gallery-thumbnail-body]");
     const fr = frame.getBoundingClientRect();
     let top = Infinity, left = Infinity, right = -Infinity, bottom = -Infinity, nodes = 0, minFont = null, worst = null;
+    // `nodes` counts the elements the card's own bounds are taken from; `textNodes` counts the leaves
+    // `minFont` came from, so a thumbnail with text only inside a scroll container is still legible-or-not
+    // rather than silently unmeasured.
+    let textNodes = 0, scrollableTextNodes = 0;
     if (body) {
       for (const el of body.querySelectorAll("*")) {
         const r = el.getBoundingClientRect();
         if (!r.width || !r.height) continue;
-        // content inside a scroll container of its own is scrollable, not clipped by the card
-        if (clips(el, frame)) continue;
-        nodes++;
-        top = Math.min(top, r.top); left = Math.min(left, r.left);
-        right = Math.max(right, r.right); bottom = Math.max(bottom, r.bottom);
-        const over = Math.max(fr.top - r.top, r.bottom - fr.bottom, fr.left - r.left, r.right - fr.right);
-        if (over > 2 && (!worst || over > worst.over))
-          worst = { over: Math.round(over), tag: el.tagName.toLowerCase(), text: (el.textContent || "").trim().slice(0, 40) };
+        // Content inside a scroll container of its own is scrollable, not clipped by the card, so it stays
+        // out of the bounds and out of the overflow verdict. Its TEXT is still measured: a cell inside the
+        // table mocks' `overflow-hidden` root is exactly as legible or illegible as any other text, and
+        // legibility is one of the things this script exists to report (#428 review).
+        const scrollable = clips(el, frame);
+        if (!scrollable) {
+          nodes++;
+          top = Math.min(top, r.top); left = Math.min(left, r.left);
+          right = Math.max(right, r.right); bottom = Math.max(bottom, r.bottom);
+          const over = Math.max(fr.top - r.top, r.bottom - fr.bottom, fr.left - r.left, r.right - fr.right);
+          if (over > 2 && (!worst || over > worst.over))
+            worst = { over: Math.round(over), tag: el.tagName.toLowerCase(), text: (el.textContent || "").trim().slice(0, 40) };
+        }
         const t = el.textContent?.trim();
         if (t && el.children.length === 0) {
           const size = parseFloat(getComputedStyle(el).fontSize);
           const scale = el.offsetHeight ? r.height / el.offsetHeight : 1;
           const eff = size * scale;
+          textNodes++;
+          if (scrollable) scrollableTextNodes++;
           if (minFont === null || eff < minFont) minFont = eff;
         }
       }
@@ -115,7 +126,7 @@ const CARD_PROBE = () => {
       slug,
       kind: frame.getAttribute("data-gallery-thumbnail"),
       frame: { width: Math.round(fr.width), height: Math.round(fr.height) },
-      nodes, minFont,
+      nodes, minFont, textNodes, scrollableTextNodes,
       clip: has ? {
         top: Math.round(Math.max(0, fr.top - top)), bottom: Math.round(Math.max(0, bottom - fr.bottom)),
         start: Math.round(Math.max(0, fr.left - left)), end: Math.round(Math.max(0, right - fr.right)),
@@ -139,13 +150,26 @@ const DETAIL_PROBE = () => {
   if (!panel) return { missing: true };
   const pr = panel.getBoundingClientRect();
   const seg = panel.querySelector('[role="radiogroup"]');
-  const toolbar = seg?.parentElement ?? null;
   const stage = panel.querySelector("[data-preview-stage]");
+  // The environment toolbar is the row directly above the stage: the one holding the "Preview direction"
+  // control. `seg.parentElement` was not it — it is whatever wraps the Preview/Code control, which measured
+  // most of the panel and could not show the toolbar's own inset (#413 review). Both facts are asserted, so
+  // a layout change reports null instead of a plausible wrong number.
+  const above = stage?.previousElementSibling ?? null;
+  const toolbar = above?.querySelector('[aria-label="Preview direction"]') ? above : null;
   const box = (el) => {
     if (!el) return null;
     const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
+    // `start` and `end` are the INLINE edges, so on an RTL panel they are measured from the right. Taking
+    // both from the physical left reported a correctly mirrored control as having a huge start inset
+    // (#413 review). The direction is read off the measured element, which inherits the `dir` that the
+    // wrapper inside `[data-cp]` carries, so the reading follows whatever the page actually rendered.
+    const rtl = cs.direction === "rtl";
     return {
-      top: +(r.top - pr.top).toFixed(1), start: +(r.left - pr.left).toFixed(1), end: +(pr.right - r.right).toFixed(1),
+      top: +(r.top - pr.top).toFixed(1),
+      start: +(rtl ? pr.right - r.right : r.left - pr.left).toFixed(1),
+      end: +(rtl ? r.left - pr.left : pr.right - r.right).toFixed(1),
+      dir: cs.direction,
       width: Math.round(r.width), height: Math.round(r.height),
       paddingTop: cs.paddingTop, paddingLeft: cs.paddingLeft, radius: cs.borderRadius,
     };
@@ -185,9 +209,12 @@ const DETAIL_PROBE = () => {
 /** Every block showcase on /blocks: its stage, the block's own box, and the empty space between them. */
 const BLOCKS_PROBE = () => {
   const rows = [];
-  for (const sec of document.querySelectorAll("[id]")) {
-    const stage = [...sec.querySelectorAll("div")].find((d) => parseFloat(getComputedStyle(d).minHeight) >= 200);
-    if (!stage) continue;
+  // One row per real showcase, found from the stage the showcase itself marks. Iterating `[id]` counted
+  // each showcase twice — once under its own slug and once under the `<main id="main-content">` that
+  // contains them all — which corrupted the block count and the emptiest-stage ranking (#413 review).
+  for (const stage of document.querySelectorAll("[data-showcase-preview]")) {
+    const sec = stage.closest("section[id]");
+    if (!sec) continue;
     const sr = stage.getBoundingClientRect();
     let top = Infinity, left = Infinity, right = -Infinity, bottom = -Infinity, n = 0;
     for (const el of stage.querySelectorAll("*")) {
@@ -266,6 +293,13 @@ if (SHOTS) {
     await open(page, "/components", {});
     for (const row of result.cards["1280/light"].rows) {
       try {
+        // Playwright scrolls a card to the nearest edge, which can leave the sticky gallery filter bar
+        // painted over the thumbnail and into both the ink share and the pairwise differences. Centring the
+        // card first is what the quick-fix evidence script does, for this same observed reason (#428 review).
+        await page.evaluate(
+          (s) => document.querySelector(`[data-gallery-card="${s}"]`)?.scrollIntoView({ block: "center" }),
+          row.slug,
+        );
         const png = await page.locator(`[data-gallery-card="${row.slug}"] [data-gallery-thumbnail]`).screenshot();
         fs.writeFileSync(`${SHOTS}${row.slug}.png`, png);
         row.ink = ink(png);

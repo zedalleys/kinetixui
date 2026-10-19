@@ -51,6 +51,7 @@
     "check:switch-motion": "node scripts/switch-motion.mjs",
     "check:card-visual": "node scripts/card-visual.mjs",
     "check:selection-visual": "node scripts/selection-visual.mjs",
+    "check:angular-selection-motion": "node scripts/angular-selection-motion.mjs",
     "check:entry-visual": "node scripts/entry-visual.mjs",
     "check:composite-visual": "node scripts/composite-visual.mjs",
     "check:navigation-visual": "node scripts/navigation-visual.mjs",
