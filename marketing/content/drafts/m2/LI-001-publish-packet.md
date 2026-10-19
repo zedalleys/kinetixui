@@ -85,6 +85,17 @@ changed, in order. Nothing is removed: the failed diagnostic is evidence, not a 
 > symptom would mean never posting.
 
 
+> **The iOS retest was done, 2026-10-19.** The owner ran it on the same iPhone, OS and Safari build as the failed
+> 18 October visit: session `01a1557a-8081-76c1-b843-54b1f8fd5bed` at 18:44:14 UTC read `kx_source = linkedin` and
+> `kx_first_source = linkedin`, with every campaign property correct across 10 events and 6 page views, attribution
+> surviving internal navigation and the diagnostic marker persisting. Production diagnostics have now passed on
+> Chrome/macOS, Safari/macOS and Safari/iOS.
+>
+> **The original failure did not reproduce. That is not a root cause, and it is not a fix.** Nothing here explains
+> the 18 October `kx_source=other`, and PR #409 is not its fix: #409 is a separate improvement and makes no such
+> claim. The investigation record lives in `marketing/m3-1/` and stays **open, not reproducible, monitoring**. The
+> procedure below is kept because it is the procedure to re-run if it ever recurs.
+
 ### The iOS Safari diagnostic, step by step (optional, three minutes, any time)
 
 This is the retest recommended above, written out so it can be done without thinking about it. It is a
@@ -188,15 +199,20 @@ URL: `marketing/distribution/register.json` LI-001 is `status: "published"`, `da
 with a result line; `marketing/content/register.json` LI-001 is `status: "published"` with the approval block and its
 sha256 pin untouched (section A still 1,538 characters, `09a3994…3cfb`, re-computed at close-out).
 
+**The first comment is confirmed by the owner.** On 2026-10-19 the owner stated that the approved tracked link was
+published in the first LinkedIn comment. That is the owner's own account of what they posted, which is the only
+source there is: no tool here can read the comments on a live LinkedIn post, and the first tagged arrival would be
+corroboration rather than proof. The link in this packet (§3) is the register's built URL and carries no
+`kx_traffic` parameter, verified on `main` at close-out.
+
 What is **not** recorded, because it was not verified:
 
 - **The exact publication time.** The author gave a date, not a time, and LinkedIn is not reachable from this
   environment. It is left unknown rather than inferred from the 14:00 UTC scheduled slot.
 - **Impressions, clicks, reactions or any engagement figure.** LinkedIn's own analytics cannot be read from here and
   nothing is estimated.
-- **Whether the first comment was posted, and with which URL.** The repository's tracked URL carries no `kx_traffic`
-  parameter and is the register's built URL (verified), but no tool here can read the comments on a live LinkedIn
-  post. The first tagged arrival is what would confirm it, and there is none yet.
+- **Independent confirmation of the comment's exact text.** The owner's statement above is what the record rests
+  on; the comment itself cannot be read from here.
 
 First measurement read, about 18:30 UTC: **no tagged arrival observed.** PostHog 620385 holds no event carrying
 `kx_campaign=kx_p1_a_parity_proof` at any point on 19 October, while ingesting events as late as 18:19:37 UTC, so the

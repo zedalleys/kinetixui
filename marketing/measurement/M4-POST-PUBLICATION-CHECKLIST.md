@@ -74,6 +74,14 @@ any time on 19 October; the project ingested events to 18:19:37 UTC, so this is 
 data. Two `kx_source=direct` Chrome/macOS sessions in the window carry no campaign tag and are not attributable to the
 post. Nothing was recorded as a click, impression or engagement figure.
 
+**What each checkpoint measures**, with the canonical definitions in `../analytics.md` and the traps in the table
+below: tagged arrivals, the canonical Qualified Evaluation Rate, `component_viewed`, the code-copy events
+(`component_code_copied`, `block_code_copied`, `install_command_copied`, `cli_command_copied`), platform exploration
+(`platform_selected` and the `platform_coverage` / `platform_availability` CTAs) and installation interest
+(`installation_viewed`, kept apart from `install_command_copied`). Audience cohort only: diagnostic, internal and
+suspected-automation sessions are excluded, and every query filters on `kx_content` so LI-001 (`li_primary`) and
+X-001 (`x_thread`) never merge on their shared campaign.
+
 **T+24h — Tuesday 20 October, after about 18:30 UTC.** Run the T+1h query above with
 `properties.kx_campaign = 'kx_p1_a_parity_proof' AND properties.kx_content = 'li_primary'` over `INTERVAL 2 DAY`, then:
 
