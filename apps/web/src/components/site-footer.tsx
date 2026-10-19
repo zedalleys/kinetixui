@@ -34,19 +34,23 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
 
 /*
   The footer is a print surface: the panel is the `accent` token, and the engraving (design-assets/) is printed
-  on that same `accent` paper — highlights in `background` — in the `azure` ramp that `primary` comes from
-  (`azure.1000`/`950` ink, `azure.900` mid-tones), so the plate's sky is the panel and its ink is the brand blue. `.kx-print-surface` pins these tokens to their light values
-  because the paper stays light in both themes. The mark matches the header (`primary`), headings are
-  `foreground` (18.2:1) and the secondary text is `foreground` at 70% (7.3:1) — `muted-foreground` would drop
-  to 4.3:1 once dark mode dims the sheet. Dark mode dims it to 85% rather than inverting it (an inverted
-  engraving reads as a photographic negative); the dimmed pairs stay at 13.0:1 and 6.3:1.
+  on that same `accent` paper, so the plate's sky is the panel. There are two plates of the one scene, one per
+  theme, each inked in that theme's values of the same tokens:
+  - light, by day: `azure.1000`/`950` ink and `azure.900` mid-tones (the ramp `primary` comes from) on light
+    `accent`, highlights in `background`;
+  - dark, at evening: dark `accent` (blue.700) sky with stars and a dusk glow on the horizon, the land in
+    `background` (blue.900) silhouettes with moonlit edges. Not an inversion — that reads as a photographic
+    negative — but the same tones re-lit for night.
+  The mark matches the header (`primary`), headings are `foreground` and the secondary text is `foreground` at
+  70%: 18.2:1 and 7.3:1 on light `accent`, 14.7:1 and 7.8:1 on dark. `muted-foreground` is 4.8:1 on light
+  `accent`, so it is not used.
 */
 const focusRing =
   "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-accent";
 
 export function SiteFooter() {
   return (
-    <footer className="kx-print-surface relative overflow-hidden bg-accent text-foreground dark:brightness-[0.85]">
+    <footer className="relative overflow-hidden bg-accent text-foreground">
       {/* Paper grain: a seamless 384px tile under everything, so the plain panel and the plate read as one sheet.
           `overlay` against mid-grey is neutral on average, so it textures the parchment without dulling it. */}
       <div
@@ -135,7 +139,8 @@ export function SiteFooter() {
           scrolls this far. The plate is 3:1; its box keeps that ratio (so nothing shifts when it loads) and is
           floored for phones, where `object-cover` crops the edges — the oasis sits in the middle 30–70% of the
           plate for that reason — so `sizes` floors at the ~720px a 240px-tall crop is wide. It is pulled up under
-          the bottom bar so the bar sits in the plate's empty sky, and the top fades into the panel. */}
+          the bottom bar so the bar sits in the plate's empty sky, and the top fades into the panel. The plate for
+          the other theme is `display: none`, which a lazy image never fetches, so each visitor downloads one. */}
       <div
         aria-hidden
         className="relative -mt-[5vw] h-[clamp(240px,33.333vw,800px)] [mask-image:linear-gradient(to_bottom,transparent,#000_14%)]"
@@ -143,14 +148,26 @@ export function SiteFooter() {
         {/* eslint-disable-next-line @next/next/no-img-element -- a static decorative image with its own srcset; no optimisation to gain */}
         <img
           src="/footer/arabian-landscape-1920.webp"
-          srcSet="/footer/arabian-landscape-960.webp 960w, /footer/arabian-landscape-1920.webp 1920w, /footer/arabian-landscape-2880.webp 2880w"
+          srcSet="/footer/arabian-landscape-960.webp 960w, /footer/arabian-landscape-1920.webp 1920w, /footer/arabian-landscape-2880.webp 2880w, /footer/arabian-landscape-3840.webp 3840w, /footer/arabian-landscape-5760.webp 5760w"
           sizes="max(100vw, 720px)"
           alt=""
-          width={2880}
-          height={960}
+          width={5760}
+          height={1920}
           loading="lazy"
           decoding="async"
-          className="size-full object-cover object-bottom"
+          className="size-full object-cover object-bottom dark:hidden"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element -- see above */}
+        <img
+          src="/footer/arabian-landscape-evening-1920.webp"
+          srcSet="/footer/arabian-landscape-evening-960.webp 960w, /footer/arabian-landscape-evening-1920.webp 1920w, /footer/arabian-landscape-evening-2880.webp 2880w, /footer/arabian-landscape-evening-3840.webp 3840w, /footer/arabian-landscape-evening-5760.webp 5760w"
+          sizes="max(100vw, 720px)"
+          alt=""
+          width={5760}
+          height={1920}
+          loading="lazy"
+          decoding="async"
+          className="hidden size-full object-cover object-bottom dark:block"
         />
       </div>
     </footer>
