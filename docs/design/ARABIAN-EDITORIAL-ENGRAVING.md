@@ -225,10 +225,10 @@ started because the previous one landed.
   a stage-1 one.
 - An approved dark screenshot of the evening footer is still needed before any dark-mode statement here can
   become **reference** rather than **source**.
-- PR #434 (`.kx-paper`, `check:engraving`) was written against the dimmed-sheet footer and changes
-  `apps/web/src/components/site-footer.tsx` and `globals.css`, both of which PR #435 has now rewritten on
-  `main`. #434 needs reconciling: `.kx-paper` still carries the dark dim, and its `check:engraving`
-  assertions were measured through the removed filter.
+- PR #434 (`.kx-paper`, `check:engraving`) was written against the dimmed-sheet footer, which PR #435 has
+  since rewritten on `main`. It has been reconciled: `main` is merged in, the dark dim and
+  `.kx-print-surface` are gone, and every ratio was re-measured against the rendered two-plate footer.
+  §10.1 and §10.3 record the result.
 
 ---
 
@@ -241,15 +241,24 @@ footer is still the only one printing on the direction.
 ### 10.1 Shipped
 
 **`.kx-paper`** — the printed sheet, in `apps/web/src/app/globals.css`. It is the `accent` panel, the
-384px grain tile at 0.22 blended `overlay`, and the dark-mode dim to 85%, in one class. Those three values
+`foreground` text colour and the 384px grain tile at 0.22 blended `overlay`, in one class. Those values
 were inline on `site-footer.tsx`; a second surface would have copied them and the copies would have
-drifted. It adds no token, no colour and no asset — the tile is the one PR #432 already ships — and it is
-composed with `.kx-print-surface`, which keeps saying *which* tokens stay light while `.kx-paper` says what
-the paper looks like.
+drifted. It adds no token, no colour and no asset — the tile is the one PR #432 already ships.
 
-The footer now carries `kx-print-surface kx-paper overflow-hidden` and no grain `<div>`. **Its rendering is
-unchanged**: 0.000% of pixels differ between the two forms, in both themes. *(rendered — `check:engraving`,
-`parity`.)*
+The footer carries `kx-paper overflow-hidden` and no grain `<div>`. **Its rendering is unchanged**: 0.000%
+of pixels differ between that form and the literal declarations it replaced, in both themes.
+*(rendered — `check:engraving`, `parity`.)*
+
+**It carries no theme branch.** AE-2A was first written against the footer PR #432 shipped, where one pale
+plate was dimmed to 85% for dark mode and `.kx-print-surface` pinned the footer's tokens light so there was
+something to dim. PR #435 (`295dae91`) replaced that with a second plate drawn for the dark theme and
+removed both. `.kx-paper` lost the dim with them, and `.kx-print-surface` is gone from the stylesheet
+altogether — the `ships` row now fails if it comes back, because its return is how the two-plate footer
+would quietly regain a light-pinned dark theme.
+
+This is the better shape of the rule in §5, not a concession to #435. **A surface that needs a dark
+treatment supplies dark artwork; it does not dim the light one, and it never inverts it.** The sheet is
+`accent` and `foreground` resolving per theme, and the art on top is the plate inked for that theme.
 
 ### 10.2 Specified, and deliberately not shipped
 
@@ -280,30 +289,49 @@ the PR that changes a decorative surface.
 
 | Row | What it proves |
 | --- | --- |
-| `ships` | `.kx-paper` and `.kx-print-surface` survive the content scan into the built stylesheet |
-| `paper` | dark DIMS the sheet and does not invert it — the dark footer is darker than the light footer and still lighter than the dark page behind it |
+| `ships` | `.kx-paper` survives the content scan into the built stylesheet, and `.kx-print-surface` stays absent |
+| `paper` | the sheet follows the theme and does not invert — the dark footer is darker than the light footer and still lighter than the dark page behind it |
 | `grain` | suppressing `.kx-paper::before` moves pixels on a patch of plain paper, in both themes. The comparison is its own negative control |
-| `text` | the footer's headings and 70% secondary text clear 4.5:1 against the paper, composited through the text's own alpha and scaled through the sheet's brightness filter |
+| `text` | the footer's headings and 70% secondary text clear 4.5:1 against the paper, composited through the text's own alpha |
 | `tree` | the plate is an `aria-hidden` `<img alt="">` with nothing focusable in it, and the grain is a pseudo-element, which cannot enter the tree at all |
+| `leak` | `.kx-paper` is on a `<footer>` and on nothing else, across a component page with live previews, charts, an interactive docs example, blocks and the homepage, LTR and RTL |
 | `layout` | no sideways scroll at 320/390/768/1280/1440, LTR and RTL, at 100% and 200% text — 20 combinations |
 | `motion` | the sheet is static with and without `prefers-reduced-motion` (§5.7) |
 | `parity` | `.kx-paper` paints what the inline declarations painted |
 
-Two things the instrument had to learn, recorded so a later gate does not relearn them:
+Measured on the two-plate footer at 1440, against the rendered background in each theme:
 
-1. `.kx-print-surface` pins the footer's tokens to their light aliases, so `getComputedStyle` returns the
-   same colours in dark mode; the dimming is a `filter`, which the cascade never folds into a computed
-   colour. A contrast row that reads computed colours alone reports the light ratio for dark mode and can
-   never see a dark-mode regression. With the filter and the text's alpha both applied, the measured
-   ratios reproduce the four the footer's own comment records (18.2, 7.3, 13.0, 6.3) to within 0.1.
+| | light | dark |
+| --- | --- | --- |
+| column heading, `foreground` | 18.32:1 | 14.73:1 |
+| link and bottom bar, `foreground/70` | 7.36:1 | 7.86:1 |
+
+Those reproduce the four ratios `site-footer.tsx` records (18.2, 7.3, 14.7, 7.8) to within 0.1, which is
+what makes them evidence rather than a restatement. The figures AE-2A first recorded for dark mode — 13.0
+and 6.3 — were the dimmed sheet's and no longer describe anything; the evening plate's own tokens read
+higher than the dimmed light ones did.
+
+Three things the instrument had to learn, recorded so a later gate does not relearn them:
+
+1. A `filter` on an ancestor is never folded into a computed colour, and `.kx-print-surface` used to pin
+   the footer's tokens light so `getComputedStyle` returned the same colours in both themes. A contrast
+   row built on computed colours alone therefore reported the light ratio for dark mode and could not see
+   a dark-mode regression at all. `main` has neither any more, so the row reads the real thing — but it
+   still reads the filter and folds in whatever it finds, rather than assuming there is none.
 2. Playwright's `addStyleTag` takes no `id`. Removing an injected tag by a guessed id removes nothing, and
    the next theme then measures a page that still has the previous theme's override applied. The handle it
    returns is the only way back to the tag.
+3. The `parity` row cannot reinstate the pre-refactor form by its Tailwind class names. Those utilities had
+   one call site between them, so removing it removed them from the bundle; the row rebuilds the old form
+   from literal declarations instead.
 
 ### 10.4 What AE-2A did not do
 
 - No page adopted the direction. The homepage, catalogue, marketing and documentation surfaces are
   untouched; they are §8 stages 3 to 5 and each needs its own authorization.
-- No image asset was added. Site image payload is unchanged.
+- No image asset was added or replaced. The plates, their derivatives and the masters are PR #432's and
+  PR #435's, carried across unchanged; site image payload is unchanged.
 - No token moved, no component changed, no claim moved.
-- The canonical screenshots of §2 are still unavailable, so every **pending reference** above stands.
+- Nothing was asserted about how dark mode *looks*. §2 has no approved screenshot of the evening footer,
+  so the dark rows above are measurements of the rendered page, which is what they say they are, and the
+  dark treatment has no visual sign-off from this work.
