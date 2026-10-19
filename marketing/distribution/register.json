@@ -301,7 +301,7 @@
       "result": "Published on dev.to on 2026-10-13 (author-supplied date), on its scheduled day 15. The live article is https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0 (author-supplied). Exact publication time: not recorded. The author did not supply one and dev.to is not reachable from this environment (the egress proxy refused the request), so it is left unknown rather than guessed. The live article text was not read back for the same reason, so its links are as the author states: the tracked primary CTA is the register's built URL for ART-001 (utm_content=art_primary). The pillar link (utm_content=art_pillar) is logged separately as ART-001-PILLAR, which stays at brief until the author confirms the edit is live. Counts as of 2026-10-13 14:40 UTC, read from PostHog: 0 events carried kx_p1_a_parity_proof and 0 carried kx_source=devto since 2026-10-12 00:00 UTC, hours after publication, so not a settled figure; it also means publish-checklist.md's attribution stop gate had not yet been observed. dev.to's own view and reaction counts are not readable from this environment and are not recorded; the author can add them. Organic only, no amplification; no hashnode cross-post. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open."
     },
     {
-      "date": null,
+      "date": "2026-10-19",
       "day": 16,
       "asset": "LI-001",
       "channel": "linkedin",
@@ -319,8 +319,9 @@
       "secondary": null,
       "communityReuse": null,
       "metricToWatch": "kx_p1_a_parity_proof sessions with utm_content=li_primary that reach /docs/platforms. The post body links the dev.to article, which first-party analytics cannot see, so only the tagged link is countable",
-      "status": "planned",
-      "result": null
+      "status": "published",
+      "liveUrl": "https://www.linkedin.com/feed/update/urn:li:activity:7518015214143873024/",
+      "result": "Published on LinkedIn on 2026-10-19, its scheduled day 16. The live post is https://www.linkedin.com/feed/update/urn:li:activity:7518015214143873024/ (author-supplied). Exact publication time: not recorded \u2014 the author reported publication at 18:29 UTC without a posting time, and LinkedIn is not reachable from this environment, so it is left unknown rather than inferred from the 14:00 UTC scheduled slot. First read at about 18:30 UTC: NO TAGGED ARRIVAL OBSERVED. PostHog project 620385 holds no event carrying kx_campaign=kx_p1_a_parity_proof at any time on 2026-10-19, while it ingested events as late as 18:19:37 UTC, so the pipeline was live and the campaign had no arrival. The only sessions since 12:00 UTC are two kx_source=direct Chrome/macOS sessions (15:28 and 17:35\u201318:19 UTC) with no campaign tag, neither attributable to this post. This is \"no tagged arrival\", not \"no clicks\": the body link goes to dev.to, which first-party analytics cannot see, and LI-007 and ART-001 each produced zero tagged arrivals while live. No impressions, clicks or engagement figures were retrieved: LinkedIn analytics is not reachable from this environment and nothing here is estimated. T+24h and T+7d checkpoints: marketing/measurement/M4-POST-PUBLICATION-CHECKLIST.md."
     },
     {
       "date": null,

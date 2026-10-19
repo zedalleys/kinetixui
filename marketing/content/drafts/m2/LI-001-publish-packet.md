@@ -1,7 +1,7 @@
 ---
 id: LI-001
 type: manual publish packet
-status: APPROVED 2026-10-18 (editorial only). Not published. Stop gate CLOSED 2026-10-18 19:07 UTC (§4).
+status: PUBLISHED 2026-10-19 (author-supplied live URL). Stop gate CLOSED 2026-10-18 19:07 UTC (§4).
 target: Monday 19 October 2026, 14:00 UTC / 17:00 Riyadh, posted by hand by the owner
 ---
 
@@ -179,3 +179,27 @@ is unaffected.
 4. X-001 follows the next day and needs its own approval first.
 
 Until step 1 is done with a real URL, LI-001 is APPROVED, not PUBLISHED.
+
+## 8. Close-out record, 2026-10-19
+
+The author reported publication at 18:29 UTC and supplied the live post URL
+<https://www.linkedin.com/feed/update/urn:li:activity:7518015214143873024/>. Both registers were closed out on that
+URL: `marketing/distribution/register.json` LI-001 is `status: "published"`, `date: "2026-10-19"`, `liveUrl` as above,
+with a result line; `marketing/content/register.json` LI-001 is `status: "published"` with the approval block and its
+sha256 pin untouched (section A still 1,538 characters, `09a3994…3cfb`, re-computed at close-out).
+
+What is **not** recorded, because it was not verified:
+
+- **The exact publication time.** The author gave a date, not a time, and LinkedIn is not reachable from this
+  environment. It is left unknown rather than inferred from the 14:00 UTC scheduled slot.
+- **Impressions, clicks, reactions or any engagement figure.** LinkedIn's own analytics cannot be read from here and
+  nothing is estimated.
+- **Whether the first comment was posted, and with which URL.** The repository's tracked URL carries no `kx_traffic`
+  parameter and is the register's built URL (verified), but no tool here can read the comments on a live LinkedIn
+  post. The first tagged arrival is what would confirm it, and there is none yet.
+
+First measurement read, about 18:30 UTC: **no tagged arrival observed.** PostHog 620385 holds no event carrying
+`kx_campaign=kx_p1_a_parity_proof` at any point on 19 October, while ingesting events as late as 18:19:37 UTC, so the
+pipeline was live and the campaign had no arrival. The only sessions since 12:00 UTC are two `kx_source=direct`
+Chrome/macOS sessions with no campaign tag. That is "no tagged arrival", not "no clicks": the body link goes to
+dev.to, which first-party analytics cannot see.

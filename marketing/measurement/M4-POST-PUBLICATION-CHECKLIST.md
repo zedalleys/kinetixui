@@ -64,6 +64,43 @@ which is why the compact one-cell export exists. `--arms-from 2026-10-19` makes 
 from the first post of this window, so an arm's floor accumulates across weeks instead of resetting
 ([`../distribution/M3-EXPERIMENTS.md`](../distribution/M3-EXPERIMENTS.md)).
 
+## LI-001's own checkpoints (published 2026-10-19)
+
+Live post: <https://www.linkedin.com/feed/update/urn:li:activity:7518015214143873024/>. Publication time unknown
+(author-supplied date only), so each checkpoint is counted from the close-out read at 18:30 UTC on 19 October.
+
+**T+1h, done 2026-10-19 ~18:30 UTC — no tagged arrival observed.** No event carrying `kx_p1_a_parity_proof` exists at
+any time on 19 October; the project ingested events to 18:19:37 UTC, so this is absence of arrivals, not absence of
+data. Two `kx_source=direct` Chrome/macOS sessions in the window carry no campaign tag and are not attributable to the
+post. Nothing was recorded as a click, impression or engagement figure.
+
+**T+24h — Tuesday 20 October, after about 18:30 UTC.** Run the T+1h query above with
+`properties.kx_campaign = 'kx_p1_a_parity_proof' AND properties.kx_content = 'li_primary'` over `INTERVAL 2 DAY`, then:
+
+- [ ] If any row appears, check the four attribution values and the landing page, and record **absolute counts** of
+      sessions, of Qualified Evaluations and of Adoption Intent, audience cohort only. A row with the campaign but
+      `kx_source=other` is the 18 October anomaly recurring: record it with its browser and device and do not treat
+      the count as attributed.
+- [ ] If none appears, write "no tagged arrival in 24 hours" in the LI-001 result line, with the ingest high-water
+      mark beside it so a reader can tell silence from an outage.
+- [ ] Either way the registers already say `published`; only the result line changes. `node scripts/check-distribution.mjs`
+      and `node scripts/check-content-register.mjs` after any edit.
+- [ ] X-001 is scheduled for 20 October 15:00 UTC on the **same campaign**, so note the reading before it posts: after
+      that, `utm_content` is the only thing separating the two posts' arrivals.
+
+**T+7d — Monday 26 October.** The weekly read, cumulative from this post:
+
+```
+node scripts/marketing-weekly-report.mjs --from 2026-10-19 --to 2026-10-26 --print-query --compact
+# run the printed SQL in PostHog, save the single cell to a .txt, then:
+node scripts/marketing-weekly-report.mjs --from 2026-10-19 --to 2026-10-26 --sessions <that file> \
+  --arms-from 2026-10-19
+```
+
+- [ ] Report audience-cohort counts beside the canonical QER, never instead of it, and absolute counts only: three
+      weeks produced 11 audience QE sessions in total, a third of the 30 floor.
+- [ ] Four posts in one week is not a test of anything. The honest output is a list of observations.
+
 ## The six measures to track, and the trap in each
 
 | Measure | How it is read | What it is not |
