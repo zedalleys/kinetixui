@@ -906,6 +906,8 @@
     --primary-foreground: var(--blue-50);
     --border: var(--blue-100);
     --ring: var(--azure-700);
+    --accent: var(--blue-50);
+    --surface-grouped: var(--neutral-100);
   }
 
   /* vertical margin rules at a container's edges — graph-paper structure */

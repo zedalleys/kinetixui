@@ -33,21 +33,20 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
 ];
 
 /*
-  The footer is a print surface: the engraving (design-assets/) is inked in palette primitives —
-  `azure.1000`/`azure.950` on `amber.150` paper, the nearest steps to the art direction's Prussian blue and
-  parchment — and the panel is that same paper, so the plate's sky is the panel. Everything set on it uses
-  the site's semantic tokens, pinned to their light values by `.kx-print-surface` because the paper stays
-  light in both themes: the mark matches the header (`primary`), headings are `foreground` (16.9:1) and the
-  secondary text is `foreground` at 70% (7.1:1). `muted-foreground` is 4.4:1 on this paper, so it is not used.
-  Dark mode dims the whole sheet to 85% rather than inverting it (an inverted engraving reads as a
-  photographic negative); the dimmed pairs stay at 12.1:1 and 6.0:1.
+  The footer is a print surface set entirely in the site's semantic tokens: the engraving (design-assets/) is
+  inked in `foreground` and `brand` on `accent` paper, highlights in `background`, and the panel is that
+  same token, so the plate's sky is the panel. `.kx-print-surface` pins these tokens to their light values
+  because the paper stays light in both themes. The mark matches the header (`primary`), headings are
+  `foreground` (18.2:1) and the secondary text is `foreground` at 70% (7.3:1) — `muted-foreground` would drop
+  to 4.3:1 once dark mode dims the sheet. Dark mode dims it to 85% rather than inverting it (an inverted
+  engraving reads as a photographic negative); the dimmed pairs stay at 13.0:1 and 6.3:1.
 */
 const focusRing =
-  "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--amber-150))]";
+  "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-accent";
 
 export function SiteFooter() {
   return (
-    <footer className="kx-print-surface relative overflow-hidden bg-[hsl(var(--amber-150))] text-foreground dark:brightness-[0.85]">
+    <footer className="kx-print-surface relative overflow-hidden bg-accent text-foreground dark:brightness-[0.85]">
       {/* Paper grain: a seamless 384px tile under everything, so the plain panel and the plate read as one sheet.
           `overlay` against mid-grey is neutral on average, so it textures the parchment without dulling it. */}
       <div
