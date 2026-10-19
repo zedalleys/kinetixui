@@ -346,6 +346,50 @@
     },
     {
       "date": null,
+      "day": 18,
+      "asset": "X-008",
+      "channel": "x",
+      "destination": "/components",
+      "icpHypothesis": "p2",
+      "pillar": "f",
+      "attribution": {
+        "utm_source": "x",
+        "utm_medium": "social",
+        "utm_campaign": "kx_p2_f_two_trades",
+        "utm_content": "x_thread"
+      },
+      "visual": "VIS-005",
+      "linkPlacement": "the tracked /components URL in place of the bare URL in post 4",
+      "secondary": null,
+      "communityReuse": null,
+      "metricToWatch": "whether the tagged /components link produces any session at all: LI-007 shares this campaign and produced no tagged audience arrival, so utm_content=x_thread is what separates this post from it",
+      "status": "planned",
+      "result": null
+    },
+    {
+      "date": null,
+      "day": 20,
+      "asset": "LI-008",
+      "channel": "linkedin",
+      "destination": "/docs/platforms",
+      "icpHypothesis": "p1",
+      "pillar": "d",
+      "attribution": {
+        "utm_source": "linkedin",
+        "utm_medium": "social",
+        "utm_campaign": "kx_p1_d_partial_evidence",
+        "utm_content": "li_primary"
+      },
+      "visual": "VIS-006",
+      "linkPlacement": "the tracked /docs/platforms URL in place of the bare URL on the last line of the copy",
+      "secondary": null,
+      "communityReuse": "COM-004 derives from it \u2014 not within 48 hours",
+      "metricToWatch": "kx_p1_d_partial_evidence sessions with utm_content=li_primary that reach /docs/platforms, then whether any reaches Qualified Evaluation. This is the first post on this campaign, so there is no prior arrival to compare against",
+      "status": "planned",
+      "result": null
+    },
+    {
+      "date": null,
       "day": null,
       "asset": "COM-001",
       "channel": "community",
