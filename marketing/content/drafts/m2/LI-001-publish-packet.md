@@ -155,6 +155,19 @@ is unaffected.
 - [ ] First comment (§3) posted with the full tracked URL
 - [ ] Post URL copied (… → Copy link to post; it should contain `/feed/update/urn:li:activity:` or `/posts/`)
 
+> **Pre-publication verification, 2026-10-19 08:56 UTC on `main`, `4688d1fe`** (the commit that squashed PR #410).
+> Re-run from the merged tree, not carried over: section A of `../a01/linkedin.md` is 1,538 characters and hashes to
+> `09a399477e8c537d48045fd2cc83a3faf77c33a467b3d046389c83e3f5d33cfb`, equal to the register pin; the first comment's
+> URL in §3 is the register's built URL and carries no `kx_traffic` parameter; `check-content-register`,
+> `check-distribution` and `check-editorial` all pass.
+>
+> **Publication state at that moment: not published.** The distribution register's LI-001 row is `status: "planned"`
+> with `date: null` and no `liveUrl`, the content register has LI-001 `ready`, and PostHog 620385 holds **no event of
+> any kind** carrying `kx_campaign=kx_p1_a_parity_proof` since 00:00 UTC today, while the project did ingest 17 events
+> up to 08:45:25 UTC — so the pipeline is live and the campaign has had no arrival. A calendar hold exists for 17:00
+> Riyadh (created 18 October 19:32 UTC); a hold is a reminder, not a publication, and nothing here treats it as one.
+> Status therefore stays APPROVED, not PUBLISHED, until the owner supplies the post's own live URL and its real time.
+
 ## 7. Close-out (only after it is live)
 
 1. In `marketing/distribution/register.json`, LI-001 row: `status: "published"`, `date: "2026-10-19"` (the real
