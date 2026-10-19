@@ -13,8 +13,8 @@ Evidence words used below, weakest first:
 - **direction** — an approved decision recorded here, not yet a rendered fact.
 - **source** — read from the repository.
 - **rendered** — measured in a browser against a real build.
-- **pending reference** — stated from the approved direction, awaiting confirmation against the canonical
-  screenshots (§2).
+- **reference** — observed or measured in the canonical screenshots (§2). A reference statement is about
+  what the approved footer looks like; it is never an accessibility or performance result.
 
 ---
 
@@ -56,11 +56,28 @@ and in the Figma working file. *(source: PR #432 description, "The PR went throu
 The canonical references are Ziad's two approved footer screenshots, **`azink-1440.png`** (light) and
 **`azink-dark-1440.png`** (dark).
 
-**Those two files are not in this repository, in the project's shared folder, or otherwise available to the
-session that wrote this document.** Everything in §1 and §3 that describes the approved footer is therefore
-grounded in the repository instead — the plate masters and the footer implementation on the open PR #432
-branch `claude/footer-arabian-illustration` — and any statement here that depends on the rendered page at
-1440px rather than on those files is marked **pending reference**.
+Both were approved and supplied on 2026-10-19 and have been read. They show the PR #432 footer at a 1440px
+viewport, light and dark, and they are what later surfaces are compared against. What they establish, as
+measurements taken from the two images rather than from a browser session:
+
+- **The paper is `accent`.** The plain panel samples `#f0f7ff` in the light screenshot — `blue.50`, the
+  value §3 records from source. The sheet is pale and slightly cool, not warm. *(reference)*
+- **Dark dims; it does not invert.** Across 11,454 colour channels sampled at random from the two images,
+  the dark screenshot is a uniform **0.850×** the light one (1st–99th percentile 0.839–0.864), and **not one
+  sampled channel is lighter in dark mode than in light**. There is no second plate and no negative: the
+  dark sheet is the light sheet, dimmed. *(reference)*
+- **The grain is present and restrained.** Rows of plain paper carry a standard deviation of about 0.5 of
+  255 — visible as texture, far below anything that would disturb the type on it. *(reference)*
+- **The composition matches §1.** Low horizon, open cloud band, palms and oasis pool centred, flat-topped
+  mesas across the middle distance, a small caravan at the left, cross-hatched dunes in the foreground.
+  Tone is carried by line density throughout; there is no soft gradient in the art. *(reference)*
+- **Text sits on paper, not on line work.** The four link columns, the tagline and the mark are all on the
+  plain panel above the plate; the plate fades in beneath the divider, so the copyright and credit bar sits
+  in the empty sky rather than over the engraving. *(reference)*
+
+These are visual observations. They are **not** accessibility or performance results: contrast ratios, axe
+runs, layout-shift and payload figures come from the measurements PR #432 and #434 record, and §3 and §5
+keep them separate on purpose.
 
 Repository-side references, in priority order:
 
@@ -71,8 +88,8 @@ Repository-side references, in priority order:
    derivatives. *(source, PR #432)*
 4. The Figma working file, which keeps every version including the superseded directions.
 
-When the two screenshots are attached, they become the canonical pair and this section is updated to say so;
-the repository assets stay as the production source of truth for the plate itself.
+The screenshots are the canonical reference for what the direction *looks like*; the repository assets stay
+the production source of truth for the plate itself.
 
 ## 3. The approved footer as the baseline
 
@@ -87,7 +104,8 @@ the baseline every later surface is measured against. Recorded here so later wor
 | Theme behavior | `.kx-print-surface` re-points `foreground`, `primary`, `primary-foreground`, `border`, `ring`, `accent` and `surface-grouped` to their light-theme aliases inside the footer; dark mode dims to 85%. No token value changes, no token is added. | source |
 | Accessibility | The plate is an `aria-hidden` `<img alt="">` — out of the accessibility tree, out of selection, out of contrast audits. Text sits on the paper, not on the art. | source |
 | Subject | Palm grove, oasis pool, flat-topped sandstone mesas, cross-hatched dunes, a small camel caravan at left, a wide cloud band over an open sky. The oasis sits in the middle 30–70% of the plate so phone crops keep it. | source (master plate + component comment) |
-| Rendered behavior at 1440 | **pending reference** — PR #432 records Chromium checks at 1440/768/390, light and dark, LTR and RTL, with no horizontal overflow, no axe violation and CLS delta 0.0000. This document does not re-verify them. | pending reference |
+| Appearance at 1440 | The canonical screenshots confirm it: paper `#f0f7ff`, dark a uniform 0.850× of light with nothing inverted, grain present at about 0.5/255 on plain paper, the plate fading in below the divider so the bottom bar sits in open sky. §2 has the measurements. | reference |
+| Accessibility and performance results | PR #432 records Chromium checks at 1440/768/390, light and dark, LTR and RTL, with no horizontal overflow, no axe violation and CLS delta 0.0000; PR #434 re-measures contrast, tree, layout and motion through `check:engraving`. **The screenshots do not establish any of these** and this document does not re-verify them. | source (those PRs' records) |
 
 ## 4. What the direction does not touch
 
@@ -161,7 +179,7 @@ Recorded so that adopting it is never read as relaxing anything:
 | Stage | What | Status |
 | --- | --- | --- |
 | 1 | Establish documentation and canonical references — this document and Claude instructions §28. | In progress (this change). |
-| 2 | Validate the approved footer as the baseline. | Not started. PR #432 is open and unmerged; validation against the canonical screenshots is stage 2's work, not stage 1's. |
+| 2 | Validate the approved footer as the baseline. | Partly done. The canonical screenshots are in hand and the footer's **appearance** is confirmed against them (§2). What remains is not a visual question: PR #432 is still open and unmerged, so the baseline is not yet on `main`. |
 | 3 | Pilot **one** restrained homepage accent. | Not started. One accent, one measurement, one decision. |
 | 4 | Extend selectively to marketing and editorial surfaces. | Not started. |
 | 5 | Consider minimal documentation and catalogue framing, **after** the overlapping catalogue work (CAT-1 #413, CAT-QF #428, CAT-2 #430) is reconciled. | Not started, and explicitly blocked on that reconciliation. |
@@ -171,8 +189,6 @@ started because the previous one landed.
 
 ## 9. Open questions
 
-- The two canonical screenshots are not yet available to this repository's agents (§2). Until they are, every
-  **pending reference** line above is unconfirmed.
 - Whether the direction gets a gate of its own (for example, one that fails if decorative art enters the
   accessibility tree, or if a decorative surface ships without a dark-mode check) is a stage-3 question, not
   a stage-1 one.
