@@ -119,6 +119,34 @@ Three further passes over the merged head found four more, all real and all fixe
 The role promotion is the one open question from the first push, now settled by the contract's own written
 definition rather than left hanging. Nothing else in the registry moved, and no other role's status changed.
 
+**Follow-ups, deliberately out of MX1b-2.** Both are known, measured and left alone, because each is a
+behaviour change rather than a motion one and wants its own slice:
+
+1. **A disabled Toggle answers a dispatched click.** `KxToggle.press()` has no guard of its own; it relies on
+   the native `disabled` button, which blocks real pointer and keyboard input but not a scripted
+   `dispatchEvent(new MouseEvent('click'))`. Real readers cannot reach it, so this is a robustness gap, not a
+   defect a person can hit. A fix adds an `isDisabled()` early return to `press()` and a spec that dispatches
+   the event, and belongs with whatever else audits the directive's own guards.
+2. **A one-way `[checked]` binding written with the same value the reader chose.** The mixed-state record is
+   cleared by a form write (`writeValue` is a call, so it is visible whatever its value) and by a `[checked]`
+   write of a *different* value. A one-way binding re-asserting the value the reader happened to pick writes a
+   signal the value it already holds, which notifies nothing, so the box stays resolved where a caller might
+   expect it to return to `mixed`. This cannot be closed without a second input — an explicit "the caller has
+   spoken" signal, or a `mixed` model the caller owns — which is an API change and so outside this slice.
+
+**Why `check:angular-selection-motion` is not a registered evidence source.** `gen-verification.mjs` credits an
+`extra` browser script only through the `kx-verify:` passages inside it, and only for the components those
+passages name. This gate carries no marker, so adding it to the Angular `extra` list regenerates
+`verification.json` byte for byte unchanged — tested, not assumed. Adding markers would change nothing either:
+every control the gate exercises (Checkbox, RadioGroup, Switch, Toggle, ToggleGroup) is already **runtime** on
+Angular, with interaction and accessibility both observed in Chromium by `check:angular-browser`, which is the
+top of the ladder in `evidence-levels.mjs`. New markers would therefore add citations and no tier, while
+`scripts/covered-slugs.mjs` credits a passage's subjects by bare prefix, so a new marker is a live
+over-crediting risk. The gate is enforcement, unconditional in `a11y-browser.yml` and path-filtered on
+`scripts/angular-selection-motion.mjs`; it does not need to publish a claim to do its job, and the other
+motion gates (`check:switch-motion`, `check:checkbox-radio-motion`, `check:toggle-motion`) are unregistered for
+the same reason.
+
 The focus-ring finding was a real a11y defect of this slice's own making: the comment above the rules claimed
 the three were at equal specificity, and they were not.
 
@@ -286,6 +314,9 @@ motion.
 - `selection-state` and `press-feedback` stay **observed**. The repository's rule for proven is consumers on
   two platforms plus a named check, and only React consumes them today. `selection-control` was already
   proven through the native Switch helpers.
+  (2026-10-18, MX1b-2: both are now **proven**. Adding the Angular consumers gave each role two platforms and
+  a named check, which is the condition `check:motion-tokens` enforces, so the sentence above describes
+  MX1b-1c's own closure and no longer the registry.)
 - No Angular or native file is changed. The Angular forced-colours gap was measured in Chromium but is left
   for MX1b-2.
 - No native cell gains a Runtime tick: there is no simulator, emulator or device run in this repository.
