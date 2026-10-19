@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Directive, booleanAttribute, forwardRef, input, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, booleanAttribute, computed, forwardRef, input, linkedSignal, model, output, signal } from '@angular/core';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 import { NgTemplateOutlet } from '@angular/common';
 import type { KxToggleSize, KxToggleVariant } from './types';
@@ -61,6 +61,15 @@ abstract class KxToggleBase implements ControlValueAccessor {
     this.toggled.emit(next);
   }
 
+  /**
+   * Touched without a value change — the one path a subclass has for "the reader acted on this, and the
+   * value it already holds is the answer" (the mixed Checkbox resolving to checked). `onTouched` is private
+   * so the callbacks stay this class's business.
+   */
+  protected markTouched(): void {
+    this.onTouched();
+  }
+
   writeValue(value: boolean): void {
     this.checked.set(!!value);
   }
@@ -81,6 +90,10 @@ abstract class KxToggleBase implements ControlValueAccessor {
  *
  * `indeterminate` renders `aria-checked="mixed"` — the tri-state a "select all" header needs. It is display
  * only: activating an indeterminate checkbox resolves it to checked, as it does everywhere else.
+ *
+ * Both glyphs are always rendered and the stylesheet shows the one the state calls for, rather than the
+ * template mounting one of them: a glyph that stays in the DOM can fade in on `fast` (MX1b-2), and the
+ * choice is keyed on the same `aria-checked` a reader is told, so the two can never disagree.
  */
 @Component({
   selector: 'kx-checkbox',
@@ -91,29 +104,73 @@ abstract class KxToggleBase implements ControlValueAccessor {
       type="button"
       role="checkbox"
       class="kx-checkbox"
-      [attr.aria-checked]="indeterminate() ? 'mixed' : checked()"
+      [attr.aria-checked]="mixed() ? 'mixed' : checked()"
       [attr.aria-label]="ariaLabel()"
       [attr.aria-labelledby]="ariaLabelledby()"
       [disabled]="isDisabled()"
       (click)="toggle()"
     >
-      @if (checked() || indeterminate()) {
-        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          @if (indeterminate()) {
-            <path d="M4 8h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          } @else {
-            <path d="M3.5 8.5l3 3 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          }
-        </svg>
-      }
+      <svg class="kx-checkbox__glyph" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path class="kx-checkbox__dash" d="M4 8h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <path
+          class="kx-checkbox__tick"
+          d="M3.5 8.5l3 3 6-6"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
     </button>
   `,
 })
 export class KxCheckbox extends KxToggleBase {
   readonly indeterminate = input(false, { transform: booleanAttribute });
+  /**
+   * Activating a mixed checkbox resolves it to checked, which is what the doc above promises and what every
+   * other implementation does — but `indeterminate` is an input the caller owns, so the component cannot
+   * clear it. It records the value the reader's own answer left behind instead, and reports `mixed` while
+   * `indeterminate` is set and the value is not theirs. So the caller stays authoritative: writing
+   * `indeterminate` again resets the record, and writing a different `checked` value — a form reset, a
+   * one-way binding, a header recomputing "some of these are selected" — makes the box mixed again, because
+   * that value is no longer the reader's answer. The reader's own later clicks keep the record current, so a
+   * second click unchecks the box rather than returning it to mixed. A form writing through the CVA clears
+   * the record outright, because `writeValue` is a call and not a signal write: a `reset()` to the value the
+   * reader happened to choose would otherwise be indistinguishable from no write at all.
+   */
+  private readonly resolved = linkedSignal<boolean, boolean | null>({ source: this.indeterminate, computation: () => null });
+  protected readonly mixed = computed(() => this.indeterminate() && this.resolved() !== this.checked());
   /** One of these is required when no visible `<label for>` points at the control. */
   readonly ariaLabel = input<string | null>(null, { alias: 'aria-label' });
   readonly ariaLabelledby = input<string | null>(null, { alias: 'aria-labelledby' });
+
+  /**
+   * A write from a form supersedes the reader's answer whatever its value: `reset()` to the value they
+   * happened to choose is still the form speaking, and the equality check alone cannot see it, because
+   * writing a signal the value it already holds notifies nothing. The reader's own clicks do not come
+   * through here — `toggle()` writes `checked` directly — so their answer is safe.
+   */
+  override writeValue(value: boolean): void {
+    this.resolved.set(null);
+    super.writeValue(value);
+  }
+
+  /** Mixed resolves to checked: already-checked and mixed both end up checked, and both report it once. */
+  protected override toggle(): void {
+    if (this.isDisabled()) return;
+    if (this.mixed()) {
+      this.resolved.set(true);
+      if (this.checked()) {
+        // The value does not change, so there is nothing to write back — but the reader did act on the
+        // control, and a form that shows its errors on touch has to hear about it.
+        this.markTouched();
+        this.toggled.emit(true);
+        return;
+      }
+    }
+    super.toggle();
+    this.resolved.set(this.checked());
+  }
 }
 
 /**
