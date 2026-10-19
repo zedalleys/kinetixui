@@ -175,17 +175,22 @@ export class KxRadioGroup extends KxValueBase<string | null> {
   selector: 'kx-radio',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <input
-      type="radio"
-      class="kx-radio__input"
-      [id]="id()"
-      [name]="group.name()"
-      [value]="value()"
-      [checked]="group.value() === value()"
-      [disabled]="disabled() || group.groupDisabled()"
-      (change)="group.select(value())"
-      (blur)="group.touch()"
-    />
+    <span class="kx-radio__control">
+      <input
+        type="radio"
+        class="kx-radio__input"
+        [id]="id()"
+        [name]="group.name()"
+        [value]="value()"
+        [checked]="group.value() === value()"
+        [disabled]="disabled() || group.groupDisabled()"
+        (change)="group.select(value())"
+        (blur)="group.touch()"
+      />
+      <!-- The dot is drawn over the input rather than inside its box-shadow, so it can fade on its own tier
+           (see the dot's own note in styles.css). It is decoration: the input carries the state. -->
+      <span class="kx-radio__dot" aria-hidden="true"></span>
+    </span>
     <label class="kx-radio__label" [for]="id()"><ng-content /></label>
   `,
   host: { class: 'kx-radio' },
