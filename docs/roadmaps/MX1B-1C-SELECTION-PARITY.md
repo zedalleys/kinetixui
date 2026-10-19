@@ -55,8 +55,8 @@ The milestones are those in MX1B-1-PLAN §6:
 | Component | React | Angular (Preview) | SwiftUI | Compose | Flutter |
 | --- | --- | --- | --- | --- | --- |
 | Toggle | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ✓ ✓ ○ | ○ ○ ○ |
-| ToggleGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ✓† ✓ ○ | ○ ○ ○ |
-| Checkbox | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ✓‡ ✓ ○ | ○ ○ ○ |
+| ToggleGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ✓[3] ✓ ○ | ○ ○ ○ |
+| Checkbox | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ✓[4] ✓ ○ | ○ ○ ○ |
 | RadioGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ✓ ✓ ○ | ○ ○ ○ |
 | Switch | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓ ○ | ✓ ✓ ○ | ✓ ✓ ○ |
 
@@ -65,19 +65,24 @@ a contract consumer (Impl), `scripts/angular-selection-motion.mjs` fails on nine
 and that gate drives the package as a live Angular application in Chromium rather than in jsdom (Runtime).
 Angular stays Preview: these are motion and accessibility cells, not a graduation.
 
-MX1d moved the Compose column (2026-10-18). What each tick means there:
+MX1d moved the Compose column (2026-10-18). Footnote numbers are scoped by platform — SwiftUI owns [1] and
+[2], Compose [3] and [4], Flutter [5] and [6] — so the three columns can land in either order without two
+notes claiming the same marker. What each tick means here:
 
 - **Impl ✓** — the control reads `KinetixSelectionMotion` (`fast` · `standard`), a `selection-state`
   consumer in `tokens/contracts/motion.json`. Switch's Impl tick is now earned: the track colour joined the
   thumb on `KinetixSwitchMotion`, which was the stated condition.
 - **Auto ✓** — `SelectionMotionTest.kt` composes each control through Robolectric and reads the semantics
-  tree, and `check:motion-tokens` / `check:native-motion` fail on negative controls that were watched to
-  fire. The Robolectric suite's **own** negative controls were not demonstrated: the module cannot be
-  compiled on the dev box (its plugin repositories are unreachable there), so CI is its first and only run.
-- **†** — ToggleGroup's Impl is its items': it is a pass-through to Toggle and animates nothing itself,
+  tree, `SwitchMotionTest.kt` reads the track's painted colour halfway through the gesture, and
+  `check:motion-tokens` / `check:native-motion` fail on negative controls that were watched to fire. The
+  painted track test has its own demonstrated control: removing the track's `animateColorAsState` fails both
+  midpoint assertions, watched on CI, which is where the Robolectric suite runs — the module cannot be
+  compiled on the dev box, since its plugin repositories are unreachable from there. The semantics
+  assertions' own negative controls remain reasoning rather than observation.
+- **[3]** — ToggleGroup's Impl is its items': it is a pass-through to Toggle and animates nothing itself,
   which is also why it is not a declared member of the motion family. Its own change is the optional
   `accessibleLabel`.
-- **‡** — Checkbox's fill and edge settle; the glyph still swaps in one frame, unlike React's fade. Stated
+- **[4]** — Checkbox's fill and edge settle; the glyph still swaps in one frame, unlike React's fade. Stated
   in MOTION.md rather than ticked over.
 - **Runtime ○** — no emulator job exists, and nothing measured an interpolated colour. Robolectric is a JVM
   host.
