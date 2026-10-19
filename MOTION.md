@@ -274,16 +274,26 @@ web); the fill already carries the state change, so it is recorded rather than h
 
 Evidence, stated exactly: **Headless verified** for interaction and accessibility —
 `SelectionMotionTest.kt` composes each control through Robolectric and reads the semantics tree, and
-`./gradlew :ui:testDebugUnitTest` runs it in `native-compose.yml`. **No interpolated colour is measured**,
-and no emulator job exists, so Runtime stays open. Robolectric is a JVM host; it renders nothing a person
-could see.
+`./gradlew :ui:testDebugUnitTest` runs it in `native-compose.yml`. No emulator job exists, so Runtime stays
+open. Robolectric is a JVM host; it renders nothing a person could see.
 
-Stated gap in the guard, not in the fix: **nothing fails if the track reverts to the direct colour.**
-`animateColorAsState` does not expose which spec it was handed, so no Robolectric assertion can read the
-track's animation, and `check:native-motion` stays green because `Switch.kt` still names
-`KinetixSwitchMotion` for the thumb. The contract cannot pin it either: `check:motion-tokens` requires a
-consumer's `expects` to name the role's own duration and easing, which `Switch.kt` deliberately does not —
-it delegates both to the helper. So on every native platform the contract can pin the **helper** that holds
-the timing and never the **component** that consumes it, where React and Angular pin the component directly
-because their timing is written in the component's own classes and stylesheet. Closing it wants either an
-on-device capture or a per-member source expectation in the native gate, and both are their own slice.
+**The switch's track is measured.** `SwitchMotionTest` stops the test clock, advances it half a duration
+into the gesture, and reads the colour the switch actually rasterised, in both directions and with
+animations off. The colour is taken as the most common fully opaque pixel rather than from a fixed
+coordinate, because the thumb is moving and any coordinate that is track at one point in the gesture is
+thumb at another; the track is the larger opaque area by roughly 840 pixels to 310, so the mode is the
+track whatever the thumb is doing. It runs under Robolectric's NATIVE graphics mode, since LEGACY draws
+nothing and would compare two blank bitmaps and pass.
+
+That closes a gap this slice first recorded rather than fixed, and it is worth saying why the obvious
+routes did not: `animateColorAsState` does not expose which spec it was handed, so no assertion can read
+the track's *spec*; `check:native-motion` stays green if the track reverts, because `Switch.kt` still names
+`KinetixSwitchMotion` for the thumb; and the contract cannot pin it, because `check:motion-tokens` requires
+a consumer's `expects` to name the role's own duration and easing, which `Switch.kt` deliberately does not —
+it delegates both to the helper. **On every native platform the contract can pin the helper that holds the
+timing and never the component that consumes it**, where React and Angular pin the component directly
+because their timing is written in the component's own classes and stylesheet. The painted test goes around
+that limit for one control rather than removing it: the same idiom is not yet extended to the checkbox's
+fill, the radio's dot or the toggle's surface, each of which needs its own answer to which pixel is the
+subject while a glyph moves over it. Watching the thumb's position and the track's colour at one instant,
+rather than each on its own, still wants an on-device capture.

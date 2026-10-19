@@ -46,13 +46,14 @@ import org.robolectric.annotation.Config
  *
  * ## What is deliberately NOT claimed
  *
- * No interpolated colour. Compose's test surface exposes composition and semantics, not per-frame
- * paint, and this repository's Compose suite establishes no image-capture idiom to lean on — the
- * module cannot be compiled on the dev box at all (its plugin repositories are unreachable there),
- * so an unproven test API would be guesswork committed to CI. **Flutter's widget tests do measure a
- * real interpolated colour mid-transition**; the difference between the platforms is stated rather
- * than smoothed over. Nothing here is runtime evidence either: Robolectric is a JVM host, there is
- * no emulator job in this repository, and `testDebugUnitTest` renders nothing a person could see.
+ * No interpolated colour for THESE four controls. The switch's track is read as a painted pixel in
+ * `SwitchMotionTest`, under a stopped test clock; extending the same idiom to the checkbox's fill,
+ * the radio's dot and the toggle's surface is worth doing and is not done here, because each needs
+ * its own answer to which pixel is the subject while the glyph moves over it. Flutter's widget tests
+ * do measure a real interpolated colour for all of them; the difference between the platforms is
+ * stated rather than smoothed over. Nothing here is runtime evidence either: Robolectric is a JVM
+ * host, there is no emulator job in this repository, and `testDebugUnitTest` renders nothing a
+ * person could see.
  *
  * Both directions throughout: unchecked → checked and checked → unchecked are asserted separately.
  */
@@ -105,17 +106,13 @@ class SelectionMotionTest {
         // `selection-control` covers the thumb AND the track colour, and before MX1d the track was
         // handed straight to `.background` and cut in one frame while the thumb slid.
         //
-        // What this test holds is the ONE spec both halves are given — nothing here reads the track.
-        // It cannot: `animateColorAsState` does not expose which spec it was handed, so a revert of
-        // `.background(trackColor)` to the direct colour would leave these assertions passing, and
-        // `check:native-motion` passing too, because `Switch.kt` still names the helper for the
-        // thumb. The wiring is pinned instead by the `selection-control` consumer on `Switch.kt` in
-        // `tokens/contracts/motion.json`, which expects both animation labels and the painted
-        // `.background(trackColor)` — the same shape as the React and Angular consumers, which also
-        // list the track and the thumb against the component rather than the helper.
+        // What this test holds is the ONE spec both halves are given — nothing here reads the track,
+        // and it cannot: `animateColorAsState` does not expose which spec it was handed. That the
+        // track is actually animated is held by `SwitchMotionTest`'s painted tests, which stop the
+        // test clock halfway through the gesture and read the colour the switch rasterised.
         //
-        // Watching the two LAND together is still out of reach here, which is why Compose's Switch
-        // Runtime cell stays open.
+        // Watching the two LAND together — the thumb's position and the track's colour at one
+        // instant — is still out of reach, which is why Compose's Switch Runtime cell stays open.
         val shared = KinetixSwitchMotion.spec<Float>(false) as TweenSpec<Float>
         assertEquals(KinetixDuration.instant, shared.durationMillis)
         assertEquals(KinetixEasing.standard, shared.easing)
