@@ -148,11 +148,11 @@ export function SiteFooter() {
         {/* eslint-disable-next-line @next/next/no-img-element -- a static decorative image with its own srcset; no optimisation to gain */}
         <img
           src="/footer/arabian-landscape-1920.webp"
-          srcSet="/footer/arabian-landscape-960.webp 960w, /footer/arabian-landscape-1920.webp 1920w, /footer/arabian-landscape-2880.webp 2880w"
+          srcSet="/footer/arabian-landscape-960.webp 960w, /footer/arabian-landscape-1920.webp 1920w, /footer/arabian-landscape-2880.webp 2880w, /footer/arabian-landscape-3840.webp 3840w, /footer/arabian-landscape-5760.webp 5760w"
           sizes="max(100vw, 720px)"
           alt=""
-          width={2880}
-          height={960}
+          width={5760}
+          height={1920}
           loading="lazy"
           decoding="async"
           className="size-full object-cover object-bottom dark:hidden"
@@ -160,11 +160,11 @@ export function SiteFooter() {
         {/* eslint-disable-next-line @next/next/no-img-element -- see above */}
         <img
           src="/footer/arabian-landscape-evening-1920.webp"
-          srcSet="/footer/arabian-landscape-evening-960.webp 960w, /footer/arabian-landscape-evening-1920.webp 1920w, /footer/arabian-landscape-evening-2880.webp 2880w"
+          srcSet="/footer/arabian-landscape-evening-960.webp 960w, /footer/arabian-landscape-evening-1920.webp 1920w, /footer/arabian-landscape-evening-2880.webp 2880w, /footer/arabian-landscape-evening-3840.webp 3840w, /footer/arabian-landscape-evening-5760.webp 5760w"
           sizes="max(100vw, 720px)"
           alt=""
-          width={2880}
-          height={960}
+          width={5760}
+          height={1920}
           loading="lazy"
           decoding="async"
           className="hidden size-full object-cover object-bottom dark:block"
