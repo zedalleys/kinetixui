@@ -39,6 +39,19 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            // The module cannot be built on a dev box — its plugin repositories are unreachable from
+            // there — so CI's log is the only place a Kotlin test failure is ever read. Gradle's
+            // default compact format prints "AssertionError at File.kt:344" and nothing else, which
+            // is not enough to fix anything: the assertion's own message, the expected and actual
+            // values and any `println` are all dropped. FULL plus the standard streams is what makes
+            // a failure here diagnosable without a second speculative push.
+            all {
+                it.testLogging {
+                    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+                    showStandardStreams = true
+                    events("failed")
+                }
+            }
         }
     }
 

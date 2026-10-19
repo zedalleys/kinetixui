@@ -341,7 +341,11 @@ class SwitchMotionTest {
         }
         assertEquals("the click should have taken effect", true, checked.value)
         val intermediate = frames.filter { it != off && it != on }
-        assertEquals("the track travelled: $intermediate", emptyList<Int>(), intermediate)
+        assertEquals(
+            "off=$off on=$on frames=$frames intermediate=$intermediate",
+            emptyList<Int>(),
+            intermediate,
+        )
         assertEquals("the track should end on the checked colour", on, frames.last())
     }
 
