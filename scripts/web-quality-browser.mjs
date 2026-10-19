@@ -165,7 +165,7 @@ const CONTRAST_FN = `(() => {
 
 /** [page, label, selector] — each selector should match at least one visible element. */
 const CONTRAST_TARGETS = [
-  ["/components", "gallery category/primitive chip", "[data-gallery-card] [data-gallery-primitive]"],
+  ["/components", "gallery category chip", "[data-gallery-card] [data-gallery-category]"],
   ["/components", "gallery status chip (beta)", "[data-gallery-card] [data-gallery-status]"],
   ["/components", "platform badge (on)", '[data-gallery-card] [data-platform-badge="on"]'],
   ["/components", "platform badge (off)", '[data-gallery-card] [data-platform-badge="off"]'],
