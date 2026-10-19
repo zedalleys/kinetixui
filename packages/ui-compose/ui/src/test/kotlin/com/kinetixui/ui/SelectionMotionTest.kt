@@ -101,14 +101,24 @@ class SelectionMotionTest {
     }
 
     @Test
-    fun theSwitchTrackNowSharesTheThumbsSpec() {
-        // `selection-control` covers the thumb AND the track colour. Before MX1d the track was
-        // handed straight to `.background` and cut in one frame. This pins the two to one spec; what
-        // it cannot do is watch them land together, which is why Compose's Switch Runtime cell is
-        // still open.
-        val thumb = KinetixSwitchMotion.spec<Float>(false) as TweenSpec<Float>
-        assertEquals(KinetixDuration.instant, thumb.durationMillis)
-        assertEquals(KinetixEasing.standard, thumb.easing)
+    fun theSwitchSpecTheTrackAndThumbShareIsInstantStandard() {
+        // `selection-control` covers the thumb AND the track colour, and before MX1d the track was
+        // handed straight to `.background` and cut in one frame while the thumb slid.
+        //
+        // What this test holds is the ONE spec both halves are given — nothing here reads the track.
+        // It cannot: `animateColorAsState` does not expose which spec it was handed, so a revert of
+        // `.background(trackColor)` to the direct colour would leave these assertions passing, and
+        // `check:native-motion` passing too, because `Switch.kt` still names the helper for the
+        // thumb. The wiring is pinned instead by the `selection-control` consumer on `Switch.kt` in
+        // `tokens/contracts/motion.json`, which expects both animation labels and the painted
+        // `.background(trackColor)` — the same shape as the React and Angular consumers, which also
+        // list the track and the thumb against the component rather than the helper.
+        //
+        // Watching the two LAND together is still out of reach here, which is why Compose's Switch
+        // Runtime cell stays open.
+        val shared = KinetixSwitchMotion.spec<Float>(false) as TweenSpec<Float>
+        assertEquals(KinetixDuration.instant, shared.durationMillis)
+        assertEquals(KinetixEasing.standard, shared.easing)
     }
 
     // kx-verify: interaction, accessibility

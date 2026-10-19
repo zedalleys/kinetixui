@@ -2179,10 +2179,10 @@
         ],
         "interaction": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:114-277"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:124-287"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:114-277",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:124-287",
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-150"
         ]
       },
@@ -5007,10 +5007,10 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:114-277"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:124-287"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:114-277"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:124-287"
         ]
       },
       "Flutter": {
@@ -5917,11 +5917,11 @@
         ],
         "interaction": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:114-277",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:124-287",
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:53-203"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:114-277",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:124-287",
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-150"
         ],
         "reducedMotion": [
@@ -6437,10 +6437,10 @@
         ],
         "interaction": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:114-277"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:124-287"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:114-277"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:124-287"
         ]
       },
       "Flutter": {
@@ -6521,10 +6521,10 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:114-277"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:124-287"
         ],
         "accessibility": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:114-277"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:124-287"
         ]
       },
       "Flutter": {

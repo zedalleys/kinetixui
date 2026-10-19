@@ -277,3 +277,13 @@ Evidence, stated exactly: **Headless verified** for interaction and accessibilit
 `./gradlew :ui:testDebugUnitTest` runs it in `native-compose.yml`. **No interpolated colour is measured**,
 and no emulator job exists, so Runtime stays open. Robolectric is a JVM host; it renders nothing a person
 could see.
+
+Stated gap in the guard, not in the fix: **nothing fails if the track reverts to the direct colour.**
+`animateColorAsState` does not expose which spec it was handed, so no Robolectric assertion can read the
+track's animation, and `check:native-motion` stays green because `Switch.kt` still names
+`KinetixSwitchMotion` for the thumb. The contract cannot pin it either: `check:motion-tokens` requires a
+consumer's `expects` to name the role's own duration and easing, which `Switch.kt` deliberately does not —
+it delegates both to the helper. So on every native platform the contract can pin the **helper** that holds
+the timing and never the **component** that consumes it, where React and Angular pin the component directly
+because their timing is written in the component's own classes and stylesheet. Closing it wants either an
+on-device capture or a per-member source expectation in the native gate, and both are their own slice.
