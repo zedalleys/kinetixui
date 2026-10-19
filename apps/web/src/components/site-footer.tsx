@@ -33,17 +33,19 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
 ];
 
 /*
-  The footer is a fixed print surface, not a themed one: the engraving (design-assets/) is a two-colour plate —
-  Prussian ink #173D73 (accents #102D57) on parchment #F1E5C8 — and the panel is set in those same inks in both
-  themes, so the plate's sky is the panel. They are the artwork's own colours, not semantic tokens.
-  Ink on parchment is 10.9:1 (#102D57) and 8.6:1 (#173D73); the 80% links and bottom bar blend to 5.3:1.
+  The footer is a print surface: the engraving (design-assets/) is inked in palette primitives only —
+  `azure.1000`/`azure.950` ink and `azure.900` mid-tones on `amber.150` paper, the nearest steps to the art
+  direction's Prussian blue and parchment — and the panel is set in the same primitives, so the plate's sky
+  is the panel. On `amber.150`, `azure.950` is 12.6:1 and `azure.900` 8.9:1; the 80% links and bottom bar
+  blend to 7.1:1. Dark mode dims the whole sheet to 85% rather than inverting it (an inverted engraving reads
+  as a photographic negative); the dimmed pairs stay at 9.7:1, 7.3:1 and 6.1:1.
 */
 const focusRing =
-  "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#102D57] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F1E5C8]";
+  "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--azure-950))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--amber-150))]";
 
 export function SiteFooter() {
   return (
-    <footer className="relative overflow-hidden bg-[#F1E5C8] text-[#102D57]">
+    <footer className="relative overflow-hidden bg-[hsl(var(--amber-150))] text-[hsl(var(--azure-950))] dark:brightness-[0.85]">
       {/* Paper grain: a seamless 384px tile under everything, so the plain panel and the plate read as one sheet.
           `overlay` against mid-grey is neutral on average, so it textures the parchment without dulling it. */}
       <div
@@ -65,14 +67,14 @@ export function SiteFooter() {
         <div className="grid gap-10 pb-12 pt-16 lg:grid-cols-[2fr_repeat(3,minmax(0,1fr))] lg:pt-20">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="grid size-8 place-items-center rounded-md bg-[#102D57] text-[#F1E5C8]">
+              <span className="grid size-8 place-items-center rounded-md bg-[hsl(var(--azure-950))] text-[hsl(var(--amber-150))]">
                 <Layers className="size-[18px]" />
               </span>
               <span className="font-display text-wordmark font-bold uppercase tracking-[0.18em]">Kinetixui</span>
             </div>
             {/* The canonical tagline, not a second copy of it: this paragraph carried the retired
                 "One token architecture, in motion across every platform" long after the hero dropped it. */}
-            <p className="mt-5 max-w-sm text-base leading-relaxed text-[#173D73]">
+            <p className="mt-5 max-w-sm text-base leading-relaxed text-[hsl(var(--azure-900))]">
               {siteConfig.tagline} This site is built with it.
             </p>
           </div>
@@ -88,7 +90,7 @@ export function SiteFooter() {
                       <Link
                         href={l.href}
                         {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-                        className={`text-[#173D73]/80 transition-colors hover:text-[#102D57] ${focusRing}`}
+                        className={`text-[hsl(var(--azure-950)/0.8)] transition-colors hover:text-[hsl(var(--azure-950))] ${focusRing}`}
                       >
                         {l.label}
                       </Link>
@@ -100,7 +102,7 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-[#173D73]/25 py-6 text-body-sm text-[#173D73]/80 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 border-t border-[hsl(var(--azure-950)/0.25)] py-6 text-body-sm text-[hsl(var(--azure-950)/0.8)] sm:flex-row sm:items-center sm:justify-between">
           {/* The licence line and the creator credit are one group, so the bar keeps its two-sided balance.
               A third top-level item would be centred by `justify-between`, which is more prominence than a
               by-line should take next to the product's own copyright. */}
@@ -115,7 +117,7 @@ export function SiteFooter() {
                 href="https://zedalleys.com/"
                 target="_blank"
                 rel="noreferrer"
-                className={`underline underline-offset-4 transition-colors hover:text-[#102D57] ${focusRing}`}
+                className={`underline underline-offset-4 transition-colors hover:text-[hsl(var(--azure-950))] ${focusRing}`}
               >
                 Zed Alleys
               </Link>
@@ -128,7 +130,7 @@ export function SiteFooter() {
       {/* Decorative engraving — an <img alt=""> rather than a CSS background so it can lazy-load: the footer is
           on every route, and a background is fetched as soon as styles resolve, even for a visitor who never
           scrolls this far. The plate is 3:1; its box keeps that ratio (so nothing shifts when it loads) and is
-          floored for phones, where `object-cover` crops the edges — the town sits in the middle 30–70% of the
+          floored for phones, where `object-cover` crops the edges — the oasis sits in the middle 30–70% of the
           plate for that reason — so `sizes` floors at the ~720px a 240px-tall crop is wide. It is pulled up under
           the bottom bar so the bar sits in the plate's empty sky, and the top fades into the panel. */}
       <div
@@ -137,12 +139,12 @@ export function SiteFooter() {
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- a static decorative image with its own srcset; no optimisation to gain */}
         <img
-          src="/footer/arabian-engraving-1920.webp"
-          srcSet="/footer/arabian-engraving-960.webp 960w, /footer/arabian-engraving-1920.webp 1920w"
+          src="/footer/arabian-landscape-1920.webp"
+          srcSet="/footer/arabian-landscape-960.webp 960w, /footer/arabian-landscape-1920.webp 1920w, /footer/arabian-landscape-2880.webp 2880w"
           sizes="max(100vw, 720px)"
           alt=""
-          width={1920}
-          height={640}
+          width={2880}
+          height={960}
           loading="lazy"
           decoding="async"
           className="size-full object-cover object-bottom"
