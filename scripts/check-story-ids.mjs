@@ -33,7 +33,10 @@ const entries = JSON.parse(readFileSync(indexPath, "utf8")).entries;
 
 const problems = [];
 let checked = 0;
-const scripts = readdirSync(`${root}/scripts`).filter((f) => f.endsWith(".mjs"));
+// This gate and its control harness both quote story ids as examples and as the text the controls edit in.
+// They are not gate call sites, so scanning them would make the gate fail on its own documentation.
+const META = new Set(["check-story-ids.mjs", "check-story-id-negative-controls.mjs", "story-id.mjs"]);
+const scripts = readdirSync(`${root}/scripts`).filter((f) => f.endsWith(".mjs") && !META.has(f));
 
 for (const file of scripts) {
   const src = readFileSync(`${root}/scripts/${file}`, "utf8");
@@ -48,7 +51,12 @@ for (const file of scripts) {
       continue;
     }
     if (!entries[id]) {
-      const near = Object.keys(entries).filter((k) => k.startsWith(id.split("--")[0] + "--"));
+      // Found by the component part, not the category prefix: when it is the CATEGORY that is wrong, a
+      // prefix search finds nothing and the message would say "no stories at all" for the very failure
+      // this gate exists to catch. Searching by component instead prints the real id and the mismatch
+      // reads itself.
+      const bare = slug.replace(/-/g, "");
+      const near = Object.keys(entries).filter((k) => k.includes(`-${bare}--`) || k.startsWith(`${bare}--`));
       problems.push(
         `${file}: storyId("${slug}", "${story}") resolves to "${id}", which is not a story in the built ` +
           `Storybook.${near.length ? ` That component's stories are: ${near.join(", ")}.` : " That component has no stories at all."}`,
@@ -58,7 +66,6 @@ for (const file of scripts) {
   // a literal id is the thing this gate and `story-id.mjs` exist to prevent: it is a third copy of the
   // taxonomy, and it goes stale without anything saying so
   for (const m of src.matchAll(/"((?:[a-z0-9]+-)*[a-z0-9]+--[a-z0-9-]+)"/g)) {
-    if (file === "check-story-ids.mjs" || file === "story-id.mjs") continue;
     if (entries[m[1]]) problems.push(`${file}: "${m[1]}" is a story id written out in full — use storyId(slug, story).`);
   }
 }

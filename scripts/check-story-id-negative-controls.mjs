@@ -35,7 +35,7 @@ function runGate() {
 const CONTROLS = [
   {
     rule: "a story id that addresses nothing fails, naming the component's real stories",
-    expect: /open-states\.mjs: storyId\("dialog", "Default"\) resolves to "feedback-status-dialog--default", which is not a story in the built Storybook\. That component's stories are:/,
+    expect: /open-states\.mjs: storyId\("dialog", "Default"\) resolves to "feedback-status-dialog--default", which is not a story in the built Storybook\. That component's stories are: overlays-dialog--default\./,
     // the drift this gate exists for: the taxonomy says one category, the built Storybook was titled from another
     edit: () => {
       const t = JSON.parse(original.taxonomy);
