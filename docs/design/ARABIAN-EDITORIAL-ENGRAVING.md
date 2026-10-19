@@ -13,8 +13,8 @@ Evidence words used below, weakest first:
 - **direction** — an approved decision recorded here, not yet a rendered fact.
 - **source** — read from the repository.
 - **rendered** — measured in a browser against a real build.
-- **pending reference** — stated from the approved direction, awaiting confirmation against the canonical
-  screenshots (§2).
+- **reference** — observed or measured in the canonical screenshots (§2). A reference statement is about
+  what the approved footer looks like; it is never an accessibility or performance result.
 
 ---
 
@@ -26,12 +26,12 @@ line-based shading, in the manner of a 19th-century copperplate landscape plate.
 | Dimension | The direction |
 | --- | --- |
 | Technique | Etching, cross-hatching, stippling, line-based shading. Tone comes from line density, never from a soft airbrushed gradient. |
-| Ink | Deep indigo. |
-| Paper | Pale, slightly cool printed surface, with restrained grain. Not warm parchment. |
+| Ink | Deep indigo by day. At night the same indigo family, re-lit: the plate goes to near-black silhouettes against a slightly lighter sky. |
+| Paper | Pale, slightly cool printed surface by day, with restrained grain. Not warm parchment. In dark mode the sheet is the dark `accent`, and the grain stays. |
 | Subject | Arabian dunes, sandstone mesas, oasis water, palms, expansive skies. Figures (a small caravan) read at the scale of staffage, not as a focal subject. |
 | Composition | Spacious contemporary editorial. Generous empty sky, a low horizon, clear space around text and navigation. |
 | Typography | The site's existing type system, unchanged. The direction adds no display face and no lettering inside the art. |
-| Themes | The same pale printed surface in light and dark. Dark mode dims the sheet; it never inverts it. |
+| Themes | **One scene, two plates: day and evening.** Each theme gets its own plate of the same landscape, inked in that theme's values of the same tokens. Never an inversion of one plate into the other. |
 | Frequency | Selective illustration and page framing. A shared decorative vocabulary, not illustration in every section. |
 
 **This direction supersedes earlier suggestions** of bright-blue woodcuts, mandatory warm parchment and
@@ -44,50 +44,97 @@ and in the Figma working file. *(source: PR #432 description, "The PR went throu
 - **Engraving rather than flat vector or photography.** Line density is a tonal system, so one plate holds
   foreground, middle distance and sky without colour; it sits beside a token-driven interface without
   competing with it for colour meaning.
-- **One pale sheet in both themes.** An engraving inverted for dark mode reads as a photographic negative —
-  the lines become light-on-dark, which is a different printing process and a different object. Dimming
-  preserves the object. *(source: `apps/web/src/components/site-footer.tsx` on PR #432 carries this
-  reasoning at the component; its implementation is `dark:brightness-[0.85]` over `.kx-print-surface`.)*
+- **Two plates rather than one inverted plate.** An engraving inverted for dark mode reads as a
+  photographic negative: the lines become light-on-dark, which is a different printing process and a
+  different object. The rule that matters is **never invert**; the way to honour it in dark mode is a second
+  plate of the same scene at night, not a filter over the first. Dimming one pale sheet was the earlier
+  reading of the same rule, and the evening plate replaces it — see §2's note on what that supersedes.
+  *(direction, decided 2026-10-19; shipped by PR #435, merged to `main` as `295dae91`.)*
 - **Spacious composition.** Decoration earns its place by giving editorial surfaces air, not by filling
   them. Empty sky is where the bottom bar and the headings sit.
 
 ## 2. Canonical visual references
 
-The canonical references are Ziad's two approved footer screenshots, **`azink-1440.png`** (light) and
-**`azink-dark-1440.png`** (dark).
+The canonical reference for **light mode** is Ziad's approved footer screenshot **`azink-1440.png`**,
+supplied on 2026-10-19 and read. It shows the footer at a 1440px viewport and is what later light surfaces
+are compared against.
 
-**Those two files are not in this repository, in the project's shared folder, or otherwise available to the
-session that wrote this document.** Everything in §1 and §3 that describes the approved footer is therefore
-grounded in the repository instead — the plate masters and the footer implementation on the open PR #432
-branch `claude/footer-arabian-illustration` — and any statement here that depends on the rendered page at
-1440px rather than on those files is marked **pending reference**.
+**Dark mode has no canonical screenshot yet.** `azink-dark-1440.png` was supplied in the same batch, but it
+shows the dimmed-pale-sheet treatment that the evening plate replaces (see "What the dark screenshot now
+documents" below), so it is a record of a superseded treatment, not a reference. Until an approved dark
+screenshot of the evening footer exists, dark-mode statements in this document are **source** — read from
+the plate and the component — and never **reference**.
+
+What the light screenshot establishes, as measurements taken from the images rather than from a browser
+session:
+
+- **The paper is `accent`.** The plain panel samples `#f0f7ff` in the light screenshot — `blue.50`, the
+  value §3 records from source. The sheet is pale and slightly cool, not warm. *(reference)*
+- **Neither plate is an inversion of the other.** This is the rule that outlives any one treatment, and it
+  is cheap to re-check on a future surface: sample both themes at the same points and compare. On the two
+  supplied screenshots, 11,454 random colour channels gave the dark image as a uniform **0.850×** the light
+  one with **not one channel lighter in dark mode** — that is a dim, which is also not an inversion. The
+  evening plate satisfies the rule a different way: it is a separate drawing of the same scene at night,
+  so no pixel of it is derived from the light plate at all. *(reference, for the dim; source, for the
+  evening plate.)*
+- **The grain is present and restrained.** Rows of plain paper carry a standard deviation of about 0.5 of
+  255 — visible as texture, far below anything that would disturb the type on it. *(reference)*
+- **The composition matches §1.** Low horizon, open cloud band, palms and oasis pool centred, flat-topped
+  mesas across the middle distance, a small caravan at the left, cross-hatched dunes in the foreground.
+  Tone is carried by line density throughout; there is no soft gradient in the art. *(reference)*
+- **Text sits on paper, not on line work.** The four link columns, the tagline and the mark are all on the
+  plain panel above the plate; the plate fades in beneath the divider, so the copyright and credit bar sits
+  in the empty sky rather than over the engraving. *(reference)*
+
+These are visual observations. They are **not** accessibility or performance results: contrast ratios, axe
+runs, layout-shift and payload figures come from the measurements PR #432 and #434 record, and §3 and §5
+keep them separate on purpose.
+
+### What the dark screenshot now documents
+
+`azink-dark-1440.png` shows the footer as it was before PR #435: one pale plate, dimmed to 85% in dark
+mode, with `.kx-print-surface` pinning the footer's tokens to their light aliases. `main` no longer renders
+that — PR #435 merged as `295dae91` on 2026-10-19. Keep the file as the record of what the first reading of
+"never invert" looked like, but do not compare a new dark surface to it.
 
 Repository-side references, in priority order:
 
-1. `design-assets/kinetixui-footer-arabian-landscape.png` — the 2880×960 master plate. *(source, PR #432)*
-2. `design-assets/kinetixui-footer-arabian-engraving.png`, `…-panorama.png`, `…-panorama.webp` — companion
-   masters. *(source, PR #432)*
-3. `apps/web/public/footer/arabian-landscape-{960,1920,2880}.webp` and `paper-grain.webp` — the shipped
-   derivatives. *(source, PR #432)*
-4. The Figma working file, which keeps every version including the superseded directions.
+1. `design-assets/kinetixui-footer-arabian-landscape.png` — the master day plate. *(source)*
+2. `design-assets/kinetixui-footer-arabian-landscape-evening.png` — the master evening plate, and
+   `design-assets/source/oasis-engraving-source-1920.png`, the untinted engraving both are inked from.
+   *(source, on `main` since `295dae91`.)*
+3. `design-assets/kinetixui-footer-arabian-engraving.png`, `…-panorama.png`, `…-panorama.webp` — companion
+   masters. *(source)*
+4. `apps/web/public/footer/arabian-landscape-*.webp`, `arabian-landscape-evening-*.webp` and
+   `paper-grain.webp` — the shipped derivatives, the evening set and the 3840/5760 widths included.
+   *(source)*
+5. The Figma working file, which keeps every version including the superseded directions.
 
-When the two screenshots are attached, they become the canonical pair and this section is updated to say so;
-the repository assets stay as the production source of truth for the plate itself.
+An approved screenshot is the canonical reference for what the direction *looks like*; the repository
+assets stay the production source of truth for the plates themselves.
 
 ## 3. The approved footer as the baseline
 
-The footer on PR #432 is the first and, as of this document, the only surface carrying the direction. It is
-the baseline every later surface is measured against. Recorded here so later work does not re-derive it:
+The site footer, merged to `main` as `da03a56` (PR #432) on 2026-10-19, is the first and, as of this
+document, the only surface carrying the direction. It is the baseline every later surface is measured
+against.
+
+Its dark half changed the same day: PR #435 merged as `295dae91` on 2026-10-19 and replaced the dimmed pale
+sheet with the evening plate. The rows below record the current state, and mark the superseded one where
+knowing it still matters. Recorded here so later work does not re-derive it:
 
 | Element | How it is made | Evidence |
 | --- | --- | --- |
 | Paper | The `accent` semantic token — `blue.50` `#f0f7ff`, a pale cool white — as the footer panel, with the plate printed on that same paper so the engraved sky runs into the link area. | source |
 | Ink | The `azure` ramp that `primary` comes from: `azure.1000` `#0f172a` and `azure.950` `#172554` for the ink, `azure.900` `#1e3a8a` for mid-tones. Baked into the image; the component carries no hex value. | source |
 | Grain | One seamless 384px tile blended `overlay` across the whole footer, so panel and plate read as one sheet. | source |
-| Theme behavior | `.kx-print-surface` re-points `foreground`, `primary`, `primary-foreground`, `border`, `ring`, `accent` and `surface-grouped` to their light-theme aliases inside the footer; dark mode dims to 85%. No token value changes, no token is added. | source |
+| Theme behavior | Two plates: the day plate is `dark:hidden`, the evening plate `hidden dark:block`, each `object-cover object-bottom`. Dark mode's paper is the dark `accent` — `blue.700` `#102432` — over the dark `background` `blue.900` `#050c11`, with the footer's tokens resolving normally. No token value changes, no token is added. | source (`main` at `295dae91`) |
+| Theme behavior, superseded | PR #432 shipped `.kx-print-surface`, which re-pointed `foreground`, `primary`, `primary-foreground`, `border`, `ring`, `accent` and `surface-grouped` to their light-theme aliases inside the footer, and dimmed dark mode to 85%. PR #435 removed both the class and the dim. Recorded because the gate work in PR #434 was written against it. | source |
 | Accessibility | The plate is an `aria-hidden` `<img alt="">` — out of the accessibility tree, out of selection, out of contrast audits. Text sits on the paper, not on the art. | source |
 | Subject | Palm grove, oasis pool, flat-topped sandstone mesas, cross-hatched dunes, a small camel caravan at left, a wide cloud band over an open sky. The oasis sits in the middle 30–70% of the plate so phone crops keep it. | source (master plate + component comment) |
-| Rendered behavior at 1440 | **pending reference** — PR #432 records Chromium checks at 1440/768/390, light and dark, LTR and RTL, with no horizontal overflow, no axe violation and CLS delta 0.0000. This document does not re-verify them. | pending reference |
+| Appearance at 1440, light | The canonical screenshot confirms it: paper `#f0f7ff`, grain present at about 0.5/255 on plain paper, the plate fading in below the divider so the bottom bar sits in open sky. §2 has the measurements. | reference |
+| Appearance at 1440, dark | No approved screenshot of the evening footer yet; the dark one in hand shows the superseded dim (§2). Read from the plate instead: the same oasis scene at night, near-black silhouettes, the cloud band still legible and the caravan still readable at left. Sampled from `arabian-landscape-evening-1920.webp`: sky top `(15,36,50)`, horizon `(10,18,24)`, foreground land `(5,15,21)`, water `(13,25,32)`. | source (the plate, not a reference) |
+| Accessibility and performance results | PR #432 records Chromium checks at 1440/768/390, light and dark, LTR and RTL, with no horizontal overflow, no axe violation and CLS delta 0.0000; PR #434 re-measures contrast, tree, layout and motion through `check:engraving`. **The screenshots do not establish any of these** and this document does not re-verify them. | source (those PRs' records) |
 
 ## 4. What the direction does not touch
 
@@ -150,7 +197,9 @@ Recorded so that adopting it is never read as relaxing anything:
 1. Name the surface and the reason decoration helps it. "It would look nicer" is not a reason; "this page is
    a wall of text and needs an editorial break" is.
 2. Reuse an existing plate or crop before commissioning a new one.
-3. Print it on the same pale paper, in the same indigo ink, with the same grain.
+3. Print it on the same pale paper, in the same indigo ink, with the same grain — and, where the surface
+   carries art in both themes, give dark its own plate of the same scene rather than a filter over the light
+   one.
 4. Keep the text off the line work; measure contrast against the paper.
 5. Check light, dark, RTL, 390/768/1440 and 200% text.
 6. Confirm the page weight cost, and that the art lazy-loads.
@@ -161,7 +210,7 @@ Recorded so that adopting it is never read as relaxing anything:
 | Stage | What | Status |
 | --- | --- | --- |
 | 1 | Establish documentation and canonical references — this document and Claude instructions §28. | In progress (this change). |
-| 2 | Validate the approved footer as the baseline. | Not started. PR #432 is open and unmerged; validation against the canonical screenshots is stage 2's work, not stage 1's. |
+| 2 | Validate the approved footer as the baseline. | Light: done. PR #432 merged to `main` as `da03a56` on 2026-10-19 and its appearance is confirmed against `azink-1440.png`. Dark: the evening plate is on `main` as `295dae91`, but validation is reopened — it still needs an approved dark screenshot to confirm against. |
 | 3 | Pilot **one** restrained homepage accent. | Not started. One accent, one measurement, one decision. |
 | 4 | Extend selectively to marketing and editorial surfaces. | Not started. |
 | 5 | Consider minimal documentation and catalogue framing, **after** the overlapping catalogue work (CAT-1 #413, CAT-QF #428, CAT-2 #430) is reconciled. | Not started, and explicitly blocked on that reconciliation. |
@@ -171,11 +220,15 @@ started because the previous one landed.
 
 ## 9. Open questions
 
-- The two canonical screenshots are not yet available to this repository's agents (§2). Until they are, every
-  **pending reference** line above is unconfirmed.
 - Whether the direction gets a gate of its own (for example, one that fails if decorative art enters the
   accessibility tree, or if a decorative surface ships without a dark-mode check) is a stage-3 question, not
   a stage-1 one.
+- An approved dark screenshot of the evening footer is still needed before any dark-mode statement here can
+  become **reference** rather than **source**.
+- PR #434 (`.kx-paper`, `check:engraving`) was written against the dimmed-sheet footer and changes
+  `apps/web/src/components/site-footer.tsx` and `globals.css`, both of which PR #435 has now rewritten on
+  `main`. #434 needs reconciling: `.kx-paper` still carries the dark dim, and its `check:engraving`
+  assertions were measured through the removed filter.
 
 ---
 
