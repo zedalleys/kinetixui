@@ -212,6 +212,28 @@ Use this for the "ours, today" paragraph. Core v0.24.0 MIT, with
 | Blocks | 20, on all five platforms |
 | npm | `ui`, `cli`, `tokens` at 0.24.0; `angular` at **0.25.0 — published, still preview**; `iot` at 0.5.0 — each non-core package versioned independently |
 
+## Re-derived 2026-10-18 (M4), beside the 2026-10-09 snapshot above, not over it
+
+The table above is the state on 2026-10-09 and stays as written; it is what ART-001 was checked against. These are
+today's figures from `pnpm marketing:stats` on `main` @ `984792b`, for anything posted from 19 October onward:
+
+| | 2026-10-09 | 2026-10-18 |
+| --- | --- | --- |
+| Catalogue entries | 98 (97 + 1 recipe) | 109 (108 + 1 recipe) |
+| React | 98 / 98 | 109 / 109 |
+| Angular | 64 / 98 — preview | 80 / 109 — still **preview**, `catalogComplete: false` |
+| SwiftUI / Compose / Flutter | 90 / 98 each | 90 / 109 each |
+| On all four catalogue-complete platforms | 90 / 98 | 90 / 109 |
+| Documented exceptions | 8 | 19 |
+| Blocks | 20 | 21 |
+| npm | `angular` 0.25.0 | `angular` **0.25.1** (published 2026-10-11); core `ui`, `cli`, `tokens` 0.24.0 and `iot` 0.5.0 unchanged |
+
+`verify-package.mjs` flags the `0.25.0` strings in this file and in `publish-checklist.md` as versions no package
+has. Both sit inside dated snapshots and are left alone on purpose; this block is the correction. The same run also
+flags ART-001's own "today" paragraph (six lines) and the "a hundred-odd" bound at 113 demo keys — see
+[`../m3/ART-001-CORRECTION.md`](../m3/ART-001-CORRECTION.md). None of them appears in the pinned LI-001 or X-001
+copy, which quotes historical figures only.
+
 Snippet migration, counted directly (not covered by `marketing:stats`). Re-counted 2026-10-09 with the
 parser in `verify-package.mjs` (top-level demo keys; `swift`/`kotlin`/`dart` keys as native snippets):
 
