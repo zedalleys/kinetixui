@@ -237,7 +237,7 @@ Full entries, with reproduction steps and proposed fixes, are in
 | 005 | Data Grid cropped, hard to read | **REPRODUCED, different cause** | real clipping is only 9px; the grid sits in its own scroll container, so the card shows part of it with no scrollbar to say so, and every cell renders at **10.1px** after `scale(0.72)` |
 | 006 | Footer thumbnail is skeleton bars | **REPRODUCED** | `FooterMock` draws 11 grey bars under 3 grey heading bars and renders **no text at all** (no text node was measurable in the frame) |
 | 007 | Data Table thumbnail is skeleton bars | **REPRODUCED** | `TableMock` has three 12px header words and **9 grey bars** for the cells; `table` and `data-table` share the same mock — 0.50% of pixels differ |
-| 008 | Dialog vs Alert Dialog not differentiated | **REPRODUCED** | **3.51%** of pixels differ. Four pairs are worse: popover/hover-card 0.40%, table/data-table 0.50%, dropdown/context-menu 1.20%, dialog/modal 2.76% |
+| 008 | Dialog vs Alert Dialog not differentiated | **REPRODUCED** | **3.51%** of pixels differ. Four pairs are worse: popover/hover-card 0.40%, table/data-table 0.50%, dropdown/context-menu 0.65%, dialog/modal 2.21% |
 | 009 | Input previews have excessive empty space | **REPRODUCED** | detail stage is `min-h-[350px]`: Input fills 7%, Toggle **1%** (314px slack), Label 2%, Button 1% |
 | 010 | Preview/Code tabs touch the panel border | **REPRODUCED** | control inset is **1px** top and start — the panel's own border width. Its 12px radius sits inside the panel's 16px radius |
 | 011 | Preview toolbar spacing inconsistent | **REPRODUCED** | one panel, three horizontal insets: **1px** (Preview/Code), **12px** (`px-3` environment toolbar), **24/40px** (`p-6 sm:p-10` stage) |
@@ -287,8 +287,8 @@ On the detail panel, the fix is a shared one, not a page-specific margin. The Pr
 a direct child of the panel with no padding; the panel is a `rounded-xl border` box. Giving the panel's control row
 the same inset as the environment toolbar (`px-3 py-2` = 12px/8px, both multiples of 8 in the existing scale) makes
 all three regions agree and keeps the control's 12px radius clear of the 16px panel corner. Measured, nothing else
-is wrong with it: the control mirrors correctly in RTL (start inset 1px → 563.3px), is unchanged under forced
-colors and reduced motion, and grows to 44px targets on touch.
+is wrong with it: the control mirrors correctly in RTL (inline start 1px and inline end 563.3px, the same pair of
+numbers as LTR), is unchanged under forced colors and reduced motion, and grows to 44px targets on touch.
 
 ## 8. State coverage
 
@@ -359,6 +359,17 @@ What the numbers are: Chromium 1194 (headless), one machine, production build of
 by `next start`. Viewports 320/390/768/1280; light, dark, RTL, 200% text (CDP `Page.setFontSizes`, standard 32),
 forced colors and reduced motion. Geometry from `getBoundingClientRect`; clipping measured against the nearest
 clipping ancestor; ink from decoded PNG screenshots of each thumbnail.
+
+Re-measured 2026-10-19, after review found five defects in the measuring script itself (RTL insets taken from the
+physical left edge, text under an `overflow` root skipped before the font measurement, the environment toolbar
+selected as whatever wrapped the Preview/Code control, each `/blocks` showcase counted twice through an
+ID-bearing ancestor, and cards screenshotted wherever Playwright's scroll left them, which can paint the sticky
+filter bar into the frame). Three numbers in this document moved, all in the direction of the defects being
+*worse* than first reported, and they are corrected above: `dropdown-menu`/`context-menu` 1.20% → **0.65%**,
+`dialog`/`modal` 2.76% → **2.21%**, and the RTL control inset, which is 1px at the inline start exactly as in LTR
+rather than the 563.3px the old probe printed. Everything else held: 21 showcases on /blocks (not 22), the
+environment toolbar's own 12px/8px inset now reproducible rather than asserted, `footer` still with no measurable
+text at all, and `table`'s three 12px header words now visible to the instrument that had been skipping them.
 
 Limits, stated rather than papered over:
 

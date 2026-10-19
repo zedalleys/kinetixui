@@ -165,9 +165,9 @@ browser zoom, and no committed baseline — every number is one run.
 ## CAT-BUG-008 — Dialog and Alert Dialog thumbnails are the same picture
 
 - **Surface:** `/components`, cards `dialog`, `alert-dialog`, `modal`.
-- **Evidence:** `dialog` vs `alert-dialog` **3.51%** of pixels differ; `dialog` vs `modal` 2.76%. Both render
+- **Evidence:** `dialog` vs `alert-dialog` **3.51%** of pixels differ; `dialog` vs `modal` 2.21%. Both render
   `DialogMock`, which varies only its title and primary-button text (`danger` prop). Four pairs are worse:
-  `popover`/`hover-card` **0.40%**, `table`/`data-table` **0.50%**, `dropdown-menu`/`context-menu` **1.20%**,
+  `popover`/`hover-card` **0.40%**, `table`/`data-table` **0.50%**, `dropdown-menu`/`context-menu` **0.65%**,
   `sheet`/`drawer` 7.85%.
 - **Root cause:** shared mocks parameterised by copy rather than by what actually differs between the components.
 - **User impact:** the gallery cannot be scanned; the cards do not teach which component to pick.
@@ -210,7 +210,8 @@ browser zoom, and no committed baseline — every number is one run.
 - **Regression requirement:** a gate asserting a minimum inset between the panel border and every control inside
   it, in LTR and RTL.
 - **Verification requirement:** rendered measurement at the four viewports, LTR and RTL. Already confirmed not a
-  defect: the control mirrors correctly in RTL (start inset 1px → 563.3px) and is unchanged under forced colors
+  defect: the control mirrors correctly in RTL (inline start 1px, inline end 563.3px, the same pair as LTR) and is
+  unchanged under forced colors
   and reduced motion, and its segments grow to 44px on touch.
 - **Status:** REPRODUCED · **Slice:** CAT-4
 
