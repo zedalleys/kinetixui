@@ -117,16 +117,30 @@ export function SiteFooter() {
         </div>
       </div>
 
-      {/* Decorative panorama — a background, not an <img>, so it stays out of the accessibility tree. Its height
-          tracks the artwork's ~4:1 ratio and is floored for phones, where `cover` crops the edges (the artwork keeps
-          its village and caravan away from them for that reason). It is pulled up under the bottom bar so the bar
-          sits in the print's empty sky, and the top is masked so the paper grain fades into the flat panel rather
-          than starting on a hard line. */}
+      {/* Decorative panorama — an <img alt=""> rather than a CSS background so it can lazy-load: the footer is on
+          every route, and a background is fetched as soon as styles resolve, even for a visitor who never scrolls
+          this far. Its height tracks the artwork's ~4:1 ratio and is floored for phones, where `object-cover` crops
+          the edges (the artwork keeps its village and caravan away from them for that reason), so `sizes` floors
+          at the ~890px a 220px-tall crop is wide. It is pulled up under the bottom bar so the bar sits in the
+          print's empty sky, and the top is masked so the paper grain fades into the flat panel rather than
+          starting on a hard line. */}
       <div
         aria-hidden
-        className="-mt-[7vw] h-[clamp(220px,25vw,640px)] bg-cover bg-[position:66%_100%] bg-no-repeat sm:bg-bottom [mask-image:linear-gradient(to_bottom,transparent,#000_18%)]"
-        style={{ backgroundImage: "url(/footer/arabian-panorama.webp)" }}
-      />
+        className="-mt-[7vw] h-[clamp(220px,25vw,640px)] [mask-image:linear-gradient(to_bottom,transparent,#000_18%)]"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- a static decorative image with its own srcset; no optimisation to gain */}
+        <img
+          src="/footer/arabian-panorama.webp"
+          srcSet="/footer/arabian-panorama-1032.webp 1032w, /footer/arabian-panorama.webp 2064w"
+          sizes="max(100vw, 890px)"
+          alt=""
+          width={2064}
+          height={512}
+          loading="lazy"
+          decoding="async"
+          className="size-full object-cover object-[66%_100%] sm:object-bottom"
+        />
+      </div>
     </footer>
   );
 }
