@@ -1,8 +1,10 @@
 ---
 type: rolling 14-day execution calendar
 window: Monday 2026-10-19 to Sunday 2026-11-01
-status: proposed. Only LI-001 is approved (editorially, 2026-10-18); nothing is scheduled, and no tool posts
-  anything. Every other slot waits on the owner's approval of that asset; the dates are a plan, not a commitment
+status: proposed. Only LI-001 is approved (editorially, 2026-10-18) and its attribution stop gate closed
+  2026-10-18 19:07 UTC; nothing is scheduled, and no tool posts anything. Every other slot waits on the owner's
+  approval of that asset; the dates are a plan, not a commitment
+queue: the per-asset M4 packet for this week's four posts is ./M4-PUBLICATION-QUEUE.md
 ---
 
 # Rolling 14-day execution calendar
@@ -36,7 +38,7 @@ and blockers from the registers.
 
 | Date | Time (UTC / UTC+3) | Asset | Channel | Audience | Objective | Destination | Approval | Required assets | Dependencies | Tracking (`utm_campaign` / `utm_content`) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Mon 19 Oct | 14:00 / 17:00 | **LI-001** | LinkedIn | P1 | Awareness: carry ART-001's parity argument to LinkedIn | dev.to article in body; `/docs/platforms` in first comment | APPROVED 2026-10-18 (editorial only; the owner posts it by hand) | none (ships without a visual) | a01 stop gate still OPEN (re-checked in PostHog 2026-10-18 ~10:00 UTC, M3: no diagnostic event yet; **corrected 13:00 UTC**: the visit arrived at 10:30 UTC but with `kx_source=other`, not `linkedin`, see the packet §4; gate BLOCKED pending the M3.1 attribution fix): source and local-browser checks pass, but no PostHog event yet. Owner opens the tagged link once with `&kx_traffic=diagnostic` on kinetixui.com and the event is confirmed in PostHog before posting. Packet: [`../content/drafts/m2/LI-001-publish-packet.md`](../content/drafts/m2/LI-001-publish-packet.md) | `kx_p1_a_parity_proof` / `li_primary` |
+| Mon 19 Oct | 14:00 / 17:00 | **LI-001** | LinkedIn | P1 | Awareness: carry ART-001's parity argument to LinkedIn | dev.to article in body; `/docs/platforms` in first comment | APPROVED 2026-10-18 (editorial only; the owner posts it by hand) | none (ships without a visual) | a01 stop gate **CLOSED 2026-10-18 19:07 UTC**: the owner's second diagnostic visit arrived in PostHog as `linkedin / social / kx_p1_a_parity_proof / li_primary`, landing `/docs/platforms`, marked diagnostic. The history stays in the packet §4: the 10:00 UTC check found no event, the 10:30 UTC visit arrived with `kx_source=other`, and that anomaly's cause is still unknown (the passing visit was Chrome on macOS, the failing one iOS Safari, and nothing was deployed between them). Open item: the ART-001 decision in §5. Packet: [`../content/drafts/m2/LI-001-publish-packet.md`](../content/drafts/m2/LI-001-publish-packet.md) | `kx_p1_a_parity_proof` / `li_primary` |
 | Tue 20 Oct | 15:00 / 18:00 | **X-001** | X | P1 | Awareness: the same argument as a thread | dev.to in post 9; `/docs/platforms` as reply | READY FOR REVIEW ([decision](../content/drafts/m3/APPROVAL-QUEUE-2026-10-20.md#1-x-001--x-thread--tue-20-oct-1500-utc)) | none | LI-001 posted the day before | `kx_p1_a_parity_proof` / `x_thread` |
 | Wed 21 Oct | 13:00 / 16:00 | **GH-001** | GitHub | neutral | Evaluation: a one-screen status note for visitors arriving from posts | `/docs/platforms` | DRAFTED | none | Owner enables Discussions (disabled on 2026-10-17); numbers re-derived on the day | `kx_neutral_g_project_status` / `gh_discussion` |
 | Thu 22 Oct | 14:00 / 17:00 | **LI-008** | LinkedIn | P1 | Evaluation: fractions, not ticks | `/docs/platforms` | READY FOR REVIEW | VIS-006 (regenerated 2026-10-17) | Owner approval; re-run `pnpm marketing:stats` | `kx_p1_d_partial_evidence` / `li_primary` |
