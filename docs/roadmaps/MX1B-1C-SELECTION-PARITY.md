@@ -54,10 +54,10 @@ The milestones are those in MX1B-1-PLAN §6:
 
 | Component | React | Angular (Preview) | SwiftUI | Compose | Flutter |
 | --- | --- | --- | --- | --- | --- |
-| Toggle | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓† ○ | ○ ○ ○ | ○ ○ ○ |
-| ToggleGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓‡ ✓† ○ | ○ ○ ○ | ○ ○ ○ |
-| Checkbox | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓† ○ | ○ ○ ○ | ○ ○ ○ |
-| RadioGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓† ○ | ○ ○ ○ | ○ ○ ○ |
+| Toggle | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓[1] ○ | ○ ○ ○ | ○ ○ ○ |
+| ToggleGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓[2] ✓[1] ○ | ○ ○ ○ | ○ ○ ○ |
+| Checkbox | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓[1] ○ | ○ ○ ○ | ○ ○ ○ |
+| RadioGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓[1] ○ | ○ ○ ○ | ○ ○ ○ |
 | Switch | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓ ○ | ○ (thumb only) ✓ ○ | ✓ ✓ ○ |
 
 Angular's five cells moved in MX1b-2 (PR for this slice): each component now uses its role's pairing and is
@@ -65,16 +65,18 @@ a contract consumer (Impl), `scripts/angular-selection-motion.mjs` fails on nine
 and that gate drives the package as a live Angular application in Chromium rather than in jsdom (Runtime).
 Angular stays Preview: these are motion and accessibility cells, not a graduation.
 
-MX1d moved the four SwiftUI selection-state cells (2026-10-18). What each tick means there:
+MX1d moved the four SwiftUI selection-state cells (2026-10-18). Footnote numbers are scoped by platform —
+SwiftUI owns [1] and [2], Compose [3] and [4], Flutter [5] and [6] — so the three columns can land in either
+order without two notes claiming the same marker. What each tick means here:
 
 - **Impl ✓** — the control reads `KinetixSelectionMotion` (`fast` · `standard`), which is a
   `selection-state` consumer in `tokens/contracts/motion.json`.
-- **Auto ✓†** — `check:motion-tokens` and `check:native-motion` both fail on a negative control that was
+- **Auto ✓[1]** — `check:motion-tokens` and `check:native-motion` both fail on a negative control that was
   watched to fire (retime the helper to `instant`; delete the family's test; name one direction only;
-  unroute Checkbox from the helper). The dagger is the honest part: the XCTest suites are run by
+  unroute Checkbox from the helper). The marker is the honest part: the XCTest suites are run by
   `native-swiftui.yml`, but **their** negative controls were not demonstrated — there is no Swift toolchain
   on the dev box, so "removing the mixed announcement makes a test fail" is reasoning, not an observation.
-- **‡** — ToggleGroup is a pass-through to Toggle and animates nothing itself, which is also why it is not
+- **[2]** — ToggleGroup is a pass-through to Toggle and animates nothing itself, which is also why it is not
   a declared member of the motion family.
 - **Runtime ○** — no iOS Simulator or device job exists. `swift build` and `swift test` on the macOS runner
   are Build verified; neither renders.
