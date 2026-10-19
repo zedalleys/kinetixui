@@ -43,6 +43,8 @@
     "gen:flagship": "node scripts/gen-flagship-examples.mjs",
     "check:flagship-examples": "node scripts/gen-flagship-examples.mjs --check",
     "check:a11y-browser": "node scripts/a11y-browser.mjs",
+    "check:story-ids": "node scripts/check-story-ids.mjs",
+    "check:story-id-controls": "node scripts/check-story-id-negative-controls.mjs",
     "check:large-text": "node scripts/large-text.mjs",
     "check:motion": "node scripts/motion.mjs",
     "check:loop-motion": "node scripts/loop-motion.mjs",

@@ -53,6 +53,7 @@ import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { PERCEPTIBLE_MS, SUPPRESSED_MS } from "./motion-states.mjs";
 import { buildAngularSubject, waitForAngular, contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
 import { gate } from "./visual-gates.mjs";
+import { storyId } from "./story-id.mjs";
 
 // The platforms come from visual-gates.mjs — the registry the Angular graduation guard reads — so the two
 // cannot disagree about what this gate measures.
@@ -76,9 +77,9 @@ if (PLATFORMS.includes("React") && !existsSync(join(staticDir, "index.json"))) {
 if (PLATFORMS.includes("React")) assertUiDistMatchesSource("card-visual");
 
 const STORY = {
-  default: "data-display-card--default",
-  grouped: "data-display-card--grouped",
-  interactive: "data-display-card--interactive",
+  default: storyId("card", "Default"),
+  grouped: storyId("card", "Grouped"),
+  interactive: storyId("card", "Interactive"),
 };
 if (PLATFORMS.includes("React")) {
   const index = JSON.parse(readFileSync(join(staticDir, "index.json"), "utf8"));

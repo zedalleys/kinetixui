@@ -60,6 +60,7 @@ import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { PERCEPTIBLE_MS, SUPPRESSED_MS } from "./motion-states.mjs";
 import { buildAngularSubject, waitForAngular, contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
 import { gate } from "./visual-gates.mjs";
+import { storyId } from "./story-id.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 // The platforms this gate measures are the ones visual-gates.mjs says it covers — the registry the Angular
@@ -81,11 +82,11 @@ const PAD = 12;
 /* ── subjects ─────────────────────────────────────────────────────────── */
 
 const STORY = {
-  checkbox: "form-inputs-checkbox--states",
-  radio: "form-inputs-radiogroup--states",
-  switch: "form-inputs-switch--states",
-  segment: "controls-actions-segmentedcontrol--states",
-  direction: "form-inputs-switch--direction",
+  checkbox: storyId("checkbox", "States"),
+  radio: storyId("radio-group", "States"),
+  switch: storyId("switch", "States"),
+  segment: storyId("segmented-control", "States"),
+  direction: storyId("switch", "Direction"),
 };
 
 /**

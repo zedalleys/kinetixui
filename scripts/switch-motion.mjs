@@ -37,6 +37,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { serveStatic } from "./visual-harness.mjs";
+import { storyId } from "./story-id.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -52,7 +53,7 @@ const INSTANT_MS = ms("instant");
 const STANDARD = `cubic-bezier(${motion.easing.standard.$value.join(", ")})`;
 const SETTLE = INSTANT_MS + 150;
 
-const STORY = { motion: "form-inputs-switch--motion", states: "form-inputs-switch--states" };
+const STORY = { motion: storyId("switch", "Motion"), states: storyId("switch", "States") };
 const HOVER = /rgba\([^)]*,\s*0\.08\)/;
 const PRESS = /rgba\([^)]*,\s*0\.14\)/;
 
