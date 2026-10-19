@@ -897,19 +897,6 @@
       linear-gradient(var(--tc) 0 0) 100% 100% / 1px var(--tl) no-repeat;
   }
 
-  /* a surface that is always light, whatever the theme — the engraved parchment footer. It re-points the
-     semantic tokens it uses to their light-theme aliases (the same primitives `:root` assigns them), so
-     `.dark` cannot flip them to the light-on-dark values while the paper underneath stays light. */
-  .kx-print-surface {
-    --foreground: var(--blue-900);
-    --primary: var(--azure-700);
-    --primary-foreground: var(--blue-50);
-    --border: var(--blue-100);
-    --ring: var(--azure-700);
-    --accent: var(--blue-50);
-    --surface-grouped: var(--neutral-100);
-  }
-
   /*
    * ── Arabian Editorial Engraving: decorative primitives ─────────────────────────────────────────────
    *
@@ -926,14 +913,19 @@
    */
 
   /*
-   * The printed sheet. `.kx-print-surface` says which tokens stay light; this says what the paper looks
-   * like — the pale cool `accent` panel, the grain over all of it, and the dark-mode dim.
+   * The printed sheet: the pale cool `accent` panel with the grain over all of it.
    *
-   * The three numbers are the footer's, unchanged: one seamless 384px tile at 0.22, blended `overlay`
+   * It carries no theme branch of its own. PR #435 gave the footer a second plate drawn for the dark
+   * theme, so the sheet is no longer one pale print that dark mode has to do something to — `accent` and
+   * `foreground` simply resolve per theme and the plate on top is the one inked for that theme. The dark
+   * rule this class used to carry (`filter: brightness(0.85)`, with `.kx-print-surface` pinning the
+   * footer's tokens light so there was something to dim) is gone with the treatment it belonged to. A
+   * surface that needs a dark treatment supplies dark artwork, the way the footer now does; it does not
+   * dim the light one, and it never inverts it, which is §5 of the direction.
+   *
+   * The two grain numbers are the footer's, unchanged: one seamless 384px tile at 0.22, blended `overlay`
    * (neutral on average against mid-grey, so it textures the sheet without dulling it). They were inline
    * on `site-footer.tsx`; a second surface would have copied them, and the copies would have drifted.
-   * Dark mode dims the sheet to 85% rather than inverting it — an inverted engraving is light-on-dark
-   * line work, which is a different printing process and a different object.
    */
   .kx-paper {
     position: relative;
@@ -950,9 +942,6 @@
     background-size: 384px;
     opacity: 0.22;
     mix-blend-mode: overlay;
-  }
-  .dark .kx-paper {
-    filter: brightness(0.85);
   }
 
   /* vertical margin rules at a container's edges — graph-paper structure */

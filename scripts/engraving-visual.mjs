@@ -22,9 +22,12 @@
  *
  *   ships    `.kx-paper` survives Tailwind's content scan into the built stylesheet. A primitive nothing
  *            names is removed from the bundle, so "it is in globals.css" is not evidence that it ships.
- *   paper    dark mode DIMS the sheet and does not invert it: the dark footer is darker than the light
+ *            The same row requires `.kx-print-surface` to stay absent, since PR #435 removed it.
+ *   paper    the sheet follows the theme and does not invert: the dark footer is darker than the light
  *            footer, and still lighter than the dark page around it. An inverted engraving would put the
  *            footer below the page, which is the failure this row exists to catch.
+ *   leak     `.kx-paper` is on the surfaces that print on the direction and nowhere else — not on a
+ *            component preview, a chart, an interactive docs example or any functional control.
  *   grain    the 384px tile actually paints — a patch of plain paper, away from text and away from the
  *            plate, varies pixel to pixel. Its negative control removes `.kx-paper::before` and requires
  *            the same patch to go flat, so a run cannot pass with the grain silently gone.
@@ -56,26 +59,22 @@ const url = (path) => `${base}${path}?kx_traffic=diagnostic`;
 /** WCAG 1.4.3 for text below 18.66px bold / 24px regular, which the footer's links and credits are. */
 const CONTRAST_MIN = 4.5;
 /**
- * What `site-footer.tsx` declared before `.kx-paper`, as literal CSS: `bg-accent text-foreground
- * dark:brightness-[0.85]` on the footer, and `pointer-events-none absolute inset-0 opacity-[0.22]
+ * What `site-footer.tsx` declared before `.kx-paper`, as literal CSS: `relative overflow-hidden bg-accent
+ * text-foreground` on the footer, and `pointer-events-none absolute inset-0 opacity-[0.22]
  * mix-blend-overlay` plus the tile on a grain <div>. See the comment on `checkParity` for why these are
  * declarations and not the original class names.
+ *
+ * It takes no theme argument any more. The form this replaced carried `dark:brightness-[0.85]`, dimming
+ * one pale plate for dark mode; PR #435 replaced that with a second plate drawn for the dark theme, so
+ * both the dim and the `.kx-print-surface` token pinning it needed are gone from `main` and from here.
  */
-const LEGACY_FOOTER_STYLE = (theme) =>
-  [
-    "position:relative",
-    "overflow:hidden",
-    "background-color:hsl(var(--accent))",
-    "color:hsl(var(--foreground))",
-    theme === "dark" ? "filter:brightness(0.85)" : "",
-  ]
-    .filter(Boolean)
-    .join(";");
+const LEGACY_FOOTER_STYLE =
+  "position:relative;overflow:hidden;background-color:hsl(var(--accent));color:hsl(var(--foreground))";
 const LEGACY_GRAIN_STYLE =
   "pointer-events:none;position:absolute;inset:0;opacity:0.22;mix-blend-mode:overlay;background-image:url(/footer/paper-grain.webp);background-size:384px";
 
 const failures = [];
-const report = { ships: [], paper: [], grain: [], text: [], tree: [], layout: [], motion: [], parity: [] };
+const report = { ships: [], paper: [], grain: [], text: [], tree: [], leak: [], layout: [], motion: [], parity: [] };
 const ok = (row, line) => report[row].push(line);
 const bad = (row, line) => {
   report[row].push(`FAIL ${line}`);
@@ -100,10 +99,18 @@ function checkShips() {
     bad("ships", `no built stylesheet under apps/web/.next/static/css — run \`pnpm build:web\` first`);
     return;
   }
-  for (const sel of [".kx-paper", ".kx-print-surface"]) {
-    if (css.includes(sel)) ok("ships", `${sel} is in the built stylesheet`);
-    else bad("ships", `${sel} was purged from the built stylesheet — nothing under the content globs names it`);
-  }
+  if (css.includes(".kx-paper")) ok("ships", `.kx-paper is in the built stylesheet`);
+  else bad("ships", `.kx-paper was purged from the built stylesheet — nothing under the content globs names it`);
+
+  /*
+   * The other direction, and the reason this is not one `includes` call. `.kx-print-surface` pinned the
+   * footer's tokens to their light aliases so one pale plate could be dimmed for dark mode; PR #435
+   * removed the class with the treatment. A stylesheet that still carries it means the dead rule came
+   * back, which is how the two-plate footer would quietly regain a light-pinned dark theme.
+   */
+  if (css.includes(".kx-print-surface"))
+    bad("ships", `.kx-print-surface is back in the built stylesheet — PR #435 removed it with the dimmed-sheet treatment`);
+  else ok("ships", `.kx-print-surface is absent, as PR #435 left it`);
 }
 
 /* ── browser helpers ────────────────────────────────────────────────────── */
@@ -179,8 +186,8 @@ async function checkSheet(page) {
     /*
      * The grain is one 384px tile at 0.22, blended `overlay` on a near-white sheet, so its amplitude is
      * well under one 8-bit step on most pixels — an absolute "is this patch textured" threshold either
-     * sits below the quantisation floor or catches nothing in dark mode, where the 0.85 dim compresses
-     * it further. So ask the question directly instead: suppress `.kx-paper::before` and count how many
+     * sits below the quantisation floor or catches nothing in dark mode, where the sheet is dark enough
+     * to compress it further. So ask the question directly instead: suppress `.kx-paper::before` and count how many
      * pixels of the same patch move. That comparison is its own negative control.
      */
     const suppressed = await page.addStyleTag({ content: ".kx-paper::before{display:none!important}" });
@@ -192,18 +199,18 @@ async function checkSheet(page) {
     sample[theme].grainPixels = differingPixels(withGrain, withoutGrain, 0);
 
     /*
-     * Text, composited. Two things make the naive reading wrong here, and both were found by this gate
-     * disagreeing with the footer's own recorded ratios:
+     * Text, composited, against the background actually rendered in this theme.
      *
-     *   - `.kx-print-surface` pins the footer's tokens to their light aliases, so `getComputedStyle`
-     *     returns the SAME colours in dark mode. The dimming is a `filter: brightness()` on the footer,
-     *     which the cascade never folds into a computed colour. Measuring computed colours alone would
-     *     report the light-mode ratio for dark mode and never see a dark-mode regression at all.
+     * Under the two-plate footer the footer's tokens resolve per theme and nothing filters the sheet, so
+     * a computed colour is the painted colour. Two things still have to be got right:
+     *
      *   - the secondary text is `foreground/70`, an alpha. Dropping the alpha measures a colour that is
-     *     never painted.
-     *
-     * So: composite the text's alpha over the opaque colour behind it, then scale both through the
-     * footer's own brightness filter, which is linear in sRGB and so applies to each channel.
+     *     never painted, so composite it over the first opaque background behind it.
+     *   - a `filter` on an ancestor is never folded into a computed colour. The dimmed-sheet footer had
+     *     one, and a contrast row that ignored it reported the light ratio for dark mode and could not
+     *     see a dark-mode regression at all. `main` has none now, so the expected reading is 1 — but
+     *     fold whatever is there in rather than assume, and report it, so the row cannot go quietly
+     *     wrong again if a filter comes back.
      */
     const pairs = await f.evaluate((el) => {
       const parse = (c) => (c.match(/[\d.]+/g) ?? []).map(Number);
@@ -232,15 +239,24 @@ async function checkSheet(page) {
     });
     for (const [what, fg, bg, brightness] of pairs) {
       const ratio = contrast(fg, bg);
-      const line = `${theme}: ${what} ${ratio.toFixed(2)}:1 against the paper (sheet at ${brightness})`;
+      const sheet = brightness === 1 ? "unfiltered" : `through a brightness(${brightness}) filter`;
+      const line = `${theme}: ${what} ${ratio.toFixed(2)}:1 against the paper (${sheet})`;
       if (ratio >= CONTRAST_MIN) ok("text", line);
       else bad("text", `${line} (needs ${CONTRAST_MIN})`);
     }
   }
 
-  // dims, does not invert
-  if (sample.dark.paper < sample.light.paper) ok("paper", `dark dims the sheet (${sample.dark.paper.toFixed(1)} < ${sample.light.paper.toFixed(1)})`);
-  else bad("paper", `dark did not dim the sheet (${sample.dark.paper.toFixed(1)} vs light ${sample.light.paper.toFixed(1)})`);
+  /*
+   * The sheet follows the theme, and is still a sheet.
+   *
+   * Not "dark dims the sheet" any more: there is no dim, and the two plates are separate drawings, so
+   * comparing their pixels across themes measures nothing. What is left is the pair of properties the
+   * direction actually asks for — the dark paper is the dark theme's `accent` and so darker than the
+   * light theme's, and it still sits above the page behind it rather than dropping to or below it,
+   * which is what an inverted sheet would do.
+   */
+  if (sample.dark.paper < sample.light.paper) ok("paper", `the sheet follows the theme (dark ${sample.dark.paper.toFixed(1)} < light ${sample.light.paper.toFixed(1)})`);
+  else bad("paper", `the dark sheet is not darker than the light one (${sample.dark.paper.toFixed(1)} vs ${sample.light.paper.toFixed(1)})`);
 
   if (sample.dark.paper > sample.dark.page) ok("paper", `the dark sheet stays lighter than the page behind it (${sample.dark.paper.toFixed(1)} > ${sample.dark.page.toFixed(1)})`);
   else bad("paper", `the dark sheet inverted — it is no lighter than the page (${sample.dark.paper.toFixed(1)} vs ${sample.dark.page.toFixed(1)})`);
@@ -327,6 +343,43 @@ async function checkMotion(browser) {
   }
 }
 
+/* ── leak ───────────────────────────────────────────────────────────────── */
+/*
+ * A decorative primitive is a global class in a global stylesheet, and the surfaces most damaged by it
+ * landing on them are the ones whose whole job is to render neutrally: a component preview, a chart, a
+ * live docs example. `.kx-paper` repaints a background and a text colour, so on any of those it would be
+ * a silent wrong answer rather than a visible mistake.
+ *
+ * So check where it actually lands, on pages chosen to cover each of those: it may only be on a <footer>.
+ * The direction's §4 says the core library stays neutral, and this is that sentence as an assertion.
+ */
+const LEAK_PAGES = [
+  ["/components/button", "a component page with live previews"],
+  ["/charts", "charts"],
+  ["/docs/theming", "an interactive documentation example"],
+  ["/blocks", "blocks"],
+  ["/", "the homepage"],
+];
+
+async function checkLeak(browser) {
+  for (const dir of ["ltr", "rtl"]) {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await ctx.newPage();
+    for (const [path, what] of LEAK_PAGES) {
+      await page.goto(url(path), { waitUntil: "networkidle" });
+      if (dir === "rtl") await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"));
+      const wrong = await page.evaluate(() =>
+        [...document.querySelectorAll(".kx-paper")]
+          .filter((el) => el.tagName !== "FOOTER")
+          .map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].slice(0, 3).join(".")}`),
+      );
+      if (wrong.length === 0) ok("leak", `${dir} ${path}: .kx-paper is on the footer and nothing else (${what})`);
+      else bad("leak", `${dir} ${path}: .kx-paper leaked onto ${wrong.join(", ")}`);
+    }
+    await ctx.close();
+  }
+}
+
 /* ── parity ─────────────────────────────────────────────────────────────── */
 /*
  * The refactor replaced three inline values and a grain <div> with one class. That is only safe if the
@@ -335,10 +388,13 @@ async function checkMotion(browser) {
  * staying put — if it moved, this row would be the thing that said so.
  *
  * The pre-refactor form is rebuilt from inline declarations, not from its old Tailwind class names. Those
- * classes (`bg-accent`, `dark:brightness-[0.85]`, `opacity-[0.22]`, `mix-blend-overlay`) had exactly one
- * call site between them, so Tailwind dropped every one of them from the bundle when this refactor removed
- * it. Reinstating the class strings on a live page reinstates nothing. What this row therefore asserts is
- * the honest form of the claim: `.kx-paper` paints what those literal declarations painted.
+ * classes (`bg-accent`, `opacity-[0.22]`, `mix-blend-overlay`) had exactly one call site between them, so
+ * Tailwind dropped every one of them from the bundle when this refactor removed it. Reinstating the class
+ * strings on a live page reinstates nothing. What this row therefore asserts is the honest form of the
+ * claim: `.kx-paper` paints what those literal declarations painted.
+ *
+ * "Before" here is the footer as PR #435 left it on `main`, two plates and no dim — not the dimmed sheet
+ * this gate was first written against.
  */
 async function checkParity(page) {
   for (const theme of ["light", "dark"]) {
@@ -356,7 +412,7 @@ async function checkParity(page) {
         grain.setAttribute("style", grainStyle);
         el.prepend(grain);
       },
-      [LEGACY_FOOTER_STYLE(theme), LEGACY_GRAIN_STYLE],
+      [LEGACY_FOOTER_STYLE, LEGACY_GRAIN_STYLE],
     );
     await page.waitForTimeout(200);
     const before = await f.screenshot();
@@ -379,6 +435,7 @@ try {
   await checkTree(page);
   await checkParity(page);
   await ctx.close();
+  await checkLeak(browser);
   await checkLayout(browser);
   await checkMotion(browser);
 } finally {
