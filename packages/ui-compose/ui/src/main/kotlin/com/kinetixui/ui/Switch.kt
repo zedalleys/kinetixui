@@ -1,6 +1,5 @@
 package com.kinetixui.ui
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -48,11 +47,8 @@ fun KinetixSwitch(
     // and action in one frame while the thumb slid for 100ms. Same spec as the thumb, so the two
     // halves of one gesture land together. The disabled alpha is folded into the target rather than
     // applied after it, so enabling or disabling a switch settles too instead of stepping.
-    val trackColor by animateColorAsState(
-        targetValue = if (enabled) targetTrack else targetTrack.copy(alpha = 0.5f),
-        animationSpec = KinetixSwitchMotion.spec(reduceMotion),
-        label = "KinetixSwitchTrack",
-    )
+    // NEGATIVE CONTROL ONLY — the pre-MX1d track, handed straight to `.background`.
+    val trackColor = if (enabled) targetTrack else targetTrack.copy(alpha = 0.5f)
 
     Box(
         modifier = modifier
