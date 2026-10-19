@@ -46,8 +46,8 @@ and in the Figma working file. *(source: PR #432 description, "The PR went throu
   competing with it for colour meaning.
 - **One pale sheet in both themes.** An engraving inverted for dark mode reads as a photographic negative —
   the lines become light-on-dark, which is a different printing process and a different object. Dimming
-  preserves the object. *(source: `apps/web/src/components/site-footer.tsx` on PR #432 carries this
-  reasoning at the component; its implementation is `dark:brightness-[0.85]` over `.kx-print-surface`.)*
+  preserves the object. *(source: `apps/web/src/components/site-footer.tsx` carries this reasoning at the
+  component; its implementation is `dark:brightness-[0.85]` over `.kx-print-surface`.)*
 - **Spacious composition.** Decoration earns its place by giving editorial surfaces air, not by filling
   them. Empty sky is where the bottom bar and the headings sit.
 
@@ -81,11 +81,11 @@ keep them separate on purpose.
 
 Repository-side references, in priority order:
 
-1. `design-assets/kinetixui-footer-arabian-landscape.png` — the 2880×960 master plate. *(source, PR #432)*
+1. `design-assets/kinetixui-footer-arabian-landscape.png` — the 2880×960 master plate. *(source)*
 2. `design-assets/kinetixui-footer-arabian-engraving.png`, `…-panorama.png`, `…-panorama.webp` — companion
-   masters. *(source, PR #432)*
+   masters. *(source)*
 3. `apps/web/public/footer/arabian-landscape-{960,1920,2880}.webp` and `paper-grain.webp` — the shipped
-   derivatives. *(source, PR #432)*
+   derivatives. *(source)*
 4. The Figma working file, which keeps every version including the superseded directions.
 
 The screenshots are the canonical reference for what the direction *looks like*; the repository assets stay
@@ -93,7 +93,8 @@ the production source of truth for the plate itself.
 
 ## 3. The approved footer as the baseline
 
-The footer on PR #432 is the first and, as of this document, the only surface carrying the direction. It is
+The site footer, merged to `main` as `da03a56` (PR #432) on 2026-10-19, is the first and, as of this
+document, the only surface carrying the direction. It is
 the baseline every later surface is measured against. Recorded here so later work does not re-derive it:
 
 | Element | How it is made | Evidence |
@@ -179,7 +180,7 @@ Recorded so that adopting it is never read as relaxing anything:
 | Stage | What | Status |
 | --- | --- | --- |
 | 1 | Establish documentation and canonical references — this document and Claude instructions §28. | In progress (this change). |
-| 2 | Validate the approved footer as the baseline. | Partly done. The canonical screenshots are in hand and the footer's **appearance** is confirmed against them (§2). What remains is not a visual question: PR #432 is still open and unmerged, so the baseline is not yet on `main`. |
+| 2 | Validate the approved footer as the baseline. | Done. PR #432 merged to `main` as `da03a56` on 2026-10-19, and the footer's appearance is confirmed against the canonical screenshots (§2). |
 | 3 | Pilot **one** restrained homepage accent. | Not started. One accent, one measurement, one decision. |
 | 4 | Extend selectively to marketing and editorial surfaces. | Not started. |
 | 5 | Consider minimal documentation and catalogue framing, **after** the overlapping catalogue work (CAT-1 #413, CAT-QF #428, CAT-2 #430) is reconciled. | Not started, and explicitly blocked on that reconciliation. |
