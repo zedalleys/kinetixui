@@ -3,14 +3,14 @@
 import * as React from "react";
 import { Treemap } from "recharts";
 import { ChartContainer, type ChartConfig } from "@kinetixui/ui";
-import { componentDocs, COMPONENT_CATEGORY, CATEGORY_ORDER } from "@/lib/site";
+import { categoryOf } from "@/lib/component-taxonomy";
+import { componentDocs, CATEGORY_ORDER } from "@/lib/site";
 
 const slugOf = (href: string) => href.split("/").pop() ?? "";
 
 const data = CATEGORY_ORDER.map((cat, i) => ({
   name: cat,
-  size: componentDocs.filter((c) => (COMPONENT_CATEGORY[slugOf(c.href)] ?? "Data Display") === cat)
-    .length,
+  size: componentDocs.filter((c) => categoryOf(slugOf(c.href)) === cat).length,
   fill: `hsl(var(--chart-${(i % 8) + 1}))`,
 }));
 

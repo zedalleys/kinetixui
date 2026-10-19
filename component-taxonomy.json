@@ -1,0 +1,522 @@
+{
+  "$schema": "https://kinetixui.com/schema/component-taxonomy.json",
+  "$description": "slug → functional category, kind and facets, plus the declared category order and the rule behind each category. GENERATED from components.manifest.json by `pnpm gen:manifest` — edit the manifest, not this file. Consumed by apps/web/src/lib/component-taxonomy.ts (the website's category map, filters and counts) and scripts/gen-stories.mjs (the Storybook group titles). There is no default category: a slug missing here is an error in both consumers, not a silent \"Data Display\".",
+  "categoryOrder": [
+    "Layout & Structure",
+    "Forms & Inputs",
+    "Actions & Controls",
+    "Navigation",
+    "Overlays",
+    "Feedback & Status",
+    "Data Display",
+    "Media & Content"
+  ],
+  "categoryAliases": {
+    "Form Inputs": "Forms & Inputs",
+    "Controls & Actions": "Actions & Controls",
+    "Feedback": "Feedback & Status"
+  },
+  "categories": {
+    "Layout & Structure": {
+      "rule": "Arranges or contains other components and has no content of its own.",
+      "count": 9
+    },
+    "Forms & Inputs": {
+      "rule": "Collects a value from the user, or labels and structures the field that does.",
+      "count": 29,
+      "formerly": [
+        "Form Inputs"
+      ]
+    },
+    "Actions & Controls": {
+      "rule": "Performs or toggles an action.",
+      "count": 7,
+      "formerly": [
+        "Controls & Actions"
+      ]
+    },
+    "Navigation": {
+      "rule": "Moves the user between places or levels.",
+      "count": 13
+    },
+    "Overlays": {
+      "rule": "Exists to present arbitrary content above the page.",
+      "count": 10
+    },
+    "Feedback & Status": {
+      "rule": "Reports state, progress, outcome or guidance.",
+      "count": 14,
+      "formerly": [
+        "Feedback"
+      ]
+    },
+    "Data Display": {
+      "rule": "Presents data the user reads rather than operates.",
+      "count": 21
+    },
+    "Media & Content": {
+      "rule": "Presents authored media or editorial content.",
+      "count": 6
+    }
+  },
+  "kinds": {
+    "component": 108,
+    "recipe": 1
+  },
+  "facets": {
+    "composed": [
+      "address-fields",
+      "form"
+    ],
+    "utility": [
+      "direction-provider"
+    ]
+  },
+  "components": {
+    "accordion": {
+      "category": "Layout & Structure",
+      "kind": "component"
+    },
+    "address-fields": {
+      "category": "Forms & Inputs",
+      "kind": "component",
+      "facets": [
+        "composed"
+      ]
+    },
+    "alert": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "alert-dialog": {
+      "category": "Overlays",
+      "kind": "component"
+    },
+    "amount-display": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "app-bar": {
+      "category": "Navigation",
+      "kind": "component"
+    },
+    "aspect-ratio": {
+      "category": "Layout & Structure",
+      "kind": "component"
+    },
+    "audio-player": {
+      "category": "Media & Content",
+      "kind": "component"
+    },
+    "avatar": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "avatar-group": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "badge": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "banner": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "breadcrumb": {
+      "category": "Navigation",
+      "kind": "component"
+    },
+    "button": {
+      "category": "Actions & Controls",
+      "kind": "component"
+    },
+    "button-group": {
+      "category": "Actions & Controls",
+      "kind": "component"
+    },
+    "calendar": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "card": {
+      "category": "Layout & Structure",
+      "kind": "component"
+    },
+    "carousel": {
+      "category": "Media & Content",
+      "kind": "component"
+    },
+    "chart": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "checkbox": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "circular-progress": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "code-block": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "collapsible": {
+      "category": "Layout & Structure",
+      "kind": "component"
+    },
+    "color-picker": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "combobox": {
+      "category": "Forms & Inputs",
+      "kind": "recipe"
+    },
+    "command": {
+      "category": "Actions & Controls",
+      "kind": "component"
+    },
+    "comparison-slider": {
+      "category": "Media & Content",
+      "kind": "component"
+    },
+    "context-menu": {
+      "category": "Overlays",
+      "kind": "component"
+    },
+    "country-select": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "data-grid": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "data-table": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "date-picker": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "date-range-input": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "description-list": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "dialog": {
+      "category": "Overlays",
+      "kind": "component"
+    },
+    "diff-viewer": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "direction-provider": {
+      "category": "Layout & Structure",
+      "kind": "component",
+      "facets": [
+        "utility"
+      ]
+    },
+    "drawer": {
+      "category": "Overlays",
+      "kind": "component"
+    },
+    "dropdown-menu": {
+      "category": "Overlays",
+      "kind": "component"
+    },
+    "empty": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "fab": {
+      "category": "Actions & Controls",
+      "kind": "component"
+    },
+    "field": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "file-upload": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "footer": {
+      "category": "Layout & Structure",
+      "kind": "component"
+    },
+    "form": {
+      "category": "Forms & Inputs",
+      "kind": "component",
+      "facets": [
+        "composed"
+      ]
+    },
+    "guest-picker": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "hover-card": {
+      "category": "Overlays",
+      "kind": "component"
+    },
+    "image": {
+      "category": "Media & Content",
+      "kind": "component"
+    },
+    "inform": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "input": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "input-group": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "input-otp": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "json-viewer": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "kanban-board": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "kbd": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "label": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "list": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "markdown-editor": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "marquee": {
+      "category": "Media & Content",
+      "kind": "component"
+    },
+    "menubar": {
+      "category": "Navigation",
+      "kind": "component"
+    },
+    "message-bubble": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "metric": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "modal": {
+      "category": "Overlays",
+      "kind": "component"
+    },
+    "multi-select": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "native-select": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "navigation-bar": {
+      "category": "Navigation",
+      "kind": "component"
+    },
+    "navigation-menu": {
+      "category": "Navigation",
+      "kind": "component"
+    },
+    "notification-center": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "number-input": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "page-header": {
+      "category": "Navigation",
+      "kind": "component"
+    },
+    "pagination": {
+      "category": "Navigation",
+      "kind": "component"
+    },
+    "pass-card": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "password-input": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "phone-input": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "popover": {
+      "category": "Overlays",
+      "kind": "component"
+    },
+    "price-breakdown": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "progress": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "quote": {
+      "category": "Media & Content",
+      "kind": "component"
+    },
+    "radio-group": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "rating": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "reference-code": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "resizable": {
+      "category": "Layout & Structure",
+      "kind": "component"
+    },
+    "result-state": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "scroll-area": {
+      "category": "Layout & Structure",
+      "kind": "component"
+    },
+    "segmented-control": {
+      "category": "Actions & Controls",
+      "kind": "component"
+    },
+    "select": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "separator": {
+      "category": "Layout & Structure",
+      "kind": "component"
+    },
+    "sheet": {
+      "category": "Overlays",
+      "kind": "component"
+    },
+    "sidebar": {
+      "category": "Navigation",
+      "kind": "component"
+    },
+    "skeleton": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "slider": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "sonner": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "spinner": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "stepper": {
+      "category": "Navigation",
+      "kind": "component"
+    },
+    "switch": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "tab-bar": {
+      "category": "Navigation",
+      "kind": "component"
+    },
+    "table": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "table-of-contents": {
+      "category": "Navigation",
+      "kind": "component"
+    },
+    "tabs": {
+      "category": "Navigation",
+      "kind": "component"
+    },
+    "tag": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "textarea": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "time-slot-picker": {
+      "category": "Forms & Inputs",
+      "kind": "component"
+    },
+    "timeline": {
+      "category": "Data Display",
+      "kind": "component"
+    },
+    "toggle": {
+      "category": "Actions & Controls",
+      "kind": "component"
+    },
+    "toggle-group": {
+      "category": "Actions & Controls",
+      "kind": "component"
+    },
+    "tooltip": {
+      "category": "Overlays",
+      "kind": "component"
+    },
+    "tour": {
+      "category": "Feedback & Status",
+      "kind": "component"
+    },
+    "tree-view": {
+      "category": "Navigation",
+      "kind": "component"
+    },
+    "virtual-list": {
+      "category": "Data Display",
+      "kind": "component"
+    }
+  }
+}

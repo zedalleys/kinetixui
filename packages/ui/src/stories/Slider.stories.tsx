@@ -7,7 +7,7 @@ import { Slider } from "@kinetixui/ui";
 const Demo = () => <Slider aria-label="Volume" defaultValue={[50]} max={100} step={1} className="w-[60%]" />;
 
 const meta = {
-  title: "Form Inputs/Slider",
+  title: "Forms & Inputs/Slider",
   component: Slider,
   args: { disabled: false },
   argTypes: { disabled: { control: "boolean" } },

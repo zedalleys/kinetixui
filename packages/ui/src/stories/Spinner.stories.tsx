@@ -13,7 +13,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Foundations/Spinner",
+  title: "Feedback & Status/Spinner",
   component: Spinner,
   args: { size: "md", variant: "default" },
   argTypes: {

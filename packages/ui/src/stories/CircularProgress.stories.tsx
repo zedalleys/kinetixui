@@ -20,7 +20,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Feedback/CircularProgress",
+  title: "Feedback & Status/CircularProgress",
   component: CircularProgress,
   args: { value: 66, size: 48, strokeWidth: 4, showValue: true },
   argTypes: {

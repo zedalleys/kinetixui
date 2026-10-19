@@ -16,6 +16,13 @@ delete an entry, including one that could not be reproduced.
 `apps/web`, same Chromium, via `node scripts/catalogue-qf-evidence.mjs --out <dir>`. Every other entry's
 evidence is still the CAT-1 run and has not been re-measured.
 
+**CAT-2 (2026-10-19):** CAT-BUG-019 is fixed in the taxonomy slice and is `VERIFIED` below; CAT-BUG-016's
+regression requirement (keep the manifest/evidence cross-check as a gate) is now met, and CAT-BUG-013's
+`kind`/facet work has landed. Those numbers were taken on CAT-QF's branch plus the CAT-2 branch, production
+build of `apps/web`, same Chromium, via `node scripts/catalogue-taxonomy-evidence.mjs --out <dir>`, plus
+`pnpm check:manifest`, `pnpm check:manifest-controls` and the test suite. The taxonomy itself is recorded
+per entry in [`docs/audits/CAT-2-TAXONOMY-VALIDATION.md`](docs/audits/CAT-2-TAXONOMY-VALIDATION.md).
+
 **Measurement baseline for every entry below:** `main` `984792b`, production build of `apps/web`, Chromium 1194
 headless, viewports 320/390/768/1280, light / dark / RTL / 200% text / forced colors / reduced motion, via
 `PLAYWRIGHT_CHROMIUM_PATH=… node scripts/catalogue-preview-audit.mjs --out <dir>`. Limits are in audit §11; the
@@ -38,13 +45,13 @@ browser zoom, and no committed baseline — every number is one run.
 | CAT-BUG-010 | Preview/Code control sits 1px from the panel border | component detail | Medium | VERIFIED | CAT-QF |
 | CAT-BUG-011 | Three different insets inside one preview panel | component detail | Medium | REPRODUCED | CAT-4 |
 | CAT-BUG-012 | Technology and category share one pill | /components card | High | VERIFIED | CAT-QF |
-| CAT-BUG-013 | Entries possibly misclassified as Components | taxonomy | Low | NOT REPRODUCIBLE | — |
+| CAT-BUG-013 | Entries possibly misclassified as Components | taxonomy | Low | NOT REPRODUCIBLE (kind/facets landed) | CAT-2 |
 | CAT-BUG-014 | Blocks have no business-capability axis | /blocks | High | REPRODUCED | CAT-5 |
 | CAT-BUG-015 | State coverage is inconsistent and undocumented | component detail, stories | High | REPRODUCED (partly) | CAT-4 |
-| CAT-BUG-016 | Platform badges need verifying against evidence | /components card | Low | NOT REPRODUCIBLE (as accuracy) | CAT-2 |
+| CAT-BUG-016 | Platform badges need verifying against evidence | /components card | Low | NOT REPRODUCIBLE (as accuracy; cross-check now gated) | CAT-2 |
 | CAT-BUG-017 | 200% text clips half the thumbnails | /components card | High | REPRODUCED | CAT-3 |
 | CAT-BUG-018 | Thumbnail text is below legible size | /components card | Medium | REPRODUCED | CAT-3 |
-| CAT-BUG-019 | Two hand-maintained category maps have drifted | canonical data | High | REPRODUCED | CAT-2 |
+| CAT-BUG-019 | Two hand-maintained category maps have drifted | canonical data | High | VERIFIED | CAT-2 |
 | CAT-BUG-020 | Block showcases waste most of their width | /blocks | Low | REPRODUCED | CAT-5 |
 
 017–020 were found while investigating the owner's reports and share their root causes.
@@ -274,8 +281,9 @@ browser zoom, and no committed baseline — every number is one run.
   control that the technologies are real values outside it, plus "still finds a component by the technology
   behind it". Negative control: reverting `component-gallery.tsx` fails the first (confirmed 2026-10-19).
 - **Verification:** rendered over all cards — **109 of 109** pills come from the category slot, **7** distinct
-  values, all of them members of `CATEGORY_ORDER`. (Those 7 are today's categories, including `Foundations`; the
-  8-category taxonomy is CAT-2.)
+  values, all of them members of `CATEGORY_ORDER`. (Those 7 were the categories as CAT-QF found them, including
+  `Foundations`. CAT-2 replaced them with the eight-value taxonomy and re-measured: 109 of 109 pills from the
+  category slot, **8** distinct values, across ten environments — see CAT-BUG-019.)
 - **Status:** VERIFIED · **Slice:** CAT-QF
 
 ## CAT-BUG-013 — Entries possibly misclassified as Components
@@ -291,11 +299,21 @@ browser zoom, and no committed baseline — every number is one run.
 - **User impact:** none today. There is a smaller real problem: `combobox` is a documented recipe but the
   catalogue presents it as a component, and `address-fields` and `form` are composed field groups that read as
   primitives.
-- **Proposed fix:** no moves. Add `kind` (`component` / `recipe`) and a `composed` facet to the manifest so the
-  distinction is visible without changing any public API or URL.
-- **Regression requirement:** manifest schema validation for the new fields.
-- **Verification requirement:** none beyond the schema gate.
-- **Status:** NOT REPRODUCIBLE (investigated, no move warranted) · **Slice:** — (the `kind`/facet work rides CAT-2)
+- **Fix (CAT-2):** no moves. `kind` (`component` / `recipe`) and `facets` (`composed`, `utility`) are now
+  manifest fields. `combobox` is the one `recipe`; `address-fields` and `form` carry `composed`;
+  `direction-provider` carries `utility` instead of being given a one-item Utilities category. All eleven
+  entries the owner asked about keep `kind: "component"`, their own page and their own URL. The recipe count
+  the site publishes ("108 components and 1 documented recipe") used to be derived by matching the words "not a
+  component" in a `platformNote`; `platform-support.ts`, `marketing-stats.mjs` and `gen-marketing-visuals.mjs`
+  now read `kind`, and `check:manifest` holds the field and the prose to each other so the pinned marketing
+  drafts that still parse the prose cannot disagree with the catalogue.
+- **Regression:** the manifest schema gate — missing `kind`, `kind` outside the enum, an unknown facet, a
+  repeated facet, and `kind` disagreeing with the prose each have a negative control in
+  `check:manifest-controls` (5 of the 13, confirmed 2026-10-19). `component-taxonomy.test.ts` asserts the
+  recipe list derived from `kind` is identical to the one the prose produced, and that the eleven entries are
+  still components with pages.
+- **Verification:** the gate and those tests; nothing rendered changed, which is the point.
+- **Status:** NOT REPRODUCIBLE (investigated, no move warranted; the `kind`/facet work landed) · **Slice:** CAT-2
 
 ## CAT-BUG-014 — Blocks have no business-capability axis
 
@@ -358,10 +376,19 @@ browser zoom, and no committed baseline — every number is one run.
 - **Proposed fix:** leave availability as the badge's meaning; consider carrying platform maturity on the card the
   way the filter chip does. Do **not** put evidence tiers on cards — five tiers × five platforms per card is the
   badge clutter the brief warns against; the detail page already shows them.
-- **Regression requirement:** keep the manifest/evidence consistency cross-check as a gate so this cannot regress
-  silently.
-- **Verification requirement:** the cross-check gate.
-- **Status:** NOT REPRODUCIBLE (as an accuracy defect; the maturity gap is recorded) · **Slice:** CAT-2
+- **Regression (CAT-2):** the cross-check is now a gate. `check:manifest` already failed a component declared on
+  a platform with no evidence; it now also fails the other direction — evidence recorded for a platform the
+  manifest does not list. A badge means "this library carries it", so the two files contradicting each other is
+  exactly the over-claim the badges were suspected of. Negative control: removing `Flutter` from one component's
+  `platforms` while `verification.json` keeps its Flutter evidence fails the gate with that message
+  (`check:manifest-controls`, confirmed 2026-10-19).
+- **Verification:** the gate passes on the current tree, which is the 0-contradiction result from the CAT-1
+  cross-check of all 545 component cells, now asserted on every run rather than audited by hand.
+- **Still open:** the maturity gap. A solid badge still says nothing about evidence tier or platform maturity;
+  carrying platform maturity on the card the way the filter chip does is unscheduled, and evidence tiers stay
+  off the cards deliberately.
+- **Status:** NOT REPRODUCIBLE (as an accuracy defect; the cross-check is gated, the maturity gap is recorded) ·
+  **Slice:** CAT-2
 
 ## CAT-BUG-017 — 200% text clips half the thumbnails
 
@@ -403,20 +430,51 @@ browser zoom, and no committed baseline — every number is one run.
 
 - **Surface:** `COMPONENT_CATEGORY` in `apps/web/src/lib/site.ts` (109 entries) and `GROUP` in
   `scripts/gen-stories.mjs` (107 entries).
-- **Evidence:** the two maps disagree on **2** slugs today: `app-bar` and `direction-provider` are present in
-  `site.ts` and absent from `gen-stories.mjs`. `site.ts` comments say the map "mirrors the taxonomy in
-  `scripts/gen-stories.mjs`"; nothing compares them, and `categoryOf` falls back to `"Data Display"` for an
-  unknown slug, so an omission is invisible on the site.
-- **Root cause:** functional category has no canonical source. It is the only catalogue dimension that is not
+- **Evidence (CAT-1, before):** the two maps disagreed on **2** slugs: `app-bar` and `direction-provider` were
+  present in `site.ts` and absent from `gen-stories.mjs`. `site.ts` comments said the map "mirrors the taxonomy
+  in `scripts/gen-stories.mjs`"; nothing compared them, and `categoryOf` fell back to `"Data Display"` for an
+  unknown slug, so an omission was invisible on the site. The Storybook side fell back to a generic
+  `"Components"` group, which is where those two stories were actually titled.
+- **Root cause:** functional category had no canonical source. It was the only catalogue dimension that was not
   generated from a manifest and not gated.
-- **User impact:** a component can be filed in one category on the site and another in Storybook, or silently land
-  in Data Display; the accessibility suites take their subject list from the Storybook side.
-- **Proposed fix:** `category` in `components.manifest.json` with the eight-value enum, both maps derived from it,
-  the silent fallback removed, and `check:manifest` extended (audit §9).
-- **Regression requirement:** a negative control — remove a category from the manifest, assert `check:manifest`
-  fails; set an invalid value, assert it fails; and assert the derived maps regenerate to a fixed point.
-- **Verification requirement:** the generator reaching a fixed point with no diff, plus the negative controls.
-- **Status:** REPRODUCED · **Slice:** CAT-2
+- **User impact:** a component could be filed in one category on the site and another in Storybook, or silently
+  land in Data Display; the accessibility suites take their subject list from the Storybook side.
+- **Fix (CAT-2):** `categoryDefinitions` and a per-component `category` in `components.manifest.json`, generated
+  into `component-taxonomy.json`, which `apps/web/src/lib/component-taxonomy.ts` and `scripts/gen-stories.mjs`
+  both read. Neither map is hand-written any more. Every silent fallback is gone: `categoryOf` throws, the story
+  generator reports a problem, and the two remaining `?? "Data Display"` lookups (`related-components.ts`,
+  `registry-treemap.tsx`) now call `categoryOf`. The eight-category taxonomy was validated entry by entry
+  against each component's own source, not migrated — see
+  [`docs/audits/CAT-2-TAXONOMY-VALIDATION.md`](docs/audits/CAT-2-TAXONOMY-VALIDATION.md); 25 of 109 entries
+  changed category and 13 rows are recorded as contested with the alternative that lost.
+- **Regression:** `check:manifest` now validates the manifest's shape (unknown and missing keys, duplicate
+  slugs that `JSON.parse` silently drops), the category enum, `kind`, `facets`, and that all three generated
+  files are a fixed point of the manifest. `check:stories` additionally fails a hand-written story whose title
+  group does not match the manifest — which it did for Button, Input and Textarea after the renames.
+  `apps/web/src/lib/component-taxonomy.test.ts` (10 tests) covers the consumers, and
+  `component-gallery.test.tsx` → "gives every category a filter chip whose count matches the cards behind it".
+- **Negative controls:** `scripts/check-manifest-negative-controls.mjs` (`pnpm check:manifest-controls`, wired
+  into CI) corrupts the real manifest one rule at a time and asserts the real `check:manifest` fails with the
+  right message. **13 of 13 controls fail the gate** (confirmed 2026-10-19): missing category, category outside
+  the enum, missing `categoryDefinitions`, a category with no rule, a misspelled key (`catagory`), missing
+  `kind`, `kind` outside the enum, an unknown facet, a repeated facet, `kind` disagreeing with the published
+  prose, generated data left stale, a duplicated slug, and a manifest/`verification.json` contradiction. The
+  harness also asserts the gate passes on the unmodified tree first, so a control that "fails" vacuously is
+  caught. Reverting the Button story title separately fails `check:stories` with the drift message.
+- **Verification (rendered, 2026-10-19):** production build, Chromium 1194, `/components` and
+  `/docs/components/direction-provider` at 320, 390, 768 and 1280px in light, dark, RTL and 200% text — ten
+  environments:
+  - **109 of 109** card pills come from the category slot in **every** environment, with **8** distinct values
+    and **0** values outside the declared taxonomy.
+  - every category's filter chip prints a count equal to the cards its filter yields, with no foreign pills:
+    Layout & Structure 9, Forms & Inputs 29, Actions & Controls 7, Navigation 13, Overlays 10,
+    Feedback & Status 14, Data Display 21, Media & Content 6 — 109 in total.
+  - the docs sidebar lists all **8** groups in every environment, and the grouped results list shows all 8
+    headings in declaration order.
+  - no horizontal page overflow in any of the ten environments (`scrollWidth` equals `clientWidth` at 320, 390,
+    768 and 1280, including at 200% text where the longer labels wrap instead).
+  - `check:manifest` reaches a fixed point: regenerating produces no diff.
+- **Status:** VERIFIED · **Slice:** CAT-2
 
 ## CAT-BUG-020 — Block showcases waste most of their width
 

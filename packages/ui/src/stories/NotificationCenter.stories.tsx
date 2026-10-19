@@ -29,7 +29,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Overlays/NotificationCenter",
+  title: "Feedback & Status/NotificationCenter",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<NotificationCenter>\\n  <NotificationCenterTrigger unreadCount={2} />\\n  <NotificationCenterContent onMarkAllRead={markAllRead}>\\n    <NotificationItem unread title=\"PR #106 merged\" time=\"2m ago\" />\\n    <NotificationItem title=\"Welcome to KinetixUI\" time=\"2d ago\" />\\n  </NotificationCenterContent>\\n</NotificationCenter>", language: "tsx" } },

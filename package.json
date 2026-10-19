@@ -37,6 +37,7 @@
     "check:verification": "node scripts/gen-verification.mjs --check",
     "gen:manifest": "node scripts/gen-manifest.mjs",
     "check:manifest": "node scripts/gen-manifest.mjs --check",
+    "check:manifest-controls": "node scripts/check-manifest-negative-controls.mjs",
     "gen:capabilities": "node scripts/gen-business-roadmap.mjs",
     "check:capabilities": "node scripts/gen-business-roadmap.mjs --check",
     "gen:flagship": "node scripts/gen-flagship-examples.mjs",

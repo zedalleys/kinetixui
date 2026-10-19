@@ -22,7 +22,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Feedback/Tag",
+  title: "Feedback & Status/Tag",
   component: Tag,
   args: { variant: "default", children: "tag" },
   argTypes: {

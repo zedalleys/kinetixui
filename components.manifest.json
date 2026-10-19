@@ -1,6 +1,35 @@
 {
   "$schema": "https://kinetixui.com/schema/components-manifest.json",
-  "$description": "Every KinetixUI component and where it is really implemented. platformDefinitions is the ONE place a platform is declared — its family (web/native), label, abbreviation, whether its catalogue is complete, its declared PACKAGE maturity and how it is distributed. Package maturity is a product decision about the offering; how well each implementation is VERIFIED is a separate, derived value in verification.json, and the two must never be collapsed into one word. Everything downstream (platform-parity.json, component-status.json, the website, CI guardrails) derives from this file; nothing re-declares the platform list. A component lists only platforms whose source actually exists (that is what parity counts), and platformGuidance says what to show for every platform it is NOT on — a native equivalent, a composition, or a planned Angular wave — so no platform tab is ever blank or invented — scripts/check-platform-source.mjs verifies that against the packages.",
+  "$description": "Every KinetixUI component and where it is really implemented. platformDefinitions is the ONE place a platform is declared — its family (web/native), label, abbreviation, whether its catalogue is complete, its declared PACKAGE maturity and how it is distributed. Package maturity is a product decision about the offering; how well each implementation is VERIFIED is a separate, derived value in verification.json, and the two must never be collapsed into one word. Everything downstream (platform-parity.json, component-status.json, the website, CI guardrails) derives from this file; nothing re-declares the platform list. categoryDefinitions is the ONE place the functional taxonomy is declared — its order is the order every surface lists categories in, and each entry carries the rule an assignment is judged against. Every component declares a category from that enum, a kind ('component' for a published API, 'recipe' for a documented composition with no export of its own) and optional facets; the website category map and the Storybook grouping are both generated from it, so neither can drift and no component can fall into a default category. A component lists only platforms whose source actually exists (that is what parity counts), and platformGuidance says what to show for every platform it is NOT on — a native equivalent, a composition, or a planned Angular wave — so no platform tab is ever blank or invented — scripts/check-platform-source.mjs verifies that against the packages.",
+  "categoryDefinitions": {
+    "Layout & Structure": {
+      "rule": "Arranges or contains other components and has no content of its own."
+    },
+    "Forms & Inputs": {
+      "rule": "Collects a value from the user, or labels and structures the field that does.",
+      "formerly": ["Form Inputs"]
+    },
+    "Actions & Controls": {
+      "rule": "Performs or toggles an action.",
+      "formerly": ["Controls & Actions"]
+    },
+    "Navigation": {
+      "rule": "Moves the user between places or levels."
+    },
+    "Overlays": {
+      "rule": "Exists to present arbitrary content above the page."
+    },
+    "Feedback & Status": {
+      "rule": "Reports state, progress, outcome or guidance.",
+      "formerly": ["Feedback"]
+    },
+    "Data Display": {
+      "rule": "Presents data the user reads rather than operates."
+    },
+    "Media & Content": {
+      "rule": "Presents authored media or editorial content."
+    }
+  },
   "platformDefinitions": {
     "React": {
       "family": "web",
@@ -80,6 +109,8 @@
   },
   "components": {
     "accordion": {
+      "category": "Layout & Structure",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -91,6 +122,11 @@
       ]
     },
     "address-fields": {
+      "category": "Forms & Inputs",
+      "kind": "component",
+      "facets": [
+        "composed"
+      ],
       "status": "beta",
       "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
       "since": "0.25.0",
@@ -118,6 +154,8 @@
       }
     },
     "alert": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -129,6 +167,8 @@
       ]
     },
     "alert-dialog": {
+      "category": "Overlays",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -140,6 +180,8 @@
       ]
     },
     "amount-display": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "beta",
       "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
       "since": "0.25.0",
@@ -167,6 +209,8 @@
       }
     },
     "app-bar": {
+      "category": "Navigation",
+      "kind": "component",
       "status": "stable",
       "since": "0.6.0",
       "platforms": [
@@ -178,6 +222,8 @@
       ]
     },
     "aspect-ratio": {
+      "category": "Layout & Structure",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -189,6 +235,8 @@
       ]
     },
     "audio-player": {
+      "category": "Media & Content",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -205,6 +253,8 @@
       }
     },
     "avatar": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -216,6 +266,8 @@
       ]
     },
     "avatar-group": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.10.0",
       "platforms": [
@@ -240,6 +292,8 @@
       }
     },
     "badge": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -251,6 +305,8 @@
       ]
     },
     "banner": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "stable",
       "since": "0.10.0",
       "platforms": [
@@ -262,6 +318,8 @@
       ]
     },
     "breadcrumb": {
+      "category": "Navigation",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -273,6 +331,8 @@
       ]
     },
     "button": {
+      "category": "Actions & Controls",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -284,6 +344,8 @@
       ]
     },
     "button-group": {
+      "category": "Actions & Controls",
+      "kind": "component",
       "status": "stable",
       "since": "0.9.0",
       "platforms": [
@@ -295,6 +357,8 @@
       ]
     },
     "calendar": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -311,6 +375,8 @@
       }
     },
     "card": {
+      "category": "Layout & Structure",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -322,6 +388,8 @@
       ]
     },
     "carousel": {
+      "category": "Media & Content",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -333,6 +401,8 @@
       ]
     },
     "chart": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -349,6 +419,8 @@
       }
     },
     "checkbox": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -360,6 +432,8 @@
       ]
     },
     "circular-progress": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -371,6 +445,8 @@
       ]
     },
     "code-block": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -382,6 +458,8 @@
       ]
     },
     "collapsible": {
+      "category": "Layout & Structure",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -393,6 +471,8 @@
       ]
     },
     "color-picker": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.12.0",
       "platforms": [
@@ -409,6 +489,8 @@
       }
     },
     "combobox": {
+      "category": "Forms & Inputs",
+      "kind": "recipe",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -434,6 +516,8 @@
       }
     },
     "command": {
+      "category": "Actions & Controls",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -445,6 +529,8 @@
       ]
     },
     "comparison-slider": {
+      "category": "Media & Content",
+      "kind": "component",
       "status": "stable",
       "since": "0.11.0",
       "platforms": [
@@ -456,6 +542,8 @@
       ]
     },
     "context-menu": {
+      "category": "Overlays",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -467,6 +555,8 @@
       ]
     },
     "country-select": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "beta",
       "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
       "since": "0.25.0",
@@ -494,6 +584,8 @@
       }
     },
     "data-grid": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.12.0",
       "platforms": [
@@ -510,6 +602,8 @@
       }
     },
     "data-table": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -526,6 +620,8 @@
       }
     },
     "date-picker": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -542,6 +638,8 @@
       }
     },
     "date-range-input": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "beta",
       "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
       "since": "0.25.0",
@@ -569,6 +667,8 @@
       }
     },
     "description-list": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.10.0",
       "platforms": [
@@ -580,6 +680,8 @@
       ]
     },
     "dialog": {
+      "category": "Overlays",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -591,6 +693,8 @@
       ]
     },
     "diff-viewer": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.12.0",
       "platforms": [
@@ -607,6 +711,11 @@
       }
     },
     "direction-provider": {
+      "category": "Layout & Structure",
+      "kind": "component",
+      "facets": [
+        "utility"
+      ],
       "status": "stable",
       "since": "0.13.0",
       "platforms": [
@@ -633,6 +742,8 @@
       }
     },
     "drawer": {
+      "category": "Overlays",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -644,6 +755,8 @@
       ]
     },
     "dropdown-menu": {
+      "category": "Overlays",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -655,6 +768,8 @@
       ]
     },
     "empty": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "stable",
       "since": "0.8.0",
       "platforms": [
@@ -666,6 +781,8 @@
       ]
     },
     "fab": {
+      "category": "Actions & Controls",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -677,6 +794,8 @@
       ]
     },
     "field": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -688,6 +807,8 @@
       ]
     },
     "file-upload": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -704,6 +825,8 @@
       }
     },
     "footer": {
+      "category": "Layout & Structure",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -715,6 +838,11 @@
       ]
     },
     "form": {
+      "category": "Forms & Inputs",
+      "kind": "component",
+      "facets": [
+        "composed"
+      ],
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -741,6 +869,8 @@
       }
     },
     "guest-picker": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "beta",
       "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
       "since": "0.25.0",
@@ -768,6 +898,8 @@
       }
     },
     "hover-card": {
+      "category": "Overlays",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -779,6 +911,8 @@
       ]
     },
     "image": {
+      "category": "Media & Content",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -790,6 +924,8 @@
       ]
     },
     "inform": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -801,6 +937,8 @@
       ]
     },
     "input": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -812,6 +950,8 @@
       ]
     },
     "input-group": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -823,6 +963,8 @@
       ]
     },
     "input-otp": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -837,6 +979,8 @@
       }
     },
     "json-viewer": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.12.0",
       "platforms": [
@@ -853,6 +997,8 @@
       }
     },
     "kanban-board": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.12.0",
       "platforms": [
@@ -879,6 +1025,8 @@
       }
     },
     "kbd": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.8.0",
       "platforms": [
@@ -890,6 +1038,8 @@
       ]
     },
     "label": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -901,6 +1051,8 @@
       ]
     },
     "list": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -912,6 +1064,8 @@
       ]
     },
     "markdown-editor": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.12.0",
       "platforms": [
@@ -928,6 +1082,8 @@
       }
     },
     "marquee": {
+      "category": "Media & Content",
+      "kind": "component",
       "status": "stable",
       "since": "0.11.0",
       "platforms": [
@@ -939,6 +1095,8 @@
       ]
     },
     "menubar": {
+      "category": "Navigation",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -950,6 +1108,8 @@
       ]
     },
     "message-bubble": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.12.0",
       "platforms": [
@@ -969,6 +1129,8 @@
       }
     },
     "metric": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -980,6 +1142,8 @@
       ]
     },
     "modal": {
+      "category": "Overlays",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -991,6 +1155,8 @@
       ]
     },
     "multi-select": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.12.0",
       "platforms": [
@@ -1002,6 +1168,8 @@
       ]
     },
     "native-select": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.9.0",
       "platforms": [
@@ -1025,6 +1193,8 @@
       }
     },
     "navigation-bar": {
+      "category": "Navigation",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1036,6 +1206,8 @@
       ]
     },
     "navigation-menu": {
+      "category": "Navigation",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1059,6 +1231,8 @@
       }
     },
     "notification-center": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "beta",
       "since": "0.12.0",
       "platforms": [
@@ -1074,6 +1248,8 @@
       }
     },
     "number-input": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1085,6 +1261,8 @@
       ]
     },
     "page-header": {
+      "category": "Navigation",
+      "kind": "component",
       "status": "stable",
       "since": "0.11.0",
       "platforms": [
@@ -1096,6 +1274,8 @@
       ]
     },
     "pagination": {
+      "category": "Navigation",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1107,6 +1287,8 @@
       ]
     },
     "pass-card": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "beta",
       "lifecycleReason": "New in the Phase 1 transactional foundations: the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
       "since": "0.25.0",
@@ -1134,6 +1316,8 @@
       }
     },
     "password-input": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1145,6 +1329,8 @@
       ]
     },
     "phone-input": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "beta",
       "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
       "since": "0.25.0",
@@ -1172,6 +1358,8 @@
       }
     },
     "popover": {
+      "category": "Overlays",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1183,6 +1371,8 @@
       ]
     },
     "price-breakdown": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "beta",
       "lifecycleReason": "New in the Phase 1 transactional foundations: the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
       "since": "0.25.0",
@@ -1210,6 +1400,8 @@
       }
     },
     "progress": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1221,6 +1413,8 @@
       ]
     },
     "quote": {
+      "category": "Media & Content",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1232,6 +1426,8 @@
       ]
     },
     "radio-group": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1243,6 +1439,8 @@
       ]
     },
     "rating": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1254,6 +1452,8 @@
       ]
     },
     "reference-code": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "beta",
       "lifecycleReason": "New in the Phase 1 transactional foundations: the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
       "since": "0.25.0",
@@ -1281,6 +1481,8 @@
       }
     },
     "resizable": {
+      "category": "Layout & Structure",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1295,6 +1497,8 @@
       }
     },
     "result-state": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "beta",
       "lifecycleReason": "New in the Phase 1 transactional foundations: the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
       "since": "0.25.0",
@@ -1322,6 +1526,8 @@
       }
     },
     "scroll-area": {
+      "category": "Layout & Structure",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1336,6 +1542,8 @@
       }
     },
     "segmented-control": {
+      "category": "Actions & Controls",
+      "kind": "component",
       "status": "stable",
       "since": "0.10.0",
       "platforms": [
@@ -1347,6 +1555,8 @@
       ]
     },
     "select": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1358,6 +1568,8 @@
       ]
     },
     "separator": {
+      "category": "Layout & Structure",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1369,6 +1581,8 @@
       ]
     },
     "sheet": {
+      "category": "Overlays",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1380,6 +1594,8 @@
       ]
     },
     "sidebar": {
+      "category": "Navigation",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1391,6 +1607,8 @@
       ]
     },
     "skeleton": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1402,6 +1620,8 @@
       ]
     },
     "slider": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1413,6 +1633,8 @@
       ]
     },
     "sonner": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1429,6 +1651,8 @@
       }
     },
     "spinner": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1440,6 +1664,8 @@
       ]
     },
     "stepper": {
+      "category": "Navigation",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1451,6 +1677,8 @@
       ]
     },
     "switch": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1462,6 +1690,8 @@
       ]
     },
     "tab-bar": {
+      "category": "Navigation",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1473,6 +1703,8 @@
       ]
     },
     "table": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1489,6 +1721,8 @@
       }
     },
     "table-of-contents": {
+      "category": "Navigation",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1500,6 +1734,8 @@
       ]
     },
     "tabs": {
+      "category": "Navigation",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1511,6 +1747,8 @@
       ]
     },
     "tag": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1522,6 +1760,8 @@
       ]
     },
     "textarea": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1533,6 +1773,8 @@
       ]
     },
     "time-slot-picker": {
+      "category": "Forms & Inputs",
+      "kind": "component",
       "status": "beta",
       "lifecycleReason": "New in the Phase 2 business foundations (business capability roadmap): the API has one consumer (the docs) and no product feedback yet, and its native and Angular adaptations are undecided, so the prop names may still change.",
       "since": "0.25.0",
@@ -1560,6 +1802,8 @@
       }
     },
     "timeline": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.10.0",
       "platforms": [
@@ -1571,6 +1815,8 @@
       ]
     },
     "toggle": {
+      "category": "Actions & Controls",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1582,6 +1828,8 @@
       ]
     },
     "toggle-group": {
+      "category": "Actions & Controls",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1593,6 +1841,8 @@
       ]
     },
     "tooltip": {
+      "category": "Overlays",
+      "kind": "component",
       "status": "stable",
       "since": "0.4.1",
       "platforms": [
@@ -1604,6 +1854,8 @@
       ]
     },
     "tour": {
+      "category": "Feedback & Status",
+      "kind": "component",
       "status": "stable",
       "since": "0.12.0",
       "platforms": [
@@ -1627,6 +1879,8 @@
       }
     },
     "tree-view": {
+      "category": "Navigation",
+      "kind": "component",
       "status": "stable",
       "since": "0.12.0",
       "platforms": [
@@ -1646,6 +1900,8 @@
       }
     },
     "virtual-list": {
+      "category": "Data Display",
+      "kind": "component",
       "status": "stable",
       "since": "0.12.0",
       "platforms": [

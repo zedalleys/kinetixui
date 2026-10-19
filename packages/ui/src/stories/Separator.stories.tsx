@@ -20,7 +20,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Foundations/Separator",
+  title: "Layout & Structure/Separator",
   component: Separator,
   args: { orientation: "horizontal" },
   argTypes: { orientation: { control: "inline-radio", options: ["horizontal", "vertical"] } },
