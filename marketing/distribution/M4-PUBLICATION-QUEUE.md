@@ -107,7 +107,7 @@ or strip the reply link, so no tagged session afterwards means "no tagged arriva
 | --- | --- |
 | Final copy | [`../content/linkedin.md`](../content/linkedin.md) § **LI-008**, campaign line to closing `---`. Pin if approved: sha256 `2584e24…6491` |
 | Destination | `/docs/platforms` |
-| Tracking URL | `https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_d_partial_evidence&utm_content=li_primary` — paste it in place of the bare URL on the last line. The pin covers the bare URL, so the swap at posting time does not break it |
+| Tracking URL | `https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_d_partial_evidence&utm_content=li_primary` — paste it in place of the bare URL on the last line. Paste-ready, the last line becomes: `The evidence, by platform: https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_d_partial_evidence&utm_content=li_primary`. See "Tracked links and the pin" below for what the hash does and does not guarantee |
 | Target audience | P1 — design-system engineers. Message: a partial count is not a tick |
 | Positioning pillar | Primary: infrastructure, verification as published evidence. Pillar **d** |
 | Visual | VIS-006, regenerated 2026-10-17 from the generator (109 / Angular 80) |
@@ -122,7 +122,7 @@ First post on `kx_p1_d_partial_evidence`, so there is no earlier arrival on this
 | --- | --- |
 | Final copy | [`../content/x.md`](../content/x.md) § **X-008**. Pin if approved: sha256 `1444496…6ccd` |
 | Destination | `/components` |
-| Tracking URL | `https://kinetixui.com/components?utm_source=x&utm_medium=social&utm_campaign=kx_p2_f_two_trades&utm_content=x_thread` — paste it in place of the bare URL in post 4 |
+| Tracking URL | `https://kinetixui.com/components?utm_source=x&utm_medium=social&utm_campaign=kx_p2_f_two_trades&utm_content=x_thread` — paste it in place of the bare URL in post 4, whose last line then reads exactly `https://kinetixui.com/components?utm_source=x&utm_medium=social&utm_campaign=kx_p2_f_two_trades&utm_content=x_thread`. See "Tracked links and the pin" below |
 | Target audience | P2 — product teams shipping web and native |
 | Positioning pillar | Secondary: multi-platform component library, with the infrastructure argument underneath. Pillar **f** |
 | Visual | VIS-005. Known nit: its alt text says "presented as equals" while one column is accent-styled — fix the alt text when posting |
@@ -133,6 +133,29 @@ Its LinkedIn sibling LI-007 shares this campaign and produced no tagged audience
 tag is the only thing that will separate this post's arrivals from LI-007's. Watch the tagged `/components` link.
 
 ---
+
+## Tracked links and the pin
+
+The copy pin and the tracked link are guarded by two different mechanisms, and it is worth being exact about which
+covers what, because a hash over the draft is easy to over-read.
+
+- **The pin covers the prose.** It hashes the section as written in the draft file, where the last line carries the
+  bare `https://kinetixui.com/...` URL. It guarantees that the words approved are the words posted. It says nothing
+  about the tracked URL, because the tracked URL is not in the hashed text — for LI-001 it is not even in the body,
+  it is in the first comment.
+- **The tracked URL is derived, not typed.** `check:distribution` rebuilds every row's URL from the content
+  register — source, medium, campaign, content — and rejects a destination that is not a real route or a source the
+  runtime would normalise to `other`. That derivation, not a hash, is what makes the URL correct, and it is
+  re-verified on every run.
+- **What neither can catch is a URL typed by hand into the post.** No check reads the link inside a published
+  LinkedIn post or X thread. So the rule at posting time is: copy the tracked URL from the asset's row above,
+  character for character, and never retype or shorten it. The paste-ready final lines in sections 3 and 4 exist so
+  that there is nothing to retype.
+- **Why the URL is not folded into the draft before approval.** It would put the same URL in two places, and the
+  register would stop being the single source the checks derive from; the two could then disagree with nothing to
+  say which is right. Hashing a rendered final-copy variant instead would need a change to
+  `scripts/marketing-publication-rules.mjs`, which is code this documentation PR does not touch. If the swap is
+  ever wanted anyway, the moment to do it is before approval, never after.
 
 ## Platform claims: what may and may not be said this window
 
