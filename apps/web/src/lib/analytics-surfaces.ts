@@ -72,6 +72,8 @@ function setupPagePlatform(path: string): AnalyticsPlatform | null {
  * routes qualify, so a 404 at a docs-shaped URL is not counted as a docs view.
  */
 export function trackRouteView(pathname: string): void {
+  // a new page view: every disclosure and evidence link on it may report its first use again
+  inspected = new WeakSet();
   const path = cleanPath(pathname);
   if (!path) return;
 
@@ -117,6 +119,50 @@ export function trackPageEngaged(pathname: string): void {
  */
 export function ctaAttrs(source: AnalyticsSource, target: AnalyticsCtaTarget) {
   return { "data-analytics-cta": target, "data-analytics-source": source } as const;
+}
+
+/* ------------------------------------------------------------------ verification inspection */
+
+type InspectLocation = Extract<AnalyticsLocation, "verification_details" | "workflow_evidence" | "evidence_link">;
+const INSPECT_LOCATIONS: readonly InspectLocation[] = ["verification_details", "workflow_evidence", "evidence_link"];
+
+/**
+ * Mark a `<summary>` (or an evidence link) whose first use is a `verification_inspected`. Plain data attributes, like
+ * `ctaAttrs`, so the server-rendered disclosure stays a native `<details>` with no client component.
+ */
+export function inspectAttrs(source: AnalyticsSource, location: InspectLocation, component?: string) {
+  return { "data-analytics-inspect": location, "data-analytics-source": source, ...(component ? { "data-analytics-component": component } : {}) } as const;
+}
+
+/** Disclosures and links already reported on this page view. Replaced, not cleared, by `trackRouteView`. */
+let inspected = new WeakSet<Element>();
+
+/**
+ * Called by the provider's click listener for any click. Reports a `verification_inspected` when the click lands on a
+ * marked `<summary>` whose `<details>` is still closed (the click is about to open it), or on a marked link, and that
+ * element has not been reported on this page view. Keyboard activation of a summary (Enter, Space) is a click too.
+ * Returns whether it reported, so the caller can skip link handling for the same click.
+ */
+export function trackInspection(target: Element | null, pathname: string): boolean {
+  const el = target?.closest?.("[data-analytics-inspect]");
+  if (!el || inspected.has(el)) return false;
+  const location = el.getAttribute("data-analytics-inspect");
+  const source = el.getAttribute("data-analytics-source");
+  if (!isMember(INSPECT_LOCATIONS, location) || !isMember(ANALYTICS_SOURCES, source)) return false;
+  if (el.tagName === "SUMMARY") {
+    const details = el.parentElement;
+    if (!(details instanceof HTMLDetailsElement) || details.open) return false;
+  }
+  inspected.add(el);
+  const component = el.getAttribute("data-analytics-component");
+  const page = cleanPath(pathname);
+  analytics.track("verification_inspected", {
+    source,
+    location,
+    ...(component ? { component } : {}),
+    ...(page && !component ? { page } : {}),
+  });
+  return true;
 }
 
 const isMember = <T extends string>(list: readonly T[], value: string | null | undefined): value is T => !!value && (list as readonly string[]).includes(value);
