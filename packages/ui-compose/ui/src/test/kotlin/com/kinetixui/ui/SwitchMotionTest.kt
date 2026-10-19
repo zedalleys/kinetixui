@@ -318,17 +318,35 @@ class SwitchMotionTest {
 
     @Test
     fun withAnimationsOffTheTrackArrivesInsteadOfTravelling() {
-        // Suppression at the painted level, where the spec tests above can only read the spec: the
-        // same instant that showed an interpolated colour must now show the destination.
+        // Suppression at the painted level, where the spec tests above can only read the spec.
+        //
+        // Stated as "no frame shows a value between the two ends" rather than "the destination by
+        // frame N", which is what the first draft asserted and what CI corrected: a zero-duration
+        // tween still needs a frame to run, so the frame right after the click can legitimately
+        // still show the colour the switch is leaving. What suppression means is that nothing is
+        // ever painted BETWEEN the two — which is both independent of frame timing and the thing a
+        // reduced-motion user would actually notice. The two tests above show that with animations
+        // on those in-between frames are intermediate, so this assertion would fail there.
         setAnimatorScale(0f)
         rule.mainClock.autoAdvance = false
         val (checked, colours) = composeSwitchWithColours()
+        val off = colours().tertiary.toArgb()
         val on = colours().action.toArgb()
 
         rule.onNode(isToggleable()).performClick()
-        rule.mainClock.advanceTimeByFrame()
-        rule.mainClock.advanceTimeBy(KinetixDuration.instant / 2L)
-        assertEquals(true, checked.value)
-        assertEquals("with animations off the track should already be at its destination", on, paintedTrackColour())
+        val frames = mutableListOf<Int>()
+        repeat(FRAMES_PAST_THE_SETTLE) {
+            rule.mainClock.advanceTimeByFrame()
+            frames += paintedTrackColour()
+        }
+        assertEquals("the click should have taken effect", true, checked.value)
+        val intermediate = frames.filter { it != off && it != on }
+        assertEquals("the track travelled: $intermediate", emptyList<Int>(), intermediate)
+        assertEquals("the track should end on the checked colour", on, frames.last())
+    }
+
+    private companion object {
+        /** 16ms frames, so ten is comfortably past `instant` and its one-frame start-up. */
+        const val FRAMES_PAST_THE_SETTLE = 10
     }
 }
