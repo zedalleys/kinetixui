@@ -165,7 +165,17 @@ describe("check:motion-tokens", () => {
   });
 
   it("fails when a recorded deviation has been aligned but not removed", () => {
-    const { code, out } = run(mutate(ANGULAR, "inset-inline-start var(--duration-base)", "inset-inline-start var(--duration-instant)"));
+    // There is no recorded deviation left to mutate: MX1b-2 aligned the last one, Angular's Switch thumb on
+    // `base`. The case is built here instead, so the rule stays covered whether or not one exists — a
+    // deviation that still claims the Angular stylesheet runs the thumb on `base` must fail.
+    const contract = JSON.parse(read(CONTRACT));
+    contract.roles["selection-control"].deviations.push({
+      platform: "angular",
+      file: "packages/ui-angular/src/styles.css",
+      uses: "inset-inline-start var(--duration-base) var(--easing-standard)",
+      reason: "built by this test: the thumb is on instant now, so this deviation should be rejected",
+    });
+    const { code, out } = run({ [CONTRACT]: JSON.stringify(contract) });
     expect(code).toBe(1);
     expect(out).toMatch(/angular deviation .* no longer contains .*if it was aligned, remove the deviation/);
   });

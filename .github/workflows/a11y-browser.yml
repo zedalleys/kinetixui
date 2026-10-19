@@ -50,6 +50,7 @@ on:
       - "scripts/angular-overlays.mjs"
       - "scripts/angular-collections.mjs"
       - "scripts/angular-layout.mjs"
+      - "scripts/angular-selection-motion.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -88,6 +89,7 @@ on:
       - "scripts/angular-overlays.mjs"
       - "scripts/angular-collections.mjs"
       - "scripts/angular-layout.mjs"
+      - "scripts/angular-selection-motion.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
@@ -294,3 +296,13 @@ jobs:
       # text, and the carousel's motion with and without reduced motion. verification.json publishes this.
       - name: Angular layout, pointer and scroll in the browser (keyboard, pointer, touch, teardown, RTL, 200% text, motion)
         run: pnpm check:angular-layout
+
+      # MX1b-2: the Angular selection controls on the same contracts React holds (MOTION.md). Switch thumb,
+      # track and halo on 100ms with the thumb sampled every frame of a move (forward only, no overshoot,
+      # aria-checked already changed, leftward in a right-to-left subtree of a left-to-right page); Checkbox
+      # and Radio colour on 200ms with the glyph and the dot fading on their own layers and the halo on
+      # 100ms; Toggle and ToggleGroup colour on 200ms with the press layer on 100ms; the pointer, the
+      # keyboard, forced colours (the thumb is CanvasText, GrayText when disabled), rapid input, reduced
+      # motion, and a 32-cell viewport, theme, direction and text matrix.
+      - name: Angular selection motion (Switch 100ms, Checkbox/Radio/Toggle 200ms, forced colours, RTL, reduced motion)
+        run: pnpm check:angular-selection-motion
