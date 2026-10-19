@@ -69,8 +69,9 @@ A role is a duration and easing pairing with a named job. Status is earned:
 
 The current roles, with their platforms and status, are rendered on
 [/docs/foundations](https://kinetixui.com/docs/foundations#motion-roles) from the contract. A consumer that
-stops using its role's pairing fails `check:motion-tokens`; a recorded deviation (today: Angular Switch on
-`base`) fails once it is aligned and not removed.
+stops using its role's pairing fails `check:motion-tokens`; a recorded deviation fails once it is aligned and
+not removed. There are no recorded deviations today: the last one, Angular's Switch on `base`, was aligned in
+MX1b-2.
 
 ## Reduced motion
 
@@ -223,6 +224,30 @@ because a colour settling reads better slower. The two are not to be normalised 
 
 Hover's `action`/90 and selection share `background-color`, but both are on `instant`, so the "Hover and
 selection on the same property" problem does not arise here.
+
+### The Angular selection controls (MX1b-2)
+
+With Angular consuming them, `selection-state` and `press-feedback` have consumers on two platforms and a
+check of their own, so both are **proven** rather than `observed`. `selection-control` was already proven and
+now records no deviation.
+
+
+React is first, not final: the same contracts, implemented the way Angular implements things, and measured in
+the same instrument. `check:angular-selection-motion` drives the package as a live Angular application in
+Chromium (the `selection-motion` fixture) and reads the transitions that actually run.
+
+| Component | Selection | Layer | How Angular does it |
+| --- | --- | --- | --- |
+| Switch | thumb `inset-inline-start` and track `background-color`, `instant` 100ms · `standard` | halo `box-shadow`, `instant` | `selection-control`, as React. Before MX1b-2 both ran on `base` (300ms), the one recorded deviation in the contract |
+| Checkbox | `background-color`, `border-color`, `color`, `fast` 200ms; the glyph fades in on `fast` and leaves at once | halo `box-shadow`, `instant` | both glyphs rendered, the stylesheet showing the one `aria-checked` names; before MX1b-2 an `@if` mounted one of them and everything ran on `instant` |
+| RadioGroup | `border-color` on `fast`; the dot fades on `fast` from its own layer | halo `box-shadow`, `instant` | the dot is a span over the native input, not an inset ring inside the input's `box-shadow` — one `box-shadow` is one transition, so a shared property could only carry one tier |
+| Toggle, ToggleGroup | `background-color`, `color`, `fast` 200ms | an inset `box-shadow` layer, `foreground` 8% / 14%, `instant` | the hover `--muted` fill became that layer: a background step would be `background-color` and could only run at selection's `fast` |
+
+Forced colours: the Switch thumb and the Radio dot are drawn in `CanvasText` (`GrayText` when disabled),
+because a background is repainted as `Canvas` there and both used to disappear into their own track or ring.
+
+Reduced motion: the per-component block in `packages/ui-angular/src/styles.css` covers each new element, so
+every control lands on its end state with nothing running.
 
 ### Selection controls (Compose, MX1d)
 

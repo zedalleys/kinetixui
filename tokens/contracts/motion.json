@@ -46,86 +46,155 @@
   "roles": {
     "selection-control": {
       "status": "proven",
-      "duration": ["instant"],
-      "easing": ["standard"],
-      "properties": ["background-color", "box-shadow", "inset-inline-start (thumb)"],
+      "duration": [
+        "instant"
+      ],
+      "easing": [
+        "standard"
+      ],
+      "properties": [
+        "background-color",
+        "box-shadow",
+        "inset-inline-start (thumb)"
+      ],
       "reducedForm": "shorten",
-      "evidence": ["scripts/motion.mjs", "apps/web/src/lib/motion-contract.test.ts", "scripts/switch-motion.mjs", "packages/ui/src/switch-motion.test.tsx"],
-      "note": "Switch only, on purpose: its thumb is a physical control, so the thumb's travel, the track colour and the halo all run on instant. It is not selection-state (fast), and the two are not to be normalised (owner decision 2026-10-17, re-confirmed for MX1b-1c). React MX1b-1c measured the thumb frame by frame in Chromium (forward only, no overshoot, mirrored in RTL, aria-checked first) and added the registry reduced form and a forced-colours thumb.",
+      "evidence": [
+        "scripts/motion.mjs",
+        "apps/web/src/lib/motion-contract.test.ts",
+        "scripts/switch-motion.mjs",
+        "packages/ui/src/switch-motion.test.tsx",
+        "scripts/angular-selection-motion.mjs"
+      ],
+      "note": "Switch only, on purpose: its thumb is a physical control, so the thumb's travel, the track colour and the halo all run on instant. It is not selection-state (fast), and the two are not to be normalised (owner decision 2026-10-17, re-confirmed for MX1b-1c). React MX1b-1c measured the thumb frame by frame in Chromium (forward only, no overshoot, mirrored in RTL, aria-checked first) and added the registry reduced form and a forced-colours thumb. MX1b-2 aligned Angular: the thumb and the track left base (300ms) for instant, measured frame by frame in Chromium (scripts/angular-selection-motion.mjs), and the thumb is drawn in CanvasText (GrayText when disabled) so forced colours no longer hide it.",
       "consumers": [
         {
           "platform": "react",
           "file": "packages/ui/src/components/switch.tsx",
-          "expects": ["transition-[background-color,box-shadow] duration-instant ease-standard", "transition-[inset-inline-start] duration-instant ease-standard", "motion-reduce:transition-none"]
+          "expects": [
+            "transition-[background-color,box-shadow] duration-instant ease-standard",
+            "transition-[inset-inline-start] duration-instant ease-standard",
+            "motion-reduce:transition-none"
+          ]
         },
         {
           "platform": "swiftui",
           "file": "packages/ui-swiftui/Sources/KinetixUI/KinetixSwitchMotion.swift",
-          "expects": ["KinetixDuration.instant", "KinetixEasing.standard"]
+          "expects": [
+            "KinetixDuration.instant",
+            "KinetixEasing.standard"
+          ]
         },
         {
           "platform": "compose",
           "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixSwitchMotion.kt",
-          "expects": ["KinetixDuration.instant", "KinetixEasing.standard"]
+          "expects": [
+            "KinetixDuration.instant",
+            "KinetixEasing.standard"
+          ]
         },
         {
           "platform": "flutter",
           "file": "packages/ui-flutter/lib/src/kinetix_switch_motion.dart",
-          "expects": ["KinetixDuration.instant", "KinetixEasing.standard"]
-        }
-      ],
-      "deviations": [
+          "expects": [
+            "KinetixDuration.instant",
+            "KinetixEasing.standard"
+          ]
+        },
         {
           "platform": "angular",
           "file": "packages/ui-angular/src/styles.css",
-          "uses": "inset-inline-start var(--duration-base) var(--easing-standard)",
-          "reason": "Angular's Switch thumb and track colour run on base (300ms), not instant. Recorded since #307; aligning it is an MX1b candidate, not a contract change."
+          "expects": [
+            "background-color var(--duration-instant) var(--easing-standard)",
+            "inset-inline-start var(--duration-instant) var(--easing-standard)"
+          ]
         }
-      ]
+      ],
+      "deviations": []
     },
     "disclosure": {
       "status": "proven",
-      "duration": ["fast"],
-      "easing": ["enter", "exit"],
-      "properties": ["height (measured)", "grid-template-rows", "transform (chevron)"],
+      "duration": [
+        "fast"
+      ],
+      "easing": [
+        "enter",
+        "exit"
+      ],
+      "properties": [
+        "height (measured)",
+        "grid-template-rows",
+        "transform (chevron)"
+      ],
       "reducedForm": "shorten",
-      "evidence": ["scripts/motion.mjs", "apps/web/src/lib/motion-contract.test.ts"],
+      "evidence": [
+        "scripts/motion.mjs",
+        "apps/web/src/lib/motion-contract.test.ts"
+      ],
       "consumers": [
         {
           "platform": "react",
           "file": "packages/ui/tailwind.config.ts",
-          "expects": ["accordion-down var(--duration-fast, 200ms) var(--easing-enter", "accordion-up var(--duration-fast, 200ms) var(--easing-exit"]
+          "expects": [
+            "accordion-down var(--duration-fast, 200ms) var(--easing-enter",
+            "accordion-up var(--duration-fast, 200ms) var(--easing-exit"
+          ]
         },
         {
           "platform": "angular",
           "file": "packages/ui-angular/src/styles.css",
-          "expects": ["grid-template-rows var(--duration-fast) var(--easing-enter)", "grid-template-rows var(--duration-fast) var(--easing-exit)"]
+          "expects": [
+            "grid-template-rows var(--duration-fast) var(--easing-enter)",
+            "grid-template-rows var(--duration-fast) var(--easing-exit)"
+          ]
         },
         {
           "platform": "swiftui",
           "file": "packages/ui-swiftui/Sources/KinetixUI/KinetixDisclosureMotion.swift",
-          "expects": ["KinetixDuration.fast", "KinetixEasing.enter", "KinetixEasing.exit"]
+          "expects": [
+            "KinetixDuration.fast",
+            "KinetixEasing.enter",
+            "KinetixEasing.exit"
+          ]
         },
         {
           "platform": "compose",
           "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixDisclosureMotion.kt",
-          "expects": ["KinetixDuration.fast", "KinetixEasing.enter", "KinetixEasing.exit"]
+          "expects": [
+            "KinetixDuration.fast",
+            "KinetixEasing.enter",
+            "KinetixEasing.exit"
+          ]
         },
         {
           "platform": "flutter",
           "file": "packages/ui-flutter/lib/src/kinetix_disclosure_motion.dart",
-          "expects": ["KinetixDuration.fast", "KinetixEasing.enter", "KinetixEasing.exit"]
+          "expects": [
+            "KinetixDuration.fast",
+            "KinetixEasing.enter",
+            "KinetixEasing.exit"
+          ]
         }
       ],
       "deviations": []
     },
     "overlay": {
       "status": "observed",
-      "duration": ["fast", "instant"],
-      "easing": ["enter", "exit"],
-      "properties": ["opacity", "transform (zoom/slide)"],
+      "duration": [
+        "fast",
+        "instant"
+      ],
+      "easing": [
+        "enter",
+        "exit"
+      ],
+      "properties": [
+        "opacity",
+        "transform (zoom/slide)"
+      ],
       "reducedForm": "shorten",
-      "evidence": ["apps/web/src/lib/motion-contract.test.ts"],
+      "evidence": [
+        "apps/web/src/lib/motion-contract.test.ts"
+      ],
       "note": "Open on fast + enter, close on instant + exit: the exit is shorter because a dismissed surface should not linger. Repeated on React Dialog and Sheet's scrim; the motion-contract test proves each animate-in/out names a token duration, not that this pairing holds.",
       "consumers": [
         {
@@ -138,16 +207,25 @@
         {
           "platform": "angular",
           "file": "packages/ui-angular/src/styles.css",
-          "expects": ["transition-duration: var(--duration-fast); transition-timing-function: var(--easing-enter);"]
+          "expects": [
+            "transition-duration: var(--duration-fast); transition-timing-function: var(--easing-enter);"
+          ]
         }
       ],
       "deviations": []
     },
     "spatial": {
       "status": "observed",
-      "duration": ["slow", "base"],
-      "easing": ["standard"],
-      "properties": ["transform (slide)"],
+      "duration": [
+        "slow",
+        "base"
+      ],
+      "easing": [
+        "standard"
+      ],
+      "properties": [
+        "transform (slide)"
+      ],
       "reducedForm": "shorten",
       "evidence": [],
       "note": "Large surfaces: Sheet opens on slow and closes on base. One React consumer and no rendered check, so it is recorded, not promoted.",
@@ -165,9 +243,15 @@
     },
     "selection-indicator": {
       "status": "proposed",
-      "duration": ["base"],
-      "easing": ["emphasized"],
-      "properties": ["transform or logical inset of one shared indicator"],
+      "duration": [
+        "base"
+      ],
+      "easing": [
+        "emphasized"
+      ],
+      "properties": [
+        "transform or logical inset of one shared indicator"
+      ],
       "reducedForm": "remove-travel",
       "evidence": [],
       "note": "A single indicator travelling between selected items (Tabs, SegmentedControl). Being built for React in PR #388; not on main. Promote to observed when #388 merges and add its consumer; promote to proven when a rendered midpoint check covers it.",
@@ -175,13 +259,29 @@
       "deviations": []
     },
     "selection-state": {
-      "status": "observed",
-      "duration": ["fast"],
-      "easing": ["standard"],
-      "properties": ["background-color", "color", "border-color", "opacity"],
+      "status": "proven",
+      "duration": [
+        "fast"
+      ],
+      "easing": [
+        "standard"
+      ],
+      "properties": [
+        "background-color",
+        "color",
+        "border-color",
+        "opacity"
+      ],
       "reducedForm": "shorten",
-      "evidence": ["scripts/motion.mjs", "scripts/toggle-motion.mjs", "packages/ui/src/toggle-motion.test.tsx", "scripts/checkbox-radio-motion.mjs", "packages/ui/src/checkbox-radio-motion.test.tsx"],
-      "note": "Colour and surface change when a control becomes selected or unselected: Toggle, ToggleGroup items, Checkbox and Radio indicators. Owner decision 2026-10-17: fast (200ms). The semantic state changes at once; only the paint interpolates. Switch keeps selection-control (instant) unless a defect is shown. Adopted component by component from MX1b-1. Observed on React Toggle and ToggleGroup (MX1b-1a, which share toggleVariants): background, text and border colour on fast, measured in a browser. Observed on React Checkbox and RadioGroup (MX1b-1b): box fill, border and glyph colour on fast, and the tick, dash or dot fading in on fast (opacity). The Checkbox glyph leaves at once rather than fading, so a box going from mixed to unchecked never shows the tick on its way out. Promoted to proven when a second platform consumes it. Compose joined in MX1d: KinetixSelectionMotion resolves fast/standard, collapses to tween(0) at animator scale 0, and Toggle, Checkbox and RadioButton read it through animateColorAsState. The status stays observed on purpose \u2014 a second CONSUMER is not a second OBSERVATION, and Compose's Robolectric suite reads the semantics tree rather than an interpolated colour.",
+      "evidence": [
+        "scripts/motion.mjs",
+        "scripts/toggle-motion.mjs",
+        "packages/ui/src/toggle-motion.test.tsx",
+        "scripts/checkbox-radio-motion.mjs",
+        "packages/ui/src/checkbox-radio-motion.test.tsx",
+        "scripts/angular-selection-motion.mjs"
+      ],
+      "note": "Colour and surface change when a control becomes selected or unselected: Toggle, ToggleGroup items, Checkbox and Radio indicators. Owner decision 2026-10-17: fast (200ms). The semantic state changes at once; only the paint interpolates. Switch keeps selection-control (instant) unless a defect is shown. Adopted component by component from MX1b-1. Observed on React Toggle and ToggleGroup (MX1b-1a, which share toggleVariants): background, text and border colour on fast, measured in a browser. Observed on React Checkbox and RadioGroup (MX1b-1b): box fill, border and glyph colour on fast, and the tick, dash or dot fading in on fast (opacity). The Checkbox glyph leaves at once rather than fading, so a box going from mixed to unchecked never shows the tick on its way out. Promoted to proven when a second platform consumes it. MX1b-2 adopted it on Angular Checkbox, RadioGroup, Toggle and ToggleGroup: colour and edge on fast, the Checkbox glyph and the Radio dot fading on fast from their own layers, and the state layer kept on instant. Compose joined in MX1d: KinetixSelectionMotion resolves fast/standard, collapses to tween(0) at animator scale 0, and Toggle, Checkbox and RadioButton read it through animateColorAsState. Compose adds a consumer and no observation: its Robolectric suite reads the semantics tree rather than an interpolated colour, so it does not carry the role's proven status — the React and Angular browser measurements do.",
       "consumers": [
         {
           "platform": "react",
@@ -210,21 +310,47 @@
           ]
         },
         {
+          "platform": "angular",
+          "file": "packages/ui-angular/src/styles.css",
+          "expects": [
+            "background-color var(--duration-fast) var(--easing-standard)",
+            "border-color var(--duration-fast) var(--easing-standard)",
+            "opacity var(--duration-fast) var(--easing-standard)"
+          ]
+        },
+        {
           "platform": "compose",
           "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixSelectionMotion.kt",
-          "expects": ["KinetixDuration.fast", "KinetixEasing.standard"]
+          "expects": [
+            "KinetixDuration.fast",
+            "KinetixEasing.standard"
+          ]
         }
       ],
       "deviations": []
     },
     "press-feedback": {
-      "status": "observed",
-      "duration": ["instant"],
-      "easing": ["standard"],
-      "properties": ["background-color", "opacity", "box-shadow"],
+      "status": "proven",
+      "duration": [
+        "instant"
+      ],
+      "easing": [
+        "standard"
+      ],
+      "properties": [
+        "background-color",
+        "opacity",
+        "box-shadow"
+      ],
       "reducedForm": "shorten",
-      "evidence": ["scripts/toggle-motion.mjs", "packages/ui/src/toggle-motion.test.tsx", "scripts/checkbox-radio-motion.mjs", "packages/ui/src/checkbox-radio-motion.test.tsx"],
-      "note": "Immediate hover and press colour on buttons, toggles and rows. Today most of these React components name no duration and run on Tailwind's untokenised 150ms default (see the debt register in motion-contract.test.ts). Owner decision 2026-10-17: press feedback is instant (100ms) where it applies, and a change of selected state uses selection-state (fast). There is no global retiming; each component moves in its own slice. Observed on React Toggle and ToggleGroup (MX1b-1a): an inset box-shadow state layer (foreground 8% hover, 14% press) on instant, so it is told apart from selection by property; the expects below pin instant to the last slot, box-shadow. Checkbox and RadioGroup (MX1b-1b) put their existing 5px foreground halo (8% hover, 14% press) on instant the same way. Their box's own hover and press colour step (TOKENS.md, Selection controls) is kept and moves with the colour on fast; the halo is the immediate answer.",
+      "evidence": [
+        "scripts/toggle-motion.mjs",
+        "packages/ui/src/toggle-motion.test.tsx",
+        "scripts/checkbox-radio-motion.mjs",
+        "packages/ui/src/checkbox-radio-motion.test.tsx",
+        "scripts/angular-selection-motion.mjs"
+      ],
+      "note": "Immediate hover and press colour on buttons, toggles and rows. Today most of these React components name no duration and run on Tailwind's untokenised 150ms default (see the debt register in motion-contract.test.ts). Owner decision 2026-10-17: press feedback is instant (100ms) where it applies, and a change of selected state uses selection-state (fast). There is no global retiming; each component moves in its own slice. Observed on React Toggle and ToggleGroup (MX1b-1a): an inset box-shadow state layer (foreground 8% hover, 14% press) on instant, so it is told apart from selection by property; the expects below pin instant to the last slot, box-shadow. Checkbox and RadioGroup (MX1b-1b) put their existing 5px foreground halo (8% hover, 14% press) on instant the same way. Their box's own hover and press colour step (TOKENS.md, Selection controls) is kept and moves with the colour on fast; the halo is the immediate answer. MX1b-2 gave Angular Toggle and ToggleGroup the same inset layer (8% hover, 14% press) on instant, and kept the Angular Checkbox, Radio and Switch halo there.",
       "consumers": [
         {
           "platform": "react",
@@ -237,12 +363,26 @@
         {
           "platform": "react",
           "file": "packages/ui/src/components/checkbox.tsx",
-          "expects": ["transition-[background-color,color,border-color,box-shadow] ease-standard", ",var(--duration-instant)]"]
+          "expects": [
+            "transition-[background-color,color,border-color,box-shadow] ease-standard",
+            ",var(--duration-instant)]"
+          ]
         },
         {
           "platform": "react",
           "file": "packages/ui/src/components/radio-group.tsx",
-          "expects": ["transition-[color,border-color,box-shadow] ease-standard", ",var(--duration-instant)]"]
+          "expects": [
+            "transition-[color,border-color,box-shadow] ease-standard",
+            ",var(--duration-instant)]"
+          ]
+        },
+        {
+          "platform": "angular",
+          "file": "packages/ui-angular/src/styles.css",
+          "expects": [
+            "box-shadow var(--duration-instant) var(--easing-standard)",
+            "inset 0 0 0 100vmax hsl(var(--foreground) / 0.14)"
+          ]
         }
       ],
       "deviations": []
@@ -251,10 +391,17 @@
       "status": "proven",
       "duration": [],
       "easing": [],
-      "properties": ["opacity", "transform"],
+      "properties": [
+        "opacity",
+        "transform"
+      ],
       "reducedForm": "rest",
       "scope": "Spinner, Skeleton, Marquee and the typing indicator, on every platform that ships them",
-      "evidence": ["scripts/loop-motion.mjs", "scripts/check-registry-motion.mjs", "scripts/check-native-motion.mjs"],
+      "evidence": [
+        "scripts/loop-motion.mjs",
+        "scripts/check-registry-motion.mjs",
+        "scripts/check-native-motion.mjs"
+      ],
       "note": "Loops have no destination, so the contract is their reduced form (a static rest), not a duration pair. Each loop keeps its own period (caret 1.25s, typing 1.2s, marquee 32s), set on the keyframe animation rather than a transition tier. `slower` (1000ms) is documented for loops but nothing reads it as a period today: InputOTP's caret pairs `animate-caret-blink` with the transition utility `duration-slower`, which does not change an animation's duration.",
       "consumers": [],
       "deviations": []
