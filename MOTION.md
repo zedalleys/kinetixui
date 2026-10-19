@@ -278,12 +278,20 @@ Evidence, stated exactly: **Headless verified** for interaction and accessibilit
 open. Robolectric is a JVM host; it renders nothing a person could see.
 
 **The switch's track is measured.** `SwitchMotionTest` stops the test clock, advances it half a duration
-into the gesture, and reads the colour the switch actually rasterised, in both directions and with
-animations off. The colour is taken as the most common fully opaque pixel rather than from a fixed
+into the gesture, and reads the colour the switch actually rasterised, in both directions. The colour is
+taken as the most common fully opaque pixel rather than from a fixed
 coordinate, because the thumb is moving and any coordinate that is track at one point in the gesture is
 thumb at another; the track is the larger opaque area by roughly 840 pixels to 310, so the mode is the
 track whatever the thumb is doing. It runs under Robolectric's NATIVE graphics mode, since LEGACY draws
 nothing and would compare two blank bitmaps and pass.
+
+Reading suppression off the pixels, rather than off the spec, was tried and dropped; the measurement is
+kept in a comment in that file. With the animator scale at 0 the track is exactly at its destination from
+the third frame on, so it does not travel — but the first two frames after a click paint each end
+multiplied by about 0.916, so something composites over the track briefly and then stops. Telling that
+apart from a real traversal needs a tolerance, and a traversal's own first frames also sit near the
+starting end, so the threshold would have been tuned against a module that cannot be run outside CI.
+Compose's `reducedMotion` evidence is the spec tests, which read the duration the control is handed.
 
 That closes a gap this slice first recorded rather than fixed, and it is worth saying why the obvious
 routes did not: `animateColorAsState` does not expose which spec it was handed, so no assertion can read
