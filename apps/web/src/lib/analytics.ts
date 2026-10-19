@@ -58,7 +58,11 @@ export const ANALYTICS_SOURCES = [
 export type AnalyticsSource = (typeof ANALYTICS_SOURCES)[number];
 
 /** The position inside a surface. Stable identifiers, never visible text. */
-export const ANALYTICS_LOCATIONS = ["hero", "primary_nav", "sidebar", "installation", "code_example", "platform_tabs", "code_tab", "component_header", "footer", "content", "command_menu"] as const;
+export const ANALYTICS_LOCATIONS = [
+  "hero", "primary_nav", "sidebar", "installation", "code_example", "platform_tabs", "code_tab", "component_header", "footer", "content", "command_menu",
+  // What `verification_inspected` opened or followed (BD-W5 F-09).
+  "verification_details", "workflow_evidence", "evidence_link",
+] as const;
 export type AnalyticsLocation = (typeof ANALYTICS_LOCATIONS)[number];
 
 /** What a product call-to-action is FOR — never its visible label and never its destination URL. */
@@ -215,6 +219,16 @@ export interface AnalyticsEvents {
    * involved any interaction apart from render-only page loads (analytics.md §11 "Traffic cohorts").
    */
   page_engaged: Shape<never, "source">;
+  /*
+   * Someone looked at the evidence behind a verification claim: opened a component page's "Verification details"
+   * (`location: "verification_details"`, with `component`) or a use-case workflow's "Evidence for each part"
+   * (`location: "workflow_evidence"`, with `page`), or followed the link that explains how a level is earned
+   * (`location: "evidence_link"`). At most once per disclosure or link per page view; closing, re-opening and a
+   * disclosure that is merely on screen send nothing. Which parts or platforms were read is not sent. In neither
+   * Qualified Evaluation nor Adoption Intent (analytics.md §3/§4): the homepage `view_verification` CTA is the QE
+   * signal, and counting this one too would widen QE, which is the owner's call.
+   */
+  verification_inspected: Shape<"source" | "location", "component" | "page">;
 }
 
 export type AnalyticsEventName = keyof AnalyticsEvents;

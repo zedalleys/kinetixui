@@ -13,6 +13,7 @@
  */
 import Link from "next/link";
 import { blockTitle, componentTitle, linkClass } from "@/components/discovery-parts";
+import { inspectAttrs } from "@/lib/analytics-surfaces";
 import { PLATFORM_DEFINITIONS } from "@/lib/platform-parity";
 import type { Workflow } from "@/lib/business-discovery";
 import {
@@ -105,7 +106,7 @@ export function WorkflowReadiness({ workflow }: { workflow: Workflow }) {
       </div>
       {/* A native <details>: keyboard operable and announced as a disclosure without any client code. */}
       <details className="group mt-3 rounded-lg border border-border">
-        <summary className="cursor-pointer px-3 py-2 text-body-sm font-medium hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <summary {...inspectAttrs("use_case_page", "workflow_evidence")} className="cursor-pointer px-3 py-2 text-body-sm font-medium hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           Evidence for each part
         </summary>
         <div role="region" aria-label={`${workflow.title}: evidence for each part`} tabIndex={0} className="overflow-x-auto border-t border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
