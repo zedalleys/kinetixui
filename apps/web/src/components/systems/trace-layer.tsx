@@ -61,11 +61,15 @@ export function TraceLayer({ pairs }: { pairs: TracePair[] }) {
   return (
     <svg
       ref={svg}
+      data-trace-layer=""
       aria-hidden="true"
       focusable="false"
-      className="pointer-events-none absolute inset-0 overflow-visible"
-      width={state?.w ?? 0}
-      height={state?.h ?? 0}
+      className="pointer-events-none overflow-visible"
+      // The drawing is sized by its own `inset`, never by what was measured: a measured size in a layout property
+      // of an element inside the observed subtree feeds the observer its own output, and the page grows without
+      // bound. Only the `viewBox` carries the measurement, and that takes no part in layout. Positioned inline
+      // rather than by a utility class so the drawing stays out of flow even if the stylesheet never arrives.
+      style={{ position: "absolute", inset: 0 }}
       viewBox={`0 0 ${state?.w ?? 0} ${state?.h ?? 0}`}
     >
       {state?.paths.map((p) => <path key={p.key} d={p.d} className="kx-trace" data-kind={p.kind} />)}

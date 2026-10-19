@@ -559,11 +559,12 @@ function MapTraces({
 
   return (
     <svg
+      data-map-traces=""
       aria-hidden="true"
       focusable="false"
-      className="pointer-events-none absolute inset-0 overflow-visible"
-      width={geometry.width}
-      height={geometry.height}
+      className="pointer-events-none overflow-visible"
+      // Sized by its own `inset`, never by what was measured, and positioned inline: see `trace-layer.tsx`.
+      style={{ position: "absolute", inset: 0 }}
       viewBox={`0 0 ${geometry.width} ${geometry.height}`}
     >
       {geometry.generated.map((g) => (
