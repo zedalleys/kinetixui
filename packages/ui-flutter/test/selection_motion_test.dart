@@ -230,6 +230,31 @@ void main() {
       expect(mid, isNot(start));
       expect(mid, isNot(_fill(tester, KinetixToggle)));
     });
+
+    testWidgets('a pressed toggle moves its edge colour and never its edge width', (tester) async {
+      // The second layout defect in this widget, found by re-reading the first. A decoration whose
+      // border appears and disappears makes `AnimatedContainer` interpolate the border's WIDTH, and
+      // a `BoxDecoration` border insets its child, so pressing a standard toggle slid its label a
+      // pixel inward over `fast`. `selection-state` sanctions colour and surface, never layout, and
+      // React transitions `border-color` against a border box that never changes.
+      await tester.pumpWidget(_host(child: const _ToggleHost()));
+      final startEdge = _edge(tester, KinetixToggle);
+      expect(_decoration(tester, KinetixToggle).border!.top.width, 1.0);
+
+      await tester.tap(find.byType(KinetixToggle));
+      await _halfway(tester);
+      expect(
+        _decoration(tester, KinetixToggle).border!.top.width,
+        1.0,
+        reason: 'the edge width must not interpolate, or the label moves',
+      );
+      final midEdge = _edge(tester, KinetixToggle);
+
+      await tester.pumpAndSettle();
+      expect(_decoration(tester, KinetixToggle).border!.top.width, 1.0);
+      expect(midEdge, isNot(startEdge), reason: 'the edge colour does settle');
+      expect(_edge(tester, KinetixToggle), isNot(startEdge));
+    });
   });
 
   group('reduced motion — the colour arrives', () {

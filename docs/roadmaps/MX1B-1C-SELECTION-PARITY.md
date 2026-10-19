@@ -55,8 +55,8 @@ The milestones are those in MX1B-1-PLAN §6:
 | Component | React | Angular (Preview) | SwiftUI | Compose | Flutter |
 | --- | --- | --- | --- | --- | --- |
 | Toggle | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ✓ ✓ ○ |
-| ToggleGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ✓† ○ ○ |
-| Checkbox | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ✓‡ ✓ ○ |
+| ToggleGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ✓[5] ○ ○ |
+| Checkbox | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ✓[6] ✓ ○ |
 | RadioGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ✓ ✓ ○ |
 | Switch | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓ ○ | ○ (thumb only) ✓ ○ | ✓ ✓ ○ |
 
@@ -65,21 +65,24 @@ a contract consumer (Impl), `scripts/angular-selection-motion.mjs` fails on nine
 and that gate drives the package as a live Angular application in Chromium rather than in jsdom (Runtime).
 Angular stays Preview: these are motion and accessibility cells, not a graduation.
 
-MX1d moved the Flutter column (2026-10-18). What each tick means there:
+MX1d moved the Flutter column (2026-10-18). Footnote numbers are scoped by platform — SwiftUI owns [1] and
+[2], Compose [3] and [4], Flutter [5] and [6] — so the three columns can land in either order without two
+notes claiming the same marker. What each tick means here:
 
 - **Impl ✓** — the control reads `KinetixSelectionMotion` (`fast` · `standard`), a `selection-state`
   consumer in `tokens/contracts/motion.json`.
 - **Auto ✓** — `test/selection_motion_test.dart` measures a real interpolated fill at the midpoint of the
   settle, asserts the suppressed form in both directions, and asserts the radio semantics that did not
   exist before. `check:motion-tokens` and `check:native-motion` fail on negative controls watched to fire.
-- **†** — ToggleGroup's motion is its items': it is a pass-through to toggle.dart and animates nothing of
+- **[5]** — ToggleGroup's motion is its items': it is a pass-through to toggle.dart and animates nothing of
   its own, so it is not a family member and has no gate of its own here.
-- **‡** — Checkbox's fill and edge settle; the glyph still swaps in one frame, unlike React's fade.
+- **[6]** — Checkbox's fill and edge settle; the glyph still swaps in one frame, unlike React's fade.
 - **Runtime ○** — `flutter test` is headless: no device, no emulator, no screen. No `integration_test` job
   exists in this repository.
 
-On the strength of Flutter's measured midpoint, `selection-state` moves from **observed to proven** in
-`motion.json`, under that role's own rule: evidence cited, consumers on two platforms.
+`selection-state` is already **proven** in `motion.json`: MX1b-2 promoted it on Angular's Chromium
+measurement, and Flutter joins as a consumer rather than carrying the promotion. What Flutter's measured
+midpoint adds is the only reading of an interpolated colour on any native platform.
 
 Compose's Switch is not ticked for Impl: `selection-control` covers the thumb and the track colour, and
 `Switch.kt` animates only `thumbOffset` while the track colour is applied directly. Its Auto tick is for the

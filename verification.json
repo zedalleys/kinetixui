@@ -2189,11 +2189,11 @@
         ],
         "interaction": [
           "packages/ui-flutter/test/interaction_test.dart:18-111",
-          "packages/ui-flutter/test/selection_motion_test.dart:156-249",
-          "packages/ui-flutter/test/selection_motion_test.dart:250-280"
+          "packages/ui-flutter/test/selection_motion_test.dart:156-274",
+          "packages/ui-flutter/test/selection_motion_test.dart:275-305"
         ],
         "accessibility": [
-          "packages/ui-flutter/test/selection_motion_test.dart:281-369",
+          "packages/ui-flutter/test/selection_motion_test.dart:306-394",
           "packages/ui-flutter/test/semantics_test.dart:30-116"
         ],
         "rtl": [
@@ -2203,7 +2203,7 @@
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
         ],
         "reducedMotion": [
-          "packages/ui-flutter/test/selection_motion_test.dart:250-280"
+          "packages/ui-flutter/test/selection_motion_test.dart:275-305"
         ]
       }
     },
@@ -5015,10 +5015,10 @@
           "packages/ui-flutter (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-flutter/test/selection_motion_test.dart:156-249"
+          "packages/ui-flutter/test/selection_motion_test.dart:156-274"
         ],
         "accessibility": [
-          "packages/ui-flutter/test/selection_motion_test.dart:281-369"
+          "packages/ui-flutter/test/selection_motion_test.dart:306-394"
         ],
         "rtl": [
           "packages/ui-flutter/test/adaptivity_test.dart:32-68"
@@ -6446,7 +6446,7 @@
         ],
         "interaction": [
           "packages/ui-flutter/test/interaction_test.dart:18-111",
-          "packages/ui-flutter/test/selection_motion_test.dart:156-249"
+          "packages/ui-flutter/test/selection_motion_test.dart:156-274"
         ],
         "accessibility": [
           "packages/ui-flutter/test/semantics_test.dart:30-116"

@@ -259,7 +259,7 @@ Toggle were plain `Container`s.
 | | Selection | Dot / glyph |
 | --- | --- | --- |
 | Trigger | `value`, `selected`, `pressed` | `selected` |
-| Property | fill, border and content colour through `AnimatedContainer` and one `ColorTween` | the radio dot's `opacity` through `AnimatedOpacity` |
+| Property | fill, border **colour** and content colour through `AnimatedContainer` and one `ColorTween` | the radio dot's `opacity` through `AnimatedOpacity` |
 | Tier · easing | `fast` 200ms · `standard` (`selection-state`) | the same |
 | Reduced form | `KinetixDisclosureMotion.suppressed` through `MediaQuery.disableAnimationsOf` — one shared reader, one shared suppressed value | the same |
 | Interruption | the implicit widgets retarget from the current value | the same |
@@ -277,6 +277,17 @@ kind is claimed for the **checkbox only**: this repository defines it as suppres
 directions exercised, and the radio's reduced-motion test is an RTL end-state check that the full settle
 would also satisfy, while the toggle has no reduced-motion test at all. The marked passage was narrowed to
 match, so the ledger credits what the tests hold and nothing more.
+
+Nothing about the geometry is animated, and that took two passes. `size` decided the Toggle's height,
+minimum width and horizontal padding from inside the `AnimatedContainer`, so a caller moving `size` at a
+breakpoint interpolated all three; those now sit in a `SizedBox` / `ConstrainedBox` / `Padding` outside it.
+Then the same mistake a second time, in the decoration itself: the border appeared on press and disappeared
+on release, and `AnimatedContainer` interpolates a border's **width**, which a `BoxDecoration` border
+charges to its child as an inset — so pressing a standard toggle slid its label a pixel inward over `fast`.
+The border is now always one pixel and transparent when there is no edge to show, which is also what React
+does: it transitions `border-color` against a border box that never changes. `selection-state` is a colour
+and surface role; it sanctions no layout movement, and positional movement is the one thing Reduce Motion
+exists to remove. Both are guarded by tests that read the rendered box.
 
 Two stated gaps. The Checkbox glyph swaps in one frame while the fill settles (as on Compose). And an icon
 inside a Toggle shares the text's `ColorTween`, so it settles — but **none of these controls is focusable or

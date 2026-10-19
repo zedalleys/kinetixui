@@ -49,6 +49,17 @@ class KinetixToggle extends StatelessWidget {
       KinetixToggleSize.lg => (40, 10),
     };
     final bool showBorder = pressed || variant == KinetixToggleVariant.outline;
+    // The edge is always ONE pixel wide and only its colour changes, transparent when there is no
+    // edge to show. Handing `AnimatedContainer` a decoration whose border appears and disappears
+    // makes it interpolate the border's WIDTH, and a `BoxDecoration` border insets its child, so
+    // pressing a standard toggle slid its label a pixel inward over `fast` — layout movement again,
+    // in the same colour-and-surface role, found by re-reading the fix for the `size` case. React
+    // transitions `border-color` against a border box that never changes: the variants that have an
+    // edge keep it in every state, and the default variant's pressed emphasis is an inset ring,
+    // which cannot move anything. Keeping the width constant is what matches that.
+    final Color borderColor = showBorder
+        ? (pressed ? c.focus : c.input)
+        : const Color(0x00000000);
     final Color contentColor = pressed ? c.accentForeground : c.foreground;
 
     return Opacity(
@@ -77,7 +88,7 @@ class KinetixToggle extends StatelessWidget {
               decoration: BoxDecoration(
                 color: pressed ? c.accent : const Color(0x00000000),
                 borderRadius: BorderRadius.circular(8),
-                border: showBorder ? Border.all(color: pressed ? c.focus : c.input, width: 1) : null,
+                border: Border.all(color: borderColor, width: 1),
               ),
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: hPad),
