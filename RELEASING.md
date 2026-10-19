@@ -138,6 +138,21 @@ pending changesets. A range that already accepts the planned version is left exa
 that does not fails the release with both numbers named. Offline, so it runs on an ordinary pull
 request — before the Version Packages PR exists. See [Peer ranges across cohorts](#peer-ranges-across-cohorts).
 
+**Release-note links**: every internal link in `release/notes/<version>.json` and in the activated
+`apps/web/src/lib/releases.ts` is resolved against the built site — the path against the prerendered
+pages, the files under `public/` and the configured redirects, and any `#fragment` against the ids in
+that page's HTML. 0.25.0's notes linked `/docs/motion`, a route that does not exist, and nothing
+stopped it: `next build` does not resolve the hrefs it renders, `check:releases` never looked at a
+link, and `check:seo` reads links out of built pages — where a curated note does not appear until the
+Version PR activates it, and with the fragment stripped before resolving. `pnpm check:release-links`
+is that check; it uses the same route inventory as `check:seo`
+([`scripts/site-inventory.mjs`](./scripts/site-inventory.mjs)), so there is no second list of routes
+to keep in step, and its rules and negative controls are in
+[`scripts/release/test/release-links.test.mjs`](./scripts/release/test/release-links.test.mjs). It
+needs a site build, so it runs in CI's `build` job — the required check on every pull request,
+including the Version PR, and again on the push to `main` that triggers the release — rather than in
+`release.yml`'s preflight, which deliberately builds no site.
+
 **Registry state**: whether each allowlisted version already exists, read from the packument rather
 than parsed out of CLI output. An unreachable registry, an authentication failure or a malformed
 response is **not** read as "unpublished" — it stops the release, because publishing against
