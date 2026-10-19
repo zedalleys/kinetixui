@@ -93,8 +93,11 @@ from the first post of this window, so an arm's floor accumulates across weeks i
       whenever convenient, would settle which it is (packet §4); it is excluded from counts whenever it is made.
 - [ ] **QER's definition is untouched.** No event is added to it without an owner decision made in analytics.md,
       not in a query. `search_result_selected` (⌘K) and the per-platform properties from BD-W4 changed nothing;
-      `verification_inspected` arrives with PR #408, which is unmerged, and is explicitly in neither QE nor
-      Adoption Intent. If any of them is ever counted under QE, QER's history breaks at that date.
+      `verification_inspected` arrived with PR #408, merged to `main` 2026-10-18 as `a7127c84`, and is explicitly
+      in neither QE nor Adoption Intent (analytics.md §4 and the 2026-10-18 BD-W5 note). It does join the arrival
+      allowlist, but it fires only on a page that has already sent its `$pageview`, so it adds no eligible session
+      and the denominator is unchanged too. If any of them is ever counted under QE, QER's history breaks at that
+      date.
 - [ ] **Campaign links resolve.** `check:distribution` verifies every destination against the routes in
       `apps/web/src/app` and rejects a `utm_source` the runtime would normalise to `other`.
 

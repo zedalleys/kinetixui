@@ -85,6 +85,31 @@ changed, in order. Nothing is removed: the failed diagnostic is evidence, not a 
 > symptom would mean never posting.
 
 
+### The iOS Safari diagnostic, step by step (optional, three minutes, any time)
+
+This is the retest recommended above, written out so it can be done without thinking about it. It is a
+**diagnostic** visit: the URL carries `&kx_traffic=diagnostic`, which puts the session in the `diagnostic` cohort,
+excluded from every audience count and from QER by analytics.md rule 7. It is therefore safe before or after the
+post, and it is never the link that goes in the post or the first comment.
+
+1. On an iPhone, open the LinkedIn app and paste this into a direct message to yourself (a note to self keeps it
+   out of the feed), then tap the link so it opens in LinkedIn's **in-app** browser:
+
+```
+https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_parity_proof&utm_content=li_primary&kx_traffic=diagnostic
+```
+
+2. Tap once anywhere on the page, wait about five seconds, then close it.
+3. Open the same link again from the in-app browser's "open in Safari" action, so the second arrival is **iOS
+   Safari proper**. Tap once, wait five seconds, close.
+4. Say in the thread that both taps are done, and roughly when. Claude then runs the query below and reports which
+   `kx_source` each arrival carried.
+
+Two arrivals, two browsers, one URL: that is what separates "the in-app browser mangles the link" from "iOS Safari
+does". Reading `linkedin` on both means the 10:30 anomaly was a one-off on a link now proven on three browsers.
+Reading `other` on either names the path that breaks it, and M3.1's next step applies — a diagnostic-only property
+recording why a source was rejected. Either way the visits are excluded from the campaign's figures.
+
 If the gate ever has to be re-run (two minutes, once):
 
 1. Open a private window and visit

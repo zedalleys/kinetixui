@@ -17,6 +17,12 @@ Re-verified against the canonical metadata on today's `main`, not carried over f
 below are unchanged from the 2026-10-18 reading on `df596cf`, and `pnpm marketing:stats` and
 `components.manifest.json` agree.
 
+**Re-checked again 2026-10-19 05:33 UTC on `main`, `a7127c84`** (which now carries BD-W5, #408). Every figure in
+the table below is unchanged: `verify-package.mjs` prints `109 catalogue entries (108 components + 1 recipe)`,
+`{"React":109,"Angular":80,"SwiftUI":90,"Compose":90,"Flutter":90}`, `onAll(4)=90`, `exceptions=19`. The
+replacement paragraph therefore still says what the repository says, and the snapshot date stays **18 October**:
+it dates the measurement, which has not moved, not the day it was re-read.
+
 `node marketing/content/drafts/a01/verify-package.mjs` re-derives every current figure from
 `components.manifest.json`:
 
