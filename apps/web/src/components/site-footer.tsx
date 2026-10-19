@@ -33,19 +33,21 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
 ];
 
 /*
-  The footer is a print surface: the engraving (design-assets/) is inked in palette primitives only —
-  `azure.1000`/`azure.950` ink and `azure.900` mid-tones on `amber.150` paper, the nearest steps to the art
-  direction's Prussian blue and parchment — and the panel is set in the same primitives, so the plate's sky
-  is the panel. On `amber.150`, `azure.950` is 12.6:1 and `azure.900` 8.9:1; the 80% links and bottom bar
-  blend to 7.1:1. Dark mode dims the whole sheet to 85% rather than inverting it (an inverted engraving reads
-  as a photographic negative); the dimmed pairs stay at 9.7:1, 7.3:1 and 6.1:1.
+  The footer is a print surface: the engraving (design-assets/) is inked in palette primitives —
+  `azure.1000`/`azure.950` on `amber.150` paper, the nearest steps to the art direction's Prussian blue and
+  parchment — and the panel is that same paper, so the plate's sky is the panel. Everything set on it uses
+  the site's semantic tokens, pinned to their light values by `.kx-print-surface` because the paper stays
+  light in both themes: the mark matches the header (`primary`), headings are `foreground` (16.9:1) and the
+  secondary text is `foreground` at 70% (7.1:1). `muted-foreground` is 4.4:1 on this paper, so it is not used.
+  Dark mode dims the whole sheet to 85% rather than inverting it (an inverted engraving reads as a
+  photographic negative); the dimmed pairs stay at 12.1:1 and 6.0:1.
 */
 const focusRing =
-  "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--azure-950))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--amber-150))]";
+  "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--amber-150))]";
 
 export function SiteFooter() {
   return (
-    <footer className="relative overflow-hidden bg-[hsl(var(--amber-150))] text-[hsl(var(--azure-950))] dark:brightness-[0.85]">
+    <footer className="kx-print-surface relative overflow-hidden bg-[hsl(var(--amber-150))] text-foreground dark:brightness-[0.85]">
       {/* Paper grain: a seamless 384px tile under everything, so the plain panel and the plate read as one sheet.
           `overlay` against mid-grey is neutral on average, so it textures the parchment without dulling it. */}
       <div
@@ -67,14 +69,16 @@ export function SiteFooter() {
         <div className="grid gap-10 pb-12 pt-16 lg:grid-cols-[2fr_repeat(3,minmax(0,1fr))] lg:pt-20">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="grid size-8 place-items-center rounded-md bg-[hsl(var(--azure-950))] text-[hsl(var(--amber-150))]">
+              <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground">
                 <Layers className="size-[18px]" />
               </span>
-              <span className="font-display text-wordmark font-bold uppercase tracking-[0.18em]">Kinetixui</span>
+              <span className="font-display text-wordmark font-bold uppercase tracking-[0.18em]">
+                Kinetix<span className="text-primary">ui</span>
+              </span>
             </div>
             {/* The canonical tagline, not a second copy of it: this paragraph carried the retired
                 "One token architecture, in motion across every platform" long after the hero dropped it. */}
-            <p className="mt-5 max-w-sm text-base leading-relaxed text-[hsl(var(--azure-900))]">
+            <p className="mt-5 max-w-sm text-base leading-relaxed text-foreground/70">
               {siteConfig.tagline} This site is built with it.
             </p>
           </div>
@@ -90,7 +94,7 @@ export function SiteFooter() {
                       <Link
                         href={l.href}
                         {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-                        className={`text-[hsl(var(--azure-950)/0.8)] transition-colors hover:text-[hsl(var(--azure-950))] ${focusRing}`}
+                        className={`text-foreground/70 transition-colors hover:text-foreground ${focusRing}`}
                       >
                         {l.label}
                       </Link>
@@ -102,7 +106,7 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-[hsl(var(--azure-950)/0.25)] py-6 text-body-sm text-[hsl(var(--azure-950)/0.8)] sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 border-t border-border py-6 text-body-sm text-foreground/70 sm:flex-row sm:items-center sm:justify-between">
           {/* The licence line and the creator credit are one group, so the bar keeps its two-sided balance.
               A third top-level item would be centred by `justify-between`, which is more prominence than a
               by-line should take next to the product's own copyright. */}
@@ -117,7 +121,7 @@ export function SiteFooter() {
                 href="https://zedalleys.com/"
                 target="_blank"
                 rel="noreferrer"
-                className={`underline underline-offset-4 transition-colors hover:text-[hsl(var(--azure-950))] ${focusRing}`}
+                className={`underline underline-offset-4 transition-colors hover:text-foreground ${focusRing}`}
               >
                 Zed Alleys
               </Link>

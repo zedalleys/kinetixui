@@ -897,6 +897,17 @@
       linear-gradient(var(--tc) 0 0) 100% 100% / 1px var(--tl) no-repeat;
   }
 
+  /* a surface that is always light, whatever the theme — the engraved parchment footer. It re-points the
+     semantic tokens it uses to their light-theme aliases (the same primitives `:root` assigns them), so
+     `.dark` cannot flip them to the light-on-dark values while the paper underneath stays light. */
+  .kx-print-surface {
+    --foreground: var(--blue-900);
+    --primary: var(--azure-700);
+    --primary-foreground: var(--blue-50);
+    --border: var(--blue-100);
+    --ring: var(--azure-700);
+  }
+
   /* vertical margin rules at a container's edges — graph-paper structure */
   .kx-edges {
     position: relative;
