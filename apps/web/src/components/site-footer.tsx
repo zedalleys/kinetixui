@@ -47,7 +47,7 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
 
   The sheet itself — the `accent` panel and the grain tile over it — is `.kx-paper` in globals.css, shared so
   the next surface to print on this paper cannot drift from this one. `pnpm check:engraving` measures it, and
-  the four ratios above are what that gate reproduces.
+  the four contrast ratios above are what that gate reproduces.
 */
 const focusRing =
   "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-accent";
