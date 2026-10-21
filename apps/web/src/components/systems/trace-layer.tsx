@@ -74,12 +74,8 @@ export function TraceLayer({ pairs }: { pairs: TracePair[] }) {
        * stylesheet never arrives. Without a stylesheet this overlay has no positioned ancestor, so `inset: 0`
        * resolves against the viewport and it covers the page: with `pointer-events` left to the stylesheet it
        * then swallows every click on the page behind it.
-       *
-       * `100%` rather than `auto` because an `<svg>` is a replaced element: `inset: 0` fills the host only
-       * through the default sizing algorithm, which is not worth depending on when two constants say it
-       * outright. They are constants, so no measurement reaches a layout property either way.
        */
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
+      style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
       viewBox={`0 0 ${state?.w ?? 0} ${state?.h ?? 0}`}
     >
       {state?.paths.map((p) => <path key={p.key} d={p.d} className="kx-trace" data-kind={p.kind} />)}

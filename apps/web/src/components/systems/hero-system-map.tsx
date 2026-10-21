@@ -564,7 +564,7 @@ function MapTraces({
       focusable="false"
       className="overflow-visible"
       // Sized by its own `inset`, out of flow and untouchable inline: see the note in `trace-layer.tsx`.
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
+      style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
       viewBox={`0 0 ${geometry.width} ${geometry.height}`}
     >
       {geometry.generated.map((g) => (
