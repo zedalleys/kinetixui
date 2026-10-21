@@ -17,6 +17,8 @@
  *   - no horizontal overflow at any of those widths, in either direction
  *   - height: the page settles at a bounded height and stays there, with the stylesheet and without it — the
  *     trace overlays must never write a measured size into a layout property inside the subtree they observe
+ *   - overlays: a decorative trace overlay never takes part in layout or in hit testing, with the stylesheet and
+ *     without it — a sampled grid over every overlay's box lands on the page behind it, never on the overlay
  *   - hero tour: the platforms advance on their own, hold under the pointer, pause from a keyboard-operable
  *     button (aria-pressed), stop once the reader chooses one, and do not run at all under reduced motion
  *   - structure (a performance guard, not a timing threshold): the HTML carries only the open explorer panel and
@@ -295,13 +297,18 @@ for (const [width, dir] of [[320, 'ltr'], [390, 'ltr'], [390, 'rtl'], [768, 'ltr
  * any layout property of that overlay is a feedback loop: the host grows, the ResizeObserver fires, it measures
  * again. It ran at tens of thousands of pixels a second when the overlay took its height from the measurement.
  *
- * The overlay therefore takes its size from `inset-0` and only its `viewBox` from the measurement, and it is
- * positioned inline so it stays out of flow even when the stylesheet never arrives. Both halves are checked here:
- * with the page's CSS, and with it blocked, which is the condition that put the overlay back in flow.
+ * The overlay therefore takes its size from its own `inset` and only its `viewBox` from the measurement, and it
+ * is positioned inline so it stays out of flow even when the stylesheet never arrives. Both halves are checked
+ * here: with the page's CSS, and with it blocked, which is the condition that put the overlay back in flow.
+ *
+ * `pointer-events` is inline for the same reason. With no stylesheet the overlay has no positioned ancestor, so
+ * its `inset: 0` resolves against the viewport and it covers the page; a hit-test grid over each overlay proves
+ * the page behind it is still reachable. Scrolled first, because the sections are `content-visibility: auto` and
+ * an overlay in a skipped subtree has no geometry to test.
  */
 const TRACES = '[data-trace-layer], [data-map-traces]';
 for (const blockStyles of [false, true]) {
-  await check(`page height: settles and stays settled${blockStyles ? ', with the stylesheet blocked' : ''}`, async () => {
+  await check(`overlays: page height settles, nothing grabs a click${blockStyles ? ', with the stylesheet blocked' : ''}`, async () => {
     const { page, context } = await open({ width: 1440, blockStyles });
     const height = () => page.evaluate(() => document.documentElement.scrollHeight);
     await page.waitForTimeout(1000);
@@ -318,6 +325,35 @@ for (const blockStyles of [false, true]) {
     assert.equal(measured, 0, 'a trace overlay carries a width/height attribute, which its measurement can reach');
     const inFlow = await page.locator(TRACES).evaluateAll((svgs) => svgs.filter((s) => getComputedStyle(s).position !== 'absolute').length);
     assert.equal(inFlow, 0, 'a trace overlay is in flow, so its drawing takes part in the layout it measures');
+
+    // hit testing: walk the page first so no overlay is inside a skipped `content-visibility: auto` subtree
+    for (let i = 0; i < 20; i += 1) {
+      await page.mouse.wheel(0, 700);
+      await page.waitForTimeout(80);
+    }
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+    const grabbed = await page.evaluate((sel) => {
+      let tested = 0;
+      let onOverlay = 0;
+      for (const svg of document.querySelectorAll(sel)) {
+        svg.scrollIntoView({ block: 'center' });
+        const box = svg.getBoundingClientRect();
+        for (let fx = 0.05; fx < 1; fx += 0.05) {
+          for (let fy = 0.05; fy < 1; fy += 0.05) {
+            const x = box.left + box.width * fx;
+            const y = box.top + box.height * fy;
+            if (x < 1 || y < 1 || x > window.innerWidth - 1 || y > window.innerHeight - 1) continue;
+            tested += 1;
+            const top = document.elementFromPoint(x, y);
+            if (top && (top === svg || svg.contains(top))) onOverlay += 1;
+          }
+        }
+      }
+      return { tested, onOverlay };
+    }, TRACES);
+    assert.ok(grabbed.tested > 100, `only ${grabbed.tested} hit-test points landed inside an overlay's box`);
+    assert.equal(grabbed.onOverlay, 0, `${grabbed.onOverlay} of ${grabbed.tested} points hit a decorative overlay instead of the page`);
     await context.close();
   });
 }
@@ -464,4 +500,4 @@ if (failures.length) {
   console.error(`\nhome-systems: ${failures.length} check(s) failed`);
   process.exit(1);
 }
-console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, page height, tour, structure');
+console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, overlays (height and hit testing), tour, structure');
