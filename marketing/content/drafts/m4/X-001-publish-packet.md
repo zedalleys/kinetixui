@@ -2,7 +2,7 @@
 id: X-001
 type: manual publish packet
 status: READY FOR OWNER APPROVAL. Not approved, not published. Editorial approval is a separate owner decision
-target: Tuesday 20 October 2026, 15:00 UTC / 18:00 Riyadh, posted by hand by the owner
+target: the 20 October 2026 slot passed unapproved and unpublished; a new slot is proposed in §7a and needs the owner's word
 ---
 
 # X-001 — manual publish packet
@@ -105,6 +105,28 @@ with `kx_content = 'x_thread'`:
 - **T+24h, Wednesday 21 October** — close the distribution row out with the live post URL, the real date, and
   absolute counts only, audience cohort only.
 - **T+7d, Monday 26 October** — the weekly read, cumulative from 19 October (`--arms-from 2026-10-19`).
+
+## 7a. The 20 October slot passed, 2026-10-21
+
+The scheduled slot — Tuesday 20 October, 15:00 UTC — came and went while the copy was still unapproved. Nothing
+here was published: no approval was ever recorded, this thread posts nothing by design, and the registers are
+unchanged (`X-001` is `ready` in the content register, `planned` with a null date in the distribution register).
+
+**Whether the thread exists on X is not something this environment can see.** X is unreachable from here, and
+first-party analytics would not settle it either: PostHog holds no session carrying `kx_content=x_thread` at any
+point since 19 October, but a thread whose tracked reply nobody opens looks exactly the same as a thread that was
+never posted. If it was in fact posted by hand, say so with its URL and the posting time and the row is closed out
+on that; nothing is backdated and nothing is marked published on a planned date alone.
+
+**Proposed new slots**, both the same weekday-afternoon shape as the original, for the owner to pick one:
+
+| Option | When | Why |
+| --- | --- | --- |
+| **Recommended** | Thursday 22 October, 15:00 UTC / 18:00 Riyadh | Keeps X-001 ahead of LI-008 on the 22nd by an hour or two at most — so move LI-008 to Friday if both are approved, rather than posting two in one afternoon |
+| | Monday 26 October, 15:00 UTC / 18:00 Riyadh | A clean week boundary: it lands after the T+7d LI-001 read, so the thread posts with the first week's figures already in hand |
+
+Either way the rule in §6 holds: nothing else posts on any channel in the same hour, and every query from then on
+filters on `kx_content`.
 
 ## 8. What the owner has to do
 

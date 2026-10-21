@@ -96,6 +96,31 @@ X-001 (`x_thread`) never merge on their shared campaign.
 - [ ] X-001 is scheduled for 20 October 15:00 UTC on the **same campaign**, so note the reading before it posts: after
       that, `utm_content` is the only thing separating the two posts' arrivals.
 
+**T+24h, read 2026-10-21 09:25 UTC (late: the 20 October slot passed while the thread was idle).** Window
+19 October 14:00 UTC to 21 October 09:25 UTC, PostHog project 620385.
+
+| Measure | Observed |
+| --- | --- |
+| Tagged arrivals (`kx_p1_a_parity_proof` + `li_primary`, audience cohort) | **0** |
+| Campaign-tagged sessions of any cohort | 3, all `kx_traffic_type=diagnostic`, 21 events, 18:33:10 to 18:44:37 UTC on 19 October — the owner's own gate and iOS retest visits, excluded by rule 7 |
+| Qualified Evaluation Rate | **undefined**, not 0%. The denominator is campaign-attributed eligible sessions, and there are none |
+| Component views | 5 `component_viewed` in 5 sessions, none campaign-tagged |
+| Code-copy events | 0 of any kind (`component_code_copied`, `block_code_copied`, `install_command_copied`, `cli_command_copied`) |
+| Platform exploration | 0 `platform_selected`, 0 `cta_clicked`. 1 `docs_viewed` outside the diagnostics |
+| Installation interest | 0 `installation_viewed` |
+
+All non-diagnostic traffic in the window is `kx_source=direct` with no campaign: 14 sessions, every one of them a
+single page with a direct referrer, which is the `suspected_automation` signature from
+[`M3-AUDIENCE-QUALITY.md`](./M3-AUDIENCE-QUALITY.md) §1. None of it is attributable to LI-001, and none of it is
+counted as audience here.
+
+**What this says and does not say.** Zero observed qualifying events for this query and this window. It is not a
+measurement of impressions, clicks or reactions — LinkedIn's own analytics cannot be read from here and none is
+recorded. The post's body link goes to dev.to, which first-party analytics cannot see, so only the first comment's
+tracked link could ever produce a row. LI-007 and ART-001 each produced zero tagged arrivals while live, so this is
+the third post in a row with the same outcome rather than a new anomaly, and it is worth saying plainly that three
+posts producing no tagged arrival is itself the finding.
+
 **T+7d — Monday 26 October.** The weekly read, cumulative from this post:
 
 ```
