@@ -15,6 +15,10 @@
  *     written branches are dashed and the generated ones solid
  *   - map, desktop: four outputs over five platforms, and no trace runs through an output it does not belong to
  *   - no horizontal overflow at any of those widths, in either direction
+ *   - height: the page settles at a bounded height and stays there, with the stylesheet and without it — the
+ *     trace overlays must never write a measured size into a layout property inside the subtree they observe
+ *   - overlays: a decorative trace overlay never takes part in layout or in hit testing, with the stylesheet and
+ *     without it — a sampled grid over every overlay's box lands on the page behind it, never on the overlay
  *   - hero tour: the platforms advance on their own, hold under the pointer, pause from a keyboard-operable
  *     button (aria-pressed), stop once the reader chooses one, and do not run at all under reduced motion
  *   - structure (a performance guard, not a timing threshold): the HTML carries only the open explorer panel and
@@ -55,7 +59,7 @@ const check = async (name, fn) => {
   }
 };
 
-async function open({ width, height = 900, scale = 1, reducedMotion = 'reduce' }) {
+async function open({ width, height = 900, scale = 1, reducedMotion = 'reduce', blockStyles = false }) {
   const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, reducedMotion });
   await context.addInitScript(() => {
     try {
@@ -63,6 +67,7 @@ async function open({ width, height = 900, scale = 1, reducedMotion = 'reduce' }
     } catch {}
   });
   const page = await context.newPage();
+  if (blockStyles) await page.route('**/*.css', (route) => route.abort());
   if (scale !== 1) {
     // 200% text the way a reader sets it, as check:a11y-site does
     const cdp = await context.newCDPSession(page);
@@ -286,6 +291,73 @@ for (const [width, dir] of [[320, 'ltr'], [390, 'ltr'], [390, 'rtl'], [768, 'ltr
   });
 }
 
+// ---- page height: the drawings never feed their own measurement back -----------------------------------------------
+/*
+ * The hero map and the trace layers measure their host and draw into an overlay inside it, so a measured size in
+ * any layout property of that overlay is a feedback loop: the host grows, the ResizeObserver fires, it measures
+ * again. It ran at tens of thousands of pixels a second when the overlay took its height from the measurement.
+ *
+ * The overlay therefore takes its size from its own `inset` and only its `viewBox` from the measurement, and it
+ * is positioned inline so it stays out of flow even when the stylesheet never arrives. Both halves are checked
+ * here: with the page's CSS, and with it blocked, which is the condition that put the overlay back in flow.
+ *
+ * `pointer-events` is inline for the same reason. With no stylesheet the overlay has no positioned ancestor, so
+ * its `inset: 0` resolves against the viewport and it covers the page; a hit-test grid over each overlay proves
+ * the page behind it is still reachable. Scrolled first, because the sections are `content-visibility: auto` and
+ * an overlay in a skipped subtree has no geometry to test.
+ */
+const TRACES = '[data-trace-layer], [data-map-traces]';
+for (const blockStyles of [false, true]) {
+  await check(`overlays: page height settles, nothing grabs a click${blockStyles ? ', with the stylesheet blocked' : ''}`, async () => {
+    const { page, context } = await open({ width: 1440, blockStyles });
+    const height = () => page.evaluate(() => document.documentElement.scrollHeight);
+    await page.waitForTimeout(1000);
+    const settled = await height();
+    await page.waitForTimeout(3000);
+    const later = await height();
+    // the loop grew the page by tens of thousands of px a second, so this tolerance still separates it from a
+    // late font or a lazily decoded image
+    assert.ok(later - settled < 500, `page grew from ${settled}px to ${later}px over 3s while idle`);
+    assert.ok(later < 60_000, `page is ${later}px tall`);
+    const measured = await page
+      .locator(TRACES)
+      .evaluateAll((svgs) => svgs.filter((s) => s.hasAttribute('width') || s.hasAttribute('height')).length);
+    assert.equal(measured, 0, 'a trace overlay carries a width/height attribute, which its measurement can reach');
+    const inFlow = await page.locator(TRACES).evaluateAll((svgs) => svgs.filter((s) => getComputedStyle(s).position !== 'absolute').length);
+    assert.equal(inFlow, 0, 'a trace overlay is in flow, so its drawing takes part in the layout it measures');
+
+    // hit testing: walk the page first so no overlay is inside a skipped `content-visibility: auto` subtree
+    for (let i = 0; i < 20; i += 1) {
+      await page.mouse.wheel(0, 700);
+      await page.waitForTimeout(80);
+    }
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+    const grabbed = await page.evaluate((sel) => {
+      let tested = 0;
+      let onOverlay = 0;
+      for (const svg of document.querySelectorAll(sel)) {
+        svg.scrollIntoView({ block: 'center' });
+        const box = svg.getBoundingClientRect();
+        for (let fx = 0.05; fx < 1; fx += 0.05) {
+          for (let fy = 0.05; fy < 1; fy += 0.05) {
+            const x = box.left + box.width * fx;
+            const y = box.top + box.height * fy;
+            if (x < 1 || y < 1 || x > window.innerWidth - 1 || y > window.innerHeight - 1) continue;
+            tested += 1;
+            const top = document.elementFromPoint(x, y);
+            if (top && (top === svg || svg.contains(top))) onOverlay += 1;
+          }
+        }
+      }
+      return { tested, onOverlay };
+    }, TRACES);
+    assert.ok(grabbed.tested > 100, `only ${grabbed.tested} hit-test points landed inside an overlay's box`);
+    assert.equal(grabbed.onOverlay, 0, `${grabbed.onOverlay} of ${grabbed.tested} points hit a decorative overlay instead of the page`);
+    await context.close();
+  });
+}
+
 // ---- the hero tour: platforms change on their own, and WCAG 2.2.2 holds ---------------------------------------------
 const heroSelected = (page) => page.locator(`${HERO} [role="tab"][aria-selected="true"]`).getAttribute('data-platform');
 
@@ -428,4 +500,4 @@ if (failures.length) {
   console.error(`\nhome-systems: ${failures.length} check(s) failed`);
   process.exit(1);
 }
-console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, tour, structure');
+console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, overlays (height and hit testing), tour, structure');

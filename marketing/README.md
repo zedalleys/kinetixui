@@ -72,6 +72,8 @@ repository may contradict them.
 | `community.md` | Which communities to participate in, fit classification, the weekly listening routine |
 | `distribution/` | **Channel roles, the 14-day execution plan, GitHub as a channel, partnerships, the distribution log** |
 | `distribution/execution-calendar.md` | **The rolling 14-day execution plan** — what goes out next, rebuilt every second Monday |
+| `distribution/M4-PUBLICATION-QUEUE.md` | The per-asset packet for 19–23 October: copy, tracked link, claims and approval state, one section each |
+| `measurement/M4-POST-PUBLICATION-CHECKLIST.md` | What to read after each post, when, and what the numbers may be said to mean |
 | `opportunities.md` | Development milestones that could become content, and what each waits on |
 | `launches.md` | Staged launch criteria and Product Hunt prep |
 | `experiments.md` | Growth experiment backlog |

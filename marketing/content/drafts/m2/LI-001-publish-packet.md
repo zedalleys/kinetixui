@@ -1,7 +1,7 @@
 ---
 id: LI-001
 type: manual publish packet
-status: APPROVED 2026-10-18 (editorial only). Not published. Stop gate OPEN.
+status: APPROVED 2026-10-18 (editorial only). Not published. Stop gate CLOSED 2026-10-18 19:07 UTC (§4).
 target: Monday 19 October 2026, 14:00 UTC / 17:00 Riyadh, posted by hand by the owner
 ---
 
@@ -34,7 +34,10 @@ LinkedIn API. The owner posts by hand, then closes the row out with the live URL
 The sentence matches what the page says about itself ("Component counts and the gaps below are generated from
 `components.manifest.json`"). Paste the full URL; do not shorten it with lnkd.in or any other shortener.
 
-## 4. Stop gate — OPEN, must close before posting
+## 4. Stop gate — CLOSED 2026-10-18 19:07 UTC
+
+The three rows below are the record as it stood that morning, and the two dated notes after them are what
+changed, in order. Nothing is removed: the failed diagnostic is evidence, not a mistake to tidy away.
 
 | Check | Result |
 | --- | --- |
@@ -50,8 +53,64 @@ The sentence matches what the page says about itself ("Component counts and the 
 > kx_source=other, not linkedin. Cause under investigation (M3.1); the visit's `utm_source` value did not arrive as
 > `linkedin`. LI-001 gate remains BLOCKED.
 
+> **PostHog delivery PASSED, 2026-10-18 19:07 UTC.** A second owner diagnostic arrived correctly attributed and
+> closes this gate. PostHog 620385 holds `$pageview` 19:07:22.944, `docs_viewed` 19:07:22.946 and `page_engaged`
+> 19:07:29.248 UTC, each carrying kx_source **linkedin**, kx_medium social, kx_campaign kx_p1_a_parity_proof,
+> kx_content li_primary, kx_landing_page /docs/platforms, kx_traffic_type diagnostic. Session
+> `01a15069-53d6-788a-a041-498cefb22366`, Chrome on Mac OS X (desktop), posthog-js 1.438.7, `kx_referrer` direct.
+> Read from PostHog twice independently: by the M3.1 thread at about 19:15 UTC and by this one at 19:16 UTC.
+>
+> Two limits on what this proves, stated so nobody reads more into it than it says:
+>
+> - **The iOS path is untested since the failure.** The passing visit was Chrome on macOS; the failing 10:30 visit
+>   was Mobile Safari on iOS. This shows the production pipeline attributes the LI-001 link correctly on that
+>   browser, not that the earlier failure cannot happen again on iOS.
+> - **The earlier anomaly's cause is still unknown.** Nothing was deployed between the two visits and PR #409 is
+>   unmerged, so no code change explains the difference. #409 is a separate improvement (a new tagged arrival in the
+>   same tab starts a new session entry) and does not claim to fix the 10:30 defect. Do not describe it as the fix.
+>
+> What this gate now certifies: the tracked LI-001 link, opened on kinetixui.com, delivers the full attribution
+> quartet to PostHog. The diagnostic visit itself is excluded from every count (analytics.md rule 7) and is not a
+> LinkedIn arrival. It does not certify every browser: one visit on one browser is not a claim that attribution is
+> reliable everywhere.
+>
+> **Recommended, and not a blocker: one iOS Safari retest.** The failure was on iOS and most LinkedIn readers tap
+> through in an in-app or mobile browser, so that is the path worth re-testing — on an iPhone, from the LinkedIn
+> app if possible, opening the same URL with `&kx_traffic=diagnostic` appended and tapping once. It can be done
+> after Monday's post as easily as before it: a diagnostic visit is excluded from every count whenever it happens,
+> so it cannot contaminate the campaign's figures. If it reads `linkedin`, the anomaly was a one-off on a link that
+> is now proven on two browsers. If it reads `other` again, the cause is on the iOS path and M3.1's next step
+> applies: a diagnostic-only property recording why a source was rejected. Publication is not held for it —
+> nothing currently indicates an active failure, and holding a post for an unexplained past event with no present
+> symptom would mean never posting.
 
-To close it (two minutes, once, any time before Monday 14:00 UTC):
+
+### The iOS Safari diagnostic, step by step (optional, three minutes, any time)
+
+This is the retest recommended above, written out so it can be done without thinking about it. It is a
+**diagnostic** visit: the URL carries `&kx_traffic=diagnostic`, which puts the session in the `diagnostic` cohort,
+excluded from every audience count and from QER by analytics.md rule 7. It is therefore safe before or after the
+post, and it is never the link that goes in the post or the first comment.
+
+1. On an iPhone, open the LinkedIn app and paste this into a direct message to yourself (a note to self keeps it
+   out of the feed), then tap the link so it opens in LinkedIn's **in-app** browser:
+
+```
+https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_parity_proof&utm_content=li_primary&kx_traffic=diagnostic
+```
+
+2. Tap once anywhere on the page, wait about five seconds, then close it.
+3. Open the same link again from the in-app browser's "open in Safari" action, so the second arrival is **iOS
+   Safari proper**. Tap once, wait five seconds, close.
+4. Say in the thread that both taps are done, and roughly when. Claude then runs the query below and reports which
+   `kx_source` each arrival carried.
+
+Two arrivals, two browsers, one URL: that is what separates "the in-app browser mangles the link" from "iOS Safari
+does". Reading `linkedin` on both means the 10:30 anomaly was a one-off on a link now proven on three browsers.
+Reading `other` on either names the path that breaks it, and M3.1's next step applies — a diagnostic-only property
+recording why a source was rejected. Either way the visits are excluded from the campaign's figures.
+
+If the gate ever has to be re-run (two minutes, once):
 
 1. Open a private window and visit
    `https://kinetixui.com/docs/platforms?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_parity_proof&utm_content=li_primary&kx_traffic=diagnostic`
@@ -84,13 +143,30 @@ is unaffected.
 
 ## 6. Manual checklist on the day
 
-- [ ] Stop gate closed (§4) and confirmed in the thread
+- [x] Stop gate closed (§4): PostHog delivery passed 2026-10-18 19:07 UTC, confirmed in the thread
+- [x] Approved copy still pinned: section A is 1,538 characters and hashes to `09a3994…3cfb`, re-computed
+      2026-10-18 on `984792b` (`check:content` enforces it on every run)
+- [ ] The first comment's URL carries **no** `kx_traffic` parameter — that mark belongs only to the owner's own
+      diagnostic visits, never to a public link
 - [ ] ART-001 decision made (§5)
 - [ ] dev.to article opens and is the right article
 - [ ] Section A pasted unchanged; preview shows the dev.to link card
 - [ ] Posted at about 14:00 UTC (17:00 Riyadh); nothing else posted on any channel in the same hour
 - [ ] First comment (§3) posted with the full tracked URL
 - [ ] Post URL copied (… → Copy link to post; it should contain `/feed/update/urn:li:activity:` or `/posts/`)
+
+> **Pre-publication verification, 2026-10-19 08:56 UTC on `main`, `4688d1fe`** (the commit that squashed PR #410).
+> Re-run from the merged tree, not carried over: section A of `../a01/linkedin.md` is 1,538 characters and hashes to
+> `09a399477e8c537d48045fd2cc83a3faf77c33a467b3d046389c83e3f5d33cfb`, equal to the register pin; the first comment's
+> URL in §3 is the register's built URL and carries no `kx_traffic` parameter; `check-content-register`,
+> `check-distribution` and `check-editorial` all pass.
+>
+> **Publication state at that moment: not published.** The distribution register's LI-001 row is `status: "planned"`
+> with `date: null` and no `liveUrl`, the content register has LI-001 `ready`, and PostHog 620385 holds **no event of
+> any kind** carrying `kx_campaign=kx_p1_a_parity_proof` since 00:00 UTC today, while the project did ingest 17 events
+> up to 08:45:25 UTC — so the pipeline is live and the campaign has had no arrival. A calendar hold exists for 17:00
+> Riyadh (created 18 October 19:32 UTC); a hold is a reminder, not a publication, and nothing here treats it as one.
+> Status therefore stays APPROVED, not PUBLISHED, until the owner supplies the post's own live URL and its real time.
 
 ## 7. Close-out (only after it is live)
 
