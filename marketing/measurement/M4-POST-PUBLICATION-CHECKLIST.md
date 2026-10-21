@@ -121,6 +121,30 @@ tracked link could ever produce a row. LI-007 and ART-001 each produced zero tag
 the third post in a row with the same outcome rather than a new anomaly, and it is worth saying plainly that three
 posts producing no tagged arrival is itself the finding.
 
+**Extended read, 2026-10-21 23:45 UTC.** The same query carried forward to T+53h after publication, window
+19 October 14:00 UTC to 21 October 23:45 UTC. **Nothing changed.** The only campaign-tagged sessions are still the
+same three diagnostics of 19 October; no fourth tagged session exists on `kx_p1_a_parity_proof` at any cohort.
+
+| Measure | Observed, window to 2026-10-21 23:45 UTC |
+| --- | --- |
+| Tagged arrivals (`kx_p1_a_parity_proof` + `li_primary`, audience cohort) | **0**, unchanged |
+| Campaign-tagged sessions of any cohort | still 3, all `diagnostic`, all on 19 October |
+| Sessions on 20 October | 6 sessions, 11 events, **0 carrying any campaign tag** |
+| Sessions on 21 October | 22 sessions, 45 events, **0 carrying any campaign tag** |
+| Every session of 20–21 October | `kx_source=direct`, direct referrer, one page each, 1 to 3 events — the `suspected_automation` signature |
+| Code-copy, `platform_selected`, `cta_clicked`, `installation_viewed` across both days | 0 of each |
+
+**The pipeline was demonstrably live throughout**, which is what makes the zero an observation rather than a gap:
+the last ingested event in the window is 2026-10-21 23:34:10 UTC, eleven minutes before the read, and the two days
+carry 56 events across 28 sessions. So the reading is that no tagged arrival was observed on a working pipeline,
+not that nobody clicked: LinkedIn click counts are not readable from here and none is recorded.
+
+**No X-tagged arrival has ever been observed.** A query over every event since 1 October for `kx_source=x`,
+`kx_content=x_thread`, or any campaign naming `x_thread` returns no rows at all. That is consistent with X-001 not
+having been published, and equally consistent with its having been published and read by nobody who followed the
+reply link, so it settles nothing about publication — see the X-001 packet §7a. It does mean that if X-001 goes out
+later, the first `x_thread` row to appear will be unambiguous: there is no earlier one to confuse it with.
+
 **T+7d — Monday 26 October.** The weekly read, cumulative from this post:
 
 ```
