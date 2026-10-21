@@ -220,23 +220,6 @@
     }
   }
 
-  /* structural grid backdrop for hero / section panels */
-  .kx-grid-bg {
-    background-image:
-      linear-gradient(color-mix(in srgb, hsl(var(--border)) 65%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, hsl(var(--border)) 65%, transparent) 1px, transparent 1px);
-    background-size: 44px 44px;
-    -webkit-mask-image: radial-gradient(ellipse 85% 65% at 30% 0%, #000 45%, transparent 100%);
-    mask-image: radial-gradient(ellipse 85% 65% at 30% 0%, #000 45%, transparent 100%);
-    /* barely-there ambient drift — one cell over a full minute */
-    animation: kx-grid-drift 60s linear infinite;
-  }
-  @keyframes kx-grid-drift {
-    to {
-      background-position: 44px 44px;
-    }
-  }
-
   /* blinking terminal caret for the hero command */
   .kx-caret {
     display: inline-block;
@@ -300,6 +283,18 @@
     position: absolute;
     z-index: -1;
     background: radial-gradient(closest-side, hsl(var(--primary) / 0.2), hsl(var(--primary) / 0.06) 55%, transparent);
+  }
+  /*
+   * The hero's glow, weaker than a chapter's.
+   *
+   * The hero is now the only chapter with no backdrop behind its type, so the glow is the only thing left
+   * between the headline and the page background — and at the chapter alpha it was the loudest remaining
+   * decoration rather than ambient light under the system map. It is also the larger half of what stops axe
+   * resolving a background colour behind hero text: of the 52 hero nodes axe reported as unresolvable,
+   * removing the grid accounted for 13 and this gradient (with the `.kx-edges` pseudo-elements) for the rest.
+   */
+  .kx-glow-soft {
+    background: radial-gradient(closest-side, hsl(var(--primary) / 0.11), hsl(var(--primary) / 0.03) 55%, transparent);
   }
 
   /*
@@ -993,7 +988,6 @@
   }
   .kx-underline::after,
   .kx-marquee-track,
-  .kx-grid-bg,
   .kx-trace,
   .kx-map-stage,
   .kx-swap,
