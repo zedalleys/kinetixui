@@ -25,8 +25,8 @@ line-based shading, in the manner of a 19th-century copperplate landscape plate.
 
 | Dimension | The direction |
 | --- | --- |
-| Technique | Etching, cross-hatching, stippling, line-based shading. Tone comes from line density, never from a soft airbrushed gradient. |
-| Ink | Deep indigo by day. At night the same indigo family, re-lit: the plate goes to near-black silhouettes against a slightly lighter sky. |
+| Technique | Etching, cross-hatching, stippling, line-based shading. **By day**, tone comes from line density, never from a soft airbrushed gradient. **At evening** the plate carries its tone as masses instead — see "two registers" below, which is the direction for night and not a relaxation of it. |
+| Ink | Deep indigo by day. At night the same indigo family, re-lit: the land reads as near-black masses against a slightly lighter sky, with edges rather than hatching carrying the form. |
 | Paper | Pale, slightly cool printed surface by day, with restrained grain. Not warm parchment. In dark mode the sheet is the dark `accent`, and the grain stays. |
 | Subject | Arabian dunes, sandstone mesas, oasis water, palms, expansive skies. Figures (a small caravan) read at the scale of staffage, not as a focal subject. |
 | Composition | Spacious contemporary editorial. Generous empty sky, a low horizon, clear space around text and navigation. |
@@ -50,6 +50,14 @@ and in the Figma working file. *(source: PR #432 description, "The PR went throu
   plate of the same scene at night, not a filter over the first. Dimming one pale sheet was the earlier
   reading of the same rule, and the evening plate replaces it — see §2's note on what that supersedes.
   *(direction, decided 2026-10-19; shipped by PR #435, merged to `main` as `295dae91`.)*
+- **Two registers, one technique.** The day plate is the direction at full line density. The evening plate
+  is deliberately quieter: its tone is carried by masses, silhouettes and lit edges rather than by
+  hatching. **That is the art direction for night, not a shortfall in it.** Measured on the shipped
+  plates, line detail is 45.49% by day against 2.45% at evening; refined higher-density candidates were
+  built and reviewed, and the owner chose to keep the shipped evening plate. So a later session should
+  read the evening figure as the intent, and should **not** raise line density, contrast, brightness or
+  strength to close the gap. *(direction, decided 2026-10-21; measured on
+  `arabian-landscape-1920.webp` and `arabian-landscape-evening-1920.webp`.)*
 - **Spacious composition.** Decoration earns its place by giving editorial surfaces air, not by filling
   them. Empty sky is where the bottom bar and the headings sit.
 
@@ -134,7 +142,7 @@ knowing it still matters. Recorded here so later work does not re-derive it:
 | Subject | Palm grove, oasis pool, flat-topped sandstone mesas, cross-hatched dunes, a small camel caravan at left, a wide cloud band over an open sky. The oasis sits in the middle 30–70% of the plate so phone crops keep it. | source (master plate + component comment) |
 | Appearance at 1440, light | The canonical screenshot confirms it: paper `#f0f7ff`, grain present at about 0.5/255 on plain paper, the plate fading in below the divider so the bottom bar sits in open sky. §2 has the measurements. | reference |
 | Appearance at 1440, dark | No approved screenshot of the evening footer yet; the dark one in hand shows the superseded dim (§2). Read from the plate instead: the same oasis scene at night, the palms, mesas, dunes and oasis water carried as near-black tonal masses, the cloud band still legible and the caravan still readable at left. Sampled from `arabian-landscape-evening-1920.webp`: sky top `(15,36,50)`, horizon `(10,18,24)`, foreground land `(5,15,21)`, water `(13,25,32)`. | source (the plate, not a reference) |
-| What the evening plate does not contain | No glow at the horizon: the brightest sky is the cloud band *above* it, about 43/255 against a 31/255 upper sky, and the plate darkens monotonically below that band to about 16/255. No legible stars: the upper sky carries scattered stipple specks, the brightest 30/255 above its local background and most under 16/255, visible only under a roughly 3× brightness boost. No rim-lit edges on the land. Recorded because the component comment on `main` described all three; PR #437 corrects it. Measured on `arabian-landscape-evening-2880.webp`. | source |
+| What the evening plate does not contain | **No glow at the horizon:** the brightest sky is the lit cloud band *above* it, at 25% of plate height, about 43/255 against a 31/255 upper sky; below that band the plate darkens to about 16/255, monotonically at 1920w and with small rises near 45% and 65–70% at 2880w. **No legible stars:** the upper sky carries scattered stipple specks, the brightest 26.4/255 above its local background, only four pixels above 16/255 and none above 30/255, visible only under a roughly 3× brightness boost. **No rim-lit edges on the land.** None of these is a defect — the plate is the approved art direction for night, per §1's two registers. The row exists because the component comment on `main` describes all three as present; PR #437 corrects that comment. Measured on `arabian-landscape-evening-2880.webp`, except the line-detail figures in §1, which are 1920w. | source |
 | Accessibility and performance results | PR #432 records Chromium checks at 1440/768/390, light and dark, LTR and RTL, with no horizontal overflow, no axe violation and CLS delta 0.0000; PR #434 re-measures contrast, tree, layout and motion through `check:engraving`. **The screenshots do not establish any of these** and this document does not re-verify them. | source (those PRs' records) |
 
 ## 4. What the direction does not touch
@@ -261,6 +269,11 @@ This is the better shape of the rule in §5, not a concession to #435. **A surfa
 treatment supplies dark artwork; it does not dim the light one, and it never inverts it.** The sheet is
 `accent` and `foreground` resolving per theme, and the art on top is the plate inked for that theme.
 
+The owner ratified the shipped evening plate on 2026-10-21, so the arrangement `.kx-paper` is shaped
+around is settled rather than provisional: two assets, one per theme, with no filter between a plate and
+the sheet. What currently holds that is the `paper` row, which asks the question of the rendered values.
+Asking it of the files as well is recorded as an open item in §10.3.
+
 ### 10.2 Specified, and deliberately not shipped
 
 Three further primitives are specified here and will land in the stage that first uses them:
@@ -312,7 +325,7 @@ what makes them evidence rather than a restatement. The figures AE-2A first reco
 and 6.3 — were the dimmed sheet's and no longer describe anything; the evening plate's own tokens read
 higher than the dimmed light ones did.
 
-Three things the instrument had to learn, recorded so a later gate does not relearn them:
+Four things the instrument had to learn, recorded so a later gate does not relearn them:
 
 1. A `filter` on an ancestor is never folded into a computed colour, and `.kx-print-surface` used to pin
    the footer's tokens light so `getComputedStyle` returned the same colours in both themes. A contrast
@@ -325,6 +338,22 @@ Three things the instrument had to learn, recorded so a later gate does not rele
 3. The `parity` row cannot reinstate the pre-refactor form by its Tailwind class names. Those utilities had
    one call site between them, so removing it removed them from the bundle; the row rebuilds the old form
    from literal declarations instead.
+4. **A row this gate cannot be shown to fail is not yet evidence, and one was dropped for it.** A
+   `plates` row was written to ask the two-plate rule of the *files* rather than of the values: two plate
+   images, each theme rendering only its own, the two being different assets, and no `filter` between a
+   plate and the sheet. It passes on `main`'s footer, three runs out of three. It could not be made to
+   fail on demand. Three attempts — both plates rendered at once, a `filter: brightness(0.85)` restored
+   over the dark sheet, and the day plate served to both themes — all died the same way instead, on
+   `scrollIntoViewIfNeeded` inside `checkSheet`: *element is not stable*, 30s, before the row under test
+   was reached. The homepage is the suspect, since `checkSheet` navigates to `/` and that route's trace
+   layer runs a `ResizeObserver` known to grow without bound in headless Chromium — but the first
+   explanation, that a taller footer never settles, does not survive the filter-only control, which
+   changed no geometry and timed out identically. The cause is unresolved, so the row is **not in this
+   change**. Shipping it would mean a gate row whose green means nothing, which is the failure this
+   document's own §9 gate question exists to avoid. Two things for whoever picks it up, probably when the
+   gate enters CI with stage 3: the rows that navigate to `/` could use any quieter route, since the
+   footer is on all of them; and the instability under a patched build is worth understanding on its own,
+   because it makes every negative control for this gate unreliable, not only this one's.
 
 ### 10.4 What AE-2A did not do
 
