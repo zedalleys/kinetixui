@@ -65,6 +65,14 @@ documents" below), so it is a record of a superseded treatment, not a reference.
 screenshot of the evening footer exists, dark-mode statements in this document are **source** — read from
 the plate and the component — and never **reference**.
 
+**Neither screenshot is in this repository.** They are approved review artefacts, not source, and at about
+5.7 MB each they do not belong in the tree. They are held with the project's files, at
+`arabian-engraving/reference/` under the shared project folder, together with a rendered dark capture of the
+evening footer at 1440 that is **not** an approved reference. Anyone who needs to reproduce the measurements
+below, or to compare a new surface to the approved baseline, asks the owner for the file rather than looking
+for it in a checkout. If that becomes a recurring cost, the answer is to commit a downsampled copy under
+`docs/design/`, which is a decision for the owner and not taken here.
+
 What the light screenshot establishes, as measurements taken from the images rather than from a browser
 session:
 
@@ -180,7 +188,13 @@ Non-negotiable for every surface that adopts the direction:
 7. Reduced motion: decorative art is static by default. Any motion added to it later must follow `MOTION.md`
    in full — a trigger, a property, a purpose, a duration, an easing and a reduced-motion form — and under
    `prefers-reduced-motion` the surface reaches its correct final state with no movement.
-8. Weight is an accessibility concern too: decorative images lazy-load and never block the route.
+8. Weight is an accessibility concern too: a decorative **plate** lazy-loads and never blocks the route.
+   The rule covers the art, not the paper. A page-wide texture such as the footer's 384px grain tile is a
+   CSS background, so it is fetched as soon as styles resolve, on every route, whether or not the visitor
+   ever scrolls to it — about 39 KB today. That is a known and accepted exception, recorded here rather
+   than papered over, and it is the reason a decorative texture must stay small enough that eager loading
+   is affordable. A new decorative surface may not add a second such background without measuring what it
+   costs on routes that never show it.
 
 ## 6. What this direction explicitly preserves
 
