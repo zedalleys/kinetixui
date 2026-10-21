@@ -67,11 +67,23 @@ The canonical reference for **light mode** is Ziad's approved footer screenshot 
 supplied on 2026-10-19 and read. It shows the footer at a 1440px viewport and is what later light surfaces
 are compared against.
 
-**Dark mode has no canonical screenshot yet.** `azink-dark-1440.png` was supplied in the same batch, but it
-shows the dimmed-pale-sheet treatment that the evening plate replaces (see "What the dark screenshot now
-documents" below), so it is a record of a superseded treatment, not a reference. Until an approved dark
-screenshot of the evening footer exists, dark-mode statements in this document are **source** — read from
-the plate and the component — and never **reference**.
+The canonical reference for **dark mode** is **`azink-dark-evening-1440.png`**, approved by Ziad on
+2026-10-21. It is the footer in dark mode at the same framing and density as the light reference —
+2880 × 1572, a 1440 × 785 logical frame at `deviceScaleFactor: 2` — rendered from a production build of
+the committed footer, which serves `arabian-landscape-evening-2880.webp` at that pixel ratio.
+
+The two are different kinds of artefact and the difference matters when citing them. The light reference
+is a design screenshot: it records the intent. The dark one is a render of the shipped page: it records
+what the build produces. There is no dark design screenshot of the evening scene, and inventing one would
+be generating artwork. So the dark reference answers "has the evening footer changed?" rather than "does
+the evening footer match the intent?", and a future dark surface is compared to it on that basis.
+
+What the approval covers is **how the dark footer looks**. It is not an accessibility or performance
+result; those stay with the measurements, as below.
+
+`azink-dark-1440.png`, supplied in the same batch as the light reference, shows the dimmed-pale-sheet
+treatment the evening plate replaces (see "What the dark screenshot now documents" below). It is the
+record of a superseded treatment and not a reference.
 
 What the light screenshot establishes, as measurements taken from the images rather than from a browser
 session:
@@ -94,9 +106,21 @@ session:
   plain panel above the plate; the plate fades in beneath the divider, so the copyright and credit bar sits
   in the empty sky rather than over the engraving. *(reference)*
 
+What the dark reference establishes, read from the approved render:
+
+- **The evening plate is the same scene, not the light one processed.** Palm grove, oasis pool, flat-topped
+  mesas, cross-hatched dunes and the caravan at left are all in their §1 positions, at night. *(reference)*
+- **The two registers of §1 are visible.** The cloud band carries engraved line work; the land below reads
+  as tonal masses and lit edges rather than as hatching. This is what "tone carried as masses at evening"
+  looks like at the size the plate is served, and it is why the plate's line-detail figure should not be
+  read as a density target missed. *(reference)*
+- **Text sits on paper here too.** The columns, tagline and mark are on the dark `accent` panel, and the
+  bottom bar sits in the empty sky above the plate, as in light mode. *(reference)*
+
 These are visual observations. They are **not** accessibility or performance results: contrast ratios, axe
 runs, layout-shift and payload figures come from the measurements PR #432 and #434 record, and §3 and §5
-keep them separate on purpose.
+keep them separate on purpose. That applies to the dark reference exactly as it does to the light one —
+its approval says the footer looks right, not that it measures right.
 
 ### What the dark screenshot now documents
 
@@ -141,7 +165,7 @@ knowing it still matters. Recorded here so later work does not re-derive it:
 | Accessibility | The plate is an `aria-hidden` `<img alt="">` — out of the accessibility tree, out of selection, out of contrast audits. Text sits on the paper, not on the art. | source |
 | Subject | Palm grove, oasis pool, flat-topped sandstone mesas, cross-hatched dunes, a small camel caravan at left, a wide cloud band over an open sky. The oasis sits in the middle 30–70% of the plate so phone crops keep it. | source (master plate + component comment) |
 | Appearance at 1440, light | The canonical screenshot confirms it: paper `#f0f7ff`, grain present at about 0.5/255 on plain paper, the plate fading in below the divider so the bottom bar sits in open sky. §2 has the measurements. | reference |
-| Appearance at 1440, dark | No approved screenshot of the evening footer yet; the dark one in hand shows the superseded dim (§2). Read from the plate instead: the same oasis scene at night, the palms, mesas, dunes and oasis water carried as near-black tonal masses, the cloud band still legible and the caravan still readable at left. Sampled from `arabian-landscape-evening-1920.webp`: sky top `(15,36,50)`, horizon `(10,18,24)`, foreground land `(5,15,21)`, water `(13,25,32)`. | source (the plate, not a reference) |
+| Appearance at 1440, dark | `azink-dark-evening-1440.png`, approved 2026-10-21, confirms it: the same oasis scene at night, the palms, mesas, dunes and oasis water carried as tonal masses and lit edges, the cloud band carrying line work, the caravan readable at left, and the bottom bar in open sky. Sampled from `arabian-landscape-evening-1920.webp`: sky top `(15,36,50)`, horizon `(10,18,24)`, foreground land `(5,15,21)`, water `(13,25,32)`. | reference, for the appearance; source, for the samples |
 | What the evening plate does not contain | **No glow at the horizon:** the brightest sky is the lit cloud band *above* it, at 25% of plate height, about 43/255 against a 31/255 upper sky; below that band the plate darkens to about 16/255, monotonically at 1920w and with small rises near 45% and 65–70% at 2880w. **No legible stars:** the upper sky carries scattered stipple specks, the brightest 26.4/255 above its local background, only four pixels above 16/255 and none above 30/255, visible only under a roughly 3× brightness boost. **No rim-lit edges on the land.** None of these is a defect — the plate is the approved art direction for night, per §1's two registers. The row exists because the component comment on `main` describes all three as present; PR #437 corrects that comment. Measured on `arabian-landscape-evening-2880.webp`, except the line-detail figures in §1, which are 1920w. | source |
 | Accessibility and performance results | PR #432 records Chromium checks at 1440/768/390, light and dark, LTR and RTL, with no horizontal overflow, no axe violation and CLS delta 0.0000; PR #434 re-measures contrast, tree, layout and motion through `check:engraving`. **The screenshots do not establish any of these** and this document does not re-verify them. | source (those PRs' records) |
 
@@ -219,7 +243,7 @@ Recorded so that adopting it is never read as relaxing anything:
 | Stage | What | Status |
 | --- | --- | --- |
 | 1 | Establish documentation and canonical references — this document and Claude instructions §28. | In progress (this change). |
-| 2 | Validate the approved footer as the baseline. | Light: done. PR #432 merged to `main` as `da03a56` on 2026-10-19 and its appearance is confirmed against `azink-1440.png`. Dark: the evening plate is on `main` as `295dae91`, but validation is reopened — it still needs an approved dark screenshot to confirm against. |
+| 2 | Validate the approved footer as the baseline. | **Done, both themes.** Light: PR #432 merged to `main` as `da03a56` on 2026-10-19, appearance confirmed against `azink-1440.png`. Dark: the evening plate merged as `295dae91` on 2026-10-19, the owner chose it over two refined candidates on 2026-10-21, and its appearance is confirmed against `azink-dark-evening-1440.png`, approved the same day. |
 | 3 | Pilot **one** restrained homepage accent. | Not started. One accent, one measurement, one decision. |
 | 4 | Extend selectively to marketing and editorial surfaces. | Not started. |
 | 5 | Consider minimal documentation and catalogue framing, **after** the overlapping catalogue work (CAT-1 #413, CAT-QF #428, CAT-2 #430) is reconciled. | Not started, and explicitly blocked on that reconciliation. |
@@ -232,8 +256,9 @@ started because the previous one landed.
 - Whether the direction gets a gate of its own (for example, one that fails if decorative art enters the
   accessibility tree, or if a decorative surface ships without a dark-mode check) is a stage-3 question, not
   a stage-1 one.
-- An approved dark screenshot of the evening footer is still needed before any dark-mode statement here can
-  become **reference** rather than **source**.
+- ~~An approved dark screenshot of the evening footer is still needed.~~ **Closed 2026-10-21:**
+  `azink-dark-evening-1440.png` is approved and §2 carries it. Dark-mode statements about *appearance* are
+  now **reference**; dark-mode measurements remain what they were.
 - PR #434 (`.kx-paper`, `check:engraving`) was written against the dimmed-sheet footer, which PR #435 has
   since rewritten on `main`. It has been reconciled: `main` is merged in, the dark dim and
   `.kx-print-surface` are gone, and every ratio was re-measured against the rendered two-plate footer.
@@ -362,6 +387,8 @@ Four things the instrument had to learn, recorded so a later gate does not relea
 - No image asset was added or replaced. The plates, their derivatives and the masters are PR #432's and
   PR #435's, carried across unchanged; site image payload is unchanged.
 - No token moved, no component changed, no claim moved.
-- Nothing was asserted about how dark mode *looks*. §2 has no approved screenshot of the evening footer,
-  so the dark rows above are measurements of the rendered page, which is what they say they are, and the
-  dark treatment has no visual sign-off from this work.
+- Nothing was asserted about how dark mode *looks* **on the strength of this work**. The dark rows above
+  are measurements of the rendered page, which is what they say they are. The evening footer does now have
+  a visual sign-off — `azink-dark-evening-1440.png`, approved 2026-10-21 and recorded in §2 — but that is
+  the owner's approval of the footer, arrived at separately, and it grades appearance only. It makes none
+  of the figures above a reference and confirms no contrast, axe, layout or payload result.
