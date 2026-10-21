@@ -61,11 +61,21 @@ export function TraceLayer({ pairs }: { pairs: TracePair[] }) {
   return (
     <svg
       ref={svg}
+      data-trace-layer=""
       aria-hidden="true"
       focusable="false"
-      className="pointer-events-none absolute inset-0 overflow-visible"
-      width={state?.w ?? 0}
-      height={state?.h ?? 0}
+      className="overflow-visible"
+      /*
+       * The drawing is sized by its own `inset`, never by what was measured: a measured size in a layout property
+       * of an element inside the observed subtree feeds the observer its own output, and the page grows without
+       * bound. Only the `viewBox` carries the measurement, and that takes no part in layout.
+       *
+       * Out of flow and untouchable inline rather than by a utility class, because both have to hold when the
+       * stylesheet never arrives. Without a stylesheet this overlay has no positioned ancestor, so `inset: 0`
+       * resolves against the viewport and it covers the page: with `pointer-events` left to the stylesheet it
+       * then swallows every click on the page behind it.
+       */
+      style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
       viewBox={`0 0 ${state?.w ?? 0} ${state?.h ?? 0}`}
     >
       {state?.paths.map((p) => <path key={p.key} d={p.d} className="kx-trace" data-kind={p.kind} />)}
