@@ -92,7 +92,11 @@ in your editor if you are unsure: `KxButton` is a directive, `KxCard` is a compo
 
 - **Angular 21** — `@angular/core` and `@angular/forms` are peers at `^21.0.0`
 - **`@kinetixui/tokens`** is a peer at `>=0.24.0 <0.26.0`; install it alongside this package. It reads
-  `--surface-grouped` and `--on-info-container`, which tokens 0.23.x does not define
+  `--surface-grouped` and `--on-info-container`, which tokens 0.23.x does not define, and
+  `--on-success-container`, `--on-warning-container` and `--on-destructive-container` (the text of a
+  `kx-banner` / `kx-inform` success, warning or error), which arrive in the tokens release this change
+  ships in. Against an older tokens package those three resolve to nothing and the notice text falls back
+  to the inherited colour, so the peer range has to move with it — see the PR for that decision
 - Standalone APIs only — no NgModules are exported
 - Built with ng-packagr; ships `fesm2022` plus types, and is compiled and strict-template-typechecked in
   CI on every change

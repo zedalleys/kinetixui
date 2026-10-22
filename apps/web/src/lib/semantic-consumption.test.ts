@@ -135,16 +135,99 @@ describe("info container: Banner and Inform read the container foreground on eve
   });
 });
 
-describe("native theme structures expose both roles to consumers", () => {
+describe("success / warning / error containers: the same role on every platform", () => {
+  /**
+   * `check:contrast` measures TOKEN pairs, so it proves the three new `on-*-container` roles clear AA on
+   * the tint and on the tighter `muted` surface. What it cannot see is which utility a component writes —
+   * reverting `text-success-on-container` to `text-success` in banner.tsx leaves the gate green while
+   * putting the 4.20:1 pair back on the page. These assertions are that other half, per status per
+   * platform, and the negative control for each is reverting one consumer to the plain role.
+   *
+   * Native code cannot be compiled on this runner, so for Swift, Kotlin and Dart this is the evidence
+   * that the role is wired.
+   */
+  const STATUSES = [
+    { web: "success", role: "success", native: "Success" },
+    { web: "warning", role: "warning", native: "Warning" },
+    { web: "error", role: "destructive", native: "Destructive" },
+  ] as const;
+
+  it.each(STATUSES)("web Banner and Inform read $role-on-container for $web", ({ web, role }) => {
+    for (const f of ["banner", "inform"]) {
+      const src = read(`packages/ui/src/components/${f}.tsx`);
+      expect(src, f).toMatch(new RegExp(`${web}: "[^"]*text-${role}-on-container"`));
+    }
+  });
+
+  it.each(STATUSES)("web ResultState reads $role-on-container for $web", ({ web, role }) => {
+    const src = read("packages/ui/src/components/result-state.tsx");
+    // ResultState's `partial` draws the warning medallion too, so warning is expected twice.
+    expect(src).toMatch(new RegExp(`${web}: "[^"]*text-${role}-on-container"`));
+  });
+
+  it.each(STATUSES)("angular $web", ({ web, role }) => {
+    const css = read("packages/ui-angular/src/styles.css");
+    for (const f of ["banner", "inform"])
+      expect(css, f).toMatch(
+        new RegExp(`\\.kx-${f}--${web}\\s*\\{[^}]*color:\\s*hsl\\(var\\(--on-${role}-container\\)\\)`),
+      );
+  });
+
+  it.each(STATUSES)("swiftui $web", ({ web, native }) => {
+    for (const f of ["Banner", "Inform"])
+      expect(read(`${SWIFT}/${f}.swift`), f).toMatch(
+        new RegExp(`case \\.${web}:[^\\n]*colors\\.on${native}Container`),
+      );
+  });
+
+  it.each(STATUSES)("compose $web", ({ web, native }) => {
+    const Web = web[0].toUpperCase() + web.slice(1);
+    for (const f of ["Banner", "Inform"])
+      expect(read(`${KOTLIN}/${f}.kt`), f).toMatch(
+        new RegExp(`${Web} ->[^\\n]*colors\\.on${native}Container`),
+      );
+  });
+
+  it.each(STATUSES)("flutter $web", ({ web, native }) => {
+    const n = native[0].toLowerCase() + native.slice(1);
+    for (const f of ["banner", "inform"])
+      expect(read(`${DART}/${f}.dart`), f).toMatch(
+        new RegExp(`\\.${web} =>[^\\n]*c\\.on${native}Container`),
+      );
+    expect(n).toBeTruthy();
+  });
+
+  it("none of them paints the container text with the plain status role", () => {
+    // The exact shapes the three components used before this slice, which measured 4.20:1 (light success),
+    // 4.4982:1 (dark success) and 4.28:1 (dark error) on a notice inside a muted panel.
+    for (const f of ["banner", "inform"]) {
+      const web = read(`packages/ui/src/components/${f}.tsx`);
+      expect(web, f).not.toMatch(/text-success"|text-warning"|text-destructive"/);
+      expect(read(`${SWIFT}/${f[0].toUpperCase()}${f.slice(1)}.swift`), f).not.toMatch(
+        /colors\.(success|warning|destructive)\)/,
+      );
+      expect(read(`${DART}/${f}.dart`), f).not.toMatch(/, c\.(success|warning|destructive)\)/);
+    }
+    expect(read("packages/ui/src/components/result-state.tsx")).not.toMatch(
+      /text-success"|text-warning"|text-destructive"/,
+    );
+  });
+});
+
+describe("native theme structures expose every role to consumers", () => {
   it("SwiftUI KinetixColors", () => {
     const src = read(`${SWIFT}/Theme.swift`);
     expect(src).toMatch(/public let onInfoContainer: Color/);
+    for (const r of ["onSuccessContainer", "onWarningContainer", "onDestructiveContainer"])
+      expect(src, r).toMatch(new RegExp(`public let ${r}: Color`));
     expect(src).toMatch(/public let scrim: Color/);
   });
 
   it("Compose KinetixColors", () => {
     const src = read(`${KOTLIN}/Theme.kt`);
     expect(src).toMatch(/val onInfoContainer: Color/);
+    for (const r of ["onSuccessContainer", "onWarningContainer", "onDestructiveContainer"])
+      expect(src, r).toMatch(new RegExp(`val ${r}: Color`));
     expect(src).toMatch(/val scrim: Color/);
     expect(src).toMatch(/Generated(Light|Dark)\.colorOnInfoContainer/);
     expect(src).toMatch(/Generated(Light|Dark)\.colorScrim/);
@@ -153,6 +236,8 @@ describe("native theme structures expose both roles to consumers", () => {
   it("Flutter KinetixColors", () => {
     const src = read(`${DART}/theme.dart`);
     expect(src).toMatch(/final Color onInfoContainer/);
+    for (const r of ["onSuccessContainer", "onWarningContainer", "onDestructiveContainer"])
+      expect(src, r).toMatch(new RegExp(`final Color ${r}`));
     expect(src).toMatch(/final Color scrim/);
   });
 });

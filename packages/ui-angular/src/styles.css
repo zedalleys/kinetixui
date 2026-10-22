@@ -62,11 +62,18 @@
   outline: none;
   box-shadow: var(--shadow-focus);
 }
-/* :disabled covers <button>; [aria-disabled] covers the anchor form, which cannot be disabled */
+/* :disabled covers <button>; [aria-disabled] covers the anchor form, which cannot be disabled.
+   The anchor is NOT `pointer-events: none`. That suppressed the pointer and nothing else — the anchor
+   stayed in the tab order and Enter still navigated — while also making the control unhoverable, so a
+   mouse user could not even read the cursor. KxButton now guards activation for every input device, so
+   this rule only has to say "unavailable": `not-allowed`, the same shape `.kx-menu__item[aria-disabled]`
+   and `.kx-pagination__link` already use. */
 .kx-btn:disabled,
 .kx-btn[aria-disabled='true'] {
-  pointer-events: none;
   opacity: var(--opacity-disabled);
+}
+.kx-btn[aria-disabled='true'] {
+  cursor: not-allowed;
 }
 .kx-btn > svg {
   pointer-events: none;
@@ -1279,14 +1286,14 @@ label.kx-rating__item { cursor: pointer; }
 .kx-inform { border-radius: var(--radius-md); padding: var(--spacing-3); }
 
 .kx-banner--information { background-color: hsl(var(--info) / 0.1); color: hsl(var(--on-info-container)); border-color: hsl(var(--info) / 0.2); }
-.kx-banner--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--warning)); border-color: hsl(var(--warning) / 0.25); }
-.kx-banner--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--success)); border-color: hsl(var(--success) / 0.25); }
-.kx-banner--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive)); border-color: hsl(var(--destructive) / 0.2); }
+.kx-banner--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--on-warning-container)); border-color: hsl(var(--warning) / 0.25); }
+.kx-banner--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--on-success-container)); border-color: hsl(var(--success) / 0.25); }
+.kx-banner--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--on-destructive-container)); border-color: hsl(var(--destructive) / 0.2); }
 .kx-banner--action      { background-color: hsl(var(--foreground)); color: hsl(var(--background)); }
 .kx-inform--information { background-color: hsl(var(--info) / 0.1); color: hsl(var(--on-info-container)); }
-.kx-inform--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--warning)); }
-.kx-inform--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--success)); }
-.kx-inform--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive)); }
+.kx-inform--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--on-warning-container)); }
+.kx-inform--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--on-success-container)); }
+.kx-inform--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--on-destructive-container)); }
 .kx-inform--action      { background-color: hsl(var(--foreground)); color: hsl(var(--background)); }
 
 .kx-banner__body {
