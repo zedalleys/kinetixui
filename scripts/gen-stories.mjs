@@ -1076,7 +1076,7 @@ const EXTRA = {
       // whole strip hidden and shown, or unmounted. Each \`data-kx-action\` button is one of those; \`check:tabs-indicator\`
       // presses them and measures the bar against the chosen tab.
       name: "Indicator",
-      imports: "Button",
+      imports: "Button TABS_MOTION",
       render: `() => {
     const all = ["Overview", "Activity", "Deployments", "Analytics", "Logs", "Storage", "Preferences", "Members", "Billing", "Integrations"];
     const [tabs, setTabs] = React.useState(all);
@@ -1087,6 +1087,9 @@ const EXTRA = {
     const [hidden, setHidden] = React.useState(false);
     const [renamed, setRenamed] = React.useState(false);
     const [mounted, setMounted] = React.useState(true);
+    // Cycling through \`TABS_MOTION\` rather than a list written here keeps the lab honest: it offers the
+    // presets the component actually publishes, and a preset added later appears without touching this story.
+    const [motion, setMotion] = React.useState(TABS_MOTION[0]);
     const actions: [string, string, () => void][] = [
       ["select-last", "Choose last", () => setValue(tabs[tabs.length - 1])],
       ["select-second", "Choose second", () => setValue(tabs[1])],
@@ -1101,6 +1104,7 @@ const EXTRA = {
       ["orientation", "Flip orientation", () => setOrientation((o) => (o === "horizontal" ? "vertical" : "horizontal"))],
       ["hidden", "Hide or show", () => setHidden((h) => !h)],
       ["unmount", "Unmount or mount", () => setMounted((m) => !m)],
+      ["motion", "Next motion preset", () => setMotion((m) => TABS_MOTION[(TABS_MOTION.indexOf(m) + 1) % TABS_MOTION.length])],
     ];
     return (
       <div className="grid w-[22rem] max-w-full grid-cols-[minmax(0,1fr)] gap-4">
@@ -1112,7 +1116,7 @@ const EXTRA = {
         <div hidden={hidden}>
           {mounted ? (
           <Tabs value={value} onValueChange={setValue} dir={dir} orientation={orientation} className={orientation === "vertical" ? "flex gap-4" : undefined}>
-            <TabsList data-kx-case="lab" aria-label="Project sections" className={orientation === "vertical" ? "w-auto" : undefined}>
+            <TabsList data-kx-case="lab" motion={motion} aria-label="Project sections" className={orientation === "vertical" ? "w-auto" : undefined}>
               {tabs.map((t, i) => (
                 <TabsTrigger key={t} value={t} disabled={disabled === t}>{t}{i === 1 ? " " + (renamed ? 1280 : 3) : null}</TabsTrigger>
               ))}

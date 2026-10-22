@@ -557,13 +557,15 @@ const expectAligned = (m, label) =>
   // is the distinction that matters — a 0.01ms transition would still be a transition, and the preset
   // is a claim about the code path, not about a number.
   const { page, ctx } = await open();
-  await page.evaluate(() =>
-    document.querySelector('[data-kx-action="motion"]').click(),
-  );
+  // The lab's button cycles the published presets, so press it until the list reports `none` rather than
+  // assuming it is one press away. A preset added later then lengthens this loop instead of breaking it.
+  const preset = await page.evaluate(() => {
+    const list = document.querySelector("[role=tablist]");
+    const button = document.querySelector('[data-kx-action="motion"]');
+    for (let i = 0; i < 12 && list.dataset.kxTabsMotion !== "none"; i++) button.click();
+    return list.dataset.kxTabsMotion;
+  });
   await settle(page);
-  const preset = await page.evaluate(
-    () => document.querySelector("[role=tablist]").dataset.kxTabsMotion,
-  );
   check(
     preset === "none",
     'motion="none": the list reports the preset',
