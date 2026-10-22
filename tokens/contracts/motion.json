@@ -242,7 +242,7 @@
       "deviations": []
     },
     "selection-indicator": {
-      "status": "proposed",
+      "status": "observed",
       "duration": [
         "base"
       ],
@@ -254,8 +254,17 @@
       ],
       "reducedForm": "remove-travel",
       "evidence": [],
-      "note": "A single indicator travelling between selected items (Tabs, SegmentedControl). Being built for React in PR #388; not on main. Promote to observed when #388 merges and add its consumer; promote to proven when a rendered midpoint check covers it.",
-      "consumers": [],
+      "note": "A single indicator travelling between selected items. React's Tabs is the one consumer: one bar per list whose leading edge moves first and whose trailing edge is held back by `instant`, so it stretches across the gap and settles on the new label. Landed for React in #388. Observed rather than proven: `check:motion` measures a rendered midpoint for the travel in both directions and that reduced motion removes it, and `check:tabs-indicator` asserts the bar's geometry against the chosen tab through seven cases including `still` (a change that is not a change of tab must snap), but this repository promotes a role to proven on a SECOND platform consuming it, and no other platform has a travelling indicator. SegmentedControl is not a consumer: #388 gave its selected item a filled surface, and that fill settles on `fast`/`standard`, which is `selection-state`, not a travelling bar. `Tabs`'s `motion` prop selects between this role's effect (`classic`) and no travel (`none`); the prop cannot set a duration, so every preset stays inside the role.",
+      "consumers": [
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/tabs.tsx",
+          "expects": [
+            "[transition-duration:var(--duration-base)]",
+            "[transition-timing-function:var(--easing-emphasized)]"
+          ]
+        }
+      ],
       "deviations": []
     },
     "selection-state": {

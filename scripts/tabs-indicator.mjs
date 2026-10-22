@@ -38,20 +38,26 @@ import { serveStatic } from "./visual-harness.mjs";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
 if (!existsSync(join(staticDir, "index.json"))) {
-  console.error("apps/docs/storybook-static not found — run `pnpm build-storybook` first.");
+  console.error(
+    "apps/docs/storybook-static not found — run `pnpm build-storybook` first.",
+  );
   process.exit(2);
 }
 assertUiDistMatchesSource("tabs-indicator");
 const index = JSON.parse(readFileSync(join(staticDir, "index.json"), "utf8"));
 for (const id of ["navigation-tabs--indicator", "navigation-tabs--default"]) {
   if (!index.entries[id]) {
-    console.error(`tabs-indicator: story ${id} is missing from the built Storybook.`);
+    console.error(
+      `tabs-indicator: story ${id} is missing from the built Storybook.`,
+    );
     process.exit(2);
   }
 }
 
 const storybook = await serveStatic(staticDir);
-const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH });
+const browser = await chromium.launch({
+  executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH,
+});
 
 const failures = [];
 const report = [];
@@ -60,17 +66,37 @@ const check = (ok, label, detail) => {
   if (!ok) failures.push(`${label}: ${detail}`);
 };
 
-async function open({ story = "indicator", viewport = { width: 480, height: 720 }, fontPx, ...ctxOpts } = {}) {
-  const ctx = await browser.newContext({ viewport, deviceScaleFactor: 1, ...ctxOpts });
+async function open({
+  story = "indicator",
+  viewport = { width: 480, height: 720 },
+  fontPx,
+  ...ctxOpts
+} = {}) {
+  const ctx = await browser.newContext({
+    viewport,
+    deviceScaleFactor: 1,
+    ...ctxOpts,
+  });
   const page = await ctx.newPage();
   await page.addInitScript(OBSERVERS);
-  await page.route((url) => !url.href.startsWith(storybook.base) && !url.href.startsWith("data:"), (route) => route.abort());
+  await page.route(
+    (url) =>
+      !url.href.startsWith(storybook.base) && !url.href.startsWith("data:"),
+    (route) => route.abort(),
+  );
   if (fontPx) {
     const cdp = await ctx.newCDPSession(page);
-    await cdp.send("Page.setFontSizes", { fontSizes: { standard: fontPx, fixed: fontPx } });
+    await cdp.send("Page.setFontSizes", {
+      fontSizes: { standard: fontPx, fixed: fontPx },
+    });
   }
-  await page.goto(`${storybook.base}/iframe.html?id=navigation-tabs--${story}&viewMode=story`, { waitUntil: "load" });
-  await page.waitForSelector("[role=tablist] [data-kx-tabs-bar]", { state: "attached" });
+  await page.goto(
+    `${storybook.base}/iframe.html?id=navigation-tabs--${story}&viewMode=story`,
+    { waitUntil: "load" },
+  );
+  await page.waitForSelector("[role=tablist] [data-kx-tabs-bar]", {
+    state: "attached",
+  });
   await settle(page);
   return { page, ctx };
 }
@@ -121,7 +147,8 @@ const settle = (page) =>
     const frame = () => new Promise((r) => requestAnimationFrame(r));
     for (let i = 0; i < 120; i++) {
       await frame();
-      if (document.getAnimations().every((a) => a.playState !== "running")) break;
+      if (document.getAnimations().every((a) => a.playState !== "running"))
+        break;
     }
     await frame();
     await frame();
@@ -132,7 +159,9 @@ const transitionsAfter = (page, run) =>
   page.evaluate(async (body) => {
     // eslint-disable-next-line no-new-func
     await new Function(body)();
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    await new Promise((r) =>
+      requestAnimationFrame(() => requestAnimationFrame(r)),
+    );
     const bar = document.querySelector("[role=tablist] [data-kx-tabs-bar]");
     return bar.getAnimations().filter((a) => a.playState === "running").length;
   }, run);
@@ -146,14 +175,17 @@ const press = async (page, key) => {
   await page.waitForTimeout(30);
 };
 
-const act = (key) => `document.querySelector('[data-kx-action="${key}"]').click();`;
+const act = (key) =>
+  `document.querySelector('[data-kx-action="${key}"]').click();`;
 
 /** The bar against the chosen tab, in viewport pixels, plus the semantics around it. */
 const measure = (page) =>
   page.evaluate(() => {
     const list = document.querySelector("[role=tablist]");
     const bar = list.querySelector("[data-kx-tabs-bar]");
-    const tab = list.querySelector(':scope > [role="tab"][data-state="active"]');
+    const tab = list.querySelector(
+      ':scope > [role="tab"][data-state="active"]',
+    );
     const box = (el) => {
       const r = el.getBoundingClientRect();
       return { l: r.left, r: r.right, t: r.top, b: r.bottom };
@@ -167,7 +199,11 @@ const measure = (page) =>
           const be = parseFloat(cs.borderBottomWidth);
           const ie = parseFloat(cs.borderInlineEndWidth);
           const rtl = cs.direction === "rtl";
-          return vertical ? (rtl ? { ...b, l: b.l + ie } : { ...b, r: b.r - ie }) : { ...b, b: b.b - be };
+          return vertical
+            ? rtl
+              ? { ...b, l: b.l + ie }
+              : { ...b, r: b.r - ie }
+            : { ...b, b: b.b - be };
         })()
       : null;
     return {
@@ -179,8 +215,13 @@ const measure = (page) =>
       pad,
       label: tab?.textContent ?? null,
       ariaHidden: bar.getAttribute("aria-hidden"),
-      selected: list.querySelectorAll('[role="tab"][aria-selected="true"]').length,
-      tabBorder: cs ? (vertical ? cs.borderInlineEndColor : cs.borderBottomColor) : null,
+      selected: list.querySelectorAll('[role="tab"][aria-selected="true"]')
+        .length,
+      tabBorder: cs
+        ? vertical
+          ? cs.borderInlineEndColor
+          : cs.borderBottomColor
+        : null,
       listOverflows: list.scrollWidth > list.clientWidth + 1,
       listScroll: list.scrollLeft,
       pageOverflow: document.scrollingElement.scrollWidth - window.innerWidth,
@@ -197,38 +238,74 @@ const fmt = (m) =>
 function aligned(m) {
   if (!m.shown || !m.tab) return false;
   if (m.vertical) {
-    const edge = m.dir === "rtl" ? near(m.bar.l, m.tab.l) : near(m.bar.r, m.tab.r);
-    return near(m.bar.t, m.tab.t) && near(m.bar.b, m.tab.b) && edge && m.bar.r - m.bar.l <= 2.5;
+    const edge =
+      m.dir === "rtl" ? near(m.bar.l, m.tab.l) : near(m.bar.r, m.tab.r);
+    return (
+      near(m.bar.t, m.tab.t) &&
+      near(m.bar.b, m.tab.b) &&
+      edge &&
+      m.bar.r - m.bar.l <= 2.5
+    );
   }
-  return near(m.bar.l, m.tab.l) && near(m.bar.r, m.tab.r) && near(m.bar.b, m.tab.b) && m.bar.b - m.bar.t <= 2.5;
+  return (
+    near(m.bar.l, m.tab.l) &&
+    near(m.bar.r, m.tab.r) &&
+    near(m.bar.b, m.tab.b) &&
+    m.bar.b - m.bar.t <= 2.5
+  );
 }
 /** the bar covers no part of the trigger's padding box, where the inset focus ring is drawn */
 function clearOfRing(m) {
-  if (m.vertical) return m.dir === "rtl" ? m.bar.r <= m.pad.l + 0.5 : m.bar.l >= m.pad.r - 0.5;
+  if (m.vertical)
+    return m.dir === "rtl"
+      ? m.bar.r <= m.pad.l + 0.5
+      : m.bar.l >= m.pad.r - 0.5;
   return m.bar.t >= m.pad.b - 0.5;
 }
-const expectAligned = (m, label) => check(aligned(m) && clearOfRing(m), label, fmt(m));
+const expectAligned = (m, label) =>
+  check(aligned(m) && clearOfRing(m), label, fmt(m));
 
 /* ── LTR, scrolling ──────────────────────────────────────────────────── */
 {
   const { page, ctx } = await open();
   let m = await measure(page);
-  check(m.listOverflows, "lab strip overflows its column (the case under test exists)", `scrollLeft ${m.listScroll}`);
+  check(
+    m.listOverflows,
+    "lab strip overflows its column (the case under test exists)",
+    `scrollLeft ${m.listScroll}`,
+  );
   expectAligned(m, "initial chosen tab");
-  check(m.ariaHidden === "true" && m.selected === 1, "bar is aria-hidden, one tab is selected", `aria-hidden=${m.ariaHidden}, selected ${m.selected}`);
+  check(
+    m.ariaHidden === "true" && m.selected === 1,
+    "bar is aria-hidden, one tab is selected",
+    `aria-hidden=${m.ariaHidden}, selected ${m.selected}`,
+  );
 
   const moving = await transitionsAfter(page, act("select-last"));
   await settle(page);
   m = await measure(page);
   expectAligned(m, "programmatic choice of an off-screen tab");
-  check(moving > 0, "a change of tab travels", `${moving} transition(s) running`);
-  check(m.pageOverflow <= 0 && m.pageScroll.join() === "0,0", "page did not scroll or overflow", `overflow ${m.pageOverflow}px, scroll ${m.pageScroll}`);
+  check(
+    moving > 0,
+    "a change of tab travels",
+    `${moving} transition(s) running`,
+  );
+  check(
+    m.pageOverflow <= 0 && m.pageScroll.join() === "0,0",
+    "page did not scroll or overflow",
+    `overflow ${m.pageOverflow}px, scroll ${m.pageScroll}`,
+  );
 
   // scroll the strip back by hand, then pick a tab with the pointer
-  await page.evaluate(() => (document.querySelector("[role=tablist]").scrollLeft = 0));
+  await page.evaluate(
+    () => (document.querySelector("[role=tablist]").scrollLeft = 0),
+  );
   await page.locator("[role=tablist] [role=tab]").nth(2).click();
   await settle(page);
-  expectAligned(await measure(page), "pointer choice after scrolling the strip");
+  expectAligned(
+    await measure(page),
+    "pointer choice after scrolling the strip",
+  );
 
   // keyboard through the whole strip: focus scrolls the strip, never the page
   await page.locator('[role=tablist] [role=tab][data-state="active"]').focus();
@@ -238,7 +315,9 @@ const expectAligned = (m, label) => check(aligned(m) && clearOfRing(m), label, f
   m = await measure(page);
   expectAligned(m, "keyboard travel to the end of an overflowing strip");
   check(
-    m.label === "Integrations" && m.listScroll > 0 && m.pageScroll.join() === "0,0",
+    m.label === "Integrations" &&
+      m.listScroll > 0 &&
+      m.pageScroll.join() === "0,0",
     "keyboard scrolled the strip, not the page",
     `chosen "${m.label}", strip ${m.listScroll.toFixed(0)}px, page ${m.pageScroll}`,
   );
@@ -250,20 +329,33 @@ const expectAligned = (m, label) => check(aligned(m) && clearOfRing(m), label, f
   await settle(page);
   m = await measure(page);
   expectAligned(m, "five rapid changes settle on the last");
-  check(m.label === "Storage", "rapid changes end on the sixth tab", `chosen "${m.label}"`);
+  check(
+    m.label === "Storage",
+    "rapid changes end on the sixth tab",
+    `chosen "${m.label}"`,
+  );
 
   // the viewport narrows: a resize-only reposition
   await page.locator("[role=tab]").nth(1).click();
   await settle(page);
   await page.setViewportSize({ width: 340, height: 720 });
   const still2 = await page.evaluate(async () => {
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-    return document.querySelector("[data-kx-tabs-bar]").getAnimations().filter((a) => a.playState === "running").length;
+    await new Promise((r) =>
+      requestAnimationFrame(() => requestAnimationFrame(r)),
+    );
+    return document
+      .querySelector("[data-kx-tabs-bar]")
+      .getAnimations()
+      .filter((a) => a.playState === "running").length;
   });
   await settle(page);
   m = await measure(page);
   expectAligned(m, "viewport resized to 340px");
-  check(still2 === 0 && m.pageOverflow <= 0, "resize snaps, page does not overflow", `${still2} transition(s), page overflow ${m.pageOverflow}px`);
+  check(
+    still2 === 0 && m.pageOverflow <= 0,
+    "resize snaps, page does not overflow",
+    `${still2} transition(s), page overflow ${m.pageOverflow}px`,
+  );
   await ctx.close();
 }
 
@@ -292,7 +384,10 @@ const expectAligned = (m, label) => check(aligned(m) && clearOfRing(m), label, f
   expectAligned(await measure(page), "a tab is added");
   await page.evaluate(act("remove-first-inactive"));
   await settle(page);
-  expectAligned(await measure(page), "an inactive tab before the chosen one is removed");
+  expectAligned(
+    await measure(page),
+    "an inactive tab before the chosen one is removed",
+  );
   await page.evaluate(act("disable-selected"));
   await settle(page);
   let m = await measure(page);
@@ -301,30 +396,64 @@ const expectAligned = (m, label) => check(aligned(m) && clearOfRing(m), label, f
   await page.evaluate(act("remove-selected"));
   await settle(page);
   m = await measure(page);
-  check(!m.shown && m.selected === 0, "the chosen tab is removed: no bar, nothing selected", `bar ${m.shown ? "SHOWN" : "hidden"}, selected ${m.selected}`);
-  const fallback = await page.evaluate(() => [...document.querySelectorAll("[role=tab]")].every((t) => getComputedStyle(t).borderBottomColor === "rgba(0, 0, 0, 0)"));
-  check(fallback, "and no trigger draws a stale edge", fallback ? "every edge transparent" : "an edge is drawn");
+  check(
+    !m.shown && m.selected === 0,
+    "the chosen tab is removed: no bar, nothing selected",
+    `bar ${m.shown ? "SHOWN" : "hidden"}, selected ${m.selected}`,
+  );
+  const fallback = await page.evaluate(() =>
+    [...document.querySelectorAll("[role=tab]")].every(
+      (t) => getComputedStyle(t).borderBottomColor === "rgba(0, 0, 0, 0)",
+    ),
+  );
+  check(
+    fallback,
+    "and no trigger draws a stale edge",
+    fallback ? "every edge transparent" : "an edge is drawn",
+  );
   await ctx.close();
 }
 
 /* ── observer lifecycle ──────────────────────────────────────────────── */
 {
   const { page, ctx } = await open();
-  const detached = async () => (await page.evaluate(() => window.__kxObservers())).reduce((n, o) => n + o.detachedTabs, 0);
+  const detached = async () =>
+    (await page.evaluate(() => window.__kxObservers())).reduce(
+      (n, o) => n + o.detachedTabs,
+      0,
+    );
   await page.evaluate(act("select-second"));
   await settle(page);
-  for (const key of ["remove-first-inactive", "remove-first-inactive", "remove-selected"]) {
+  for (const key of [
+    "remove-first-inactive",
+    "remove-first-inactive",
+    "remove-selected",
+  ]) {
     await page.evaluate(act(key));
     await settle(page);
   }
   const held = await detached();
-  check(held === 0, "removed tabs are no longer observed", `${held} detached tab(s) still watched`);
+  check(
+    held === 0,
+    "removed tabs are no longer observed",
+    `${held} detached tab(s) still watched`,
+  );
   await page.evaluate(act("unmount"));
   await settle(page);
-  const live = (await page.evaluate(() => window.__kxObservers())).filter((o) => o.watching > 0);
-  check(live.length === 0, "unmounting the strip disconnects its observers", live.length ? live.map((o) => `${o.name} watching ${o.watching}`).join(", ") : "none left connected");
+  const live = (await page.evaluate(() => window.__kxObservers())).filter(
+    (o) => o.watching > 0,
+  );
+  check(
+    live.length === 0,
+    "unmounting the strip disconnects its observers",
+    live.length
+      ? live.map((o) => `${o.name} watching ${o.watching}`).join(", ")
+      : "none left connected",
+  );
   await page.evaluate(act("unmount"));
-  await page.waitForSelector("[role=tablist] [data-kx-tabs-bar]", { state: "attached" });
+  await page.waitForSelector("[role=tablist] [data-kx-tabs-bar]", {
+    state: "attached",
+  });
   await page.evaluate(act("select-second"));
   await settle(page);
   expectAligned(await measure(page), "remounted after unmounting");
@@ -340,29 +469,50 @@ const expectAligned = (m, label) => check(aligned(m) && clearOfRing(m), label, f
   await settle(page);
   let m = await measure(page);
   expectAligned(m, "direction flipped to rtl");
-  check(m.dir === "rtl" && still === 0, "direction flip snaps, no travel", `dir ${m.dir}, ${still} transition(s)`);
+  check(
+    m.dir === "rtl" && still === 0,
+    "direction flip snaps, no travel",
+    `dir ${m.dir}, ${still} transition(s)`,
+  );
   await page.evaluate(act("select-last"));
   await settle(page);
   m = await measure(page);
   expectAligned(m, "rtl: programmatic choice of an off-screen tab");
-  check(m.pageOverflow <= 0, "rtl: page does not overflow", `${m.pageOverflow}px`);
+  check(
+    m.pageOverflow <= 0,
+    "rtl: page does not overflow",
+    `${m.pageOverflow}px`,
+  );
   await page.locator('[role=tablist] [role=tab][data-state="active"]').focus();
   for (let i = 0; i < 4; i++) await press(page, "ArrowRight"); // toward the inline start in rtl
   await settle(page);
   m = await measure(page);
   expectAligned(m, "rtl: keyboard travel back along the strip");
-  check(m.pageScroll.join() === "0,0", "rtl: keyboard did not scroll the page", `page ${m.pageScroll}`);
+  check(
+    m.pageScroll.join() === "0,0",
+    "rtl: keyboard did not scroll the page",
+    `page ${m.pageScroll}`,
+  );
 
   await page.evaluate(act("orientation"));
   await settle(page);
-  expectAligned(await measure(page), "vertical, rtl: bar on the chosen tab's inline-end rail");
+  expectAligned(
+    await measure(page),
+    "vertical, rtl: bar on the chosen tab's inline-end rail",
+  );
   await page.evaluate(act("direction"));
   await settle(page);
-  expectAligned(await measure(page), "vertical, ltr: bar on the chosen tab's inline-end rail");
+  expectAligned(
+    await measure(page),
+    "vertical, ltr: bar on the chosen tab's inline-end rail",
+  );
   await page.locator('[role=tablist] [role=tab][data-state="active"]').focus();
   await press(page, "ArrowDown");
   await settle(page);
-  expectAligned(await measure(page), "vertical: keyboard choice of the next tab");
+  expectAligned(
+    await measure(page),
+    "vertical: keyboard choice of the next tab",
+  );
   await page.evaluate(act("orientation"));
   await settle(page);
 
@@ -374,20 +524,117 @@ const expectAligned = (m, label) => check(aligned(m) && clearOfRing(m), label, f
   await settle(page);
   m = await measure(page);
   expectAligned(m, "choice changed while hidden, then shown");
-  check(shown === 0, "revealing the strip snaps, no travel from a stale place", `${shown} transition(s)`);
+  check(
+    shown === 0,
+    "revealing the strip snaps, no travel from a stale place",
+    `${shown} transition(s)`,
+  );
   await ctx.close();
 }
 
 /* ── 200% text, reduced motion, forced colours, hydration fallback ───── */
 {
-  const { page, ctx } = await open({ fontPx: 32, viewport: { width: 390, height: 800 } });
+  const { page, ctx } = await open({
+    fontPx: 32,
+    viewport: { width: 390, height: 800 },
+  });
   let m = await measure(page);
   expectAligned(m, "200% text: initial");
   await page.evaluate(act("select-last"));
   await settle(page);
   m = await measure(page);
   expectAligned(m, "200% text: off-screen choice");
-  check(m.pageOverflow <= 0, "200% text: page does not overflow at 390px", `${m.pageOverflow}px`);
+  check(
+    m.pageOverflow <= 0,
+    "200% text: page does not overflow at 390px",
+    `${m.pageOverflow}px`,
+  );
+  await ctx.close();
+}
+{
+  // The `motion` preset. `none` must reach the chosen tab through the same snap path a resize takes:
+  // placed, not interpolated. Asserting "no transition is running" rather than "the duration is short"
+  // is the distinction that matters — a 0.01ms transition would still be a transition, and the preset
+  // is a claim about the code path, not about a number.
+  const { page, ctx } = await open();
+  await page.evaluate(() =>
+    document.querySelector('[data-kx-action="motion"]').click(),
+  );
+  await settle(page);
+  const preset = await page.evaluate(
+    () => document.querySelector("[role=tablist]").dataset.kxTabsMotion,
+  );
+  check(
+    preset === "none",
+    'motion="none": the list reports the preset',
+    `data-kx-tabs-motion=${preset}`,
+  );
+  const moving = await transitionsAfter(page, act("select-last"));
+  const m = await measure(page);
+  expectAligned(m, 'motion="none": lands on the chosen tab at once');
+  check(moving === 0, 'motion="none": no travel', `${moving} transition(s)`);
+  await ctx.close();
+}
+{
+  // `classic` retargets from where the bar is rather than restarting. Choosing a second tab part-way
+  // through a travel must continue from the bar's current rendered position: the frame after the second
+  // choice has to be near where the bar already was, not back at the first tab.
+  const { page, ctx } = await open();
+  const retarget = await page.evaluate(async () => {
+    const bar = document.querySelector("[role=tablist] [data-kx-tabs-bar]");
+    const left = () => bar.getBoundingClientRect().left;
+    const frame = () => new Promise((r) => requestAnimationFrame(r));
+    const first = left();
+    document.querySelector('[data-kx-action="select-last"]').click();
+    for (let i = 0; i < 8; i++) await frame(); // part-way into the travel, well before it settles
+    const midway = left();
+    document.querySelector('[data-kx-action="select-second"]').click();
+    await frame();
+    await frame();
+    const after = left();
+    return { first, midway, after };
+  });
+  const moved = Math.abs(retarget.midway - retarget.first) > 1;
+  const continued =
+    Math.abs(retarget.after - retarget.midway) <
+    Math.abs(retarget.after - retarget.first);
+  check(
+    moved,
+    "classic: the bar is mid-travel when the second tab is chosen",
+    `${retarget.first.toFixed(1)} → ${retarget.midway.toFixed(1)}`,
+  );
+  check(
+    continued,
+    "classic: retargets from the current position, not from the start",
+    `midway ${retarget.midway.toFixed(1)}, next frame ${retarget.after.toFixed(1)}, start ${retarget.first.toFixed(1)}`,
+  );
+  await settle(page);
+  expectAligned(
+    await measure(page),
+    "classic: settles on the second chosen tab after interruption",
+  );
+  await ctx.close();
+}
+{
+  // Rapid repeated selection: the bar ends on the last tab chosen, with no accumulated offset and no
+  // observer growth. The observer count is read because this list watches every tab with a
+  // ResizeObserver, and an observer that is added per selection would be invisible until it was not.
+  const { page, ctx } = await open();
+  await page.evaluate(async () => {
+    for (let i = 0; i < 10; i++) {
+      document
+        .querySelector(
+          `[data-kx-action="${i % 2 ? "select-second" : "select-last"}"]`,
+        )
+        .click();
+      await new Promise((r) => requestAnimationFrame(r));
+    }
+  });
+  await settle(page);
+  expectAligned(
+    await measure(page),
+    "rapid selection: settles on the last tab chosen",
+  );
   await ctx.close();
 }
 {
@@ -402,7 +649,11 @@ const expectAligned = (m, label) => check(aligned(m) && clearOfRing(m), label, f
   const { page, ctx } = await open({ forcedColors: "active" });
   const m = await measure(page);
   const drawn = m.tabBorder !== "rgba(0, 0, 0, 0)";
-  check(!m.shown && drawn, "forced colours: bar hidden, chosen trigger draws its own edge", `bar ${m.shown ? "SHOWN" : "hidden"}, edge ${m.tabBorder}`);
+  check(
+    !m.shown && drawn,
+    "forced colours: bar hidden, chosen trigger draws its own edge",
+    `bar ${m.shown ? "SHOWN" : "hidden"}, edge ${m.tabBorder}`,
+  );
   await ctx.close();
 }
 {
@@ -420,9 +671,20 @@ const expectAligned = (m, label) => check(aligned(m) && clearOfRing(m), label, f
     const cs = getComputedStyle(tab);
     const w = parseFloat(cs.borderBottomWidth);
     const bar = list.querySelector("[data-kx-tabs-bar]");
-    return { l: r.left, r: r.right, t: r.bottom - w, b: r.bottom, color: cs.borderBottomColor, barShown: getComputedStyle(bar).display !== "none" };
+    return {
+      l: r.left,
+      r: r.right,
+      t: r.bottom - w,
+      b: r.bottom,
+      color: cs.borderBottomColor,
+      barShown: getComputedStyle(bar).display !== "none",
+    };
   });
-  const same = near(edge.l, bar.bar.l) && near(edge.r, bar.bar.r) && near(edge.t, bar.bar.t) && near(edge.b, bar.bar.b);
+  const same =
+    near(edge.l, bar.bar.l) &&
+    near(edge.r, bar.bar.r) &&
+    near(edge.t, bar.bar.t) &&
+    near(edge.b, bar.bar.b);
   check(
     same && edge.color !== "rgba(0, 0, 0, 0)" && !edge.barShown,
     "pre-hydration edge is the box the bar takes over",
@@ -435,7 +697,12 @@ await browser.close();
 storybook.close();
 console.log(report.join("\n"));
 if (failures.length) {
-  console.error(`\n✗ tabs-indicator: ${failures.length} failure(s)\n` + failures.map((f) => `  ${f}`).join("\n"));
+  console.error(
+    `\n✗ tabs-indicator: ${failures.length} failure(s)\n` +
+      failures.map((f) => `  ${f}`).join("\n"),
+  );
   process.exit(1);
 }
-console.log(`\ntabs-indicator ok — the bar stays on the chosen tab through scrolling, resizing, dynamic tabs, direction, orientation, 200% text and reveal.`);
+console.log(
+  `\ntabs-indicator ok — the bar stays on the chosen tab through scrolling, resizing, dynamic tabs, direction, orientation, 200% text and reveal.`,
+);
