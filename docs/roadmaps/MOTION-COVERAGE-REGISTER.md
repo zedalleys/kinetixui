@@ -35,8 +35,15 @@ counts as runtime*.
 | --- | --- |
 | **M** | motion is implemented *and* a gate measures rendered intermediate behaviour (not only that a class or token is present) |
 | **m** | motion is implemented; only its wiring, class strings or resolver values are checked |
+| **!** | motion is implemented and its **reduced form is an acknowledged open gap**, recorded in `KNOWN_GAPS` in `scripts/native-motion-spec.mjs` |
 | **·** | no motion by design on that platform, and that is a recorded decision |
 | **○** | no motion, and no decision — an open gap |
+
+`!` and `·` both appear against a `KNOWN_GAPS` entry and are not interchangeable. `·` is for an entry whose note
+*settles* the question — SwiftUI's `Dialog.swift`, where "positional movement is what Reduce Motion removes, and a
+fade is the accepted replacement, so there is nothing concrete to fix". `!` is for an entry whose note *defers* it
+to another slice. Collapsing the second into the first would hide a live reduced-motion gap, which is exactly what
+this register exists to prevent.
 | **—** | not in the catalogue for that platform |
 
 ---
@@ -50,13 +57,13 @@ First symbol is motion status, second is the component's evidence level.
 
 | Component | R | A | S | C | F |
 | --- | --- | --- | --- | --- | --- |
-| Switch | **M** headless | **M** runtime | m build | m headless | m headless |
+| Switch | **M** headless | **M** runtime | m build | m headless | **M** headless |
 | Toggle | **M** headless | **M** runtime | ○ build | ○ build | ○ headless |
 | ToggleGroup | **M** headless | **M** runtime | ○ build | ○ build | ○ build |
 | Checkbox | **M** headless | **M** runtime | ○ build | ○ headless | ○ headless |
 | RadioGroup | **M** headless | **M** runtime | ○ build | ○ build | ○ build |
 | SegmentedControl | m build | m runtime | ○ build | ○ build | ○ build |
-| Tabs (indicator) | **M** headless | ○ runtime | ○ headless | ○ headless | ○ headless |
+| Tabs (indicator) | **M** headless | ○ runtime | ○ build | ○ headless | ○ headless |
 | TabBar | ○ build | ○ runtime | ○ build | ○ build | ○ build |
 
 **What each M rests on.** React: `check:motion` (rendered midpoint and duration in Chromium), plus
@@ -65,7 +72,9 @@ First symbol is motion status, second is the component's evidence level.
 the package driven as a live Angular application in Chromium (#416, merged `822304a`).
 
 **The native ○ cells are the register's largest honest gap**, and three open PRs move the *semantics and
-implementation* half of them without closing the motion half:
+implementation* half of them without closing the motion half. Flutter's Switch is **M** rather than ○ or m because
+`switch_motion_test.dart` measures the thumb's inset mid-travel off the render tree; its ceiling is still headless,
+not a device:
 
 | PR | Platform | What it adds | Level change | Runtime? |
 | --- | --- | --- | --- | --- |
@@ -81,12 +90,17 @@ platform claims `runtime` for any component, and none can**: the repository has 
 
 | Component | R | A | S | C | F |
 | --- | --- | --- | --- | --- | --- |
-| Accordion | **M** headless | **M** runtime | m build | m build | m build |
-| Collapsible | **M** headless | **M** runtime | m build | m build | m build |
+| Accordion | **M** headless | **M** runtime | m build | m build | **M** build |
+| Collapsible | **M** headless | **M** runtime | m build | m build | **M** build |
 
-The `disclosure` role is `proven` with consumers on all five platforms — the only role that is. Native cells are
-**m** not **M** because `DisclosureMotion` unit tests prove the helper's branches and `check:native-motion` proves
-each member reaches the platform preference; neither renders.
+The `disclosure` role is `proven` with consumers on all five platforms — the only role that is.
+
+**SwiftUI and Compose are `m`; Flutter is `M`.** SwiftUI's suite says so in its own header — "no ViewInspector, no
+XCUITest host, so **nothing here** renders" — and asserts resolver values (`durationSeconds`, the easing pair,
+`nil` under Reduce Motion). Compose's `DisclosureMotionTest.kt` composes through Robolectric and asserts that a
+node *exists* after a click, which is state, not a midpoint. Flutter's `disclosure_motion_test.dart` pumps to
+100 ms — halfway through 200 ms — and measures the `AnimatedSize` height off the render tree, asserting it is
+strictly between the two ends. That is a rendered intermediate measurement, which is what **M** means here.
 
 ### 1.3 Overlay and spatial family — MX3, barely started
 
@@ -95,7 +109,7 @@ each member reaches the platform preference; neither renders.
 | Dialog | m headless | m runtime | · build (fade only, recorded in `KNOWN_GAPS`) | ○ build | ○ build |
 | AlertDialog | m headless | m runtime | ○ build | ○ build | ○ build |
 | Sheet | m headless | m runtime | m build (slide helper) | ○ build | ○ build |
-| Drawer (React, Vaul) | ○ headless | see Sheet | — | — | — |
+| Drawer | ○ headless (Vaul) | m runtime | ○ build | ○ build | ○ build |
 | Popover · Tooltip · HoverCard | m headless | m runtime | ○ build | ○ build | ○ build |
 | Menu family · DropdownMenu · ContextMenu | m headless | m runtime | ○ build | ○ build | ○ build |
 | Menubar | ○ headless (**G6**: no exit animation) | m runtime | ○ build | ○ build | ○ build |
@@ -107,26 +121,41 @@ The `overlay` role is still **`observed`** with two consumers (react, angular); 
 rendered *states*, not motion. **React's Drawer takes its motion from Vaul** at a fixed 500 ms curve with no
 Kinetix token: that is an un-recorded third-party curve inside a `proven`-looking family.
 
+**The native Drawer cells are a gap the gate cannot see.** `Drawer.swift`, `Drawer.kt` and `drawer.dart` all exist
+and all carry `build` in `componentLevels`, and **none of the three contains a single animation call**. Because
+`check:native-motion` only flags a file that *animates* and belongs to no family, a native overlay that animates
+nothing passes it silently and never reaches `KNOWN_GAPS`. The same holds for AlertDialog, Popover, Tooltip,
+HoverCard and the menu family on all three native platforms. That is the largest blind spot in the instrument, not
+just in the coverage.
+
 ### 1.4 Continuous input and progress — MX2, not started
+
+The four `!` cells below are the ones this register nearly hid. `Progress.swift:34` is
+`.animation(.default, value: value)`, `CircularProgress.swift:45` is `.animation(.easeOut(duration: 0.3), value:
+fraction)`, and both Compose files drive their fraction through `animateFloatAsState`. All four animate, none
+reaches the reader's reduced-motion setting, and all four sit in `KNOWN_GAPS` under a note that **defers** the
+progress-feedback family to its own slice rather than settling it. They are open reduced-motion gaps, not static
+components.
 
 | Component | R | A | S | C | F |
 | --- | --- | --- | --- | --- | --- |
 | Slider (incl. range) | ○ headless | ○ runtime | ○ build | ○ build | ○ build |
-| Progress | ○ build (**G7**: physical `translateX`, RTL unmeasured) | ○ headless | · build (`KNOWN_GAPS`: progress-feedback family) | · build | ○ build |
-| CircularProgress | ○ build | ○ headless (slows to 3 s instead of stopping) | · build | · build | ○ build |
+| Progress | ○ build (**G7**: physical `translateX`, RTL unmeasured) | ○ headless | **!** build | **!** build | ○ build |
+| CircularProgress | ○ build | ○ headless (slows to 3 s instead of stopping) | **!** build | **!** build | ○ build |
 
 ### 1.5 Loop and feedback — MX4, partly gated
 
 | Component | R | A | S | C | F |
 | --- | --- | --- | --- | --- | --- |
-| Spinner | **M** build (`check:loop-motion`) | ○ headless (slows, does not stop; no loop gate) | m build (strict family) | m build (strict) | m build (strict) |
-| Skeleton | **M** build | m headless (stops) | m build (strict) | m build (strict) | m build (strict) |
-| Marquee | m build (no browser gate) | m headless (stops) | m build (strict) | m build (strict) | m build (strict) |
-| MessageBubble typing | m build (no browser gate) | — | m build | m build | m build |
+| Spinner | **M** build (`check:loop-motion`) | ○ headless (slows, does not stop; no loop gate) | m build (strict family) | m build (strict) | **M** build (strict) |
+| Skeleton | **M** build | m headless (stops) | m build (strict) | m build (strict) | **M** build (strict) |
+| Marquee | m build (no browser gate) | m headless (stops) | m build (strict) | m build (strict) | **M** build (strict) |
+| MessageBubble typing | m build (no browser gate) | — | m build | m build | **M** build |
 | InputOTP caret | m build (no browser gate) | ○ runtime | ○ build | ○ build | ○ build |
-| Carousel | ○ build | m runtime | ○ build | · build (`KNOWN_GAPS`: pager family) | ○ build |
+| Carousel | ○ build | m runtime | ○ build | **!** build (`KNOWN_GAPS`: pager family) | ○ build |
 | Sonner · Alert · Banner | ○ build/`sonner` build | m runtime | ○ build | ○ build | ○ build |
 | Chart | ○ build (**G3**: Recharts ignores reduced motion) | — | · build (renders statically) | · build | · build |
+| JsonViewer | m headless (an untokenised `transition-transform` on the chevron, part of the **G1** debt register; no motion gate) | — | ○ build | ○ build | **!** build (`KNOWN_GAPS`: disclosure-shaped, own slice) |
 
 **The contract has no role for feedback entry.** A toast appearing is motion with a trigger and a purpose, and
 `tokens/contracts/motion.json` has nothing to put it under. Either add a role or record each as static by design;
@@ -194,8 +223,16 @@ G-numbers are from the Phase M0 audit (`/mnt/project-files/motion-audit/`) and m
 
 ## 4. What this register does not claim
 
-- No rendered motion evidence exists on **any** native platform. Every native cell above is wiring, resolver
-  values or a headless widget test.
+- **No simulator, emulator or device evidence exists on any platform but the web**, and so no native cell reaches
+  `runtime`. That is the claim; "no rendered native evidence at all" would be too strong. **Flutter is the
+  exception worth naming:** `switch_motion_test.dart` pumps to 50 ms and measures the thumb's inset off the render
+  tree, `disclosure_motion_test.dart` pumps to 100 ms and measures the `AnimatedSize` height, and
+  `loop_motion_test.dart` measures the spinner's turns, the skeleton's opacity, a typing dot's offset and the
+  marquee's translation — each asserting a value strictly between the two ends, each with its reduced form proving
+  no frame is scheduled. Those are rendered intermediate measurements in a headless renderer, which is **M** under
+  this register's own definition and the reason Flutter carries seven of them. SwiftUI's suite states in its own
+  header that nothing it contains renders, and Compose's disclosure test asserts that a node exists after a click,
+  which is state rather than a midpoint.
 - `check:native-motion` proves that an animating file references the platform setting and that tests cover both
   directions. It does not render, and a file in `KNOWN_GAPS` is excused from even that.
 - Angular's `runtime` cells are motion and accessibility evidence. They are **not** a graduation: 27 catalogue

@@ -121,7 +121,8 @@ renamed and no phase was renumbered.
        └─> CAT-2 taxonomy decision (E1/E2) gates CAT-3…CAT-6
 
 MX1 (merged) ──> Angular reducedMotion for 5 components ──> 2 of 6 open graduation criteria
-Angular `timeline` rtl + largeText ──> 3 of 6 open graduation criteria
+Angular `timeline` rtl+largeText AND `toggle` rtl ──> 3 of 6 open graduation criteria
+       └─> `timeline` alone closes only the two largeText criteria: the rtl row needs BOTH components
 27 planned Angular entries ──> the 6th criterion ──> Preview → Stable is *not* reachable this quarter
 ```
 
@@ -147,7 +148,7 @@ new-branch work that cannot collide with the thirteen open PRs (verified against
 
 | # | Workstream | Slice | Why it is safe now |
 | --- | --- | --- | --- |
-| **P1** | WS4 | **Angular `timeline` RTL + large-text evidence.** Closes 3 of 6 open graduation criteria | touches `packages/ui-angular` + `scripts/angular-browser.mjs` + regenerated `verification.json`; no open PR touches that trio. Unowned since #392 §7 row 6 |
+| **P1** | WS4 | **Angular `timeline` RTL and large text, plus `toggle` RTL.** Closes 3 of 6 open graduation criteria — the rtl row is 22/24 and needs *both* components, so `timeline` alone closes only the two largeText criteria | touches `packages/ui-angular` + `scripts/angular-browser.mjs` + regenerated `verification.json`; no open PR touches that trio. Unowned since #392 §7 row 6 |
 | **P2** | WS5 | **Angular `reducedMotion` for checkbox, radio-group, tabs, toggle, toggle-group.** Closes the other 2 criteria + 2 roadmap rows | the Angular selection work merged (#416); the gate `check:angular-selection-motion` exists. Touches `scripts/` + `packages/ui-angular` |
 | **P3** | WS5 | **Give the feedback-entry role a home**: add a role to `tokens/contracts/motion.json` for Sonner/Alert/Banner appearing, or record each as static by design | blocked only by the MX1d chain's conflict on that one file — so do it **after gate 2**, or as a decision note now |
 | **P4** | WS1 | **Attribution diagnosis** for the three zero-arrival posts: re-derive the tracked URL for LI-001, LI-007 and ART-001 from the live posts, confirm the `utm` quartet survives each channel's link handling, and write the finding | reads PostHog and the live posts; writes only to `marketing/measurement/`. Publishes nothing |
@@ -322,12 +323,14 @@ slice with its own acceptance criteria, and none of them merges, publishes or pu
 > `node scripts/check-angular-graduation.mjs` reports 7 of 13 criteria met. Five of the six open ones are two
 > bounded slices. Ship them as **two** PRs, never one.
 >
-> **PR A:** `timeline` is the single missing component in Angular's `rtl` (22/24, with `toggle`) and `largeText`
-> (26/27, both the marker and the real-browser pass). Add `timeline` to the `rtl` and `largeText` passes of
-> `scripts/angular-browser.mjs`, asserting logical geometry — marker and connector on the start side under
-> `dir="rtl"` — not merely that the attribute is set; fix any defect in `packages/ui-angular` rather than
-> allowlisting it; regenerate with `pnpm gen:verification` and confirm the fixed point with
-> `pnpm check:verification`, never by hand.
+> **PR A:** the `rtl` row is 22/24 and misses **two** components, `timeline` **and** `toggle`; `largeText` is
+> 26/27 and misses only `timeline`, for both the marker and the real-browser pass. **The slice must carry `toggle`
+> RTL as well as `timeline`** — `timeline` alone closes the two largeText criteria and leaves `rtl` open at 23/24,
+> which takes the total to 11 of 13, not 12. Add `timeline` to the `rtl` and `largeText` passes of
+> `scripts/angular-browser.mjs` and `toggle` to the `rtl` pass, asserting logical geometry — for `timeline`, marker
+> and connector on the start side under `dir="rtl"` — not merely that the attribute is set; fix any defect in
+> `packages/ui-angular` rather than allowlisting it; regenerate with `pnpm gen:verification` and confirm the fixed
+> point with `pnpm check:verification`, never by hand.
 >
 > **PR B:** Angular holds `reducedMotion` evidence for 3 of the 8 components React does; `checkbox`,
 > `radio-group`, `tabs`, `toggle` and `toggle-group` are missing, both the marker and the real-browser pass. The
