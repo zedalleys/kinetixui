@@ -1747,7 +1747,7 @@
       ]
     },
     "tag": {
-      "category": "Feedback & Status",
+      "category": "Data Display",
       "kind": "component",
       "status": "stable",
       "since": "0.4.1",

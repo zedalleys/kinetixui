@@ -107,8 +107,8 @@ primary category, nothing is orphaned, and the smallest category holds 6.
 | Proposed category | Count | Rule |
 |---|---|---|
 | Forms & Inputs | 29 | Collects a value from the user, or labels/structures the field that does |
-| Data Display | 21 | Presents data the user reads rather than operates |
-| Feedback & Status | 14 | Reports state, progress, outcome or guidance |
+| Data Display | 22 | Presents data the user reads rather than operates |
+| Feedback & Status | 13 | Reports state, progress, outcome or guidance |
 | Navigation | 13 | Moves the user between places or levels |
 | Overlays | 10 | **Purpose is presenting arbitrary content above the page** |
 | Layout & Structure | 9 | Arranges or contains other components; no content of its own |

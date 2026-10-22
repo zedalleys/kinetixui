@@ -20,8 +20,8 @@ contested row is a decision the owner can overturn by editing one field in the m
 | Actions & Controls | 7 | Performs or toggles an action. |
 | Navigation | 13 | Moves the user between places or levels. |
 | Overlays | 10 | Exists to present arbitrary content above the page. |
-| Feedback & Status | 14 | Reports state, progress, outcome or guidance. |
-| Data Display | 21 | Presents data the user reads rather than operates. |
+| Feedback & Status | 13 | Reports state, progress, outcome or guidance. |
+| Data Display | 22 | Presents data the user reads rather than operates. |
 | Media & Content | 6 | Presents authored media or editorial content. |
 
 Order is `categoryDefinitions`' own declaration order, and it is the order every surface lists categories in:
@@ -33,7 +33,7 @@ than what it does, and its nine entries belong in five different functional home
 
 ## 2. Every entry
 
-`kind` is `component` unless stated. **Moved** marks the 25 entries whose
+`kind` is `component` unless stated. **Moved** marks the 26 entries whose
 category changed (a rename alone is not a move).
 
 | Slug | Before CAT-2 | Category now | Moved | Source read | kind / facets |
@@ -137,7 +137,7 @@ category changed (a rename alone is not a move).
 | `table` | Data Display | Data Display | — | `table.tsx (184L)` | — |
 | `table-of-contents` | Navigation | Navigation | — | `table-of-contents.tsx (47L)` | — |
 | `tabs` | Navigation | Navigation | — | `tabs.tsx (211L)` | — |
-| `tag` | Feedback | Feedback & Status | — | `tag.tsx (75L)` | — |
+| `tag` | Feedback | **Data Display** | yes | `tag.tsx (75L)` | — |
 | `textarea` | Form Inputs | Forms & Inputs | — | `textarea.tsx (74L)` | — |
 | `time-slot-picker` | Form Inputs | Forms & Inputs | — | `time-slot-picker.tsx (165L)` | — |
 | `timeline` | Data Display | Data Display | — | `timeline.tsx (177L)` | — |
@@ -154,7 +154,7 @@ category changed (a rename alone is not a move).
 - **`collapsible`** → Layout & Structure. Defensible alternative: **Actions & Controls**. Same disclosure gesture as Accordion, and it stays with it; the source is a bare Radix re-export plus a height transition.
 - **`notification-center`** → Feedback & Status. Defensible alternative: **Overlays**. It is a popover by mechanism (`Popover` re-exported as its root), but its subject is read/unread notifications — Overlays is for components whose purpose is floating arbitrary content.
 - **`tour`** → Feedback & Status. Defensible alternative: **Overlays**. Spotlight popovers, but the sequence exists to guide; `Feedback & Status` covers guidance, and a tour deliberately does not trap focus the way an overlay does.
-- **`tag`** → Feedback & Status. Defensible alternative: **Data Display**. A tag often carries metadata rather than status, and it is dismissible; kept beside Badge because a reader comparing the two chips wants them adjacent.
+- **`tag`** → **Data Display** (decided by the owner, 2026-10-22). Previously proposed as Feedback & Status beside Badge, so that a reader comparing the two chips found them adjacent. It was the one row that failed its own category's rule rather than merely fitting a second one less well: a tag carries metadata the reader reads, not state, progress, outcome or guidance. Adjacency to Badge is a gallery-ordering concern, not a taxonomy one. The move takes Feedback & Status to 13 and Data Display to 22.
 - **`kbd`** → Data Display. Defensible alternative: **Media & Content**. A key glyph is typographic, but it renders a value for reading, which is the Data Display rule.
 - **`footer`** → Layout & Structure. Defensible alternative: **Navigation**. Its columns are nav links, but the component is a shell: `Footer` takes any children and supplies only the surface and the bottom bar.
 - **`pagination`** → Navigation. Defensible alternative: **Actions & Controls**. The items are buttons, but the source declares `role="navigation"` with `aria-label="pagination"` — the component itself says it is navigation.

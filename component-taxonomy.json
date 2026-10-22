@@ -45,14 +45,14 @@
     },
     "Feedback & Status": {
       "rule": "Reports state, progress, outcome or guidance.",
-      "count": 14,
+      "count": 13,
       "formerly": [
         "Feedback"
       ]
     },
     "Data Display": {
       "rule": "Presents data the user reads rather than operates.",
-      "count": 21
+      "count": 22
     },
     "Media & Content": {
       "rule": "Presents authored media or editorial content.",
@@ -479,7 +479,7 @@
       "kind": "component"
     },
     "tag": {
-      "category": "Feedback & Status",
+      "category": "Data Display",
       "kind": "component"
     },
     "textarea": {
