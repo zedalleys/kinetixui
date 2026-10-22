@@ -145,6 +145,14 @@ having been published, and equally consistent with its having been published and
 reply link, so it settles nothing about publication — see the X-001 packet §7a. It does mean that if X-001 goes out
 later, the first `x_thread` row to appear will be unambiguous: there is no earlier one to confuse it with.
 
+**Why the zeros are now a diagnosis rather than a repetition.** The cause is being worked as its own question in
+[`M4-ATTRIBUTION-DIAGNOSIS.md`](./M4-ATTRIBUTION-DIAGNOSIS.md). Two things it settles are worth carrying here: the
+failure is upstream of cohort classification, since no campaign-tagged session exists in any cohort rather than
+being filtered out of the audience one; and `$referrer` is null on every session since 1 October, so the query
+string is the only attribution channel this pipeline has. A reader whose query string does not survive the trip
+from LinkedIn lands as `kx_source=direct` with a direct referrer, which is why the untagged one-page sessions
+cannot be excluded as candidates and why "no tagged arrival observed" is the only claim these reads support.
+
 **T+7d — Monday 26 October.** The weekly read, cumulative from this post:
 
 ```
