@@ -185,6 +185,18 @@ That single string answers the question outright, with no navigation, no event a
 If the fourth row is what you find, do not re-post or edit the comment to fix it — that is a publication decision,
 and it is yours. Say so and I will write up what it means for the three posts still unpublished.
 
+**What attempt 2 closes, and what it does not.** This is the owner's caution of 22 October, and it is correct: a
+tagged URL in the comment proves the link **exists and retains its parameters inside LinkedIn's own markup**. It
+does not prove that a mobile tap delivers those parameters to PostHog — the in-app browser, its link handling and
+its event delivery are all still untested. So the two questions are scored separately from here on:
+
+| Question | Closed by | State |
+| --- | --- | --- |
+| **Link validity** — does the comment carry a real, parameter-bearing hyperlink? | attempt 2, on its own | open, one right-click away |
+| **End-to-end attribution** — does a reader's tap put those parameters in PostHog? | only C3, a visit attributed from landing URL to session | open, and stays open whatever attempt 2 returns |
+
+Nothing in this file reports the first as if it settled the second.
+
 **Attempt 3 remains LinkedIn's own numbers** — impressions, members reached, and a link-click count if one exists
 for comment links. Still the only thing that can separate placement from reach, and still unanswered.
 
@@ -227,8 +239,9 @@ what it does to our links: **stop depending on the query string surviving.**
 1. **Put the tracked link in the post body, not a first comment.** It trades some reach for a link readers can
    actually reach, and it removes the comment linkifier from the path entirely.
 2. **Give the next campaign a destination that identifies itself** — a dedicated path rather than a query, so a
-   hit on that path is attribution on its own, whatever any platform does to parameters. This is a web change with
-   its own design and its own decision, not a marketing one, and it is the one structural fix on the table.
+   hit on that path is attribution on its own, whatever any platform does to parameters. **Deferred by the owner,
+   22 October: not to be implemented until a placement correction has been tried and shown insufficient.** It stays
+   on the table as the structural fix, and it is a web change with its own design and its own decision.
 3. **Keep `utm_content` as the secondary signal**, so the two posts of a campaign stay separable when the query
    does survive.
 
@@ -244,3 +257,9 @@ recommendation; the decision is the owner's, their copy and pins are ready, and 
 
 If the owner would rather keep the cadence than wait, the cheapest compromise is to publish the next post **with
 the tracked link in the body**, which tests fallback step 1 on real traffic at no extra cost and keeps the slot.
+
+**Decision recorded, 2026-10-22 00:32 UTC.** The owner agreed to the hold: X-001, LI-008 and X-008 wait until one
+of C1, C2 or C3 is satisfied. He also set the order of remedies — **establish whether a simple placement
+correction solves it before building anything** — so step 1 of the fallback is the first thing tried and step 2 is
+not started. Project priority puts R1 release closure ahead of this work, with the attribution validation next
+after it.

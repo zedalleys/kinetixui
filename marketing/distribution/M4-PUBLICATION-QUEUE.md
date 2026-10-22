@@ -267,3 +267,17 @@ out on the same pattern:
 Neither is a defect to fix in code, and neither is a reason to stop posting. The decision they raise is the
 owner's: whether the tracked link belongs in the post body rather than a comment for the next posts, which is a
 reach-versus-attribution trade, not a measurement question.
+
+---
+
+## Hold recorded, 2026-10-22 00:32 UTC
+
+**X-001, LI-008 and X-008 are held by the owner's decision** until the attribution experiment reaches one of its
+three finish conditions ([`../measurement/M4-READER-PATH-TEST.md`](../measurement/M4-READER-PATH-TEST.md), "What
+closes this experiment"). All three planned the same tracked-link pattern that has produced four zeros and one
+inconclusive test, and the reason for the hold is that posting into an unmeasured path spends the post without
+learning anything.
+
+Nothing about the assets themselves changed: the copy, the pins, the tracked URLs and the proposed slots stand as
+written above, and X-001's copy still has no approval block. The hold is on publication, not on readiness, and it
+lifts the moment the experiment closes — the schedule above is then re-dated forward, never backwards.
