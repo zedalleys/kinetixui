@@ -471,7 +471,8 @@ browser zoom, and no committed baseline — every number is one run.
     and **0** values outside the declared taxonomy.
   - every category's filter chip prints a count equal to the cards its filter yields, with no foreign pills:
     Layout & Structure 9, Forms & Inputs 29, Actions & Controls 7, Navigation 13, Overlays 10,
-    Feedback & Status 14, Data Display 21, Media & Content 6 — 109 in total.
+    Feedback & Status 13, Data Display 22, Media & Content 6 — 109 in total (re-measured
+    2026-10-22 after `tag` moved to Data Display; every other figure here is unchanged from the first run).
   - the docs sidebar lists all **8** groups in every environment, and the grouped results list shows all 8
     headings in declaration order.
   - no horizontal page overflow in any of the ten environments (`scrollWidth` equals `clientWidth` at 320, 390,
