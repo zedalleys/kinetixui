@@ -202,3 +202,45 @@ for comment links. Still the only thing that can separate placement from reach, 
 **Impact on QER: still none.** No definition changed, no event joined or left it, and LI-001's QER remains
 undefined rather than zero because its denominator is empty. The untagged LinkedIn arrival above does not enter
 the campaign denominator — it carries no campaign — so it changes no rate, and nothing about it will be made to.
+
+---
+
+# What closes this experiment
+
+The owner's priority of 22 October is to resolve this before the next tracked campaign publication. So the
+experiment needs a stated finish line rather than an open-ended series of taps. It closes on **any one** of these,
+and each is reachable this week:
+
+| # | Closing evidence | Who | What it decides |
+| --- | --- | --- | --- |
+| **C1** | The copied link address from attempt 2 | owner, no navigation | Whether the comment's link carries the query, truncates it, wraps it, or was never a link. Any of the four closes the mechanism question |
+| **C2** | LinkedIn's own impressions and click count | owner | Whether there was an audience to lose. Near-zero impressions closes the experiment with "nothing was broken" |
+| **C3** | One deliberate visit attributed end to end — a tracked URL opened, its parameters confirmed in the landing URL, and the matching PostHog session found | owner tap, my correlation | That the path works when taken, which makes every remaining zero a placement or reach question |
+
+**C1 alone is enough to decide what the next post should do**, which is why it is first and why it costs nothing.
+
+## If it stays inconclusive
+
+The fallback does not need LinkedIn's cooperation, and it is the honest answer to a channel that will not tell us
+what it does to our links: **stop depending on the query string surviving.**
+
+1. **Put the tracked link in the post body, not a first comment.** It trades some reach for a link readers can
+   actually reach, and it removes the comment linkifier from the path entirely.
+2. **Give the next campaign a destination that identifies itself** — a dedicated path rather than a query, so a
+   hit on that path is attribution on its own, whatever any platform does to parameters. This is a web change with
+   its own design and its own decision, not a marketing one, and it is the one structural fix on the table.
+3. **Keep `utm_content` as the secondary signal**, so the two posts of a campaign stay separable when the query
+   does survive.
+
+Under that fallback the next publication is self-verifying: a path hit proves the reader arrived, a tagged path hit
+proves the query survived too, and the absence of both is finally unambiguous.
+
+## What this means for the three unpublished posts
+
+X-001, LI-008 and X-008 all plan a tracked link in the same pattern that has now produced four zeros and one
+inconclusive test. **My recommendation is that none of them goes out until C1 or C2 comes back** — not because
+posting is unsafe, but because posting into an unmeasured path spends the post and learns nothing. That is a
+recommendation; the decision is the owner's, their copy and pins are ready, and nothing here publishes itself.
+
+If the owner would rather keep the cadence than wait, the cheapest compromise is to publish the next post **with
+the tracked link in the body**, which tests fallback step 1 on real traffic at no extra cost and keeps the slot.
