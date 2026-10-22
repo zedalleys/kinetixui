@@ -177,12 +177,19 @@ export default function HomePage() {
       {/* ─── [01] hero ───────────────────────────────────────────────────────── */}
       <section className="kx-chapter overflow-hidden border-b border-border">
         {/*
-          The hero carries no decorative field. It used to hold a 44px lattice whose mask was centred at
+          The hero carries no decorative texture. It used to hold a 44px lattice whose mask was centred at
           `30% 0%` — the middle of the copy column — so the texture was strongest across the headline and the
           paragraph and had faded out by the time it reached the system map, the one thing it was meant to
           sit behind. That position is physical, so under `dir="rtl"` it landed on the map instead. What is
           left is the structure the whole page already carries: the `.kx-edges` margin rules, the type, and
-          one softened glow under the map.
+          the one glow below.
+
+          That glow is placed, not centred, so where it falls depends on the width: measured at 1440px it
+          covers 56% of the map and none of the headline, which is what it is for, but at 390px the map has
+          moved below the fold and the glow covers the headline instead, all of it. It is a tenth-alpha
+          wash rather than a lattice, so what lands on the type there is much less than what was removed —
+          but it is the same kind of placement, and it is the reason hiding the glow changes axe's
+          unresolved-background count at 390px and not at 1440px.
         */}
         <div aria-hidden="true" className="kx-glow kx-glow-soft -end-40 -top-32 size-[46rem]" />
         <div className={container}>

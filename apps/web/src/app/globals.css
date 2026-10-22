@@ -288,10 +288,12 @@
    * The hero's glow, weaker than a chapter's.
    *
    * The hero is now the only chapter with no backdrop behind its type, so the glow is the only thing left
-   * between the headline and the page background — and at the chapter alpha it was the loudest remaining
-   * decoration rather than ambient light under the system map. It is also the larger half of what stops axe
-   * resolving a background colour behind hero text: of the 52 hero nodes axe reported as unresolvable,
-   * removing the grid accounted for 13 and this gradient (with the `.kx-edges` pseudo-elements) for the rest.
+   * between the headline and the page background, and at the chapter alpha it read as the loudest remaining
+   * decoration rather than as ambient light under the system map. The reason is visual, and only visual:
+   * measured on the hero, hiding this gradient changes the number of nodes whose background axe cannot
+   * resolve by 0 at 1440px and by 3 at 390px. The `.kx-edges` rules are what axe actually cannot see
+   * through — hiding their pseudo-elements takes that count from 39 to 17 at 1440px — and 17 nodes stay
+   * unresolved with both gone, so neither this gradient nor the edge rules is the whole story.
    */
   .kx-glow-soft {
     background: radial-gradient(closest-side, hsl(var(--primary) / 0.11), hsl(var(--primary) / 0.03) 55%, transparent);
