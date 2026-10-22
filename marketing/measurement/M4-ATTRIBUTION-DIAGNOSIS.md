@@ -2,7 +2,7 @@
 type: diagnosis
 subject: why four posts with a tracked link produced no tagged audience arrival
 opened: 2026-10-22
-status: OPEN — one mechanism confirmed, two live hypotheses, three tests outstanding
+status: OPEN — accepted by the owner 2026-10-22 as the current working explanation; four live hypotheses, three tests outstanding
 scope: diagnosis only. Nothing here publishes, posts or edits a live link, and no test in it requires one
 ---
 
@@ -68,6 +68,8 @@ H1 and H2 are not alternatives: either on its own produces the observed zero, an
 None of these publishes anything, posts anything, or edits a live link.
 
 **T1 — tap the link that is actually live. Owner, about one minute. The decisive test.**
+Written up as a step-by-step protocol, with the correlation table, the separate block for LinkedIn's own numbers,
+stated confidence levels and the QER consequences: [`M4-READER-PATH-TEST.md`](./M4-READER-PATH-TEST.md). In short:
 Open the live LI-001 post, tap the tracked URL in its **first comment** exactly as a reader would, let the page
 load, and tell me roughly when. Nothing is edited and nothing is posted. Then:
 - a session appears carrying `kx_campaign=kx_p1_a_parity_proof` → **H2 is dead**, LinkedIn preserves the query,
