@@ -117,3 +117,88 @@ event joins or leaves it because of this diagnosis. Three consequences worth sta
 
 **What will not happen:** no attribution instrumentation gets changed to make a dashboard show a non-zero number.
 If the honest count is zero, the record says zero, and says what that zero does and does not mean.
+
+---
+
+# Attempt 1 — 2026-10-22, 03:24 Riyadh / 00:24 UTC. **INCONCLUSIVE for the mobile path, and it found something else.**
+
+## What the owner reported
+
+The test was run in the **LinkedIn in-app browser** on a phone. The URL copied afterwards was still a
+`linkedin.com/feed/update/...` address carrying a **text-fragment reference** to the full tracked KinetixUI link,
+with all four `utm_*` values present in that referenced text. So the capture shows the tracked link existing, in
+full, inside LinkedIn's own page — and **does not show a navigation to kinetixui.com at all.**
+
+**Classification: inconclusive, not an attribution failure.** No external landing URL was reached, so nothing here
+says anything about whether LinkedIn would have preserved the query on a real navigation. Recording it as
+"LinkedIn stripped the parameters" would be a conclusion the evidence does not carry.
+
+## What PostHog shows for that window
+
+Queried 00:10 to 00:40 UTC on 22 October, every event, project 620385. Two sessions exist in the whole window,
+and the three categories stay separate:
+
+| Category | What was found |
+| --- | --- |
+| **Tagged arrival** (campaign + content) | **None.** No event carries `kx_p1_a_parity_proof` at any point on 22 October |
+| **Untagged arrival from LinkedIn** | **One, and it is new.** Session `01a160f8-1a07-72a0-9463-226266d2ee81`, `$pageview` on `/docs/platforms` at **00:21:26.161 UTC**, `kx_source=linkedin`, `kx_referrer=linkedin`, `$current_url` = `https://kinetixui.com/docs/platforms` — **no query string**, campaign and content null. Chrome on macOS |
+| **No recorded session** | **The mobile attempt.** No session from a phone, an in-app browser or iOS appears anywhere in the window. The 03:24 Riyadh tap produced no event at all |
+
+## The two findings, kept apart
+
+**1. Referrer attribution works, and this is the first time we have seen it from LinkedIn.** Every session since
+1 October had a null raw referrer; this one arrived with `kx_referrer=linkedin` and was attributed `kx_source=linkedin`
+*without any query string*. That is the first direct evidence that an arrival from LinkedIn can be recognised at
+all when the tag is missing — and it narrows the earlier worry: such an arrival is **not** necessarily
+indistinguishable from `direct`. On desktop web it is distinguishable. In the in-app browser, where no referrer has
+ever arrived, it still would not be.
+
+**2. A LinkedIn-referred visit reached `/docs/platforms` with no campaign parameters.** That is consistent with the
+comment's link not carrying them, and it is equally consistent with a different link on linkedin.com having been
+clicked — our own page's website field, an older post, or the post body. **Which link produced it is not
+established**, so it is not evidence that the comment's link is broken. It is the reason for attempt 2.
+
+A third observation, recorded without a claim attached: later pageviews in that same session (00:23:55 onward) read
+`kx_source=direct` rather than retaining `linkedin`. Acquisition is supposed to stick for the session. It may be a
+storage boundary in that browser, or the same class of same-tab behaviour PR #409 touches. It is noted here as an
+anomaly to watch, not diagnosed, and it does not affect the counts above.
+
+## Attempt 2 — the clean test, and it needs no navigation at all
+
+The flaw in attempt 1 is that it tried to establish the link's target by following it. There is a direct way:
+**read the anchor instead of clicking it.**
+
+1. Open LI-001's first comment, on **desktop web** (`linkedin.com`, any browser).
+2. **Right-click the `kinetixui.com/docs/platforms` link in it → "Copy link address"** (Chrome) or "Copy Link"
+   (Safari/Firefox). Do not click it.
+3. Paste that into the thread, whole.
+
+That single string answers the question outright, with no navigation, no event and nothing published:
+
+| What the copied address looks like | Conclusion | Confidence |
+| --- | --- | --- |
+| `https://kinetixui.com/docs/platforms?utm_source=linkedin&...` — all four parameters | The comment carries the tracked link correctly. The zero is **placement or reach**, and attempt 3 is LinkedIn's own click numbers | High |
+| `https://kinetixui.com/docs/platforms` — bare, or truncated at the `?` | **LinkedIn's linkifier is cutting the query**, which also explains finding 2 above. The fix is to stop relying on a pasted URL being linkified whole | High |
+| An `lnkd.in/...` wrapper | The query may survive inside the wrapper; paste it and I will resolve what it forwards to | Partial |
+| There is no link to right-click — the URL is plain text | **The comment's URL was never a hyperlink.** On mobile a tap selects text, which is exactly what attempt 1 produced, and the arrival above came from somewhere else | Decisive, and it would explain everything |
+
+If the fourth row is what you find, do not re-post or edit the comment to fix it — that is a publication decision,
+and it is yours. Say so and I will write up what it means for the three posts still unpublished.
+
+**Attempt 3 remains LinkedIn's own numbers** — impressions, members reached, and a link-click count if one exists
+for comment links. Still the only thing that can separate placement from reach, and still unanswered.
+
+## Confidence after attempt 1
+
+| Claim | Confidence | Change |
+| --- | --- | --- |
+| No campaign-tagged session has reached PostHog for LI-001 | **Certain** | Unchanged, now through 22 October |
+| LinkedIn strips `utm_*` parameters | **Not established** | Attempt 1 produced no external landing URL. Do not claim it |
+| An arrival from LinkedIn is indistinguishable from `direct` | **Narrowed to the in-app browser** | On desktop web the referrer arrives and is classified; in the in-app browser no referrer has ever been seen |
+| A LinkedIn-referred visit reached `/docs/platforms` untagged on 22 October | **Certain** | New. Which link produced it is **unknown** |
+| The mobile tap navigated anywhere | **No** | It produced no session, and the copied URL never left `linkedin.com` |
+| The first comment's URL is a working hyperlink in the app | **Unknown, and now the leading question** | Attempt 1's text-fragment capture is what a text selection looks like |
+
+**Impact on QER: still none.** No definition changed, no event joined or left it, and LI-001's QER remains
+undefined rather than zero because its denominator is empty. The untagged LinkedIn arrival above does not enter
+the campaign denominator — it carries no campaign — so it changes no rate, and nothing about it will be made to.

@@ -51,6 +51,13 @@ That is not proof that any such reader exists. It does mean the honest reading o
 *"no arrival carried the tag"*, not *"nobody came from the post"*, and that the untagged `direct` sessions cannot
 be excluded as candidates.
 
+**Narrowed on 22 October.** A LinkedIn-referred arrival finally appeared with its referrer intact — session
+`01a160f8…` at 00:21:26 UTC, `kx_referrer=linkedin`, attributed `kx_source=linkedin` on a bare
+`/docs/platforms` URL with no query at all. So the claim above holds only where no referrer arrives, which so far
+means **LinkedIn's in-app browser**; on desktop web an untagged LinkedIn arrival *is* distinguishable from
+`direct`. Details, and the two findings kept apart, in
+[`M4-READER-PATH-TEST.md`](./M4-READER-PATH-TEST.md) under "Attempt 1".
+
 ## The live hypotheses
 
 | # | Hypothesis | What it predicts | State |
@@ -59,6 +66,7 @@ be excluded as candidates.
 | **H2** | **Link rewriting.** LinkedIn (`lnkd.in`) or X (`t.co`) drops or truncates the query when wrapping the link | A tap on the *actually posted* link produces an untagged `direct` session, while the same URL pasted into a browser produces a tagged one | **Live, and decisive if true.** Needs T1 |
 | **H3** | **The dev.to boundary.** Readers who follow the body link read the article and never come back to kinetixui.com | No campaign row, and no `devto` referrer either, which is what we see — one `devto` session in three weeks | **Live but minor.** Explains ART-001, not LI-001's comment link |
 | **H4** | **Reach.** The posts were read by very few people, and the tagged count is honest | LinkedIn impressions and clicks near zero | **Live.** Needs T3, and only the owner can answer it |
+| **H6** | **The comment's URL is not a hyperlink.** If LinkedIn rendered the pasted URL as plain text, a tap selects text instead of navigating, and no reader could reach the link at all | No external navigation from the comment, on any device, and a copy attempt that never leaves `linkedin.com` | **Live, and now the leading question** after attempt 1 of the reader-path test produced exactly that. Needs attempt 2 |
 | **H5** | **The 18 October `kx_source=other` defect recurring.** The failed 10:30 diagnostic is still unexplained | Tagged arrivals landing as `other` | **Not supported.** No `other` session exists since 18 October, so nothing is currently being mis-shaped. The investigation stays **OPEN — NOT REPRODUCIBLE / MONITORING**, and PR #409 is not its fix |
 
 H1 and H2 are not alternatives: either on its own produces the observed zero, and both can be true at once.
