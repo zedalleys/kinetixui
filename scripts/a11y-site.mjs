@@ -490,10 +490,20 @@ for (const scheme of SCHEMES) {
 // any other, and the entry is marked only when real overflow was actually observed. That is strictly
 // stronger than the earlier separate re-check at one width in one theme, and it means a pending page's
 // axe results and its other widths are no longer skipped.
+/**
+ * Both ratchets below assert that an entry is still EARNED, which only one kind of run can judge.
+ *
+ * A `--page` run visits a subset, so a page it never opened cannot have been observed, and demanding the
+ * observation would fail every targeted run — including the negative controls, which is how this was found.
+ * The membership check still applies either way: an entry naming a page that is not in PAGES is wrong
+ * whatever was swept.
+ */
+const swept = (path) => (ONLY_PAGES ?? PAGES).includes(path);
+
 for (const [path, why] of TEXT_SCALE_PENDING) {
   if (!PAGES.includes(path)) {
     failures.push(`${path}: listed in TEXT_SCALE_PENDING but not in PAGES — remove the entry or the page`);
-  } else if (!pendingSeen.has(path)) {
+  } else if (swept(path) && !pendingSeen.has(path)) {
     failures.push(`${path}: no longer overflows at 200% text in any swept view — delete it from TEXT_SCALE_PENDING (was: ${why})`);
   }
 }
@@ -501,6 +511,11 @@ for (const [path, why] of TEXT_SCALE_PENDING) {
 // Same ratchet as TEXT_SCALE_PENDING: an artefact entry that no longer matches anything is a line claiming a
 // finding the sweep cannot find, which is indistinguishable from an exemption nobody is checking.
 for (const [path, entries] of AXE_ARTIFACTS) {
+  if (!PAGES.includes(path)) {
+    failures.push(`${path}: listed in AXE_ARTIFACTS but not in PAGES — remove the entry or the page`);
+    continue;
+  }
+  if (!swept(path)) continue;
   entries.forEach((e, i) => {
     if (!artifactsSeen.has(artifactKey(path, i))) {
       failures.push(
