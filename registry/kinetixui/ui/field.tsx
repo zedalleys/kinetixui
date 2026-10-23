@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
  * label & message colour tracking the invalid state). Framework-agnostic: for
  * React Hook Form, use `Form` / `FormField` instead.
  *
- * <Field invalid={!!error}>
+ * <Field invalid={!!error} required>
  *   <FieldLabel>Email</FieldLabel>
  *   <FieldControl><Input type="email" /></FieldControl>
  *   <FieldDescription>We'll never share it.</FieldDescription>
@@ -21,7 +21,13 @@ import { Label } from "@/components/ui/label";
  * </Field>
  */
 
-type FieldContextValue = { id: string; descriptionId: string; messageId: string; invalid: boolean };
+type FieldContextValue = {
+  id: string;
+  descriptionId: string;
+  messageId: string;
+  invalid: boolean;
+  required: boolean;
+};
 const FieldContext = React.createContext<FieldContextValue | null>(null);
 
 function useField() {
@@ -32,18 +38,43 @@ function useField() {
 
 interface FieldProps extends React.HTMLAttributes<HTMLDivElement> {
   invalid?: boolean;
+  /**
+   * The field must be filled in. Puts the required state on the control and a marker beside the
+   * label, so the requirement reaches a screen reader and a sighted reader from one declaration.
+   *
+   * It lives here rather than on the control because the marker and the attribute have to agree:
+   * `<Input required />` alone leaves the label silent, and an asterisk typed into the label alone
+   * leaves the accessibility tree silent. Passing it to the control as well is harmless — a native
+   * `required` and the ARIA state say the same thing — but it is not how the two stay in step.
+   *
+   * The ARIA state rather than the native attribute, because `FieldControl` wraps controls that are
+   * not `<input>`: a Radix checkbox is a `<button>`, where `required` means nothing at all.
+   */
+  required?: boolean;
 }
 
 const Field = React.forwardRef<HTMLDivElement, FieldProps>(
-  ({ className, invalid = false, ...props }, ref) => {
+  ({ className, invalid = false, required = false, ...props }, ref) => {
     const id = React.useId();
     const value = React.useMemo<FieldContextValue>(
-      () => ({ id: `${id}-control`, descriptionId: `${id}-description`, messageId: `${id}-message`, invalid }),
-      [id, invalid],
+      () => ({
+        id: `${id}-control`,
+        descriptionId: `${id}-description`,
+        messageId: `${id}-message`,
+        invalid,
+        required,
+      }),
+      [id, invalid, required],
     );
     return (
       <FieldContext.Provider value={value}>
-        <div ref={ref} data-invalid={invalid || undefined} className={cn("grid gap-1.5", className)} {...props} />
+        <div
+          ref={ref}
+          data-invalid={invalid || undefined}
+          data-required={required || undefined}
+          className={cn("grid gap-1.5", className)}
+          {...props}
+        />
       </FieldContext.Provider>
     );
   },
@@ -53,21 +84,34 @@ Field.displayName = "Field";
 const FieldLabel = React.forwardRef<
   React.ElementRef<typeof Label>,
   React.ComponentPropsWithoutRef<typeof Label>
->(({ className, ...props }, ref) => {
-  const { id, invalid } = useField();
-  return <Label ref={ref} htmlFor={id} className={cn(invalid && "text-destructive", className)} {...props} />;
+>(({ className, children, ...props }, ref) => {
+  const { id, invalid, required } = useField();
+  return (
+    <Label ref={ref} htmlFor={id} className={cn(invalid && "text-destructive", className)} {...props}>
+      {children}
+      {required && (
+        // Decoration, deliberately. The control already carries the required state, so a screen
+        // reader is told once; a marker that also announced would say it twice, and naming it
+        // "required" inside the label would fold the requirement into the field accessible name.
+        <span aria-hidden="true" data-required-marker="" className="ms-0.5 text-destructive">
+          *
+        </span>
+      )}
+    </Label>
+  );
 });
 FieldLabel.displayName = "FieldLabel";
 
 /** wraps a single form control (Input, Textarea, Select…) and wires a11y attrs */
 const FieldControl = React.forwardRef<HTMLElement, React.ComponentPropsWithoutRef<typeof Slot>>(
   ({ ...props }, ref) => {
-    const { id, descriptionId, messageId, invalid } = useField();
+    const { id, descriptionId, messageId, invalid, required } = useField();
     return (
       <Slot
         ref={ref}
         id={id}
         aria-invalid={invalid || undefined}
+        aria-required={required || undefined}
         aria-describedby={`${descriptionId} ${messageId}`}
         {...props}
       />

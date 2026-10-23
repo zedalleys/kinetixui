@@ -22,6 +22,36 @@ npx @kinetixui/cli add field
 import { Field, FieldLabel, FieldControl, FieldDescription, FieldMessage } from "@kinetixui/ui";
 ```
 
+## Required fields
+
+Pass `required` to the `Field`, not to the control inside it:
+
+```tsx
+<Field required>
+  <FieldLabel>Email</FieldLabel>
+  <FieldControl><Input type="email" /></FieldControl>
+</Field>
+```
+
+One declaration moves both halves. The control gets `aria-required`, so a screen reader announces
+the requirement; the label gets a marker, so a sighted reader sees it. That marker is decoration —
+`aria-hidden` — because the control already carries the state, and a marker that announced as well
+would say it twice and fold the word into the field's accessible name.
+
+It is the ARIA state rather than the native `required` attribute because `FieldControl` wraps
+controls that are not `<input>`. A Radix checkbox renders a `<button>`, and `required` on a button
+means nothing at all. Passing `required` to a native control as well is harmless — the two say the
+same thing — but it is not what keeps the label and the attribute in step.
+
+`Form` works the same way, with `required` on the `FormItem`. It is declared rather than read off
+the schema: with a resolver the rules live in zod or yup, and react-hook-form reports validity
+rather than whether a value is demanded, so there is nothing to read.
+
+Four controls carry the state themselves and can be marked directly — `Checkbox`, `Switch`,
+`Select` and `RadioGroup`, where it lands on the group rather than on one radio. Controls still
+without a path are listed by `check:required-semantics`, which fails when a new one arrives
+without either a proof or an entry.
+
 Styled entirely from the KinetixUI token contract — `bg-action`,
 `text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
 with no extra config. Keyboard and ARIA behaviour is inherited from Radix where the

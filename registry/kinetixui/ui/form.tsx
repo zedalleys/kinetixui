@@ -44,9 +44,10 @@ const useFormField = () => {
 
   if (!fieldContext) throw new Error("useFormField should be used within <FormField>");
 
-  const { id } = itemContext;
+  const { id, required } = itemContext;
   return {
     id,
+    required,
     name: fieldContext.name,
     formItemId: `${id}-form-item`,
     formDescriptionId: `${id}-form-item-description`,
@@ -55,15 +56,34 @@ const useFormField = () => {
   };
 };
 
-type FormItemContextValue = { id: string };
+type FormItemContextValue = { id: string; required: boolean };
 const FormItemContext = React.createContext<FormItemContextValue>({} as FormItemContextValue);
 
-const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => {
+interface FormItemProps extends React.HTMLAttributes<HTMLDivElement> {
+  /**
+   * The field must be filled in. Puts `aria-required` on the control and a marker beside the label,
+   * the same contract `Field` has.
+   *
+   * It is declared rather than read off the form: with a resolver — zod, yup, valibot — the rules
+   * live in the schema, and react-hook-form's `getFieldState` reports validity, not whether a value
+   * is demanded. There is nothing to read, so saying it here is the honest version, and a schema and
+   * a label that disagree is a review problem rather than a silent one.
+   */
+  required?: boolean;
+}
+
+const FormItem = React.forwardRef<HTMLDivElement, FormItemProps>(
+  ({ className, required = false, ...props }, ref) => {
     const id = React.useId();
+    const value = React.useMemo<FormItemContextValue>(() => ({ id, required }), [id, required]);
     return (
-      <FormItemContext.Provider value={{ id }}>
-        <div ref={ref} className={cn("grid gap-2", className)} {...props} />
+      <FormItemContext.Provider value={value}>
+        <div
+          ref={ref}
+          data-required={required || undefined}
+          className={cn("grid gap-2", className)}
+          {...props}
+        />
       </FormItemContext.Provider>
     );
   },
@@ -73,9 +93,19 @@ FormItem.displayName = "FormItem";
 const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => {
-  const { error, formItemId } = useFormField();
-  return <Label ref={ref} className={cn(error && "text-destructive", className)} htmlFor={formItemId} {...props} />;
+>(({ className, children, ...props }, ref) => {
+  const { error, formItemId, required } = useFormField();
+  return (
+    <Label ref={ref} className={cn(error && "text-destructive", className)} htmlFor={formItemId} {...props}>
+      {children}
+      {required && (
+        // Decoration — the control carries `aria-required`; see the note in `field.tsx`.
+        <span aria-hidden="true" data-required-marker="" className="ms-0.5 text-destructive">
+          *
+        </span>
+      )}
+    </Label>
+  );
 });
 FormLabel.displayName = "FormLabel";
 
@@ -83,13 +113,14 @@ const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
   React.ComponentPropsWithoutRef<typeof Slot>
 >(({ ...props }, ref) => {
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
+  const { error, formItemId, formDescriptionId, formMessageId, required } = useFormField();
   return (
     <Slot
       ref={ref}
       id={formItemId}
       aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
       aria-invalid={!!error}
+      aria-required={required || undefined}
       {...props}
     />
   );

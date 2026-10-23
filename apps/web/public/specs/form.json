@@ -15,7 +15,14 @@
     },
     {
       "name": "FormItem",
-      "props": []
+      "props": [
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "The field must be filled in. Puts `aria-required` on the control and a marker beside the label, the same contract `Field` has. It is declared rather than read off the form: with a resolver — zod, yup…"
+        }
+      ]
     },
     {
       "name": "FormLabel",
