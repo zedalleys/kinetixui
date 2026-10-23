@@ -1,7 +1,8 @@
 # KinetixUI unified master roadmap
 
-**Written:** 2026-10-21 · **Last accuracy pass:** 2026-10-22 (see *State refreshed* below) · **Baseline:**
-`origin/main` at `72770976` (after #438) · **Status:** a reconciliation of existing plans, not a new plan. Every 30/60/90 item is a **proposal**; nothing here is a commitment, an approval or
+**Written:** 2026-10-21 · **Last accuracy pass:** 2026-10-23 (see *State refreshed* below) · **Measurement
+baseline:** `origin/main` at `72770976`, which is what every figure below was read from · **`main` is now
+`b8cfba9`**, after #348 merged · **Status:** a reconciliation of existing plans, not a new plan. Every 30/60/90 item is a **proposal**; nothing here is a commitment, an approval or
 an authorization to merge or publish.
 
 ## How to use this document
@@ -50,7 +51,7 @@ Everything below was re-read on 2026-10-22; where it supersedes a figure written
 
 | Item | State on 2026-10-22 | Change since 2026-10-21 |
 | --- | --- | --- |
-| **#348** R1 version PR | head `bf1cea82`, base `72770976`, `mergeable_state` **clean**, not merged. Publishes ui/tokens/cli 0.25.0 + angular 0.26.0; `iot` absent, so it stays 0.5.0 | unchanged; still no merge authorization |
+| **#348** R1 version PR | **MERGED as `b8cfba9`** on `main`. It set ui/tokens/cli to 0.25.0 and angular to 0.26.0 in the repository and left `iot` at 0.5.0. **npm still served the previous versions when read on 2026-10-23**, so publication closure is the release thread's to report, not this file's to assume | merged since the 2026-10-22 pass |
 | **#428** CAT-QF | head `cab1c51f`, ready | unchanged |
 | **#430** CAT-2 taxonomy | head `e2432811`, **base is now `main`**, draft, `mergeable_state` unstable. Every substantive #428 commit is an ancestor, so **#428 is contained in #430** and merging #428 first costs #430 no reconciliation | was based on #428's branch at `1f2cee4e` |
 | **CAT-2 taxonomy decision** | **decided 2026-10-22 by the owner:** 8 categories accepted, twelve of the thirteen contested rows as proposed, and **`tag` moved to Data Display**; applied on #430's head and the chip counts re-measured in the browser | was open as E1/E2 |
@@ -61,13 +62,26 @@ Everything below was re-read on 2026-10-22; where it supersedes a figure written
 | **#440** this roadmap | head `0839c71a`, 6 checks green, clean, 0 open review threads | new |
 | **#441** Tabs motion presets | **draft**, head `d059f7b1`. Adds `motion="classic" \| "none"` to `TabsList` and repairs the `selection-indicator` role (`proposed` → `observed`, first consumer, two tokens pinned). **`fluid` and `spring` are specified and deliberately *not* in it** — it is the first slice, not the fluid one. No changeset on purpose until R1 closes; it touches `tokens/contracts/motion.json`, so **MX1d merges first and #441 rebases onto it** | new |
 | **MX1d heads** | #411 `f026060f`, #412 `4c5a287c`, #414 `7fbad7b2` — all ready, order unchanged | all three moved |
-| **Open PRs** | **15 substantive** (#348, #411–#414, #427, #428, #430, #433, #434, #436, #437, #439, #440, #441) + 10 Dependabot | was 13 + 10 |
+| **Open PRs** | **14 substantive** after #348 merged (#411–#414, #427, #428, #430, #433, #434, #436, #437, #439, #440, #441) + 10 Dependabot, which the R1 freeze no longer holds | was 13 + 10 on 2026-10-21 |
 | **BD-W6 boarding-pass block** | the owner **approved the slice on 2026-10-22** (decision B1′ in `/mnt/project-files/bd-blocks-audit/TRAVEL-BOOKING-FEASIBILITY.md`). It is the only `existing` travel stage, backed by the shipped `pass-card`, classified at birth on the BoardingPass capability row, and **static — no motion**, which is correct while `selection-indicator` has no merged consumer. Nothing is implemented yet | new |
 | **Active threads** | three opened since this roadmap was written: *PR remediation and release readiness*, *Component state completeness audit*, *Discovery to adoption UX fixes* — alongside *Native selection motion and a11y*, *AE-2A decorative foundations*, *Integration register and release gates*, *Homepage hero art direction audit* | new |
 
-**One claim I could not verify.** A *reader-path test classified **inconclusive*** was reported to this thread. The
-string appears in no repository file and in no project file I can read, so it is recorded here as **reported and
-unevidenced** rather than as a result. A later session should find the owning thread before citing it.
+**The reader-path test, now located and read.** It is
+`marketing/measurement/M4-READER-PATH-TEST.md`, on **#436's branch and not on `main`**, written by the marketing
+thread from Ziad's own instruction. **Attempt 1, 2026-10-22 00:24 UTC, is classified INCONCLUSIVE, and correctly
+so:** the URL the owner copied in LinkedIn's in-app browser never left `linkedin.com` — it was a text-fragment
+reference to the tracked link rather than a navigation — so **nothing in it shows whether LinkedIn preserves the
+query string on a real tap.** Recording it as "LinkedIn strips the parameters" would claim more than the evidence
+carries, and the file does not. Two results did come out of that window and are kept apart from it: the first
+LinkedIn arrival ever recognised **by referrer alone**, with no query string (`kx_source=linkedin` on
+`/docs/platforms`, 00:21:26 UTC), which narrows GAP-style worry that an untagged LinkedIn arrival is
+indistinguishable from `direct` **to the in-app browser only**; and the fact that no campaign-tagged session has
+reached PostHog for LI-001 at any point. The experiment closes on **C1** (the copied link address, no navigation),
+**C2** (LinkedIn's own impressions and clicks) or **C3** (one visit attributed end to end). **X-001, LI-008 and
+X-008 are on hold until one of them lands**, which is the owner's decision of 2026-10-22 00:32 UTC, and the order
+of remedies is his too: try a placement correction before building a self-identifying destination. QER is
+**unchanged and still undefined rather than zero** for LI-001. This supersedes **D-5** in §6: the decision is
+made, and the diagnosis is the work.
 
 ---
 
@@ -78,10 +92,13 @@ distribution is further ahead than its measurement.**
 
 Three sentences that the repository supports:
 
-1. **Engineering has a release ready and unmerged.** #348 is green and GO; merging it publishes
-   `@kinetixui/ui`, `tokens` and `cli` at 0.25.0 and `@kinetixui/angular` at 0.26.0, with `@kinetixui/iot` held at
-   0.5.0. Twenty-two changesets wait behind it, and 10 Dependabot PRs are deliberately frozen so they cannot
-   invalidate it. Nothing has been merged, published or tagged.
+1. **R1 is merged. The publication itself is not yet confirmed.** #348 merged as **`b8cfba9`** on `main`, which
+   sets `@kinetixui/ui`, `tokens` and `cli` to 0.25.0 and `@kinetixui/angular` to 0.26.0 in the repository, drains
+   `.changeset/` to its README alone, and leaves `@kinetixui/iot` at 0.5.0 with its 7 changesets still held in
+   `.changeset-held/iot/`. **The npm registry still served 0.24.0 / 0.24.0 / 0.24.0 / 0.25.1 / 0.5.0 when this was
+   read at 2026-10-23 03:0x UTC**, so the release workflow had not completed its publish. A merged version PR is
+   not a published package: **the release thread owns closure**, and until it reports it, "0.25.0 is out" is not a
+   claim this file makes. The Dependabot freeze that protected the window can now be lifted.
 2. **The web experience has a verified defect backlog that is not yet on `main`.** Twenty CAT-BUG findings and
    thirty-five evaluator-journey findings exist with reproduction evidence; the documents recording them live in
    three unmerged PRs and one deliberately-local file. The *fixes* for the highest-severity catalogue defects are
@@ -99,8 +116,9 @@ so the honest state is "instrument before publishing again".
 
 | | Value | Read from |
 | --- | --- | --- |
-| Published versions | ui 0.24.0 · tokens 0.24.0 · cli 0.24.0 · angular 0.25.1 · iot 0.5.0 | `packages/*/package.json` |
-| Unreleased changesets | 22 in `.changeset/`; 6 IoT changesets held in `.changeset-held/iot/` | directory listing |
+| Versions **in the repository**, on `b8cfba9` | ui 0.25.0 · tokens 0.25.0 · cli 0.25.0 · angular 0.26.0 · iot 0.5.0 | `packages/*/package.json` |
+| Versions **published to npm**, read 2026-10-23 | ui 0.24.0 · tokens 0.24.0 · cli 0.24.0 · angular 0.25.1 · iot 0.5.0 — **the publish had not completed** | `registry.npmjs.org` |
+| Unreleased changesets | **0** — `.changeset/` holds its README alone after #348; **7** IoT changesets still held in `.changeset-held/iot/` | directory listing on `b8cfba9` |
 | Catalogue | 109 entries; React 109 · Angular 80 (+2 equivalent, 27 planned) · SwiftUI 90 · Compose 90 · Flutter 90 | `platform-parity.json`, `check:angular-graduation` |
 | Angular graduation | **7 of 13 criteria met today**; 6 open. The **12 of 13** figure elsewhere in this file is a *projection* after P1+P2 land, never a current reading | `node scripts/check-angular-graduation.mjs`, re-run 2026-10-22 on `72770976` |
 | Evidence levels | React 61 build / 48 headless / **0 runtime** · Angular 20 headless / 60 runtime · SwiftUI 90 build · Compose 86 build / 4 headless · Flutter 85 build / 5 headless | `verification.json` `componentLevelTotals` |
@@ -130,7 +148,7 @@ renamed and no phase was renumbered.
 | Workstream | Completed and merged | Outstanding on `main` | In flight (PR) | Deliberately paused |
 | --- | --- | --- | --- | --- |
 | WS1 | M1 #398, M2 #405, M3 #406, M3.1 #409, M4 #410, LI-001 pre-publication record #429 | LI-001 close-out; measurement of why three posts yielded nothing; X-001 approval + slot | #436 (draft) | COM-001…004 community rows (rules gate); `/blog` (needs ≥3 off-site articles) |
-| WS2 | ENG-2b-4 #401, ENG-2b-5 #407, R1 iot exclusion #415, BD-W5 consumer gates #408 | the 0.25.0/0.26.0 publication itself; native publication to SPM/Maven/pub.dev | #348, #427 | Dependabot #417–#426 (frozen for R1) |
+| WS2 | ENG-2b-4 #401, ENG-2b-5 #407, R1 iot exclusion #415, BD-W5 consumer gates #408, **R1 #348 merged `b8cfba9`** | **confirming the npm publish actually completed**; native publication to SPM/Maven/pub.dev | #427 | Dependabot #417–#426 (the freeze can now be lifted) |
 | WS3 | evaluator track A #347, track B #350, web quality #369, homepage #370, footer #432/#435, homepage overlay fix #438 | CAT-BUG-001…005, 009, 011, 014, 015, 017…020; 128px docs column at 1280px/200% text; F-07 maturity vocabulary | #428, #413, #439 (direction approved, waits behind R1), #433/#437/#434 | CAT-3 thumbnails, AE-2B (both held by Ziad) |
 | WS4 | capability phases 0–2 foundations (#376, #378), BD-W1…W5 (#377, #389, #394, #395, #397, #399, #403, #408), Angular waves A–C3, field shapes #402 | 27 planned Angular entries; 6 open graduation criteria; capability phase 3 not started | #430 (taxonomy decided 2026-10-22, now based on `main`); BD-W6 boarding-pass block approved, unimplemented | IoT (real-device evidence); Pro tier (research only) |
 | WS5 | MX1a #393, MX1b-1a #396, MX1b-1b #400, MX1b-1c #404, MX1b-2 Angular #416 | G3, G5, G6, G7, G11, G12; feedback-entry role; overlay motion gate; native rendered evidence | #411, #412, #414; #441 (draft, rebases onto MX1d) | G2 (settled: stagger stays untokenised) |
@@ -142,9 +160,10 @@ renamed and no phase was renumbered.
 ### 3.1 The dependency spine
 
 ```
-#348 (R1 publish) ──┬─> #427 release-note gate ──> all later PRs judged by `build`
-                    ├─> Dependabot #417–#426 unfrozen
-                    └─> #436 LI-001 close-out can be marked ready
+#348 MERGED b8cfba9 ─┬─> npm publish — NOT yet confirmed; the release thread reports closure
+                     ├─> #427 release-note gate ──> all later PRs judged by `build`
+                     ├─> Dependabot #417–#426 can be unfrozen
+                     └─> #436 LI-001 close-out can be marked ready
                               └─> WS1 measurement checkpoints T+24h / T+7d become readable
 
 #411 SwiftUI ──> #412 Compose ──> #414 Flutter      (sequential; regenerate platform-parity.json at step 3)
@@ -167,8 +186,8 @@ Angular `timeline` rtl+largeText AND `toggle` rtl ──> 3 of 6 open graduation
 
 | # | Risk | Why it matters | Mitigation that exists |
 | --- | --- | --- | --- |
-| **IR-1** | Merging #348 **is** the npm publish (`release.yml` on push to `main`) | It is irreversible and public. Four packages go out at once | the sibling thread's gate 0; no authorization exists |
-| **IR-2** | Any push to `main` force-pushes #348's branch to a new head, so its approved runs attach to a dead commit | Burns CI minutes and needs a fresh approval window each time. It has already happened twice today | Dependabot frozen; gates 1–7 all sit behind R1 |
+| **IR-1** | Merging #348 **is** the npm publish (`release.yml` on push to `main`) | **Realised 2026-10-22/23: #348 is merged.** The step is irreversible and public, and four packages go out at once | the gate did its job; what remains is confirming the publish completed, since npm was still serving the old versions after the merge |
+| **IR-2** | Any push to `main` force-pushed #348's branch to a new head, so its approved runs attached to a dead commit | **Closed by the merge.** It cost two approval windows on 2026-10-21 | n/a — the version PR is gone until the next release cycle opens one |
 | **IR-3** | `ci.yml` is `pull_request: branches: [main]`, so a PR based on a feature branch gets **no `build` and no CodeQL at all** | #430 and #434 went days without their required check ever running | both retargeted to `main` on 2026-10-21; #430 now has a genuine `build` failure, which is the system working |
 | **IR-4** | Three parallel chains (native, footer, catalogue) and #439 all touch overlapping trees | the conflict matrix was measured with each chain starting from `main`, which is not the state that will exist | re-measure gates 3–5 after gate 2 lands |
 | **IR-5** | `verification.json` reads as "verified" to a casual reader, and React now shows **0 runtime** against Angular's 60 | A reader can conclude the Preview platform is better verified than the reference one | the evidence-tier doc states what each level means; the figure needs an owner decision (D-7 below) |
@@ -224,7 +243,7 @@ counting down.
 | | Next phase | Entry condition | Exit condition |
 | --- | --- | --- | --- |
 | WS1 | **M5 — attribution diagnosis and re-instrumentation** (new, replaces "publish X-001 next") | none; starts now | the mechanism behind three zero-arrival posts is named with evidence, and the next post's link is verified end-to-end before it goes out |
-| WS2 | **R1 execution, then gate 1** | Ziad's merge authorization for #348 | four packages published at the stated versions, release CI green, `check:releases` agreeing, #427 landed after it |
+| WS2 | **R1 publication closure, then gate 1** | none — #348 is merged; this is now a verification, not a decision | four packages **visible on npm** at 0.25.0/0.25.0/0.25.0/0.26.0, release CI green, `check:releases` agreeing, #427 landed after it. Until npm shows them, the release is merged and unpublished |
 | WS3 | **CAT-QF → CAT-2 → CAT-1 landing, then CAT-4** | R1 closed; CAT-2 taxonomy decision (E1/E2) | the 6 VERIFIED CAT-BUGs closed with rendered before/after evidence and a gate that catches each |
 | WS4 | **Angular graduation closure (P1 + P2), then capability phase 3** | none for P1/P2; phase 3 needs phase 2's AmountDisplay (shipped) | **projected** graduation at 12 of 13 criteria (today's reading is 7 of 13) with the 27 planned entries the only open one |
 | WS5 | **MX1d landing, then MX2a (Progress logical fill) and MX3a (Menubar exit + Angular floor)** | gate 2 of the merge sequence | the native selection cells move from ○ to m with a recorded ceiling, and no cell claims runtime |
@@ -238,7 +257,7 @@ and art direction; these are roadmap-shaped.
 
 | # | Decision | Recommendation |
 | --- | --- | --- |
-| **D-5** | **Does marketing publish again before the attribution finding exists?** | **No.** One more zero row costs a week of credibility and teaches nothing. Diagnose first (P4), then re-slot X-001 |
+| **D-5** | ~~Does marketing publish again before the attribution finding exists?~~ | **Decided by Ziad, 2026-10-22 00:32 UTC: no.** X-001, LI-008 and X-008 hold until C1, C2 or C3 in `M4-READER-PATH-TEST.md` lands, and a placement correction is tried before anything is built. The recommendation stood; the decision is now his and this row is closed |
 | **D-6** | **Native UI tests in CI** — macOS runner for SwiftUI, Android emulator for Compose (this is #392's D4, still open) | Start with **one platform and one component**: Switch on Compose, where the emulator is cheapest. Without it, no native cell can ever reach runtime |
 | **D-7** | **React's 0 runtime cells against Angular's 60.** Correct under the ladder, misleading to a reader | Do **not** change the ladder. Either promote React's interaction evidence by running a browser interaction pass, or show the environment beside the level on `/docs/platforms`. Changing the rule to flatter the reference platform is the one option to refuse |
 | **D-8** | **One public maturity vocabulary** (F-07: three vocabularies today, native "Experimental" hidden in a `<details>`) | Adopt the audit's proposal: *Package* (Published / Source-only), *Platform status* (Stable / Preview), *Verification* (Beta / Experimental), shown inline rather than nested |

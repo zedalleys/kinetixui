@@ -1,8 +1,9 @@
 # Motion coverage register — five platforms
 
-**Measured:** 2026-10-21 · **Last accuracy pass:** 2026-10-22 · **Baseline:** `origin/main` at `72770976` (after
-#438) · **Status:** register of what is true, plus the named gap behind each cell. It claims nothing that a file or
-a gate does not already prove.
+**Measured:** 2026-10-21 · **Last accuracy pass:** 2026-10-23 · **Measurement baseline:** `origin/main` at
+`72770976`, which every cell was read from · **`main` is now `b8cfba9`** after #348 merged, which changes package
+versions and no motion fact in this register · **Status:** register of what is true, plus the named gap behind each
+cell. It claims nothing that a file or a gate does not already prove.
 
 > **Green gates are not completeness.** Every gate this register names can pass while GAP-1…GAP-8 in
 > [`KINETIXUI-MASTER-ROADMAP.md`](KINETIXUI-MASTER-ROADMAP.md) §3.3 are all true. GAP-1 (Progress reduced motion on
