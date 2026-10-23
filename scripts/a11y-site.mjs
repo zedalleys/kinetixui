@@ -109,6 +109,13 @@ const WIDTHS = [
   ["small-phone", 320, 812],
   ["phone", 375, 812],
   ["tablet", 768, 1024],
+  // 1024 is the width at which the `lg` compositions switch on, and it was the gap between `tablet` and
+  // `desktop` where a layout can be at its tightest: wide enough to have committed to a desktop arrangement,
+  // not wide enough to afford it. #444 found a real failure there that this list could not see — at 1024px
+  // with a 32px default font size the docs component pages gained **37px of horizontal scrolling**, because
+  // the 14rem sidebar had become 448px of a 1024px screen. The defect is fixed; the blind spot was not, and
+  // a sample that misses a whole breakpoint keeps missing whatever else sits in it.
+  ["laptop", 1024, 768],
   ["desktop", 1280, 900],
 ];
 const SCHEMES = ["light", "dark"];
@@ -138,6 +145,60 @@ const TEXT_SCALES = [1, 2];
  * same way. A new entry needs a measured reason.
  */
 const TEXT_SCALE_PENDING = new Map([]);
+
+/**
+ * Single axe findings that are artefacts of how axe resolves a background, not defects of the page, as a ratchet.
+ *
+ * axe's `color-contrast` asks `elementsFromPoint` what is painted beneath a node. When a node is laid out
+ * inside a clipping ancestor but positioned outside it, the browser paints nothing there, so that question
+ * returns the page instead of the node's own card — and axe compares the text against a background it is never
+ * drawn on. The finding is then arithmetic about two colours that never meet.
+ *
+ * An entry says: at this exact view, this exact rule on this exact node is such an artefact, and here is the
+ * measurement that shows it. It is matched on all four of those, so it cannot quietly cover a second node, a
+ * second rule or a second width, and like `TEXT_SCALE_PENDING` it is asserted to be NEEDED — the run fails if
+ * the finding stops being observed, which is what stops a ratchet becoming an exemption.
+ *
+ * It is NOT a way to carry a real contrast failure. Only a finding whose true ratio has been measured against
+ * the background the reader actually sees belongs here, with that number in `why`.
+ */
+const AXE_ARTIFACTS = new Map([
+  [
+    "/create",
+    [
+      {
+        view: "dark/laptop/text100%",
+        rule: "color-contrast",
+        node: ".text-destructive",
+        // The `laptop` width found this on its first run. At 1024px the preview frame is 574px wide
+        // (x 417–991) while the dashboard scene inside it paints its Metric trend at x 974–1019: 28px past
+        // the frame's `overflow-hidden` edge, so the reader never sees it and `elementsFromPoint` at its
+        // centre returns `main` and `body`. axe therefore measured #c70a0a on the page's #050b10 and got
+        // 3.27. Against the white card the element is actually inside, the same two colours measure
+        // **6.04**, which passes AA at 12px. There is no contrast defect here.
+        //
+        // The clipping IS a defect, and it is not this gate's: the preview scene's `sm-rem:` classes are
+        // viewport media queries, so a 574px frame at a 1024px viewport is asked to lay out the desktop
+        // arrangement. Nothing currently measures content painted outside its own clip, at any width.
+        why: "node painted 28px outside its clipping frame; true ratio against its white card is 6.04:1",
+      },
+    ],
+  ],
+]);
+
+/** Marks an artefact entry as still earned; an unseen entry fails the run at the end. */
+const artifactsSeen = new Set();
+const artifactKey = (path, i) => `${path}#${i}`;
+
+/** The matching entry for one axe violation in one view, or undefined. */
+function axeArtifactFor(path, view, v) {
+  const entries = AXE_ARTIFACTS.get(path);
+  if (!entries) return undefined;
+  const i = entries.findIndex((e) => e.view === view && e.rule === v.id && v.count === 1 && v.nodes[0] === e.node);
+  if (i === -1) return undefined;
+  artifactsSeen.add(artifactKey(path, i));
+  return entries[i];
+}
 
 /**
  * Per-page layout contracts: regions that must still be usable, not merely free of sideways scroll.
@@ -342,6 +403,7 @@ for (const scheme of SCHEMES) {
             failures.push(`${tag}: no docs navigation — neither the sidebar nor the menu button is visible`);
           }
           for (const v of result.violations) {
+            if (axeArtifactFor(path, tag.split(" ")[0], v)) continue;
             failures.push(`${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")})`);
           }
           const contract = LAYOUT_CONTRACTS.get(path);
@@ -428,12 +490,40 @@ for (const scheme of SCHEMES) {
 // any other, and the entry is marked only when real overflow was actually observed. That is strictly
 // stronger than the earlier separate re-check at one width in one theme, and it means a pending page's
 // axe results and its other widths are no longer skipped.
+/**
+ * Both ratchets below assert that an entry is still EARNED, which only one kind of run can judge.
+ *
+ * A `--page` run visits a subset, so a page it never opened cannot have been observed, and demanding the
+ * observation would fail every targeted run — including the negative controls, which is how this was found.
+ * The membership check still applies either way: an entry naming a page that is not in PAGES is wrong
+ * whatever was swept.
+ */
+const swept = (path) => (ONLY_PAGES ?? PAGES).includes(path);
+
 for (const [path, why] of TEXT_SCALE_PENDING) {
   if (!PAGES.includes(path)) {
     failures.push(`${path}: listed in TEXT_SCALE_PENDING but not in PAGES — remove the entry or the page`);
-  } else if (!pendingSeen.has(path)) {
+  } else if (swept(path) && !pendingSeen.has(path)) {
     failures.push(`${path}: no longer overflows at 200% text in any swept view — delete it from TEXT_SCALE_PENDING (was: ${why})`);
   }
+}
+
+// Same ratchet as TEXT_SCALE_PENDING: an artefact entry that no longer matches anything is a line claiming a
+// finding the sweep cannot find, which is indistinguishable from an exemption nobody is checking.
+for (const [path, entries] of AXE_ARTIFACTS) {
+  if (!PAGES.includes(path)) {
+    failures.push(`${path}: listed in AXE_ARTIFACTS but not in PAGES — remove the entry or the page`);
+    continue;
+  }
+  if (!swept(path)) continue;
+  entries.forEach((e, i) => {
+    if (!artifactsSeen.has(artifactKey(path, i))) {
+      failures.push(
+        `${path}: the ${e.rule} finding on \`${e.node}\` at ${e.view} no longer occurs — delete it from ` +
+          `AXE_ARTIFACTS (was: ${e.why})`,
+      );
+    }
+  });
 }
 
 await browser.close();
