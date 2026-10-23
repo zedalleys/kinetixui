@@ -72,6 +72,7 @@
     "check:type-scale": "node scripts/check-type-scale.mjs",
     "check:typography": "node scripts/check-typography.mjs",
     "check:web-quality": "node scripts/web-quality-browser.mjs --base http://127.0.0.1:3000",
+    "check:engraving": "node scripts/engraving-visual.mjs --base http://127.0.0.1:3000",
     "check:blocks-discovery": "node scripts/blocks-discovery-browser.mjs --base http://127.0.0.1:3000",
     "check:global-search": "node scripts/global-search-browser.mjs --base http://127.0.0.1:3000",
     "check:use-cases": "node scripts/use-cases-browser.mjs --base http://127.0.0.1:3000",

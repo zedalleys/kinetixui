@@ -897,6 +897,53 @@
       linear-gradient(var(--tc) 0 0) 100% 100% / 1px var(--tl) no-repeat;
   }
 
+  /*
+   * ── Arabian Editorial Engraving: decorative primitives ─────────────────────────────────────────────
+   *
+   * docs/design/ARABIAN-EDITORIAL-ENGRAVING.md is the direction. `.kx-paper` is the part of it that is the
+   * same on every surface, so a surface adopting the direction composes it instead of re-deriving it. It
+   * introduces no token, no colour and no dependency, puts nothing in the accessibility tree and does not
+   * animate; its one asset is the grain tile the footer already ships.
+   *
+   * The direction's other three primitives — the tonal hatch, the engraved divider and the plate-crop
+   * frame — are specified in that document's §10 but are deliberately not here. Tailwind's content scan
+   * removes hand-written `@layer components` rules that no source file names, which was measured on this
+   * build and not assumed: with all four present, `.next/static/css` carried `.kx-paper` and none of the
+   * other three. A primitive therefore ships with its first consumer, in the stage that has one.
+   */
+
+  /*
+   * The printed sheet: the pale cool `accent` panel with the grain over all of it.
+   *
+   * It carries no theme branch of its own. PR #435 gave the footer a second plate drawn for the dark
+   * theme, so the sheet is no longer one pale print that dark mode has to do something to — `accent` and
+   * `foreground` simply resolve per theme and the plate on top is the one inked for that theme. The dark
+   * rule this class used to carry (`filter: brightness(0.85)`, with `.kx-print-surface` pinning the
+   * footer's tokens light so there was something to dim) is gone with the treatment it belonged to. A
+   * surface that needs a dark treatment supplies dark artwork, the way the footer now does; it does not
+   * dim the light one, and it never inverts it, which is §5 of the direction.
+   *
+   * The two grain numbers are the footer's, unchanged: one seamless 384px tile at 0.22, blended `overlay`
+   * (neutral on average against mid-grey, so it textures the sheet without dulling it). They were inline
+   * on `site-footer.tsx`; a second surface would have copied them, and the copies would have drifted.
+   */
+  .kx-paper {
+    position: relative;
+    background-color: hsl(var(--accent));
+    color: hsl(var(--foreground));
+  }
+  .kx-paper::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: url("/footer/paper-grain.webp");
+    background-size: 384px;
+    opacity: 0.22;
+    mix-blend-mode: overlay;
+  }
+
   /* vertical margin rules at a container's edges — graph-paper structure */
   .kx-edges {
     position: relative;
