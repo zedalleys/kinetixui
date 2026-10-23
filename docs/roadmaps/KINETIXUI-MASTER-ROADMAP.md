@@ -51,7 +51,7 @@ Everything below was re-read on 2026-10-22; where it supersedes a figure written
 
 | Item | State on 2026-10-22 | Change since 2026-10-21 |
 | --- | --- | --- |
-| **#348** R1 version PR | **MERGED as `b8cfba9`** on `main`. It set ui/tokens/cli to 0.25.0 and angular to 0.26.0 in the repository and left `iot` at 0.5.0. **npm still served the previous versions when read on 2026-10-23**, so publication closure is the release thread's to report, not this file's to assume | merged since the 2026-10-22 pass |
+| **#348** R1 version PR | **MERGED as `b8cfba9`**, and **the release then failed and published nothing** — run 39700240605, `release:preflight`, because the 0.25.0 notes were dated 2026-10-21 and the merge landed 31 minutes into 2026-10-22 UTC. Repository versions moved; the registry did not. Recovery is a one-line date change in `releases.ts`, needing Ziad's approval and a **same-UTC-day** merge | merged, and failed, since the 2026-10-22 pass |
 | **#428** CAT-QF | head `cab1c51f`, ready | unchanged |
 | **#430** CAT-2 taxonomy | head `e2432811`, **base is now `main`**, draft, `mergeable_state` unstable. Every substantive #428 commit is an ancestor, so **#428 is contained in #430** and merging #428 first costs #430 no reconciliation | was based on #428's branch at `1f2cee4e` |
 | **CAT-2 taxonomy decision** | **decided 2026-10-22 by the owner:** 8 categories accepted, twelve of the thirteen contested rows as proposed, and **`tag` moved to Data Display**; applied on #430's head and the chip counts re-measured in the browser | was open as E1/E2 |
@@ -62,7 +62,7 @@ Everything below was re-read on 2026-10-22; where it supersedes a figure written
 | **#440** this roadmap | head `0839c71a`, 6 checks green, clean, 0 open review threads | new |
 | **#441** Tabs motion presets | **draft**, head `d059f7b1`. Adds `motion="classic" \| "none"` to `TabsList` and repairs the `selection-indicator` role (`proposed` → `observed`, first consumer, two tokens pinned). **`fluid` and `spring` are specified and deliberately *not* in it** — it is the first slice, not the fluid one. No changeset on purpose until R1 closes; it touches `tokens/contracts/motion.json`, so **MX1d merges first and #441 rebases onto it** | new |
 | **MX1d heads** | #411 `f026060f`, #412 `4c5a287c`, #414 `7fbad7b2` — all ready, order unchanged | all three moved |
-| **Open PRs** | **14 substantive** after #348 merged (#411–#414, #427, #428, #430, #433, #434, #436, #437, #439, #440, #441) + 10 Dependabot, which the R1 freeze no longer holds | was 13 + 10 on 2026-10-21 |
+| **Open PRs** | **14 substantive** after #348 merged (#411–#414, #427, #428, #430, #433, #434, #436, #437, #439, #440, #441) + 10 Dependabot. **The freeze still holds**, on Dependabot and on every other merge: any push to `main` re-runs `release.yml`, and R1 is not published yet | was 13 + 10 on 2026-10-21 |
 | **BD-W6 boarding-pass block** | the owner **approved the slice on 2026-10-22** (decision B1′ in `/mnt/project-files/bd-blocks-audit/TRAVEL-BOOKING-FEASIBILITY.md`). It is the only `existing` travel stage, backed by the shipped `pass-card`, classified at birth on the BoardingPass capability row, and **static — no motion**, which is correct while `selection-indicator` has no merged consumer. Nothing is implemented yet | new |
 | **Active threads** | three opened since this roadmap was written: *PR remediation and release readiness*, *Component state completeness audit*, *Discovery to adoption UX fixes* — alongside *Native selection motion and a11y*, *AE-2A decorative foundations*, *Integration register and release gates*, *Homepage hero art direction audit* | new |
 
@@ -92,13 +92,21 @@ distribution is further ahead than its measurement.**
 
 Three sentences that the repository supports:
 
-1. **R1 is merged. The publication itself is not yet confirmed.** #348 merged as **`b8cfba9`** on `main`, which
+1. **R1 is merged and the release failed. Nothing was published.** #348 merged as **`b8cfba9`** on `main`, which
    sets `@kinetixui/ui`, `tokens` and `cli` to 0.25.0 and `@kinetixui/angular` to 0.26.0 in the repository, drains
    `.changeset/` to its README alone, and leaves `@kinetixui/iot` at 0.5.0 with its 7 changesets still held in
-   `.changeset-held/iot/`. **The npm registry still served 0.24.0 / 0.24.0 / 0.24.0 / 0.25.1 / 0.5.0 when this was
-   read at 2026-10-23 03:0x UTC**, so the release workflow had not completed its publish. A merged version PR is
-   not a published package: **the release thread owns closure**, and until it reports it, "0.25.0 is out" is not a
-   claim this file makes. The Dependabot freeze that protected the window can now be lifted.
+   `.changeset-held/iot/`. The `Release` workflow then ran on that commit and **failed**: run
+   [39700240605](https://github.com/zedalleys/kinetixui/actions/runs/39700240605), job `preflight`, step
+   `pnpm release:preflight`, at 2026-10-22 00:33:16 UTC — **31 minutes after UTC midnight**, which is the whole
+   cause. Its message, verbatim:
+   > `Core 0.25.0 release notes are dated 2026-10-21; first publication requires 2026-10-22 (UTC). Refresh the Version PR release date and obtain approval before merging. No package was published.`
+
+   So the npm registry still served 0.24.0 / 0.24.0 / 0.24.0 / 0.25.1 / 0.5.0 when it was read on 2026-10-23, and
+   that is not a pending publish — it is a **refused** one. **Recovery is one line**: `date` on the 0.25.0 entry in
+   `apps/web/src/lib/releases.ts:154` becomes the current UTC day, which **Ziad must approve and which must merge
+   the same UTC day**, or the gate refuses it again for the same reason. A merged version PR is not a published
+   package, and **the release thread owns closure**: until it reports it, "0.25.0 is out" is not a claim this file
+   makes.
 2. **The web experience has a verified defect backlog that is not yet on `main`.** Twenty CAT-BUG findings and
    thirty-five evaluator-journey findings exist with reproduction evidence; the documents recording them live in
    three unmerged PRs and one deliberately-local file. The *fixes* for the highest-severity catalogue defects are
@@ -148,7 +156,7 @@ renamed and no phase was renumbered.
 | Workstream | Completed and merged | Outstanding on `main` | In flight (PR) | Deliberately paused |
 | --- | --- | --- | --- | --- |
 | WS1 | M1 #398, M2 #405, M3 #406, M3.1 #409, M4 #410, LI-001 pre-publication record #429 | LI-001 close-out; measurement of why three posts yielded nothing; X-001 approval + slot | #436 (draft) | COM-001…004 community rows (rules gate); `/blog` (needs ≥3 off-site articles) |
-| WS2 | ENG-2b-4 #401, ENG-2b-5 #407, R1 iot exclusion #415, BD-W5 consumer gates #408, **R1 #348 merged `b8cfba9`** | **confirming the npm publish actually completed**; native publication to SPM/Maven/pub.dev | #427 | Dependabot #417–#426 (the freeze can now be lifted) |
+| WS2 | ENG-2b-4 #401, ENG-2b-5 #407, R1 iot exclusion #415, BD-W5 consumer gates #408, **R1 #348 merged `b8cfba9`** | **the publish itself — refused by `release:preflight`, recoverable by one dated line**; native publication to SPM/Maven/pub.dev | #427 | Dependabot #417–#426 (**the freeze holds** until R1 is published and verified) |
 | WS3 | evaluator track A #347, track B #350, web quality #369, homepage #370, footer #432/#435, homepage overlay fix #438 | CAT-BUG-001…005, 009, 011, 014, 015, 017…020; 128px docs column at 1280px/200% text; F-07 maturity vocabulary | #428, #413, #439 (direction approved, waits behind R1), #433/#437/#434 | CAT-3 thumbnails, AE-2B (both held by Ziad) |
 | WS4 | capability phases 0–2 foundations (#376, #378), BD-W1…W5 (#377, #389, #394, #395, #397, #399, #403, #408), Angular waves A–C3, field shapes #402 | 27 planned Angular entries; 6 open graduation criteria; capability phase 3 not started | #430 (taxonomy decided 2026-10-22, now based on `main`); BD-W6 boarding-pass block approved, unimplemented | IoT (real-device evidence); Pro tier (research only) |
 | WS5 | MX1a #393, MX1b-1a #396, MX1b-1b #400, MX1b-1c #404, MX1b-2 Angular #416 | G3, G5, G6, G7, G11, G12; feedback-entry role; overlay motion gate; native rendered evidence | #411, #412, #414; #441 (draft, rebases onto MX1d) | G2 (settled: stagger stays untokenised) |
@@ -160,9 +168,10 @@ renamed and no phase was renumbered.
 ### 3.1 The dependency spine
 
 ```
-#348 MERGED b8cfba9 ─┬─> npm publish — NOT yet confirmed; the release thread reports closure
+#348 MERGED b8cfba9 ──> Release run FAILED at release:preflight ──> NOTHING published
+       └─> one-line releases.ts date + Ziad's approval + a SAME-UTC-DAY merge ──> publish
                      ├─> #427 release-note gate ──> all later PRs judged by `build`
-                     ├─> Dependabot #417–#426 can be unfrozen
+                     ├─> Dependabot #417–#426 stay frozen until then: any push to main re-runs release.yml
                      └─> #436 LI-001 close-out can be marked ready
                               └─> WS1 measurement checkpoints T+24h / T+7d become readable
 
@@ -186,8 +195,8 @@ Angular `timeline` rtl+largeText AND `toggle` rtl ──> 3 of 6 open graduation
 
 | # | Risk | Why it matters | Mitigation that exists |
 | --- | --- | --- | --- |
-| **IR-1** | Merging #348 **is** the npm publish (`release.yml` on push to `main`) | **Realised 2026-10-22/23: #348 is merged.** The step is irreversible and public, and four packages go out at once | the gate did its job; what remains is confirming the publish completed, since npm was still serving the old versions after the merge |
-| **IR-2** | Any push to `main` force-pushed #348's branch to a new head, so its approved runs attached to a dead commit | **Closed by the merge.** It cost two approval windows on 2026-10-21 | n/a — the version PR is gone until the next release cycle opens one |
+| **IR-1** | Merging #348 **is** the npm publish (`release.yml` on push to `main`) | **Realised 2026-10-22: #348 merged and the release was refused.** `release:preflight` held the line precisely because the step is irreversible — a stale release-note date would have shipped publicly | the gate worked. What remains is a dated line, an approval, and a same-UTC-day merge |
+| **IR-2** | **Any push to `main` re-runs `release.yml`** — before the merge it also force-pushed #348 to a new head and killed its approved runs | **Not closed.** It cost two approval windows on 2026-10-21, and until R1 publishes, every merge is another release attempt against a date gate that only passes on the day the notes carry | the freeze on merges, Dependabot included, holds until R1 is published **and verified against the registry** |
 | **IR-3** | `ci.yml` is `pull_request: branches: [main]`, so a PR based on a feature branch gets **no `build` and no CodeQL at all** | #430 and #434 went days without their required check ever running | both retargeted to `main` on 2026-10-21; #430 now has a genuine `build` failure, which is the system working |
 | **IR-4** | Three parallel chains (native, footer, catalogue) and #439 all touch overlapping trees | the conflict matrix was measured with each chain starting from `main`, which is not the state that will exist | re-measure gates 3–5 after gate 2 lands |
 | **IR-5** | `verification.json` reads as "verified" to a casual reader, and React now shows **0 runtime** against Angular's 60 | A reader can conclude the Preview platform is better verified than the reference one | the evidence-tier doc states what each level means; the figure needs an owner decision (D-7 below) |
@@ -243,7 +252,7 @@ counting down.
 | | Next phase | Entry condition | Exit condition |
 | --- | --- | --- | --- |
 | WS1 | **M5 — attribution diagnosis and re-instrumentation** (new, replaces "publish X-001 next") | none; starts now | the mechanism behind three zero-arrival posts is named with evidence, and the next post's link is verified end-to-end before it goes out |
-| WS2 | **R1 publication closure, then gate 1** | none — #348 is merged; this is now a verification, not a decision | four packages **visible on npm** at 0.25.0/0.25.0/0.25.0/0.26.0, release CI green, `check:releases` agreeing, #427 landed after it. Until npm shows them, the release is merged and unpublished |
+| WS2 | **R1 recovery, then gate 1** | **Ziad's approval of the one-line `releases.ts` date**, merged the same UTC day | four packages **visible on npm** at 0.25.0/0.25.0/0.25.0/0.26.0, the `Release` run green, `check:releases` agreeing, #427 landed after it. Until the registry shows them, the release is merged and unpublished |
 | WS3 | **CAT-QF → CAT-2 → CAT-1 landing, then CAT-4** | R1 closed; CAT-2 taxonomy decision (E1/E2) | the 6 VERIFIED CAT-BUGs closed with rendered before/after evidence and a gate that catches each |
 | WS4 | **Angular graduation closure (P1 + P2), then capability phase 3** | none for P1/P2; phase 3 needs phase 2's AmountDisplay (shipped) | **projected** graduation at 12 of 13 criteria (today's reading is 7 of 13) with the 27 planned entries the only open one |
 | WS5 | **MX1d landing, then MX2a (Progress logical fill) and MX3a (Menubar exit + Angular floor)** | gate 2 of the merge sequence | the native selection cells move from ○ to m with a recorded ceiling, and no cell claims runtime |
