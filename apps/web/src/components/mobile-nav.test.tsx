@@ -37,7 +37,7 @@ beforeEach(() => {
 describe("MobileNav breakpoint", () => {
   it("stays available until the docs sidebar takes over, on every docs page", () => {
     for (const path of ["/docs", "/docs/installation", "/docs/components/button"]) {
-      expect(menuBreakpointClass(path), path).toBe("lg:hidden");
+      expect(menuBreakpointClass(path), path).toBe("lg-rem:hidden");
     }
   });
 
@@ -50,7 +50,7 @@ describe("MobileNav breakpoint", () => {
   it("renders the class for the current page", () => {
     nav.pathname = "/docs/tokens";
     const { container } = render(<MobileNav />);
-    expect(container.firstElementChild).toHaveClass("lg:hidden");
+    expect(container.firstElementChild).toHaveClass("lg-rem:hidden");
     expect(container.firstElementChild).not.toHaveClass("md:hidden");
   });
 });
