@@ -53,6 +53,12 @@ const sha = (f) => createHash("sha256").update(readFileSync(f)).digest("hex");
  * report — so markup controls go through the chunk, not the HTML.)
  */
 let server = null;
+/**
+ * Whether the server on 3000 is this harness's to stop. A run that reuses one someone else started must
+ * leave it alone; a run that started its own must not leave it behind on ANY exit path, or the next run
+ * reuses a stale process and every control it reports is a measurement of the wrong build.
+ */
+let ownServer = false;
 const up = async () => {
   try {
     await fetch(BASE, { signal: AbortSignal.timeout(2000) });
@@ -72,12 +78,20 @@ async function startServer() {
 }
 async function stopServer() {
   if (server) {
+    ownServer = false;
     try {
       process.kill(-server.pid, "SIGTERM");
     } catch {}
     server = null;
   }
   for (let i = 0; i < 30 && (await up()); i++) await sleep(500);
+}
+
+/** The only way out of this script: stop a server we started, then exit. */
+async function bail(code, message) {
+  if (message) console.error(message);
+  if (ownServer) await stopServer();
+  process.exit(code);
 }
 
 /** Append a rule to the built stylesheet. `!important` where it has to beat the real one. */
@@ -187,10 +201,8 @@ function runGate() {
 
 /* ── the server ────────────────────────────────────────────────────────────────────────────── */
 if (!(await up())) {
-  if (!(await startServer())) {
-    console.error("could not start `next start` on 3000");
-    process.exit(2);
-  }
+  if (!(await startServer())) await bail(2, "could not start `next start` on 3000");
+  ownServer = true;
   console.log("started next start on 3000");
 } else {
   console.log("using the server already on 3000");
@@ -203,12 +215,10 @@ writeFileSync(cssFile, before + "\n.kx-preflight-probe{color:#123456}\n");
 const served = execFileSync("curl", ["-s", `${BASE}/_next/static/css/${cssFile.split("/").pop()}`], { encoding: "utf8" });
 writeFileSync(cssFile, before);
 if (sha(cssFile) !== beforeSha) {
-  console.error("pre-flight: could not restore the stylesheet byte-for-byte; refusing to run");
-  process.exit(2);
+  await bail(2, "pre-flight: could not restore the stylesheet byte-for-byte; refusing to run");
 }
 if (!served.includes("kx-preflight-probe")) {
-  console.error("pre-flight FAILED: the running server did not serve the mutated stylesheet, so every control below would be vacuous");
-  process.exit(2);
+  await bail(2, "pre-flight FAILED: the running server did not serve the mutated stylesheet, so every control below would be vacuous");
 }
 console.log("pre-flight ok: the server serves the mutated built stylesheet, and it restored byte-for-byte\n");
 
@@ -216,8 +226,7 @@ console.log("pre-flight ok: the server serves the mutated built stylesheet, and 
 const clean = runGate();
 console.log(`clean\texit=${clean.code}\tfailures=${clean.json ? clean.json.failures.length : "unreadable"}`);
 if (clean.code !== 0) {
-  console.error("the gate does not pass on the unmodified build; fix that before reading any control");
-  process.exit(2);
+  await bail(2, "the gate does not pass on the unmodified build; fix that before reading any control");
 }
 
 /* ── the controls ──────────────────────────────────────────────────────────────────────────── */
@@ -245,8 +254,7 @@ for (let pass = 1; pass <= repeats; pass++) {
     if (c.restart) await stopServer();
     writeFileSync(c.file, original);
     if (c.restart && !(await startServer())) {
-      console.error("could not restart the server after restoring; stopping");
-      process.exit(2);
+      await bail(2, "could not restart the server after restoring; stopping");
     }
     const restored = sha(c.file) === originalSha;
 

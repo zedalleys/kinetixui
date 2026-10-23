@@ -112,24 +112,34 @@ if (await answering()) {
 }
 
 const repeats = process.argv.includes("--repeat") ? Number(process.argv[process.argv.indexOf("--repeat") + 1]) : 1;
+/*
+ * Every control's verdict, so the exit code means what the table says. A harness that prints MISSED and
+ * exits 0 hands a caller invalid evidence under a passing status, which is the same fault the gate's own
+ * dropped `plates` row was dropped for.
+ */
+const results = [];
 for (let pass = 1; pass <= repeats; pass++)
 for (const c of CONTROLS) {
   const original = readFileSync(c.file, "utf8");
   const originalSha = sha(c.file);
   const mutated = c.mutate(original);
   if (mutated === original) {
-    console.log(`${c.id}\tMUTATION-NO-OP`);
+    // The source moved under the control's `replace`, so it changed nothing and proved nothing.
+    results.push({ pass, id: c.id, verdict: "MUTATION-NO-OP", restored: true });
+    console.log(`pass${pass}\t${c.id}\tMUTATION-NO-OP — the control changed nothing`);
     continue;
   }
   writeFileSync(c.file, mutated);
   let line;
+  let verdict = "ERROR";
   try {
     const secs = build();
     if (!(await start())) throw new Error("server would not start");
     const r = gate();
     const hit = (r.failures ?? []).filter((f) => f.startsWith(`${c.row}:`) && f.includes(c.expect));
     const collateral = [...new Set((r.failures ?? []).map((f) => f.split(":")[0]))].filter((x) => x !== c.row);
-    line = `${c.id}\t${!r.failures ? "GATE-DID-NOT-REPORT" : hit.length ? "detected" : "MISSED"}\tbuild=${secs}s\texit=${r.code}\tfailures=${r.failures?.length ?? "?"}\tcollateral=${collateral.join(",") || "none"}`;
+    verdict = !r.failures ? "GATE-DID-NOT-REPORT" : hit.length ? "detected" : "MISSED";
+    line = `${c.id}\t${verdict}\tbuild=${secs}s\texit=${r.code}\tfailures=${r.failures?.length ?? "?"}\tcollateral=${collateral.join(",") || "none"}`;
     if (hit.length) line += `\n   ${hit.join("\n   ")}`;
   } catch (e) {
     line = `${c.id}\tERROR\t${e.message.slice(0, 200)}`;
@@ -137,7 +147,16 @@ for (const c of CONTROLS) {
     await stop();
     writeFileSync(c.file, original);
   }
-  console.log(`pass${pass}\t` + line, `\trestored=${sha(c.file) === originalSha}`);
+  // A control that did not come back byte-for-byte has left the tree changed, so it counts as failed too
+  // however its row read: the next control would then be measuring a source nobody authorized.
+  const restored = sha(c.file) === originalSha;
+  results.push({ pass, id: c.id, verdict, restored });
+  console.log(`pass${pass}\t` + line, `\trestored=${restored}`);
 }
 
 console.log(`restoring the build from clean source: ${build()}s`);
+
+const failed = results.filter((r) => r.verdict !== "detected" || !r.restored);
+console.log(`\n${results.length - failed.length}/${results.length} control runs detected and restored.`);
+for (const f of failed) console.log(`  ${f.id} pass${f.pass}: ${f.verdict}${f.restored ? "" : ", NOT RESTORED"}`);
+process.exit(failed.length ? 1 : 0);
