@@ -26,6 +26,7 @@
  *   sitemap-bad-url      a sitemap URL has a query/fragment, is off-host, is noindex, or is a utility route
  *   sitemap-omits        an indexable built page is missing from the sitemap
  *   link-broken          an internal href resolves to no built page, public file or redirect
+ *   route-parent         a nested route's parent path is neither a built page nor a redirect (truncating the URL 404s)
  *   og-image             an indexable page has no og:image, or it does not resolve to a built image
  *   jsonld-invalid       a JSON-LD block does not parse, or has no @context/@type
  *   breadcrumb-mismatch  BreadcrumbList JSON-LD disagrees with the visible breadcrumb
@@ -305,6 +306,38 @@ for (const p of extracted) {
     if (!linkOk(href)) fail("link-broken", p.route, `→ ${href}`);
   }
 }
+
+/*
+ * Parent routes. Truncating a URL to its parent is something readers and crawlers both do, and every nested
+ * route on this site publishes its own parent as a path: `/use-cases/commerce` implies `/use-cases`,
+ * `/docs/components/button` implies `/docs/components`. Neither existed until this rule was written; nothing
+ * caught them, because `link-broken` only sees hrefs that are actually in the HTML and a parent nobody links
+ * is a path nobody wrote down. So the check is derived from the route tree itself rather than from the links:
+ * every ancestor of a built route must resolve to a built page or to a redirect in next.config.mjs.
+ *
+ * PARENT_404 is a debt register, not an allowlist: an entry whose parent now resolves FAILS, so an exception
+ * cannot outlive the defect it was written for. It is empty, and the intent is that it stays that way --
+ * a new nested route gets a parent or a redirect in the same change.
+ */
+const PARENT_404 = {};
+// one entry per missing parent, not per child: 109 component pages share one hole, and 109 lines would hide it
+const orphanedParents = new Map();
+for (const route of pages.keys()) {
+  if (route === NOT_FOUND) continue;
+  const parts = route.split("/").filter(Boolean);
+  for (let i = 1; i < parts.length; i++) {
+    const parent = "/" + parts.slice(0, i).join("/");
+    if (pages.has(parent) || redirectSources.has(parent)) continue;
+    (orphanedParents.get(parent) ?? orphanedParents.set(parent, []).get(parent)).push(route);
+  }
+}
+for (const [parent, children] of [...orphanedParents].sort()) {
+  if (parent in PARENT_404) continue;
+  const n = children.length;
+  fail("route-parent", parent, `no page and no redirect, but ${n} route${n === 1 ? " is" : "s are"} published under it (e.g. ${children[0]})`);
+}
+for (const [parent, why] of Object.entries(PARENT_404))
+  if (!orphanedParents.has(parent)) fail("route-parent", parent, `registered as a known 404 ("${why}") but it resolves now — drop the entry`);
 
 /* Orphans: every indexable page must be reachable by a link from at least one other page. */
 const inbound = new Map();
