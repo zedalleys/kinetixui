@@ -24,6 +24,11 @@ npx @kinetixui/cli add form
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@kinetixui/ui";
 ```
 
+Mark a field that must be filled in with `required` on the `FormItem` — the control gets
+`aria-required` and the label gets a marker from the one declaration. See
+[Field](/docs/components/field#required-fields) for why it is declared rather than read off the
+schema.
+
 Styled entirely from the KinetixUI token contract — `bg-action`,
 `text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
 with no extra config. Keyboard and ARIA behaviour is inherited from Radix where the
