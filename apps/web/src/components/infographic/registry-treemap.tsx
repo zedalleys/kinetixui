@@ -14,6 +14,13 @@ const data = CATEGORY_ORDER.map((cat, i) => ({
   fill: `hsl(var(--chart-${(i % 8) + 1}))`,
 }));
 
+// The chart's accessible description names its two largest groups, and it named them from memory until CAT-2
+// renamed `Form Inputs` to `Forms & Inputs`: the label went on telling assistive technology about a category
+// the chart no longer draws, which is worse than a stale comment because it is the only description a reader
+// who cannot see the treemap gets. Read off the same data the rectangles are drawn from, so the sentence
+// cannot disagree with the picture.
+const largest = [...data].sort((a, b) => b.size - a.size).map((d) => d.name);
+
 type NodeProps = {
   x?: number;
   y?: number;
@@ -51,7 +58,7 @@ export function RegistryTreemap() {
     <ChartContainer
       config={{} satisfies ChartConfig}
       className="mt-5 h-[280px] w-full"
-      label={`The ${componentDocs.length} catalogue entries by category — Form Inputs and Data Display are the largest groups.`}
+      label={`The ${componentDocs.length} catalogue entries by category — ${largest[0]} and ${largest[1]} are the largest groups.`}
     >
       <Treemap
         data={data}
