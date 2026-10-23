@@ -151,7 +151,7 @@ export const RELEASES: Release[] = [
       "SwiftUI, Jetpack Compose and Flutter remain source-checkout distributions rather than packages published to their platform registries.",
       "IoT remains a React-only module and is not a sixth core platform. @kinetixui/iot is not published by this release."
     ],
-    date: "2026-10-21"
+    date: "2026-10-23"
   },
   {
     version: "0.24.0",
