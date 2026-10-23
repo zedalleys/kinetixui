@@ -30,7 +30,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Components/AppBar",
+  title: "Navigation/AppBar",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<AppBar>\\n  <AppBarBrand>Acme</AppBarBrand>\\n  <AppBarNav>\\n    <AppBarLink href=\"/\" active>Overview</AppBarLink>\\n    <AppBarLink href=\"/reports\">Reports</AppBarLink>\\n    <AppBarLink href=\"/team\">Team</AppBarLink>\\n  </AppBarNav>\\n  <AppBarActions>\\n    <Button variant=\"Ghost\" size=\"icon\"><Bell /></Button>\\n    <Avatar>…</Avatar>\\n  </AppBarActions>\\n</AppBar>", language: "tsx" } },

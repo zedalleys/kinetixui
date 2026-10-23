@@ -52,6 +52,12 @@ on:
       - "scripts/angular-layout.mjs"
       - "scripts/angular-selection-motion.mjs"
       - "scripts/ui-dist-stamp.mjs"
+      - "scripts/story-id.mjs"
+      - "scripts/check-story-ids.mjs"
+      # story ids are derived from the component categories, so a rename here moves every gate's
+      # story id and this workflow has to run
+      - "components.manifest.json"
+      - "component-taxonomy.json"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
   pull_request:
@@ -91,6 +97,12 @@ on:
       - "scripts/angular-layout.mjs"
       - "scripts/angular-selection-motion.mjs"
       - "scripts/ui-dist-stamp.mjs"
+      - "scripts/story-id.mjs"
+      - "scripts/check-story-ids.mjs"
+      # story ids are derived from the component categories, so a rename here moves every gate's
+      # story id and this workflow has to run
+      - "components.manifest.json"
+      - "component-taxonomy.json"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
 
@@ -123,6 +135,16 @@ jobs:
 
       - name: Build Storybook
         run: pnpm build-storybook
+
+      # Before Chromium, because it is the cheap half of the same question: every gate below drives
+      # Storybook by story id, and an id that addresses nothing reports a missing story rather than the
+      # component being wrong. CAT-2 renamed three categories and moved `card`, which changed 52 ids at
+      # once; only three of them were checked by anything.
+      - name: Story ids resolve to real stories
+        run: pnpm check:story-ids
+
+      - name: Story-id gate negative controls (it really fails)
+        run: pnpm check:story-id-controls
 
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium

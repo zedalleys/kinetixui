@@ -67,6 +67,7 @@
  * and has no flake to tolerate. An element with no animations yields no midpoint and is reported as
  * not moving, which is the honest answer rather than a skip.
  */
+import { storyId } from "./story-id.mjs";
 
 /** Motion materially communicates the change. These must prove a perceptible rendered midpoint. */
 export const MOTION_REQUIRED = "MOTION_REQUIRED";
@@ -163,7 +164,7 @@ export const MOTION_FAMILIES = {
 export const MOTION_STATES = [
   {
     slug: "accordion",
-    story: "data-display-accordion--playground",
+    story: storyId("accordion", "Playground"),
     interaction: "expand",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: "button[data-state=closed]" },
@@ -172,7 +173,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "accordion",
-    story: "data-display-accordion--playground",
+    story: storyId("accordion", "Playground"),
     interaction: "chevron rotation",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: "button[data-state=closed]" },
@@ -182,7 +183,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "collapsible",
-    story: "data-display-collapsible--playground",
+    story: storyId("collapsible", "Playground"),
     interaction: "expand",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: "button[data-state=closed]" },
@@ -191,7 +192,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "accordion",
-    story: "data-display-accordion--playground",
+    story: storyId("accordion", "Playground"),
     interaction: "collapse",
     classification: MOTION_REQUIRED,
     prelude: { action: "click", selector: "button[data-state=closed]" },
@@ -201,7 +202,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "switch",
-    story: "form-inputs-switch--playground",
+    story: storyId("switch", "Playground"),
     interaction: "thumb travel OFF → ON",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: "button[role=switch][data-state=unchecked]" },
@@ -216,7 +217,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "switch",
-    story: "form-inputs-switch--playground",
+    story: storyId("switch", "Playground"),
     interaction: "thumb travel ON → OFF",
     classification: MOTION_REQUIRED,
     // Turning off is a separate transition of the same property in the opposite direction. The
@@ -230,7 +231,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "tabs",
-    story: "navigation-tabs--playground",
+    story: storyId("tabs", "Playground"),
     interaction: "indicator travel → inline end",
     classification: MOTION_REQUIRED,
     // Radix activates a tab on mousedown or key, not on a bare `click()`, so the trigger is a key press.
@@ -242,7 +243,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "tabs",
-    story: "navigation-tabs--playground",
+    story: storyId("tabs", "Playground"),
     interaction: "indicator travel → inline start",
     classification: MOTION_REQUIRED,
     // Back again: the other edge leads, so this is a different pair of delays, not a replay.
@@ -253,7 +254,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "collapsible",
-    story: "data-display-collapsible--playground",
+    story: storyId("collapsible", "Playground"),
     interaction: "collapse",
     classification: MOTION_REQUIRED,
     prelude: { action: "click", selector: "button[data-state=closed]" },
@@ -266,7 +267,7 @@ export const MOTION_STATES = [
   // duration the other states rely on would hide a selection retimed to anything up to 200ms.
   {
     slug: "toggle",
-    story: "controls-actions-toggle--states",
+    story: storyId("toggle", "States"),
     interaction: "select OFF → ON",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: '[data-kx-case="pill-off"]' },
@@ -276,7 +277,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "toggle",
-    story: "controls-actions-toggle--states",
+    story: storyId("toggle", "States"),
     interaction: "deselect ON → OFF",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: '[data-kx-case="default-on"]' },
@@ -286,7 +287,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "toggle-group",
-    story: "controls-actions-togglegroup--states",
+    story: storyId("toggle-group", "States"),
     interaction: "single: choose B",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: '[data-kx-case="single"] > button:nth-child(2)' },
@@ -296,7 +297,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "toggle-group",
-    story: "controls-actions-togglegroup--states",
+    story: storyId("toggle-group", "States"),
     interaction: "single: A released",
     classification: MOTION_REQUIRED,
     // Choosing B releases A in the same click. A's colour leaves on the same tier B's arrives on, so the
@@ -308,7 +309,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "toggle-group",
-    story: "controls-actions-togglegroup--states",
+    story: storyId("toggle-group", "States"),
     interaction: "rtl: choose B",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: '[data-kx-case="rtl"] > button:nth-child(2)' },
@@ -320,7 +321,7 @@ export const MOTION_STATES = [
   // sampled too: the tick and the dot fade on `fast`, which is the one opacity transition in either control.
   {
     slug: "checkbox",
-    story: "form-inputs-checkbox--motion",
+    story: storyId("checkbox", "Motion"),
     interaction: "check OFF → ON: fill",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: '[data-kx-case="off"]' },
@@ -330,7 +331,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "checkbox",
-    story: "form-inputs-checkbox--motion",
+    story: storyId("checkbox", "Motion"),
     interaction: "check OFF → ON: tick fades in",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: '[data-kx-case="off"]' },
@@ -340,7 +341,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "checkbox",
-    story: "form-inputs-checkbox--motion",
+    story: storyId("checkbox", "Motion"),
     interaction: "uncheck ON → OFF: fill",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: '[data-kx-case="on"]' },
@@ -350,7 +351,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "checkbox",
-    story: "form-inputs-checkbox--motion",
+    story: storyId("checkbox", "Motion"),
     interaction: "rtl: check, fill",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: '[data-kx-case="rtl"]' },
@@ -360,7 +361,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "radio-group",
-    story: "form-inputs-radiogroup--motion",
+    story: storyId("radio-group", "Motion"),
     interaction: "choose Pro: border",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: '[data-kx-case="plan"] [role=radio][value=pro]' },
@@ -370,7 +371,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "radio-group",
-    story: "form-inputs-radiogroup--motion",
+    story: storyId("radio-group", "Motion"),
     interaction: "choose Pro: dot fades in",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: '[data-kx-case="plan"] [role=radio][value=pro]' },
@@ -380,7 +381,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "radio-group",
-    story: "form-inputs-radiogroup--motion",
+    story: storyId("radio-group", "Motion"),
     interaction: "Free released: dot fades out",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: '[data-kx-case="plan"] [role=radio][value=pro]' },
@@ -390,7 +391,7 @@ export const MOTION_STATES = [
   },
   {
     slug: "radio-group",
-    story: "form-inputs-radiogroup--motion",
+    story: storyId("radio-group", "Motion"),
     interaction: "rtl: choose, border",
     classification: MOTION_REQUIRED,
     trigger: { action: "click", selector: '[data-kx-case="rtl"] [role=radio][value=pro]' },

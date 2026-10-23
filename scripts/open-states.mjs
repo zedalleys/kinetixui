@@ -33,6 +33,7 @@
  * There is no `waitForTimeout` anywhere in the sequence. An overlay that never opens stops at (2) with the
  * selector that was being waited for, and is reported as a failure against that component and state.
  */
+import { storyId } from "./story-id.mjs";
 
 /**
  * The overlay family, by canonical manifest slug. Every one of these must have at least one open state
@@ -79,21 +80,21 @@ export const OVERLAY_FAMILY = [
  * `role="tooltip"`; the three menus carry `role="menu"`; AlertDialog is `role="alertdialog"`.
  */
 export const OPEN_STATES = [
-  { component: "dialog", modal: true, story: "overlays-dialog--default", state: "open dialog", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
-  { component: "alert-dialog", modal: true, story: "overlays-alertdialog--default", state: "open alert dialog", open: { click: "#storybook-root button" }, surface: '[role="alertdialog"]' },
-  { component: "sheet", modal: true, story: "overlays-sheet--default", state: "open sheet", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
-  { component: "drawer", modal: true, story: "overlays-drawer--default", state: "open drawer", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
-  { component: "modal", modal: true, story: "overlays-modal--default", state: "open modal", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
-  { component: "popover", modal: false, story: "overlays-popover--default", state: "open popover", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
-  { component: "tooltip", modal: false, story: "overlays-tooltip--default", state: "visible tooltip", open: { focus: "#storybook-root button" }, surface: '[role="tooltip"]' },
-  { component: "dropdown-menu", modal: false, stampsDir: true, story: "overlays-dropdownmenu--default", state: "open menu", open: { click: "#storybook-root button" }, surface: '[role="menu"]' },
-  { component: "context-menu", modal: false, stampsDir: true, story: "overlays-contextmenu--default", state: "open context menu", open: { rightClick: "#storybook-root [data-state]" }, surface: '[role="menu"]' },
-  { component: "menubar", modal: false, stampsDir: true, story: "navigation-menubar--default", state: "open menubar menu", open: { click: '#storybook-root [role="menuitem"]' }, surface: '[role="menu"]' },
+  { component: "dialog", modal: true, story: storyId("dialog", "Default"), state: "open dialog", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "alert-dialog", modal: true, story: storyId("alert-dialog", "Default"), state: "open alert dialog", open: { click: "#storybook-root button" }, surface: '[role="alertdialog"]' },
+  { component: "sheet", modal: true, story: storyId("sheet", "Default"), state: "open sheet", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "drawer", modal: true, story: storyId("drawer", "Default"), state: "open drawer", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "modal", modal: true, story: storyId("modal", "Default"), state: "open modal", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "popover", modal: false, story: storyId("popover", "Default"), state: "open popover", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "tooltip", modal: false, story: storyId("tooltip", "Default"), state: "visible tooltip", open: { focus: "#storybook-root button" }, surface: '[role="tooltip"]' },
+  { component: "dropdown-menu", modal: false, stampsDir: true, story: storyId("dropdown-menu", "Default"), state: "open menu", open: { click: "#storybook-root button" }, surface: '[role="menu"]' },
+  { component: "context-menu", modal: false, stampsDir: true, story: storyId("context-menu", "Default"), state: "open context menu", open: { rightClick: "#storybook-root [data-state]" }, surface: '[role="menu"]' },
+  { component: "menubar", modal: false, stampsDir: true, story: storyId("menubar", "Default"), state: "open menubar menu", open: { click: '#storybook-root [role="menuitem"]' }, surface: '[role="menu"]' },
   // The Phase 2 booking fields open a Popover, so what a reader operates — the steppers, the country list,
   // the calendar — only exists while it is open (business capability roadmap, Phase 2).
-  { component: "guest-picker", modal: false, story: "form-inputs-guestpicker--default", state: "open guest panel", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
-  { component: "country-select", modal: false, story: "form-inputs-countryselect--default", state: "open country list", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
-  { component: "date-range-input", modal: false, story: "form-inputs-daterangeinput--default", state: "open range calendar", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "guest-picker", modal: false, story: storyId("guest-picker", "Default"), state: "open guest panel", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "country-select", modal: false, story: storyId("country-select", "Default"), state: "open country list", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
+  { component: "date-range-input", modal: false, story: storyId("date-range-input", "Default"), state: "open range calendar", open: { click: "#storybook-root button" }, surface: '[role="dialog"]' },
 ];
 
 /** The one action key each entry carries, so a malformed entry is a failure rather than a silent no-op. */

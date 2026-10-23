@@ -34,6 +34,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { serveStatic } from "./visual-harness.mjs";
+import { storyId } from "./story-id.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -43,7 +44,7 @@ if (!existsSync(join(staticDir, "index.json"))) {
 }
 assertUiDistMatchesSource("tabs-indicator");
 const index = JSON.parse(readFileSync(join(staticDir, "index.json"), "utf8"));
-for (const id of ["navigation-tabs--indicator", "navigation-tabs--default"]) {
+for (const id of [storyId("tabs", "Indicator"), storyId("tabs", "Default")]) {
   if (!index.entries[id]) {
     console.error(`tabs-indicator: story ${id} is missing from the built Storybook.`);
     process.exit(2);

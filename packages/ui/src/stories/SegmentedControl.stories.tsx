@@ -13,7 +13,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Controls & Actions/SegmentedControl",
+  title: "Actions & Controls/SegmentedControl",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<SegmentedControl defaultValue=\"grid\">\\n  <SegmentedControlItem value=\"list\">List</SegmentedControlItem>\\n  <SegmentedControlItem value=\"grid\">Grid</SegmentedControlItem>\\n  <SegmentedControlItem value=\"board\">Board</SegmentedControlItem>\\n</SegmentedControl>", language: "tsx" } },

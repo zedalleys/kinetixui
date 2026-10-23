@@ -21,7 +21,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Data Display/Card",
+  title: "Layout & Structure/Card",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<Card>\\n  <CardHeader>\\n    <CardTitle>Create project</CardTitle>\\n    <CardDescription>Deploy your new project in one click.</CardDescription>\\n  </CardHeader>\\n  <CardContent>…</CardContent>\\n  <CardFooter>…</CardFooter>\\n</Card>", language: "tsx" } },

@@ -84,13 +84,17 @@ const PAGES = [
   "/docs/components/accordion",
   "/docs/components/code-block",
   "/docs/components/diff-viewer",
-  // One page per remaining gallery category (Form Inputs, Navigation, Overlays, Feedback), so every category has
-  // at least one page under the gate. Button (Controls & Actions), Data Grid and the three above (Foundations,
-  // Data Display) cover the rest. A full 98-page sweep at this matrix is ~1,570 views; this is the bounded step.
+  // One page per remaining gallery category, so every one of the eight has at least one page under the gate:
+  // Forms & Inputs, Navigation, Overlays, Feedback & Status and Media & Content here; Actions & Controls is
+  // Button above, Data Display is Data Grid, Code Block and Diff Viewer, and Layout & Structure is Accordion.
+  // CAT-2 renamed three of those labels and added Media & Content, which is why Image joined the list — the
+  // claim this comment makes is only true while every declared category appears. A full 109-page sweep at this
+  // matrix is ~1,570 views; this is the bounded step.
   "/docs/components/input",
   "/docs/components/tabs",
   "/docs/components/dialog",
   "/docs/components/alert",
+  "/docs/components/image",
   // The guides cluster (SEO Phase 3): long-form reading pages with their own layout, a status line, a wrapping CTA
   // button and a related-reading footer. Swept in whichever publication state the registry is in, so the pages
   // are already under the gate on the day they go live (marketing/seo/GUIDE-PUBLISH-RUNBOOK.md).

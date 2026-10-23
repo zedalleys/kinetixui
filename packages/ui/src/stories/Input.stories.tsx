@@ -6,7 +6,7 @@ import { Label } from "../components/label";
 const STATES = ["Default", "Focus", "Error", "Disabled"] as const;
 
 const meta = {
-  title: "Form Inputs/Input",
+  title: "Forms & Inputs/Input",
   component: Input,
   parameters: {
     layout: "centered",

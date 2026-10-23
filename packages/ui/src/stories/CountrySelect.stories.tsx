@@ -21,7 +21,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Form Inputs/CountrySelect",
+  title: "Forms & Inputs/CountrySelect",
   parameters: {
     layout: "padded",
     docs: { source: { code: "// Names in the reader's language — e.g. from Intl.DisplayNames — supplied by the product.\nconst countries = [{ code: \"SA\", name: \"Saudi Arabia\" }, { code: \"AE\", name: \"United Arab Emirates\", keywords: [\"UAE\"] }];\n\n<CountrySelect label=\"Country\" countries={countries} value={country} onValueChange={setCountry} showCode />", language: "tsx" } },

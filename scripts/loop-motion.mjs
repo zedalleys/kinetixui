@@ -32,6 +32,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
+import { storyId } from "./story-id.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -57,8 +58,8 @@ const known = new Set(Object.values(JSON.parse(readFileSync(join(staticDir, "ind
 
 /** The loops under contract. `find` runs in the page and returns the element that moves. */
 const LOOPS = [
-  { name: "spinner", story: "foundations-spinner--default", find: `document.querySelector('#storybook-root [role="status"]')`, kind: "ring" },
-  { name: "skeleton", story: "foundations-skeleton--default", find: `document.querySelector('#storybook-root [class*="bg-muted"]')`, kind: "block" },
+  { name: "spinner", story: storyId("spinner", "Default"), find: `document.querySelector('#storybook-root [role="status"]')`, kind: "ring" },
+  { name: "skeleton", story: storyId("skeleton", "Default"), find: `document.querySelector('#storybook-root [class*="bg-muted"]')`, kind: "block" },
 ];
 
 function sample(page, loop) {

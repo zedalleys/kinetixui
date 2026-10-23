@@ -13,7 +13,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Foundations/Image",
+  title: "Media & Content/Image",
   component: Image,
   args: { ratio: "4:3", rounded: true },
   argTypes: {

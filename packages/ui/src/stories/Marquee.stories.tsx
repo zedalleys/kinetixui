@@ -16,7 +16,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Data Display/Marquee",
+  title: "Media & Content/Marquee",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<Marquee durationSeconds={18}>\\n  {items.map((item) => (\\n    <span key={item}>{item}</span>\\n  ))}\\n</Marquee>", language: "tsx" } },

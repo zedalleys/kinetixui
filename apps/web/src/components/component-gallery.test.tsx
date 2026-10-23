@@ -13,6 +13,7 @@ vi.mock("next/navigation", () => ({
 import { ComponentGallery } from "./component-gallery";
 import { THUMBNAIL_MOCKS } from "./component-thumbnails";
 import { catalogueFacets } from "@/lib/business-discovery";
+import { CATEGORY_COUNT, CATEGORY_ORDER, PRIMITIVE } from "@/lib/component-registry";
 
 const FACETS = catalogueFacets();
 
@@ -175,6 +176,91 @@ describe("ComponentGallery thumbnails", () => {
       expect(card.querySelector("[data-gallery-thumbnail]")?.getAttribute("data-gallery-thumbnail"), slug).toBe("mock");
     }
   });
+
+  /**
+   * CAT-BUG-012. The pill under a card's title is one slot that used to carry two dimensions: the
+   * implementation technology when there was one, the functional category otherwise. A reader cannot tell
+   * `RADIX DIALOG` from a category, and the category filter has no such value. Reverting the fix puts a
+   * technology back in this slot and fails here.
+   */
+  it("shows a functional category — never a technology — in every card's category pill", () => {
+    const { container } = render(<ComponentGallery facets={FACETS} />);
+    const categories = new Set<string>(CATEGORY_ORDER);
+    const pills = [...container.querySelectorAll<HTMLElement>("[data-gallery-card]")].map((card) => [
+      card.getAttribute("data-gallery-card")!,
+      card.querySelector<HTMLElement>("[data-gallery-category]")?.textContent?.trim(),
+    ] as const);
+    expect(pills.length).toBeGreaterThan(0);
+    for (const [slug, pill] of pills) {
+      expect(pill, `${slug}: category pill`).toBeTruthy();
+      expect(categories, `${slug}: "${pill}" is not one of the catalogue's categories`).toContain(pill);
+    }
+    // negative control: the technologies this slot used to print are real, so the assertion above is not
+    // vacuous — it is only satisfied because the pill stopped preferring them.
+    const technologies = new Set(Object.values(PRIMITIVE));
+    expect(technologies.size).toBeGreaterThan(0);
+    for (const t of technologies) expect(categories).not.toContain(t);
+  });
+
+  /**
+   * CAT-2. The chips and the grouped headings are the taxonomy as a reader meets it. Both read the generated
+   * category order now, so the one thing worth asserting is that the number on a chip is the number of cards
+   * the chip's filter produces — a count computed from a different map than the filter is how a reader ends
+   * up on an empty category.
+   */
+  it("gives every category a filter chip whose count matches the cards behind it", () => {
+    const { container } = render(<ComponentGallery facets={FACETS} />);
+    const chips = within(screen.getByRole("group", { name: "Filter by category" })).getAllByRole("button");
+    const labelled = chips.map((c) => c.textContent?.trim() ?? "");
+    for (const cat of CATEGORY_ORDER) {
+      const chip = labelled.find((t) => t.startsWith(cat));
+      expect(chip, `${cat}: no filter chip`).toBeTruthy();
+      const cards = [...container.querySelectorAll<HTMLElement>("[data-gallery-card]")].filter(
+        (card) => card.querySelector<HTMLElement>("[data-gallery-category]")?.textContent?.trim() === cat,
+      );
+      expect(cards.length, `${cat}: cards in the grid`).toBeGreaterThan(0);
+      // the chip's number, the cards on the page, and the generator's own count: all three or it is wrong
+      expect(chip).toBe(`${cat} ${cards.length}`);
+      expect(CATEGORY_COUNT[cat], `${cat}: generated count`).toBe(cards.length);
+    }
+    // negative control: the chips are exactly the declared categories, so a retired label cannot linger
+    const categoryChips = labelled.filter((t) => CATEGORY_ORDER.some((c) => t.startsWith(c)));
+    expect(categoryChips.length).toBe(CATEGORY_ORDER.length);
+    expect(labelled.some((t) => t.startsWith("Foundations"))).toBe(false);
+  });
+
+  /**
+   * CAT-2 renamed three categories. A link to an old name is a link someone has already sent, so the gallery
+   * resolves it rather than showing an empty grid. This covers the wiring; the resolver's own cases are in
+   * `component-taxonomy.test.ts`.
+   */
+  it("still filters from a link that names a category by its old label", () => {
+    nav.search = "cat=Form+Inputs";
+    const { container } = render(<ComponentGallery facets={FACETS} />);
+    const pills = new Set(
+      [...container.querySelectorAll<HTMLElement>("[data-gallery-card]")].map(
+        (c) => c.querySelector<HTMLElement>("[data-gallery-category]")?.textContent?.trim(),
+      ),
+    );
+    expect(pills).toEqual(new Set(["Forms & Inputs"]));
+    expect(container.querySelectorAll("[data-gallery-card]").length).toBe(CATEGORY_COUNT["Forms & Inputs"]);
+    // negative control: an unaliased value is not quietly mapped onto a category, so the assertion above is
+    // about the alias and not about the filter ignoring its input
+    nav.search = "cat=Nonsense";
+    const { container: none } = render(<ComponentGallery facets={FACETS} />);
+    expect(none.querySelectorAll("[data-gallery-card]").length).toBe(0);
+  });
+
+  /** The technology did not disappear with the pill: it is still how a reader can search for a component. */
+  it("still finds a component by the technology behind it", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<ComponentGallery facets={FACETS} />);
+    await user.type(screen.getByRole("searchbox"), "recharts");
+    const shown = [...container.querySelectorAll("[data-gallery-card]")].map((el) =>
+      el.getAttribute("data-gallery-card"),
+    );
+    expect(shown).toContain("chart");
+  });
 });
 
 describe("static thumbnail mocks", () => {
@@ -187,6 +273,60 @@ describe("static thumbnail mocks", () => {
     expect(container.querySelectorAll("h1, h2, h3, h4, h5, h6, [role='heading']")).toHaveLength(0);
     // a mock is a picture: it carries no roles or names of its own for assistive technology to announce
     expect(container.querySelectorAll("[role], [aria-label]")).toHaveLength(0);
+  });
+
+  /**
+   * CAT-BUG-006 and CAT-BUG-007. These components exist to display content, and their mocks were drawn as
+   * grey bars, so the cards read as loading placeholders. Each one now has to render real words — enough of
+   * them that a skeleton cannot pass.
+   */
+  const CONTENT_BEARING: [string, string[]][] = [
+    ["footer", ["KinetixUI", "Product", "Components", "Privacy"]],
+    ["table", ["Name", "Ava Chen", "Active", "Admin"]],
+    ["data-table", ["Name", "Ava Chen", "$1,240", "selected of"]],
+  ];
+  it.each(CONTENT_BEARING)("%s renders readable content, not a skeleton", (slug, expected) => {
+    const Mock = THUMBNAIL_MOCKS[slug];
+    const { container } = render(<Mock />);
+    const text = container.textContent ?? "";
+    for (const word of expected) expect(text, `${slug}: "${word}"`).toContain(word);
+    // text nodes, not one long label: a bar-and-block skeleton has no text nodes at all
+    const texts = [...container.querySelectorAll("*")]
+      .flatMap((el) => [...el.childNodes])
+      .filter((n) => n.nodeType === 3 && (n.textContent ?? "").trim().length > 1);
+    expect(texts.length, `${slug}: text nodes`).toBeGreaterThanOrEqual(4);
+  });
+
+  /**
+   * CAT-BUG-007 and CAT-BUG-008. Components that share a family used to share a mock, parameterised by
+   * wording: `dialog`, `modal` and `alert-dialog` were one picture, as were `popover`/`hover-card`,
+   * `dropdown-menu`/`context-menu`/`menubar` and `table`/`data-table`. Structure, not copy, is what tells
+   * them apart, so this compares the markup with every word removed: two mocks that differ only in their
+   * text collapse to the same string here and fail.
+   */
+  const skeletonOf = (html: string) =>
+    html
+      .replace(/>[^<]*</g, "><") // drop every text node
+      .replace(/\s+/g, " ")
+      .trim();
+  const FAMILIES: [string, string[]][] = [
+    ["dialog family", ["dialog", "modal", "alert-dialog"]],
+    ["floating cards", ["popover", "hover-card"]],
+    ["menus", ["dropdown-menu", "context-menu", "menubar"]],
+    ["tables", ["table", "data-table"]],
+    ["side surfaces", ["sheet", "drawer"]],
+  ];
+  it.each(FAMILIES)("%s are told apart by structure, not by wording", (_family, slugs) => {
+    const skeletons = slugs.map((slug) => {
+      const Mock = THUMBNAIL_MOCKS[slug];
+      const { container } = render(<Mock />);
+      return [slug, skeletonOf(container.innerHTML)] as const;
+    });
+    for (const [slug, skeleton] of skeletons) expect(skeleton.length, `${slug}: markup`).toBeGreaterThan(0);
+    expect(new Set(skeletons.map(([, s]) => s)).size, slugs.join(" vs ")).toBe(slugs.length);
+    // negative control: the comparison does detect sameness — one mock against itself is one skeleton
+    const [first] = skeletons;
+    expect(new Set([first[1], first[1]]).size).toBe(1);
   });
 });
 
