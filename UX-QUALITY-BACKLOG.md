@@ -53,8 +53,13 @@ browser zoom, and no committed baseline — every number is one run.
 | CAT-BUG-018 | Thumbnail text is below legible size | /components card | Medium | REPRODUCED | CAT-3 |
 | CAT-BUG-019 | Two hand-maintained category maps have drifted | canonical data | High | VERIFIED | CAT-2 |
 | CAT-BUG-020 | Block showcases waste most of their width | /blocks | Low | REPRODUCED | CAT-5 |
+| CAT-BUG-021 | A retired category in a shared link reads as an empty category | /components?cat= | High | REPRODUCED | CAT-3 |
+| CAT-BUG-022 | Category labels are search terms, so 26 entries changed what they match | /components search | Medium | REPRODUCED | CAT-3 |
+| CAT-BUG-023 | `composed` and `utility` are recorded but never rendered | taxonomy, /components card | Low | REPRODUCED | CAT-3 |
 
-017–020 were found while investigating the owner's reports and share their root causes.
+017–020 were found while investigating the owner's reports and share their root causes. 021–023 are the
+discovery gaps CAT-2 leaves behind, carried here at the owner's instruction on 2026-10-22 rather than left in
+a pull request description: a green build is not evidence that these journeys work.
 
 ---
 
@@ -448,8 +453,9 @@ browser zoom, and no committed baseline — every number is one run.
   generator reports a problem, and the two remaining `?? "Data Display"` lookups (`related-components.ts`,
   `registry-treemap.tsx`) now call `categoryOf`. The eight-category taxonomy was validated entry by entry
   against each component's own source, not migrated — see
-  [`docs/audits/CAT-2-TAXONOMY-VALIDATION.md`](docs/audits/CAT-2-TAXONOMY-VALIDATION.md); 25 of 109 entries
-  changed category and 13 rows are recorded as contested with the alternative that lost.
+  [`docs/audits/CAT-2-TAXONOMY-VALIDATION.md`](docs/audits/CAT-2-TAXONOMY-VALIDATION.md); 26 of 109 entries
+  change category and 13 rows were recorded as contested with the alternative that lost. The owner settled all
+  thirteen on 2026-10-22: twelve stand as proposed, and `tag` moved to Data Display.
 - **Regression:** `check:manifest` now validates the manifest's shape (unknown and missing keys, duplicate
   slugs that `JSON.parse` silently drops), the category enum, `kind`, `facets`, and that all three generated
   files are a fixed point of the manifest. `check:stories` additionally fails a hand-written story whose title
@@ -458,10 +464,11 @@ browser zoom, and no committed baseline — every number is one run.
   `component-gallery.test.tsx` → "gives every category a filter chip whose count matches the cards behind it".
 - **Negative controls:** `scripts/check-manifest-negative-controls.mjs` (`pnpm check:manifest-controls`, wired
   into CI) corrupts the real manifest one rule at a time and asserts the real `check:manifest` fails with the
-  right message. **13 of 13 controls fail the gate** (confirmed 2026-10-19): missing category, category outside
+  right message. **15 of 15 controls fail the gate** (re-confirmed 2026-10-22): missing category, category outside
   the enum, missing `categoryDefinitions`, a category with no rule, a misspelled key (`catagory`), missing
   `kind`, `kind` outside the enum, an unknown facet, a repeated facet, `kind` disagreeing with the published
-  prose, generated data left stale, a duplicated slug, and a manifest/`verification.json` contradiction. The
+  prose, generated data left stale, a former label that is also a current category, two categories claiming one
+  former label, a duplicated slug, and a manifest/`verification.json` contradiction. The
   harness also asserts the gate passes on the unmodified tree first, so a control that "fails" vacuously is
   caught. Reverting the Button story title separately fails `check:stories` with the drift message.
 - **Verification (rendered, 2026-10-19):** production build, Chromium 1194, `/components` and
@@ -495,3 +502,89 @@ browser zoom, and no committed baseline — every number is one run.
 - **Regression requirement:** a gate on the share of the stage a block covers, with recorded exceptions.
 - **Verification requirement:** rendered measurement at 1280 and 390.
 - **Status:** REPRODUCED · **Slice:** CAT-5
+
+## CAT-BUG-021 — A retired category in a shared link reads as an empty category
+
+- **Surface:** `/components?cat=<label>`. `resolveCategoryParam` in `component-gallery.tsx`, against
+  `categoryDefinitions.formerly` in `components.manifest.json`.
+- **Evidence (rendered, 2026-10-22, production build, Chromium 1194, 1280px):** the three **renamed** labels
+  all resolve and filter correctly — `?cat=Feedback` → 13 cards with the `Feedback & Status 13` chip pressed,
+  `?cat=Form%20Inputs` → 29, `?cat=Controls%20%26%20Actions` → 7. The one **retired** label does not:
+  `?cat=Foundations` → **0 cards**, no chip pressed, and the page reads "No components match in Foundations."
+  with a CLEAR FILTERS action. `?cat=Nonsense` renders **identically** — same count, same sentence shape, same
+  action.
+- **Root cause:** `formerly` maps an old label to a current one, and `Foundations` has no single successor —
+  its nine entries went to five different categories. There is no third state for "this category existed and
+  was retired", so the resolver treats a retired label and a typo the same way, and so must the reader.
+- **User impact:** this is the only gap in CAT-2 that reaches a reader who did nothing wrong. Someone who
+  shared `/components?cat=Foundations` — in a message, a ticket, a bookmark — now sends people to a page that
+  says the category is empty. It isn't empty; it no longer exists, and the nine components are all still there
+  under other names. The empty state is honest about the filter and silent about the taxonomy, so the reader's
+  reasonable conclusion ("those components are gone") is wrong. The recovery action clears the filter rather
+  than taking them anywhere, so the trail ends.
+- **Proposed fix:** a `retired` block in `categoryDefinitions`, naming each retired label and the categories
+  its members went to. `resolveCategoryParam` then returns one of three answers rather than two — current,
+  renamed, or retired — and the retired case renders a sentence that says so and offers the successor
+  categories as chips the reader can press. A typo keeps today's message, which is the right message for a
+  typo. This is data, not a redirect: no URL changes, nothing is served from a second place, and the retired
+  list is as gateable as the rest of the manifest.
+- **Rejected alternative:** an HTTP redirect from the retired value to one successor. It would have to pick one
+  of five destinations and would quietly show the reader a category they did not ask for, which is a worse
+  failure than an honest dead end.
+- **Regression requirement:** a gate asserting every label in `formerly` resolves and every label in `retired`
+  names only current categories, plus a gallery test that a retired value renders the retired message and an
+  unknown value does not.
+- **Verification requirement:** rendered measurement of a retired, a renamed and an unknown value, in both
+  themes. Both messages must be reachable; today they are the same message.
+- **Status:** REPRODUCED · **Slice:** CAT-3
+
+## CAT-BUG-022 — Category labels are search terms, so 26 entries changed what they match
+
+- **Surface:** the search box on `/components`. The predicate in `component-gallery.tsx` matches the query
+  against title, slug, primitive, **category**, and the business-discovery terms.
+- **Evidence (rendered, 2026-10-22, 1280px):** `category` is one of five haystacks, so every one of the 26
+  entries that changed category changed what it matches. Measured: `media` → **6** cards and `data display` →
+  **22**, both new matches that returned nothing under the old taxonomy; `form inputs` → **0**, a retired label
+  that used to return 29. `image` no longer matches its old category label, as expected — it has no
+  business-discovery terms and its category is now Media & Content.
+- **A second finding, and the more surprising one:** `foundations` returns **10** cards, not 0. Those are not
+  taxonomy matches at all. The business-discovery terms include each entry's roadmap row, and two rows in
+  `docs/BUSINESS-CAPABILITY-ROADMAP.md` are named "Transactional foundations" and "Foundations shipped", so the
+  Phase 1 and Phase 2 components match the word for an unrelated reason. The result is the worst of both: a
+  reader searching `foundations` gets ten components that have nothing to do with the retired category, which
+  reads as though the category half-exists. This is pre-existing behaviour, not something CAT-2 introduced, but
+  CAT-2 is what makes it misleading.
+- **Root cause:** search terms are assembled from display labels rather than declared, so renaming a label is
+  also a silent search change, and a roadmap row's prose leaks into the same namespace as category names.
+- **User impact:** a reader who searched by category label before finds nothing now, with no indication that
+  the label was renamed rather than the components removed. Nothing tells them, and nothing tells us either:
+  no gate covers which words reach which component.
+- **Proposed fix:** declare the per-entry search terms in the manifest, derived from category, kind, facets and
+  the business axes, and keep roadmap prose out of them. Then a label change is a visible diff in generated
+  data rather than an invisible behaviour change.
+- **Regression requirement:** a gate on the generated search terms, so a rename shows up as a diff; and a test
+  that a retired label returns the retired message rather than a silent zero (see CAT-BUG-021).
+- **Verification requirement:** rendered counts for each current label, each retired label and each `formerly`
+  label.
+- **Status:** REPRODUCED · **Slice:** CAT-3
+
+## CAT-BUG-023 — `composed` and `utility` are recorded but never rendered
+
+- **Surface:** `facets` in `components.manifest.json`, generated into `component-taxonomy.json`.
+- **Evidence:** both facets are carried on every entry that earns them, gated by `check:manifest` (an unknown
+  facet and a repeated facet are each a negative control), and read by nothing. No card, filter chip, detail
+  page or search term mentions either value.
+- **Root cause:** CAT-2's scope was the canonical source. Surfacing a new axis is a product decision about what
+  a reader should be able to filter by, and inventing a UI for it inside a data slice would have made that
+  decision silently.
+- **User impact:** none today, which is the point — the data earns nothing until something shows it. The risk
+  is the other direction: a recorded axis nobody renders drifts out of meaning, because only a reader noticing
+  a wrong answer would catch it, and no reader can see it.
+- **Proposed fix:** decide first whether `composed` belongs in the catalogue's reading (it distinguishes a
+  component a reader can drop in from one assembled out of others, which is the question behind several of the
+  owner's reports) and only then design where it shows. If the answer is no, delete the facets rather than
+  keeping unread data under a gate.
+- **Regression requirement:** whichever way it goes, a gate that the rendered set and the declared set agree,
+  so "recorded but unread" cannot come back.
+- **Verification requirement:** rendered measurement once a surface exists.
+- **Status:** REPRODUCED · **Slice:** CAT-3
