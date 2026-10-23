@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -35,7 +36,7 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import com.kinetixui.ui.KinetixButton
 import com.kinetixui.ui.KinetixButtonSize
 import com.kinetixui.ui.KinetixButtonVariant
@@ -275,7 +276,11 @@ class BoardingPassBlockTest {
         rule.setContent {
             KinetixTheme(darkTheme = false) { BoardingPassBlock(onCopyCode = { handedOver = it }) }
         }
-        rule.onNodeWithContentDescription("Copy confirmation code").performClick()
+        // Invoke the node's own click action rather than a touch: Robolectric lays the card out in a fixed
+        // window, so the stub is below the fold and a tap at its coordinates lands outside the root. This is
+        // the same action an accessibility service fires.
+        rule.onNodeWithContentDescription("Copy confirmation code")
+            .performSemanticsAction(SemanticsActions.OnClick)
         // The code the button hands over is the code printed on the pass, and the block says it happened.
         assertEquals(CONFIRMATION_CODE, handedOver)
         rule.onNodeWithText("Copied").assertExists()

@@ -11968,13 +11968,13 @@
           ],
           "interaction": [
             {
-              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt:271-283",
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt:272-288",
               "environment": "robolectric"
             }
           ],
           "accessibility": [
             {
-              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt:256-270",
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt:257-271",
               "environment": "robolectric"
             }
           ],
