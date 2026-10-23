@@ -58,7 +58,7 @@ describe("TabsList motion presets", () => {
   it("offers exactly the presets it implements", () => {
     // The playground and the docs read this list; a preset here that the component cannot perform would
     // advertise an effect that does nothing.
-    expect([...TABS_MOTION]).toEqual(["classic", "none"]);
+    expect([...TABS_MOTION]).toEqual(["classic", "fluid", "none"]);
   });
 
   it("does not leak the preset onto the element as an unknown attribute", () => {
@@ -94,6 +94,48 @@ describe("TabsList motion presets", () => {
       );
     },
   );
+
+  // jsdom computes no layout, so every offset is 0 and the bar never visibly moves. What it does run is the
+  // layout effect, which means the two custom properties the preset decides — how long the trailing edge
+  // waits, and which curve both edges take — are readable here even though the travel is not.
+  const bar = () =>
+    list().querySelector("[data-kx-tabs-bar]") as HTMLElement | null;
+
+  it.each([
+    ["classic", "var(--easing-emphasized)"],
+    ["fluid", "var(--easing-standard)"],
+  ] as const)("%s travels on %s", (preset, ease) => {
+    render(<Strip motion={preset} />);
+    expect(bar()!.style.getPropertyValue("--kx-tabs-ease")).toBe(ease);
+  });
+
+  it.each([
+    ["classic", "var(--duration-instant)"],
+    ["fluid", "var(--duration-base)"],
+  ] as const)(
+    "%s holds its trailing edge back by %s once a tab changes",
+    async (preset, trail) => {
+      const user = userEvent.setup();
+      render(<Strip motion={preset} />);
+      await user.click(screen.getByRole("tab", { name: "Rent" }));
+      // Which edge leads depends on the direction of travel, and with no layout both offsets are 0, so the
+      // assertion is on the pair: one edge waits the preset's hold and the other leaves at once.
+      const delays = [
+        bar()!.style.getPropertyValue("--kx-tabs-start-delay"),
+        bar()!.style.getPropertyValue("--kx-tabs-end-delay"),
+      ];
+      expect(delays.filter((d) => d === trail)).toHaveLength(1);
+      expect(delays.filter((d) => d === "0ms")).toHaveLength(1);
+    },
+  );
+
+  it("never holds an edge back under none: there is no phase to wait for", async () => {
+    const user = userEvent.setup();
+    render(<Strip motion="none" />);
+    await user.click(screen.getByRole("tab", { name: "Rent" }));
+    expect(bar()!.style.getPropertyValue("--kx-tabs-start-delay")).toBe("0ms");
+    expect(bar()!.style.getPropertyValue("--kx-tabs-end-delay")).toBe("0ms");
+  });
 
   it("keeps the preset a presentation choice: the tab panel is the same either way", async () => {
     const user = userEvent.setup();

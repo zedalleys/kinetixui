@@ -178,6 +178,75 @@ const press = async (page, key) => {
 const act = (key) =>
   `document.querySelector('[data-kx-action="${key}"]').click();`;
 
+/**
+ * Interrupt a travel and report whether it continued from where it was.
+ *
+ * The travel is advanced through the Web Animations API rather than by waiting frames. Frame pacing in a
+ * headless browser is neither 16.7ms nor stable: counting eight frames put `classic` at its destination and
+ * `fluid` a third of the way in the same run, and the first frame after a click can swallow a whole 300ms
+ * tier, which makes a "midway" that has already arrived — and any comparison against it passes whatever the
+ * component does. Setting `currentTime` on the running transitions puts the bar at a known fraction of the
+ * effect instead, so the interruption happens at the same point every run.
+ *
+ * `found` is false when no transition was running to interrupt, which fails the case rather than weakening it.
+ */
+const retargetProbe = (page, firstKey, secondKey, fraction = 0.4) =>
+  page.evaluate(
+    async ([first, second, at]) => {
+      const bar = document.querySelector("[role=tablist] [data-kx-tabs-bar]");
+      const lead = () => bar.getBoundingClientRect().right;
+      const frame = () => new Promise((r) => requestAnimationFrame(r));
+      const start = lead();
+      document.querySelector(`[data-kx-action="${first}"]`).click();
+      await frame();
+      const running = bar
+        .getAnimations()
+        .filter((a) => a.playState === "running");
+      if (!running.length) return { found: false, start, midway: lead() };
+      for (const a of running) {
+        const t = a.effect.getTiming();
+        a.currentTime = (t.delay ?? 0) + Number(t.duration) * at;
+      }
+      await frame();
+      const midway = lead();
+      document.querySelector(`[data-kx-action="${second}"]`).click();
+      await frame();
+      // Where the SECOND travel begins, rather than where the bar happens to be some frames later:
+      // rewinding the new transitions to their own time zero renders their starting value. A travel that
+      // retargets begins from where the bar had got to; one that restarts begins from the resting position.
+      // Reading that start value takes frame pacing out of the assertion entirely — two frames after a
+      // click can span a whole tier here, which finishes the travel and tells you nothing.
+      for (const a of bar.getAnimations()) {
+        if (a.playState === "running") a.currentTime = 0;
+      }
+      await frame();
+      return { found: true, start, midway, after: lead() };
+    },
+    [firstKey, secondKey, fraction],
+  );
+
+/**
+ * Put the lab on `preset`. Its button cycles the presets the component publishes, so this presses until the
+ * list reports the one asked for rather than assuming it is one press away — and awaits a frame between
+ * presses, because React applies the state change after the click, not during it. Pressing in a tight
+ * synchronous loop queues every update into one render and lands wherever the cycle happens to end.
+ */
+const choosePreset = async (page, preset) => {
+  const got = await page.evaluate(async (want) => {
+    const list = document.querySelector("[role=tablist]");
+    const button = document.querySelector('[data-kx-action="motion"]');
+    const frame = () => new Promise((r) => requestAnimationFrame(r));
+    for (let i = 0; i < 8 && list.dataset.kxTabsMotion !== want; i++) {
+      button.click();
+      await frame();
+      await frame();
+    }
+    return list.dataset.kxTabsMotion;
+  }, preset);
+  await settle(page);
+  return got;
+};
+
 /** The bar against the chosen tab, in viewport pixels, plus the semantics around it. */
 const measure = (page) =>
   page.evaluate(() => {
@@ -557,15 +626,7 @@ const expectAligned = (m, label) =>
   // is the distinction that matters — a 0.01ms transition would still be a transition, and the preset
   // is a claim about the code path, not about a number.
   const { page, ctx } = await open();
-  // The lab's button cycles the published presets, so press it until the list reports `none` rather than
-  // assuming it is one press away. A preset added later then lengthens this loop instead of breaking it.
-  const preset = await page.evaluate(() => {
-    const list = document.querySelector("[role=tablist]");
-    const button = document.querySelector('[data-kx-action="motion"]');
-    for (let i = 0; i < 12 && list.dataset.kxTabsMotion !== "none"; i++) button.click();
-    return list.dataset.kxTabsMotion;
-  });
-  await settle(page);
+  const preset = await choosePreset(page, "none");
   check(
     preset === "none",
     'motion="none": the list reports the preset',
@@ -582,38 +643,220 @@ const expectAligned = (m, label) =>
   // through a travel must continue from the bar's current rendered position: the frame after the second
   // choice has to be near where the bar already was, not back at the first tab.
   const { page, ctx } = await open();
-  const retarget = await page.evaluate(async () => {
-    const bar = document.querySelector("[role=tablist] [data-kx-tabs-bar]");
-    const left = () => bar.getBoundingClientRect().left;
-    const frame = () => new Promise((r) => requestAnimationFrame(r));
-    const first = left();
-    document.querySelector('[data-kx-action="select-last"]').click();
-    for (let i = 0; i < 8; i++) await frame(); // part-way into the travel, well before it settles
-    const midway = left();
-    document.querySelector('[data-kx-action="select-second"]').click();
-    await frame();
-    await frame();
-    const after = left();
-    return { first, midway, after };
-  });
-  const moved = Math.abs(retarget.midway - retarget.first) > 1;
-  const continued =
-    Math.abs(retarget.after - retarget.midway) <
-    Math.abs(retarget.after - retarget.first);
+  const retarget = await retargetProbe(page, "select-last", "select-second");
   check(
-    moved,
-    "classic: the bar is mid-travel when the second tab is chosen",
-    `${retarget.first.toFixed(1)} → ${retarget.midway.toFixed(1)}`,
+    retarget.found,
+    "classic: the bar is caught part-way through the travel",
+    `start ${retarget.start.toFixed(1)}, midway ${retarget.midway.toFixed(1)} (40% of the effect)`,
   );
   check(
-    continued,
+    retarget.found &&
+      Math.abs(retarget.after - retarget.midway) <
+        Math.abs(retarget.midway - retarget.start) * 0.5,
     "classic: retargets from the current position, not from the start",
-    `midway ${retarget.midway.toFixed(1)}, next frame ${retarget.after.toFixed(1)}, start ${retarget.first.toFixed(1)}`,
+    `midway ${retarget.midway.toFixed(1)}, second travel begins at ${retarget.after?.toFixed(1) ?? "n/a"}, resting ${retarget.start.toFixed(1)}`,
   );
   await settle(page);
   expectAligned(
     await measure(page),
     "classic: settles on the second chosen tab after interruption",
+  );
+  await ctx.close();
+}
+{
+  // `fluid`: the two edges run in sequence instead of together. Everything here is measured in a rendered
+  // browser rather than asserted from the class list, because the claim is about what the bar does over
+  // time: a phase boundary, a stretch, a total duration, and two labels that change on those same phases.
+  const { page, ctx } = await open();
+  const preset = await choosePreset(page, "fluid");
+  check(
+    preset === "fluid",
+    "fluid: the list reports the preset",
+    `data-kx-tabs-motion=${preset}`,
+  );
+  const run = await page.evaluate(async () => {
+    const list = document.querySelector("[role=tablist]");
+    const bar = list.querySelector("[data-kx-tabs-bar]");
+    const tabs = [...list.querySelectorAll(':scope > [role="tab"]')];
+    const from = tabs.find((t) => t.dataset.state === "active");
+    const frame = () => new Promise((r) => requestAnimationFrame(r));
+    const width = () => bar.getBoundingClientRect().width;
+    const resting = width();
+    const samples = [];
+    const t0 = performance.now();
+    document.querySelector('[data-kx-action="select-second"]').click();
+    for (let i = 0; i < 90; i++) {
+      await frame();
+      const to = tabs.find((t) => t.dataset.state === "active");
+      samples.push({
+        t: performance.now() - t0,
+        l: bar.getBoundingClientRect().left,
+        r: bar.getBoundingClientRect().right,
+        w: width(),
+        outgoing: getComputedStyle(from).color,
+        incoming: to ? getComputedStyle(to).color : null,
+        running: bar.getAnimations().some((a) => a.playState === "running"),
+      });
+      if (i > 4 && !samples[samples.length - 1].running) break;
+    }
+    return { resting, samples };
+  });
+  const { resting, samples } = run;
+  const settled =
+    samples.find((s) => !s.running) ?? samples[samples.length - 1];
+  const widest = samples.reduce((a, b) => (b.w > a.w ? b : a), samples[0]);
+  const at = (ms) =>
+    samples.reduce((a, b) => (Math.abs(b.t - ms) < Math.abs(a.t - ms) ? b : a));
+  // One `base` in, the leading edge has arrived and the trailing edge has not left, so the bar is at or
+  // near its widest. That is the whole difference from `classic`, where the two overlap for 200 of 300ms.
+  const handover = at(300);
+  check(
+    widest.w > resting * 2,
+    "fluid: the bar stretches across the gap",
+    `resting ${resting.toFixed(1)}px, widest ${widest.w.toFixed(1)}px at ${widest.t.toFixed(0)}ms`,
+  );
+  check(
+    handover.w > resting * 1.8,
+    "fluid: still stretched at the phase boundary, so the edges did not overlap",
+    `${handover.w.toFixed(1)}px at ${handover.t.toFixed(0)}ms (resting ${resting.toFixed(1)}px)`,
+  );
+  check(
+    settled.t > 450 && settled.t < 900,
+    "fluid: runs about two base tiers end to end",
+    `settled at ${settled.t.toFixed(0)}ms`,
+  );
+  // The labels ride those phases: the one being left has finished changing by the handover, and the one
+  // being chosen has not started. Colour is read from the rendered element, not from a class.
+  const first = samples[0];
+  check(
+    handover.outgoing !== first.outgoing,
+    "fluid: the outgoing label changes over the first phase",
+    `${first.outgoing} → ${handover.outgoing} by ${handover.t.toFixed(0)}ms`,
+  );
+  check(
+    handover.incoming !== settled.incoming,
+    "fluid: the incoming label is still arriving at the handover",
+    `${handover.incoming} at ${handover.t.toFixed(0)}ms, ${settled.incoming} once settled`,
+  );
+  expectAligned(await measure(page), "fluid: final geometry is the chosen tab");
+  await ctx.close();
+}
+{
+  // Interruption, reversal and repetition under the longer effect. A second choice during phase 1 must
+  // retarget from where the bar is rather than restart the stretch from the resting width.
+  const { page, ctx } = await open();
+  await choosePreset(page, "fluid");
+  const retarget = await retargetProbe(page, "select-last", "select-second");
+  check(
+    retarget.found,
+    "fluid: the bar is caught part-way through the travel",
+    `start ${retarget.start.toFixed(1)}, midway ${retarget.midway.toFixed(1)} (40% of the effect)`,
+  );
+  check(
+    retarget.found &&
+      Math.abs(retarget.after - retarget.midway) <
+        Math.abs(retarget.midway - retarget.start) * 0.5,
+    "fluid: retargets from the current position, not from the start",
+    `midway ${retarget.midway.toFixed(1)}, second travel begins at ${retarget.after?.toFixed(1) ?? "n/a"}, resting ${retarget.start.toFixed(1)}`,
+  );
+  await settle(page);
+  expectAligned(
+    await measure(page),
+    "fluid: settles on the second chosen tab after interruption",
+  );
+  // Reversal: the edges swap roles with the direction of travel, so going back is the same effect mirrored.
+  await page.evaluate(act("select-last"));
+  await settle(page);
+  await page.evaluate(act("select-second"));
+  await settle(page);
+  expectAligned(
+    await measure(page),
+    "fluid: settles after reversing direction",
+  );
+  await page.evaluate(async () => {
+    const frame = () => new Promise((r) => requestAnimationFrame(r));
+    for (let i = 0; i < 10; i++) {
+      document
+        .querySelector(
+          `[data-kx-action="${i % 2 ? "select-last" : "select-second"}"]`,
+        )
+        .click();
+      await frame();
+    }
+  });
+  await settle(page);
+  expectAligned(
+    await measure(page),
+    "fluid: ten rapid selections settle on the last tab chosen",
+  );
+  await ctx.close();
+}
+{
+  // The conditions the reference clip cannot answer for, under `fluid` rather than under the default.
+  const { page, ctx } = await open();
+  await choosePreset(page, "fluid");
+  await page.evaluate(act("select-second"));
+  await settle(page);
+  const still = await transitionsAfter(page, act("grow-count"));
+  check(
+    still === 0,
+    "fluid: a label resizing snaps, it does not travel",
+    `${still} transition(s)`,
+  );
+  const flipped = await transitionsAfter(page, act("direction"));
+  await settle(page);
+  check(
+    flipped === 0,
+    "fluid: a direction flip snaps, it does not travel",
+    `${flipped} transition(s)`,
+  );
+  await page.evaluate(act("select-last"));
+  await settle(page);
+  expectAligned(await measure(page), "fluid, rtl: lands on the chosen tab");
+  await page.evaluate(act("direction"));
+  await page.evaluate(act("orientation"));
+  await settle(page);
+  await page.evaluate(act("select-second"));
+  await settle(page);
+  expectAligned(
+    await measure(page),
+    "fluid, vertical: lands on the chosen tab's inline-end rail",
+  );
+  await page.evaluate(act("orientation"));
+  await settle(page);
+  await page.setViewportSize({ width: 340, height: 720 });
+  await settle(page);
+  expectAligned(
+    await measure(page),
+    "fluid: holds the chosen tab after a resize",
+  );
+  await page.evaluate(act("disable-selected"));
+  await settle(page);
+  expectAligned(
+    await measure(page),
+    "fluid: the chosen tab disabled (Radix keeps it selected)",
+  );
+  await ctx.close();
+}
+{
+  // Reduced motion removes the travel under `fluid` too, and removes it rather than shortening it. 600ms
+  // of positional travel is exactly what the setting exists to take away.
+  const { page, ctx } = await open({ reducedMotion: "reduce" });
+  const preset = await choosePreset(page, "fluid");
+  check(
+    preset === "fluid",
+    "fluid, reduced motion: the preset is still the one asked for",
+    `data-kx-tabs-motion=${preset}`,
+  );
+  const moving = await transitionsAfter(page, act("select-last"));
+  expectAligned(
+    await measure(page),
+    "fluid, reduced motion: lands on the chosen tab at once",
+  );
+  check(
+    moving === 0,
+    "fluid, reduced motion: no travel",
+    `${moving} transition(s)`,
   );
   await ctx.close();
 }

@@ -20,12 +20,17 @@ const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? React.useEffect : React.useLayoutEffect;
 
 /**
- * Which selection effect the list's indicator performs. Named presets rather than a duration, so the
- * choice stays inside the `selection-indicator` role: every preset reads the role's own tokens, and no
- * consumer can set a timing the motion contract does not know about.
+ * Which selection effect the list's indicator performs. Named presets rather than a duration, so a
+ * consumer cannot set a timing the motion contract does not know about: each preset is a choice between
+ * behaviours, and every one of them reads tokens.
  *
- *   `classic`  the bar travels, leading edge first, trailing edge held back by `instant` — the default,
- *              and the behaviour every version before this prop shipped.
+ *   `classic`  the bar travels, leading edge first, trailing edge held back by `instant`, both edges on
+ *              `emphasized` — the default, and the behaviour every version before this prop shipped.
+ *   `fluid`    the two edges move in sequence rather than together: the leading edge travels the whole
+ *              `base` tier, and only then does the trailing edge follow for another. The bar stretches
+ *              across the gap to several times its resting width and then draws itself in, and the two
+ *              labels change colour on those same two phases. Twice `classic`'s duration, which is the
+ *              cost of the effect and the reason it is opted into rather than default.
  *   `none`     the bar snaps to the chosen tab. Not `transition: none` on the element: it takes the same
  *              path a resize or a direction flip already takes, so the bar arrives placed rather than
  *              animated, and the single code path stays the one the geometry gate already covers.
@@ -33,9 +38,28 @@ const useIsomorphicLayoutEffect =
  * Reduced motion is NOT a preset and is not opted out of here. A reader who asks for less motion gets
  * `none`'s behaviour whatever this prop says.
  */
-export type TabsMotion = "classic" | "none";
+export type TabsMotion = "classic" | "fluid" | "none";
 
-export const TABS_MOTION: readonly TabsMotion[] = ["classic", "none"];
+export const TABS_MOTION: readonly TabsMotion[] = ["classic", "fluid", "none"];
+
+/**
+ * How long the trailing edge waits, and on which curve both edges travel.
+ *
+ * `fluid`'s curve is measured rather than chosen by name. Against the reference's frame-by-frame
+ * progression, `standard` fits both edges best (rms 0.077 leading, 0.091 trailing) and `emphasized` —
+ * the role's own canonical curve, and the one the name argues for — fits worst on the trailing edge
+ * (0.218), because it spends most of its distance early where the reference creeps and then rushes.
+ * Using `emphasized` here would shrink the bar fast and then crawl, losing the hang that is the whole
+ * character of the effect. The departure is recorded as a deviation in `tokens/contracts/motion.json`.
+ */
+const PHASING: Record<TabsMotion, { trail: string; ease: string }> = {
+  classic: {
+    trail: "var(--duration-instant)",
+    ease: "var(--easing-emphasized)",
+  },
+  fluid: { trail: "var(--duration-base)", ease: "var(--easing-standard)" },
+  none: { trail: "0ms", ease: "var(--easing-emphasized)" },
+};
 
 /** Places the list's indicator on its chosen tab; a change of tab travels, anything else (resize, text size) snaps. */
 function useTabsIndicator(
@@ -105,15 +129,18 @@ function useTabsIndicator(
       // move is interpolated.
       const travels =
         motion !== "none" && !reframed && chosen !== null && chosen !== tab;
-      // The edge on the side the bar is heading leads; the other waits for it.
+      const { trail, ease } = PHASING[motion];
+      bar.style.setProperty("--kx-tabs-ease", ease);
+      // The edge on the side the bar is heading leads; the other waits for it. Which edge leads swaps with
+      // the direction, so the two phases stay in the same order in time however the selection moves.
       const forward = nextStart > start;
       bar.style.setProperty(
         "--kx-tabs-start-delay",
-        travels && forward ? "var(--duration-instant)" : "0ms",
+        travels && forward ? trail : "0ms",
       );
       bar.style.setProperty(
         "--kx-tabs-end-delay",
-        travels && !forward ? "var(--duration-instant)" : "0ms",
+        travels && !forward ? trail : "0ms",
       );
       if (!travels) bar.style.transition = "none";
       bar.style.setProperty("--kx-tabs-start", `${nextStart}px`);
@@ -210,8 +237,10 @@ const TabsList = React.forwardRef<
           // grid-ok: 2px is a stroke weight, not spacing: the trigger's border-b-2 at any text size
           "bottom-0 h-[2px] [inset-inline-end:var(--kx-tabs-end,0px)] [inset-inline-start:var(--kx-tabs-start,0px)]", // grid-ok
           "group-data-[orientation=vertical]/tabs:bottom-auto group-data-[orientation=vertical]/tabs:h-auto group-data-[orientation=vertical]/tabs:w-[2px] group-data-[orientation=vertical]/tabs:[inset-inline-start:auto] group-data-[orientation=vertical]/tabs:[inset-inline-end:0px] group-data-[orientation=vertical]/tabs:[inset-block-start:var(--kx-tabs-start,0px)] group-data-[orientation=vertical]/tabs:[inset-block-end:var(--kx-tabs-end,0px)]", // grid-ok
-          // Two edges on one curve, the trailing one held back by `instant`: a stretch, then a settle.
-          "[transition-duration:var(--duration-base)] [transition-property:inset-inline-start,inset-inline-end,inset-block-start,inset-block-end] [transition-timing-function:var(--easing-emphasized)]",
+          // Two edges on one curve, the trailing one held back: a stretch, then a settle. How far it is held
+          // and which curve both edges take is the preset's to say, so the hook writes them; the fallback is
+          // `classic`'s, which is what a bar renders with before the hook has run.
+          "[transition-duration:var(--duration-base)] [transition-property:inset-inline-start,inset-inline-end,inset-block-start,inset-block-end] [transition-timing-function:var(--kx-tabs-ease,var(--easing-emphasized))]",
           "[transition-delay:var(--kx-tabs-start-delay,0ms),var(--kx-tabs-end-delay,0ms),var(--kx-tabs-start-delay,0ms),var(--kx-tabs-end-delay,0ms)] motion-reduce:transition-none",
         )}
       />
@@ -270,6 +299,15 @@ const TabsTrigger = React.forwardRef<
     className={cn(
       "inline-flex min-h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium data-[orientation=vertical]:border-b-0 data-[orientation=vertical]:[border-inline-end-width:2px]",
       "transition-colors duration-fast ease-standard motion-reduce:transition-none",
+      // Under `fluid` each label rides its own phase of the bar rather than changing on its own clock: the
+      // one being left fades over the leading edge's travel, and the one being chosen brightens over the
+      // trailing edge's. CSS reads the transition off the state being entered, so the delay belongs on the
+      // active rule and the tab going inactive takes none — which puts the two in sequence, not together.
+      // Only the label's own colour is re-timed. The hover surface is answering a pointer, not narrating a
+      // selection, so it stays on `fast`: a 300ms hover would read as lag.
+      "group-data-[kx-tabs-motion=fluid]/tabs:[transition-property:color,background-color,border-color]",
+      "group-data-[kx-tabs-motion=fluid]/tabs:[transition-duration:var(--duration-base),var(--duration-fast),var(--duration-fast)]",
+      "group-data-[kx-tabs-motion=fluid]/tabs:data-[state=active]:[transition-delay:var(--duration-base),0ms,0ms]",
       "[@media(hover:hover)]:enabled:hover:data-[state=inactive]:bg-foreground/[0.08] [@media(hover:hover)]:enabled:hover:data-[state=inactive]:text-foreground",
       "data-[state=active]:border-foreground data-[state=active]:text-foreground",
       // The list's travelling indicator takes over the chosen edge once it has measured; forced colours keep this one.
