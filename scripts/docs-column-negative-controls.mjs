@@ -7,9 +7,15 @@
  * on the layout it was written for, or it is a comment with a test runner attached.
  *
  * Each control restores ONE piece of the defective behaviour in the source tree, rebuilds the site, runs the
- * sweep over a docs page, and requires the named failure. It then restores the tree with `git checkout`,
- * verifies every file's SHA-256 against the original, rebuilds, and requires the same run to pass. A control
- * the gate does not catch fails this script, and so does a restore that does not come back byte-for-byte.
+ * sweep over a docs page, and requires the named failure. It then puts back the exact bytes it read before
+ * mutating, verifies every file's SHA-256 against the original, rebuilds, and requires the same run to pass.
+ * A control the gate does not catch fails this script, and so does a restore that does not come back
+ * byte-for-byte.
+ *
+ * Restoring from bytes rather than from `git checkout --` matters: these are source files someone may be
+ * editing. `git checkout` would replace their unstaged work with the index version, and the hash check would
+ * then report the mismatch it had just caused. Every mutation is also wrapped in `try/finally`, so a build
+ * that fails or a server that never starts cannot leave the defective classes behind.
  *
  * The mutation is a Tailwind class, so it changes both the prerendered markup and the generated stylesheet:
  * every control pays a full `pnpm build:web` (~90s) and a fresh `next start`. There is no cheaper honest
@@ -37,6 +43,8 @@ const FILES = [
   "apps/web/src/components/mobile-nav.tsx",
 ];
 const sha = (f) => createHash("sha256").update(readFileSync(resolve(f))).digest("hex");
+/** The tree exactly as found, bytes and all — the only thing a restore is allowed to put back. */
+const ORIGINAL_BYTES = Object.fromEntries(FILES.map((f) => [f, readFileSync(resolve(f))]));
 const ORIGINAL = Object.fromEntries(FILES.map((f) => [f, sha(f)]));
 
 const log = (s) => console.log(s);
@@ -103,7 +111,7 @@ function sweep() {
 }
 
 function restore() {
-  execFileSync("git", ["checkout", "--", ...FILES]);
+  for (const f of FILES) writeFileSync(resolve(f), ORIGINAL_BYTES[f]);
   for (const f of FILES) {
     if (sha(f) !== ORIGINAL[f]) throw new Error(`restore of ${f} did not match its original SHA-256`);
   }
@@ -123,14 +131,20 @@ log(`  clean tree passes — ${pre.out.trim().split("\n").pop()}`);
 const results = [];
 for (const c of CONTROLS) {
   log(`control ${c.id}: ${c.name}`);
-  for (const f of FILES) {
-    const before = readFileSync(resolve(f), "utf8");
-    const after = c.mutate(f, before);
-    if (after !== before) writeFileSync(resolve(f), after);
+  let r;
+  try {
+    for (const f of FILES) {
+      const before = readFileSync(resolve(f), "utf8");
+      const after = c.mutate(f, before);
+      if (after !== before) writeFileSync(resolve(f), after);
+    }
+    build();
+    r = await withServer(sweep);
+  } finally {
+    // Not only on the happy path: a failed build or a server that never comes up must not leave the
+    // deliberately defective classes in someone's working tree.
+    restore();
   }
-  build();
-  const r = await withServer(sweep);
-  restore();
   const caught = !r.passed && c.expect.test(r.out);
   const lines = r.out.split("\n").filter((l) => c.expect.test(l));
   results.push({ id: c.id, name: c.name, caught, findings: lines.length, sample: lines.slice(0, 3) });
