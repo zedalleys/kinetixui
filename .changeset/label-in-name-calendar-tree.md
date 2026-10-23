@@ -1,5 +1,0 @@
----
-"@kinetixui/ui": patch
----
-
-Day buttons and tree items now say what they show (WCAG 2.5.3, Label in Name). A `Calendar` day button's accessible name starts with the number on it, then the full date: "1, Sunday, March 1st, 2026" rather than "Sunday, March 1st, 2026", which never contained the visible "1", so a speech-input user could not name it. The number comes from the same `formatDay` that renders the button, so the two agree in every locale and numbering system; "Today" and "selected" are kept, and a `labels.labelDayButton` you pass is used unchanged. `DateRangeInput` inherits this. A `TreeItem`'s element now holds only its own row, and an expanded item owns its children's `role="group"` through `aria-owns` as the next sibling (the APG navigation tree structure), so an expanded item's visible text is its label alone. Keyboard behaviour is unchanged, and clicking a nested item now selects that item rather than also selecting its parent. Your `className` and the disabled styling sit on the item's new `role="none"` wrapper, so a styled or disabled item still lays out and dims its subtree as before; a `ref` still points at the `treeitem`.

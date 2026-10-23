@@ -1,5 +1,43 @@
 # @kinetixui/angular
 
+## 0.26.0
+
+### Minor Changes
+
+- e75b1dc: Add the scroll area, resizable panels, carousel and comparison slider. `kx-scroll-area` keeps the browser's own scrolling and draws its scrollbars beside the content; it is a named Tab stop only while something overflows, and its thumb follows content and containers that resize. `kx-resizable-panel-group` (with `kx-resizable-panel` and `kx-resizable-handle`) resizes by mouse, pen, touch or keyboard (arrows by 5, Home, End, F6 between handles), holds each panel's limits, follows the reading direction and announces itself as a window splitter. `kx-carousel` (with `kx-carousel-content`, `kx-carousel-item`, `kxCarouselPrevious` and `kxCarouselNext`) moves by buttons, arrow keys that follow the reading direction, and drag or swipe; it keeps focus at its ends, makes off-screen slides inert, announces a move once when it lands, has no autoplay and respects reduced motion. `kx-comparison-slider` is one native range input over two layers, named, held to 0–100, and drawn from the inline start in either direction. Angular stays Preview.
+- 822304a: Selection-control motion parity with React (MX1b-2), measured in a real browser.
+  
+  Before: the Angular Switch moved its thumb and track over 300ms, Checkbox and Radio ran every property at
+  100ms so a selection change was as quick as a hover, Toggle answered the pointer with a `--muted` background
+  step and had no press layer, and under forced colours the Switch thumb and the Radio dot were repainted the
+  same white as the surface behind them, leaving a switch with no thumb and a chosen radio that looked
+  unchosen. Activating a mixed Checkbox left it announcing `mixed` for ever.
+  
+  After: the Switch thumb, track and halo run on `instant` (100ms, `standard`), so Angular holds the same
+  `selection-control` contract as React and the recorded deviation is gone. Checkbox and Radio put fill, edge
+  and glyph colour on `fast` (200ms) and keep their halo on `instant`; the Checkbox glyph and the Radio dot
+  fade in on `fast` from elements of their own and leave at once. Toggle and ToggleGroup keep selection on
+  `fast` and gain an inset 8% / 14% press layer on `instant`. The Switch thumb and the Radio dot are drawn in
+  `CanvasText`, or `GrayText` when disabled, so forced colours keep them visible. A mixed Checkbox resolves to
+  checked when it is activated, and returns to mixed if the caller writes `indeterminate` again.
+  
+  Fixed along the way: a disabled Radio's label kept full opacity once the input was wrapped, a disabled
+  single-select ToggleGroup item answered the pointer with the new press layer because the element it paints is
+  a `<label>` and a label never matches `:disabled`, the Radio dot sat outside its control on a right-to-left
+  page, and a mixed Checkbox that was already checked resolved without reporting touched to Angular forms.
+  
+  Public inputs, outputs and ARIA are unchanged. Minor rather than patch because the Toggle's hover fill and
+  the Radio dot's markup are visual defaults an application may have styled around.
+- 00871d0: Add the menus: `kx-dropdown-menu`, `kx-context-menu` and `kx-menubar`, built on one set of shared parts (`kxMenuItem`, `kx-menu-checkbox-item`, `kx-menu-radio-group` / `kx-menu-radio-item`, `kx-menu-label`, `kx-menu-separator`, `kx-menu-shortcut`, `kx-menu-group`, and submenus with `kx-menu-sub`, `kxMenuSubTrigger`, `kx-menu-sub-content`). Roving focus, typeahead, direction-aware arrow keys, submenus with a pointer grace area, and a context menu anchored to the pointer. Angular stays Preview.
+- eb6957f: Add the listboxes: `kx-select` (with `kxSelectTrigger`, `kx-select-value`, `kx-select-content`, `kx-select-item`, `kx-select-group`, `kx-select-label`, `kx-select-separator`), `kx-command` (with `kxCommandInput`, `kx-command-list`, `kx-command-empty`, `kx-command-group`, `kx-command-item`, `kx-command-separator`, `kx-command-shortcut`, and `kx-command-dialog`) and `kx-multi-select`. All three keep focus on the field and move `aria-activedescendant`, never onto a disabled or filtered-out option; select and multi-select are form controls. Command filters locally and sends its query nowhere. Combobox is documented as a recipe (a popover holding a command), not a component. Angular stays Preview.
+- b3b9207: Add the navigation menu, notifications and sidebar. `nav[kxNavigationMenu]` (with `kxNavigationMenuList`, `kxNavigationMenuItem`, `kxNavigationMenuTrigger`, `kx-navigation-menu-content`, `kxNavigationMenuLink` and `kx-navigation-menu-indicator`) is site navigation: disclosure buttons and real links, never menu roles, with arrow keys that follow the reading direction. `kx-toaster` and `KxToasterService` show toasts from one shared queue: a polite live region that never takes focus, pausing on hover and focus with the elapsed time kept, separate toasters by `id`, Alt+T to reach them. `kx-notification-center` (with `kxNotificationCenterTrigger`, `kx-notification-center-content` and `kx-notification-item`) is a popover of notifications whose state stays in the application. `kx-tour` is a modal walkthrough that follows its targets, including ones that move, are removed or never exist. `kx-sidebar-provider` and `kx-sidebar` (with its header, content, group, menu, trigger and inset parts) are a persistent panel on desktop and the sheet on a phone, with one state model. Angular stays Preview.
+
+### Patch Changes
+
+- e77340a: `KxSegmentedControl`: the chosen segment stays marked in forced-colours mode (Windows contrast themes). Its raised surface and shadow were flattened to the same Canvas as the other segments, so chosen and unchosen looked identical (1.00:1). It now keeps the system's `SelectedItem` / `SelectedItemText` pair, 5.37:1 against its neighbours in a light palette and 3.91:1 in a dark one. Nothing changes outside forced colours, and the API, semantics and focus outline are unchanged.
+- 55176e5: Accept `@kinetixui/tokens` 0.25.0: the peer range is now `>=0.24.0 <0.26.0`. The next core release is a minor only because `@kinetixui/ui` adds components, and `@kinetixui/tokens` moves with it in the fixed group; no token is renamed or removed, so the variables Angular reads (including `--surface-grouped` and `--on-info-container`) are unchanged.
+- 010d3bf: Every text-entry field now has one shape. GuestPicker, CountrySelect, DateRangeInput, NumberInput, PhoneInput and InputOTP's end slots were rounded at `--radius-md` (8px) while Input, Textarea and Select were at 4px; they all take `--radius-field` now, and Input, Textarea, Select, NativeSelect, InputGroup and MultiSelect read the role token too, so a theme that overrides `--radius-field` reshapes every field. The picker triggers (GuestPicker, CountrySelect, DateRangeInput) are 46px like Input instead of 44px. DatePicker's trigger is a field rather than an Outline button: a 3:1 `muted-foreground` edge where the button's was 2.2:1, the `action` focus edge, and `aria-invalid` when `error` is set. MarkdownEditor's shell takes the field edge and draws the focus ring while its textarea has focus; before, it had no focus indicator. Angular: `kx-input` focuses with the `action` edge its contract names (it used `ring`), is 46px like the other fields, and `kx-input-otp`'s end slots take `--radius-field`.
+
 ## 0.25.1
 
 ### Patch Changes
