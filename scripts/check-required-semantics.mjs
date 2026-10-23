@@ -124,17 +124,33 @@ function components() {
     .map((f) => ({ name: f.replace(/\.tsx$/, ""), code: stripComments(read(join(COMPONENTS, f))) }));
 }
 
-/** Test sources, read once: which components each one renders, and whether it asserts the state. */
-function testsAssertingRequired() {
-  const out = [];
+/**
+ * Which components are proven, and by what.
+ *
+ * The unit of proof is the individual test, not the file: a block that both renders `<Thing>` and
+ * asserts `aria-required` proves Thing. File-level matching was the first draft, and deleting one
+ * assertion from a file with several left the gate green — the second negative control is that
+ * measurement. A skipped test proves nothing, so `it.skip` and `it.todo` are excluded.
+ */
+function provenComponents() {
+  const proven = new Set();
   for (const f of readdirSync(SRC)) {
     if (!/\.test\.tsx$/.test(f)) continue;
     const code = read(join(SRC, f));
     if (!code.includes("aria-required")) continue;
-    out.push({ file: f, imports: [...code.matchAll(/from "\.\/components\/([a-z0-9-]+)"/g)].map((m) => m[1]) });
+    const blocks = [...code.matchAll(/\bit(\.\w+)?\(/g)];
+    for (let i = 0; i < blocks.length; i += 1) {
+      const skipped = blocks[i][1] && blocks[i][1] !== ".each";
+      const body = code.slice(blocks[i].index, blocks[i + 1]?.index ?? code.length);
+      if (skipped || !body.includes("aria-required")) continue;
+      for (const [, tag] of body.matchAll(/<([A-Z][A-Za-z0-9]*)/g)) proven.add(tag);
+    }
   }
-  return out;
+  return proven;
 }
+
+/** `radio-group` → `RadioGroup`, the tag a test would render. */
+const tagOf = (name) => name.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join("");
 
 const isNative = (code) => /<(input|textarea|select)\b/.test(code);
 const usesRadixControl = (code) => RADIX_CONTROLS.some((mod) => code.includes(mod));
@@ -157,7 +173,7 @@ for (const part of ["field", "form"]) {
 }
 
 // 2 — every derived control is proven, exempt, or a failure.
-const proven = testsAssertingRequired();
+const proven = provenComponents();
 const COMPOSITIONS = new Set(["field", "form"]); // checked above, as the contract itself
 const controls = components().filter(
   ({ name, code }) =>
@@ -166,7 +182,7 @@ const controls = components().filter(
 
 for (const { name, code } of controls) {
   if (isNative(code)) continue; // the native attribute is the path
-  if (proven.some((t) => t.imports.includes(name))) continue;
+  if (proven.has(tagOf(name))) continue;
   if (name in EXEMPT) {
     notes.push(`${name} — ${EXEMPT[name]}`);
     continue;
