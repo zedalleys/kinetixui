@@ -19,12 +19,17 @@ already use, so a pointer user can hover it and read the cursor.
 
 The `<button>` form is untouched; the browser disables it and never dispatches these events.
 
-One limitation, measured rather than assumed: a handler the caller binds on the same element with
-`(click)` still runs, because Angular creates an element's template listeners before a directive's host
-listeners. `stopImmediatePropagation` does not help for that reason. Closing it needs a `disabled` input
-on the directive for callers to bind instead of writing `aria-disabled` by hand, which is a public API
-change and is proposed separately. A test records the current behaviour so that proposal has one to flip.
+The guards are registered in the directive's constructor rather than declared as `host` listeners, and the
+difference is load-bearing: Angular creates an element's own template listeners before a directive's host
+listeners, so a host-bound guard runs second and a `(click)` the caller wrote on the same anchor has
+already fired — `stopImmediatePropagation` included, since registration order rather than phase decides
+it. A constructor listener runs first, so the caller's handler is suppressed too and no `disabled` input
+is needed. Both arrangements were measured; the spec asserts the working one, so moving the listeners back
+into `host` fails a test instead of quietly reopening the gap.
 
 Also, Angular's styles now read `--on-success-container`, `--on-warning-container` and
 `--on-destructive-container` for `kx-banner` / `kx-inform` success, warning and error text, which are new
-in the accompanying `@kinetixui/tokens` release. See the README's Environment note.
+in the accompanying `@kinetixui/tokens` 0.26.0. Each one carries a CSS fallback to the plain status role,
+so on the older tokens this package still supports the notices keep their previous colour rather than
+inheriting an arbitrary ancestor colour, and only the peer range's upper bound moves (to `<0.27.0`). See
+the README's Environment note.

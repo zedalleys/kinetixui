@@ -34,8 +34,6 @@ import type { KxButtonSize, KxButtonVariant, KxCorners } from './types';
     // exposed for application CSS and tests; mirrors the data-variant attribute the React button sets
     '[attr.data-variant]': 'variant()',
     '[attr.data-size]': 'size()',
-    '(click)': 'blockWhenAriaDisabled($event)',
-    '(keydown)': 'blockKeyWhenAriaDisabled($event)',
   },
 })
 export class KxButton {
@@ -44,6 +42,25 @@ export class KxButton {
   readonly corners = input<KxCorners>('default');
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /**
+   * The guards are registered here, imperatively, instead of as `host: { '(click)': ... }` bindings — and
+   * that is the difference between "mostly inert" and inert. Angular creates an element's own template
+   * listeners BEFORE a directive's host listeners, so a host-bound guard runs second: by then
+   * `(click)="submit()"` written on the anchor by the caller has already fired, and
+   * `stopImmediatePropagation` cannot undo it, because what decides this is registration order, not phase.
+   * A constructor listener is created before the template's, so the guard runs first and
+   * `stopImmediatePropagation` suppresses the caller's handler as well. Measured both ways; the spec
+   * asserts it, so a later move back to `host` fails rather than quietly reopening the hole.
+   *
+   * These handlers only cancel — they read no signal and set no state — so running outside Angular's zone
+   * costs nothing, and the directive is destroyed with the element it is on.
+   */
+  constructor() {
+    const el = this.host.nativeElement;
+    el.addEventListener('click', (event) => this.blockWhenAriaDisabled(event), true);
+    el.addEventListener('keydown', (event) => this.blockKeyWhenAriaDisabled(event), true);
+  }
 
   /**
    * Read at event time rather than bound, so a caller writing `[attr.aria-disabled]` needs no second input
@@ -56,31 +73,30 @@ export class KxButton {
   /**
    * A native `<button disabled>` never dispatches these, so this only ever fires for the anchor form.
    *
-   * What this stops: the navigation, and the event reaching any ANCESTOR handler. What it cannot stop is a
-   * handler the caller bound on the same element — Angular creates an element's own template listeners
-   * before a directive's host listeners, so `(click)` on the anchor has already run by the time this is
-   * called, and `stopImmediatePropagation` is therefore no better than `stopPropagation` here (measured,
-   * not assumed — see the slice report). Closing that last gap needs a `disabled` input on this directive
-   * for the caller to bind instead of writing `aria-disabled` by hand, which is a public API change and is
-   * proposed separately rather than slipped in here.
+   * What this stops: the navigation, every ancestor handler, and the caller's own handler on this same
+   * element. The last of those is why the listeners are registered in the constructor rather than declared
+   * in `host` — see the comment there.
    */
-  protected blockWhenAriaDisabled(event: Event): void {
+  private blockWhenAriaDisabled(event: Event): void {
     if (!this.ariaDisabled) return;
     event.preventDefault();
-    event.stopPropagation();
+    // `stopImmediatePropagation`, not `stopPropagation`: at the target element the DOM standard invokes
+    // capture and bubble listeners in registration order, so only the immediate form reaches a sibling
+    // listener the caller registered after this one. `stopPropagation` happens to be enough under jsdom,
+    // where the capture listener is dispatched in the capturing phase; that is a difference between the
+    // test environment and a browser, not a licence to rely on it.
+    event.stopImmediatePropagation();
   }
 
   /**
    * Enter activates an anchor and Space scrolls the page; both are stopped. Tab, the arrow keys and the rest
    * are left alone, because the control stays focusable and reachable.
    */
-  protected blockKeyWhenAriaDisabled(event: Event): void {
-    // `Event`, not `KeyboardEvent`: a host binding's `$event` is typed as `Event` under AOT template
-    // checking, so narrowing here is what keeps `pnpm --filter @kinetixui/angular build` compiling.
+  private blockKeyWhenAriaDisabled(event: Event): void {
     if (!this.ariaDisabled || !(event instanceof KeyboardEvent)) return;
     if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
     event.preventDefault();
-    event.stopPropagation();
+    event.stopImmediatePropagation();
   }
 
   protected readonly classes = computed(() => {

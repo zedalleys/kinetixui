@@ -169,7 +169,11 @@ describe("success / warning / error containers: the same role on every platform"
     const css = read("packages/ui-angular/src/styles.css");
     for (const f of ["banner", "inform"])
       expect(css, f).toMatch(
-        new RegExp(`\\.kx-${f}--${web}\\s*\\{[^}]*color:\\s*hsl\\(var\\(--on-${role}-container\\)\\)`),
+        // The fallback is part of the contract, not noise: the peer range still accepts a tokens release
+        // without these roles, where an unguarded `var()` would leave the text inheriting an ancestor.
+        new RegExp(
+          `\\.kx-${f}--${web}\\s*\\{[^}]*color:\\s*hsl\\(var\\(--on-${role}-container, var\\(--${role}\\)\\)\\)`,
+        ),
       );
   });
 

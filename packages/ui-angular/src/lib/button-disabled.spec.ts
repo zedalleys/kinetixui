@@ -9,14 +9,20 @@ import { KxButton } from './button';
  * `pointer-events: none` and nothing stopped Enter, so a focused `<a kxButton href aria-disabled="true">`
  * still navigated. These are the assertions for the guard that replaced it.
  *
- * The negative control is removing the two host listeners from `KxButton`; the Enter and click cases then
- * fail. Recorded in /mnt/project-files/phase-b-states/slice-2-negative-controls/.
+ * The negative control is removing the two constructor listeners from `KxButton`; the Enter and click
+ * cases then fail. Recorded in /mnt/project-files/phase-b-states/slice-2-negative-controls/.
  */
 @Component({
   selector: 'kx-test-host',
   imports: [KxButton],
   template: `
-    <a kxButton href="/docs" [attr.aria-disabled]="off() ? 'true' : null" (click)="hits.push('anchor')">Docs</a>
+    <a
+      kxButton
+      href="/docs"
+      [attr.aria-disabled]="off() ? 'true' : null"
+      (click)="hits.push('anchor')"
+      (keydown)="hits.push('anchor')"
+    >Docs</a>
     <button kxButton type="button" (click)="hits.push('button')">Save</button>
   `,
 })
@@ -55,14 +61,22 @@ describe('KxButton — a disabled anchor is inert for every input device', () =>
     expect(seen).toEqual([]);
   });
 
-  it('records the one thing it cannot stop: the caller\'s own handler on the same element', () => {
-    // Angular creates an element's template listeners before a directive's host listeners, so `(click)` on
-    // the anchor itself has already run when the guard is reached. `stopImmediatePropagation` does not help
-    // for the same reason. This assertion exists so the limitation is a measured, visible fact rather than a
-    // surprise, and so the `disabled`-input proposal that closes it has a test to flip.
+  it("stops the caller's own (click) on the same element", () => {
+    // This is the assertion that dictates HOW the guard is registered. Host listeners declared in the
+    // `host` metadata are created AFTER the element's own template listeners, so a guard written that way
+    // runs second and `(click)="submit()"` on the anchor has already fired — `stopImmediatePropagation`
+    // included, because order, not phase, is what decides it. Registering in the constructor instead puts
+    // the guard first, and `stopImmediatePropagation` then suppresses the caller's handler too. Measured
+    // both ways: with the `host` form this expects ['anchor'].
     const { anchor, host } = setup();
     anchor.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-    expect(host.hits).toEqual(['anchor']);
+    expect(host.hits).toEqual([]);
+  });
+
+  it("stops the caller's own (keydown) activation on the same element", () => {
+    const { anchor, host } = setup();
+    anchor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    expect(host.hits).toEqual([]);
   });
 
   it('swallows Enter — the case `pointer-events: none` could never reach', () => {

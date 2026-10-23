@@ -1285,15 +1285,20 @@ label.kx-rating__item { cursor: pointer; }
 .kx-banner--sticky { position: sticky; inset-block-start: 0; z-index: var(--z-index-sticky, 40); }
 .kx-inform { border-radius: var(--radius-md); padding: var(--spacing-3); }
 
+/* The three `on-*-container` roles arrived in @kinetixui/tokens 0.26.0. This package's peer
+   range still accepts older tokens, where those custom properties do not exist, so each one
+   falls back to the plain status role — the colour these notices used before the contrast
+   fix. Without the fallback `hsl(var(--on-success-container))` is an invalid colour and the
+   text inherits whatever an ancestor set. */
 .kx-banner--information { background-color: hsl(var(--info) / 0.1); color: hsl(var(--on-info-container)); border-color: hsl(var(--info) / 0.2); }
-.kx-banner--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--on-warning-container)); border-color: hsl(var(--warning) / 0.25); }
-.kx-banner--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--on-success-container)); border-color: hsl(var(--success) / 0.25); }
-.kx-banner--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--on-destructive-container)); border-color: hsl(var(--destructive) / 0.2); }
+.kx-banner--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--on-warning-container, var(--warning))); border-color: hsl(var(--warning) / 0.25); }
+.kx-banner--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--on-success-container, var(--success))); border-color: hsl(var(--success) / 0.25); }
+.kx-banner--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--on-destructive-container, var(--destructive))); border-color: hsl(var(--destructive) / 0.2); }
 .kx-banner--action      { background-color: hsl(var(--foreground)); color: hsl(var(--background)); }
 .kx-inform--information { background-color: hsl(var(--info) / 0.1); color: hsl(var(--on-info-container)); }
-.kx-inform--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--on-warning-container)); }
-.kx-inform--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--on-success-container)); }
-.kx-inform--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--on-destructive-container)); }
+.kx-inform--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--on-warning-container, var(--warning))); }
+.kx-inform--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--on-success-container, var(--success))); }
+.kx-inform--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--on-destructive-container, var(--destructive))); }
 .kx-inform--action      { background-color: hsl(var(--foreground)); color: hsl(var(--background)); }
 
 .kx-banner__body {

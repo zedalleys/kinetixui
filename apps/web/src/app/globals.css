@@ -69,6 +69,9 @@
   */
   --surface-grouped: var(--neutral-100);
   --on-info-container: 204 33% 33%;
+  --on-success-container: var(--green-700);
+  --on-warning-container: var(--amber-800);
+  --on-destructive-container: var(--red-500);
   --semantic-on-info-container: var(--on-info-container);
   --semantic-muted-on-container: 0 0% 38%;
   --brand: var(--blue-500);
