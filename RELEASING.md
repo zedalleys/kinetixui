@@ -143,6 +143,32 @@ than parsed out of CLI output. An unreachable registry, an authentication failur
 response is **not** read as "unpublished" — it stops the release, because publishing against
 unknown state is exactly the situation to avoid.
 
+### The release notes must be dated the day the release runs
+
+Before a core version's **first** upload, `scripts/release/dates.mjs` requires the `date` on that
+version's entry in `apps/web/src/lib/releases.ts` to equal the current UTC date. The notes carry a
+publication date, so a date that is not the publication day is simply wrong, and the gate refuses
+the release rather than publish a release note that misdates itself.
+
+That date is generated. `changeset version` stamps it with the day it ran, which means **every
+rebuild of the Version Packages PR re-stamps it with the rebuild's day**, and the merge window for
+that build is bounded by that UTC day. Merge after midnight UTC and the release is refused with the
+two dates named, which is what happened to 0.25.0: the Version PR was rebuilt on 2026-10-21 and
+merged at 00:31 UTC on the 22nd, so nothing published until the date was corrected and merged on
+the day it ran.
+
+Two practical consequences:
+
+- The date cannot be prepared in advance. It goes stale at 00:00 UTC, so correcting it is a
+  same-day action: set it to the day the release will actually run, and merge it that day.
+- `pnpm check:releases` passing says nothing about this. It validates the notes' shape, ordering
+  and entry count, not publication-day readiness. Only `release:preflight` compares the date to
+  today, and it runs in the credential-free job, so a refusal here publishes nothing and consumes
+  no version number.
+
+The gate exempts a version already on the registry (`plan.alreadyPublished`), so it cannot block a
+partial-publication recovery for a cohort that has started to upload.
+
 ---
 
 ## Normal flow
@@ -323,14 +349,24 @@ installed the version, and the version number can never be reused.
 
 ## `@kinetixui/angular`
 
-Status: a repository Preview implementation. Versioned here, built and tested in CI, **not on npm**.
+Status: Preview, and published. Versioned here, built and tested in CI, and on npm in its own
+release cohort.
 
-It carries `private: true`, which is the mechanism that keeps it out of the publish set, and it is
-not in the allowlist — two independent reasons it cannot be published by accident.
-`ng-packagr` also copies the flag into `dist/package.json`, so a publish from the build output is
-refused too.
+It is listed in `release/publish-packages.json` in the `angular` cohort, which is what grants it
+publication, and it carries `publishConfig.access` and `provenance`. Because ng-packagr generates
+the Angular Package Format manifest into `dist/`, the allowlist entry names that directory as the
+`artifactDirectory` while `directory` stays the workspace identity the allowlist is matched
+against.
 
-### Publication readiness — validated, still not published
+As a Preview implementation, Angular has not yet met the project's full graduation criteria. Its
+compatibility guarantees should be understood in the context of that status, independently of its
+npm availability. `ANGULAR-GRADUATION.md` is the policy and `pnpm check:angular-graduation` is the
+measurement; as that document puts it, publication is distribution, not maturity.
+
+The cohort is what keeps the two independent: Angular moves on its own version line rather than
+with the `core` three, so an Angular minor never drags the React set with it.
+
+### Publication readiness — how the artifact is validated
 
 `pnpm check:angular-package` proves the artifact behind those locks is genuinely usable, without
 unlocking anything:
@@ -348,8 +384,8 @@ unlocking anything:
 - the emitted CSS is checked for the token contract, the extras sheet and the component classes, so
   a stylesheet that silently failed to resolve cannot pass
 
-Readiness is not availability. `npm install @kinetixui/angular` still does not work, and no public
-documentation says otherwise.
+This gate ran before Angular was ever published and still runs on every pull request, so the
+artifact is validated the same way whether or not a release is in flight.
 
 ### Activation — complete
 
