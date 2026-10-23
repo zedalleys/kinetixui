@@ -254,11 +254,6 @@ describe("Button pending — precedence and misuse", () => {
     expect(screen.getByRole("button", { name: "Save" })).not.toHaveAttribute("aria-busy");
   });
 
-  it('state="Pending" pins the state for docs and snapshots, with no prop', () => {
-    const { container } = render(<Button state="Pending">Save</Button>);
-    expect(screen.getByRole("button", { name: "Save" })).toHaveAttribute("data-pending", "");
-    expect(container.querySelector(".animate-spin")).not.toBeNull();
-  });
 
   it("rejects pending + asChild in development rather than rendering something wrong", () => {
     // Development is the environment this test runs in, which is the point: the misuse is loud here
@@ -318,5 +313,265 @@ describe("negative control: the naive disabled={pending} button", () => {
   it("and says nothing at all while it works", () => {
     render(<NaivePendingButton pending>Save</NaivePendingButton>);
     expect(screen.queryByRole("status")).toBeNull();
+  });
+});
+
+/* ------------------------------------------------------------------------------------------------ *
+ * `state="Pending"` is a PICTURE of the state. `pending` IS the state.
+ *
+ * The first version of this component derived the functional state from both, and that is a defect
+ * rather than a convenience: `state` is the presentational CVA axis the docs, the playground and the
+ * visual snapshots pin an appearance with — exactly as `state="Disabled"` pins the look of
+ * `disabled` without disabling anything. Deriving behaviour from it meant a documentation page that
+ * pinned the look also stopped accepting clicks, marked itself `aria-busy`, and announced "Working…"
+ * about an action nobody had started.
+ * ------------------------------------------------------------------------------------------------ */
+describe('Button — state="Pending" is presentational only', () => {
+  it("draws the indicator, which is the whole point of pinning it", () => {
+    const { container } = render(<Button state="Pending">Save</Button>);
+    expect(container.querySelector(".animate-spin")).not.toBeNull();
+    // The slot is there too, so a docs page shows the same geometry a real pending button has.
+    expect(container.querySelector("[data-pending-slot]")).not.toBeNull();
+  });
+
+  it("sets none of the functional attributes", () => {
+    render(<Button state="Pending">Save</Button>);
+    const button = screen.getByRole("button", { name: "Save" });
+    expect(button).not.toHaveAttribute("aria-busy");
+    expect(button).not.toHaveAttribute("aria-disabled");
+    expect(button).not.toHaveAttribute("data-pending");
+  });
+
+  it("renders no live region, so nothing is announced about an action nobody started", () => {
+    render(<Button state="Pending">Save</Button>);
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("still calls onClick", async () => {
+    const onClick = vi.fn();
+    render(
+      <Button state="Pending" onClick={onClick}>
+        Save
+      </Button>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("still activates from the keyboard", async () => {
+    const onClick = vi.fn();
+    render(
+      <Button state="Pending" onClick={onClick}>
+        Save
+      </Button>,
+    );
+    screen.getByRole("button", { name: "Save" }).focus();
+    await userEvent.keyboard("{Enter}");
+    await userEvent.keyboard(" ");
+    expect(onClick).toHaveBeenCalledTimes(2);
+  });
+
+  it("still submits the form it sits in", async () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <Button type="submit" state="Pending">
+          Save
+        </Button>
+      </form>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("the functional prop selects the visual as well, so the two agree", () => {
+    const { container } = render(<Button pending>Save</Button>);
+    expect(container.querySelector(".animate-spin")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Save" })).toHaveAttribute("data-pending", "");
+  });
+
+  it("disabled outranks the pinned visual too", () => {
+    const { container } = render(
+      <Button state="Pending" disabled>
+        Save
+      </Button>,
+    );
+    // Dimmed and unavailable, not working: the picture of pending is withdrawn as well.
+    expect(container.querySelector(".animate-spin")).toBeNull();
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+  });
+
+  it("mentioning neither renders no slot and no region", () => {
+    const { container } = render(<Button>Save</Button>);
+    expect(container.querySelector("[data-pending-slot]")).toBeNull();
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+});
+
+/**
+ * NEGATIVE CONTROL for the separation above — the previous derivation, written out.
+ *
+ * `isPending = Boolean(pending) || state === "Pending"` is one character short of correct and it is
+ * the shape this component shipped with. These two assertions are the ones it fails.
+ */
+function DerivedPendingButton({
+  state,
+  onClick,
+  children,
+}: {
+  state?: "Default" | "Pending";
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  children: React.ReactNode;
+}) {
+  const pending = state === "Pending"; // the defect: the presentational axis drives behaviour
+  return (
+    <button
+      type="button"
+      aria-disabled={pending || undefined}
+      aria-busy={pending || undefined}
+      onClick={(event) => {
+        if (pending) {
+          event.preventDefault();
+          return;
+        }
+        onClick?.(event);
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+describe('negative control: deriving the functional state from state="Pending"', () => {
+  it("refuses a click on a button that was only ever asked to LOOK pending", async () => {
+    const onClick = vi.fn();
+    render(
+      <DerivedPendingButton state="Pending" onClick={onClick}>
+        Save
+      </DerivedPendingButton>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    // The failure, recorded. The real Button calls it — see the suite above.
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("and tells a screen reader the page is busy when nothing is happening", () => {
+    render(<DerivedPendingButton state="Pending">Save</DerivedPendingButton>);
+    const button = screen.getByRole("button", { name: "Save" });
+    expect(button).toHaveAttribute("aria-busy", "true");
+    expect(button).toHaveAttribute("aria-disabled", "true");
+  });
+});
+
+/* ------------------------------------------------------------------------------------------------ *
+ * The keyboard, beyond Enter and Space.
+ *
+ * The first version wrapped `onKeyDown`/`onKeyUp` and cancelled EVERY key while pending, which traps
+ * the user on the control: Tab no longer moves focus off a button that is, by design, still
+ * focusable. Cancelling only the two keys that activate a button is the whole fix.
+ * ------------------------------------------------------------------------------------------------ */
+describe("Button pending — the keyboard is not a trap", () => {
+  it("cancels Enter and Space, and only those", () => {
+    render(<Button pending>Save</Button>);
+    const button = screen.getByRole("button", { name: "Save" });
+
+    for (const key of ["Enter", " "]) {
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+      button.dispatchEvent(event);
+      expect(event.defaultPrevented, key).toBe(true);
+    }
+    for (const key of ["Tab", "Escape", "ArrowDown", "a"]) {
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+      button.dispatchEvent(event);
+      expect(event.defaultPrevented, key).toBe(false);
+    }
+  });
+
+  it("still delivers a non-activation key to the caller's own handler", () => {
+    const onKeyDown = vi.fn();
+    render(
+      <Button pending onKeyDown={onKeyDown}>
+        Save
+      </Button>,
+    );
+    const button = screen.getByRole("button", { name: "Save" });
+    button.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    // ...and not the ones that would activate it.
+    button.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * NEGATIVE CONTROL — cancelling every key, which is what this component did.
+ */
+function CancelEveryKeyButton({ pending, children }: { pending?: boolean; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-disabled={pending || undefined}
+      onKeyDown={(event) => {
+        if (pending) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+describe("negative control: a pending button that cancels every key", () => {
+  it("cancels Tab, which leaves a focusable control the user cannot leave", () => {
+    render(<CancelEveryKeyButton pending>Save</CancelEveryKeyButton>);
+    const event = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    screen.getByRole("button", { name: "Save" }).dispatchEvent(event);
+    // The failure, recorded. The real Button leaves it alone — see the suite above.
+    expect(event.defaultPrevented).toBe(true);
+  });
+});
+
+/* ------------------------------------------------------------------------------------------------ *
+ * The icon size.
+ *
+ * `size="icon"` collapses every direct non-SVG child to `sr-only` — that is how an icon button keeps
+ * its accessible name while showing only a glyph. The indicator slot is a direct non-SVG child too,
+ * so without an exception a pending icon button hides its own spinner and shows no sign of working
+ * at all.
+ * ------------------------------------------------------------------------------------------------ */
+describe("Button pending — an icon button", () => {
+  it("excludes the indicator slot from the sr-only collapse", () => {
+    const { container } = render(
+      <Button size="icon" pending>
+        Save
+      </Button>,
+    );
+    const button = screen.getByRole("button", { name: "Save" });
+    // The selector the size variant applies, with the slot excluded from it.
+    expect(button.className).toContain("[&>*:not(svg):not([data-pending-slot])]:sr-only");
+    expect(container.querySelector("[data-pending-slot] .animate-spin")).not.toBeNull();
+  });
+
+  it("hides the glyph while pending, so the square holds one thing at a time", () => {
+    const { container } = render(
+      <Button size="icon" pending>
+        <svg data-testid="glyph" />
+        Save
+      </Button>,
+    );
+    expect(screen.getByRole("button").className).toContain("[&>svg]:hidden");
+    expect(container.querySelector("[data-testid='glyph']")).not.toBeNull();
+  });
+
+  it("keeps its accessible name while pending", () => {
+    render(
+      <Button size="icon" pending>
+        Save
+      </Button>,
+    );
+    // The label is `sr-only`, not removed: the name survives the state.
+    expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
   });
 });

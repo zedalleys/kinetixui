@@ -129,7 +129,13 @@ public struct KinetixButton<Label: View>: View {
     /// Opted in at all. `nil` — the default — means this call site never mentioned `pending`, and the
     /// button renders exactly as it did before this parameter existed: no indicator slot, no spacing.
     private var pendingAware: Bool { pending != nil }
-    private var isPending: Bool { pending == true }
+
+    /// PRECEDENCE: `.disabled()` wins over `pending`, the same rule the other four ports follow. A
+    /// control the author has taken out of service is not performing an action, so a disabled button
+    /// draws no indicator, exposes no status value and carries no `.updatesFrequently` trait —
+    /// otherwise VoiceOver would describe an unavailable control as working. `isEnabled` is the
+    /// environment value `.disabled()` writes, so this reads the real state rather than a parameter.
+    private var isPending: Bool { pending == true && isEnabled }
 
     public var body: some View {
         let s = spec(for: size)

@@ -86,6 +86,11 @@ dropping `pending` silently.
 to `false` on the confirmed path and the failed one alike, and show the outcome with
 [`ResultState`](/docs/components/result-state).
 
+`state="Pending"` is a different thing: the presentational `state` axis gains a `Pending` key so a docs
+page, a playground or a visual snapshot can pin the appearance, exactly as `state="Disabled"` pins the
+look of `disabled`. It draws the indicator and nothing else — no suppression, no `aria-busy`, no
+announcement. The prop is the state; the axis is a picture of it.
+
 ## API
 
 | Prop | Type | Default |
@@ -93,6 +98,7 @@ to `false` on the confirmed path and the failed one alike, and show the outcome 
 | `variant` | `"Primary" \| "Secondary" \| "Outline" \| "Destructive" \| "Ghost" \| "Link"` | `"Primary"` |
 | `size` | `"sm" \| "md" \| "lg" \| "icon"` | `"md"` |
 | `state` | `"Default" \| "Hover" \| "Focus" \| "Active" \| "Disabled" \| "Pending"` | `"Default"` |
+| | <small>presentational only — pins an appearance, changes no behavior</small> | |
 | `pending` | `boolean` | — |
 | `pendingLabel` | `string` | `"Working…"` |
 | `asChild` | `boolean` | `false` |

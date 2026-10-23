@@ -122,6 +122,19 @@ void main() {
     });
   });
 
+  group('KinetixButton pending — disabled wins', () {
+    testWidgets('a null onPressed outranks pending: unavailable, not working', (tester) async {
+      await tester.pumpWidget(host(KinetixButton(pending: true, onPressed: null, child: const Text('Save'))));
+      final p = props(tester);
+      expect(p.enabled, isFalse);
+      // The precedence the other four ports share: a control taken out of service is not performing
+      // an action, so it says nothing about working.
+      expect(p.value, isNull);
+      expect(p.liveRegion, isFalse);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
+  });
+
   group('KinetixButton pending — layout', () {
     testWidgets('the label does not move when the ring appears', (tester) async {
       Widget at(bool pending) =>

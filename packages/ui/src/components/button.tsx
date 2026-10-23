@@ -28,6 +28,14 @@ import { spinnerVariants } from "./spinner";
  * defect nearly every hand-rolled submit spinner ships. `pending` keeps the button focusable and
  * named, marks it `aria-disabled` + `aria-busy`, suppresses activation for every input device, and
  * announces the status in a live region OUTSIDE the button so the accessible name never changes.
+ *
+ * `pending` the prop and `state="Pending"` are two different things and the difference is load
+ * bearing. The prop is the state of a real action: it suppresses activation, sets `aria-busy` and
+ * announces. `state="Pending"` is the sixth key on the presentational `state` axis — a picture of
+ * the state for the docs, the playground and the visual snapshots, exactly like `state="Disabled"`
+ * is a picture of `disabled`. It draws the indicator and nothing else: no suppression, no ARIA, no
+ * announcement. Anything else would mean a documentation page quietly refusing clicks and
+ * announcing work that nobody started.
  */
 
 const buttonVariants = cva(
@@ -76,7 +84,10 @@ const buttonVariants = cva(
         // spacing/6 + spacing/3 ; Label Large (14/20, +0.1)
         lg: "px-6 py-3 text-label-lg",
         // spacing/3 all round, square
-        icon: "p-3 [&>*:not(svg)]:sr-only",
+        // `[&>*:not(svg)]:sr-only` hides the LABEL on an icon button, which is how the name survives
+        // while only the glyph shows. The pending indicator slot is a direct non-svg child too, so it
+        // is excluded by attribute — otherwise a pending icon button hides its own spinner.
+        icon: "p-3 [&>*:not(svg):not([data-pending-slot])]:sr-only",
       },
       /** force a static visual state — leave undefined for real interaction */
       state: {
@@ -109,6 +120,10 @@ const buttonVariants = cva(
       { variant: "Ghost", state: "Active", class: "bg-accent text-action" },
       { variant: "Link", state: "Hover", class: "underline text-foreground" },
       { variant: "Link", size: ["sm", "md", "lg"], class: "py-2 px-0 h-auto" },
+      // An icon button is a square with one glyph in it. While pending the indicator takes that
+      // place rather than sitting beside the glyph, so the square keeps its size; the label is
+      // `sr-only` here either way, so the accessible name is untouched.
+      { size: "icon", state: "Pending", class: "[&>svg]:hidden" },
     ],
     defaultVariants: { variant: "Primary", size: "md", state: "Default", corners: "default" },
   },
@@ -125,6 +140,8 @@ export interface ButtonProps
    *
    * The button stays focusable and keeps its accessible name; activation is suppressed instead.
    * `disabled` takes precedence — see the precedence note in the implementation.
+   *
+   * This is the functional state. `state="Pending"` only pins its appearance.
    */
   pending?: boolean;
   /**
@@ -154,11 +171,11 @@ declare const process: { env?: { NODE_ENV?: string } } | undefined;
  * guard covers keyboard activation too — but real applications also hang submit work on `keyDown`,
  * `keyUp`, `pointerDown` and `touchStart`, and those fire before any click. Each is wrapped, so the
  * caller's own handler is never reached while pending, whichever device started it.
+ *
+ * Pointer and click events are cancelled wholesale, because every one of them IS an activation.
  */
-const ACTIVATION_HANDLERS = [
+const POINTER_ACTIVATION_HANDLERS = [
   "onClick",
-  "onKeyDown",
-  "onKeyUp",
   "onPointerDown",
   "onPointerUp",
   "onMouseDown",
@@ -167,7 +184,20 @@ const ACTIVATION_HANDLERS = [
   "onTouchEnd",
 ] as const;
 
-type ActivationHandler = (typeof ACTIVATION_HANDLERS)[number];
+/**
+ * Key events are not. A keydown on a focused button may be Tab, Escape or an arrow, and cancelling
+ * those would trap the user on a control they cannot leave — the exact opposite of why this state
+ * keeps the button focusable in the first place. Only the two keys that activate a button are
+ * cancelled; everything else reaches the caller's handler and the browser's default untouched.
+ */
+const KEY_ACTIVATION_HANDLERS = ["onKeyDown", "onKeyUp"] as const;
+
+/** `" "` is the modern spelling; `"Spacebar"` is IE/old-Edge, and `"Space"` appears in the wild. */
+const ACTIVATION_KEYS = new Set(["Enter", " ", "Spacebar", "Space"]);
+
+type ActivationHandler =
+  | (typeof POINTER_ACTIVATION_HANDLERS)[number]
+  | (typeof KEY_ACTIVATION_HANDLERS)[number];
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
@@ -191,12 +221,27 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // out of service is not performing an action, so it is not pending — no spinner, no busy state,
     // no announcement. The same applies to the pinned `state="Disabled"`, which is `disabled`.
     const unavailable = Boolean(disabled) || state === "Disabled";
-    const isPending = !unavailable && (Boolean(pending) || state === "Pending");
 
-    // Whether this call site opted into the pending machinery at all. When it did not, the rendered
-    // output is byte-identical to before this prop existed: no spinner slot, no live region, no
-    // wrapped handlers, no extra attributes.
-    const pendingAware = pending !== undefined || state === "Pending";
+    // FUNCTIONAL pending: only the `pending` prop produces it. `state` is the CVA axis the docs,
+    // the playground and the visual snapshots pin a static appearance with — `state="Pending"` is a
+    // picture of this state, not the state. Deriving behaviour from it too (as the first version of
+    // this component did) would mean a docs page that pins the look also silently stops accepting
+    // clicks, marks itself `aria-busy` and announces "Working…" about an action nobody started.
+    const isPending = pending === true && !unavailable;
+
+    // PRESENTATIONAL pending: the functional state, or the pinned one. Both defer to `unavailable`,
+    // so `disabled` keeps its appearance as well as its behaviour.
+    const showsPendingVisual = isPending || (state === "Pending" && !unavailable);
+
+    // Whether the machinery is wired at all: the guards and the live region belong to the prop, and
+    // only to the prop. Pinning the visual state wires neither.
+    const pendingAware = pending !== undefined;
+
+    // The indicator slot is layout, so it is reserved whenever either form of pending is in play —
+    // that is what keeps the label from moving when the ring appears, and what lets the docs show
+    // the state statically. A call site that mentions neither renders exactly what it did before
+    // this prop existed: no slot, no live region, no wrapped handlers, no extra attributes.
+    const reservesIndicator = pendingAware || state === "Pending";
 
     if (typeof process !== "undefined" && process?.env?.NODE_ENV !== "production" && pending !== undefined && asChild) {
       // Rejected loudly in development: `asChild` renders through a Radix `Slot`, which takes exactly
@@ -223,7 +268,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // stops a form or row listener above from treating it as a second attempt.
     const guarded: Partial<Record<ActivationHandler, React.EventHandler<React.SyntheticEvent>>> = {};
     if (pendingAware) {
-      for (const name of ACTIVATION_HANDLERS) {
+      for (const name of POINTER_ACTIVATION_HANDLERS) {
         const original = props[name] as React.EventHandler<React.SyntheticEvent> | undefined;
         guarded[name] = (event) => {
           if (isPending) {
@@ -233,6 +278,20 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           }
           original?.(event);
         };
+      }
+      for (const name of KEY_ACTIVATION_HANDLERS) {
+        const original = props[name] as React.KeyboardEventHandler<HTMLButtonElement> | undefined;
+        const guard: React.KeyboardEventHandler<HTMLButtonElement> = (event) => {
+          // Only Enter and Space. Tab must still move focus off a pending button, Escape must still
+          // close whatever contains it, and arrows must still reach a caller's own handler.
+          if (isPending && ACTIVATION_KEYS.has(event.key)) {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+          }
+          original?.(event);
+        };
+        guarded[name] = guard as React.EventHandler<React.SyntheticEvent>;
       }
     }
 
@@ -251,7 +310,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       "data-size": size ?? "md",
       disabled: unavailable,
       className: cn(
-        buttonVariants({ variant, size, state: isPending ? "Pending" : state, corners }),
+        buttonVariants({ variant, size, state: showsPendingVisual ? "Pending" : state, corners }),
         className,
       ),
       ...props,
@@ -260,7 +319,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const button =
-      pendingAware && !asChild ? (
+      reservesIndicator && !asChild ? (
         <Comp {...shared}>
           {/*
             Sized in BOTH states and present in both, so the label does not reflow when the spinner
@@ -269,8 +328,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             `spinnerVariants`, which is where this package's reduced-motion form is contracted — this
             slice adds no motion of its own and does not touch the motion contract.
           */}
-          <span aria-hidden="true" className="inline-flex size-[18px] shrink-0 items-center justify-center">
-            {isPending && <span className={cn(spinnerVariants({ size: "sm" }), "size-[18px] text-current")} />}
+          <span
+            aria-hidden="true"
+            data-pending-slot=""
+            className="inline-flex size-[18px] shrink-0 items-center justify-center"
+          >
+            {showsPendingVisual && (
+              <span className={cn(spinnerVariants({ size: "sm" }), "size-[18px] text-current")} />
+            )}
           </span>
           {props.children}
         </Comp>
@@ -280,6 +345,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         <Comp {...shared} />
       );
 
+    // No live region for a pinned visual state: `state="Pending"` must announce nothing, because
+    // nothing happened. The region belongs to the prop that tracks a real action.
     if (!pendingAware) return button;
 
     return (
@@ -287,8 +354,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {button}
         {/*
           OUTSIDE the button on purpose. A live region inside it would be part of the button's own
-          accessible name (buttons are named from their content), so the name would change from
-          "Save" to "Save Working…" mid-interaction. Mounted empty from the first render, because a
+          accessible name (buttons are named from their content), so a button named Save would be
+          renamed to "Save Working…" mid-interaction. Mounted empty from the first render, because a
           region that appears at the same moment as its text is unreliably announced.
         */}
         <span role="status" aria-live="polite" className="sr-only">

@@ -188,7 +188,11 @@ fun KinetixButton(
     val contentPadding = PaddingValues(horizontal = spec.horizontal, vertical = spec.vertical)
 
     val pendingAware = pending != null
-    val isPending = pending == true
+    // PRECEDENCE: `enabled = false` wins over `pending`, the same rule the other four ports follow.
+    // A control the author has taken out of service is not performing an action, so a disabled
+    // button gets no indicator, no `stateDescription` and no live region — otherwise TalkBack would
+    // describe an unavailable control as working.
+    val isPending = pending == true && enabled
 
     // Gated rather than disabled. A press while pending reaches this lambda and stops here, so the
     // node keeps its enabled semantics, its name and TalkBack's focus. Every input device arrives

@@ -23,7 +23,18 @@ disabled is not doing anything), and `state="Disabled"` wins over `state="Pendin
 `asChild` throws in development and falls back to rendering the button without an indicator in
 production, because Radix's `Slot` takes exactly one child and a spinner cannot be injected into it —
 silently ignoring `pending` there would hide a broken state from the author. `state` also gains a
-`Pending` member for docs and snapshots, next to the `Disabled` it already had.
+`Pending` member for docs and snapshots, next to the `Disabled` it already had — and it is
+presentational only. Pinning it draws the indicator and changes nothing else: no suppressed
+activation, no `aria-busy`, no `aria-disabled`, no announcement. The prop is the state; the axis is a
+picture of it, the same relationship `state="Disabled"` has to `disabled`.
+
+Only Enter and Space are cancelled on a key event. Tab still moves focus off a pending button, which
+matters because this state deliberately keeps it focusable, and Escape and the arrow keys still reach
+the caller's own handler. On `size="icon"` the indicator replaces the glyph for as long as it is
+pending, so the square keeps its size and its accessible name.
+
+`DEFAULT_PENDING_LABEL` is exported from `@kinetixui/ui`, so a caller can build on the default
+wording rather than retyping it.
 
 Nothing changes for a call site that does not mention `pending`. The prop is three-valued on purpose
 (absent, `false`, `true`): absent renders exactly the previous tree, with no indicator slot, no spacing

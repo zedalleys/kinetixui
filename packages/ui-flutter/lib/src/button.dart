@@ -71,7 +71,12 @@ class _KinetixButtonState extends State<KinetixButton> {
 
   /// Opted in at all — see [KinetixButton.pending].
   bool get _pendingAware => widget.pending != null;
-  bool get _isPending => widget.pending == true;
+
+  /// PRECEDENCE: a null [KinetixButton.onPressed] — Flutter's disabled — wins over [pending], the
+  /// same rule the other four ports follow. A control the author has taken out of service is not
+  /// performing an action, so a disabled button gets no indicator, no `value` and no live region;
+  /// otherwise the node would report itself both unavailable and working.
+  bool get _isPending => widget.pending == true && widget.onPressed != null;
 
   @override
   Widget build(BuildContext context) {
