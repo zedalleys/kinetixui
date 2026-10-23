@@ -440,7 +440,9 @@
       "components": [
         "pass-card"
       ],
-      "blocks": [],
+      "blocks": [
+        "boarding-pass"
+      ],
       "iot": []
     },
     "TrainTicket / BusTicket / EventTicket": {
@@ -1873,7 +1875,9 @@
         "pass-card",
         "time-slot-picker"
       ],
-      "blocks": [],
+      "blocks": [
+        "boarding-pass"
+      ],
       "iot": [],
       "rows": [
         "AvailabilityPicker / AppointmentPicker",
@@ -2417,7 +2421,9 @@
         "result-state",
         "time-slot-picker"
       ],
-      "blocks": [],
+      "blocks": [
+        "boarding-pass"
+      ],
       "iot": [],
       "capabilities": [
         "transactions",
@@ -4267,6 +4273,17 @@
       ],
       "domains": [],
       "workflows": []
+    },
+    "boarding-pass": {
+      "capabilities": [
+        "booking-scheduling"
+      ],
+      "domains": [
+        "travel-booking"
+      ],
+      "workflows": [
+        "flight-booking"
+      ]
     },
     "comment-box": {
       "capabilities": [

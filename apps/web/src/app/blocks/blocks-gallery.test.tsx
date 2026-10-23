@@ -55,7 +55,7 @@ describe("/blocks discovery filters", () => {
     render(<BlocksGallery {...DATA} />);
     expect(screen.getByLabelText("Capability")).toHaveValue("");
     expect(screen.getByLabelText("Platform")).toHaveValue("");
-    expect(titles()).toEqual(["Order summary", "Receipt"]);
+    expect(titles()).toEqual(["Order summary", "Boarding pass", "Receipt"]);
   });
 
   it("writes a change with replace (no history entry), keeps unrelated filters and drops invalid ones", async () => {

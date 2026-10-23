@@ -17,7 +17,7 @@
  *
  * Only what a passage asserts counts. The accessibility pass runs axe over each block's own preview in light
  * and dark, left-to-right and right-to-left. The interaction passes drive one block each and assert what changed:
- * order summary by keyboard and by pointer, receipt by keyboard. A block with no interaction passage here stays Build verified on React.
+ * order summary by keyboard and by pointer, receipt and the boarding pass by keyboard. A block with no interaction passage here stays Build verified on React.
  */
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -162,13 +162,45 @@ const block = (page, slug) => page.locator(`[id="${slug}"] [data-showcase-previe
   }
   await context.close();
 }
+// kx-verify-block: interaction
+{
+  // boarding-pass: the confirmation code is the one value a traveller reads out or pastes, so copying it
+  // must work from the keyboard and must say that it worked. The code image is decorative modules behind one
+  // name, so the pass must still carry its facts as text when the code will not scan.
+  const { context, page } = await open({ permissions: ["clipboard-read", "clipboard-write"] });
+  const root = block(page, "boarding-pass");
+  const copy = root.getByRole("button", { name: /copy/i });
+  const status = root.locator('[role="status"]').first();
+
+  // the facts a traveller needs are text in the field grid, not pixels in the code
+  const field = async (term) =>
+    (await root.locator("dt", { hasText: new RegExp(`^${term}$`) }).locator("xpath=following-sibling::dd").textContent())?.trim();
+  if ((await field("Gate")) !== "C21" || (await field("Seat")) !== "9A")
+    fail(`boarding-pass: the grid reads Gate ${await field("Gate")} / Seat ${await field("Seat")}, expected C21 / 9A`);
+  if ((await root.getByRole("img", { name: "Boarding pass QR code" }).count()) !== 1)
+    fail("boarding-pass: the supplied code is not a single named image");
+
+  if ((await copy.count()) !== 1) fail(`boarding-pass: expected one copy button, found ${await copy.count()}`);
+  else {
+    await copy.focus();
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(200);
+    const said = (await status.textContent())?.trim();
+    const clip = await page.evaluate(() => navigator.clipboard.readText());
+    if (said !== "Copied") fail(`boarding-pass: after Enter the status says "${said}", expected "Copied"`);
+    if (clip !== "KX7F2Q9") fail(`boarding-pass: the clipboard holds "${clip}", expected the confirmation code`);
+  }
+  if (!failures.some((f) => f.startsWith("boarding-pass")))
+    ok("boarding-pass: gate and seat are text, the code is one named image, and Enter on the copy button puts the confirmation code on the clipboard and announces it");
+  await context.close();
+}
 // kx-verify-block: end
 
-/* ── layout: the two interactive blocks at phone and desktop width (not block evidence; a page check) ── */
+/* ── layout: the three interactive blocks at phone and desktop width (not block evidence; a page check) ── */
 for (const width of [390, 1280])
   for (const dir of ["ltr", "rtl"]) {
     const { context, page } = await open({ width, dir });
-    for (const slug of ["order-summary", "receipt"]) {
+    for (const slug of ["order-summary", "receipt", "boarding-pass"]) {
       const over = await block(page, slug).evaluate((el) => [...el.querySelectorAll("*")].filter((n) => n.getBoundingClientRect().right > innerWidth + 1 || n.getBoundingClientRect().left < -1).length);
       if (over) fail(`layout ${slug} ${width}/${dir}: ${over} element(s) outside the viewport`);
     }
@@ -176,7 +208,7 @@ for (const width of [390, 1280])
     if (scroll > 0) fail(`layout /blocks ${width}/${dir}: the page scrolls sideways by ${scroll}px`);
     await context.close();
   }
-if (!failures.some((f) => f.startsWith("layout"))) ok("layout: order-summary and receipt stay inside the viewport at 390 and 1280, LTR and RTL");
+if (!failures.some((f) => f.startsWith("layout"))) ok("layout: order-summary, receipt and boarding-pass stay inside the viewport at 390 and 1280, LTR and RTL");
 
 if (errors.length) for (const e of [...new Set(errors)]) fail(`console: ${e}`);
 await browser.close();
