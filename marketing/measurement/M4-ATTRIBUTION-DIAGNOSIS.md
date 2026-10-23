@@ -33,8 +33,8 @@ confirms that end to end — the full quartet (`kx_source`, `kx_medium`, `kx_cam
 Chrome/macOS, Safari/macOS and Safari/iOS.
 
 **3. Referrers are not arriving, from anywhere, almost ever.** This is the finding with teeth. Across every
-session since 1 October, PostHog's raw `$referrer` is **null in every single one**, and the derived `kx_referrer`
-is `direct` in all but two (one `bing`, 19 October; one `devto`, 17 October). The classifier is not at fault —
+session since 1 October the derived `kx_referrer` is `direct` in all but two (one `bing`, 19 October; one `devto`,
+17 October). The classifier is not at fault —
 `classifyReferrer` in `apps/web/src/lib/analytics-attribution.ts` handles `linkedin.com`, `lnkd.in`, `x.com`,
 `t.co` and `dev.to` by hostname suffix, and it demonstrably worked for the dev.to arrival. The referrer simply is
 not there to classify.
@@ -50,6 +50,15 @@ So on this pipeline the query string is the single channel of attribution, with 
 That is not proof that any such reader exists. It does mean the honest reading of "zero tagged arrivals" is
 *"no arrival carried the tag"*, not *"nobody came from the post"*, and that the untagged `direct` sessions cannot
 be excluded as candidates.
+
+**Corrected 2026-10-23, after a review finding.** An earlier version of this file also cited PostHog's raw
+`$referrer` being null on every session. That is not evidence of anything: `sanitizeCapture` in
+`apps/web/src/lib/analytics-posthog.ts` deliberately deletes `$referrer`, `$referring_domain`, `$search_engine`,
+`ph_keyword` and their `$initial_` / `$session_entry_` twins from every event before it is sent, by design, because
+a raw referrer is a full URL and a search keyword is the visitor's own text. Its absence is guaranteed whether or
+not the browser supplied one, so only the derived `kx_referrer` can say what the classifier saw. The finding above
+rests on `kx_referrer` alone, which is the signal that carries the information; the conclusion is unchanged, its
+evidence is narrower than it was written.
 
 **Narrowed on 22 October.** A LinkedIn-referred arrival finally appeared with its referrer intact — session
 `01a160f8…` at 00:21:26 UTC, `kx_referrer=linkedin`, attributed `kx_source=linkedin` on a bare

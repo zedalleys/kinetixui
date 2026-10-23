@@ -148,8 +148,8 @@ later, the first `x_thread` row to appear will be unambiguous: there is no earli
 **Why the zeros are now a diagnosis rather than a repetition.** The cause is being worked as its own question in
 [`M4-ATTRIBUTION-DIAGNOSIS.md`](./M4-ATTRIBUTION-DIAGNOSIS.md). Two things it settles are worth carrying here: the
 failure is upstream of cohort classification, since no campaign-tagged session exists in any cohort rather than
-being filtered out of the audience one; and `$referrer` is null on every session since 1 October, so the query
-string is the only attribution channel this pipeline has. A reader whose query string does not survive the trip
+being filtered out of the audience one; and the derived `kx_referrer` is `direct` on all but two sessions since
+1 October, so the query string is the only attribution channel this pipeline has in practice. A reader whose query string does not survive the trip
 from LinkedIn lands as `kx_source=direct` with a direct referrer, which is why the untagged one-page sessions
 cannot be excluded as candidates and why "no tagged arrival observed" is the only claim these reads support.
 
@@ -165,6 +165,10 @@ node scripts/marketing-weekly-report.mjs --from 2026-10-19 --to 2026-10-26 --ses
 - [ ] Report audience-cohort counts beside the canonical QER, never instead of it, and absolute counts only: three
       weeks produced 11 audience QE sessions in total, a third of the 30 floor.
 - [ ] Four posts in one week is not a test of anything. The honest output is a list of observations.
+- [ ] **Gate: if a reader-path test visit happened, its session id must already be in `EXCLUDED_SESSION_IDS` in
+      `scripts/marketing-weekly-report.mjs` before this read runs.** A deliberate visit on the public link carries
+      no `kx_traffic_type`, so nothing else keeps it out of the audience cohort, and it would turn a zero into an
+      arrival. See [`M4-READER-PATH-TEST.md`](./M4-READER-PATH-TEST.md), "What I do with it".
 
 ## The six measures to track, and the trap in each
 

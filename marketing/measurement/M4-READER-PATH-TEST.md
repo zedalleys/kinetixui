@@ -42,13 +42,25 @@ I take your timestamp, find the session in PostHog 620385 within a few minutes e
 | Query parameters present in it | derived from the URL | |
 | PostHog session id | matched on your timestamp | |
 | `kx_source` / `kx_medium` / `kx_campaign` / `kx_content` on that session | PostHog | |
-| `kx_referrer` and raw `$referrer` | PostHog | |
+| `kx_referrer` on that session | PostHog (the raw `$referrer` is deleted before send by design, so there is nothing to read) | |
 | Cohort it landed in | the weekly report's rules | |
 | Browser and platform | PostHog | |
 
 The session will land in whatever cohort the rules put it in, since the posted link carries no `kx_traffic`
-marker and I will not add one to a public link. **I will record its session id here by hand as a diagnostic**, so
-that it is excluded from the audience counts in the T+7d read rather than quietly inflating them.
+marker and I will not add one to a public link.
+
+**Excluding it has to be executable, not written down.** Recording the session id in this file excludes nothing:
+`scripts/marketing-weekly-report.mjs` classifies a session as diagnostic only from `kx_traffic_type=diagnostic`,
+which this visit cannot carry, and its query excludes session ids only from the hard-coded
+`EXCLUDED_SESSION_IDS` array. A successful visit — especially after the instructed scroll fires `page_engaged` —
+would otherwise be classified **audience**, turn LI-001's zero into a campaign arrival, and move QER. So:
+
+- [ ] **Before the T+7d read runs, the test session's id is added to `EXCLUDED_SESSION_IDS` in
+      `scripts/marketing-weekly-report.mjs`**, in its own commit, with this file naming the id and the date.
+- [ ] The T+7d read does not run until that is in place. If the id is unknown — the visit produced no session, or
+      it cannot be matched to the timestamp — that is recorded as such and nothing is excluded.
+- [ ] The exclusion is named in the T+7d result, so a later reader can see that a deliberate visit was removed and
+      which one.
 
 ## How the outcome decides the cause
 
@@ -95,7 +107,7 @@ This is the only thing that separates placement from reach:
 | No campaign-tagged session reached PostHog for LI-001 between 19 and 22 October | **Certain** | Three direct queries, pipeline proven live each time by a diagnostic minutes earlier |
 | The failure is not the cohort rules | **Certain** | No tagged session exists in any cohort, so nothing was filtered |
 | The site does not drop the query string | **High** | Two redirects in the app, neither on a campaign destination, no middleware; every owner diagnostic since 18 October landed the full quartet |
-| The query string is the only attribution channel in use | **High** | Raw `$referrer` is null on every session since 1 October; the owner's own LinkedIn taps recorded `kx_referrer: direct` |
+| The query string is the only attribution channel in use | **High** | The derived `kx_referrer` is `direct` on all but two sessions since 1 October, and the owner's own LinkedIn taps recorded `kx_referrer: direct`. The raw `$referrer` is deleted before send, so it is evidence of nothing either way |
 | Readers did arrive but were recorded as `direct` | **Unknown, and untestable from here** | The untagged one-page sessions are consistent with it and equally consistent with automation |
 | Nobody clicked the link | **Not established, and not claimable** | First-party analytics cannot see a click that produced no event |
 | X-001 was published | **Unknown** | No `x_thread` arrival has ever existed, which is consistent with both outcomes |
@@ -141,13 +153,13 @@ and the three categories stay separate:
 | Category | What was found |
 | --- | --- |
 | **Tagged arrival** (campaign + content) | **None.** No event carries `kx_p1_a_parity_proof` at any point on 22 October |
-| **Untagged arrival from LinkedIn** | **One, and it is new.** Session `01a160f8-1a07-72a0-9463-226266d2ee81`, `$pageview` on `/docs/platforms` at **00:21:26.161 UTC**, `kx_source=linkedin`, `kx_referrer=linkedin`, `$current_url` = `https://kinetixui.com/docs/platforms` — **no query string**, campaign and content null. Chrome on macOS |
+| **Untagged arrival from LinkedIn** | **One, and it is new.** Session `01a160f8-1a07-72a0-9463-226266d2ee81`, `$pageview` on `/docs/platforms` at **00:21:26.161 UTC**, `kx_source=linkedin`, `kx_referrer=linkedin`, **`kx_campaign` and `kx_content` both null** — no campaign parameter was present when attribution was read. Chrome on macOS. (The stored `$current_url` has its query stripped before send, so it cannot be used to show a bare URL; the null `kx_*` fields are the evidence.) |
 | **No recorded session** | **The mobile attempt.** No session from a phone, an in-app browser or iOS appears anywhere in the window. The 03:24 Riyadh tap produced no event at all |
 
 ## The two findings, kept apart
 
 **1. Referrer attribution works, and this is the first time we have seen it from LinkedIn.** Every session since
-1 October had a null raw referrer; this one arrived with `kx_referrer=linkedin` and was attributed `kx_source=linkedin`
+1 October was classified `direct`; this one arrived with `kx_referrer=linkedin` and was attributed `kx_source=linkedin`
 *without any query string*. That is the first direct evidence that an arrival from LinkedIn can be recognised at
 all when the tag is missing — and it narrows the earlier worry: such an arrival is **not** necessarily
 indistinguishable from `direct`. On desktop web it is distinguishable. In the in-app browser, where no referrer has
