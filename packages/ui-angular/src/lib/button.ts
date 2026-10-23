@@ -1,5 +1,33 @@
-import { Directive, ElementRef, computed, inject, input } from '@angular/core';
+import { DestroyRef, Directive, ElementRef, booleanAttribute, computed, effect, inject, input } from '@angular/core';
 import type { KxButtonSize, KxButtonVariant, KxCorners } from './types';
+
+/**
+ * One polite live region per document, for the `pending` announcement.
+ *
+ * It lives on `document.body` rather than next to the button on purpose. A directive cannot add a
+ * child to a native `<button>` without that child becoming part of the button's accessible name —
+ * buttons are named from their content, so "Save" would turn into "Save Working…" mid-interaction.
+ * Inserting a SIBLING is no better: `.kx-sr-only` is a real box, so inside a flex row with `gap` it
+ * is a flex item and shifts the layout the caller designed. A single shared region at the end of the
+ * document has neither problem, which is also why Angular's own CDK `LiveAnnouncer` is built this
+ * way. Created on first use, so a page that never uses `pending` gets no extra node.
+ */
+const LIVE_REGION_ID = 'kx-button-pending-live-region';
+
+function announcePending(message: string): void {
+  // SSR: there is no document to announce into, and nothing is interacting yet either.
+  if (typeof document === 'undefined') return;
+  let region = document.getElementById(LIVE_REGION_ID);
+  if (!region) {
+    region = document.createElement('div');
+    region.id = LIVE_REGION_ID;
+    region.className = 'kx-sr-only';
+    region.setAttribute('aria-live', 'polite');
+    region.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(region);
+  }
+  region.textContent = message;
+}
 
 /**
  * KinetixUI button.
@@ -41,7 +69,32 @@ export class KxButton {
   readonly size = input<KxButtonSize>('md');
   readonly corners = input<KxCorners>('default');
 
+  /**
+   * The action this button started is in flight. Controlled by the caller, which must bring it back
+   * to `false` on both the confirmed and the failed path.
+   *
+   * Not `[disabled]`: that attribute drops the control out of the tab order, so the focus the user
+   * just placed on it moves to the document. `pending` marks the button `aria-disabled` + `aria-busy`
+   * and cancels activation in the guard below, which leaves it focusable and named.
+   *
+   * Do not also bind `[attr.aria-disabled]` on a button that uses `pending`; the two write the same
+   * attribute and the template's binding is applied last.
+   */
+  readonly pending = input<boolean | undefined, unknown>(undefined, {
+    // Three-valued on purpose: `undefined` means this call site never mentioned `pending`, and only
+    // then is the rendered button byte-identical to one written before this input existed — no
+    // reserved spinner slot, no attributes, nothing. `false` means "opted in, not pending now",
+    // which reserves the slot so the label does not jump when it flips.
+    transform: (value: unknown) => (value === undefined ? undefined : booleanAttribute(value)),
+  });
+
+  /** What a screen reader hears while pending. English default, like the rest of this package. */
+  readonly pendingLabel = input('Working…');
+
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /** Whether THIS directive is the one that wrote `aria-disabled`, so it only removes its own. */
+  private ownsAriaDisabled = false;
 
   /**
    * The guards are registered here, imperatively, instead of as `host: { '(click)': ... }` bindings — and
@@ -60,6 +113,41 @@ export class KxButton {
     const el = this.host.nativeElement;
     el.addEventListener('click', (event) => this.blockWhenAriaDisabled(event), true);
     el.addEventListener('keydown', (event) => this.blockKeyWhenAriaDisabled(event), true);
+
+    // The attributes are written here rather than host-bound because `aria-disabled` is also the
+    // caller's to write (that is the whole of PR #442's anchor case), and two bindings on one
+    // attribute is a conflict rather than a merge. `ownsAriaDisabled` keeps this from removing an
+    // `aria-disabled` the caller put there.
+    effect(() => {
+      const declared = this.pending();
+      // Never mentioned at this call site: touch nothing, not even the shared live region. This is
+      // what makes a button written before `pending` existed render byte-identically.
+      if (declared === undefined) return;
+      const pending = declared === true;
+      if (pending) {
+        el.setAttribute('data-pending', '');
+        el.setAttribute('aria-busy', 'true');
+        if (el.getAttribute('aria-disabled') !== 'true') {
+          el.setAttribute('aria-disabled', 'true');
+          this.ownsAriaDisabled = true;
+        }
+      } else {
+        el.removeAttribute('data-pending');
+        el.removeAttribute('aria-busy');
+        if (this.ownsAriaDisabled) {
+          el.removeAttribute('aria-disabled');
+          this.ownsAriaDisabled = false;
+        }
+      }
+      // Driven by the transition: an `effect` re-runs when `pending()` changes, not on every change
+      // detection pass, so a parent rendering ten times mid-flight announces once.
+      announcePending(pending ? this.pendingLabel() : '');
+    });
+
+    // A button that unmounts while still pending must not leave "Working…" sitting in the region.
+    inject(DestroyRef).onDestroy(() => {
+      if (this.pending() === true) announcePending('');
+    });
   }
 
   /**
@@ -67,7 +155,9 @@ export class KxButton {
    * and the guard can never hold a stale answer.
    */
   private get ariaDisabled(): boolean {
-    return this.host.nativeElement.getAttribute('aria-disabled') === 'true';
+    // `pending()` is consulted as well as the attribute, so the guard is correct in the one frame
+    // between the input changing and the effect running.
+    return this.pending() === true || this.host.nativeElement.getAttribute('aria-disabled') === 'true';
   }
 
   /**
@@ -103,6 +193,8 @@ export class KxButton {
     const out = ['kx-btn', `kx-btn--${this.variant().toLowerCase()}`, `kx-btn--${this.size()}`];
     // "default" corners means "whatever the control radius token says", so it adds no class
     if (this.corners() !== 'default') out.push(`kx-btn--${this.corners()}`);
+    // Reserves the indicator slot for a call site that uses `pending` at all — see the input.
+    if (this.pending() !== undefined) out.push('kx-btn--pending-aware');
     return out.join(' ');
   });
 }

@@ -361,12 +361,14 @@
       "description": "Reconciled 1:1 with the KinetixUI design source, node 54863:351.",
       "dependencies": [
         "@radix-ui/react-slot",
+        "Save",
         "class-variance-authority",
         "clsx",
         "tailwind-merge"
       ],
       "registryDependencies": [
-        "tokens"
+        "tokens",
+        "spinner"
       ],
       "files": [
         {

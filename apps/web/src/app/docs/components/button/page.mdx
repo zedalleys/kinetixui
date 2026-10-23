@@ -1,6 +1,6 @@
 import { componentMetadata } from "@/lib/seo";
 
-export const metadata = componentMetadata("button", "Trigger an action. Six variants, four sizes and five interaction states.");
+export const metadata = componentMetadata("button", "Trigger an action. Six variants, four sizes, five interaction states and a pending state for work in flight.");
 
 # Button
 
@@ -46,13 +46,55 @@ for snapshots and this documentation.
 
 <ComponentPreview name="button-sizes" />
 
+## Pending
+
+While the action a button started is in flight, pass `pending`. The button stays focusable and keeps its
+name, a spinner appears in a slot that is reserved in both states so the label does not move, and
+activation is suppressed for every input device — pointer, <kbd>Enter</kbd>, <kbd>Space</kbd>, touch and
+implicit form submission.
+
+```tsx
+const [saving, setSaving] = React.useState(false);
+
+<Button
+  pending={saving}
+  onClick={async () => {
+    setSaving(true);
+    try {
+      await save();
+    } finally {
+      setSaving(false);   // both paths: pending is controlled, and nothing clears it for you
+    }
+  }}
+>
+  Save
+</Button>
+```
+
+It is deliberately not `disabled`. `disabled` takes the control out of the interactive set, which moves
+the focus the user just placed; `pending` sets `aria-disabled` and `aria-busy` instead, so the control
+keeps its place and the status is announced politely from a live region outside the button — once per
+transition, and separately from the button's name. Pass `pendingLabel` to localise that announcement; it
+defaults to the English `"Working…"`.
+
+Two rules worth knowing before you hit them. `disabled` wins over `pending`, because a control the author
+has disabled is not doing anything. And `pending` cannot be combined with `asChild`: Radix's `Slot` takes
+exactly one child, so the spinner has nowhere to go — that combination throws in development rather than
+dropping `pending` silently.
+
+`pending` is a state of the action, not a semantic variant, and it has a settled successor: move it back
+to `false` on the confirmed path and the failed one alike, and show the outcome with
+[`ResultState`](/docs/components/result-state).
+
 ## API
 
 | Prop | Type | Default |
 | --- | --- | --- |
 | `variant` | `"Primary" \| "Secondary" \| "Outline" \| "Destructive" \| "Ghost" \| "Link"` | `"Primary"` |
 | `size` | `"sm" \| "md" \| "lg" \| "icon"` | `"md"` |
-| `state` | `"Default" \| "Hover" \| "Focus" \| "Active" \| "Disabled"` | `"Default"` |
+| `state` | `"Default" \| "Hover" \| "Focus" \| "Active" \| "Disabled" \| "Pending"` | `"Default"` |
+| `pending` | `boolean` | — |
+| `pendingLabel` | `string` | `"Working…"` |
 | `asChild` | `boolean` | `false` |
 
 Plus all native `<button>` attributes.

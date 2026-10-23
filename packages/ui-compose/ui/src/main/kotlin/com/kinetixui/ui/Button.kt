@@ -6,8 +6,12 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button as Material3Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.TextButton
@@ -17,6 +21,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -96,6 +105,18 @@ private fun kinetixCornerShape(corners: KinetixCorners) = RoundedCornerShape(
     },
 )
 
+/**
+ * The original entry point, unchanged.
+ *
+ * It delegates to the overload below, and that is not a style choice. This artifact is published to
+ * Maven, so an app can be compiled against one version and run against another, which makes the JVM
+ * method descriptor part of the contract. Adding a defaulted `pending` parameter HERE would keep every
+ * source call compiling while replacing the descriptor — the breakage would surface later, in someone
+ * else's app, as `NoSuchMethodError`. The house rule, set by `KinetixTheme` and `KinetixInput`, is a
+ * second overload whose distinguishing parameters are undefaulted and last, with the original
+ * delegating to it. `ButtonBinaryCompatibilityTest` reads the methods the compiler actually emitted,
+ * so a later edit that collapses these two back into one fails a test.
+ */
 @Composable
 fun KinetixButton(
     onClick: () -> Unit,
@@ -106,14 +127,108 @@ fun KinetixButton(
     enabled: Boolean = true,
     content: @Composable RowScope.() -> Unit,
 ) {
+    KinetixButton(
+        onClick = onClick,
+        modifier = modifier,
+        variant = variant,
+        size = size,
+        corners = corners,
+        enabled = enabled,
+        content = content,
+        pending = null,
+        pendingLabel = KinetixButtonDefaults.PendingLabel,
+    )
+}
+
+/**
+ * Defaults for [KinetixButton], in the shape Material3's own `ButtonDefaults` uses.
+ *
+ * [PendingLabel] is exposed because the overload that takes `pending` cannot default its
+ * `pendingLabel` — the binary-compatibility rule above requires the distinguishing parameters to be
+ * undefaulted — so a caller who wants the standard wording asks for it by name.
+ */
+object KinetixButtonDefaults {
+    /** The default status wording. English, like every other default label in this package. */
+    const val PendingLabel: String = "Working…"
+}
+
+/**
+ * [pending] says the action this button started is in flight.
+ *
+ * It is deliberately NOT `enabled = false`. Disabling a composable changes its semantics node: the
+ * control is reported as disabled, which is a different thing from busy, and TalkBack's focus moves
+ * off it. While [pending] the button stays `enabled`, [onClick] is gated so a second press cannot
+ * start the work twice, the status is carried as a `stateDescription` — separate from the name, which
+ * is whatever [content] says — inside a polite `liveRegion` so a change is announced, and a
+ * `CircularProgressIndicator` is drawn in a slot that is reserved in both states so the label does not
+ * shift.
+ *
+ * Three-valued on purpose: `null` means this call site never mentioned `pending`, and the composable
+ * emits exactly what it did before the parameter existed — no indicator slot, no semantics additions.
+ *
+ * NOT VERIFIED AT RUNTIME. There is no instrumented TalkBack run behind this; the gate compiles the
+ * library and the unit tests read semantics, which is a claim about the modifiers, not a measurement
+ * of what an assistive technology does with them.
+ */
+@Composable
+fun KinetixButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    variant: KinetixButtonVariant = KinetixButtonVariant.Primary,
+    size: KinetixButtonSize = KinetixButtonSize.Md,
+    corners: KinetixCorners = KinetixCorners.Default,
+    enabled: Boolean = true,
+    content: @Composable RowScope.() -> Unit,
+    pending: Boolean?,
+    pendingLabel: String,
+) {
     val colors = KinetixColorScheme.current
     val spec = kinetixButtonSpec(size)
     val shape = kinetixCornerShape(corners)
     val contentPadding = PaddingValues(horizontal = spec.horizontal, vertical = spec.vertical)
+
+    val pendingAware = pending != null
+    val isPending = pending == true
+
+    // Gated rather than disabled. A press while pending reaches this lambda and stops here, so the
+    // node keeps its enabled semantics, its name and TalkBack's focus. Every input device arrives
+    // through the same `onClick`, so there is nothing else to suppress.
+    val guardedOnClick: () -> Unit = if (pendingAware) ({ if (!isPending) onClick() }) else onClick
+
+    // `stateDescription` is the status, and it is not the name: the name comes from `content`. The
+    // polite live region is what makes a CHANGE of it announced rather than only read on focus. Both
+    // are added only for a call site that uses `pending`, so nothing else's semantics node moves.
+    val decoratedModifier = if (pendingAware) {
+        modifier.semantics {
+            if (isPending) {
+                stateDescription = pendingLabel
+                liveRegion = LiveRegionMode.Polite
+            }
+        }
+    } else {
+        modifier
+    }
+
     // Only font/size/line-height/tracking are overridden — color is left alone so it
     // keeps flowing from Material3's own LocalContentColor (set by the `colors =`
     // argument on each branch below), the same way a bare `Text("Button")` would.
     val label: @Composable RowScope.() -> Unit = {
+        if (pendingAware) {
+            // The slot is 18dp in both states — matching React's `[&_svg]:size-[18px]` icon slot —
+            // so the label does not shift when the ring appears. The indicator carries no semantics
+            // of its own; the status is on the button's node, and two sources would say it twice.
+            if (isPending) {
+                CircularProgressIndicator(
+                    // Cleared rather than merged: the status belongs to the button's node, and an
+                    // indicator that also reports progress would have TalkBack say it twice.
+                    modifier = Modifier.size(18.dp).clearAndSetSemantics { },
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Spacer(Modifier.size(18.dp))
+            }
+            Spacer(Modifier.width(4.dp))
+        }
         ProvideTextStyle(spec.textStyle) { content() }
     }
 
@@ -124,7 +239,7 @@ fun KinetixButton(
             val pressed by interaction.collectIsPressedAsState()
             val hovered by interaction.collectIsHoveredAsState()
             Material3Button(
-                onClick = onClick, modifier = modifier, enabled = enabled, shape = shape, contentPadding = contentPadding,
+                onClick = guardedOnClick, modifier = decoratedModifier, enabled = enabled, shape = shape, contentPadding = contentPadding,
                 interactionSource = interaction,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = when {
@@ -141,7 +256,7 @@ fun KinetixButton(
         }
 
         KinetixButtonVariant.Secondary -> Material3Button(
-            onClick = onClick, modifier = modifier, enabled = enabled, shape = shape, contentPadding = contentPadding,
+            onClick = guardedOnClick, modifier = decoratedModifier, enabled = enabled, shape = shape, contentPadding = contentPadding,
             colors = ButtonDefaults.buttonColors(
                 containerColor = colors.secondary,
                 contentColor = colors.secondaryForeground,
@@ -155,7 +270,7 @@ fun KinetixButton(
         // matching the React Outline variant's resting state (hover-to-accent isn't
         // portable 1:1 — Material's own press/ripple state covers the interaction cue).
         KinetixButtonVariant.Outline -> OutlinedButton(
-            onClick = onClick, modifier = modifier, enabled = enabled, shape = shape, contentPadding = contentPadding,
+            onClick = guardedOnClick, modifier = decoratedModifier, enabled = enabled, shape = shape, contentPadding = contentPadding,
             border = BorderStroke(dimensionResource(R.dimen.border_width_default), colors.border),
             colors = ButtonDefaults.outlinedButtonColors(
                 contentColor = colors.foreground,
@@ -165,7 +280,7 @@ fun KinetixButton(
         )
 
         KinetixButtonVariant.Destructive -> Material3Button(
-            onClick = onClick, modifier = modifier, enabled = enabled, shape = shape, contentPadding = contentPadding,
+            onClick = guardedOnClick, modifier = decoratedModifier, enabled = enabled, shape = shape, contentPadding = contentPadding,
             colors = ButtonDefaults.buttonColors(
                 containerColor = colors.destructive,
                 contentColor = colors.destructiveForeground,
@@ -176,7 +291,7 @@ fun KinetixButton(
         )
 
         KinetixButtonVariant.Ghost -> TextButton(
-            onClick = onClick, modifier = modifier, enabled = enabled, shape = shape, contentPadding = contentPadding,
+            onClick = guardedOnClick, modifier = decoratedModifier, enabled = enabled, shape = shape, contentPadding = contentPadding,
             colors = ButtonDefaults.textButtonColors(
                 contentColor = colors.foreground,
                 disabledContentColor = colors.mutedForeground,
@@ -186,7 +301,7 @@ fun KinetixButton(
 
         // React's Link variant drops its own horizontal padding (`px-0`) — mirrored here.
         KinetixButtonVariant.Link -> TextButton(
-            onClick = onClick, modifier = modifier, enabled = enabled, contentPadding = PaddingValues(0.dp),
+            onClick = guardedOnClick, modifier = decoratedModifier, enabled = enabled, contentPadding = PaddingValues(0.dp),
             colors = ButtonDefaults.textButtonColors(
                 contentColor = colors.link,
                 disabledContentColor = colors.mutedForeground,
