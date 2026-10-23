@@ -167,13 +167,20 @@ Two practical consequences:
 
 - The date cannot be prepared in advance. It goes stale at 00:00 UTC, so correcting it is a
   same-day action: set it to the day the release will actually run, and merge it that day.
-- `pnpm check:releases` passing says nothing about this. It validates the notes' shape, ordering
-  and entry count, not publication-day readiness. Only `release:preflight` compares the date to
-  today, and it runs in the credential-free job, so a refusal here publishes nothing and consumes
-  no version number.
+- `pnpm check:releases` passing says nothing about this, and it is the check most likely to be
+  mistaken for saying it. It does validate dates — that each is `YYYY-MM-DD` and that the list is
+  non-increasing as versions descend — along with the core cohort being on one version, every
+  changelogged version having an entry, `breaking` being present, `newComponents` slugs existing
+  and `githubReleaseUrl` naming its version. None of that is publication-day readiness: a note
+  dated three days ago is well-formed and correctly ordered. Only `release:preflight` compares the
+  date to today, and it runs in the credential-free job — no npm token, no `id-token` permission —
+  so a refusal there publishes nothing and consumes no version number.
 
-The gate exempts a version already on the registry (`plan.alreadyPublished`), so it cannot block a
-partial-publication recovery for a cohort that has started to upload.
+Two cases fall outside the gate, both deliberately. It reads the `core` entry of `plan.publish`,
+so a release that publishes no core package — an Angular-only or IoT-only cohort release — is not
+date-checked at all. And it returns early when a core package is already on the registry at this
+version (`plan.alreadyPublished`), so it cannot block a recovery for a cohort that has started to
+upload.
 
 ---
 
