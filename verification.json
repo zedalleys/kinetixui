@@ -69,8 +69,8 @@
     },
     "Compose": {
       "build": 90,
-      "interaction": 7,
-      "accessibility": 6,
+      "interaction": 9,
+      "accessibility": 9,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 7,
@@ -113,8 +113,8 @@
     "Compose": {
       "not-implemented": 19,
       "source": 0,
-      "build": 86,
-      "headless": 4,
+      "build": 83,
+      "headless": 7,
       "runtime": 0
     },
     "Flutter": {
@@ -1026,6 +1026,21 @@
           "message-bubble",
           "skeleton",
           "spinner"
+        ]
+      },
+      {
+        "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt",
+        "environment": "robolectric",
+        "kinds": [
+          "accessibility",
+          "interaction"
+        ],
+        "components": [
+          "checkbox",
+          "radio-group",
+          "switch",
+          "toggle",
+          "toggle-group"
         ]
       },
       {
@@ -2163,9 +2178,11 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ],
         "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284",
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-150"
         ]
       },
@@ -4988,6 +5005,12 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ]
       },
       "Flutter": {
@@ -5894,13 +5917,15 @@
         ],
         "interaction": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:53-203"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:67-343"
         ],
         "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284",
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-150"
         ],
         "reducedMotion": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:53-203"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:67-343"
         ]
       },
       "Flutter": {
@@ -6411,7 +6436,11 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ]
       },
       "Flutter": {
@@ -6490,6 +6519,12 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ]
       },
       "Flutter": {
@@ -8868,7 +8903,13 @@
         "level": "build"
       },
       "Compose": {
-        "level": "build"
+        "level": "headless",
+        "interaction": [
+          "robolectric"
+        ],
+        "accessibility": [
+          "robolectric"
+        ]
       },
       "Flutter": {
         "level": "build"
@@ -9601,8 +9642,11 @@
         "level": "build"
       },
       "Compose": {
-        "level": "build",
+        "level": "headless",
         "interaction": [
+          "robolectric"
+        ],
+        "accessibility": [
           "robolectric"
         ]
       },
@@ -9642,7 +9686,13 @@
         "level": "build"
       },
       "Compose": {
-        "level": "build"
+        "level": "headless",
+        "interaction": [
+          "robolectric"
+        ],
+        "accessibility": [
+          "robolectric"
+        ]
       },
       "Flutter": {
         "level": "build"

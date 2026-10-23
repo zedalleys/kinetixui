@@ -5,6 +5,9 @@ import androidx.compose.animation.core.TweenSpec
 import androidx.compose.material3.Text
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.performClick
@@ -18,6 +21,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * `KinetixSwitch`'s motion contract on Compose.
@@ -30,15 +34,20 @@ import org.robolectric.annotation.Config
  *   through Robolectric, the switch still reports on and off, still responds to a click, and still
  *   refuses one when disabled.
  *
+ * - **The painted tests** prove that the TRACK is animated and not only the thumb. They hold the
+ *   test clock still, advance it half a duration into the gesture, and read the colour the switch
+ *   actually painted, in both directions. Nothing else in this file can tell the two apart: `animateColorAsState` does
+ *   not expose which spec it was handed, so an edit that sent the target colour straight to
+ *   `.background(…)` would leave every spec assertion passing and `check:native-motion` green, since
+ *   `Switch.kt` still names the helper for the thumb. Reading the pixel is what closes that.
+ *
  * ## What is deliberately NOT claimed
  *
- * No interpolated pixel midpoint. Compose's test surface exposes composition and semantics rather
- * than per-frame geometry, and the frame-clock APIs needed to approximate it are not part of the
- * surface this module's other tests establish. Flutter's widget tests DO measure the thumb's rendered
- * offset mid-travel (`test/switch_motion_test.dart`); that difference between platforms is stated in
- * the PR rather than smoothed over, and the marker below claims only `reducedMotion`, not
- * `accessibility` — the on/off assertions here are interaction and state, not an audit of what
- * assistive technology receives.
+ * Not runtime. A painted pixel is still a pixel Robolectric rasterised on a JVM host: there is no
+ * emulator or device job in this repository, nothing here is on a screen, and nothing here is what a
+ * person or TalkBack would perceive. The marker below claims `interaction` and `reducedMotion`, not
+ * `accessibility` — the on/off assertions are state, not an audit of what assistive technology
+ * receives.
  *
  * ## The preference is the platform's, and it is the shared one
  *
@@ -50,6 +59,11 @@ import org.robolectric.annotation.Config
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
+// Robolectric's LEGACY graphics mode draws nothing, so `captureToImage` would hand back a blank
+// bitmap and the painted tests below would compare two identical nothings and pass. NATIVE rasterises
+// through the real Skia pipeline, which is the only mode in which reading a painted colour means
+// anything.
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 // kx-verify: interaction, reducedMotion
 class SwitchMotionTest {
     @get:Rule
@@ -199,4 +213,130 @@ class SwitchMotionTest {
         rule.waitForIdle()
         assertEquals(true, checked.value)
     }
+
+    // ── painted: the track travels too, not only the thumb ──────────────────
+
+    /**
+     * Hosts a switch and hands back both its value and the colours it resolved.
+     *
+     * The scheme is captured out of the composition rather than rebuilt from the token objects, so
+     * the endpoints these tests compare against are the ones the control itself was given.
+     */
+    private fun composeSwitchWithColours(initial: Boolean = false): Pair<MutableState<Boolean>, () -> KinetixColors> {
+        val checked = mutableStateOf(initial)
+        var captured: KinetixColors? = null
+        rule.setContent {
+            KinetixTheme(darkTheme = false) {
+                captured = KinetixColorScheme.current
+                KinetixSwitch(
+                    checked = checked.value,
+                    onCheckedChange = { checked.value = it },
+                )
+            }
+        }
+        return checked to { requireNotNull(captured) { "KinetixTheme did not provide a colour scheme" } }
+    }
+
+    /**
+     * The colour the track is painted at this instant.
+     *
+     * Taken as the most common fully opaque pixel in the switch rather than from a fixed coordinate,
+     * because the thumb is moving: any coordinate that is track at one point in the gesture is thumb
+     * at another. The track is the larger opaque area by a wide margin — a 48×24 rounded rectangle
+     * against a 20dp circle, so roughly 840 pixels against 310 at this density — so the mode is the
+     * track whatever the thumb is doing, and the antialiased blend along the thumb's edge cannot
+     * outvote it because each of those pixels is its own distinct value. Translucent pixels are
+     * skipped: outside the rounded ends there is nothing painted at all.
+     */
+    private fun paintedTrackColour(): Int {
+        val pixels = rule.onNode(isToggleable()).captureToImage().toPixelMap()
+        val counts = HashMap<Int, Int>()
+        for (y in 0 until pixels.height) {
+            for (x in 0 until pixels.width) {
+                val pixel = pixels[x, y]
+                if (pixel.alpha < 1f) continue
+                val argb = pixel.toArgb()
+                counts[argb] = (counts[argb] ?: 0) + 1
+            }
+        }
+        return requireNotNull(counts.maxByOrNull { it.value }) {
+            "the switch painted no opaque pixel, so the capture read nothing"
+        }.key
+    }
+
+    @Test
+    fun offToOnPaintsAnInterpolatedTrackColourHalfwayThrough() {
+        setAnimatorScale(1f)
+        rule.mainClock.autoAdvance = false
+        val (checked, colours) = composeSwitchWithColours()
+        val off = colours().tertiary.toArgb()
+        val on = colours().action.toArgb()
+        // Without this the rest of the test would pass on a switch that painted nothing at all.
+        assertNotEquals("the two ends of the track must differ", off, on)
+        assertEquals("an unchecked switch should paint the unchecked track colour", off, paintedTrackColour())
+
+        rule.onNode(isToggleable()).performClick()
+        // One frame to commit the click's new value and start the animation, then half the duration.
+        rule.mainClock.advanceTimeByFrame()
+        rule.mainClock.advanceTimeBy(KinetixDuration.instant / 2L)
+        assertEquals("the click should have taken effect", true, checked.value)
+
+        val halfway = paintedTrackColour()
+        // This is the assertion that fails if the track stops animating while the thumb still does:
+        // an unanimated track is already at its destination one frame after the click.
+        assertNotEquals("the track jumped straight to the checked colour", on, halfway)
+        assertNotEquals("the track has not started moving", off, halfway)
+
+        rule.mainClock.autoAdvance = true
+        rule.waitForIdle()
+        assertEquals("the track should settle on the checked colour", on, paintedTrackColour())
+    }
+
+    @Test
+    fun onToOffPaintsAnInterpolatedTrackColourHalfwayThrough() {
+        // The reverse gesture from its own initial state, not as the second half of a round trip.
+        setAnimatorScale(1f)
+        rule.mainClock.autoAdvance = false
+        val (checked, colours) = composeSwitchWithColours(initial = true)
+        val off = colours().tertiary.toArgb()
+        val on = colours().action.toArgb()
+        assertEquals("a checked switch should paint the checked track colour", on, paintedTrackColour())
+
+        rule.onNode(isToggleable()).performClick()
+        rule.mainClock.advanceTimeByFrame()
+        rule.mainClock.advanceTimeBy(KinetixDuration.instant / 2L)
+        assertEquals("the click should have taken effect", false, checked.value)
+
+        val halfway = paintedTrackColour()
+        assertNotEquals("the track jumped straight to the unchecked colour", off, halfway)
+        assertNotEquals("the track has not started moving", on, halfway)
+
+        rule.mainClock.autoAdvance = true
+        rule.waitForIdle()
+        assertEquals("the track should settle on the unchecked colour", off, paintedTrackColour())
+    }
+
+    // A fourth painted test — suppression read off the pixels rather than off the spec — was written,
+    // run, and dropped. Keeping what it measured, because it is the useful part and the next person
+    // should not have to spend the CI rounds again.
+    //
+    // With the animator scale at 0, walking ten frames from the click gave:
+    //
+    //     off = #B0B0B0   on = #1D4ED8
+    //     frames = #A1A1A1, #1B47C6, #1D4ED8, #1D4ED8, … (the rest #1D4ED8)
+    //
+    // Frame 3 onward is exactly the destination, so the track does not travel. But frames 1 and 2
+    // are each one of the two ends multiplied by about 0.916 — 176→161, and (29,78,216)→(27,71,198)
+    // — so something composites over the track for two frames after a click and then stops. A press
+    // indication is the obvious suspect and is not established. Whatever it is, it is not travel:
+    // frame 1 is 15 channel steps from the unchecked end and 132 from the checked one, against 147
+    // between the ends.
+    //
+    // Distinguishing that from a real traversal needs a tolerance, and a traversal's own first
+    // frames sit near the starting end too, so the tolerance separating them would have been tuned
+    // against a module that cannot be run here. The suppression claim does not need it: it rests on
+    // the spec tests above, which read the duration the control is handed, and `reducedMotion` in
+    // the ledger is that evidence. The two painted tests above are what hold the track's animation,
+    // and a negative control that removes it fails both of them.
+
 }
