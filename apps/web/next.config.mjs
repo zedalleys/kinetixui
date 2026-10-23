@@ -97,6 +97,30 @@ const registryCorsHeaders = [
 export const routeRedirects = [
   { source: "/colors", destination: "/create", permanent: true },
   { source: "/theme-builder", destination: "/create", permanent: true },
+
+  /*
+   * Parent routes. Every one of these is a path a reader can reach by truncating a URL the site itself
+   * publishes -- `/use-cases/commerce` back to `/use-cases`, `/docs/components/button` back to
+   * `/docs/components` -- and each one returned a 404 until now. `check:seo`'s `route-parent` rule fails the
+   * build if a nested route's parent resolves to neither a page nor an entry here, so this list cannot fall
+   * behind the routes again.
+   *
+   * Each sends the reader to the page that already does the job, rather than to a second one built to answer
+   * the same question: `/capabilities` is the use-cases hub the domain pages already breadcrumb up to, and
+   * `/components` is the catalogue the docs component pages are generated from. Permanent, because these are
+   * aliases of a settled destination, not a staging post -- except `/demos`, which is temporary: there is one
+   * demo today, and a second one makes an index page the right answer instead.
+   */
+  { source: "/use-cases", destination: "/capabilities", permanent: true },
+  { source: "/docs/components", destination: "/components", permanent: true },
+  { source: "/demos", destination: "/demos/building-operations", permanent: false },
+
+  /*
+   * `/platforms` is not a parent route; nothing nested lives under it. It is here because "platforms" is the
+   * word the site, the guides and the roadmap all use for the coverage page, which lives at `/docs/platforms`,
+   * so the short form is the one a reader types. No gate can derive this one -- it is a judgement about a name.
+   */
+  { source: "/platforms", destination: "/docs/platforms", permanent: true },
 ];
 
 /** @type {import('next').NextConfig} */
