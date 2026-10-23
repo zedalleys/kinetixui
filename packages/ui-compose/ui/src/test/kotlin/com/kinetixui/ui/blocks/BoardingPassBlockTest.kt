@@ -51,7 +51,7 @@ import com.kinetixui.ui.KinetixTag
 import com.kinetixui.ui.KinetixTagVariant
 import com.kinetixui.ui.KinetixTheme
 import kotlinx.coroutines.launch
-import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -74,7 +74,8 @@ import org.robolectric.annotation.Config
 // directions. Gate, seat and group are emphasised because they are what a traveller looks for at a glance.
 // Each field is merged into one node, so "Gate, C21" is announced together rather than as two unrelated
 // strings. The copy result goes into a polite live region — including when the clipboard refuses, so the
-// block never claims a copy that did not happen.
+// block never claims a copy that did not happen. The host clipboard itself is a parameter, so a unit
+// test can exercise the button and the announcement without a real clipboard to wait on.
 //
 // All data here is fictional, Kinetix Air included.
 //
@@ -106,7 +107,13 @@ private val CODE_PATTERN = listOf(
 )
 
 @Composable
-fun BoardingPassBlock() {
+fun BoardingPassBlock(
+    /**
+     * How the confirmation code reaches the clipboard. Null uses the host clipboard, which is what a real
+     * app wants; a unit test has no host clipboard to wait on, so it passes its own.
+     */
+    onCopyCode: (suspend (String) -> Unit)? = null,
+) {
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
     var feedback by remember { mutableStateOf("") }
@@ -114,7 +121,13 @@ fun BoardingPassBlock() {
     fun copy() {
         scope.launch {
             feedback = try {
-                clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Confirmation code", CONFIRMATION_CODE)))
+                if (onCopyCode != null) {
+                    onCopyCode(CONFIRMATION_CODE)
+                } else {
+                    clipboard.setClipEntry(
+                        ClipEntry(ClipData.newPlainText("Confirmation code", CONFIRMATION_CODE)),
+                    )
+                }
                 "Copied"
             } catch (e: Exception) {
                 "Couldn't copy automatically. Press and hold the code to select it."
@@ -249,22 +262,18 @@ class BoardingPassBlockTest {
 
     // kx-verify-block: interaction
     @Test
-    fun copying_the_confirmation_code_announces_its_own_result() {
-        rule.setContent { KinetixTheme(darkTheme = false) { BoardingPassBlock() } }
+    fun copying_the_confirmation_code_hands_over_the_code_and_announces_the_result() {
+        var handedOver: String? = null
+        rule.setContent {
+            KinetixTheme(darkTheme = false) { BoardingPassBlock(onCopyCode = { handedOver = it }) }
+        }
         rule.onNodeWithContentDescription("Copy confirmation code").performClick()
-        // The copy runs in a coroutine, so wait for the live region instead of assuming the click and the
+        // The copy is a coroutine, so wait for the live region rather than assuming the click and the
         // announcement land in the same frame.
-        rule.waitUntil(5_000) { announcedOutcome() != null }
-        // Whatever the clipboard did, the block says what happened rather than staying silent. Which of the
-        // two outcomes a host clipboard produces is not this block's contract — saying nothing would be.
-        assertNotNull("the live region stayed empty after the copy", announcedOutcome())
-    }
-
-    /** What the polite live region currently says, or null while it is still empty. */
-    private fun announcedOutcome(): String? = when {
-        rule.onAllNodesWithText("Copied").fetchSemanticsNodes().isNotEmpty() -> "Copied"
-        rule.onAllNodesWithText("Couldn't copy automatically", substring = true)
-            .fetchSemanticsNodes().isNotEmpty() -> "refused, with the select-it-yourself fallback"
-        else -> null
+        rule.waitUntil(5_000) {
+            rule.onAllNodesWithText("Copied").fetchSemanticsNodes().isNotEmpty()
+        }
+        // The code the button hands over is the code printed on the pass, and the block says it happened.
+        assertEquals(CONFIRMATION_CODE, handedOver)
     }
 }
