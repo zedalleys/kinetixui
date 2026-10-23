@@ -66,6 +66,94 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.25.0",
+    summary: "KinetixUI 0.25.0 expands the React library with transactional and booking foundations, restyles SegmentedControl and Tabs, puts the selection controls on the motion tokens, and fixes range and disabled Sliders along with several accessibility defects. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together on the 0.25.0 line. @kinetixui/angular publishes 0.26.0 on its own line and remains Preview; @kinetixui/iot stays on 0.5.0 while its device-integration work awaits real-device validation.",
+    breaking: [],
+    changes: [
+      {
+        kind: "new",
+        area: "components",
+        title: "Transactional foundations for business workflows",
+        body: "React adds beta ResultState, ReferenceCode, PriceBreakdown and PassCard foundations for outcomes, references, totals and passes/tickets. They compose existing primitives, keep formatted values supplied by the application, and avoid inventing payment, barcode or document-generation behavior. Native platforms currently have composition guidance; Angular is planned."
+      },
+      {
+        kind: "new",
+        area: "components",
+        title: "Money, status and booking fields",
+        body: "React adds beta AmountDisplay, GuestPicker, CountrySelect, PhoneInput, DateRangeInput, TimeSlotPicker and AddressFields. Timeline gains optional per-item statuses, NumberInput gets localisable stepper labels and keeps bound steppers focusable with aria-disabled, and Calendar uses logical classes with mirrored navigation inside KinetixDirectionProvider. Native platforms currently have composition guidance; Angular is planned."
+      },
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "Calendar, DateRangeInput and TreeView say what they show",
+        body: "Calendar day buttons now include the visible day number in their accessible name before the full date, so DateRangeInput inherits WCAG 2.5.3 Label in Name support. TreeItem now owns its child group as a sibling instead of including the whole subtree in its visible text; keyboard behavior is preserved and clicking a nested item no longer also selects its parent."
+      },
+      {
+        kind: "improved",
+        area: "components",
+        title: "Tabs, filters and mode controls are easier to reuse",
+        body: "Tabs use text-first line navigation with a base rail and active underline, SegmentedControl keeps its enclosed mode treatment and can reflow, and Toggle gains a pill variant plus a decorative leadingIcon slot for filter chips. Reduced-motion behavior is preserved."
+      },
+      {
+        kind: "improved",
+        area: "components",
+        title: "SegmentedControl is filled, and the Tabs indicator travels",
+        body: "The segmented track is now a soft grey well with a subtle edge, and the chosen segment is filled with foreground - near-black in light, near-white in dark - with background text. Tabs draw one 2px indicator per list that travels to the chosen tab: its leading edge moves first and the trailing edge follows, so it stretches across and settles. It follows the list direction and orientation, snaps on resize or text-size changes, and jumps straight to the new tab under reduced motion. Under forced colours both controls use the system SelectedItem pair, so the choice stays marked. No API changes.",
+        href: "/docs/components/tabs"
+      },
+      {
+        kind: "fixed",
+        area: "components",
+        title: "Range and disabled Sliders work",
+        body: "Slider draws one thumb per value. A range such as defaultValue={[20, 80]} used to render a single thumb, so every value after the first had no handle to drag, focus or read; with more than one value the root is now a named role=group and each thumb keeps its position name. A disabled Slider is announced and drawn as disabled: the thumb carries aria-disabled, which Radix put only on the role-less root. Single-value Sliders are unchanged.",
+        href: "/docs/components/slider"
+      },
+      {
+        kind: "improved",
+        area: [
+          "components",
+          "tokens"
+        ],
+        title: "One shape for every text-entry field",
+        body: "GuestPicker, CountrySelect, DateRangeInput, NumberInput, PhoneInput and the end slots of InputOTP were rounded at 8px while Input, Textarea and Select were at 4px. They all take --radius-field now, and the other fields read the role token too, so a theme that overrides --radius-field reshapes every field. The picker triggers are 46px like Input. DatePicker trigger is a field rather than an outline button, with a 3:1 edge where the button had 2.2:1, and MarkdownEditor draws a focus ring it previously had none of. Angular follows: kx-input focuses with the action edge and is 46px.",
+        href: "/docs/tokens"
+      },
+      {
+        kind: "improved",
+        area: "components",
+        title: "Selection controls move on the motion tokens",
+        body: "Checkbox, RadioGroup, Toggle, ToggleGroup and Switch now run selection and pointer feedback on the motion tokens rather than untokenised Tailwind timings: selection over --duration-fast (200ms) where it belongs, a hover and press state layer on --duration-instant (100ms), and Switch left on instant. Under forced colours the chosen item uses the system Highlight pair and the Switch thumb draws in CanvasText, where on and off used to look identical. An uncontrolled Checkbox with defaultChecked=\"indeterminate\" now draws the dash instead of a tick. Semantics change at once, reduced motion lands on the same end state without moving, and no API changed. This release covers React only.",
+        href: "/docs/foundations#motion"
+      },
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "Code and diff scroll regions are keyboard reachable",
+        body: "At a phone width a long line made CodeBlock and DiffViewer scrollable regions no keyboard could reach (axe scrollable-region-focusable, WCAG 2.1.1). Each now takes a tab stop only while it can actually scroll, with a visible focus ring, following the contract Table already held. A CodeBlock showing a file is named by that file. No new props or exports."
+      },
+      {
+        kind: "improved",
+        area: "components",
+        title: "Sheet and CommandDialog cover logical navigation and command-palette needs",
+        body: "Sheet adds logical start/end sides, scrolling for tall side panels and closeLabel. CommandDialog adds a required title, optional description, a single-element trigger for focus return, commandProps for the inner Command and stable top anchoring while filtering; CommandProps is exported."
+      },
+      {
+        kind: "improved",
+        area: "release",
+        title: "Core moves together on the 0.25.0 release line",
+        body: "@kinetixui/ui carries the feature and accessibility changes. @kinetixui/tokens and @kinetixui/cli move with it because the three packages are one fixed Changesets cohort. Angular and IoT continue on their independent release lines."
+      }
+    ],
+    limitations: [
+      "Angular remains Preview; this release does not graduate it. It carries 80 of the 109 catalogue entries, and 6 of 13 graduation criteria are still open.",
+      "The selection-control motion work in this release is React only. Angular and the native platforms do not yet carry the same reduced-motion and forced-colours behaviour.",
+      "The new business components are beta on React. Native platforms have composition guidance rather than ports for these additions, and Angular implementation is planned.",
+      "SwiftUI, Jetpack Compose and Flutter remain source-checkout distributions rather than packages published to their platform registries.",
+      "IoT remains a React-only module and is not a sixth core platform. @kinetixui/iot is not published by this release."
+    ],
+    date: "2026-10-21"
+  },
+  {
     version: "0.24.0",
     date: "2026-10-06",
     summary:
