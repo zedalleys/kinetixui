@@ -1,8 +1,8 @@
 # Motion coverage register — five platforms
 
-**Measured:** 2026-10-21 · **Last accuracy pass:** 2026-10-23 · **Measurement baseline:** `origin/main` at
-`72770976`, which every cell was read from · **`main` is now `b8cfba9`** after #348 merged, which changes package
-versions and no motion fact in this register · **Status:** register of what is true, plus the named gap behind each
+**Measured:** 2026-10-21 · **Last accuracy pass:** 2026-10-23, post-R1 · **Measurement baseline:** `origin/main`
+at `72770976`, which every cell was read from · **`main` is now `45cdaf11`**, with R1 published (ui/tokens/cli
+0.25.0, angular 0.26.0, iot 0.5.0) — which changes package versions and no motion fact in this register · **Status:** register of what is true, plus the named gap behind each
 cell. It claims nothing that a file or a gate does not already prove.
 
 > **Green gates are not completeness.** Every gate this register names can pass while GAP-1…GAP-8 in
@@ -236,12 +236,22 @@ React in PR #388", which merged on 2026-10-17 — the bar has shipped and the bo
 consumer declared, `check:motion-tokens` had nothing to check, so the two tokens the travelling Tabs indicator
 reads were pinned by nothing.
 
-**Draft PR #441** (head `d059f7b1`) repairs that: status `observed`, the React consumer added with its two tokens,
+**Draft PR #441** (head `8be3025c`) repairs that: status `observed`, the React consumer added with its two tokens,
 and the note's scope corrected — SegmentedControl was never a consumer, since #388 gave it a filled surface that
-settles on `fast`/`standard`, which is `selection-state`. It also adds `motion="classic" | "none"` to `TabsList`,
-a preset over behaviours of one role that cannot express a timing. **`fluid` and `spring` are specified and
-deliberately not in it.** It touches `tokens/contracts/motion.json`, so MX1d (#411 → #412 → #414) merges first and
-#441 rebases onto it; it owes a changeset once R1 closes. Nothing in this paragraph is on `main`.
+settles on `fast`/`standard`, which is `selection-state`. It also adds a `motion` prop to `TabsList` with **three**
+presets, each a behaviour of the one role rather than a timing anyone can set:
+
+- **`classic`** — the default, byte-for-byte what shipped in #388: the trailing edge held back an `instant` against
+  a `base` leading edge, so the bar stretches and settles.
+- **`fluid`** — **implemented, not merely specified.** The trailing edge is held back a whole `base`, so the two
+  edges run in sequence with no overlap: the bar stretches across, hangs at its widest, then draws itself in, and
+  each label changes colour on the phase that belongs to it. Roughly twice `classic`'s duration, which is why it is
+  opted into. It carries a justified `standard` easing deviation that integration must reconcile rather than drop.
+- **`none`** — the bar is placed, through the same path a resize or a direction flip already takes.
+
+It touches `tokens/contracts/motion.json`, so MX1d (#411 → #412 → #414) merges first and #441 rebases onto it; the
+changeset is owed at integration. **None of this is React-only motion made into a parity claim** — the presets are
+React, and the native platforms carry nothing like them. Nothing in this paragraph is on `main`.
 
 ---
 

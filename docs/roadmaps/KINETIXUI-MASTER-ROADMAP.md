@@ -1,8 +1,8 @@
 # KinetixUI unified master roadmap
 
-**Written:** 2026-10-21 · **Last accuracy pass:** 2026-10-23 (see *State refreshed* below) · **Measurement
-baseline:** `origin/main` at `72770976`, which is what every figure below was read from · **`main` is now
-`8b40fce`**, after #348 (`b8cfba9`) and #444 · **Status:** a reconciliation of existing plans, not a new plan. Every 30/60/90 item is a **proposal**; nothing here is a commitment, an approval or
+**Written:** 2026-10-21 · **Last accuracy pass:** 2026-10-23, post-R1 (see *State refreshed* below) ·
+**Measurement baseline:** `origin/main` at `72770976`, which is what the per-cell figures were read from ·
+**`main` is now `45cdaf11`**, after #348 (`b8cfba9`), #444 and #446 — **R1 is published** · **Status:** a reconciliation of existing plans, not a new plan. Every 30/60/90 item is a **proposal**; nothing here is a commitment, an approval or
 an authorization to merge or publish.
 
 ## How to use this document
@@ -20,6 +20,7 @@ document wins** and this file is the one that is wrong.
 | Selection-motion parity and the five-platform handoff | [`docs/roadmaps/MX1B-1C-SELECTION-PARITY.md`](MX1B-1C-SELECTION-PARITY.md) (#404) | yes |
 | Motion coverage, per family × platform × nine dimensions | [`MOTION-COVERAGE-REGISTER.md`](MOTION-COVERAGE-REGISTER.md) | **new, this change** |
 | Business capabilities, phases 0–10, the Core/Pro line | [`docs/BUSINESS-CAPABILITY-ROADMAP.md`](../BUSINESS-CAPABILITY-ROADMAP.md) | yes |
+| Core/Pro separation: the never-paywalled floor, the Pro intake tests | [`CORE-AND-PRO-SEPARATION.md`](CORE-AND-PRO-SEPARATION.md) — a **draft**; §2.3 of the capability roadmap above still owns the rules | **new, this change** |
 | Angular graduation contract, 13 criteria | [`ANGULAR-GRADUATION.md`](../../ANGULAR-GRADUATION.md) + `scripts/check-angular-graduation.mjs` | yes |
 | Evidence ladder and what each instrument proves | [`docs/VERIFICATION-EVIDENCE-TIERS.md`](../VERIFICATION-EVIDENCE-TIERS.md) | yes |
 | Catalogue quality programme CAT-2…CAT-6 | `docs/roadmaps/CATALOGUE-QUALITY-ROADMAP.md` | **no — PR #413** |
@@ -32,7 +33,6 @@ document wins** and this file is the one that is wrong.
 | 19–23 October publication queue | [`marketing/distribution/M4-PUBLICATION-QUEUE.md`](../../marketing/distribution/M4-PUBLICATION-QUEUE.md) | yes |
 | **Live PR state, heads, checks, measured conflicts, merge sequence** | `/mnt/project-files/integration/LIVE-STATE-REGISTER-2026-10-21-EVENING.md` | project file |
 | **Open owner decisions E1–E12 and their history** | `/mnt/project-files/integration/INTEGRATION-REGISTER-2026-10-21.md` | project file |
-
 | Component and variant state completeness, Phase B work packages | `/mnt/project-files/phase-b-states/STATE-COMPLETENESS-MATRIX.md`, `PHASE-B-WORK-PACKAGES.md`, `SEMANTIC-VARIANT-TOKEN-GAPS.md` | project file |
 | Block vs component classification, travel-booking feasibility | `/mnt/project-files/bd-blocks-audit/` (3 files) | project file |
 | Configurable motion variants, `fluid` frame spec | `/mnt/project-files/motion/MOTION-VARIANTS-DECISION.md`, `FLUID-TABS-FRAME-SPEC.md` | project file |
@@ -51,7 +51,10 @@ Everything below was re-read on 2026-10-22; where it supersedes a figure written
 
 | Item | State on 2026-10-22 | Change since 2026-10-21 |
 | --- | --- | --- |
-| **#348** R1 version PR | **MERGED as `b8cfba9`**, and **the release then failed and published nothing** — run 39700240605, `release:preflight`, because the 0.25.0 notes were dated 2026-10-21 and the merge landed 31 minutes into 2026-10-22 UTC. Repository versions moved; the registry did not. Recovery is a one-line date change in `releases.ts`, needing Ziad's approval and a **same-UTC-day** merge | merged, and failed, since the 2026-10-22 pass |
+| **#348** R1 version PR | **MERGED and PUBLISHED.** Two runs were refused by `release:preflight` over a day-stale release-note date (`b8cfba9`, then `8b40fce`); **#446** refreshed the date, merged the same UTC day as `45cdaf11`, and the release succeeded. npm serves 0.25.0 / 0.25.0 / 0.25.0 / 0.26.0 / 0.5.0 | published since the 2026-10-22 pass |
+| **The R1 merge freeze** | **lifted.** Its reason was that every push to `main` re-ran a release attempt against a date gate that could not pass; R1 is out and `.changeset/` is empty, so that is no longer true. Merge sequencing is now the **integration thread's** Track A / B / C, not a freeze | was holding on the 2026-10-23 morning pass |
+| **New since the morning pass** | **#442** (status notices clear AA on a muted surface, and the disabled `kxButton` anchor made inert — Phase B WP-4 and WP-8), **#443** (BD-W6 boarding-pass block, five platforms), **#445** (1024px axe sweep with negative controls), **#447** (`check:engraving` in the a11y workflow), **#448** (a11y job timeout 35 → 60 min), **#449** (WP-1: a `pending` Button state on all five platforms, based on #442's branch), **#450** (`RELEASING.md` corrected, and the one-day release-note window documented) | all new |
+| **Integration order** | owned by the integration thread, from the owner's directive of 2026-10-23: **Track A** #450 → #427 → #428 → #430 → #413 → #443 · **Track B** #411 → #412 → #414 → #441 (with #441 also needing #430 where generated story and verification data meet) · **Track C** #433 → #437 → #434 → #448 → #447, with #445 after #448. **#440 merges last.** This roadmap does not re-derive that order | new |
 | **#428** CAT-QF | head `cab1c51f`, ready | unchanged |
 | **#430** CAT-2 taxonomy | head `e2432811`, **base is now `main`**, draft, `mergeable_state` unstable. Every substantive #428 commit is an ancestor, so **#428 is contained in #430** and merging #428 first costs #430 no reconciliation | was based on #428's branch at `1f2cee4e` |
 | **CAT-2 taxonomy decision** | **decided 2026-10-22 by the owner:** 8 categories accepted, twelve of the thirteen contested rows as proposed, and **`tag` moved to Data Display**; applied on #430's head and the chip counts re-measured in the browser | was open as E1/E2 |
@@ -60,7 +63,7 @@ Everything below was re-read on 2026-10-22; where it supersedes a figure written
 | **#439** hero Direction B | head `15273e92`, ready, **visual direction approved by the owner 2026-10-22 with notes**; merging is not authorized by that approval and waits behind R1 | was awaiting the choice |
 | **#439 open question** | whether to **reposition the glow at narrow widths**: at 390px it covers 0% of the system map and 100% of the headline, which is the same physical-placement fault the PR removes the lattice for. Left open deliberately, because moving it changes the approved appearance | new |
 | **#440** this roadmap | head `0839c71a`, 6 checks green, clean, 0 open review threads | new |
-| **#441** Tabs motion presets | **draft**, head `d059f7b1`. Adds `motion="classic" \| "none"` to `TabsList` and repairs the `selection-indicator` role (`proposed` → `observed`, first consumer, two tokens pinned). **`fluid` and `spring` are specified and deliberately *not* in it** — it is the first slice, not the fluid one. No changeset on purpose until R1 closes; it touches `tokens/contracts/motion.json`, so **MX1d merges first and #441 rebases onto it** | new |
+| **#441** Tabs motion presets | **draft**, head `8be3025c`, `behind`. It now carries **three** presets, not two: `classic` (the default, byte-for-byte what shipped), **`fluid`** — which *is* implemented, holding the trailing edge back a whole `base` so the two edges run with no overlap and each label changes colour on its own phase, at roughly twice `classic`'s duration — and `none`. It repairs the `selection-indicator` role (`proposed` → `observed`, first consumer declared, two tokens pinned), which had been recorded as "not on main" since #388 merged. It touches `tokens/contracts/motion.json`, so **MX1d merges first and #441 rebases onto it**; the changeset is owed at integration | `fluid` is implemented — the 2026-10-22 line saying it was deliberately excluded was true of `d059f7b1` and is no longer true |
 | **MX1d heads** | #411 `f026060f`, #412 `4c5a287c`, #414 `7fbad7b2` — all ready, order unchanged | all three moved |
 | **Open PRs** | **14 substantive** after #348 merged (#411–#414, #427, #428, #430, #433, #434, #436, #437, #439, #440, #441) + 10 Dependabot. **The freeze still holds**, on Dependabot and on every other merge: any push to `main` re-runs `release.yml`, and R1 is not published yet | was 13 + 10 on 2026-10-21 |
 | **BD-W6 boarding-pass block** | the owner **approved the slice on 2026-10-22** (decision B1′ in `/mnt/project-files/bd-blocks-audit/TRAVEL-BOOKING-FEASIBILITY.md`). It is the only `existing` travel stage, backed by the shipped `pass-card`, classified at birth on the BoardingPass capability row, and **static — no motion**, which is correct while `selection-indicator` has no merged consumer. Nothing is implemented yet | new |
@@ -92,26 +95,23 @@ distribution is further ahead than its measurement.**
 
 Three sentences that the repository supports:
 
-1. **R1 is merged and the release failed. Nothing was published.** #348 merged as **`b8cfba9`** on `main`, which
-   sets `@kinetixui/ui`, `tokens` and `cli` to 0.25.0 and `@kinetixui/angular` to 0.26.0 in the repository, drains
-   `.changeset/` to its README alone, and leaves `@kinetixui/iot` at 0.5.0 with its 7 changesets still held in
-   `.changeset-held/iot/`. The `Release` workflow then ran on that commit and **failed**: run
-   [39700240605](https://github.com/zedalleys/kinetixui/actions/runs/39700240605), job `preflight`, step
-   `pnpm release:preflight`, at 2026-10-22 00:33:16 UTC — **31 minutes after UTC midnight**, which is the whole
-   cause. Its message, verbatim:
-   > `Core 0.25.0 release notes are dated 2026-10-21; first publication requires 2026-10-22 (UTC). Refresh the Version PR release date and obtain approval before merging. No package was published.`
+1. **R1 is published, and it took three attempts.** `main` is `45cdaf11`. The registry was read on 2026-10-23
+   and serves `@kinetixui/ui` **0.25.0**, `tokens` **0.25.0**, `cli` **0.25.0**, `@kinetixui/angular` **0.26.0**
+   and `@kinetixui/iot` unchanged at **0.5.0**. The `Release` run on `45cdaf11` **succeeded**. Release closure,
+   with the registry, tag, Release and provenance evidence, is the release thread's report:
+   `/mnt/project-files/release-r1/R1-CLOSURE-REPORT.md`.
 
-   **It has now failed twice.** #444 merged at 2026-10-23 10:43 UTC, and the `Release` run on `8b40fce`
-   ([39941158437](https://github.com/zedalleys/kinetixui/actions/runs/39941158437)) failed in the same `preflight`
-   job. `apps/web/src/lib/releases.ts:154` still reads `date: "2026-10-21"` on `main`, so the gate's condition is
-   still unmet and every further merge spends another failed release run. This is **IR-2 realised a second time.**
+   **Why it took three.** #348 merged as `b8cfba9` at 2026-10-22 00:31 UTC — 31 minutes after UTC midnight — and
+   `release:preflight` refused to publish because the 0.25.0 notes were dated 2026-10-21 (run
+   [39700240605](https://github.com/zedalleys/kinetixui/actions/runs/39700240605)): *"first publication requires
+   2026-10-22 (UTC) … No package was published."* #444 then merged on 2026-10-23 and spent a second run on the
+   same refusal ([39941158437](https://github.com/zedalleys/kinetixui/actions/runs/39941158437)), because the date
+   had not been refreshed. **#446** refreshed that one line and merged the same UTC day, and the release went out.
+   The gate was right every time: a stale release-note date would have shipped publicly and irreversibly. **The
+   lesson is the one-day window, not the gate** — #450 documents it in `RELEASING.md`.
 
-   So the npm registry still served 0.24.0 / 0.24.0 / 0.24.0 / 0.25.1 / 0.5.0 when it was read on 2026-10-23, and
-   that is not a pending publish — it is a **refused** one. **Recovery is one line**: `date` on the 0.25.0 entry in
-   `apps/web/src/lib/releases.ts:154` becomes the current UTC day, which **Ziad must approve and which must merge
-   the same UTC day**, or the gate refuses it again for the same reason. A merged version PR is not a published
-   package, and **the release thread owns closure**: until it reports it, "0.25.0 is out" is not a claim this file
-   makes.
+   **Angular is published and still Preview**: 0.26.0 on npm, 7 of 13 graduation criteria met, re-run on
+   `45cdaf11`. **Native publication did not happen**: SwiftUI, Compose and Flutter remain source checkouts.
 2. **The web experience has a verified defect backlog that is not yet on `main`.** Twenty CAT-BUG findings and
    thirty-five evaluator-journey findings exist with reproduction evidence; the documents recording them live in
    three unmerged PRs and one deliberately-local file. The *fixes* for the highest-severity catalogue defects are
@@ -129,15 +129,15 @@ so the honest state is "instrument before publishing again".
 
 | | Value | Read from |
 | --- | --- | --- |
-| Versions **in the repository**, on `b8cfba9` | ui 0.25.0 · tokens 0.25.0 · cli 0.25.0 · angular 0.26.0 · iot 0.5.0 | `packages/*/package.json` |
-| Versions **published to npm**, read 2026-10-23 | ui 0.24.0 · tokens 0.24.0 · cli 0.24.0 · angular 0.25.1 · iot 0.5.0 — **the publish had not completed** | `registry.npmjs.org` |
-| Unreleased changesets | **0** — `.changeset/` holds its README alone after #348; **7** IoT changesets still held in `.changeset-held/iot/` | directory listing on `b8cfba9` |
+| Versions **published to npm**, read 2026-10-23 after R1 | ui 0.25.0 · tokens 0.25.0 · cli 0.25.0 · angular 0.26.0 · iot 0.5.0 | `registry.npmjs.org`, and the release thread's closure report |
+| Native publication | **none.** SwiftUI, Compose and Flutter are source checkouts; no platform registry carries them | `verification.json` `published` = 0 |
+| Unreleased changesets | **0** — `.changeset/` holds its README alone; **7** IoT changesets still held in `.changeset-held/iot/` | directory listing on `45cdaf11` |
 | Catalogue | 109 entries; React 109 · Angular 80 (+2 equivalent, 27 planned) · SwiftUI 90 · Compose 90 · Flutter 90 | `platform-parity.json`, `check:angular-graduation` |
 | Angular graduation | **7 of 13 criteria met today**; 6 open. The **12 of 13** figure elsewhere in this file is a *projection* after P1+P2 land, never a current reading | `node scripts/check-angular-graduation.mjs`, re-run 2026-10-22 on `72770976` |
 | Evidence levels | React 61 build / 48 headless / **0 runtime** · Angular 20 headless / 60 runtime · SwiftUI 90 build · Compose 86 build / 4 headless · Flutter 85 build / 5 headless | `verification.json` `componentLevelTotals` |
 | Native publication | **none.** Not on SPM, Maven or pub.dev; the publish workflows have never run for a real release | `verification.json` `published` = 0 for all three |
 | Motion roles | 5 `proven` · 2 `observed` · 1 `proposed` · 1 (`loop`) proven with no consumer list. #441 would move `selection-indicator` to `observed` with its first consumer — **in a draft PR, not on `main`** | `tokens/contracts/motion.json` |
-| Open PRs | **15** substantive + 10 Dependabot (2026-10-22) | integration register, refreshed above |
+| Open PRs | **21** substantive + 10 Dependabot (2026-10-23, post-R1) | the GitHub API, refreshed above |
 | Posts published to date | 9 of 17 distribution rows; 4 planned, 4 community rows blocked | `marketing/distribution/register.json` |
 | Tagged arrivals from the last three posts | **0** | `/mnt/project-files/integration/`, PR #436 |
 
@@ -220,10 +220,15 @@ never read as "the experience is complete"**, and each names the instrument that
 | **GAP-2** | Native overlays animate nothing | `Drawer.swift`, `Drawer.kt` and `drawer.dart` contain **zero animation calls**, as do AlertDialog, Popover, Tooltip, HoverCard and the menu family on all three native platforms | `check:native-motion` flags a file that *animates* and belongs to no family. A file that animates nothing passes silently and never reaches `KNOWN_GAPS` | register §4; **the instrument's largest blind spot** |
 | **GAP-3** | No native rendered-motion evidence beyond Flutter | Flutter's widget tests do read rendered intermediate values; SwiftUI's suite states in its own header that nothing in it renders, and Compose's asserts a node *exists* after a click, which is state, not a midpoint | `scripts/evidence-levels.mjs` lists `chromium` as the only runtime environment, so **no native cell can reach `runtime`** however much is added | register §4; owner decision **D-6** |
 | **GAP-4** | React holds **0** `runtime` evidence cells against Angular's **60** | Correct under the ladder — it needs interaction *and* accessibility both observed in a runtime environment, and React's interaction tests are jsdom | the ladder is working as designed; the defect is that a reader sees the reference platform ranked below Preview | owner decision **D-7** |
-| **GAP-5** | No pending or loading state on any action control, on any platform | No `Button`, submit control, menu item or form on any of the five platforms has one; a search for `isLoading\|loading\|aria-busy\|pending` across every platform package comes back effectively empty | nothing asserts the *presence* of a state, only the correctness of states that exist | `/mnt/project-files/phase-b-states/STATE-COMPLETENESS-MATRIX.md` §3.1 |
+| **GAP-5** | No pending or loading state on any action control, on any platform | No `Button`, submit control, menu item or form on any of the five platforms had one; `aria-busy` appeared once in the whole React catalogue. **Now in flight: #449** gives `Button` a controlled `pending` / `pendingLabel` on all five platforms (WP-1) | nothing asserts the *presence* of a state, only the correctness of states that exist — which is why this needed an audit rather than a gate to find | `/mnt/project-files/phase-b-states/STATE-COMPLETENESS-MATRIX.md` §3.1; **#449** |
 | **GAP-6** | `aria-required` appears **zero times** in the React catalogue | `Label`, `Field` and `Form` have no way to mark a control required | axe cannot fault a missing `aria-required` on a control nobody declared required | same matrix, line 103; work package WP covering `required?` on `Field` |
-| **GAP-7** | `check:contrast` gates one status tint of four | it measures the info status on a muted surface and not the other three, and it measures token pairs rather than rendered states | a token-pair gate cannot see a state it was never given a pair for. It is **green on current `main`**, which is exactly the point | `/mnt/project-files/phase-b-states/SEMANTIC-VARIANT-TOKEN-GAPS.md` |
-| **GAP-8** | Angular's disabled **anchor** form is not disabled | the anchor is dimmed in `styles.css` but still focusable and still activates by keyboard | CSS-only disabling leaves the semantics untouched, and no gate asserts an anchor's keyboard behaviour | same work packages, WP-8 |
+| **GAP-7** | `check:contrast` gates one status tint of four | it measured the info status on a muted surface and not the other three, and it measures token pairs rather than rendered states. **Now in flight: #442** (WP-4), which measured success at **4.20:1 on light `--muted`** — a real AA failure the gate could not see | a token-pair gate cannot see a state it was never given a pair for. It was **green on `main`** throughout, which is exactly the point | `/mnt/project-files/phase-b-states/SEMANTIC-VARIANT-TOKEN-GAPS.md`; **#442** |
+| **GAP-8** | Angular's disabled **anchor** form is not disabled | the anchor is dimmed in `styles.css` but still focusable and still activates by keyboard. **Now in flight: #442** (WP-8) makes it inert | CSS-only disabling leaves the semantics untouched, and no gate asserts an anchor's keyboard behaviour | same work packages, WP-8; **#442** |
+
+**Three of the eight now have an owning PR** (#442 for GAP-7 and GAP-8, #449 for GAP-5) and none of the three is
+merged, so every gap above is still true of `main`. **GAP-6 — `aria-required` absent from the entire React
+catalogue — is the one with no owner at all.** GAP-1 to GAP-4 are motion and evidence-ladder gaps and need
+decisions (D-6, D-7) rather than PRs.
 
 Two more that are recorded elsewhere and are not reopened here: **G1** (frozen) and the 17 hero
 `color-contrast` *incomplete* nodes that remain after both the lattice and the glow are gone, which belong to the
@@ -276,7 +281,7 @@ and art direction; these are roadmap-shaped.
 | **D-7** | **React's 0 runtime cells against Angular's 60.** Correct under the ladder, misleading to a reader | Do **not** change the ladder. Either promote React's interaction evidence by running a browser interaction pass, or show the environment beside the level on `/docs/platforms`. Changing the rule to flatter the reference platform is the one option to refuse |
 | **D-8** | **One public maturity vocabulary** (F-07: three vocabularies today, native "Experimental" hidden in a `<details>`) | Adopt the audit's proposal: *Package* (Published / Source-only), *Platform status* (Stable / Preview), *Verification* (Beta / Experimental), shown inline rather than nested |
 | **D-9** | **Native publication**: run the publish workflows, or document git pinning as the supported path | Document pinning now (P7), publish later. A first real publication of three unversioned native packages is a release event of its own, not a side effect |
-| **D-10** | **Pro commercialization** | **Keep it a research item.** `marketing/STRATEGY.md` rule 7 already keeps Pro-candidate rows off the site, and the capability roadmap's phase 10 already says "only with an owner decision that a Pro tier exists at all". Nothing in this roadmap changes that, and no engineering work should be shaped by it |
+| **D-10** | **Pro commercialization** | **Keep it a research item.** `marketing/STRATEGY.md` rule 7 already keeps Pro-candidate rows off the site, and the capability roadmap's phase 10 already says "only with an owner decision that a Pro tier exists at all". Nothing in this roadmap changes that, and no engineering work should be shaped by it. **Drafted in detail on 2026-10-23 in [`CORE-AND-PRO-SEPARATION.md`](CORE-AND-PRO-SEPARATION.md)**, which keeps D-10 as it stands and splits out four narrower questions D-10a–D-10d — the load-bearing one being that rule 1's never-paywalled promise is enforced for eight row names and nothing else |
 
 ---
 
