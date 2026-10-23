@@ -2,7 +2,7 @@
 
 **Written:** 2026-10-21 · **Last accuracy pass:** 2026-10-23 (see *State refreshed* below) · **Measurement
 baseline:** `origin/main` at `72770976`, which is what every figure below was read from · **`main` is now
-`b8cfba9`**, after #348 merged · **Status:** a reconciliation of existing plans, not a new plan. Every 30/60/90 item is a **proposal**; nothing here is a commitment, an approval or
+`8b40fce`**, after #348 (`b8cfba9`) and #444 · **Status:** a reconciliation of existing plans, not a new plan. Every 30/60/90 item is a **proposal**; nothing here is a commitment, an approval or
 an authorization to merge or publish.
 
 ## How to use this document
@@ -101,6 +101,11 @@ Three sentences that the repository supports:
    cause. Its message, verbatim:
    > `Core 0.25.0 release notes are dated 2026-10-21; first publication requires 2026-10-22 (UTC). Refresh the Version PR release date and obtain approval before merging. No package was published.`
 
+   **It has now failed twice.** #444 merged at 2026-10-23 10:43 UTC, and the `Release` run on `8b40fce`
+   ([39941158437](https://github.com/zedalleys/kinetixui/actions/runs/39941158437)) failed in the same `preflight`
+   job. `apps/web/src/lib/releases.ts:154` still reads `date: "2026-10-21"` on `main`, so the gate's condition is
+   still unmet and every further merge spends another failed release run. This is **IR-2 realised a second time.**
+
    So the npm registry still served 0.24.0 / 0.24.0 / 0.24.0 / 0.25.1 / 0.5.0 when it was read on 2026-10-23, and
    that is not a pending publish — it is a **refused** one. **Recovery is one line**: `date` on the 0.25.0 entry in
    `apps/web/src/lib/releases.ts:154` becomes the current UTC day, which **Ziad must approve and which must merge
@@ -157,7 +162,7 @@ renamed and no phase was renumbered.
 | --- | --- | --- | --- | --- |
 | WS1 | M1 #398, M2 #405, M3 #406, M3.1 #409, M4 #410, LI-001 pre-publication record #429 | LI-001 close-out; measurement of why three posts yielded nothing; X-001 approval + slot | #436 (draft) | COM-001…004 community rows (rules gate); `/blog` (needs ≥3 off-site articles) |
 | WS2 | ENG-2b-4 #401, ENG-2b-5 #407, R1 iot exclusion #415, BD-W5 consumer gates #408, **R1 #348 merged `b8cfba9`** | **the publish itself — refused by `release:preflight`, recoverable by one dated line**; native publication to SPM/Maven/pub.dev | #427 | Dependabot #417–#426 (**the freeze holds** until R1 is published and verified) |
-| WS3 | evaluator track A #347, track B #350, web quality #369, homepage #370, footer #432/#435, homepage overlay fix #438 | CAT-BUG-001…005, 009, 011, 014, 015, 017…020; 128px docs column at 1280px/200% text; F-07 maturity vocabulary | #428, #413, #439 (direction approved, waits behind R1), #433/#437/#434 | CAT-3 thumbnails, AE-2B (both held by Ziad) |
+| WS3 | evaluator track A #347, track B #350, web quality #369, homepage #370, footer #432/#435, homepage overlay fix #438, **128px docs column #444** | CAT-BUG-001…005, 009, 011, 014, 015, 017…020; F-07 maturity vocabulary | #428, #413, #439 (direction approved, waits behind R1), #433/#437/#434 | CAT-3 thumbnails, AE-2B (both held by Ziad) |
 | WS4 | capability phases 0–2 foundations (#376, #378), BD-W1…W5 (#377, #389, #394, #395, #397, #399, #403, #408), Angular waves A–C3, field shapes #402 | 27 planned Angular entries; 6 open graduation criteria; capability phase 3 not started | #430 (taxonomy decided 2026-10-22, now based on `main`); BD-W6 boarding-pass block approved, unimplemented | IoT (real-device evidence); Pro tier (research only) |
 | WS5 | MX1a #393, MX1b-1a #396, MX1b-1b #400, MX1b-1c #404, MX1b-2 Angular #416 | G3, G5, G6, G7, G11, G12; feedback-entry role; overlay motion gate; native rendered evidence | #411, #412, #414; #441 (draft, rebases onto MX1d) | G2 (settled: stagger stays untokenised) |
 
@@ -237,7 +242,7 @@ new-branch work that cannot collide with the thirteen open PRs (verified against
 | **P2** | WS5 | **Angular `reducedMotion` for checkbox, radio-group, tabs, toggle, toggle-group.** Closes the other 2 criteria + 2 roadmap rows | the Angular selection work merged (#416); the gate `check:angular-selection-motion` exists. Touches `scripts/` + `packages/ui-angular` |
 | **P3** | WS5 | **Give the feedback-entry role a home**: add a role to `tokens/contracts/motion.json` for Sonner/Alert/Banner appearing, or record each as static by design | blocked only by the MX1d chain's conflict on that one file — so do it **after gate 2**, or as a decision note now |
 | **P4** | WS1 | **Attribution diagnosis** for the three zero-arrival posts: re-derive the tracked URL for LI-001, LI-007 and ART-001 from the live posts, confirm the `utm` quartet survives each channel's link handling, and write the finding | reads PostHog and the live posts; writes only to `marketing/measurement/`. Publishes nothing |
-| **P5** | WS3 | **The 128px docs column at 1280px with 200% text** — a pre-existing finding from track B, never given a PR | `apps/web` docs layout; no open PR touches the docs sidebar sizing |
+| ~~**P5**~~ | WS3 | ~~The 128px docs column at 1280px with 200% text~~ — **delivered 2026-10-23 as #444**, by the *Discovery to adoption UX fixes* thread. Kept here struck through rather than deleted, so the slice list reads as a record | n/a |
 | **P6** | WS5 | **G7 Progress logical fill, measured in RTL first.** Measure before changing, per §10 of the project rules | `packages/ui` Progress + a new RTL probe; untouched by open PRs |
 | **P7** | WS2 | **Native publication *documentation***: state the pin-a-commit path and that SPM/Maven/pub.dev carry nothing. F-01's docs half | docs only; the publish decision itself is an owner call |
 
@@ -295,7 +300,7 @@ marketing). This is the cross-workstream version, and every line is a proposal Z
 | WS | Proposed | Measurable acceptance |
 | --- | --- | --- |
 | WS5 + WS2 | **first native runtime evidence**: one platform, one component, on a simulator or emulator in CI (D-6) | a `runtime` cell exists on a native platform, earned by `scripts/evidence-levels.mjs` without changing the rule |
-| WS3 | D-8 maturity vocabulary shipped; the 128px docs column fixed | one vocabulary on every public surface, with a guard; docs readable at 1280px/200% text |
+| WS3 | D-8 maturity vocabulary shipped (the 128px docs column is done, #444) | one vocabulary on every public surface, with a guard |
 | WS4 | capability phase 3 first slice: **DataGrid RTL pinning** (`left`/`right` → start/end) | the RTL contract defect is fixed before the component is extended, with a negative control |
 | WS1 | SEO landing pages per `marketing/roadmap.md` days 31–60, **only if** the attribution finding cleared | first non-brand organic entry recorded |
 | WS5 | G5 Angular global floor + G6 Menubar exit | both gaps closed with rendered evidence; G-numbers retired, not renumbered |
@@ -392,16 +397,12 @@ slice with its own acceptance criteria, and none of them merges, publishes or pu
 > `marketing-claims`-style test family that fails if a page claims native package availability while
 > `verification.json` records `published: 0`, with a negative control; `check:distribution` green; no changeset.
 
-### WS3 — the 128px docs column (P5)
+### WS3 — the 128px docs column (P5) — **delivered as #444, 2026-10-23**
 
-> At 1280px with 200% text, every docs content column measures 128px wide, because the sidebar and the table of
-> contents are sized in `rem` while the content column takes what is left. This was found during evaluator track B
-> and has never had a PR.
->
-> Reproduce it with a rendered measurement before changing anything, then fix the layout contract rather than
-> shrinking text or clipping. **Accept:** the measured column width at 1280px/200% text in both directions before
-> and after; an assertion in the existing web-quality browser gate that the docs content column keeps a stated
-> minimum at that scale; a negative control; and the 320–1280px × 100/200% matrix still green.
+> This prompt is kept as a record of what was asked and is no longer work to do. The slice shipped on 2026-10-23
+> as **#444**, from the *Discovery to adoption UX fixes* thread. The next WS3 slice is **D-8**, the single public
+> maturity vocabulary (F-07): three vocabularies coexist on public surfaces today, and the decision is which one
+> survives before any of them is enforced by a guard.
 
 ### WS4 — Angular graduation closure (P1 + P2, two PRs)
 
