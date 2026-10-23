@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -50,6 +51,7 @@ import com.kinetixui.ui.KinetixTag
 import com.kinetixui.ui.KinetixTagVariant
 import com.kinetixui.ui.KinetixTheme
 import kotlinx.coroutines.launch
+import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -250,8 +252,19 @@ class BoardingPassBlockTest {
     fun copying_the_confirmation_code_announces_its_own_result() {
         rule.setContent { KinetixTheme(darkTheme = false) { BoardingPassBlock() } }
         rule.onNodeWithContentDescription("Copy confirmation code").performClick()
-        rule.waitForIdle()
-        // Whatever the clipboard did, the block says what happened rather than staying silent.
-        rule.onNodeWithText("Copied").assertExists()
+        // The copy runs in a coroutine, so wait for the live region instead of assuming the click and the
+        // announcement land in the same frame.
+        rule.waitUntil(5_000) { announcedOutcome() != null }
+        // Whatever the clipboard did, the block says what happened rather than staying silent. Which of the
+        // two outcomes a host clipboard produces is not this block's contract — saying nothing would be.
+        assertNotNull("the live region stayed empty after the copy", announcedOutcome())
+    }
+
+    /** What the polite live region currently says, or null while it is still empty. */
+    private fun announcedOutcome(): String? = when {
+        rule.onAllNodesWithText("Copied").fetchSemanticsNodes().isNotEmpty() -> "Copied"
+        rule.onAllNodesWithText("Couldn't copy automatically", substring = true)
+            .fetchSemanticsNodes().isNotEmpty() -> "refused, with the select-it-yourself fallback"
+        else -> null
     }
 }
