@@ -109,6 +109,13 @@ const WIDTHS = [
   ["small-phone", 320, 812],
   ["phone", 375, 812],
   ["tablet", 768, 1024],
+  // 1024 is the width at which the `lg` compositions switch on, and it was the gap between `tablet` and
+  // `desktop` where a layout can be at its tightest: wide enough to have committed to a desktop arrangement,
+  // not wide enough to afford it. #444 found a real failure there that this list could not see — at 1024px
+  // with a 32px default font size the docs component pages gained **37px of horizontal scrolling**, because
+  // the 14rem sidebar had become 448px of a 1024px screen. The defect is fixed; the blind spot was not, and
+  // a sample that misses a whole breakpoint keeps missing whatever else sits in it.
+  ["laptop", 1024, 768],
   ["desktop", 1280, 900],
 ];
 const SCHEMES = ["light", "dark"];
