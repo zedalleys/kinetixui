@@ -147,6 +147,60 @@ const TEXT_SCALES = [1, 2];
 const TEXT_SCALE_PENDING = new Map([]);
 
 /**
+ * Single axe findings that are artefacts of how axe resolves a background, not defects of the page, as a ratchet.
+ *
+ * axe's `color-contrast` asks `elementsFromPoint` what is painted beneath a node. When a node is laid out
+ * inside a clipping ancestor but positioned outside it, the browser paints nothing there, so that question
+ * returns the page instead of the node's own card — and axe compares the text against a background it is never
+ * drawn on. The finding is then arithmetic about two colours that never meet.
+ *
+ * An entry says: at this exact view, this exact rule on this exact node is such an artefact, and here is the
+ * measurement that shows it. It is matched on all four of those, so it cannot quietly cover a second node, a
+ * second rule or a second width, and like `TEXT_SCALE_PENDING` it is asserted to be NEEDED — the run fails if
+ * the finding stops being observed, which is what stops a ratchet becoming an exemption.
+ *
+ * It is NOT a way to carry a real contrast failure. Only a finding whose true ratio has been measured against
+ * the background the reader actually sees belongs here, with that number in `why`.
+ */
+const AXE_ARTIFACTS = new Map([
+  [
+    "/create",
+    [
+      {
+        view: "dark/laptop/text100%",
+        rule: "color-contrast",
+        node: ".text-destructive",
+        // The `laptop` width found this on its first run. At 1024px the preview frame is 574px wide
+        // (x 417–991) while the dashboard scene inside it paints its Metric trend at x 974–1019: 28px past
+        // the frame's `overflow-hidden` edge, so the reader never sees it and `elementsFromPoint` at its
+        // centre returns `main` and `body`. axe therefore measured #c70a0a on the page's #050b10 and got
+        // 3.27. Against the white card the element is actually inside, the same two colours measure
+        // **6.04**, which passes AA at 12px. There is no contrast defect here.
+        //
+        // The clipping IS a defect, and it is not this gate's: the preview scene's `sm-rem:` classes are
+        // viewport media queries, so a 574px frame at a 1024px viewport is asked to lay out the desktop
+        // arrangement. Nothing currently measures content painted outside its own clip, at any width.
+        why: "node painted 28px outside its clipping frame; true ratio against its white card is 6.04:1",
+      },
+    ],
+  ],
+]);
+
+/** Marks an artefact entry as still earned; an unseen entry fails the run at the end. */
+const artifactsSeen = new Set();
+const artifactKey = (path, i) => `${path}#${i}`;
+
+/** The matching entry for one axe violation in one view, or undefined. */
+function axeArtifactFor(path, view, v) {
+  const entries = AXE_ARTIFACTS.get(path);
+  if (!entries) return undefined;
+  const i = entries.findIndex((e) => e.view === view && e.rule === v.id && v.count === 1 && v.nodes[0] === e.node);
+  if (i === -1) return undefined;
+  artifactsSeen.add(artifactKey(path, i));
+  return entries[i];
+}
+
+/**
  * Per-page layout contracts: regions that must still be usable, not merely free of sideways scroll.
  *
  * #278 taught that a page can pass the overflow check and still be unusable, and /create proved it.
@@ -349,6 +403,7 @@ for (const scheme of SCHEMES) {
             failures.push(`${tag}: no docs navigation — neither the sidebar nor the menu button is visible`);
           }
           for (const v of result.violations) {
+            if (axeArtifactFor(path, tag.split(" ")[0], v)) continue;
             failures.push(`${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")})`);
           }
           const contract = LAYOUT_CONTRACTS.get(path);
@@ -441,6 +496,19 @@ for (const [path, why] of TEXT_SCALE_PENDING) {
   } else if (!pendingSeen.has(path)) {
     failures.push(`${path}: no longer overflows at 200% text in any swept view — delete it from TEXT_SCALE_PENDING (was: ${why})`);
   }
+}
+
+// Same ratchet as TEXT_SCALE_PENDING: an artefact entry that no longer matches anything is a line claiming a
+// finding the sweep cannot find, which is indistinguishable from an exemption nobody is checking.
+for (const [path, entries] of AXE_ARTIFACTS) {
+  entries.forEach((e, i) => {
+    if (!artifactsSeen.has(artifactKey(path, i))) {
+      failures.push(
+        `${path}: the ${e.rule} finding on \`${e.node}\` at ${e.view} no longer occurs — delete it from ` +
+          `AXE_ARTIFACTS (was: ${e.why})`,
+      );
+    }
+  });
 }
 
 await browser.close();
