@@ -176,8 +176,28 @@ export default function HomePage() {
 
       {/* ─── [01] hero ───────────────────────────────────────────────────────── */}
       <section className="kx-chapter overflow-hidden border-b border-border">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 kx-grid-bg opacity-50" />
-        <div aria-hidden="true" className="kx-glow -end-40 -top-32 size-[46rem]" />
+        {/*
+          The hero carries no decorative texture. It used to hold a 44px lattice whose mask was centred at
+          `30% 0%` — the middle of the copy column — so the texture was strongest across the headline and the
+          paragraph and had faded out by the time it reached the system map, the one thing it was meant to
+          sit behind. That position is physical, so under `dir="rtl"` it landed on the map instead. What is
+          left is the structure the whole page already carries: the `.kx-edges` margin rules, the type, and
+          the one glow below.
+
+          The glow is placed rather than centred, so an offset from one corner means different things at
+          different widths. Anchored to the top it sits under the map while the map is beside the copy, but
+          below `lg-rem` the map moves under the copy and the same offset puts the glow over the headline
+          instead — measured, 100% of the headline and 0% of the map at 390px. That is not free: the lede
+          paragraph is `muted-foreground` at 16px, which clears AA by 0.60 in light theme, and the gradient
+          under it measured 4.28:1 against the 4.5 floor. axe cannot see it, because it will not resolve a
+          background behind a gradient and reports "incomplete" rather than a failure.
+
+          So the anchor follows the layout: bottom-anchored while the map is below the copy, top-anchored
+          from `lg-rem` up, where the composition — and the approved appearance — is unchanged. `bottom-14`
+          rather than `bottom-0` keeps the gradient clear of the targets ticker below it, whose own text is
+          muted at 14px.
+        */}
+        <div aria-hidden="true" className="kx-glow kx-glow-soft -end-40 bottom-14 top-auto size-[46rem] lg-rem:bottom-auto lg-rem:-top-32" />
         <div className={container}>
           {/*
             Hero vertical rhythm is a mobile-first decision. At 390×800 the primary CTA and the install command
@@ -235,7 +255,12 @@ export default function HomePage() {
                   <Link
                     href="/docs/installation"
                     {...ctaAttrs("homepage_hero", "installation")}
-                    className="text-primary underline-offset-4 hover:underline"
+                    // Always underlined, for the same reason as the "What ships where" link below: inside
+                    // mixed foreground/muted text, colour alone does not mark a link. It measured 1.3:1
+                    // against the muted prose around it in light and 1.13:1 in dark, against WCAG 1.4.1's
+                    // 3:1 — and the hero's old backdrop gradient hid that from axe, which could only report
+                    // "contrast could not be determined" while it was there.
+                    className="text-primary underline underline-offset-4"
                   >
                     Installation
                   </Link>{" "}
