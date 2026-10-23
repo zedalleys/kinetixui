@@ -3,7 +3,7 @@
 // @kinetixui/ui — public entrypoint
 
 /* Design-source native API (variant props mirror Figma component properties) */
-export { Button, buttonVariants, type ButtonProps } from "./components/button";
+export { Button, buttonVariants, DEFAULT_PENDING_LABEL, type ButtonProps } from "./components/button";
 export { Input, inputVariants, type InputProps } from "./components/input";
 export { Textarea, textareaVariants, type TextareaProps } from "./components/textarea";
 

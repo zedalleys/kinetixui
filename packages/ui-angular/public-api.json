@@ -606,6 +606,8 @@
       "selector": "button[kxButton], a[kxButton]",
       "inputs": [
         "corners",
+        "pending",
+        "pendingLabel",
         "size",
         "variant"
       ],

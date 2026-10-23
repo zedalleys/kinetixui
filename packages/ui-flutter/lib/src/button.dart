@@ -20,6 +20,9 @@ enum KinetixButtonSize { sm, md, lg, icon }
 /// (`rounded-md`).
 enum KinetixCorners { sharp, standard, pill }
 
+/// The default status wording for [KinetixButton.pending]. English, like the rest of this package.
+const String kKinetixButtonPendingLabel = 'Working…';
+
 class KinetixButton extends StatefulWidget {
   const KinetixButton({
     super.key,
@@ -28,6 +31,8 @@ class KinetixButton extends StatefulWidget {
     this.variant = KinetixButtonVariant.primary,
     this.size = KinetixButtonSize.md,
     this.corners = KinetixCorners.standard,
+    this.pending,
+    this.pendingLabel = kKinetixButtonPendingLabel,
   });
 
   /// `null` renders the disabled treatment (`--border` fill / `--muted-foreground` text).
@@ -37,6 +42,25 @@ class KinetixButton extends StatefulWidget {
   final KinetixButtonSize size;
   final KinetixCorners corners;
 
+  /// The action this button started is in flight.
+  ///
+  /// Deliberately NOT expressed by passing `onPressed: null`. In Flutter a null `onPressed` IS
+  /// disabled semantics — `Semantics(enabled: false)` below is derived from it — and a disabled
+  /// control is reported as unavailable rather than busy, and loses focus. While pending, [onPressed]
+  /// stays non-null and the tap callback is gated instead, so the node keeps its enabled semantics,
+  /// its label and the focus the user put on it.
+  ///
+  /// Three-valued on purpose: `null` means this call site never mentioned `pending`, and the widget
+  /// builds exactly what it did before this field existed — no indicator slot, no extra semantics.
+  ///
+  /// NOT VERIFIED AT RUNTIME. No TalkBack or VoiceOver run stands behind this; the widget tests read
+  /// the semantics tree, which is a claim about the properties set, not a measurement of what an
+  /// assistive technology says.
+  final bool? pending;
+
+  /// What a screen reader hears while [pending], carried separately from the button's own label.
+  final String pendingLabel;
+
   @override
   State<KinetixButton> createState() => _KinetixButtonState();
 }
@@ -45,6 +69,15 @@ class _KinetixButtonState extends State<KinetixButton> {
   bool _hovered = false;
   bool _pressed = false;
 
+  /// Opted in at all — see [KinetixButton.pending].
+  bool get _pendingAware => widget.pending != null;
+
+  /// PRECEDENCE: a null [KinetixButton.onPressed] — Flutter's disabled — wins over [pending], the
+  /// same rule the other four ports follow. A control the author has taken out of service is not
+  /// performing an action, so a disabled button gets no indicator, no `value` and no live region;
+  /// otherwise the node would report itself both unavailable and working.
+  bool get _isPending => widget.pending == true && widget.onPressed != null;
+
   @override
   Widget build(BuildContext context) {
     // InkWell alone gives a screen reader the label but no "button" role and no enabled/disabled state.
@@ -52,6 +85,11 @@ class _KinetixButtonState extends State<KinetixButton> {
       container: true,
       button: true,
       enabled: widget.onPressed != null,
+      // The status, separate from the label, which stays whatever `child` renders. `liveRegion` is
+      // what makes a CHANGE announced rather than only read when the node is focused. Both are left
+      // off entirely for a call site that never mentions `pending`.
+      value: _isPending ? widget.pendingLabel : null,
+      liveRegion: _pendingAware ? _isPending : null,
       child: _buildControl(context),
     );
   }
@@ -125,7 +163,15 @@ class _KinetixButtonState extends State<KinetixButton> {
       color: Colors.transparent,
       borderRadius: borderRadius,
       child: InkWell(
-        onTap: onPressed,
+        // Gated, not nulled: `onTap: null` would make InkWell itself inert and unfocusable, which is
+        // the disabled behaviour this state exists to avoid. Read back off the widget rather than
+        // through the promoted local, so the closure needs no type promotion to compile.
+        onTap: onPressed == null
+            ? null
+            : () {
+                if (_isPending) return;
+                widget.onPressed?.call();
+              },
         onHover: (bool v) => setState(() => _hovered = v),
         onHighlightChanged: (bool v) => setState(() => _pressed = v),
         borderRadius: borderRadius,
@@ -143,7 +189,28 @@ class _KinetixButtonState extends State<KinetixButton> {
             style: textStyle.copyWith(color: fg),
             child: IconTheme.merge(
               data: IconThemeData(color: fg, size: 18),
-              child: child,
+              child: _pendingAware
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        // The slot is 18px in both states — matching the icon slot and React's
+                        // `[&_svg]:size-[18px]` — so the label does not shift when the ring appears.
+                        // `ExcludeSemantics`: the status is on the button's node, and a second source
+                        // would have it announced twice.
+                        SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: _isPending
+                              ? ExcludeSemantics(
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: fg),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 4),
+                        child,
+                      ],
+                    )
+                  : child,
             ),
           ),
         ),
