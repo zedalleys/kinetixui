@@ -195,6 +195,33 @@ const LAYOUT_CONTRACTS = new Map([
  */
 const isDocsPage = (path) => path === "/docs" || path.startsWith("/docs/");
 
+/**
+ * The docs reading column against the navigation rails beside it.
+ *
+ * `/create` taught that a page can pass the overflow check and still be unusable because its content is being
+ * crushed rather than pushed. The docs layout had the same failure in a different shape, and the per-element
+ * content ratio above cannot see it: prose wraps, so a 128px article has `scrollWidth === clientWidth` and
+ * measures perfectly healthy element by element. What is wrong is how the row was divided. Measured on the
+ * commit before this one, at 1280px with a 32px default font size:
+ *
+ *     sidebar 448px   article 128px   table of contents 448px
+ *
+ * Both rails are sized in `rem` and doubled with the reader's text; the `lg`/`xl` media queries that decided to
+ * show them are in `px` and could not see that the text had doubled, so the layout kept a three-column desktop
+ * composition and gave the documentation the narrowest third of it.
+ *
+ * The assertion is a comparison and not a pixel floor. A floor would be a number invented here, and it would be
+ * wrong at 320px, where a narrow column is the screen being narrow rather than the layout being broken. What the
+ * page can be held to at every width is the relationship it is making a claim about:
+ *
+ *     the documentation is never narrower than the navigation beside it.
+ *
+ * Only rails that are actually rendered count, so a width where the sidebar is hidden simply has less to beat.
+ * Separation is wide and not delicate: the broken view measures 0.29 of its widest rail, every view after the
+ * fix measures 2.0 or more, and the three-column views at the default text size are unchanged at 3.1.
+ */
+const DOCS_COLUMN_MIN_RATIO = 1;
+
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const failures = [];
@@ -236,7 +263,7 @@ for (const scheme of SCHEMES) {
             continue;
           }
           await page.addScriptTag({ content: axeSource });
-          const result = await page.evaluate(async (contract) => {
+          const result = await page.evaluate(async ({ docs, ...contract }) => {
             const r = await window.axe.run(document, { rules: { region: { enabled: false } } });
             return {
               violations: r.violations.map((v) => ({
@@ -246,7 +273,7 @@ for (const scheme of SCHEMES) {
                 count: v.nodes.length,
               })),
               overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-              layout: contract
+              layout: contract.selector
                 ? (() => {
                     const nodes = [...document.querySelectorAll(contract.selector)];
                     const crushed = nodes
@@ -260,8 +287,22 @@ for (const scheme of SCHEMES) {
                     return { matched: nodes.length, crushed: crushed.slice(0, 3), crushedCount: crushed.length };
                   })()
                 : null,
+              // Rails are measured by their rendered box, not by their classes: a rail hidden at this width has
+              // no box and nothing to beat, which is the correct reading of "the navigation beside it".
+              docsColumn: docs
+                ? (() => {
+                    const article = document.querySelector("[data-docs-content]");
+                    if (!article) return { found: false };
+                    const rails = [...document.querySelectorAll("[data-docs-rail]")]
+                      .map((el) => ({ name: el.getAttribute("data-docs-rail"), width: Math.round(el.getBoundingClientRect().width) }))
+                      .filter((r) => r.width > 0);
+                    const widest = rails.reduce((m, r) => (r.width > m.width ? r : m), { name: "none", width: 0 });
+                    const a = Math.round(article.getBoundingClientRect().width);
+                    return { found: true, article: a, rails, widest, ratio: widest.width > 0 ? a / widest.width : Infinity };
+                  })()
+                : null,
             };
-          }, LAYOUT_CONTRACTS.get(path) ?? null);
+          }, { ...(LAYOUT_CONTRACTS.get(path) ?? { selector: null }), docs: isDocsPage(path) });
           views++;
           const reach = await page.evaluate(() => {
             const shown = (el) => {
@@ -299,6 +340,21 @@ for (const scheme of SCHEMES) {
                   result.layout.crushed
                     .map((c) => `${c.client}px shown of ${c.content}px (${c.ratio.toFixed(2)}) "${c.text}"`)
                     .join(" | "),
+              );
+            }
+          }
+          if (isDocsPage(path)) {
+            const c = result.docsColumn;
+            if (!c || !c.found) {
+              failures.push(
+                `${tag}: no \`[data-docs-content]\` article found — this contract is measuring nothing, which is ` +
+                  `not the same as finding nothing wrong`,
+              );
+            } else if (c.ratio < DOCS_COLUMN_MIN_RATIO) {
+              failures.push(
+                `${tag}: the docs reading column is ${c.article}px against a ${c.widest.width}px ${c.widest.name} rail ` +
+                  `(${c.ratio.toFixed(2)}) — the navigation has more of the page than the documentation ` +
+                  `[${c.rails.map((r) => `${r.name} ${r.width}px`).join(", ") || "no rails rendered"}]`,
               );
             }
           }
@@ -340,7 +396,8 @@ if (failures.length) {
 console.log(
   `a11y-site ok — ${(ONLY_PAGES ?? PAGES).length} pages × ${SCHEMES.length} themes × ${WIDTHS.length} widths × ${TEXT_SCALES.length} text sizes ` +
     `(${views} views): no axe findings, no horizontal overflow, ${LAYOUT_CONTRACTS.size} layout contract(s) held, ` +
-    `site search and docs navigation reachable at every width.` +
+    `site search and docs navigation reachable at every width, and the docs reading column never narrower ` +
+    `than the navigation rails beside it.` +
     (TEXT_SCALE_PENDING.size
       ? `\n  ${TEXT_SCALE_PENDING.size} page(s) pending at 200% text, each verified to still need it: ` +
         [...TEXT_SCALE_PENDING.keys()].join(", ")
