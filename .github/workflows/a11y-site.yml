@@ -30,6 +30,11 @@ on:
       - "blocks.manifest.json"
       - "scripts/global-search-browser.mjs"
       - "scripts/use-cases-browser.mjs"
+      - "scripts/engraving-visual.mjs"
+      # The harnesses that prove the engraving gate can fail; a change to either changes what the
+      # gate's evidence is worth, even though neither runs in this job.
+      - "scripts/engraving-negative-controls.mjs"
+      - "scripts/engraving-source-negative-controls.mjs"
       # The Use cases hub and the use-case pages are rendered from the discovery index.
       - "discovery-index.json"
       - "discovery-routes.json"
@@ -62,6 +67,11 @@ on:
       - "blocks.manifest.json"
       - "scripts/global-search-browser.mjs"
       - "scripts/use-cases-browser.mjs"
+      - "scripts/engraving-visual.mjs"
+      # The harnesses that prove the engraving gate can fail; a change to either changes what the
+      # gate's evidence is worth, even though neither runs in this job.
+      - "scripts/engraving-negative-controls.mjs"
+      - "scripts/engraving-source-negative-controls.mjs"
       # The Use cases hub and the use-case pages are rendered from the discovery index.
       - "discovery-index.json"
       - "discovery-routes.json"
@@ -186,3 +196,15 @@ jobs:
       # light/dark and forced colours.
       - name: Use cases hub (links, anchors, keyboard, axe, layout)
         run: pnpm check:use-cases
+
+      # The printed sheet's contract on rendered pixels: that `.kx-paper` ships, follows the theme without
+      # inverting, paints its grain, clears AA on the paper in both themes, stays out of the accessibility
+      # tree, stays off every surface but the footer, holds its layout at 20 viewport combinations and stays
+      # still with and without `prefers-reduced-motion`.
+      #
+      # Its ten negative controls are `pnpm check:engraving-controls` (built output, ~11 min) and
+      # `scripts/engraving-source-negative-controls.mjs` (source plus rebuild, on demand). Neither runs
+      # here: a suite that pays seven rebuilds does not belong on every pull request. 30 of 30 control runs
+      # detected across three passes — see docs/design/ARABIAN-EDITORIAL-ENGRAVING.md §10.
+      - name: Printed sheet (ships, theme, grain, contrast, tree, leak, layout, motion, parity)
+        run: pnpm check:engraving
