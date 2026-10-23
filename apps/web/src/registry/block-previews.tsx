@@ -11,6 +11,7 @@
 import type { ComponentType } from "react";
 import { AccountSecurityBlock } from "@/examples/blocks/account-security";
 import { AlertStackBlock } from "@/examples/blocks/alert-stack";
+import { BoardingPassBlock } from "@/examples/blocks/boarding-pass";
 import { CommentBoxBlock } from "@/examples/blocks/comment-box";
 import { CreateAccountBlock } from "@/examples/blocks/create-account";
 import { CtaBannerBlock } from "@/examples/blocks/cta-banner";
@@ -53,4 +54,5 @@ export const blockPreviews: Record<string, ComponentType> = {
   "order-summary": OrderSummaryBlock,
   "create-account": CreateAccountBlock,
   "receipt": ReceiptBlock,
+  "boarding-pass": BoardingPassBlock,
 };
