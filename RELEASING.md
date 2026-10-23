@@ -150,12 +150,18 @@ version's entry in `apps/web/src/lib/releases.ts` to equal the current UTC date.
 publication date, so a date that is not the publication day is simply wrong, and the gate refuses
 the release rather than publish a release note that misdates itself.
 
-That date is generated. `changeset version` stamps it with the day it ran, which means **every
-rebuild of the Version Packages PR re-stamps it with the rebuild's day**, and the merge window for
-that build is bounded by that UTC day. Merge after midnight UTC and the release is refused with the
-two dates named, which is what happened to 0.25.0: the Version PR was rebuilt on 2026-10-21 and
-merged at 00:31 UTC on the 22nd, so nothing published until the date was corrected and merged on
-the day it ran.
+That date is generated, and `changeset version` is not what writes it. `pnpm version-packages` is
+`changeset version && node scripts/version-release-meta.mjs`, and it is the second half that reads
+`release/notes/<core-version>.json`, sets `entry.date` to the current UTC day and inserts the entry
+into `releases.ts`. Running the Changesets CLI on its own versions the packages and leaves the date
+alone, so **a Version PR regenerated that way can still be refused after midnight** — use
+`pnpm version-packages`, or correct the one line by hand.
+
+Because the bot rebuilds the Version PR from `main`, where the entry does not exist yet, **every
+rebuild inserts it afresh with the rebuild's day**, and the merge window for that build is bounded
+by that UTC day. Merge after midnight UTC and the release is refused with the two dates named,
+which is what happened to 0.25.0: the Version PR was rebuilt on 2026-10-21 and merged at 00:31 UTC
+on the 22nd, so nothing published until the date was corrected and merged on the day it ran.
 
 Two practical consequences:
 
