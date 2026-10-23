@@ -1,7 +1,7 @@
 ---
 id: LI-001
 type: manual publish packet
-status: APPROVED 2026-10-18 (editorial only). Not published. Stop gate CLOSED 2026-10-18 19:07 UTC (§4).
+status: PUBLISHED 2026-10-19 (author-supplied live URL). Stop gate CLOSED 2026-10-18 19:07 UTC (§4).
 target: Monday 19 October 2026, 14:00 UTC / 17:00 Riyadh, posted by hand by the owner
 ---
 
@@ -84,6 +84,17 @@ changed, in order. Nothing is removed: the failed diagnostic is evidence, not a 
 > nothing currently indicates an active failure, and holding a post for an unexplained past event with no present
 > symptom would mean never posting.
 
+
+> **The iOS retest was done, 2026-10-19.** The owner ran it on the same iPhone, OS and Safari build as the failed
+> 18 October visit: session `01a1557a-8081-76c1-b843-54b1f8fd5bed` at 18:44:14 UTC read `kx_source = linkedin` and
+> `kx_first_source = linkedin`, with every campaign property correct across 10 events and 6 page views, attribution
+> surviving internal navigation and the diagnostic marker persisting. Production diagnostics have now passed on
+> Chrome/macOS, Safari/macOS and Safari/iOS.
+>
+> **The original failure did not reproduce. That is not a root cause, and it is not a fix.** Nothing here explains
+> the 18 October `kx_source=other`, and PR #409 is not its fix: #409 is a separate improvement and makes no such
+> claim. The investigation record lives in `marketing/m3-1/` and stays **open, not reproducible, monitoring**. The
+> procedure below is kept because it is the procedure to re-run if it ever recurs.
 
 ### The iOS Safari diagnostic, step by step (optional, three minutes, any time)
 
@@ -179,3 +190,32 @@ is unaffected.
 4. X-001 follows the next day and needs its own approval first.
 
 Until step 1 is done with a real URL, LI-001 is APPROVED, not PUBLISHED.
+
+## 8. Close-out record, 2026-10-19
+
+The author reported publication at 18:29 UTC and supplied the live post URL
+<https://www.linkedin.com/feed/update/urn:li:activity:7518015214143873024/>. Both registers were closed out on that
+URL: `marketing/distribution/register.json` LI-001 is `status: "published"`, `date: "2026-10-19"`, `liveUrl` as above,
+with a result line; `marketing/content/register.json` LI-001 is `status: "published"` with the approval block and its
+sha256 pin untouched (section A still 1,538 characters, `09a3994…3cfb`, re-computed at close-out).
+
+**The first comment is confirmed by the owner.** On 2026-10-19 the owner stated that the approved tracked link was
+published in the first LinkedIn comment. That is the owner's own account of what they posted, which is the only
+source there is: no tool here can read the comments on a live LinkedIn post, and the first tagged arrival would be
+corroboration rather than proof. The link in this packet (§3) is the register's built URL and carries no
+`kx_traffic` parameter, verified on `main` at close-out.
+
+What is **not** recorded, because it was not verified:
+
+- **The exact publication time.** The author gave a date, not a time, and LinkedIn is not reachable from this
+  environment. It is left unknown rather than inferred from the 14:00 UTC scheduled slot.
+- **Impressions, clicks, reactions or any engagement figure.** LinkedIn's own analytics cannot be read from here and
+  nothing is estimated.
+- **Independent confirmation of the comment's exact text.** The owner's statement above is what the record rests
+  on; the comment itself cannot be read from here.
+
+First measurement read, about 18:30 UTC: **no tagged arrival observed.** PostHog 620385 holds no event carrying
+`kx_campaign=kx_p1_a_parity_proof` at any point on 19 October, while ingesting events as late as 18:19:37 UTC, so the
+pipeline was live and the campaign had no arrival. The only sessions since 12:00 UTC are two `kx_source=direct`
+Chrome/macOS sessions with no campaign tag. That is "no tagged arrival", not "no clicks": the body link goes to
+dev.to, which first-party analytics cannot see.
