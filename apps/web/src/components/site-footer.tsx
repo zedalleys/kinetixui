@@ -38,9 +38,14 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
   theme, each inked in that theme's values of the same tokens:
   - light, by day: `azure.1000`/`950` ink and `azure.900` mid-tones (the ramp `primary` comes from) on light
     `accent`, highlights in `background`;
-  - dark, at evening: dark `accent` (blue.700) sky with stars and a dusk glow on the horizon, the land in
-    `background` (blue.900) silhouettes with moonlit edges. Not an inversion — that reads as a photographic
+  - dark, at evening: dark `accent` (blue.700) sky over land in `background` (blue.900), the palms, mesas,
+    dunes and oasis water carried as near-black tonal masses. Not an inversion — that reads as a photographic
     negative — but the same tones re-lit for night.
+  The evening plate's brightest sky is the cloud band above the horizon, at about 43/255 against a 31/255
+  upper sky; below the band the plate darkens all the way down, so there is no glow at the horizon itself.
+  The upper sky carries scattered stipple specks, the brightest 30/255 above their local background and most
+  under 16/255 — present in the file, but not legible as stars at the size the footer renders. Measured on
+  `public/footer/arabian-landscape-evening-2880.webp`.
   The mark matches the header (`primary`), headings are `foreground` and the secondary text is `foreground` at
   70%: 18.2:1 and 7.3:1 on light `accent`, 14.7:1 and 7.8:1 on dark. `muted-foreground` is 4.8:1 on light
   `accent`, so it is not used.
