@@ -1,7 +1,16 @@
 # Motion coverage register — five platforms
 
-**Measured:** 2026-10-21 · **Baseline:** `origin/main` at `72770976` (after #438) · **Status:** register of what
-is true, plus the named gap behind each cell. It claims nothing that a file or a gate does not already prove.
+**Measured:** 2026-10-21 · **Last accuracy pass:** 2026-10-22 · **Baseline:** `origin/main` at `72770976` (after
+#438) · **Status:** register of what is true, plus the named gap behind each cell. It claims nothing that a file or
+a gate does not already prove.
+
+> **Green gates are not completeness.** Every gate this register names can pass while GAP-1…GAP-8 in
+> [`KINETIXUI-MASTER-ROADMAP.md`](KINETIXUI-MASTER-ROADMAP.md) §3.3 are all true. GAP-1 (Progress reduced motion on
+> SwiftUI and Compose), GAP-2 (native overlays that animate nothing, which `check:native-motion` structurally
+> cannot see) and GAP-3 (no native runtime environment exists) are motion gaps and belong to this register.
+>
+> A second file of this name exists under `/mnt/project-files/motion/`, written by another thread. This one, in
+> `docs/roadmaps/`, is the one the master roadmap cites.
 
 This register does **not** replace [`MOTION.md`](../../MOTION.md) (the canonical contract: tiers, easings, roles,
 reduced-motion forms, RTL rules, anti-patterns) or
@@ -218,6 +227,20 @@ G-numbers are from the Phase M0 audit (`/mnt/project-files/motion-audit/`) and m
 | G10 | Native ledger gaps | **open and explicit**: `KNOWN_GAPS` in `scripts/native-motion-spec.mjs` lists 5 SwiftUI, 3 Compose, 1 Flutter file |
 | G11 | No layout-transition policy | **open** |
 | G12 | Gesture tokens unwired | **open**. React Drawer's Vaul curve is the live instance |
+
+### In flight, not on `main` (2026-10-22)
+
+`selection-indicator` is the one role at `proposed`, and its note on `main` still says it is "being built for
+React in PR #388", which merged on 2026-10-17 — the bar has shipped and the bookkeeping had not followed. With no
+consumer declared, `check:motion-tokens` had nothing to check, so the two tokens the travelling Tabs indicator
+reads were pinned by nothing.
+
+**Draft PR #441** (head `d059f7b1`) repairs that: status `observed`, the React consumer added with its two tokens,
+and the note's scope corrected — SegmentedControl was never a consumer, since #388 gave it a filled surface that
+settles on `fast`/`standard`, which is `selection-state`. It also adds `motion="classic" | "none"` to `TabsList`,
+a preset over behaviours of one role that cannot express a timing. **`fluid` and `spring` are specified and
+deliberately not in it.** It touches `tokens/contracts/motion.json`, so MX1d (#411 → #412 → #414) merges first and
+#441 rebases onto it; it owes a changeset once R1 closes. Nothing in this paragraph is on `main`.
 
 ---
 

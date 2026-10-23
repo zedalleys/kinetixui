@@ -1,7 +1,7 @@
 # KinetixUI unified master roadmap
 
-**Written:** 2026-10-21 · **Baseline:** `origin/main` at `72770976` (after #438) · **Status:** a reconciliation of
-existing plans, not a new plan. Every 30/60/90 item is a **proposal**; nothing here is a commitment, an approval or
+**Written:** 2026-10-21 · **Last accuracy pass:** 2026-10-22 (see *State refreshed* below) · **Baseline:**
+`origin/main` at `72770976` (after #438) · **Status:** a reconciliation of existing plans, not a new plan. Every 30/60/90 item is a **proposal**; nothing here is a commitment, an approval or
 an authorization to merge or publish.
 
 ## How to use this document
@@ -32,9 +32,42 @@ document wins** and this file is the one that is wrong.
 | **Live PR state, heads, checks, measured conflicts, merge sequence** | `/mnt/project-files/integration/LIVE-STATE-REGISTER-2026-10-21-EVENING.md` | project file |
 | **Open owner decisions E1–E12 and their history** | `/mnt/project-files/integration/INTEGRATION-REGISTER-2026-10-21.md` | project file |
 
+| Component and variant state completeness, Phase B work packages | `/mnt/project-files/phase-b-states/STATE-COMPLETENESS-MATRIX.md`, `PHASE-B-WORK-PACKAGES.md`, `SEMANTIC-VARIANT-TOKEN-GAPS.md` | project file |
+| Block vs component classification, travel-booking feasibility | `/mnt/project-files/bd-blocks-audit/` (3 files) | project file |
+| Configurable motion variants, `fluid` frame spec | `/mnt/project-files/motion/MOTION-VARIANTS-DECISION.md`, `FLUID-TABS-FRAME-SPEC.md` | project file |
+
 **PR remediation and release readiness are owned by a sibling thread**, whose registers are the last two rows.
 This roadmap does not restate PR heads, check states or merge order; it reads them from there, and it adds nothing
 to that thread's scope.
+
+> A second file named `MOTION-COVERAGE-REGISTER.md` exists under `/mnt/project-files/motion/`, written by another
+> thread. The register this roadmap cites is the one in **this directory**, published in #440. If the two disagree,
+> that is a reconciliation someone owes, not a figure to average.
+
+### State refreshed 2026-10-22
+
+Everything below was re-read on 2026-10-22; where it supersedes a figure written on 2026-10-21, the newer line wins.
+
+| Item | State on 2026-10-22 | Change since 2026-10-21 |
+| --- | --- | --- |
+| **#348** R1 version PR | head `bf1cea82`, base `72770976`, `mergeable_state` **clean**, not merged. Publishes ui/tokens/cli 0.25.0 + angular 0.26.0; `iot` absent, so it stays 0.5.0 | unchanged; still no merge authorization |
+| **#428** CAT-QF | head `cab1c51f`, ready | unchanged |
+| **#430** CAT-2 taxonomy | head `e2432811`, **base is now `main`**, draft, `mergeable_state` unstable. Every substantive #428 commit is an ancestor, so **#428 is contained in #430** and merging #428 first costs #430 no reconciliation | was based on #428's branch at `1f2cee4e` |
+| **CAT-2 taxonomy decision** | **decided 2026-10-22 by the owner:** 8 categories accepted, twelve of the thirteen contested rows as proposed, and **`tag` moved to Data Display**; applied on #430's head and the chip counts re-measured in the browser | was open as E1/E2 |
+| **#413** CAT-1 audit | head `df7ef57f`, ready | was `3d195beb` |
+| **Catalogue merge order** | **#428 → #430 → #413**, unchanged and now also the cheapest | unchanged |
+| **#439** hero Direction B | head `15273e92`, ready, **visual direction approved by the owner 2026-10-22 with notes**; merging is not authorized by that approval and waits behind R1 | was awaiting the choice |
+| **#439 open question** | whether to **reposition the glow at narrow widths**: at 390px it covers 0% of the system map and 100% of the headline, which is the same physical-placement fault the PR removes the lattice for. Left open deliberately, because moving it changes the approved appearance | new |
+| **#440** this roadmap | head `0839c71a`, 6 checks green, clean, 0 open review threads | new |
+| **#441** Tabs motion presets | **draft**, head `d059f7b1`. Adds `motion="classic" \| "none"` to `TabsList` and repairs the `selection-indicator` role (`proposed` → `observed`, first consumer, two tokens pinned). **`fluid` and `spring` are specified and deliberately *not* in it** — it is the first slice, not the fluid one. No changeset on purpose until R1 closes; it touches `tokens/contracts/motion.json`, so **MX1d merges first and #441 rebases onto it** | new |
+| **MX1d heads** | #411 `f026060f`, #412 `4c5a287c`, #414 `7fbad7b2` — all ready, order unchanged | all three moved |
+| **Open PRs** | **15 substantive** (#348, #411–#414, #427, #428, #430, #433, #434, #436, #437, #439, #440, #441) + 10 Dependabot | was 13 + 10 |
+| **BD-W6 boarding-pass block** | the owner **approved the slice on 2026-10-22** (decision B1′ in `/mnt/project-files/bd-blocks-audit/TRAVEL-BOOKING-FEASIBILITY.md`). It is the only `existing` travel stage, backed by the shipped `pass-card`, classified at birth on the BoardingPass capability row, and **static — no motion**, which is correct while `selection-indicator` has no merged consumer. Nothing is implemented yet | new |
+| **Active threads** | three opened since this roadmap was written: *PR remediation and release readiness*, *Component state completeness audit*, *Discovery to adoption UX fixes* — alongside *Native selection motion and a11y*, *AE-2A decorative foundations*, *Integration register and release gates*, *Homepage hero art direction audit* | new |
+
+**One claim I could not verify.** A *reader-path test classified **inconclusive*** was reported to this thread. The
+string appears in no repository file and in no project file I can read, so it is recorded here as **reported and
+unevidenced** rather than as a result. A later session should find the owning thread before citing it.
 
 ---
 
@@ -69,11 +102,11 @@ so the honest state is "instrument before publishing again".
 | Published versions | ui 0.24.0 · tokens 0.24.0 · cli 0.24.0 · angular 0.25.1 · iot 0.5.0 | `packages/*/package.json` |
 | Unreleased changesets | 22 in `.changeset/`; 6 IoT changesets held in `.changeset-held/iot/` | directory listing |
 | Catalogue | 109 entries; React 109 · Angular 80 (+2 equivalent, 27 planned) · SwiftUI 90 · Compose 90 · Flutter 90 | `platform-parity.json`, `check:angular-graduation` |
-| Angular graduation | **7 of 13** criteria met; 6 open | `node scripts/check-angular-graduation.mjs` |
+| Angular graduation | **7 of 13 criteria met today**; 6 open. The **12 of 13** figure elsewhere in this file is a *projection* after P1+P2 land, never a current reading | `node scripts/check-angular-graduation.mjs`, re-run 2026-10-22 on `72770976` |
 | Evidence levels | React 61 build / 48 headless / **0 runtime** · Angular 20 headless / 60 runtime · SwiftUI 90 build · Compose 86 build / 4 headless · Flutter 85 build / 5 headless | `verification.json` `componentLevelTotals` |
 | Native publication | **none.** Not on SPM, Maven or pub.dev; the publish workflows have never run for a real release | `verification.json` `published` = 0 for all three |
-| Motion roles | 5 `proven` · 2 `observed` · 1 `proposed` · 1 (`loop`) proven with no consumer list | `tokens/contracts/motion.json` |
-| Open PRs | 13 substantive + 10 Dependabot | integration register |
+| Motion roles | 5 `proven` · 2 `observed` · 1 `proposed` · 1 (`loop`) proven with no consumer list. #441 would move `selection-indicator` to `observed` with its first consumer — **in a draft PR, not on `main`** | `tokens/contracts/motion.json` |
+| Open PRs | **15** substantive + 10 Dependabot (2026-10-22) | integration register, refreshed above |
 | Posts published to date | 9 of 17 distribution rows; 4 planned, 4 community rows blocked | `marketing/distribution/register.json` |
 | Tagged arrivals from the last three posts | **0** | `/mnt/project-files/integration/`, PR #436 |
 
@@ -98,9 +131,9 @@ renamed and no phase was renumbered.
 | --- | --- | --- | --- | --- |
 | WS1 | M1 #398, M2 #405, M3 #406, M3.1 #409, M4 #410, LI-001 pre-publication record #429 | LI-001 close-out; measurement of why three posts yielded nothing; X-001 approval + slot | #436 (draft) | COM-001…004 community rows (rules gate); `/blog` (needs ≥3 off-site articles) |
 | WS2 | ENG-2b-4 #401, ENG-2b-5 #407, R1 iot exclusion #415, BD-W5 consumer gates #408 | the 0.25.0/0.26.0 publication itself; native publication to SPM/Maven/pub.dev | #348, #427 | Dependabot #417–#426 (frozen for R1) |
-| WS3 | evaluator track A #347, track B #350, web quality #369, homepage #370, footer #432/#435, homepage overlay fix #438 | CAT-BUG-001…005, 009, 011, 014, 015, 017…020; 128px docs column at 1280px/200% text; F-07 maturity vocabulary | #428, #413, #439, #433/#437/#434 | CAT-3 thumbnails, AE-2B (both held by Ziad) |
-| WS4 | capability phases 0–2 foundations (#376, #378), BD-W1…W5 (#377, #389, #394, #395, #397, #399, #403, #408), Angular waves A–C3, field shapes #402 | 27 planned Angular entries; 6 open graduation criteria; capability phase 3 not started | #430 (taxonomy, `build` red) | IoT (real-device evidence); Pro tier (research only) |
-| WS5 | MX1a #393, MX1b-1a #396, MX1b-1b #400, MX1b-1c #404, MX1b-2 Angular #416 | G3, G5, G6, G7, G11, G12; feedback-entry role; overlay motion gate; native rendered evidence | #411, #412, #414 | G2 (settled: stagger stays untokenised) |
+| WS3 | evaluator track A #347, track B #350, web quality #369, homepage #370, footer #432/#435, homepage overlay fix #438 | CAT-BUG-001…005, 009, 011, 014, 015, 017…020; 128px docs column at 1280px/200% text; F-07 maturity vocabulary | #428, #413, #439 (direction approved, waits behind R1), #433/#437/#434 | CAT-3 thumbnails, AE-2B (both held by Ziad) |
+| WS4 | capability phases 0–2 foundations (#376, #378), BD-W1…W5 (#377, #389, #394, #395, #397, #399, #403, #408), Angular waves A–C3, field shapes #402 | 27 planned Angular entries; 6 open graduation criteria; capability phase 3 not started | #430 (taxonomy decided 2026-10-22, now based on `main`); BD-W6 boarding-pass block approved, unimplemented | IoT (real-device evidence); Pro tier (research only) |
+| WS5 | MX1a #393, MX1b-1a #396, MX1b-1b #400, MX1b-1c #404, MX1b-2 Angular #416 | G3, G5, G6, G7, G11, G12; feedback-entry role; overlay motion gate; native rendered evidence | #411, #412, #414; #441 (draft, rebases onto MX1d) | G2 (settled: stagger stays untokenised) |
 
 ---
 
@@ -118,7 +151,11 @@ renamed and no phase was renumbered.
        └─> native rendered evidence needs a CI runner decision (D4) that does not exist yet
 
 #428 CAT-QF ──> #430 CAT-2 taxonomy ──> #413 CAT-1 audit   (reconcile the 3 docs files once, at #413)
-       └─> CAT-2 taxonomy decision (E1/E2) gates CAT-3…CAT-6
+       └─> #428 is contained in #430, so this order costs #430 no reconciliation at all
+       └─> CAT-2 taxonomy DECIDED 2026-10-22 (8 categories, `tag` -> Data Display) ──> CAT-3…CAT-6 unblocked
+
+#411 -> #412 -> #414 (MX1d) ──> #441 Tabs motion presets rebases onto them
+       └─> all four touch tokens/contracts/motion.json; #441 also owes a changeset once R1 closes
 
 MX1 (merged) ──> Angular reducedMotion for 5 components ──> 2 of 6 open graduation criteria
 Angular `timeline` rtl+largeText AND `toggle` rtl ──> 3 of 6 open graduation criteria
@@ -138,6 +175,26 @@ Angular `timeline` rtl+largeText AND `toggle` rtl ──> 3 of 6 open graduation
 | **IR-6** | Marketing cannot learn anything until the attribution question is answered | Publishing more content against a broken or mis-placed link produces more zero rows | M4 post-publication checklist; #436's T+24h/T+7d checkpoints |
 | **IR-7** | Native "stable" maturity with near-zero native interaction evidence, and no published artifact | The strongest claim in the product has the weakest evidence | Phase 5 of the product roadmap; `published` = 0 is recorded honestly |
 | **IR-8** | This document could itself become a competing roadmap | §0's rule: it indexes, it does not own | every subject names its owning document |
+
+### 3.3 Documented gaps that a green CI does not cover
+
+Every gate named in this file can pass while each of these is true. They are listed so that **"CI is green" is
+never read as "the experience is complete"**, and each names the instrument that is blind to it.
+
+| # | Gap | What is actually true | Why no gate catches it | Owning record |
+| --- | --- | --- | --- | --- |
+| **GAP-1** | Progress reduced motion, SwiftUI and Compose | `Progress.swift:34` animates on `.default`, `CircularProgress.swift:45` on `.easeOut(0.3)`, and both Compose ports drive their fraction through `animateFloatAsState`. **None carries a reduced-motion form.** | `KNOWN_GAPS` records it as *deferred*, and a deferred entry is an acknowledgement, not a check | `scripts/native-motion-spec.mjs`; register §3 (`!` cells) |
+| **GAP-2** | Native overlays animate nothing | `Drawer.swift`, `Drawer.kt` and `drawer.dart` contain **zero animation calls**, as do AlertDialog, Popover, Tooltip, HoverCard and the menu family on all three native platforms | `check:native-motion` flags a file that *animates* and belongs to no family. A file that animates nothing passes silently and never reaches `KNOWN_GAPS` | register §4; **the instrument's largest blind spot** |
+| **GAP-3** | No native rendered-motion evidence beyond Flutter | Flutter's widget tests do read rendered intermediate values; SwiftUI's suite states in its own header that nothing in it renders, and Compose's asserts a node *exists* after a click, which is state, not a midpoint | `scripts/evidence-levels.mjs` lists `chromium` as the only runtime environment, so **no native cell can reach `runtime`** however much is added | register §4; owner decision **D-6** |
+| **GAP-4** | React holds **0** `runtime` evidence cells against Angular's **60** | Correct under the ladder — it needs interaction *and* accessibility both observed in a runtime environment, and React's interaction tests are jsdom | the ladder is working as designed; the defect is that a reader sees the reference platform ranked below Preview | owner decision **D-7** |
+| **GAP-5** | No pending or loading state on any action control, on any platform | No `Button`, submit control, menu item or form on any of the five platforms has one; a search for `isLoading\|loading\|aria-busy\|pending` across every platform package comes back effectively empty | nothing asserts the *presence* of a state, only the correctness of states that exist | `/mnt/project-files/phase-b-states/STATE-COMPLETENESS-MATRIX.md` §3.1 |
+| **GAP-6** | `aria-required` appears **zero times** in the React catalogue | `Label`, `Field` and `Form` have no way to mark a control required | axe cannot fault a missing `aria-required` on a control nobody declared required | same matrix, line 103; work package WP covering `required?` on `Field` |
+| **GAP-7** | `check:contrast` gates one status tint of four | it measures the info status on a muted surface and not the other three, and it measures token pairs rather than rendered states | a token-pair gate cannot see a state it was never given a pair for. It is **green on current `main`**, which is exactly the point | `/mnt/project-files/phase-b-states/SEMANTIC-VARIANT-TOKEN-GAPS.md` |
+| **GAP-8** | Angular's disabled **anchor** form is not disabled | the anchor is dimmed in `styles.css` but still focusable and still activates by keyboard | CSS-only disabling leaves the semantics untouched, and no gate asserts an anchor's keyboard behaviour | same work packages, WP-8 |
+
+Two more that are recorded elsewhere and are not reopened here: **G1** (frozen) and the 17 hero
+`color-contrast` *incomplete* nodes that remain after both the lattice and the glow are gone, which belong to the
+`.kx-edges` rules and are outside #439.
 
 ---
 
@@ -169,7 +226,7 @@ counting down.
 | WS1 | **M5 — attribution diagnosis and re-instrumentation** (new, replaces "publish X-001 next") | none; starts now | the mechanism behind three zero-arrival posts is named with evidence, and the next post's link is verified end-to-end before it goes out |
 | WS2 | **R1 execution, then gate 1** | Ziad's merge authorization for #348 | four packages published at the stated versions, release CI green, `check:releases` agreeing, #427 landed after it |
 | WS3 | **CAT-QF → CAT-2 → CAT-1 landing, then CAT-4** | R1 closed; CAT-2 taxonomy decision (E1/E2) | the 6 VERIFIED CAT-BUGs closed with rendered before/after evidence and a gate that catches each |
-| WS4 | **Angular graduation closure (P1 + P2), then capability phase 3** | none for P1/P2; phase 3 needs phase 2's AmountDisplay (shipped) | graduation at 12 of 13 criteria with the 27 planned entries the only open one |
+| WS4 | **Angular graduation closure (P1 + P2), then capability phase 3** | none for P1/P2; phase 3 needs phase 2's AmountDisplay (shipped) | **projected** graduation at 12 of 13 criteria (today's reading is 7 of 13) with the 27 planned entries the only open one |
 | WS5 | **MX1d landing, then MX2a (Progress logical fill) and MX3a (Menubar exit + Angular floor)** | gate 2 of the merge sequence | the native selection cells move from ○ to m with a recorded ceiling, and no cell claims runtime |
 
 ---
@@ -201,7 +258,7 @@ marketing). This is the cross-workstream version, and every line is a proposal Z
 | --- | --- | --- |
 | WS2 | R1 published; gates 1–7 executed in order | four packages live at the stated versions; `check:releases` green; 10 Dependabot PRs resolved |
 | WS1 | attribution finding written; next post's link verified before posting | a named mechanism with evidence; one post with a non-zero tagged arrival **or** a documented reason the channel cannot carry one |
-| WS4 | P1 + P2 land | `check:angular-graduation` reports 12 of 13 |
+| WS4 | P1 + P2 land | `check:angular-graduation` moves from today's 7 of 13 to 12 of 13 |
 | WS3 | #428 → #430 → #413 land; CAT-4 starts | 6 VERIFIED CAT-BUGs closed, each with a gate and a negative control |
 | WS5 | #411 → #412 → #414 land | the register's native selection cells move ○ → m; no cell claims runtime |
 
@@ -320,7 +377,7 @@ slice with its own acceptance criteria, and none of them merges, publishes or pu
 
 ### WS4 — Angular graduation closure (P1 + P2, two PRs)
 
-> `node scripts/check-angular-graduation.mjs` reports 7 of 13 criteria met. Five of the six open ones are two
+> `node scripts/check-angular-graduation.mjs` reports **7 of 13 criteria met today** (re-run 2026-10-22 on `72770976`). Five of the six open ones are two
 > bounded slices. Ship them as **two** PRs, never one.
 >
 > **PR A:** the `rtl` row is 22/24 and misses **two** components, `timeline` **and** `toggle`; `largeText` is
