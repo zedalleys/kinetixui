@@ -33,7 +33,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -74,8 +73,9 @@ import org.robolectric.annotation.Config
 // directions. Gate, seat and group are emphasised because they are what a traveller looks for at a glance.
 // Each field is merged into one node, so "Gate, C21" is announced together rather than as two unrelated
 // strings. The copy result goes into a polite live region — including when the clipboard refuses, so the
-// block never claims a copy that did not happen. The host clipboard itself is a parameter, so a unit
-// test can exercise the button and the announcement without a real clipboard to wait on.
+// block never claims a copy that did not happen. Where the code goes is a parameter, so a unit test
+// can exercise the button, the payload and the announcement: Robolectric has no host clipboard,
+// and its suspend call never resolves there.
 //
 // All data here is fictional, Kinetix Air included.
 //
@@ -106,31 +106,39 @@ private val CODE_PATTERN = listOf(
     "###.#.#..",
 )
 
+private const val COPY_REFUSED = "Couldn't copy automatically. Press and hold the code to select it."
+
 @Composable
 fun BoardingPassBlock(
     /**
-     * How the confirmation code reaches the clipboard. Null uses the host clipboard, which is what a real
-     * app wants; a unit test has no host clipboard to wait on, so it passes its own.
+     * Where the confirmation code goes. Null hands it to the host clipboard, which is what a real app
+     * wants; a caller that keeps the code itself — a unit test, or a host with its own share sheet —
+     * passes a handler, which answers at once and needs no coroutine.
      */
-    onCopyCode: (suspend (String) -> Unit)? = null,
+    onCopyCode: ((String) -> Unit)? = null,
 ) {
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
     var feedback by remember { mutableStateOf("") }
 
     fun copy() {
-        scope.launch {
+        if (onCopyCode != null) {
             feedback = try {
-                if (onCopyCode != null) {
-                    onCopyCode(CONFIRMATION_CODE)
-                } else {
-                    clipboard.setClipEntry(
-                        ClipEntry(ClipData.newPlainText("Confirmation code", CONFIRMATION_CODE)),
-                    )
-                }
+                onCopyCode(CONFIRMATION_CODE)
                 "Copied"
             } catch (e: Exception) {
-                "Couldn't copy automatically. Press and hold the code to select it."
+                COPY_REFUSED
+            }
+            return
+        }
+        scope.launch {
+            feedback = try {
+                clipboard.setClipEntry(
+                    ClipEntry(ClipData.newPlainText("Confirmation code", CONFIRMATION_CODE)),
+                )
+                "Copied"
+            } catch (e: Exception) {
+                COPY_REFUSED
             }
         }
     }
@@ -268,12 +276,8 @@ class BoardingPassBlockTest {
             KinetixTheme(darkTheme = false) { BoardingPassBlock(onCopyCode = { handedOver = it }) }
         }
         rule.onNodeWithContentDescription("Copy confirmation code").performClick()
-        // The copy is a coroutine, so wait for the live region rather than assuming the click and the
-        // announcement land in the same frame.
-        rule.waitUntil(5_000) {
-            rule.onAllNodesWithText("Copied").fetchSemanticsNodes().isNotEmpty()
-        }
         // The code the button hands over is the code printed on the pass, and the block says it happened.
         assertEquals(CONFIRMATION_CODE, handedOver)
+        rule.onNodeWithText("Copied").assertExists()
     }
 }
