@@ -58,6 +58,21 @@ const CONTROLS = [
     expect: /open-states\.mjs: "overlays-dialog--default" is a story id written out in full — use storyId\(slug, story\)/,
     edit: () => writeFileSync(TARGETS.probe, original.probe.replace('storyId("dialog", "Default")', '"overlays-dialog--default"')),
   },
+  {
+    // The hole this closes: the first version of the check asked `entries[literal]`, so it rejected a
+    // written-out id that still worked and accepted the one that had gone stale — the only case a gate is
+    // needed for. A renamed category leaves exactly this behind.
+    rule: "a written-out id left behind by a category rename is rejected too, and says that it addresses nothing",
+    expect: /open-states\.mjs: "feedback-status-dialog--default" is a story id written out in full — use storyId\(slug, story\)\. It no longer addresses a story/,
+    edit: () => writeFileSync(TARGETS.probe, original.probe.replace('storyId("dialog", "Default")', '"feedback-status-dialog--default"')),
+  },
+  {
+    // The second hole: ids are spelled into Storybook URLs, where no quote sits beside them, so a check that
+    // only reads whole string literals cannot see the place they are most often written.
+    rule: "an id spelled inside a URL rather than as a whole string literal is found",
+    expect: /open-states\.mjs: "overlays-dialog--default" is a story id written out in full/,
+    edit: () => writeFileSync(TARGETS.probe, original.probe.replace('storyId("dialog", "Default")', '`iframe.html?id=overlays-dialog--default&viewMode=story`')),
+  },
 ];
 
 for (const [name, path] of Object.entries(TARGETS)) {

@@ -30,6 +30,10 @@ if (!existsSync(indexPath)) {
   process.exit(1);
 }
 const entries = JSON.parse(readFileSync(indexPath, "utf8")).entries;
+// the component part of an id, as `story-id.mjs` builds it: the slug with its dashes closed up
+const componentParts = Object.keys(JSON.parse(readFileSync(`${root}/component-taxonomy.json`, "utf8")).components).map((slug) =>
+  slug.replace(/-/g, ""),
+);
 
 const problems = [];
 let checked = 0;
@@ -63,10 +67,23 @@ for (const file of scripts) {
       );
     }
   }
-  // a literal id is the thing this gate and `story-id.mjs` exist to prevent: it is a third copy of the
-  // taxonomy, and it goes stale without anything saying so
-  for (const m of src.matchAll(/"((?:[a-z0-9]+-)*[a-z0-9]+--[a-z0-9-]+)"/g)) {
-    if (entries[m[1]]) problems.push(`${file}: "${m[1]}" is a story id written out in full — use storyId(slug, story).`);
+  // A literal id is the thing this gate and `story-id.mjs` exist to prevent: it is a third copy of the
+  // taxonomy, and it goes stale without anything saying so. So "is this an id that exists" is the wrong
+  // test, and it was the test here: it answers yes for a literal that is still valid and no for exactly the
+  // one that has rotted, which is the case this comment describes and the only case worth a gate. The test
+  // is instead whether the text reads as a story id for a component the catalogue knows, under any category
+  // prefix at all, so an id left behind by a rename is caught with the rest. The prefix has to END with the
+  // component part rather than be it, because `button--action` and `label--before` are BEM class names and
+  // not story ids. Scanned over the raw source and not over whole string literals, because the id that
+  // actually rotted was spelled inside a URL in a template string, where no quote sits beside it.
+  for (const m of src.matchAll(/(?<![a-z0-9-])((?:[a-z0-9]+-)*[a-z0-9]+--[a-z0-9-]+)(?![a-z0-9-])/g)) {
+    const [literal] = m.slice(1);
+    const prefix = literal.slice(0, literal.indexOf("--"));
+    if (!entries[literal] && !componentParts.some((c) => prefix.endsWith(`-${c}`))) continue;
+    problems.push(
+      `${file}: "${literal}" is a story id written out in full — use storyId(slug, story).` +
+        (entries[literal] ? "" : " It no longer addresses a story, which is what a written-out id does when a category is renamed."),
+    );
   }
 }
 
