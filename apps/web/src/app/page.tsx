@@ -184,14 +184,20 @@ export default function HomePage() {
           left is the structure the whole page already carries: the `.kx-edges` margin rules, the type, and
           the one glow below.
 
-          That glow is placed, not centred, so where it falls depends on the width: measured at 1440px it
-          covers 56% of the map and none of the headline, which is what it is for, but at 390px the map has
-          moved below the fold and the glow covers the headline instead, all of it. It is a tenth-alpha
-          wash rather than a lattice, so what lands on the type there is much less than what was removed —
-          but it is the same kind of placement, and it is the reason hiding the glow changes axe's
-          unresolved-background count at 390px and not at 1440px.
+          The glow is placed rather than centred, so an offset from one corner means different things at
+          different widths. Anchored to the top it sits under the map while the map is beside the copy, but
+          below `lg-rem` the map moves under the copy and the same offset puts the glow over the headline
+          instead — measured, 100% of the headline and 0% of the map at 390px. That is not free: the lede
+          paragraph is `muted-foreground` at 16px, which clears AA by 0.60 in light theme, and the gradient
+          under it measured 4.28:1 against the 4.5 floor. axe cannot see it, because it will not resolve a
+          background behind a gradient and reports "incomplete" rather than a failure.
+
+          So the anchor follows the layout: bottom-anchored while the map is below the copy, top-anchored
+          from `lg-rem` up, where the composition — and the approved appearance — is unchanged. `bottom-14`
+          rather than `bottom-0` keeps the gradient clear of the targets ticker below it, whose own text is
+          muted at 14px.
         */}
-        <div aria-hidden="true" className="kx-glow kx-glow-soft -end-40 -top-32 size-[46rem]" />
+        <div aria-hidden="true" className="kx-glow kx-glow-soft -end-40 bottom-14 top-auto size-[46rem] lg-rem:bottom-auto lg-rem:-top-32" />
         <div className={container}>
           {/*
             Hero vertical rhythm is a mobile-first decision. At 390×800 the primary CTA and the install command
