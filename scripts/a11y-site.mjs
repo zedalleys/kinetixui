@@ -222,6 +222,23 @@ const isDocsPage = (path) => path === "/docs" || path.startsWith("/docs/");
  */
 const DOCS_COLUMN_MIN_RATIO = 1;
 
+/**
+ * The width at which the docs layout renders both rails, for a reader at this text size.
+ *
+ * The contract above is only worth anything in a view that actually renders a rail, and at 200% text none of the
+ * swept widths does: the rails appear at `lg-rem`/`xl-rem`, which are 2048px and 2560px once the root is 32px, and
+ * the widest swept viewport is 1280px. Every enlarged-text view would therefore meet no rail, score `Infinity` and
+ * pass without having looked at the composition the contract is about.
+ *
+ * So on docs pages the desktop view is measured a second time, in a viewport scaled the way the breakpoints are.
+ * At the default text size that is 1280px, the width already being swept, and the second measurement is the same
+ * measurement. At 200% it is 2560px, which is where the three-column layout comes back for that reader — and where
+ * a real defect was hiding: `max-w-screen-2xl` is a flat 1536px, so the row was divided inside a container that had
+ * not grown with the columns, and the article measured 384px beside a 448px table of contents. Resizing the open
+ * page costs no navigation, which is why this is a resize rather than a fifth entry in WIDTHS.
+ */
+const DOCS_RAIL_WIDTH = 1280;
+
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const failures = [];
@@ -343,6 +360,38 @@ for (const scheme of SCHEMES) {
               );
             }
           }
+          if (isDocsPage(path) && widthName === "desktop" && width !== DOCS_RAIL_WIDTH * scale) {
+            // Same page, same text size, a viewport wide enough for this reader to be shown the rails.
+            await page.setViewportSize({ width: DOCS_RAIL_WIDTH * scale, height });
+            await page.waitForTimeout(200);
+            const wide = await page.evaluate(() => {
+              const article = document.querySelector("[data-docs-content]");
+              if (!article) return { found: false };
+              const rails = [...document.querySelectorAll("[data-docs-rail]")]
+                .map((el) => ({ name: el.getAttribute("data-docs-rail"), width: Math.round(el.getBoundingClientRect().width) }))
+                .filter((r) => r.width > 0);
+              const widest = rails.reduce((m, r) => (r.width > m.width ? r : m), { name: "none", width: 0 });
+              const a = Math.round(article.getBoundingClientRect().width);
+              return { found: true, article: a, rails, widest, ratio: widest.width > 0 ? a / widest.width : Infinity };
+            });
+            if (!wide.found) {
+              failures.push(`${scheme}/${DOCS_RAIL_WIDTH * scale}px/text${scale * 100}% ${path}: no \`[data-docs-content]\` article found`);
+            } else if (wide.widest.width === 0) {
+              failures.push(
+                `${scheme}/${DOCS_RAIL_WIDTH * scale}px/text${scale * 100}% ${path}: no docs rail rendered at the width the ` +
+                  `breakpoints name — this re-measurement is measuring nothing, so either the breakpoints or ` +
+                  `DOCS_RAIL_WIDTH has moved and this contract is no longer exercising the multi-column layout`,
+              );
+            } else if (wide.ratio < DOCS_COLUMN_MIN_RATIO) {
+              failures.push(
+                `${scheme}/${DOCS_RAIL_WIDTH * scale}px/text${scale * 100}% ${path}: the docs reading column is ` +
+                  `${wide.article}px against a ${wide.widest.width}px ${wide.widest.name} rail (${wide.ratio.toFixed(2)}) — ` +
+                  `the navigation has more of the page than the documentation ` +
+                  `[${wide.rails.map((r) => `${r.name} ${r.width}px`).join(", ")}]`,
+              );
+            }
+            await page.setViewportSize({ width, height });
+          }
           if (isDocsPage(path)) {
             const c = result.docsColumn;
             if (!c || !c.found) {
@@ -397,7 +446,8 @@ console.log(
   `a11y-site ok — ${(ONLY_PAGES ?? PAGES).length} pages × ${SCHEMES.length} themes × ${WIDTHS.length} widths × ${TEXT_SCALES.length} text sizes ` +
     `(${views} views): no axe findings, no horizontal overflow, ${LAYOUT_CONTRACTS.size} layout contract(s) held, ` +
     `site search and docs navigation reachable at every width, and the docs reading column never narrower ` +
-    `than the navigation rails beside it.` +
+    `than the navigation rails beside it, measured both at the swept widths and at ${DOCS_RAIL_WIDTH}px × the text ` +
+    `scale, where this reader is shown those rails.` +
     (TEXT_SCALE_PENDING.size
       ? `\n  ${TEXT_SCALE_PENDING.size} page(s) pending at 200% text, each verified to still need it: ` +
         [...TEXT_SCALE_PENDING.keys()].join(", ")
