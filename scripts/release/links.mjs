@@ -19,10 +19,33 @@
  * can be tested against fixtures, including the cases that must fail.
  */
 import { existsSync, readdirSync } from "node:fs";
-import { fragmentOf, pathOf, sitePath } from "../site-inventory.mjs";
+import { SITE_ORIGIN, fragmentOf, pathOf, sitePath } from "../site-inventory.mjs";
 
-/** Markdown inline links: `[text](/docs/tokens)`, and the absolute form of the same link. */
-const MARKDOWN_LINK = /\]\(([^)\s]+)\)/g;
+/**
+ * Markdown inline links: `[text](/docs/tokens)`, and the absolute form of the same link.
+ *
+ * CommonMark lets the destination carry a title (`[text](/docs/tokens "Tokens")`) and lets it be wrapped
+ * in angle brackets (`[text](</docs/tokens>)`). Both render as the same clickable link, so both have to
+ * be read here; matching only the bare form would have let a dead link through in a spelling an author
+ * can reach by hand. The title's quotes are matched with an optional backslash before them, because in
+ * `release/notes/<version>.json` the prose is a JSON string and the quotes arrive escaped.
+ */
+const MARKDOWN_LINK = /\]\(\s*(<[^<>\n]*>|[^()\s]+)(?:\s+(?:\\?"[^"]*\\?"|'[^']*'|\([^()]*\)))?\s*\)/g;
+
+/** The angle-bracket form of a destination names the same target as the bare one. */
+const unwrapped = (destination) =>
+  destination.startsWith("<") && destination.endsWith(">") ? destination.slice(1, -1) : destination;
+
+/**
+ * A href in a link position that deliberately names no route on this site.
+ *
+ * Everything else in a link position is meant to be a route here, so an href this does not cover and
+ * `sitePath` cannot resolve is reported rather than skipped — see `internalLinksIn`.
+ */
+const offSite = (href) =>
+  href.startsWith("#") ||
+  href.startsWith("//") ||
+  /^[a-z][a-z0-9+.-]*:/i.test(href);
 
 /** The fields that carry a route. `href` is the only one on `ReleaseChange`; see the `Release` type. */
 export const LINK_KEYS = ["href"];
@@ -45,20 +68,30 @@ export const LINK_KEYS = ["href"];
  *
  * A path merely mentioned in prose is not a link. Release notes talk about routes — a breaking-change
  * line reads "`/colors` — azure ramp listed first" — and a reader cannot click those, so resolving them
- * would fail a release over a sentence rather than over a link. External URLs, `mailto:`,
+ * would fail a release over a sentence rather than over a link. External URLs, `mailto:`, `tel:`,
  * protocol-relative `//host/path` and bare `#anchor` references name no route here and are left alone.
+ *
+ * A href in a link position that is neither of those nor a site path — `./docs/motion`, `docs/motion`,
+ * a value with padding — is reported as an error rather than skipped. The browser resolves it against
+ * the page the reader is on, so `./docs/motion` on /docs/changelog is a 404 in a different spelling,
+ * and silently dropping it is the hole this gate exists to close.
  */
 export function internalLinksIn(text, source, { keys = LINK_KEYS } = {}) {
   const keyed = new RegExp(String.raw`"?(?:${keys.join("|")})"?\s*:\s*"((?:\\.|[^"\\])*)"`, "g");
   const found = new Map();
   const add = (href, line) => {
+    if (found.has(href)) return;
     const path = sitePath(href);
-    if (path === null || found.has(href)) return;
+    // A href that is neither a site path nor deliberately off-site — `./docs/motion`, `docs/motion`,
+    // a padded value — is not "not a link": the reader clicks it and the browser resolves it against
+    // whatever page they are on. `changelog-view.tsx` renders it verbatim and `release-notes.mjs`
+    // passes it through, so it has to be reported, not dropped.
+    if (path === null && offSite(href)) return;
     found.set(href, { source, href, path, line });
   };
   for (const [i, line] of text.split("\n").entries()) {
     for (const m of line.matchAll(keyed)) add(m[1], i + 1);
-    for (const m of line.matchAll(MARKDOWN_LINK)) add(m[1], i + 1);
+    for (const m of line.matchAll(MARKDOWN_LINK)) add(unwrapped(m[1]), i + 1);
   }
   return [...found.values()];
 }
@@ -74,6 +107,12 @@ export function auditLinks(links, { pathUnresolved, idsFor }) {
   const errors = [];
   const at = (l) => `${l.source}:${l.line}`;
   for (const link of links) {
+    if (link.path === null) {
+      errors.push(
+        `${at(link)}: ${link.href} → not a path on this site; a release link must be written \`/docs/...\` or as an absolute URL on ${SITE_ORIGIN}`,
+      );
+      continue;
+    }
     const target = link.path ?? link.href;
     const reason = pathUnresolved(target);
     if (reason) {

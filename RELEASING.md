@@ -150,8 +150,10 @@ is that check; it uses the same route inventory as `check:seo`
 to keep in step, and its rules and negative controls are in
 [`scripts/release/test/release-links.test.mjs`](./scripts/release/test/release-links.test.mjs). It
 needs a site build, so it runs in CI's `build` job — the required check on every pull request,
-including the Version PR, and again on the push to `main` that triggers the release — rather than in
-`release.yml`'s preflight, which deliberately builds no site.
+including the Version PR whose merge publishes — rather than in `release.yml`'s preflight, which
+deliberately builds no site. The enforcement point is therefore that required check, not the release
+workflow: `ci.yml` runs again on the push to `main`, but `release.yml` reads no signal from it, so a
+link is caught before the Version PR can merge rather than at publication time.
 
 **Registry state**: whether each allowlisted version already exists, read from the packument rather
 than parsed out of CLI output. An unreachable registry, an authentication failure or a malformed

@@ -56,6 +56,16 @@ const errors = auditLinks(links, {
   idsFor: (href) => idsForHref(inventory, href, idCache),
 });
 
+// A floor, because the failure mode of a text-scanning gate is quiet: if the release content stops
+// matching the rules — a Prettier quote-style flip in the generated `releases.ts`, a renamed field — the
+// audit has nothing to audit and every link passes. The one test that would notice needs a built site,
+// which `test:release` does not have in CI, so the assertion belongs here, where the build is guaranteed.
+if (!links.length) {
+  console.error(`  ✗ no internal links found in ${sources.length} release-content file(s): ${sources.join(", ")}`);
+  console.error("\ncheck:release-links failed (the release content carries no internal links at all, which means the rules stopped matching it).");
+  process.exit(1);
+}
+
 if (errors.length) {
   console.error(errors.map((e) => `  ✗ ${e}`).join("\n"));
   console.error(`\ncheck:release-links failed (${errors.length}).`);

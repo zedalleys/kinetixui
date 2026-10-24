@@ -118,6 +118,36 @@ it("never accepts Next's own 404 route", () => {
   assert.equal(check("/_not-found").length, 1);
 });
 
+it("reads a Markdown destination that carries a title, or is wrapped in angle brackets", () => {
+  // CommonMark renders all three identically, so a dead link in any of them reaches the reader.
+  const text = [
+    "see [the grid](/docs/foundations#the-8-unit-grid)",
+    'see [tokens](/docs/motion "Motion")',
+    "see [tokens](</docs/motion>)",
+    "see [tokens]( /docs/motion )",
+  ].join("\n");
+  assert.deepEqual(
+    internalLinksIn(text, "src").map((l) => l.href),
+    ["/docs/foundations#the-8-unit-grid", "/docs/motion"],
+  );
+  const errors = auditLinks(internalLinksIn('[tokens](/docs/motion "Motion")', "note.json"), {
+    pathUnresolved: (h) => unresolvedPath(inventory, h),
+    idsFor: () => null,
+  });
+  assert.equal(errors.length, 1, "a titled Markdown link to a dead route must fail");
+  assert.match(errors[0], /no built page, public file or redirect/);
+});
+
+it("rejects a relative href rather than skipping it, because the browser resolves it against the reader's page", () => {
+  // `./docs/motion` in a note rendered on /docs/changelog lands the reader on /docs/docs/motion.
+  for (const href of ["./docs/motion", "docs/motion", "../docs/motion", " /docs/foundations "]) {
+    const errors = check(href);
+    assert.equal(errors.length, 1, href);
+    assert.match(errors[0], /not a path on this site/, href);
+  }
+  assert.deepEqual(check("/docs/foundations"), [], "a site path is still resolved normally");
+});
+
 /* ------------------------------------------------------------------------------------- the real repo */
 
 it("resolves every internal link in this repository's release content", async (t) => {
@@ -132,6 +162,8 @@ it("resolves every internal link in this repository's release content", async (t
   }
   const sources = releaseContentSources(root);
   const links = sources.flatMap((s) => internalLinksIn(readFileSync(`${root}${s}`, "utf8"), s));
+  // The same floor the gate enforces in `check-release-links.mjs`, where a build is guaranteed; this
+  // half of it only runs when a build happens to be present, which in CI it is not.
   assert.ok(links.length > 0, "release content carries no internal links at all, which is itself suspicious");
   const cache = new Map();
   assert.deepEqual(
@@ -161,5 +193,7 @@ it("states which fields carry a route, so a new one is a deliberate change", () 
   assert.equal(isInternalHref("//evil.example/x"), false);
   assert.equal(sitePath("//evil.example/x"), null);
   assert.equal(sitePath("mailto:hi@example.com"), null);
+  const gate = readFileSync(`${root}scripts/check-release-links.mjs`, "utf8");
   assert.ok(existsSync(`${root}scripts/check-release-links.mjs`));
+  assert.match(gate, /if \(!links\.length\)/, "the gate no longer fails when the rules match nothing at all");
 });
