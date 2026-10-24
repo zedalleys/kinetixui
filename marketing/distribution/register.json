@@ -345,7 +345,7 @@
       "result": null
     },
     {
-      "date": null,
+      "date": "2026-10-24",
       "day": 18,
       "asset": "X-008",
       "channel": "x",
@@ -363,8 +363,9 @@
       "secondary": null,
       "communityReuse": null,
       "metricToWatch": "whether the tagged /components link produces any session at all: LI-007 shares this campaign and produced no tagged audience arrival, so utm_content=x_thread is what separates this post from it",
-      "status": "planned",
-      "result": null
+      "status": "published",
+      "result": "Posted 2026-10-24, on day 26 against a planned day 18 (2026-10-16) \u2014 it carried forward with LI-001 and X-001 under the rolling plan from 2026-10-19. Post 1 is https://x.com/zedalleys/status/2114105950915514785 (author-supplied; x.com is not reachable from this environment, so the thread was not read back here). Posting time about 21:25 UTC: the status ID's embedded timestamp gives 2026-10-24 21:25:11 UTC, which agrees with the author's own reading of the post, so the derived and the reported time do not diverge. The author reports the thread went out as four posts, with the tracked /components URL used and NO image attached \u2014 so VIS-005 was prepared but did not ship. That account is the author's; it is not verified from here. Counts as of 2026-10-24 21:40 UTC, read from PostHog: 0 sessions carried kx_p2_f_two_trades with any utm_content, minutes after posting, so not a settled figure. The zero is readable rather than a dead pipeline \u2014 events arrived in the 21:00 UTC hour of the same read. Still open: the day-after count on 2026-10-25, and a click-test confirming the posted link still carries its tag, which is the point of this row (LI-007 shares this campaign and produced no tagged audience arrival). Replies are not readable from this environment and are not recorded; the author can add them. Organic only, no amplification. Absolute counts only \u2014 analytics.md \u00a710's baseline window is open.",
+      "liveUrl": "https://x.com/zedalleys/status/2114105950915514785"
     },
     {
       "date": null,

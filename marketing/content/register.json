@@ -438,7 +438,7 @@
       "icp": "p2",
       "pillar": "f",
       "stage": "evaluation",
-      "status": "ready",
+      "status": "published",
       "file": "marketing/content/x.md",
       "day": 18,
       "destination": "/components",

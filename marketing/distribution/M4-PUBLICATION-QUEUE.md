@@ -25,7 +25,7 @@ difference is named.
 | **LI-001** | Mon 19 Oct, 14:00 / 17:00 | **READY TO PUBLISH** | Nothing gating. One optional owner decision: the stale "today" paragraph in the dev.to article it links to |
 | **X-001** | Tue 20 Oct, 15:00 / 18:00 | **READY WITH NOTES** — ready for owner approval | The owner's approval reply, and LI-001 live the day before |
 | **LI-008** | Thu 22 Oct, 14:00 / 17:00 | **READY WITH NOTES** — ready for owner approval | The owner's approval reply |
-| **X-008** | Fri 23 Oct, 15:00 / 18:00 | **READY WITH NOTES** — ready for owner approval | The owner's approval reply, and a link check the day after posting |
+| **X-008** | Published Sat 24 Oct, 21:25 UTC | **PUBLISHED** — closed out in both registers | The day-after link check, queued below for 2026-10-25 |
 
 Approving all three outstanding assets is one reply in the thread. The decision packet, with the exact copy and the
 pins, is [`../content/drafts/m3/APPROVAL-QUEUE-2026-10-20.md`](../content/drafts/m3/APPROVAL-QUEUE-2026-10-20.md);
@@ -131,6 +131,35 @@ First post on `kx_p1_d_partial_evidence`, so there is no earlier arrival on this
 
 Its LinkedIn sibling LI-007 shares this campaign and produced no tagged audience arrival, so the `x_thread` content
 tag is the only thing that will separate this post's arrivals from LI-007's. Watch the tagged `/components` link.
+
+**Published 2026-10-24.** The owner posted it himself: <https://x.com/zedalleys/status/2114105950915514785>, a
+thread of four posts, with the tracked `/components` URL used and no image attached, so VIS-005 was prepared but
+did not ship. Posting time about 21:25 UTC — the status ID's embedded timestamp gives 21:25:11 UTC and agrees
+with the owner's own reading, so derived and reported do not diverge. The thread itself was not read back from
+here; x.com is unreachable from this environment, and the four-post account is the owner's. Both registers and
+the calendar now say `published`, dated 2026-10-24, and `check:content` and `check:distribution` pass (9
+published rows, 5 on X). The asset carries no `approval` block in the content register — the rules make one
+optional — so what authorises this row is the owner's own act of posting, not a recorded editorial approval.
+
+**Queued: the day-after link check, 2026-10-25.** Two reads, both absolute counts only:
+
+```sql
+-- 1. did anything arrive on the tagged /components link in the first day
+SELECT timestamp, event, properties.kx_source, properties.kx_medium, properties.kx_campaign,
+       properties.kx_content, properties.kx_landing_page, properties.kx_traffic_type
+FROM events
+WHERE properties.kx_campaign = 'kx_p2_f_two_trades' AND timestamp >= '2026-10-24 21:00:00'
+ORDER BY timestamp
+```
+
+- Any row must carry `kx_content=x_thread` to be this post's rather than LI-007's; that tag is the only separator.
+- No row means "no tagged arrival observed", never "no clicks" — X wraps and previews links.
+- A row with the campaign but `kx_source=other` is the 18 October anomaly recurring: record the browser and the
+  device and do not treat the count as attributed.
+- Read the pipeline in the same query window first. A zero is only readable if other events arrived in it.
+- The click-test itself — opening the link as it stands in the live post — needs x.com, which is unreachable from
+  here. It is the owner's to run, and if a visit is made it must carry `?kx_traffic=diagnostic` or it will land in
+  the audience cohort and turn this row's zero into an arrival.
 
 ---
 
