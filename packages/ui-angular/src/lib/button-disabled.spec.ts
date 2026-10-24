@@ -52,6 +52,30 @@ describe('KxButton — a disabled anchor is inert for every input device', () =>
     expect(event.defaultPrevented).toBe(true);
   });
 
+  it('cancels a middle-click, which is an auxclick and would otherwise open the href in a new tab', () => {
+    const { anchor } = setup();
+    // button 1 is the middle button; the browser dispatches `auxclick` for it, never `click`.
+    const event = new MouseEvent('auxclick', { bubbles: true, cancelable: true, button: 1 });
+    anchor.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('keeps a middle-click away from the caller\u2019s own handler on the same element', () => {
+    const { anchor, host } = setup();
+    anchor.addEventListener('auxclick', () => host.hits.push('anchor-aux'));
+    anchor.dispatchEvent(new MouseEvent('auxclick', { bubbles: true, cancelable: true, button: 1 }));
+    expect(host.hits).toEqual([]);
+  });
+
+  it('lets a middle-click through once aria-disabled is gone', () => {
+    const { fixture, anchor, host } = setup();
+    host.off.set(false);
+    fixture.detectChanges();
+    const event = new MouseEvent('auxclick', { bubbles: true, cancelable: true, button: 1 });
+    anchor.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
   it('keeps the click away from an ancestor handler', () => {
     const { fixture, anchor } = setup();
     const root = fixture.nativeElement as HTMLElement;
