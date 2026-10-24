@@ -113,6 +113,13 @@ export class KxButton {
   /** Whether THIS directive is the one that wrote `aria-disabled`, so it only removes its own. */
   private ownsAriaDisabled = false;
 
+  /**
+   * Whether this directive has ever written pending state onto the element. It is what separates "the
+   * caller never mentioned `pending`" from "the caller's bound value went back to `undefined`" — see
+   * the effect in the constructor.
+   */
+  private touched = false;
+
   /** This button's own live region — created on the first `applyPending`, removed on destroy. */
   private liveRegion: HTMLElement | null = null;
 
@@ -170,9 +177,19 @@ export class KxButton {
       // label changed mid-flight re-announces (a changed status is a status).
       const declared = this.pending();
       const label = this.pendingLabel();
-      // Never mentioned at this call site: touch nothing, not even the shared live region. This is
-      // what makes a button written before `pending` existed render byte-identically.
-      if (declared === undefined) return;
+      if (declared === undefined) {
+        // Two different situations reach here, and conflating them was a defect. A call site that
+        // never mentions `pending` must have NOTHING touched — not an attribute, not even the live
+        // region — which is what makes a button written before this input existed render
+        // byte-identically. But a BOUND value that goes back to `undefined` (an async value that
+        // resolves to nothing, a row object that loses the key) is not that: the directive has
+        // already written `data-pending`, `aria-busy`, `aria-disabled` and an announcement, and the
+        // activation guard reads that `aria-disabled`, so returning early here left the button
+        // permanently unusable with no way for the caller to recover it. `touched` tells the two
+        // apart: it is only ever set by a write of ours.
+        if (this.touched) this.applyPending(false, label);
+        return;
+      }
       this.applyPending(declared === true, label);
     });
 
@@ -217,6 +234,7 @@ export class KxButton {
   private applyPending(declaredPending: boolean, label: string): void {
     const el = this.host.nativeElement;
     const pending = declaredPending && !this.unavailable;
+    this.touched = true;
     if (pending) {
       el.setAttribute('data-pending', '');
       el.setAttribute('aria-busy', 'true');

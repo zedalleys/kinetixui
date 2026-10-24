@@ -26,7 +26,7 @@ import { KxButton } from './button';
   `,
 })
 class Host {
-  readonly busy = signal(false);
+  readonly busy = signal<boolean | undefined>(false);
   readonly label = signal('Working…');
   readonly hits: string[] = [];
 }
@@ -61,6 +61,47 @@ describe('KxButton pending — semantics', () => {
     expect(button.getAttribute('aria-busy')).toBe('true');
     expect(button.hasAttribute('data-pending')).toBe(true);
     expect(button.disabled).toBe(false);
+  });
+
+  it('clears everything it owns when a bound pending goes back to undefined', () => {
+    // `[pending]="busy()"` where busy is `boolean | undefined` — an async value that resolves to
+    // nothing, or a row object that loses the key. The early return for `undefined` exists so a
+    // button written before `pending` existed renders byte-identically; it must not also mean that a
+    // button which WAS pending stays pending for ever. The activation guard reads `aria-disabled`,
+    // so leaving it behind leaves the button permanently unusable.
+    const { fixture, host, button } = setup();
+    host.busy.set(true);
+    fixture.detectChanges();
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+
+    host.busy.set(undefined);
+    fixture.detectChanges();
+    expect(button.getAttribute('aria-disabled')).toBeNull();
+    expect(button.hasAttribute('aria-busy')).toBe(false);
+    expect(button.hasAttribute('data-pending')).toBe(false);
+    expect(announced()).toBe('');
+  });
+
+  it('is pressable again after a bound pending goes back to undefined', () => {
+    const { fixture, host, button } = setup();
+    host.busy.set(true);
+    fixture.detectChanges();
+    button.click();
+    expect(host.hits).toEqual([]); // suppressed while pending
+
+    host.busy.set(undefined);
+    fixture.detectChanges();
+    button.click();
+    expect(host.hits).toEqual(['press']);
+  });
+
+  it('still touches nothing at a call site that never mentions pending', () => {
+    // The other half of the same rule: the plain button has no `pending` binding at all, so the
+    // directive must not create a region or write an attribute for it.
+    const { plain } = setup();
+    expect(plain.hasAttribute('aria-busy')).toBe(false);
+    expect(plain.hasAttribute('data-pending')).toBe(false);
+    expect(plain.hasAttribute('aria-disabled')).toBe(false);
   });
 
   it('keeps the accessible name out of the announcement', () => {

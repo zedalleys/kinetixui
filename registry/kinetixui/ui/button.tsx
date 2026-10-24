@@ -87,7 +87,14 @@ const buttonVariants = cva(
         // `[&>*:not(svg)]:sr-only` hides the LABEL on an icon button, which is how the name survives
         // while only the glyph shows. The pending indicator slot is a direct non-svg child too, so it
         // is excluded by attribute — otherwise a pending icon button hides its own spinner.
-        icon: "p-3 [&>*:not(svg):not([data-pending-slot])]:sr-only",
+        // The indicator slot is taken OUT of the flex flow here and centred over the square, so it
+        // never adds its own 18px and a gap beside the glyph. In flow, an icon button that opts into
+        // `pending` measured 18px + gap wider than one that does not, and then shrank by exactly
+        // that much the moment work started, because the glyph left the layout. Codex measured it;
+        // `button-pending-geometry.test.tsx` is the assertion.
+        icon:
+          "relative p-3 [&>*:not(svg):not([data-pending-slot])]:sr-only " +
+          "[&>[data-pending-slot]]:absolute [&>[data-pending-slot]]:inset-0 [&>[data-pending-slot]]:m-auto",
       },
       /** force a static visual state — leave undefined for real interaction */
       state: {
@@ -120,10 +127,14 @@ const buttonVariants = cva(
       { variant: "Ghost", state: "Active", class: "bg-accent text-action" },
       { variant: "Link", state: "Hover", class: "underline text-foreground" },
       { variant: "Link", size: ["sm", "md", "lg"], class: "py-2 px-0 h-auto" },
-      // An icon button is a square with one glyph in it. While pending the indicator takes that
-      // place rather than sitting beside the glyph, so the square keeps its size; the label is
-      // `sr-only` here either way, so the accessible name is untouched.
-      { size: "icon", state: "Pending", class: "[&>svg]:hidden" },
+      // An icon button is a square with one glyph in it, and the indicator takes that same place:
+      // the slot is absolutely centred (see the `icon` size) and the glyph goes INVISIBLE rather
+      // than hidden, so it keeps its box and the square keeps its size in both states. `hidden`
+      // was the bug — `display: none` took the glyph's 18px out of the layout and the button
+      // narrowed as soon as work began. `visibility: hidden` also takes the glyph out of the
+      // accessibility tree, which is right: on an icon button the name comes from the `sr-only`
+      // label, not from the glyph.
+      { size: "icon", state: "Pending", class: "[&>svg]:invisible" },
     ],
     defaultVariants: { variant: "Primary", size: "md", state: "Default", corners: "default" },
   },

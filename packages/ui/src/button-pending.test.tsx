@@ -554,14 +554,20 @@ describe("Button pending — an icon button", () => {
     expect(container.querySelector("[data-pending-slot] .animate-spin")).not.toBeNull();
   });
 
-  it("hides the glyph while pending, so the square holds one thing at a time", () => {
+  it("covers the glyph while pending without taking its box out of the layout", () => {
+    // This asserted `[&>svg]:hidden` until Codex measured what that costs: `display: none` removed
+    // the glyph's 18px, so the square narrowed the moment work began and widened again when it
+    // finished. `invisible` keeps the box and the indicator is centred over it, so the geometry is
+    // the same in both states. `button-pending-geometry.test.tsx` holds the whole contract.
     const { container } = render(
       <Button size="icon" pending>
         <svg data-testid="glyph" />
         Save
       </Button>,
     );
-    expect(screen.getByRole("button").className).toContain("[&>svg]:hidden");
+    const className = screen.getByRole("button").className;
+    expect(className).toContain("[&>svg]:invisible");
+    expect(className).not.toContain("[&>svg]:hidden");
     expect(container.querySelector("[data-testid='glyph']")).not.toBeNull();
   });
 
