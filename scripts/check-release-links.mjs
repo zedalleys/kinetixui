@@ -30,7 +30,7 @@
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { auditLinks, internalLinksIn, releaseContentSources } from "./release/links.mjs";
+import { auditLinks, carriesLinkKey, internalLinksIn, releaseContentSources } from "./release/links.mjs";
 import { MissingBuildError, idsForHref, siteInventory, unresolvedPath } from "./site-inventory.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -48,8 +48,8 @@ try {
   process.exit(1);
 }
 
-const sources = releaseContentSources(root);
-const links = sources.flatMap((source) => internalLinksIn(readFileSync(`${root}${source}`, "utf8"), source));
+const sources = releaseContentSources(root).map((source) => ({ source, text: readFileSync(`${root}${source}`, "utf8") }));
+const links = sources.flatMap(({ source, text }) => internalLinksIn(text, source));
 const idCache = new Map();
 const errors = auditLinks(links, {
   pathUnresolved: (href) => unresolvedPath(inventory, href),
@@ -57,11 +57,30 @@ const errors = auditLinks(links, {
 });
 
 // A floor, because the failure mode of a text-scanning gate is quiet: if the release content stops
-// matching the rules — a Prettier quote-style flip in the generated `releases.ts`, a renamed field — the
-// audit has nothing to audit and every link passes. The one test that would notice needs a built site,
-// which `test:release` does not have in CI, so the assertion belongs here, where the build is guaranteed.
+// matching the rules — a quote-style flip in the generated `releases.ts`, a renamed field — the audit has
+// nothing to audit and every link passes. The one test that would notice needs a built site, which
+// `test:release` does not have in CI, so the assertion belongs here, where the build is guaranteed.
+//
+// It is per source, not a total. `releases.ts` carries most of the links, so a total above zero is
+// satisfied by that one file while every curated note matches nothing — and the curated note is where the
+// dead link was.
+//
+// What it can see is a file that still carries an `href` field out of which no link was read: a quote
+// style flipped, a value escaped another way, a value that is no longer a string. What it cannot see is
+// the field being renamed or removed, because at that point nothing in the text distinguishes it from a
+// release that simply links nowhere — and failing that would block a legitimate release. `LINK_KEYS` is
+// pinned by a test instead (scripts/release/test/release-links.test.mjs), so renaming the field is a
+// deliberate change that fails there rather than going quiet here.
+const barren = sources.filter(({ source, text }) => carriesLinkKey(text) && !links.some((l) => l.source === source));
+if (barren.length) {
+  for (const { source } of barren) {
+    console.error(`  ✗ ${source} carries an \`href\` field but no link was read out of it — the rules have stopped matching this file`);
+  }
+  console.error(`\ncheck:release-links failed (${barren.length} release-content file(s) the rules no longer match).`);
+  process.exit(1);
+}
 if (!links.length) {
-  console.error(`  ✗ no internal links found in ${sources.length} release-content file(s): ${sources.join(", ")}`);
+  console.error(`  ✗ no internal links found in ${sources.length} release-content file(s): ${sources.map((s) => s.source).join(", ")}`);
   console.error("\ncheck:release-links failed (the release content carries no internal links at all, which means the rules stopped matching it).");
   process.exit(1);
 }

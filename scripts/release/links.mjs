@@ -36,16 +36,49 @@ const MARKDOWN_LINK = /\]\(\s*(<[^<>\n]*>|[^()\s]+)(?:\s+(?:\\?"[^"]*\\?"|'[^']*
 const unwrapped = (destination) =>
   destination.startsWith("<") && destination.endsWith(">") ? destination.slice(1, -1) : destination;
 
-/**
- * A href in a link position that deliberately names no route on this site.
- *
- * Everything else in a link position is meant to be a route here, so an href this does not cover and
- * `sitePath` cannot resolve is reported rather than skipped — see `internalLinksIn`.
- */
+/** A href in a link position that deliberately names no route on this site. */
 const offSite = (href) =>
   href.startsWith("#") ||
   href.startsWith("//") ||
   /^[a-z][a-z0-9+.-]*:/i.test(href);
+
+/**
+ * Whether a href `sitePath` could not resolve is nevertheless meant to be a route here.
+ *
+ * This is the line between a dead link and something that is not a link to this site at all, and it
+ * has to be drawn structurally rather than by asking whether the route exists — a relative href that
+ * names a route which does not exist is the worst case, not an exempt one.
+ *
+ * Two shapes in a link position are not route references, and both are reachable in real release prose:
+ *
+ *   - no slash at all. `handlers[kind](event)` in a sentence about an indexed dispatch map is matched by
+ *     `MARKDOWN_LINK`, and `event` is not a path.
+ *   - a file extension on the last segment. `[the package changelog](packages/ui/CHANGELOG.md)` resolves
+ *     correctly in the GitHub Release body and the generated posts, which is where this prose is
+ *     rendered; `release-notes.mjs` links the same file absolutely. Demanding `/docs/...` there would be
+ *     telling the author to make a working link wrong.
+ *
+ * Everything else — `./docs/motion`, `docs/motion`, `../docs/motion`, a padded `/docs/tokens` — is read
+ * as a route and reported, whether or not that route exists, because the browser resolves it against the
+ * page the reader is on. The cost of drawing the line here is that a repo-relative link to a file with
+ * no extension is reported; an absolute URL is the answer in that case.
+ */
+const meansARoute = (href) => {
+  const [withoutFragment] = href.trim().split("#");
+  if (!withoutFragment.includes("/")) return false;
+  const last = withoutFragment.split("/").pop() ?? "";
+  return !/\.[a-z0-9]{1,8}$/i.test(last);
+};
+
+/**
+ * The characters a JSON or TypeScript string literal stands for.
+ *
+ * `keyed` and `MARKDOWN_LINK` read the raw literal, so an escape arrives verbatim. `"\/docs\/angular"`
+ * is valid JSON for `/docs/angular` — some serializers emit it — and resolving the backslashes would
+ * fail a working link.
+ */
+const unescaped = (raw) =>
+  raw.replace(/\\(.)/g, (_, c) => ({ n: "\n", t: "\t", r: "\r", b: "\b", f: "\f", v: "\v", 0: "\0" })[c] ?? c);
 
 /** The fields that carry a route. `href` is the only one on `ReleaseChange`; see the `Release` type. */
 export const LINK_KEYS = ["href"];
@@ -77,23 +110,46 @@ export const LINK_KEYS = ["href"];
  * and silently dropping it is the hole this gate exists to close.
  */
 export function internalLinksIn(text, source, { keys = LINK_KEYS } = {}) {
-  const keyed = new RegExp(String.raw`"?(?:${keys.join("|")})"?\s*:\s*"((?:\\.|[^"\\])*)"`, "g");
+  const keyed = keyedPattern(keys);
   const found = new Map();
-  const add = (href, line) => {
+  const add = (raw, line) => {
+    const href = unescaped(raw);
     if (found.has(href)) return;
     const path = sitePath(href);
     // A href that is neither a site path nor deliberately off-site — `./docs/motion`, `docs/motion`,
     // a padded value — is not "not a link": the reader clicks it and the browser resolves it against
     // whatever page they are on. `changelog-view.tsx` renders it verbatim and `release-notes.mjs`
-    // passes it through, so it has to be reported, not dropped.
-    if (path === null && offSite(href)) return;
+    // passes it through, so it has to be reported, not dropped. `meansARoute` is where prose and
+    // repo-file links are separated from that.
+    if (path === null && (offSite(href) || !meansARoute(href))) return;
     found.set(href, { source, href, path, line });
   };
   for (const [i, line] of text.split("\n").entries()) {
-    for (const m of line.matchAll(keyed)) add(m[1], i + 1);
+    for (const m of line.matchAll(keyed)) add(m[1] ?? m[2], i + 1);
     for (const m of line.matchAll(MARKDOWN_LINK)) add(unwrapped(m[1]), i + 1);
   }
   return [...found.values()];
+}
+
+/**
+ * The pattern for a link-carrying field, in either quote.
+ *
+ * `apps/web/src/lib/releases.ts` is a checked-in TypeScript file that invites hand-editing, and the repo
+ * pins no quote style, so `href: '/docs/motion'` is a spelling an author or a formatter can produce. With
+ * the delimiter hard-coded to `"`, flipping that file to single quotes took its link count from 31 to 5
+ * and the gate still reported success — the exact silence the floor in `check-release-links.mjs` is meant
+ * to catch, in the file class where the original dead link was.
+ */
+function keyedPattern(keys) {
+  return new RegExp(
+    String.raw`["']?(?:${keys.join("|")})["']?\s*:\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)')`,
+    "g",
+  );
+}
+
+/** Whether a source carries a link-bearing field at all, however its value is spelled. @see keyedPattern */
+export function carriesLinkKey(text, { keys = LINK_KEYS } = {}) {
+  return new RegExp(String.raw`["']?(?:${keys.join("|")})["']?\s*:`).test(text);
 }
 
 /**
@@ -108,8 +164,12 @@ export function auditLinks(links, { pathUnresolved, idsFor }) {
   const at = (l) => `${l.source}:${l.line}`;
   for (const link of links) {
     if (link.path === null) {
+      // A route reference that is not a site path: written relative, or padded. Name the route it would
+      // be read as when that route exists, since that is the correction the author wants.
+      const asRoute = `/${link.href.trim().replace(/^(?:\.{0,2}\/)+/, "")}`;
+      const names = pathUnresolved(asRoute) === null ? ` It names ${asRoute}, which exists.` : "";
       errors.push(
-        `${at(link)}: ${link.href} → not a path on this site; a release link must be written \`/docs/...\` or as an absolute URL on ${SITE_ORIGIN}`,
+        `${at(link)}: ${link.href} → not a path on this site; the reader's browser resolves it against the page they are on.${names} Write it \`/docs/...\` or as an absolute URL on ${SITE_ORIGIN}`,
       );
       continue;
     }

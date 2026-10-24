@@ -155,6 +155,33 @@ deliberately builds no site. The enforcement point is therefore that required ch
 workflow: `ci.yml` runs again on the push to `main`, but `release.yml` reads no signal from it, so a
 link is caught before the Version PR can merge rather than at publication time.
 
+What the link gate does **not** check, so that nobody reads more into a green run than it means:
+
+- **Link shapes it does not extract.** It reads a value of an `href` field, in either quote, and a
+  CommonMark inline link — including a titled or angle-bracketed destination. A raw `<a href="...">`, a
+  reference-style `[text][id]` with its definition elsewhere, and a destination containing balanced
+  parentheses are not read. None of those spellings occurs in release content today, and the changelog
+  page renders a note's `body` as plain text, so the exposure is the GitHub Release body and the
+  generated posts.
+- **Links the generator synthesises.** `scripts/release-notes.mjs` builds
+  `/docs/changelog#<version>` and a `/docs/components/<slug>` link for each entry in `newComponents`.
+  Neither comes from an `href` field, so neither is audited. The changelog anchor exists by
+  construction — `changelog-view.tsx` renders `id={release.version}` for every entry — but only once the
+  Version PR has activated the entry, so generating notes for a version that is still only a curated
+  file emits an anchor that does not yet resolve. The component link is emitted when the route's
+  **source directory** exists, which is not the same question as whether the page was built.
+- **A relative href that names no route.** A destination with a slash and no file extension
+  (`./docs/motion`, `docs/motion`) is reported, because the reader's browser resolves it against the
+  page they are on. One with a file extension (`packages/ui/CHANGELOG.md`) or no slash at all is left
+  alone: it is a repo-file link, which works where this prose is rendered, or it is prose. So a
+  repo-relative link to a file with no extension is reported, and an absolute URL is the answer there.
+- **A trailing slash.** `/docs/angular/` is reported as unresolved although Next redirects it. That is
+  `check:seo`'s own path semantics, shared deliberately rather than forked.
+- **A field rename.** The per-source coverage floor fails a file that still carries an `href` field but
+  yields no link — a quote flip, a re-escaped value, a value that is no longer a string. Renaming or
+  removing the field is indistinguishable from a release that links nowhere, so `LINK_KEYS` is pinned by
+  a test instead.
+
 **Registry state**: whether each allowlisted version already exists, read from the packument rather
 than parsed out of CLI output. An unreachable registry, an authentication failure or a malformed
 response is **not** read as "unpublished" — it stops the release, because publishing against

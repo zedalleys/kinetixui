@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { LINK_KEYS, auditLinks, internalLinksIn, releaseContentSources } from "../links.mjs";
+import { LINK_KEYS, auditLinks, carriesLinkKey, internalLinksIn, releaseContentSources } from "../links.mjs";
 import { MissingBuildError, SITE_ORIGIN, fragmentOf, idsForHref, isInternalHref, pathOf, siteInventory, sitePath, unresolvedPath } from "../../site-inventory.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
@@ -138,6 +138,46 @@ it("reads a Markdown destination that carries a title, or is wrapped in angle br
   assert.match(errors[0], /no built page, public file or redirect/);
 });
 
+it("reads an href written in either quote, because releases.ts is hand-edited and no quote style is pinned", () => {
+  // Flipping that file to single quotes took the link count from 31 to 5 while the gate still reported
+  // success: the rules stopped matching the file class where the original dead link was.
+  assert.deepEqual(
+    internalLinksIn(["{ \"href\": \"/docs/tokens\" }", "  href: '/docs/motion',"].join("\n"), "src").map((l) => l.href),
+    ["/docs/tokens", "/docs/motion"],
+  );
+  assert.equal(check("/docs/motion").length, 1);
+  const single = auditLinks(internalLinksIn("  href: '/docs/motion',", "releases.ts"), {
+    pathUnresolved: (h) => unresolvedPath(inventory, h),
+    idsFor: () => null,
+  });
+  assert.equal(single.length, 1, "a dead link in single quotes must fail exactly as in double");
+});
+
+it("resolves the characters a string literal stands for, not the literal", () => {
+  // `"\/docs\/foundations"` is valid JSON for /docs/foundations; some serializers emit it, and the
+  // backslashes reached `sitePath` before, failing a working link.
+  // Built by splitting rather than with an inline regexp escape, which `regexp.test.mjs` forbids here.
+  const json = JSON.stringify({ href: "/docs/foundations" }).split("/").join("\\/");
+  assert.equal(JSON.parse(json).href, "/docs/foundations", "the fixture is valid JSON for the real path");
+  assert.deepEqual(internalLinksIn(json, "note.json").map((l) => l.href), ["/docs/foundations"]);
+  assert.deepEqual(
+    auditLinks(internalLinksIn(json, "note.json"), { pathUnresolved: (h) => unresolvedPath(inventory, h), idsFor: () => null }),
+    [],
+  );
+});
+
+it("leaves prose and repo-file links alone, because a gate that fails a correct release is worse than the hole", () => {
+  // Both of these were reproduced failing the gate on the real release content. `handlers[kind](event)`
+  // is matched by MARKDOWN_LINK, and `packages/ui/CHANGELOG.md` resolves correctly in the GitHub Release
+  // body — `release-notes.mjs` links the same file absolutely.
+  const text = [
+    '{ "body": "the handler is resolved as handlers[kind](event) at render time" }',
+    '{ "body": "the full record is in [the package changelog](packages/ui/CHANGELOG.md)" }',
+    '{ "body": "see [the release checklist](./RELEASING.md)" }',
+  ].join("\n");
+  assert.deepEqual(internalLinksIn(text, "note.json"), []);
+});
+
 it("rejects a relative href rather than skipping it, because the browser resolves it against the reader's page", () => {
   // `./docs/motion` in a note rendered on /docs/changelog lands the reader on /docs/docs/motion.
   for (const href of ["./docs/motion", "docs/motion", "../docs/motion", " /docs/foundations "]) {
@@ -196,4 +236,8 @@ it("states which fields carry a route, so a new one is a deliberate change", () 
   const gate = readFileSync(`${root}scripts/check-release-links.mjs`, "utf8");
   assert.ok(existsSync(`${root}scripts/check-release-links.mjs`));
   assert.match(gate, /if \(!links\.length\)/, "the gate no longer fails when the rules match nothing at all");
+  assert.match(gate, /carriesLinkKey\(text\) && !links\.some/, "the floor is no longer per source, so one file's links cover for the rest");
+  assert.equal(carriesLinkKey('{ "href": "/docs/tokens" }'), true);
+  assert.equal(carriesLinkKey("  href: '/docs/tokens',"), true, "a quote-style flip must still be seen as a link-bearing file");
+  assert.equal(carriesLinkKey('{ "title": "no link here" }'), false, "a release that links nowhere must not be failed for it");
 });
