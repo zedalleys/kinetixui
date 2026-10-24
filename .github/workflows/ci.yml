@@ -65,6 +65,12 @@ jobs:
       - name: Accessibility gate covers every package with stories
         run: pnpm check:a11y-coverage
 
+      # A field's visible label has to name the field. No <label> that labels nothing, and every
+      # rendered `label` prop proven to reach its control's accessible name — axe cannot see this,
+      # because a trigger with the wrong name still has a name.
+      - name: A visible label names its field
+        run: pnpm check:label-association
+
       - name: Token table matches the tokens
         run: pnpm check:token-contract
 
