@@ -109,6 +109,13 @@ const WIDTHS = [
   ["small-phone", 320, 812],
   ["phone", 375, 812],
   ["tablet", 768, 1024],
+  // 1024 is the width at which the `lg` compositions switch on, and it was the gap between `tablet` and
+  // `desktop` where a layout can be at its tightest: wide enough to have committed to a desktop arrangement,
+  // not wide enough to afford it. #444 found a real failure there that this list could not see — at 1024px
+  // with a 32px default font size the docs component pages gained **37px of horizontal scrolling**, because
+  // the 14rem sidebar had become 448px of a 1024px screen. The defect is fixed; the blind spot was not, and
+  // a sample that misses a whole breakpoint keeps missing whatever else sits in it.
+  ["laptop", 1024, 768],
   ["desktop", 1280, 900],
 ];
 const SCHEMES = ["light", "dark"];
@@ -138,6 +145,196 @@ const TEXT_SCALES = [1, 2];
  * same way. A new entry needs a measured reason.
  */
 const TEXT_SCALE_PENDING = new Map([]);
+
+/**
+ * Single axe findings that are artefacts of how axe resolves a background, not defects of the page, as a ratchet.
+ *
+ * axe's `color-contrast` asks `elementsFromPoint` what is painted beneath a node. When a node is laid out
+ * inside a clipping ancestor but positioned outside it, the browser paints nothing there, so that question
+ * returns the page instead of the node's own card — and axe compares the text against a background it is never
+ * drawn on. The finding is then arithmetic about two colours that never meet.
+ *
+ * An entry says: at this exact view, this exact rule on this exact node is such an artefact, and here is the
+ * measurement that shows it. It is matched on all four of those, so it cannot quietly cover a second node, a
+ * second rule or a second width, and like `TEXT_SCALE_PENDING` it is asserted to be NEEDED — the run fails if
+ * the finding stops being observed, which is what stops a ratchet becoming an exemption.
+ *
+ * It is NOT a way to carry a real contrast failure. Only a finding whose true ratio has been measured against
+ * the background the reader actually sees belongs here, with that number in `why`.
+ */
+const AXE_ARTIFACTS = new Map([
+  [
+    "/create",
+    [
+      {
+        view: "dark/laptop/text100%",
+        rule: "color-contrast",
+        node: ".text-destructive",
+        // The `laptop` width found this on its first run. At 1024px the preview frame is 574px wide
+        // (x 417–991) while the dashboard scene inside it paints its Metric trend at x 974–1019: 28px past
+        // the frame's `overflow-hidden` edge, so the reader never sees it and `elementsFromPoint` at its
+        // centre returns `main` and `body`. axe therefore measured #c70a0a on the page's #050b10 and got
+        // 3.27. Against the white card the element is actually inside, the same two colours measure
+        // **6.04**, which passes AA at 12px. There is no contrast defect here.
+        //
+        // The clipping IS a defect, and it is not this gate's: the preview scene's `sm-rem:` classes are
+        // viewport media queries, so a 574px frame at a 1024px viewport is asked to lay out the desktop
+        // arrangement. Nothing currently measures content painted outside its own clip, at any width.
+        why: "node painted 28px outside its clipping frame; true ratio against its white card is 6.04:1",
+        // The ratio above is re-measured on every run against the backdrop the node is really drawn over,
+        // and the entry fails if it moves. Without it the entry excuses the finding on the mechanism alone:
+        // a node still outside its clip, still reported by axe, but now genuinely illegible where it is
+        // painted, would keep the same key and stay silent. Measured by hand once; asserted from here on.
+        trueRatio: 6.04,
+      },
+    ],
+  ],
+]);
+
+/** Marks an artefact entry as still earned; an unseen entry fails the run at the end. */
+const artifactsSeen = new Set();
+const artifactKey = (path, i) => `${path}#${i}`;
+
+/**
+ * Is every element this selector matches unable to be hit-tested at its own centre?
+ *
+ * This is the condition an `AXE_ARTIFACTS` entry rests on, asked of the live page rather than read from
+ * the entry's note. axe's `color-contrast` resolves a background with `elementsFromPoint` at the node's
+ * centre; when the node is laid out outside a clipping ancestor, nothing is painted there, the hit test
+ * returns the node's ANCESTORS instead of the node, and axe compares the text against a background it is
+ * never drawn on. If the node CAN be hit at its own centre, that is not happening: axe sampled what the
+ * reader actually sees, and the finding is a measurement rather than an artefact, whatever the entry says.
+ *
+ * Every match is checked, not the first. An axe selector for a single node is normally specific, but a
+ * bare class like `.text-destructive` can match several elements, and the suppression must not rest on
+ * whichever one `querySelector` happens to return. One hittable match disqualifies the entry: the bias is
+ * towards reporting.
+ */
+async function unhittableAtItsCentre(page, selector) {
+  return page.evaluate((sel) => {
+    const els = [...document.querySelectorAll(sel)];
+    if (!els.length) return { held: false, why: `no element matches \`${sel}\` any more` };
+    for (const el of els) {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue; // no box, so nothing axe could have sampled
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      // Off-viewport is equally unhittable, and for the same reason: `elementsFromPoint` returns nothing there.
+      if (cx < 0 || cy < 0 || cx > window.innerWidth || cy > window.innerHeight) continue;
+      // The node itself, or anything inside it, being at that point means the node IS painted there.
+      if (document.elementsFromPoint(cx, cy).some((n) => n === el || el.contains(n))) {
+        let clip = null;
+        for (let a = el.parentElement; a && !clip; a = a.parentElement) {
+          if (getComputedStyle(a).overflow !== "visible") clip = a;
+        }
+        return {
+          held: false,
+          why:
+            `the node is now painted at its own centre (${Math.round(cx)}, ${Math.round(cy)}), so axe sampled the ` +
+            `background the reader really sees` +
+            (clip ? `; its nearest clipping ancestor is \`${clip.tagName.toLowerCase()}\`` : `; it has no clipping ancestor`),
+        };
+      }
+    }
+    return { held: true, why: "the node cannot be hit at its own centre" };
+  }, selector);
+}
+
+/**
+ * The contrast ratio the reader really gets on one node, and the ratio WCAG AA asks of it.
+ *
+ * `unhittableAtItsCentre` establishes that axe sampled the wrong background. It says nothing about what the
+ * right background is, so on its own it excuses a finding on the mechanism alone: a node still outside its
+ * clip, still reported, but now genuinely illegible where it IS painted, would keep the same key and stay
+ * silent. This measures the other half — the backdrop the node is drawn over in its own layout position.
+ *
+ * The backdrop is composited the way the painter does it: background colours from the node outwards until
+ * one is opaque, then laid back over each other in that order. A background IMAGE anywhere in that stack
+ * ends the measurement rather than guessing a colour from it, and so does running out of ancestors without
+ * an opaque layer: both report, because an entry that cannot be measured has not earned its silence.
+ */
+async function trueContrast(page, selector) {
+  return page.evaluate((sel) => {
+    const parse = (c) => {
+      const m = c.match(/rgba?\(([^)]+)\)/);
+      if (!m) return null;
+      const [r, g, b, a = "1"] = m[1].split(",").map((x) => x.trim());
+      return { r: +r, g: +g, b: +b, a: +a };
+    };
+    const over = (top, bottom) => ({
+      r: top.r * top.a + bottom.r * (1 - top.a),
+      g: top.g * top.a + bottom.g * (1 - top.a),
+      b: top.b * top.a + bottom.b * (1 - top.a),
+      a: 1,
+    });
+    const luminance = ({ r, g, b }) => {
+      const ch = [r, g, b].map((v) => {
+        const x = v / 255;
+        return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+    };
+    const ratio = (a, b) => {
+      const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+      return (hi + 0.05) / (lo + 0.05);
+    };
+
+    const measured = [];
+    for (const el of document.querySelectorAll(sel)) {
+      const cs = getComputedStyle(el);
+      const fg = parse(cs.color);
+      if (!fg) return { ok: false, why: `cannot parse the node's colour \`${cs.color}\`` };
+
+      const layers = [];
+      let base = null;
+      for (let n = el; n; n = n.parentElement) {
+        const ns = getComputedStyle(n);
+        if (ns.backgroundImage !== "none") {
+          return {
+            ok: false,
+            why: `\`${n.tagName.toLowerCase()}\` behind the node paints a background image, so the ratio the reader gets cannot be measured from colours alone`,
+          };
+        }
+        const bg = parse(ns.backgroundColor);
+        if (!bg || bg.a === 0) continue;
+        layers.push(bg);
+        if (bg.a === 1) {
+          base = bg;
+          break;
+        }
+      }
+      if (!base) return { ok: false, why: "no opaque background behind the node, so its backdrop is undefined" };
+      // layers[] runs innermost-first; composite outermost-inwards so the node's own background lands last.
+      let backdrop = base;
+      for (let i = layers.length - 2; i >= 0; i--) backdrop = over(layers[i], backdrop);
+
+      // AA: 4.5:1, or 3:1 for large text (>=24px, or >=18.66px when bold).
+      const px = parseFloat(cs.fontSize);
+      const bold = parseInt(cs.fontWeight, 10) >= 700;
+      const required = px >= 24 || (px >= 18.66 && bold) ? 3 : 4.5;
+      measured.push({
+        ratio: Math.round(ratio(fg, backdrop) * 100) / 100,
+        required,
+        px,
+        backdrop: `rgb(${[backdrop.r, backdrop.g, backdrop.b].map(Math.round).join(" ")})`,
+      });
+    }
+    if (!measured.length) return { ok: false, why: `no element matches \`${sel}\` any more` };
+    // The worst match decides, for the same reason every match is hit-tested: one illegible node is enough.
+    measured.sort((a, b) => a.ratio - b.ratio);
+    return { ok: true, ...measured[0] };
+  }, selector);
+}
+
+/** The matching entry for one axe violation in one view, or undefined. */
+function axeArtifactFor(path, view, v) {
+  const entries = AXE_ARTIFACTS.get(path);
+  if (!entries) return undefined;
+  const i = entries.findIndex((e) => e.view === view && e.rule === v.id && v.count === 1 && v.nodes[0] === e.node);
+  if (i === -1) return undefined;
+  artifactsSeen.add(artifactKey(path, i));
+  return entries[i];
+}
 
 /**
  * Per-page layout contracts: regions that must still be usable, not merely free of sideways scroll.
@@ -342,6 +539,37 @@ for (const scheme of SCHEMES) {
             failures.push(`${tag}: no docs navigation — neither the sidebar nor the menu button is visible`);
           }
           for (const v of result.violations) {
+            const artifact = axeArtifactFor(path, tag.split(" ")[0], v);
+            if (artifact) {
+              // Matching on view, rule and node proves the finding still OCCURS. It does not prove the
+              // finding is still an ARTEFACT: that rests on a ratio measured by hand once, and a layout
+              // change could move this node back under the pointer while leaving it on a dark surface —
+              // same selector, same rule, same view, now a real contrast failure, silently excused. So the
+              // condition is asserted against the page before anything is suppressed.
+              const clip = await unhittableAtItsCentre(page, artifact.node);
+              // Both halves of the claim, or the finding is reported. The mechanism (axe sampled a
+              // background the node is not drawn on) and the consequence (where it IS drawn, the reader
+              // gets the ratio this entry recorded) are separate facts, and either can stop being true on
+              // its own.
+              const real = clip.held ? await trueContrast(page, artifact.node) : null;
+              const drift = real?.ok ? Math.abs(real.ratio - artifact.trueRatio) : 0;
+              const why = !clip.held
+                ? clip.why
+                : !real.ok
+                  ? real.why
+                  : real.ratio < real.required
+                    ? `where it is painted the reader gets ${real.ratio}:1 on ${real.backdrop}, below the ${real.required}:1 AA asks of ${real.px}px text`
+                    : drift > 0.05
+                      ? `where it is painted the reader now gets ${real.ratio}:1 on ${real.backdrop}, not the ${artifact.trueRatio}:1 this entry recorded`
+                      : null;
+              if (!why) continue;
+              failures.push(
+                `${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")}) ` +
+                  `— AXE_ARTIFACTS excuses this as a background-resolution artefact, but ${why}. ` +
+                  `Re-measure it: the entry's recorded "${artifact.why}" no longer describes this page.`,
+              );
+              continue;
+            }
             failures.push(`${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")})`);
           }
           const contract = LAYOUT_CONTRACTS.get(path);
@@ -428,12 +656,40 @@ for (const scheme of SCHEMES) {
 // any other, and the entry is marked only when real overflow was actually observed. That is strictly
 // stronger than the earlier separate re-check at one width in one theme, and it means a pending page's
 // axe results and its other widths are no longer skipped.
+/**
+ * Both ratchets below assert that an entry is still EARNED, which only one kind of run can judge.
+ *
+ * A `--page` run visits a subset, so a page it never opened cannot have been observed, and demanding the
+ * observation would fail every targeted run — including the negative controls, which is how this was found.
+ * The membership check still applies either way: an entry naming a page that is not in PAGES is wrong
+ * whatever was swept.
+ */
+const swept = (path) => (ONLY_PAGES ?? PAGES).includes(path);
+
 for (const [path, why] of TEXT_SCALE_PENDING) {
   if (!PAGES.includes(path)) {
     failures.push(`${path}: listed in TEXT_SCALE_PENDING but not in PAGES — remove the entry or the page`);
-  } else if (!pendingSeen.has(path)) {
+  } else if (swept(path) && !pendingSeen.has(path)) {
     failures.push(`${path}: no longer overflows at 200% text in any swept view — delete it from TEXT_SCALE_PENDING (was: ${why})`);
   }
+}
+
+// Same ratchet as TEXT_SCALE_PENDING: an artefact entry that no longer matches anything is a line claiming a
+// finding the sweep cannot find, which is indistinguishable from an exemption nobody is checking.
+for (const [path, entries] of AXE_ARTIFACTS) {
+  if (!PAGES.includes(path)) {
+    failures.push(`${path}: listed in AXE_ARTIFACTS but not in PAGES — remove the entry or the page`);
+    continue;
+  }
+  if (!swept(path)) continue;
+  entries.forEach((e, i) => {
+    if (!artifactsSeen.has(artifactKey(path, i))) {
+      failures.push(
+        `${path}: the ${e.rule} finding on \`${e.node}\` at ${e.view} no longer occurs — delete it from ` +
+          `AXE_ARTIFACTS (was: ${e.why})`,
+      );
+    }
+  });
 }
 
 await browser.close();
