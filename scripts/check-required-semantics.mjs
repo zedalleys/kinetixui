@@ -139,12 +139,40 @@ function components() {
 }
 
 /**
+ * A block asserts the required state POSITIVELY — the control carries `aria-required="true"`, not
+ * merely that the attribute is mentioned somewhere.
+ *
+ * The distinction is the whole rule. `field-required.test.tsx` deliberately asserts both
+ * directions in one block: the group carries it, the radio item inside does not. Counting any
+ * occurrence made the negative half sufficient on its own, so deleting
+ * `expect(...radiogroup...).toHaveAttribute("aria-required", "true")` left the block still
+ * "proving" RadioGroup on the strength of `.not.toHaveAttribute("aria-required")` two lines below —
+ * measured, and the gate reported `ok`. The required coverage could be deleted without a red check,
+ * which is the one thing this gate exists to prevent. Found by Codex on `4dd469a`, reproduced
+ * before the fix and after it.
+ *
+ * Whitespace is collapsed first, because the multi-line `toHaveAttribute(\n  "aria-required",\n
+ * "true",\n)` form appears in the same file and a line-based match would miss it. The lookbehind is
+ * what rejects the negative form: in `.not.toHaveAttribute` the four characters before the matcher
+ * are `.not`.
+ *
+ * What this cannot see: a positive assertion written any other way — `getAttribute("aria-required")`
+ * compared with `toBe("true")`, a snapshot, a custom matcher. Every assertion of this attribute in
+ * the repository today is `toHaveAttribute`, and the failure direction is the safe one: an
+ * unrecognized shape fails the gate and says which component it could not prove, rather than
+ * passing it.
+ */
+const assertsRequired = (body) =>
+  /(?<!\.not)\.toHaveAttribute\( ?["']aria-required["'], ?["']true["']/.test(body.replace(/\s+/g, " "));
+
+/**
  * Which components are proven, and by what.
  *
  * The unit of proof is the individual test, not the file: a block that both renders `<Thing>` and
- * asserts `aria-required` proves Thing. File-level matching was the first draft, and deleting one
- * assertion from a file with several left the gate green — the second negative control is that
- * measurement. A skipped test proves nothing, so `it.skip` and `it.todo` are excluded.
+ * asserts `aria-required="true"` on a control proves Thing. File-level matching was the first
+ * draft, and deleting one assertion from a file with several left the gate green — the second
+ * negative control is that measurement. A skipped test proves nothing, so `it.skip` and `it.todo`
+ * are excluded.
  */
 function provenComponents() {
   const proven = new Set();
@@ -156,7 +184,7 @@ function provenComponents() {
     for (let i = 0; i < blocks.length; i += 1) {
       const skipped = blocks[i][1] && blocks[i][1] !== ".each";
       const body = code.slice(blocks[i].index, blocks[i + 1]?.index ?? code.length);
-      if (skipped || !body.includes("aria-required")) continue;
+      if (skipped || !assertsRequired(body)) continue;
       for (const [, tag] of body.matchAll(/<([A-Z][A-Za-z0-9]*)/g)) proven.add(tag);
     }
   }
