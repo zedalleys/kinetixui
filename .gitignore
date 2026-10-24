@@ -31,3 +31,8 @@ packages/ui-compose/.idea/
 packages/ui-compose/**/*.iml
 # Generated release worksheets only — hand-written drafts under drafts/<id>/ ARE tracked.
 marketing/content/drafts/release-*.md
+
+# Agent worktrees created by Claude Code under .claude/. They are checkouts of this
+# same repository, so committing them would nest the repo inside itself; the rest of
+# .claude/ (launch.json, skills) stays tracked.
+.claude/worktrees/
