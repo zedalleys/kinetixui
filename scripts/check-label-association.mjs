@@ -21,7 +21,12 @@
  *      correct, and the only way to know that is to read the computed name.
  *
  * The unit of proof is one `it(...)` block, which must both render the component with a `label` and
- * assert a `name:`; `it.skip` proves nothing. Counting per FILE would let a file with several
+ * assert a `name:`; `it.skip` proves nothing. What this cannot tell, stated rather than left to be
+ * discovered: a block that renders the component with a label and asserts a `name:` for some OTHER
+ * element in the same block counts as proof here. The gate's claim is therefore "somebody read a
+ * computed name while this component was on screen with a label", which is weaker than "this
+ * component's own name contains its label" — the latter is what the test file has to mean, and a
+ * reviewer still has to read it. Counting per FILE would let a file with several
  * assertions lose one and stay green — the defect the GAP-6 gate's second negative control found.
  * Comments are stripped before any matching, for the same reason that gate strips them: a doc
  * comment mentioning `<label>` or `aria-labelledby` is prose, not code, and a scanner that reads
