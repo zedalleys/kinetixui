@@ -190,6 +190,51 @@ const AXE_ARTIFACTS = new Map([
 const artifactsSeen = new Set();
 const artifactKey = (path, i) => `${path}#${i}`;
 
+/**
+ * Is every element this selector matches unable to be hit-tested at its own centre?
+ *
+ * This is the condition an `AXE_ARTIFACTS` entry rests on, asked of the live page rather than read from
+ * the entry's note. axe's `color-contrast` resolves a background with `elementsFromPoint` at the node's
+ * centre; when the node is laid out outside a clipping ancestor, nothing is painted there, the hit test
+ * returns the node's ANCESTORS instead of the node, and axe compares the text against a background it is
+ * never drawn on. If the node CAN be hit at its own centre, that is not happening: axe sampled what the
+ * reader actually sees, and the finding is a measurement rather than an artefact, whatever the entry says.
+ *
+ * Every match is checked, not the first. An axe selector for a single node is normally specific, but a
+ * bare class like `.text-destructive` can match several elements, and the suppression must not rest on
+ * whichever one `querySelector` happens to return. One hittable match disqualifies the entry: the bias is
+ * towards reporting.
+ */
+async function unhittableAtItsCentre(page, selector) {
+  return page.evaluate((sel) => {
+    const els = [...document.querySelectorAll(sel)];
+    if (!els.length) return { held: false, why: `no element matches \`${sel}\` any more` };
+    for (const el of els) {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue; // no box, so nothing axe could have sampled
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      // Off-viewport is equally unhittable, and for the same reason: `elementsFromPoint` returns nothing there.
+      if (cx < 0 || cy < 0 || cx > window.innerWidth || cy > window.innerHeight) continue;
+      // The node itself, or anything inside it, being at that point means the node IS painted there.
+      if (document.elementsFromPoint(cx, cy).some((n) => n === el || el.contains(n))) {
+        let clip = null;
+        for (let a = el.parentElement; a && !clip; a = a.parentElement) {
+          if (getComputedStyle(a).overflow !== "visible") clip = a;
+        }
+        return {
+          held: false,
+          why:
+            `the node is now painted at its own centre (${Math.round(cx)}, ${Math.round(cy)}), so axe sampled the ` +
+            `background the reader really sees` +
+            (clip ? `; its nearest clipping ancestor is \`${clip.tagName.toLowerCase()}\`` : `; it has no clipping ancestor`),
+        };
+      }
+    }
+    return { held: true, why: "the node cannot be hit at its own centre" };
+  }, selector);
+}
+
 /** The matching entry for one axe violation in one view, or undefined. */
 function axeArtifactFor(path, view, v) {
   const entries = AXE_ARTIFACTS.get(path);
@@ -403,7 +448,22 @@ for (const scheme of SCHEMES) {
             failures.push(`${tag}: no docs navigation — neither the sidebar nor the menu button is visible`);
           }
           for (const v of result.violations) {
-            if (axeArtifactFor(path, tag.split(" ")[0], v)) continue;
+            const artifact = axeArtifactFor(path, tag.split(" ")[0], v);
+            if (artifact) {
+              // Matching on view, rule and node proves the finding still OCCURS. It does not prove the
+              // finding is still an ARTEFACT: that rests on a ratio measured by hand once, and a layout
+              // change could move this node back under the pointer while leaving it on a dark surface —
+              // same selector, same rule, same view, now a real contrast failure, silently excused. So the
+              // condition is asserted against the page before anything is suppressed.
+              const clip = await unhittableAtItsCentre(page, artifact.node);
+              if (clip.held) continue;
+              failures.push(
+                `${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")}) ` +
+                  `— AXE_ARTIFACTS excuses this as a background-resolution artefact, but ${clip.why}. ` +
+                  `Re-measure it: the entry's recorded "${artifact.why}" no longer describes this page.`,
+              );
+              continue;
+            }
             failures.push(`${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")})`);
           }
           const contract = LAYOUT_CONTRACTS.get(path);
