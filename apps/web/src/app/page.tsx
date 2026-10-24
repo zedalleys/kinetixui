@@ -189,15 +189,22 @@ export default function HomePage() {
           below `lg-rem` the map moves under the copy and the same offset puts the glow over the headline
           instead — measured, 100% of the headline and 0% of the map at 390px. That is not free: the lede
           paragraph is `muted-foreground` at 16px, which clears AA by 0.60 in light theme, and the gradient
-          under it measured 4.28:1 against the 4.5 floor. axe cannot see it, because it will not resolve a
-          background behind a gradient and reports "incomplete" rather than a failure.
+          took the most adverse background pixel under its glyphs to 4.28:1 against the 4.5 floor, with 39%
+          of that paragraph's glyph pixels below the floor. The statistic matters: against the mean of the
+          same background it measured 4.59:1 and would have looked compliant. It was worst at 390px but not
+          confined to it — the same measurement fails from 320px to roughly 740px, and again at 1200px for a
+          reader whose browser font size is 32px, which is what the `-rem` breakpoints exist to track. axe
+          cannot see any of it, because it will not resolve a background behind a gradient and reports
+          "incomplete" rather than a failure.
 
           So the anchor follows the layout: bottom-anchored while the map is below the copy, top-anchored
-          from `lg-rem` up, where the composition — and the approved appearance — is unchanged. `bottom-14`
-          rather than `bottom-0` keeps the gradient clear of the targets ticker below it, whose own text is
-          muted at 14px.
+          from `lg-rem` up, where the composition — and the approved appearance — is unchanged. The 3.5rem
+          offset is cosmetic margin, not a guarantee: what keeps the targets ticker's own muted text safe is
+          `closest-side`, which puts the gradient's alpha at zero on the box's own edge. Measured, the ticker
+          text reads 5.10:1 with this offset and 5.06:1 with none, and under `prefers-reduced-motion` the
+          band wraps and grows into the glow's box by 26px with no change to that figure.
         */}
-        <div aria-hidden="true" className="kx-glow kx-glow-soft -end-40 bottom-14 top-auto size-[46rem] lg-rem:bottom-auto lg-rem:-top-32" />
+        <div aria-hidden="true" className="kx-glow kx-glow-soft -end-40 bottom-14 size-[46rem] lg-rem:bottom-auto lg-rem:-top-32" />
         <div className={container}>
           {/*
             Hero vertical rhythm is a mobile-first decision. At 390×800 the primary CTA and the install command
@@ -256,9 +263,10 @@ export default function HomePage() {
                     href="/docs/installation"
                     {...ctaAttrs("homepage_hero", "installation")}
                     // Always underlined, for the same reason as the "What ships where" link below: inside
-                    // mixed foreground/muted text, colour alone does not mark a link. It measured 1.3:1
-                    // against the muted prose around it in light and 1.13:1 in dark, against WCAG 1.4.1's
-                    // 3:1 — and the hero's old backdrop gradient hid that from axe, which could only report
+                    // mixed foreground/muted text, colour alone does not mark a link. It measured 1.31:1
+                    // against the muted prose around it in light and 1.14:1 in dark, against the 3:1 that
+                    // technique G183 asks of a colour-only link under WCAG 1.4.1, which states no ratio of
+                    // its own — and the hero's old backdrop gradient hid that from axe, which could only report
                     // "contrast could not be determined" while it was there.
                     className="text-primary underline underline-offset-4"
                   >
