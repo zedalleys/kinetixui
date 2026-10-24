@@ -10,8 +10,8 @@ import { cn } from "../lib/utils";
  * uncontrolled (`defaultValue`); `readOnly` renders a static display, e.g.
  * inside a Card.
  *
- * The interaction contract, which is `kx-rating`'s contract — Angular stated it, asserted it in a
- * real browser, and recorded that this component disagreed with it:
+ * The interaction contract, which is `kx-rating`'s contract — Angular stated it, asserted it in its
+ * unit tests, and recorded that this component disagreed with it:
  *
  *   semantics   a `radiogroup` whose stars are real `<input type="radio">`s named "1 star" …
  *               "5 stars". One of N, chosen, which is what a rating is and what a screen reader
@@ -29,6 +29,11 @@ import { cn } from "../lib/utils";
  * Native radios rather than `role="radio"` on a div: focus movement, the roving tab stop, RTL
  * mirroring and the "3 of 5" position all come from the browser, and an input the pointer cannot
  * see is still an input the keyboard and the accessibility tree can.
+ *
+ * What is NOT proven anywhere: the arrow-key half, on a real engine. jsdom implements no
+ * radio-group navigation, so `rating-radio.test.tsx` exercises it through `user-event`'s emulation
+ * of it, and Angular's `kx-rating` spec runs in jsdom too. Both say what the browser is specified
+ * to do; neither observes it doing so.
  */
 const starVariants = cva("transition-colors", {
   variants: {
