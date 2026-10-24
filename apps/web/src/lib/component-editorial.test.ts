@@ -16,9 +16,16 @@ const allText = (slug: string) => {
 };
 
 describe("component editorial copy", () => {
-  it("covers a bounded, representative set of pages, not all of them", () => {
-    expect(entries.length).toBeGreaterThanOrEqual(12);
-    expect(entries.length).toBeLessThanOrEqual(20);
+  /*
+   * The set is bounded at both ends on purpose. The ceiling stops it growing into all 109 pages, which is
+   * more hand-written copy than anyone will keep true; the floor stops a batch being quietly undone. They
+   * are equal because coverage moves in approved batches, not by drift: raising the ceiling is an owner
+   * decision, and the batch that fills it raises the floor in the same change. 20 -> 30 was approved on
+   * 2026-10-24 and delivered as the ten selection and waiting-state entries.
+   */
+  it("covers exactly the approved number of pages, not all of them", () => {
+    expect(entries.length).toBeGreaterThanOrEqual(30);
+    expect(entries.length).toBeLessThanOrEqual(30);
   });
 
   it("keeps every entry between 80 and 180 words", () => {
