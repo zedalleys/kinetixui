@@ -27,11 +27,25 @@
  * therefore arrives inside this gate on the day it is written, which is the failure mode that let
  * the original gap sit unnoticed.
  *
- * What the derivation cannot see, stated rather than hidden: `Rating`, `DatePicker`, `InputOTP` and
- * `GuestPicker` are built from plain buttons and expose no control role at all, so they do not look
- * like controls to this scan — and they would not look like controls to a screen reader either.
- * That is a larger gap than a missing attribute and it is not fixed here; it is recorded in the
- * GAP-6 report. Adding a role to any of them brings it into this gate automatically.
+ * What the derivation cannot see, stated rather than hidden — and corrected on 2026-10-24, because
+ * the first version of this note was wrong. `Rating`, `DatePicker`, `InputOTP` and `GuestPicker` are
+ * all outside this scan, but not for one reason, and not because they carry no ARIA at all:
+ *
+ *   Rating       writes `role={readOnly ? "img" : "radiogroup"}`, and the match below is for the
+ *                literal `role="radiogroup"`, so a conditional role is invisible here. Its stars
+ *                are `aria-pressed` buttons rather than radios, which is the real defect.
+ *   InputOTP     renders a native `<input>` through the `input-otp` dependency, so there is no
+ *                `<input` in the file to find. `required` already reaches that input today.
+ *   DatePicker   has `aria-haspopup="dialog"` and `aria-expanded` from `Popover.Trigger`, and no
+ *                control role, because the control is the Calendar inside the popover.
+ *   GuestPicker  the same, and its counts are `NumberInput`s — native inputs with a value always
+ *                set, so there is nothing for requiredness to describe.
+ *
+ * Each is measured rather than assumed, and classified in
+ * `/mnt/project-files/phase-b-states/aria-role-gap-classification.md`. Teaching this scan to read a
+ * conditional role, and to count an `input-otp` import as native, is listed there as work. None of
+ * it is fixed here. Adding a literal control role to any of them brings it into this gate
+ * automatically.
  *
  * Comments are stripped before matching. A doc comment in `field.tsx` that mentions `<input>` made
  * the first draft of this script classify Field itself as a native control — the same way a doc
