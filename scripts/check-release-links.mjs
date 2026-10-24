@@ -30,7 +30,7 @@
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { auditLinks, carriesLinkKey, internalLinksIn, releaseContentSources } from "./release/links.mjs";
+import { auditLinks, carriesLinkKey, internalLinksIn, keyedDestinations, releaseContentSources } from "./release/links.mjs";
 import { MissingBuildError, idsForHref, siteInventory, unresolvedPath } from "./site-inventory.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -65,16 +65,21 @@ const errors = auditLinks(links, {
 // satisfied by that one file while every curated note matches nothing — and the curated note is where the
 // dead link was.
 //
-// What it can see is a file that still carries an `href` field out of which no link was read: a quote
-// style flipped, a value escaped another way, a value that is no longer a string. What it cannot see is
+// What it can see is a file that still carries an `href` field out of which no destination could be
+// read: a value that is no longer a string, a spelling the reader stopped matching. What it cannot see is
 // the field being renamed or removed, because at that point nothing in the text distinguishes it from a
 // release that simply links nowhere — and failing that would block a legitimate release. `LINK_KEYS` is
 // pinned by a test instead (scripts/release/test/release-links.test.mjs), so renaming the field is a
 // deliberate change that fails there rather than going quiet here.
-const barren = sources.filter(({ source, text }) => carriesLinkKey(text) && !links.some((l) => l.source === source));
+//
+// It counts destinations read, not links audited. A note whose only `href` is an external URL, a bare
+// `#anchor` or a repo file carries a working link field and nothing for this gate to resolve; failing it
+// would be the gate blocking correct release content, which is the mistake this file has already made
+// once.
+const barren = sources.filter(({ source, text }) => carriesLinkKey(text) && !keyedDestinations(text, source).length);
 if (barren.length) {
   for (const { source } of barren) {
-    console.error(`  ✗ ${source} carries an \`href\` field but no link was read out of it — the rules have stopped matching this file`);
+    console.error(`  ✗ ${source} carries an \`href\` field but no destination could be read out of it — the rules have stopped matching this file`);
   }
   console.error(`\ncheck:release-links failed (${barren.length} release-content file(s) the rules no longer match).`);
   process.exit(1);

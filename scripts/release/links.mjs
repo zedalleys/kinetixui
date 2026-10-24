@@ -73,12 +73,23 @@ const meansARoute = (href) => {
 /**
  * The characters a JSON or TypeScript string literal stands for.
  *
- * `keyed` and `MARKDOWN_LINK` read the raw literal, so an escape arrives verbatim. `"\/docs\/angular"`
- * is valid JSON for `/docs/angular` — some serializers emit it — and resolving the backslashes would
- * fail a working link.
+ * `keyedDestinations` and `MARKDOWN_LINK` read the raw literal, so an escape arrives verbatim.
+ * `"\/docs\/angular"` is valid JSON for `/docs/angular` — some serializers emit it — and resolving the
+ * backslashes would fail a working link. The numeric escapes are decoded rather than having the
+ * backslash dropped, because dropping it turns `"/docs/\u0061ngular"` into `/docs/u0061ngular`: a route
+ * that does not exist, audited in place of the one `JSON.parse` gives the site, which would fail a
+ * correct release. Anything that is not a recognised escape stands for the character itself, which is
+ * what both languages do.
  */
+const SIMPLE_ESCAPE = { n: "\n", t: "\t", r: "\r", b: "\b", f: "\f", v: "\v", 0: "\0" };
+
 const unescaped = (raw) =>
-  raw.replace(/\\(.)/g, (_, c) => ({ n: "\n", t: "\t", r: "\r", b: "\b", f: "\f", v: "\v", 0: "\0" })[c] ?? c);
+  raw.replace(/\\(u\{([0-9a-fA-F]{1,6})\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|[\s\S])/g, (_, whole, braced, u4, x2) => {
+    if (braced !== undefined) return String.fromCodePoint(Number.parseInt(braced, 16));
+    if (u4 !== undefined) return String.fromCharCode(Number.parseInt(u4, 16));
+    if (x2 !== undefined) return String.fromCharCode(Number.parseInt(x2, 16));
+    return SIMPLE_ESCAPE[whole] ?? whole;
+  });
 
 /** The fields that carry a route. `href` is the only one on `ReleaseChange`; see the `Release` type. */
 export const LINK_KEYS = ["href"];
@@ -110,25 +121,83 @@ export const LINK_KEYS = ["href"];
  * and silently dropping it is the hole this gate exists to close.
  */
 export function internalLinksIn(text, source, { keys = LINK_KEYS } = {}) {
-  const keyed = keyedPattern(keys);
   const found = new Map();
-  const add = (raw, line) => {
-    const href = unescaped(raw);
+  /**
+   * `fromMarkdown` decides how an unresolvable destination is treated, because the two positions carry
+   * different certainty. A value of a link-carrying field is unambiguously a link — `changelog-view.tsx`
+   * renders it verbatim into an anchor — so one that is not a site path and not deliberately off-site is
+   * reported whatever it looks like, `"href": "motion"` included. A Markdown candidate is a guess about
+   * prose: `MARKDOWN_LINK` matches any `](…)`, so `handlers[kind](event)` in a sentence arrives here as
+   * the destination `event`, and `[the package changelog](packages/ui/CHANGELOG.md)` is a repo-file link
+   * that works where this prose is rendered. `meansARoute` separates those, and only there.
+   */
+  const add = (href, line, fromMarkdown) => {
     if (found.has(href)) return;
     const path = sitePath(href);
-    // A href that is neither a site path nor deliberately off-site — `./docs/motion`, `docs/motion`,
-    // a padded value — is not "not a link": the reader clicks it and the browser resolves it against
-    // whatever page they are on. `changelog-view.tsx` renders it verbatim and `release-notes.mjs`
-    // passes it through, so it has to be reported, not dropped. `meansARoute` is where prose and
-    // repo-file links are separated from that.
-    if (path === null && (offSite(href) || !meansARoute(href))) return;
+    if (path === null && (offSite(href) || (fromMarkdown && !meansARoute(href)))) return;
     found.set(href, { source, href, path, line });
   };
+  for (const { href, line } of keyedDestinations(text, source, { keys })) add(href, line, false);
   for (const [i, line] of text.split("\n").entries()) {
-    for (const m of line.matchAll(keyed)) add(m[1] ?? m[2], i + 1);
-    for (const m of line.matchAll(MARKDOWN_LINK)) add(unwrapped(m[1]), i + 1);
+    for (const m of line.matchAll(MARKDOWN_LINK)) add(unescaped(unwrapped(m[1])), i + 1, true);
   }
   return [...found.values()];
+}
+
+/**
+ * Every destination written in a link-carrying field, off-site ones included.
+ *
+ * This is what the coverage floor counts, so it has to be "a field whose value was read as a
+ * destination", not "a link worth auditing": a note whose only `href` is an external URL carries a
+ * perfectly good link field, and failing it would block a correct release.
+ *
+ * A `.json` source is read by parsing it rather than by pattern-matching its text. The text scan can be
+ * defeated by any valid JSON spelling of the field — `"\u0068ref"` makes both the scan and
+ * `carriesLinkKey` see nothing, while `version-release-meta.mjs` parses the same file and activates the
+ * destination — and a parser cannot be, so the curated notes are read exactly. `releases.ts` is
+ * TypeScript and cannot be parsed here, so it keeps the text scan; it is generated from those notes, and
+ * a renamed field there is held by the `LINK_KEYS` test.
+ */
+export function keyedDestinations(text, source = "", { keys = LINK_KEYS } = {}) {
+  if (source.endsWith(".json")) {
+    const parsed = parsedKeyedDestinations(text, keys);
+    if (parsed) return parsed;
+  }
+  const pattern = keyedPattern(keys);
+  const out = [];
+  for (const [i, line] of text.split("\n").entries()) {
+    for (const m of line.matchAll(pattern)) out.push({ href: unescaped(m[1] ?? m[2]), line: i + 1 });
+  }
+  return out;
+}
+
+/**
+ * The same destinations, read out of parsed JSON, or null when the text is not JSON at all.
+ *
+ * The line is recovered by looking for the value in the text, decoded the same way, so the error message
+ * still points somewhere useful; a value whose spelling the text scan cannot find falls back to the first
+ * line, which is the case where the parse is the only reason we know about it.
+ */
+function parsedKeyedDestinations(text, keys) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  const lines = text.split("\n").map(unescaped);
+  const lineOf = (href) => lines.findIndex((line) => line.includes(href)) + 1 || 1;
+  const out = [];
+  const walk = (node) => {
+    if (Array.isArray(node)) return node.forEach(walk);
+    if (node === null || typeof node !== "object") return;
+    for (const [key, value] of Object.entries(node)) {
+      if (keys.includes(key) && typeof value === "string") out.push({ href: value, line: lineOf(value) });
+      else walk(value);
+    }
+  };
+  walk(data);
+  return out;
 }
 
 /**

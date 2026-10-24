@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { LINK_KEYS, auditLinks, carriesLinkKey, internalLinksIn, releaseContentSources } from "../links.mjs";
+import { LINK_KEYS, auditLinks, carriesLinkKey, internalLinksIn, keyedDestinations, releaseContentSources } from "../links.mjs";
 import { MissingBuildError, SITE_ORIGIN, fragmentOf, idsForHref, isInternalHref, pathOf, siteInventory, sitePath, unresolvedPath } from "../../site-inventory.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
@@ -178,6 +178,56 @@ it("leaves prose and repo-file links alone, because a gate that fails a correct 
   assert.deepEqual(internalLinksIn(text, "note.json"), []);
 });
 
+it("reports a link-field value whatever it looks like, because that position is unambiguously a link", () => {
+  // The prose exemption belongs only to Markdown candidates. `"href": "motion"` is rendered verbatim
+  // into an anchor by `changelog-view.tsx`, so dropping it for looking slashless would hand the reader a
+  // dead link — the defect this gate exists for, in the field it was found in.
+  for (const href of ["motion", "packages/ui/CHANGELOG.md", "release-notes"]) {
+    const errors = check(href);
+    assert.equal(errors.length, 1, href);
+    assert.match(errors[0], /not a path on this site/, href);
+  }
+  // The same spellings in prose are left alone, which is the whole point of the distinction.
+  assert.deepEqual(internalLinksIn('{ "body": "see [c](packages/ui/CHANGELOG.md) and handlers[kind](event)" }', "note.json"), []);
+});
+
+it("decodes a numeric escape instead of dropping its backslash", () => {
+  // `"/docs/\u0061ngular"` is valid JSON for /docs/angular, which is what `version-release-meta.mjs`
+  // activates. Dropping the backslash would audit `/docs/u0061ngular` and fail a correct release.
+  const unicode = '{ "href": "/docs/\\u0066oundations" }';
+  assert.equal(JSON.parse(unicode).href, "/docs/foundations", "the fixture is valid JSON for the real path");
+  assert.deepEqual(internalLinksIn(unicode, "note.json").map((l) => l.href), ["/docs/foundations"]);
+  assert.deepEqual(internalLinksIn('{ "href": "/docs/\\x66oundations" }', "note.json").map((l) => l.href), ["/docs/foundations"]);
+  assert.deepEqual(internalLinksIn('{ "href": "/docs/\\u{66}oundations" }', "note.json").map((l) => l.href), ["/docs/foundations"]);
+  assert.deepEqual(internalLinksIn('{ "href": "/docs/m\\otion" }', "note.json").map((l) => l.href), ["/docs/motion"], "an unrecognised escape stands for the character");
+});
+
+it("reads a .json source by parsing it, so no spelling of the field can hide a link", () => {
+  // `"\u0068ref"` is a valid JSON spelling of `href`. It defeats any text scan — `carriesLinkKey` sees
+  // nothing either — while `JSON.parse` in `version-release-meta.mjs` restores the ordinary field and
+  // activates the destination. A parser cannot be spelled around.
+  const hidden = '{ "changes": [{ "\\u0068ref": "/docs/motion" }] }';
+  assert.equal(Object.keys(JSON.parse(hidden).changes[0])[0], "href", "the fixture really is an href field");
+  assert.equal(carriesLinkKey(hidden), false, "the text scan cannot see it, which is why the parse exists");
+  assert.deepEqual(internalLinksIn(hidden, "release/notes/0.0.0.json").map((l) => l.href), ["/docs/motion"]);
+  assert.equal(internalLinksIn(hidden, "release/notes/0.0.0.json").length, 1);
+  // Nested shapes are walked, and a non-string value yields no destination, which is what the floor sees.
+  assert.deepEqual(
+    keyedDestinations('{ "changes": [{ "href": "/docs/a" }, { "nested": { "href": "/docs/b" } }] }', "x.json").map((d) => d.href),
+    ["/docs/a", "/docs/b"],
+  );
+  assert.deepEqual(keyedDestinations('{ "href": ["/docs/a"] }', "x.json"), [], "a value that is not a string is not a destination");
+});
+
+it("counts destinations read, not links audited, so an off-site-only note is not failed", () => {
+  // The floor asks whether the rules still match the file, not whether it has internal links. A note
+  // whose only link is external carries a working field and nothing here to resolve.
+  const external = '{ "href": "https://github.com/zedalleys/kinetixui/issues/1" }';
+  assert.deepEqual(internalLinksIn(external, "note.json"), [], "an external URL is not this gate's business");
+  assert.equal(keyedDestinations(external, "note.json").length, 1, "but the field was read, so the floor must not fire");
+  assert.equal(keyedDestinations('{ "href": "#motion" }', "note.json").length, 1, "nor for a bare fragment");
+});
+
 it("rejects a relative href rather than skipping it, because the browser resolves it against the reader's page", () => {
   // `./docs/motion` in a note rendered on /docs/changelog lands the reader on /docs/docs/motion.
   for (const href of ["./docs/motion", "docs/motion", "../docs/motion", " /docs/foundations "]) {
@@ -236,7 +286,7 @@ it("states which fields carry a route, so a new one is a deliberate change", () 
   const gate = readFileSync(`${root}scripts/check-release-links.mjs`, "utf8");
   assert.ok(existsSync(`${root}scripts/check-release-links.mjs`));
   assert.match(gate, /if \(!links\.length\)/, "the gate no longer fails when the rules match nothing at all");
-  assert.match(gate, /carriesLinkKey\(text\) && !links\.some/, "the floor is no longer per source, so one file's links cover for the rest");
+  assert.match(gate, /carriesLinkKey\(text\) && !keyedDestinations\(text, source\)\.length/, "the floor no longer counts destinations read, per source");
   assert.equal(carriesLinkKey('{ "href": "/docs/tokens" }'), true);
   assert.equal(carriesLinkKey("  href: '/docs/tokens',"), true, "a quote-style flip must still be seen as a link-bearing file");
   assert.equal(carriesLinkKey('{ "title": "no link here" }'), false, "a release that links nowhere must not be failed for it");

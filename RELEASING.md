@@ -170,17 +170,22 @@ What the link gate does **not** check, so that nobody reads more into a green ru
   Version PR has activated the entry, so generating notes for a version that is still only a curated
   file emits an anchor that does not yet resolve. The component link is emitted when the route's
   **source directory** exists, which is not the same question as whether the page was built.
-- **A relative href that names no route.** A destination with a slash and no file extension
-  (`./docs/motion`, `docs/motion`) is reported, because the reader's browser resolves it against the
-  page they are on. One with a file extension (`packages/ui/CHANGELOG.md`) or no slash at all is left
-  alone: it is a repo-file link, which works where this prose is rendered, or it is prose. So a
-  repo-relative link to a file with no extension is reported, and an absolute URL is the answer there.
+- **A destination in prose that looks like a repo file.** A value of an `href` field is reported
+  whatever it looks like, because that position is unambiguously a link. The exemption applies only to a
+  Markdown candidate, where `](…)` matches sentences as well as links: there a destination with a slash
+  and no file extension is read as a route and reported, and one with a file extension
+  (`packages/ui/CHANGELOG.md`) or no slash at all is left alone as a repo-file link or prose. So a
+  repo-relative Markdown link to an extensionless file is reported, and an absolute URL is the answer.
 - **A trailing slash.** `/docs/angular/` is reported as unresolved although Next redirects it. That is
   `check:seo`'s own path semantics, shared deliberately rather than forked.
 - **A field rename.** The per-source coverage floor fails a file that still carries an `href` field but
-  yields no link — a quote flip, a re-escaped value, a value that is no longer a string. Renaming or
-  removing the field is indistinguishable from a release that links nowhere, so `LINK_KEYS` is pinned by
-  a test instead.
+  yields no destination — a value that is no longer a string, a spelling the reader stopped matching. It
+  counts destinations read, not links audited, so a note whose only `href` is external or a bare
+  `#anchor` is not failed for having nothing to resolve. Renaming or removing the field is
+  indistinguishable from a release that links nowhere, so `LINK_KEYS` is pinned by a test instead.
+- A curated `release/notes/*.json` is read by **parsing** it, not by scanning its text, so no valid JSON
+  spelling of the field — `"\u0068ref"` — can hide a link from the gate while `JSON.parse` activates it
+  into the site. `releases.ts` is TypeScript and keeps the text scan; it is generated from those notes.
 
 **Registry state**: whether each allowlisted version already exists, read from the packument rather
 than parsed out of CLI output. An unreachable registry, an authentication failure or a malformed
