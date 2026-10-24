@@ -181,6 +181,11 @@ const AXE_ARTIFACTS = new Map([
         // viewport media queries, so a 574px frame at a 1024px viewport is asked to lay out the desktop
         // arrangement. Nothing currently measures content painted outside its own clip, at any width.
         why: "node painted 28px outside its clipping frame; true ratio against its white card is 6.04:1",
+        // The ratio above is re-measured on every run against the backdrop the node is really drawn over,
+        // and the entry fails if it moves. Without it the entry excuses the finding on the mechanism alone:
+        // a node still outside its clip, still reported by axe, but now genuinely illegible where it is
+        // painted, would keep the same key and stay silent. Measured by hand once; asserted from here on.
+        trueRatio: 6.04,
       },
     ],
   ],
@@ -232,6 +237,92 @@ async function unhittableAtItsCentre(page, selector) {
       }
     }
     return { held: true, why: "the node cannot be hit at its own centre" };
+  }, selector);
+}
+
+/**
+ * The contrast ratio the reader really gets on one node, and the ratio WCAG AA asks of it.
+ *
+ * `unhittableAtItsCentre` establishes that axe sampled the wrong background. It says nothing about what the
+ * right background is, so on its own it excuses a finding on the mechanism alone: a node still outside its
+ * clip, still reported, but now genuinely illegible where it IS painted, would keep the same key and stay
+ * silent. This measures the other half — the backdrop the node is drawn over in its own layout position.
+ *
+ * The backdrop is composited the way the painter does it: background colours from the node outwards until
+ * one is opaque, then laid back over each other in that order. A background IMAGE anywhere in that stack
+ * ends the measurement rather than guessing a colour from it, and so does running out of ancestors without
+ * an opaque layer: both report, because an entry that cannot be measured has not earned its silence.
+ */
+async function trueContrast(page, selector) {
+  return page.evaluate((sel) => {
+    const parse = (c) => {
+      const m = c.match(/rgba?\(([^)]+)\)/);
+      if (!m) return null;
+      const [r, g, b, a = "1"] = m[1].split(",").map((x) => x.trim());
+      return { r: +r, g: +g, b: +b, a: +a };
+    };
+    const over = (top, bottom) => ({
+      r: top.r * top.a + bottom.r * (1 - top.a),
+      g: top.g * top.a + bottom.g * (1 - top.a),
+      b: top.b * top.a + bottom.b * (1 - top.a),
+      a: 1,
+    });
+    const luminance = ({ r, g, b }) => {
+      const ch = [r, g, b].map((v) => {
+        const x = v / 255;
+        return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+    };
+    const ratio = (a, b) => {
+      const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+      return (hi + 0.05) / (lo + 0.05);
+    };
+
+    const measured = [];
+    for (const el of document.querySelectorAll(sel)) {
+      const cs = getComputedStyle(el);
+      const fg = parse(cs.color);
+      if (!fg) return { ok: false, why: `cannot parse the node's colour \`${cs.color}\`` };
+
+      const layers = [];
+      let base = null;
+      for (let n = el; n; n = n.parentElement) {
+        const ns = getComputedStyle(n);
+        if (ns.backgroundImage !== "none") {
+          return {
+            ok: false,
+            why: `\`${n.tagName.toLowerCase()}\` behind the node paints a background image, so the ratio the reader gets cannot be measured from colours alone`,
+          };
+        }
+        const bg = parse(ns.backgroundColor);
+        if (!bg || bg.a === 0) continue;
+        layers.push(bg);
+        if (bg.a === 1) {
+          base = bg;
+          break;
+        }
+      }
+      if (!base) return { ok: false, why: "no opaque background behind the node, so its backdrop is undefined" };
+      // layers[] runs innermost-first; composite outermost-inwards so the node's own background lands last.
+      let backdrop = base;
+      for (let i = layers.length - 2; i >= 0; i--) backdrop = over(layers[i], backdrop);
+
+      // AA: 4.5:1, or 3:1 for large text (>=24px, or >=18.66px when bold).
+      const px = parseFloat(cs.fontSize);
+      const bold = parseInt(cs.fontWeight, 10) >= 700;
+      const required = px >= 24 || (px >= 18.66 && bold) ? 3 : 4.5;
+      measured.push({
+        ratio: Math.round(ratio(fg, backdrop) * 100) / 100,
+        required,
+        px,
+        backdrop: `rgb(${[backdrop.r, backdrop.g, backdrop.b].map(Math.round).join(" ")})`,
+      });
+    }
+    if (!measured.length) return { ok: false, why: `no element matches \`${sel}\` any more` };
+    // The worst match decides, for the same reason every match is hit-tested: one illegible node is enough.
+    measured.sort((a, b) => a.ratio - b.ratio);
+    return { ok: true, ...measured[0] };
   }, selector);
 }
 
@@ -456,10 +547,25 @@ for (const scheme of SCHEMES) {
               // same selector, same rule, same view, now a real contrast failure, silently excused. So the
               // condition is asserted against the page before anything is suppressed.
               const clip = await unhittableAtItsCentre(page, artifact.node);
-              if (clip.held) continue;
+              // Both halves of the claim, or the finding is reported. The mechanism (axe sampled a
+              // background the node is not drawn on) and the consequence (where it IS drawn, the reader
+              // gets the ratio this entry recorded) are separate facts, and either can stop being true on
+              // its own.
+              const real = clip.held ? await trueContrast(page, artifact.node) : null;
+              const drift = real?.ok ? Math.abs(real.ratio - artifact.trueRatio) : 0;
+              const why = !clip.held
+                ? clip.why
+                : !real.ok
+                  ? real.why
+                  : real.ratio < real.required
+                    ? `where it is painted the reader gets ${real.ratio}:1 on ${real.backdrop}, below the ${real.required}:1 AA asks of ${real.px}px text`
+                    : drift > 0.05
+                      ? `where it is painted the reader now gets ${real.ratio}:1 on ${real.backdrop}, not the ${artifact.trueRatio}:1 this entry recorded`
+                      : null;
+              if (!why) continue;
               failures.push(
                 `${tag}: ${v.id} ×${v.count} — ${v.help} (${v.nodes.join(" | ")}) ` +
-                  `— AXE_ARTIFACTS excuses this as a background-resolution artefact, but ${clip.why}. ` +
+                  `— AXE_ARTIFACTS excuses this as a background-resolution artefact, but ${why}. ` +
                   `Re-measure it: the entry's recorded "${artifact.why}" no longer describes this page.`,
               );
               continue;
