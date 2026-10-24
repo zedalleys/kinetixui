@@ -21,6 +21,9 @@
  *     without it — a sampled grid over every overlay's box lands on the page behind it, never on the overlay
  *   - hero tour: the platforms advance on their own, hold under the pointer, pause from a keyboard-operable
  *     button (aria-pressed), stop once the reader chooses one, and do not run at all under reduced motion
+ *   - hero decoration: the glow never lands on the hero's copy column at the widths where the system map sits
+ *     below it, and the lede paragraph — the site's `muted-foreground` role at its smallest, with the least
+ *     headroom over WCAG AA — keeps 4.5:1 against the most adverse background pixel under its own glyphs
  *   - structure (a performance guard, not a timing threshold): the HTML carries only the open explorer panel and
  *     the payload no second copy of it; the hero map's client props stay under a byte budget; the hero map, its
  *     outputs and its tabs exist once at phone and desktop widths (no duplicate mobile tree); every excerpt, on
@@ -495,9 +498,149 @@ for (const width of [390, 1440]) {
   });
 }
 
+/*
+ * The hero's decorative glow, and what it is allowed to touch.
+ *
+ * The glow is placed from a corner rather than centred, so one offset means different things at different
+ * widths: anchored to the top it sits under the system map while the map is beside the copy, but below
+ * `lg-rem` the map moves under the copy and the same offset puts the gradient over the headline and the
+ * lede instead. That is not only a composition question. The lede is `muted-foreground` at 16px, which
+ * clears WCAG AA by 0.60 in light theme, and a gradient over it spent 0.82 of that: measured at 390px it
+ * took the most adverse background pixel under the paragraph's glyphs to 4.28:1 against the 4.5 floor,
+ * with 39% of those glyph pixels below it, across roughly 320px to 740px.
+ *
+ * axe cannot catch this. It will not resolve a background behind a gradient, so `color-contrast` reports
+ * "incomplete" rather than a violation — the hero passes `check:a11y-site` either way. This is the check
+ * that does not, which is why it samples rendered pixels instead of asking axe.
+ *
+ * Both assertions are negative controls for each other, and were written against the defect rather than
+ * against the fix: with the old placement restored in the same build, six of these checks fail — the
+ * placement one at 320, 390 and 768, and the contrast one at 4.28:1, 4.28:1 and 4.47:1 at those widths.
+ */
+const LG_REM = 1024; // `lg-rem` in apps/web/tailwind.config.ts, at the default root size
+const AA = 4.5; // WCAG 1.4.3 for text under 18.66px, which the lede is at every width
+const COPY_COLUMN = 'h1.kx-hero-title';
+const LEDE = 'h1.kx-hero-title + p';
+
+/** WCAG relative luminance of one sRGB triple. */
+const luminance = (r, g, b) => {
+  const f = (c) => (c / 255 <= 0.04045 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+};
+const contrast = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+
+/**
+ * The worst contrast any part of `selector`'s text has against what is actually rendered behind it.
+ *
+ * WCAG assumes one flat background and a gradient has none, so this takes the conservative reading: hide
+ * the text, screenshot each line box of it, and compare the element's own colour against the most adverse
+ * background pixel under that line. The mean would be the generous reading — at 390px it gave 4.59:1 for a
+ * paragraph whose worst point was 4.28:1, which is the difference between reporting this defect and
+ * missing it.
+ */
+async function worstTextContrast(page, selector) {
+  const info = await page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) return null;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    return {
+      lines: [...range.getClientRects()].map((r) => ({ x: r.left, y: r.top, w: r.width, h: r.height })),
+      color: getComputedStyle(el).color,
+    };
+  }, selector);
+  assert.ok(info, `${selector} is not on the page`);
+  assert.ok(info.lines.length, `${selector} renders no text`);
+
+  await page.addStyleTag({ content: `${selector} { visibility: hidden !important }` });
+  await page.waitForTimeout(100);
+
+  const [r, g, b] = info.color.match(/[\d.]+/g).map(Number);
+  const text = luminance(r, g, b);
+  let worst = Infinity;
+  for (const line of info.lines) {
+    // inset by a pixel: the glyph box's own edge carries the antialiasing of whatever sits beside it
+    const clip = {
+      x: Math.round(line.x) + 1,
+      y: Math.round(line.y) + 1,
+      width: Math.round(line.w) - 2,
+      height: Math.round(line.h) - 2,
+    };
+    if (clip.width < 1 || clip.height < 1 || clip.y < 0) continue;
+    const shot = (await page.screenshot({ clip })).toString('base64');
+    const seen = await page.evaluate(async (data) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${data}`;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const px = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      const f = (c) => (c / 255 <= 0.04045 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4);
+      let min = 2;
+      let max = -1;
+      for (let i = 0; i < px.length; i += 4) {
+        const l = 0.2126 * f(px[i]) + 0.7152 * f(px[i + 1]) + 0.0722 * f(px[i + 2]);
+        if (l < min) min = l;
+        if (l > max) max = l;
+      }
+      return { min, max };
+    }, shot);
+    worst = Math.min(worst, contrast(text, seen.min), contrast(text, seen.max));
+  }
+  assert.ok(Number.isFinite(worst), `${selector}: no line box could be sampled`);
+  return worst;
+}
+
+for (const width of [320, 390, 768, 1024, 1440]) {
+  await check(`hero glow at ${width}px: off the copy, on the map`, async () => {
+    const { page, context } = await open({ width });
+    const f = await page.evaluate(
+      ({ copySel }) => {
+        const hero = document.querySelector('section.kx-chapter');
+        const glow = hero?.querySelector('.kx-glow');
+        const copy = document.querySelector(copySel)?.closest('div[class*="max-w-3xl"]');
+        const map = document.querySelector('[data-hero-system-map]');
+        if (!hero || !glow || !copy || !map) return null;
+        const box = (el) => el.getBoundingClientRect();
+        const share = (a, b) => {
+          const w = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+          const h = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+          return (100 * w * h) / (b.width * b.height);
+        };
+        const g = box(glow);
+        return { onCopy: share(g, box(copy)), onMap: share(g, box(map)), mapTop: box(map).top, copyBottom: box(copy).bottom };
+      },
+      { copySel: COPY_COLUMN },
+    );
+    assert.ok(f, 'hero, glow, copy column and system map are all on the page');
+    if (width < LG_REM) {
+      // one column: the map is under the copy, so the glow belongs to the map and must not reach the type
+      assert.ok(f.mapTop > f.copyBottom, `the map starts at ${Math.round(f.mapTop)}px, above the copy's end`);
+      assert.equal(Math.round(f.onCopy), 0, `the glow covers ${f.onCopy.toFixed(1)}% of the copy column`);
+      assert.ok(f.onMap > 25, `the glow covers only ${f.onMap.toFixed(1)}% of the map`);
+    } else {
+      // two columns: the map is beside the copy and the glow sits under it, as the approved composition has it
+      assert.ok(f.onMap > 25, `the glow covers only ${f.onMap.toFixed(1)}% of the map`);
+    }
+    await context.close();
+  });
+}
+
+for (const width of [320, 390, 768, 1440]) {
+  await check(`hero lede at ${width}px: AA against whatever is rendered behind it`, async () => {
+    const { page, context } = await open({ width });
+    const worst = await worstTextContrast(page, LEDE);
+    assert.ok(worst >= AA, `the lede's worst point is ${worst.toFixed(2)}:1, under ${AA}:1`);
+    await context.close();
+  });
+}
+
 await browser.close();
 if (failures.length) {
   console.error(`\nhome-systems: ${failures.length} check(s) failed`);
   process.exit(1);
 }
-console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, overlays (height and hit testing), tour, structure');
+console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, overlays (height and hit testing), tour, hero decoration (placement and lede contrast), structure');
