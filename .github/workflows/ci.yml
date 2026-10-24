@@ -65,6 +65,12 @@ jobs:
       - name: Accessibility gate covers every package with stories
         run: pnpm check:a11y-coverage
 
+      # A group that claims one choice has to hold choices: a radiogroup needs real radios and
+      # cannot describe them with aria-pressed. axe is green on that contradiction, because no
+      # single element is wrong -- only the pair.
+      - name: A radiogroup holds radios
+        run: pnpm check:role-coherence
+
       - name: Token table matches the tokens
         run: pnpm check:token-contract
 
