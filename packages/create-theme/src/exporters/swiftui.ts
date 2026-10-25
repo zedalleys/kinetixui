@@ -20,8 +20,8 @@
  *
  * ## Complete file, changed values only
  *
- * `KinetixColors` has a memberwise initializer that demands 35 of its 37 colours (`onInfoContainer` and `scrim` default,
- * so a theme written before they existed still compiles), so a partial theme is not
+ * `KinetixColors` has a memberwise initializer that demands 35 of its 40 colours (`onInfoContainer`, the three
+ * `on*Container` status roles and `scrim` default, so a theme written before they existed still compiles), so a partial theme is not
  * expressible and this file is always complete — unlike the CSS exporter, which emits a diff and nothing
  * at all for the default design. But a field the design did not change is written as a reference to the
  * shipped token (`KinetixColorsSwiftUI.tertiary`) rather than as a literal. That keeps both ideas: a
@@ -29,8 +29,9 @@
  * field without anyone re-exporting, and the default design exports a file that is all references —
  * which is exactly what "this design changes nothing" should look like.
  *
- * Eight of the 37 — `tertiary`, `tertiaryForeground`, `successForeground`, `warningForeground`, `info`,
- * `infoForeground`, `onInfoContainer` and `scrim` — are not in the Create token contract at all, so they are always references. So is
+ * Eleven of the 40 — `tertiary`, `tertiaryForeground`, `successForeground`, `warningForeground`, `info`,
+ * `infoForeground`, `onInfoContainer`, `onSuccessContainer`, `onWarningContainer`, `onDestructiveContainer`
+ * and `scrim` — are not in the Create token contract at all, so they are always references. So is
  * the chart palette at the `kinetix` default, which generates nothing.
  *
  * Pure, like every exporter here: no file system, no process, no CLI formatting.
@@ -251,7 +252,8 @@ export const SWIFT_COLOR_FIELDS = [
   "destructive-foreground", "foreground", "background", "border", "input", "ring", "muted",
   "muted-foreground", "accent", "accent-foreground", "tertiary", "tertiary-foreground", "warning",
   "warning-foreground", "card", "card-foreground", "success", "success-foreground", "info",
-  "info-foreground", "popover", "popover-foreground", "on-info-container", "scrim",
+  "info-foreground", "popover", "popover-foreground", "on-info-container", "on-success-container",
+  "on-warning-container", "on-destructive-container", "scrim",
 ] as const;
 
 /** The chart stops `KinetixColors.chart` carries. The shipped enum has eight; the struct exposes five. */

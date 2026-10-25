@@ -15,9 +15,10 @@
 // They apply on the web. That is the only thing this file does not carry.
 //
 // A field written as `KinetixColors.light.…` is one this design did not change, and it keeps
-// following the library. Eight of them — tertiary, tertiaryForeground, info, infoForeground,
-// onInfoContainer, scrim, successForeground and warningForeground — are always references, because
-// Create does not model those tokens.
+// following the library. Eleven of them — tertiary, tertiaryForeground, info, infoForeground,
+// onInfoContainer, onSuccessContainer, onWarningContainer, onDestructiveContainer, scrim,
+// successForeground and warningForeground — are ALWAYS written that way, because Create does not
+// model those tokens.
 //
 // These are `static final` rather than `static const`: Dart's constant expressions do not include
 // instance field access, so a `static const` could not reference the shipped palette. The theme is
@@ -74,6 +75,9 @@ abstract final class CreateThemeFixture {
     popover: Color(0xFFFFFFFE),
     popoverForeground: Color(0xFF0E0A06),
     onInfoContainer: KinetixColors.light.onInfoContainer,
+    onSuccessContainer: KinetixColors.light.onSuccessContainer,
+    onWarningContainer: KinetixColors.light.onWarningContainer,
+    onDestructiveContainer: KinetixColors.light.onDestructiveContainer,
     scrim: KinetixColors.light.scrim,
     chart: <Color>[
       Color(0xFFBD4049),
@@ -121,6 +125,9 @@ abstract final class CreateThemeFixture {
     popover: Color(0xFF1E1A15),
     popoverForeground: Color(0xFFFBF4ED),
     onInfoContainer: KinetixColors.dark.onInfoContainer,
+    onSuccessContainer: KinetixColors.dark.onSuccessContainer,
+    onWarningContainer: KinetixColors.dark.onWarningContainer,
+    onDestructiveContainer: KinetixColors.dark.onDestructiveContainer,
     scrim: KinetixColors.dark.scrim,
     chart: <Color>[
       Color(0xFFF17074),
