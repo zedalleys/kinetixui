@@ -67,6 +67,28 @@ describe("useTransientState", () => {
       }),
     ).not.toThrow();
   });
+
+  /**
+   * Failure injection, adopted from #469, which found this defect independently and guarded it better than
+   * the first draft of this file did.
+   *
+   * `getTimerCount()` reads 0 for two different reasons: nothing is pending, or fake timers were never
+   * installed. A test that cannot tell those apart passes on broken code. This schedules the exact defect
+   * the components had and requires the same measurement to report it, so if the measurement ever stops
+   * working these fail together instead of going quietly green.
+   */
+  it("the measurement can see an uncleared timer (control)", () => {
+    function Unguarded() {
+      const [, setCopied] = React.useState(false);
+      React.useEffect(() => {
+        setTimeout(() => setCopied(false), 1500); // deliberately unguarded
+      }, []);
+      return null;
+    }
+    const { unmount } = render(<Unguarded />);
+    unmount();
+    expect(vi.getTimerCount()).toBe(1);
+  });
 });
 
 describe("CopyButton", () => {
