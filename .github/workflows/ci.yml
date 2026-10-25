@@ -51,6 +51,15 @@ jobs:
       - name: Publish allowlist and package metadata
         run: pnpm release:check
 
+      # A merge that moves the core cohort needs its curated release note to exist already.
+      # scripts/version-release-meta.mjs refuses to build the Version PR without it, but that throw
+      # runs only on push to main — after the merge, when main is red on every push and no Version
+      # PR can be generated. #442 (0.26.0) and #455 (0.26.1) both landed that way on 2026-10-25.
+      # This asks the same question from the changesets the merge would carry. It passes a PR that
+      # moves nothing, and it does not fail a PR for a gap the base branch already has.
+      - name: Curated release note exists for the version this would publish
+        run: pnpm check:release-note
+
       - name: Website component dogfooding (reviewed native-pattern ratchet)
         run: pnpm check:web-dogfooding
 
