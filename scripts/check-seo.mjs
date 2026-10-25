@@ -79,7 +79,7 @@ if (!existsSync(APP_DIR)) {
  * one inventory, so the two gates cannot come to different conclusions about what exists.
  */
 const inventory = await siteInventory({ nextDir: NEXT_DIR, publicDir: PUBLIC_DIR });
-const { pages, publicFiles, builtAssets } = inventory;
+const { pages, publicFiles, builtAssets, redirects } = inventory;
 
 const sitemapXml = readFileSync(join(APP_DIR, "sitemap.xml.body"), "utf8");
 const sitemapUrls = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
@@ -305,7 +305,7 @@ for (const route of pages.keys()) {
   const parts = route.split("/").filter(Boolean);
   for (let i = 1; i < parts.length; i++) {
     const parent = "/" + parts.slice(0, i).join("/");
-    if (pages.has(parent) || redirectSources.has(parent)) continue;
+    if (pages.has(parent) || redirects.has(parent)) continue;
     (orphanedParents.get(parent) ?? orphanedParents.set(parent, []).get(parent)).push(route);
   }
 }
