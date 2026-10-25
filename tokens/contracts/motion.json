@@ -242,7 +242,7 @@
       "deviations": []
     },
     "selection-indicator": {
-      "status": "proposed",
+      "status": "observed",
       "duration": [
         "base"
       ],
@@ -254,9 +254,25 @@
       ],
       "reducedForm": "remove-travel",
       "evidence": [],
-      "note": "A single indicator travelling between selected items (Tabs, SegmentedControl). Being built for React in PR #388; not on main. Promote to observed when #388 merges and add its consumer; promote to proven when a rendered midpoint check covers it.",
-      "consumers": [],
-      "deviations": []
+      "note": "A single indicator travelling between selected items. React's Tabs is the one consumer: one bar per list whose leading edge moves first and whose trailing edge follows, so it stretches across the gap and settles on the new label. Landed for React in #388. Observed rather than proven: `check:motion` measures a rendered midpoint for the travel in both directions and that reduced motion removes it, and `check:tabs-indicator` asserts the bar's geometry against the chosen tab, including `still` (a change that is not a change of tab must snap), but this repository promotes a role to proven on a SECOND platform consuming it, and no other platform has a travelling indicator. SegmentedControl is not a consumer: #388 gave its selected item a filled surface, and that fill settles on `fast`/`standard`, which is `selection-state`, not a travelling bar. `Tabs`'s `motion` prop chooses between this role's effect held back by `instant` (`classic`, the default), the same effect with the trailing edge held back a whole `base` so the two edges run in sequence (`fluid`), and no travel (`none`). The prop cannot set a duration: every preset is a choice between behaviours composed from this role's own tiers, so none of them can introduce a timing this contract does not know about.",
+      "consumers": [
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/tabs.tsx",
+          "expects": [
+            "[transition-duration:var(--duration-base)]",
+            "[transition-timing-function:var(--kx-tabs-ease,var(--easing-emphasized))]"
+          ]
+        }
+      ],
+      "deviations": [
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/tabs.tsx",
+          "uses": "fluid: { trail: \"var(--duration-base)\", ease: \"var(--easing-standard)\" }",
+          "reason": "`fluid` travels on `standard` rather than this role's `emphasized`, and the curve was measured rather than chosen by name. Fitted against the reference clip's frame-by-frame progression (40ms frames, 9 samples per edge, each curve allowed its best start offset so it is judged on shape), `standard` fits best on both edges — rms 0.077 leading, 0.091 trailing — and `emphasized` fits worst on the trailing edge at 0.218, because it covers most of its distance early where the reference creeps and then rushes. Rendered with `emphasized` the bar would draw itself in fast and then crawl, losing the hang that is the effect. `classic` is untouched and remains the role's canonical pairing; this applies only inside `fluid`. The measurement is in /mnt/project-files/motion/FLUID-TABS-FRAME-SPEC.md."
+        }
+      ]
     },
     "selection-state": {
       "status": "proven",
@@ -344,7 +360,14 @@
           ]
         }
       ],
-      "deviations": []
+      "deviations": [
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/tabs.tsx",
+          "uses": "group-data-[kx-tabs-motion=fluid]/tabs:[transition-duration:var(--duration-base),var(--duration-fast),var(--duration-fast)]",
+          "reason": "Under Tabs' `fluid` preset the label's own colour runs at `base` rather than this role's `fast`, because it is choreographed to the indicator rather than answering on its own clock: the label being left fades across the leading edge's travel and the label being chosen brightens across the trailing edge's, which is what makes the two phases read as one movement. Deliberate and scoped: `color` alone is re-timed, the hover surface and the border stay on `fast` in the same declaration, and `classic` and `none` leave the label exactly as it was."
+        }
+      ]
     },
     "press-feedback": {
       "status": "proven",

@@ -5,10 +5,19 @@
 /* Design-source native API (variant props mirror Figma component properties) */
 export { Button, buttonVariants, type ButtonProps } from "./components/button";
 export { Input, inputVariants, type InputProps } from "./components/input";
-export { Textarea, textareaVariants, type TextareaProps } from "./components/textarea";
+export {
+  Textarea,
+  textareaVariants,
+  type TextareaProps,
+} from "./components/textarea";
 
 /* Ported onto the KinetixUI token contract (common component API conventions) */
-export { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./components/accordion";
+export {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "./components/accordion";
 export { Alert, AlertTitle, AlertDescription } from "./components/alert";
 export {
   AlertDialog,
@@ -29,7 +38,13 @@ export {
   useKinetixPortalContainer,
   type KinetixDirectionProviderProps,
 } from "./components/direction-provider";
-export { Avatar, AvatarImage, AvatarFallback, AvatarGroup, type AvatarGroupProps } from "./components/avatar";
+export {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+  AvatarGroup,
+  type AvatarGroupProps,
+} from "./components/avatar";
 export { Badge, badgeVariants, type BadgeProps } from "./components/badge";
 export {
   Breadcrumb,
@@ -50,7 +65,11 @@ export {
   type CardProps,
 } from "./components/card";
 export { Checkbox } from "./components/checkbox";
-export { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./components/collapsible";
+export {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "./components/collapsible";
 export {
   Dialog,
   DialogPortal,
@@ -80,7 +99,11 @@ export {
   DropdownMenuSubTrigger,
   DropdownMenuRadioGroup,
 } from "./components/dropdown-menu";
-export { HoverCard, HoverCardTrigger, HoverCardContent } from "./components/hover-card";
+export {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from "./components/hover-card";
 export { Label } from "./components/label";
 export {
   Pagination,
@@ -91,7 +114,12 @@ export {
   PaginationNext,
   PaginationEllipsis,
 } from "./components/pagination";
-export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor } from "./components/popover";
+export {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverAnchor,
+} from "./components/popover";
 export { Progress } from "./components/progress";
 export { RadioGroup, RadioGroupItem } from "./components/radio-group";
 export { ScrollArea, ScrollBar } from "./components/scroll-area";
@@ -134,10 +162,23 @@ export {
   TableCell,
   TableCaption,
 } from "./components/table";
-export { Tabs, TabsList, TabsTrigger, TabsContent } from "./components/tabs";
+export {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  TABS_MOTION,
+  type TabsMotion,
+  type TabsListProps,
+} from "./components/tabs";
 export { Toggle, toggleVariants } from "./components/toggle";
 export { ToggleGroup, ToggleGroupItem } from "./components/toggle-group";
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./components/tooltip";
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "./components/tooltip";
 
 /* Batch 2 — compositions + charting + layout */
 export { Calendar, type CalendarProps } from "./components/calendar";
@@ -225,7 +266,12 @@ export {
   InputGroupText,
   InputGroupButton,
 } from "./components/input-group";
-export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "./components/input-otp";
+export {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  InputOTPSeparator,
+} from "./components/input-otp";
 export { PasswordInput } from "./components/password-input";
 export {
   Menubar,
@@ -256,7 +302,11 @@ export {
   NavigationMenuIndicator,
   NavigationMenuViewport,
 } from "./components/navigation-menu";
-export { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./components/resizable";
+export {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "./components/resizable";
 export {
   Sidebar,
   SidebarContent,
@@ -279,18 +329,32 @@ export {
 
 /* Batch 3 — additional gap-fill components */
 export { AudioPlayer, type AudioPlayerProps } from "./components/audio-player";
-export { CircularProgress, type CircularProgressProps } from "./components/circular-progress";
+export {
+  CircularProgress,
+  type CircularProgressProps,
+} from "./components/circular-progress";
 export { Image, type ImageProps } from "./components/image";
 export { Inform, informVariants, type InformProps } from "./components/inform";
 
 /* Batch 4 — mobile-pattern gap-fill components */
 export { Rating, type RatingProps } from "./components/rating";
-export { Spinner, spinnerVariants, type SpinnerProps } from "./components/spinner";
+export {
+  Spinner,
+  spinnerVariants,
+  type SpinnerProps,
+} from "./components/spinner";
 export { List, ListItem, type ListItemProps } from "./components/list";
-export { Stepper, type StepperProps, type StepperStep } from "./components/stepper";
+export {
+  Stepper,
+  type StepperProps,
+  type StepperStep,
+} from "./components/stepper";
 export { Fab, fabVariants, type FabProps } from "./components/fab";
 export { TabBar, TabBarItem, type TabBarItemProps } from "./components/tab-bar";
-export { NavigationBar, type NavigationBarProps } from "./components/navigation-bar";
+export {
+  NavigationBar,
+  type NavigationBarProps,
+} from "./components/navigation-bar";
 export {
   AppBar,
   AppBarBrand,
@@ -311,15 +375,34 @@ export {
 export { DatePicker, type DatePickerProps } from "./components/date-picker";
 
 /* Batch 5 — web-pattern gap-fill components */
-export { CodeBlock, type CodeBlockProps, type CodeBlockFile } from "./components/code-block";
+export {
+  CodeBlock,
+  type CodeBlockProps,
+  type CodeBlockFile,
+} from "./components/code-block";
 export { Metric, type MetricProps } from "./components/metric";
 export { NumberInput, type NumberInputProps } from "./components/number-input";
 export { Quote, type QuoteProps } from "./components/quote";
-export { Footer, FooterColumn, FooterLink, FooterBottom, type FooterColumnProps } from "./components/footer";
-export { TableOfContents, type TableOfContentsProps, type TocItem } from "./components/table-of-contents";
+export {
+  Footer,
+  FooterColumn,
+  FooterLink,
+  FooterBottom,
+  type FooterColumnProps,
+} from "./components/footer";
+export {
+  TableOfContents,
+  type TableOfContentsProps,
+  type TocItem,
+} from "./components/table-of-contents";
 
 /* Batch 6 — infra/design-system audit gap-fill components */
-export { Kbd, KbdGroup, type KbdProps, type KbdGroupProps } from "./components/kbd";
+export {
+  Kbd,
+  KbdGroup,
+  type KbdProps,
+  type KbdGroupProps,
+} from "./components/kbd";
 export {
   Empty,
   EmptyHeader,
@@ -357,9 +440,17 @@ export {
   SegmentedControlItem,
   type SegmentedControlProps,
 } from "./components/segmented-control";
-export { Timeline, type TimelineItem, type TimelineProps, type TimelineStatus } from "./components/timeline";
+export {
+  Timeline,
+  type TimelineItem,
+  type TimelineProps,
+  type TimelineStatus,
+} from "./components/timeline";
 export { Marquee, type MarqueeProps } from "./components/marquee";
-export { ComparisonSlider, type ComparisonSliderProps } from "./components/comparison-slider";
+export {
+  ComparisonSlider,
+  type ComparisonSliderProps,
+} from "./components/comparison-slider";
 export { PageHeader, type PageHeaderProps } from "./components/page-header";
 export {
   NotificationCenter,
@@ -370,21 +461,55 @@ export {
   type NotificationCenterContentProps,
   type NotificationItemProps,
 } from "./components/notification-center";
-export { TreeView, TreeItem, type TreeViewProps, type TreeItemProps } from "./components/tree-view";
-export { MultiSelect, type MultiSelectOption, type MultiSelectProps } from "./components/multi-select";
-export { MessageBubble, TypingIndicator, type MessageBubbleProps } from "./components/message-bubble";
+export {
+  TreeView,
+  TreeItem,
+  type TreeViewProps,
+  type TreeItemProps,
+} from "./components/tree-view";
+export {
+  MultiSelect,
+  type MultiSelectOption,
+  type MultiSelectProps,
+} from "./components/multi-select";
+export {
+  MessageBubble,
+  TypingIndicator,
+  type MessageBubbleProps,
+} from "./components/message-bubble";
 export { Tour, type TourStep, type TourProps } from "./components/tour";
 export { VirtualList, type VirtualListProps } from "./components/virtual-list";
-export { DataGrid, type DataGridColumn, type DataGridProps, type DataGridRange, type DataGridSelection } from "./components/data-grid";
+export {
+  DataGrid,
+  type DataGridColumn,
+  type DataGridProps,
+  type DataGridRange,
+  type DataGridSelection,
+} from "./components/data-grid";
 export { JsonViewer, type JsonViewerProps } from "./components/json-viewer";
 export { DiffViewer, type DiffViewerProps } from "./components/diff-viewer";
 export { ColorPicker, type ColorPickerProps } from "./components/color-picker";
-export { KanbanBoard, type KanbanBoardProps, type KanbanColumn, type KanbanCard } from "./components/kanban-board";
-export { MarkdownEditor, type MarkdownEditorProps } from "./components/markdown-editor";
+export {
+  KanbanBoard,
+  type KanbanBoardProps,
+  type KanbanColumn,
+  type KanbanCard,
+} from "./components/kanban-board";
+export {
+  MarkdownEditor,
+  type MarkdownEditorProps,
+} from "./components/markdown-editor";
 
 // Transactional foundations (Business capability roadmap, Phase 1 — docs/BUSINESS-CAPABILITY-ROADMAP.md).
-export { ResultState, type ResultStateProps, type ResultStateStatus } from "./components/result-state";
-export { ReferenceCode, type ReferenceCodeProps } from "./components/reference-code";
+export {
+  ResultState,
+  type ResultStateProps,
+  type ResultStateStatus,
+} from "./components/result-state";
+export {
+  ReferenceCode,
+  type ReferenceCodeProps,
+} from "./components/reference-code";
 export {
   PriceBreakdown,
   PriceBreakdownLine,
@@ -408,12 +533,37 @@ export {
 } from "./components/pass-card";
 
 // Money, status and booking fields (Business capability roadmap, Phase 2). QuantityPicker is NumberInput.
-export { AmountDisplay, type AmountDisplayProps } from "./components/amount-display";
-export { GuestPicker, type GuestPickerProps, type GuestCategory } from "./components/guest-picker";
-export { CountrySelect, type CountrySelectProps, type CountryOption } from "./components/country-select";
-export { PhoneInput, type PhoneInputProps, type PhoneCountry, type PhoneValue } from "./components/phone-input";
-export { DateRangeInput, type DateRangeInputProps, type DateRangeValue } from "./components/date-range-input";
-export { TimeSlotPicker, type TimeSlotPickerProps, type TimeSlot, type TimeSlotGroup } from "./components/time-slot-picker";
+export {
+  AmountDisplay,
+  type AmountDisplayProps,
+} from "./components/amount-display";
+export {
+  GuestPicker,
+  type GuestPickerProps,
+  type GuestCategory,
+} from "./components/guest-picker";
+export {
+  CountrySelect,
+  type CountrySelectProps,
+  type CountryOption,
+} from "./components/country-select";
+export {
+  PhoneInput,
+  type PhoneInputProps,
+  type PhoneCountry,
+  type PhoneValue,
+} from "./components/phone-input";
+export {
+  DateRangeInput,
+  type DateRangeInputProps,
+  type DateRangeValue,
+} from "./components/date-range-input";
+export {
+  TimeSlotPicker,
+  type TimeSlotPickerProps,
+  type TimeSlot,
+  type TimeSlotGroup,
+} from "./components/time-slot-picker";
 export {
   AddressFields,
   type AddressFieldsProps,

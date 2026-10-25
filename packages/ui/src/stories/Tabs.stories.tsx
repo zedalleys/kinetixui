@@ -2,7 +2,7 @@
    Source of truth: apps/web/src/registry/demos.tsx · controls: scripts/gen-stories.mjs CONTROLS */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Button, Card, CardContent, Tabs, TabsContent, TabsList, TabsTrigger } from "@kinetixui/ui";
+import { Button, Card, CardContent, TABS_MOTION, Tabs, TabsContent, TabsList, TabsTrigger } from "@kinetixui/ui";
 
 const Demo = () => (
     <Tabs defaultValue="account" className="w-[360px]">
@@ -84,6 +84,9 @@ export const Indicator: StoryObj<typeof meta> = { render: () => {
     const [hidden, setHidden] = React.useState(false);
     const [renamed, setRenamed] = React.useState(false);
     const [mounted, setMounted] = React.useState(true);
+    // Cycling through `TABS_MOTION` rather than a list written here keeps the lab honest: it offers the
+    // presets the component actually publishes, and a preset added later appears without touching this story.
+    const [motion, setMotion] = React.useState(TABS_MOTION[0]);
     const actions: [string, string, () => void][] = [
       ["select-last", "Choose last", () => setValue(tabs[tabs.length - 1])],
       ["select-second", "Choose second", () => setValue(tabs[1])],
@@ -98,6 +101,7 @@ export const Indicator: StoryObj<typeof meta> = { render: () => {
       ["orientation", "Flip orientation", () => setOrientation((o) => (o === "horizontal" ? "vertical" : "horizontal"))],
       ["hidden", "Hide or show", () => setHidden((h) => !h)],
       ["unmount", "Unmount or mount", () => setMounted((m) => !m)],
+      ["motion", "Next motion preset", () => setMotion((m) => TABS_MOTION[(TABS_MOTION.indexOf(m) + 1) % TABS_MOTION.length])],
     ];
     return (
       <div className="grid w-[22rem] max-w-full grid-cols-[minmax(0,1fr)] gap-4">
@@ -109,7 +113,7 @@ export const Indicator: StoryObj<typeof meta> = { render: () => {
         <div hidden={hidden}>
           {mounted ? (
           <Tabs value={value} onValueChange={setValue} dir={dir} orientation={orientation} className={orientation === "vertical" ? "flex gap-4" : undefined}>
-            <TabsList data-kx-case="lab" aria-label="Project sections" className={orientation === "vertical" ? "w-auto" : undefined}>
+            <TabsList data-kx-case="lab" motion={motion} aria-label="Project sections" className={orientation === "vertical" ? "w-auto" : undefined}>
               {tabs.map((t, i) => (
                 <TabsTrigger key={t} value={t} disabled={disabled === t}>{t}{i === 1 ? " " + (renamed ? 1280 : 3) : null}</TabsTrigger>
               ))}
