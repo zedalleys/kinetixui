@@ -32,6 +32,24 @@ import { DatePicker } from "@kinetixui/ui";
 For a range picker, compose `Calendar mode="range"` directly — see the
 [Calendar](/docs/components/calendar) docs.
 
+## How it is announced
+
+The trigger's accessible name is the label followed by what the field currently holds —
+"Appointment date, Mar 14, 2026" — and `helperText` is its description, in the error state as well as
+the neutral one. `DateRangeInput` states the same contract, so the two date fields read alike.
+
+The label renders as a `<span>` that the trigger references, rather than as a `<label for>`. A
+`<button>` is labelable, so a `<label>` would work — but the accessible name computation prefers a
+label element over the trigger's own contents, so the field would be announced as "Appointment date"
+with the chosen date dropped out of the name, and clicking the label text would open the calendar.
+The open calendar is named by the same label, so the dialog is not anonymous.
+
+`check:label-association` holds this: no component may render a `<label>` that labels nothing, and
+every component that renders a visible `label` prop needs a test asserting that the label reaches
+its control's accessible name. An automated accessibility scan cannot catch this class of defect,
+because a field whose label is attached to nothing still has an accessible name — just the wrong
+one.
+
 Styled entirely from the KinetixUI token contract — `bg-action`,
 `text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
 with no extra config. Keyboard and ARIA behaviour is inherited from Radix where the
