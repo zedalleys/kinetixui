@@ -77,9 +77,25 @@ export default {
         // lighter than `card`, so a card on it read as recessed.
         surface: { grouped: c("--surface-grouped") },
         accent: { DEFAULT: c("--accent"), foreground: c("--accent-foreground") },
-        destructive: { DEFAULT: c("--destructive"), foreground: c("--destructive-foreground") },
-        success: { DEFAULT: c("--success"), foreground: c("--success-foreground") },
-        warning: { DEFAULT: c("--warning"), foreground: c("--warning-foreground") },
+        // Each status carries an `on-container` sibling for the same reason `info` does: the role itself is
+        // tuned against the page, and a notice draws it on its own tint (`bg-success/15`, `bg-destructive/10`),
+        // which eats the margin. `--muted` is the tightest surface those notices ship on and is what the
+        // on-container values are tuned against. Measured by check:contrast's ALPHA_TEXT_PAIRS.
+        destructive: {
+          DEFAULT: c("--destructive"),
+          foreground: c("--destructive-foreground"),
+          "on-container": c("--on-destructive-container"),
+        },
+        success: {
+          DEFAULT: c("--success"),
+          foreground: c("--success-foreground"),
+          "on-container": c("--on-success-container"),
+        },
+        warning: {
+          DEFAULT: c("--warning"),
+          foreground: c("--warning-foreground"),
+          "on-container": c("--on-warning-container"),
+        },
         info: {
           DEFAULT: c("--info"),
           foreground: c("--info-foreground"),
