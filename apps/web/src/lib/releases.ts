@@ -66,6 +66,46 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.26.0",
+    summary: "KinetixUI 0.26.0 is an accessibility release. Status notices no longer fail WCAG AA when they sit on a muted surface, which required three new theme-aware foreground roles in @kinetixui/tokens and moved Banner and Inform onto them on all five platforms, with ResultState on React. @kinetixui/angular publishes 0.26.1 on its own line, where a disabled <a kxButton> is no longer operable from the keyboard or by middle-click, and its @kinetixui/tokens peer range widens to >=0.24.0 <0.27.0 so it accepts these tokens while still supporting the older ones. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together to 0.26.0; @kinetixui/cli carries no change of its own in this release. @kinetixui/angular remains Preview and @kinetixui/iot stays on 0.5.0 while its device-integration work awaits real-device validation.",
+    breaking: [],
+    changes: [
+      {
+        kind: "accessibility",
+        area: [
+          "components",
+          "tokens"
+        ],
+        title: "Status notices clear AA on a muted surface",
+        body: "Banner, Inform and ResultState drew their success, warning and error text in the status colour on that colour's own tint. Measured inside a muted panel, the tightest surface these ship on, success was 4.20:1 in light, success 4.4982:1 in dark and error 4.28:1 in dark — all below AA for body text. The information variant was already correct because it had a dedicated foreground role; the other three had simply never been measured there. They now draw on three new roles and clear AA at 6.26:1, 6.03:1 and 6.38:1 at the same worst case. Tints, borders, icons, layout and API are unchanged, and the information and action variants are byte-identical."
+      },
+      {
+        kind: "new",
+        area: "tokens",
+        title: "Theme-aware foreground roles for success, warning and error containers",
+        body: "--on-success-container, --on-warning-container and --on-destructive-container join the existing --on-info-container, tuned against --muted as the worst case in both light and dark. Web exposes them as text-success-on-container, text-warning-on-container and text-destructive-on-container; SwiftUI, Compose and Flutter as onSuccessContainer, onWarningContainer and onDestructiveContainer. Warning in both modes and error in light keep the value they had, which already cleared AA, but gain a role of their own so a theme that moves --warning cannot silently take the notice text with it. A colour set built before these roles existed falls back to the plain status role on every native platform, which is what those views drew before."
+      },
+      {
+        kind: "accessibility",
+        area: "platforms",
+        title: "A disabled <a kxButton> is inert to the keyboard and to middle-click",
+        body: "aria-disabled on the anchor form was enforced by the stylesheet alone, with pointer-events: none. That suppressed the pointer and nothing else: the anchor stayed in the tab order and Enter still navigated, so the control was inert for a mouse and live for a keyboard. KxButton now guards activation itself — click, auxclick, Enter and Space are cancelled while aria-disabled is true, read at event time, so href can stay and no second input is needed. The control stays focusable on purpose, which is the difference between aria-disabled and disabled: it remains discoverable, so a keyboard user reaches it and hears why it is unavailable instead of finding a gap. pointer-events: none gives way to cursor: not-allowed so a pointer user can hover it and read the cursor. The <button> form is untouched, since the browser disables it and never dispatches these events."
+      },
+      {
+        kind: "improved",
+        area: "platforms",
+        title: "@kinetixui/angular accepts the 0.26 tokens without dropping the 0.24 and 0.25 lines",
+        body: "The @kinetixui/tokens peer range's upper bound moves to <0.27.0 so this package accepts the tokens that define the new container roles. The lower bound stays at >=0.24.0: each of the three reads carries a CSS fallback to the plain status role, so on the older tokens the notices keep the colour they had before this change rather than inheriting an arbitrary ancestor colour. Nothing installed today changes behaviour, and the wider range admits a newer tokens without narrowing what consumers may install."
+      }
+    ],
+    limitations: [
+      "@kinetixui/angular remains Preview. Its graduation criteria are tracked separately and this release does not move them.",
+      "The three native platforms receive the new token roles as source-level wiring with consumption assertions. Nothing in this release was rendered on a device or simulator, so no native evidence tier moves.",
+      "@kinetixui/cli is published at 0.26.0 by the fixed core cohort and carries no change of its own."
+    ],
+    date: "2026-10-25"
+  },
+  {
     version: "0.25.0",
     summary: "KinetixUI 0.25.0 expands the React library with transactional and booking foundations, restyles SegmentedControl and Tabs, puts the selection controls on the motion tokens, and fixes range and disabled Sliders along with several accessibility defects. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together on the 0.25.0 line. @kinetixui/angular publishes 0.26.0 on its own line and remains Preview; @kinetixui/iot stays on 0.5.0 while its device-integration work awaits real-device validation.",
     breaking: [],
@@ -151,7 +191,7 @@ export const RELEASES: Release[] = [
       "SwiftUI, Jetpack Compose and Flutter remain source-checkout distributions rather than packages published to their platform registries.",
       "IoT remains a React-only module and is not a sixth core platform. @kinetixui/iot is not published by this release."
     ],
-    date: "2026-10-21"
+    date: "2026-10-23"
   },
   {
     version: "0.24.0",
