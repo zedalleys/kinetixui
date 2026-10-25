@@ -16,6 +16,11 @@ on:
 permissions:
   contents: read
 
+# A pub.dev version is permanent once taken; two dispatches must not race for it.
+concurrency:
+  group: publish-flutter
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -25,11 +30,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # A burnt pub.dev version cannot be reused, so the version is rejected
+      # before the toolchain is warmed up.
+      - name: Validate version
+        working-directory: .
+        run: node scripts/check-native-publish-preflight.mjs --version='${{ inputs.version }}'
+
+      - name: Preflight
+        working-directory: .
+        run: node scripts/check-native-publish-preflight.mjs
+
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
 
       - run: flutter pub get
+
+      - name: Test
+        run: flutter test
 
       - name: Stage for publish
         run: |
@@ -37,7 +55,13 @@ jobs:
           # in the package directory. Both are set up here, not committed.
           sed -i '/^publish_to:/d' pubspec.yaml
           sed -i "s/^version: .*/version: ${{ inputs.version }}/" pubspec.yaml
-          cp ../../LICENSE ./LICENSE 2>/dev/null || true
+          cp ../../LICENSE ./LICENSE
+          # sed exits 0 when it matches nothing, so assert the staging actually
+          # happened rather than publishing the committed 0.0.0.
+          grep -qx 'version: ${{ inputs.version }}' pubspec.yaml \
+            || { echo '::error::Staging did not set the version in pubspec.yaml.'; exit 1; }
+          ! grep -q '^publish_to:' pubspec.yaml \
+            || { echo '::error::Staging did not remove publish_to from pubspec.yaml.'; exit 1; }
 
       - name: Dry run
         run: flutter pub publish --dry-run

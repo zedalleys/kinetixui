@@ -5,16 +5,32 @@ name: Publish (SwiftUI)
 # to a thin mirror repo (Package.swift lands at the mirror root). Set the
 # SWIFTUI_MIRROR_REPO secret to an authenticated push URL, e.g.
 #   https://x-access-token:<PAT>@github.com/<you>/kinetix-ui-swift.git
-# Without it this is a dry run (local split only).
+#
+# Defaults to a dry run: the split and the tag are computed and reported,
+# nothing is pushed. A real publish needs `dry_run: false` AND the secret.
+# Previously the only thing standing between a dispatch and a permanent tag
+# was whether the secret happened to be unset, which meant the workflow
+# became irreversible the moment it was configured — and there was then no
+# way to rehearse it at all.
 on:
   workflow_dispatch:
     inputs:
       version:
         description: "SemVer tag for the mirror, e.g. 0.1.0"
         required: true
+      dry_run:
+        description: "dry run only — split and report, nothing pushed"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
+
+# A second dispatch must not force-push the same mirror branch while the
+# first is still pushing it.
+concurrency:
+  group: publish-swiftui
+  cancel-in-progress: false
 
 jobs:
   publish:
@@ -24,20 +40,44 @@ jobs:
         with:
           fetch-depth: 0
 
+      # A typo here becomes a git tag that `from:` resolves against forever,
+      # so it is rejected before the toolchain is even warmed up.
+      - name: Validate version
+        run: node scripts/check-native-publish-preflight.mjs --version='${{ inputs.version }}'
+
+      - name: Preflight
+        run: node scripts/check-native-publish-preflight.mjs
+
       - name: Build sanity
         run: swift build --package-path packages/ui-swiftui
+
+      # Compiling proves the split will compile; the suite is what proves this
+      # commit is the one the native workflow went green on.
+      - name: Test
+        run: swift test --package-path packages/ui-swiftui
 
       - name: Split & push to mirror
         env:
           MIRROR: ${{ secrets.SWIFTUI_MIRROR_REPO }}
           VERSION: ${{ inputs.version }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
           git subtree split --prefix=packages/ui-swiftui -b swiftui-dist
           SHA=$(git rev-parse swiftui-dist)
           echo "subtree split → $SHA"
-          if [ -z "$MIRROR" ]; then
-            echo "::notice::SWIFTUI_MIRROR_REPO not set — dry run, nothing pushed."
+          # The mirror root is what a consumer sees; prove the manifest is there
+          # before pushing a tag that cannot be moved.
+          if ! git cat-file -e "$SHA:Package.swift" 2>/dev/null; then
+            echo "::error::Package.swift is not at the root of the subtree split. A .package(url:) consumer cannot resolve this mirror."
+            exit 1
+          fi
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "::notice::Dry run — would tag $SHA as $VERSION. Nothing pushed."
             exit 0
+          fi
+          if [ -z "$MIRROR" ]; then
+            echo "::error::SWIFTUI_MIRROR_REPO is not set. Add the mirror's authenticated push URL as that secret, or run with dry_run: true."
+            exit 1
           fi
           git push --force "$MIRROR" swiftui-dist:main
           git push "$MIRROR" "$SHA:refs/tags/$VERSION"
