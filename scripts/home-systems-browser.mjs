@@ -506,7 +506,8 @@ for (const width of [390, 1440]) {
  * The glow is placed from a corner rather than centred, so one offset means different things at different
  * widths: anchored to the top it sits under the system map while the map is beside the copy, but below
  * `lg-rem` the map moves under the copy and the same offset puts the gradient over the headline and the
- * lede instead. That is not only a composition question. The lede is `muted-foreground` at 16px, which
+ * lede instead. Which case a width is in is read from the hero grid's own resolved columns rather than from
+ * a breakpoint this file holds a second copy of. That is not only a composition question. The lede is `muted-foreground` at 16px, which
  * clears WCAG AA by 0.60 in light theme, and a gradient over it spent 0.82 of that: measured at 390px it
  * took the most adverse background pixel under the paragraph's glyphs to 4.28:1 against the 4.5 floor,
  * with 39% of those glyph pixels below it, across roughly 320px to 740px.
@@ -522,7 +523,6 @@ for (const width of [390, 1440]) {
  * lede still reads 4.98:1 and passes. Contrast is the backstop, for a regression that leaves the box where
  * it is. Neither sees the gradient itself, which is why the tint check below exists.
  */
-const LG_REM = 1024; // `lg-rem` in apps/web/tailwind.config.ts, at the default root size
 const AA = 4.5; // WCAG 1.4.3 for text under 18.66px, which the lede is at every width
 const COPY = '[data-hero-copy]'; // the hero's copy column, hooked for this check rather than matched on a utility class
 const LEDE = 'h1.kx-hero-title + p';
@@ -624,12 +624,25 @@ for (const width of [320, 390, 768, 1024, 1440]) {
           return (100 * w * h) / (b.width * b.height);
         };
         const g = box(glow);
-        return { onCopy: share(g, box(copy)), onMap: share(g, box(map)), mapTop: box(map).top, copyBottom: box(copy).bottom };
+        // the branch comes from the layout that is actually on screen, not from a width this script holds a
+        // copy of: if `lg-rem` moves in the config, or the glow's own breakpoint drifts away from the grid's,
+        // this still asks the question that matters — where the map is, is the glow over it?
+        const grid = copy.parentElement;
+        const columns = getComputedStyle(grid).gridTemplateColumns.split(/\s+/).filter(Boolean).length;
+        return {
+          columns,
+          onCopy: share(g, box(copy)),
+          onMap: share(g, box(map)),
+          mapTop: box(map).top,
+          copyBottom: box(copy).bottom,
+          glowTop: g.top,
+        };
       },
       { copySel: COPY },
     );
     assert.ok(f, 'hero, glow, copy column and system map are all on the page');
-    if (width < LG_REM) {
+    assert.ok(f.columns === 1 || f.columns === 2, `the hero grid resolved to ${f.columns} columns`);
+    if (f.columns === 1) {
       // one column: the map is under the copy, so the glow belongs to the map and must not reach the type
       assert.ok(f.mapTop > f.copyBottom, `the map starts at ${Math.round(f.mapTop)}px, above the copy's end`);
       assert.equal(Math.round(f.onCopy), 0, `the glow covers ${f.onCopy.toFixed(1)}% of the copy column`);
@@ -641,6 +654,10 @@ for (const width of [320, 390, 768, 1024, 1440]) {
       // covering the whole hero would satisfy that and fail a reader.
       assert.ok(f.onMap > 25, `the glow covers only ${f.onMap.toFixed(1)}% of the map`);
       assert.ok(f.onCopy < 10, `the glow covers ${f.onCopy.toFixed(1)}% of the copy column`);
+      // and it comes down from above the map, as the top anchor puts it. Without this a glow still anchored
+      // to the bottom here — the one-column treatment left on past the grid's switch — reads as 80% of the
+      // map and passes, which is the composition the owner approved in reverse.
+      assert.ok(f.glowTop <= f.mapTop, `the glow starts ${Math.round(f.glowTop - f.mapTop)}px below the map's top`);
     }
     await context.close();
   });
