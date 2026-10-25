@@ -27,6 +27,12 @@
           "name": "invalid",
           "type": "boolean",
           "required": false
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "required": false,
+          "description": "The field must be filled in. Puts the required state on the control and a marker beside the label, so the requirement reaches a screen reader and a sighted reader from one declaration. It lives here …"
         }
       ]
     },

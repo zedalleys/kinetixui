@@ -65,6 +65,12 @@ jobs:
       - name: Accessibility gate covers every package with stories
         run: pnpm check:a11y-coverage
 
+      # A field that must be filled in has to say so in the accessibility tree, not only with an
+      # asterisk. This checks the Field/Form contract exists and that every control that is not a
+      # native <input> is proven to carry aria-required or is listed as a known gap.
+      - name: Required fields say so
+        run: pnpm check:required-semantics
+
       - name: Token table matches the tokens
         run: pnpm check:token-contract
 
