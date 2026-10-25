@@ -5,6 +5,14 @@ import { cn } from "@/lib/utils";
  * Heading with a hover-revealed `#` permalink (id from rehype-slug in MDX, or passed by a component).
  * Typography lives here — the docs layout no longer restyles headings — and is shared by the MDX renderer and
  * the docs components that emit their own section headings, so the two cannot drift apart.
+ *
+ * The anchor hides with `opacity-0`, which hides it from the eye and from nothing else: an opacity-0 element
+ * still answers `elementFromPoint` and still takes a click. There is no hover on a touch device to reveal it, so
+ * it stayed invisible and stayed tappable — a 15×31px target just past the end of every heading that silently
+ * jumped the reader to a fragment. `pointer-events-none` is what actually removes it from the hit test, and the
+ * reveal rules hand interactivity back at the same moment they hand back visibility, so a mouse user who hovers
+ * the heading still clicks the `#`. Keyboard reach is untouched: `pointer-events` governs pointers only, and
+ * `focus-visible` still reveals the anchor on tab.
  */
 export function heading(Tag: "h2" | "h3" | "h4", base: string) {
   return function Heading({ id, children, className, ...p }: ComponentPropsWithoutRef<"h2">) {
@@ -16,7 +24,7 @@ export function heading(Tag: "h2" | "h3" | "h4", base: string) {
             href={`#${id}`}
             data-heading-anchor
             aria-label="Permalink to this section"
-            className="ml-2 text-muted-foreground no-underline opacity-0 transition-opacity hover:text-primary focus-visible:opacity-100 group-hover:opacity-100"
+            className="pointer-events-none ml-2 text-muted-foreground no-underline opacity-0 transition-opacity hover:text-primary focus-visible:pointer-events-auto focus-visible:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100"
           >
             #
           </a>
