@@ -198,10 +198,15 @@ function Card({ item }: { item: Item }) {
             )}
           </span>
           <span
-            data-gallery-primitive
+            data-gallery-category
             className="mt-1 inline-block max-w-full truncate rounded border border-border/70 px-1.5 py-0.5 font-mono text-label-md uppercase tracking-[0.1em] text-muted-foreground"
           >
-            {item.primitive ?? item.category}
+            {/* The functional category, always — this slot used to prefer `primitive`, so 40 of 109 cards
+                showed an implementation technology (`RADIX DIALOG`) in the place where the other 69 showed
+                a category, and in a vocabulary the category filter does not have (CAT-BUG-012). The
+                technology stays on the detail page, where <ComponentMeta> already prints it, and it is
+                still searchable here. */}
+            {item.category}
           </span>
           <PlatformBadges slug={item.slug} className="mt-2" />
         </span>
