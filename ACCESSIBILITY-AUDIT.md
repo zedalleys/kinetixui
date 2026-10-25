@@ -127,7 +127,7 @@ which lists each as a `/charts` recipe. (This paragraph used to call them outsta
 - **Landmarks** — `<header>` / `<nav>` / `<main>` / `<footer>` all present;
   `<main>` now has an id/skip target.
 - **`prefers-reduced-motion`** — `globals.css` has a thorough block: every
-  keyframe animation (`kx-underline`, `kx-grid-bg`, marquee, fan wires, caret,
+  keyframe animation (`kx-underline`, marquee, fan wires, caret,
   flow bars, `[data-reveal]`, hero enter) is disabled or frozen. Component
   transitions are `transition-colors` only.
 - **Icon-only controls** — `Button size="icon"`, `Fab`, `mobile-nav`, GitHub

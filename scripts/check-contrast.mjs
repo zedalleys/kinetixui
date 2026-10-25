@@ -93,6 +93,18 @@ const ALPHA_TEXT_PAIRS = [
   // Native Banner/Inform draw the same text on the same tint (`onInfoContainer`); a banner inside a
   // muted panel is the tighter case — `info` itself is 3.90:1 there.
   ["on-info-container", "info", 0.1, "muted", "Banner/Inform information on a muted surface"],
+  // The other three statuses draw the same shape — a tinted bar or medallion with the status colour as
+  // its text — in Banner, Inform and ResultState. They were not measured here, and two of them failed:
+  // raw `success` is 4.20:1 on its own 15% tint over `muted` (light) and 4.4982:1 (dark), raw
+  // `destructive` is 4.28:1 on its own 10% tint over `muted` (dark). Each now has an `on-container`
+  // sibling tuned against `muted`, the tightest surface these notices ship on, and every status is
+  // measured on both surfaces so the asymmetry that hid those two cannot come back.
+  ["on-success-container", "success", 0.15, "background", "Banner/Inform/ResultState success"],
+  ["on-success-container", "success", 0.15, "muted", "Banner/Inform/ResultState success on a muted surface"],
+  ["on-warning-container", "warning", 0.15, "background", "Banner/Inform/ResultState warning"],
+  ["on-warning-container", "warning", 0.15, "muted", "Banner/Inform/ResultState warning on a muted surface"],
+  ["on-destructive-container", "destructive", 0.1, "background", "Banner/Inform/ResultState error"],
+  ["on-destructive-container", "destructive", 0.1, "muted", "Banner/Inform/ResultState error on a muted surface"],
   // IoT device, group and activity cards tint their surface to carry state. `--muted-foreground`
   // is tuned against `--background` and `--muted` and has no margin left on a 10% tint (4.43:1 on
   // primary, 4.33:1 on destructive), which is how three contrast violations reached main unseen.

@@ -21,6 +21,11 @@
  *     without it — a sampled grid over every overlay's box lands on the page behind it, never on the overlay
  *   - hero tour: the platforms advance on their own, hold under the pointer, pause from a keyboard-operable
  *     button (aria-pressed), stop once the reader chooses one, and do not run at all under reduced motion
+ *   - hero decoration: the glow never lands on the hero's copy column at the widths where the system map sits
+ *     below it and stays a bounded share of it where the map sits beside it; the lede paragraph — the site's
+ *     `muted-foreground` role at its smallest, with the least headroom over WCAG AA — keeps 4.5:1 against the
+ *     most adverse background pixel under its own glyphs; and the gradient itself stays a wash, measured as
+ *     what it adds to the pixels underneath rather than read from the stylesheet
  *   - structure (a performance guard, not a timing threshold): the HTML carries only the open explorer panel and
  *     the payload no second copy of it; the hero map's client props stay under a byte budget; the hero map, its
  *     outputs and its tabs exist once at phone and desktop widths (no duplicate mobile tree); every excerpt, on
@@ -495,9 +500,223 @@ for (const width of [390, 1440]) {
   });
 }
 
+/*
+ * The hero's decorative glow, and what it is allowed to touch.
+ *
+ * The glow is placed from a corner rather than centred, so one offset means different things at different
+ * widths: anchored to the top it sits under the system map while the map is beside the copy, but below
+ * `lg-rem` the map moves under the copy and the same offset puts the gradient over the headline and the
+ * lede instead. Which case a width is in is read from the hero grid's own resolved columns rather than from
+ * a breakpoint this file holds a second copy of. That is not only a composition question. The lede is `muted-foreground` at 16px, which
+ * clears WCAG AA by 0.60 in light theme, and a gradient over it spent 0.82 of that: measured at 390px it
+ * took the most adverse background pixel under the paragraph's glyphs to 4.28:1 against the 4.5 floor,
+ * with 39% of those glyph pixels below it, across roughly 320px to 740px.
+ *
+ * axe cannot catch this. It will not resolve a background behind a gradient, so `color-contrast` reports
+ * "incomplete" rather than a violation — the hero passes `check:a11y-site` either way. This is the check
+ * that does not, which is why it samples rendered pixels instead of asking axe.
+ *
+ * These were written against the defect rather than against the fix: with the old placement restored in
+ * the same build, the placement checks fail at 320, 390 and 768 and the contrast checks fail there at
+ * 4.28:1, 4.28:1 and 4.47:1. They are not equivalent to each other, and an independent review measured
+ * where each stops. Placement is the strict one: a different offset moves the box and fails it while the
+ * lede still reads 4.98:1 and passes. Contrast is the backstop, for a regression that leaves the box where
+ * it is. Neither sees the gradient itself, which is why the tint check below exists.
+ */
+const AA = 4.5; // WCAG 1.4.3 for text under 18.66px, which the lede is at every width
+const COPY = '[data-hero-copy]'; // the hero's copy column, hooked for this check rather than matched on a utility class
+const LEDE = 'h1.kx-hero-title + p';
+// What the glow may add to the page underneath it, as a per-channel 0–255 delta, measured by hiding it.
+// As shipped it is 25. Raising the gradient's alphas to 0.95/0.75/0.5 takes it to 209 and swapping
+// `closest-side` for `farthest-corner` to 199 — neither of which moves the glow's box, so the placement
+// assertions below see nothing. This is the one that does.
+const MAX_TINT = 40;
+
+/** WCAG relative luminance of one sRGB triple. */
+const luminance = (r, g, b) => {
+  const f = (c) => (c / 255 <= 0.04045 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+};
+const contrast = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+
+/**
+ * The worst contrast any part of `selector`'s text has against what is actually rendered behind it.
+ *
+ * WCAG assumes one flat background and a gradient has none, so this takes the conservative reading: hide
+ * the text, screenshot each line box of it, and compare the element's own colour against the most adverse
+ * background pixel under that line. The mean would be the generous reading — at 390px it gave 4.59:1 for a
+ * paragraph whose worst point was 4.28:1, which is the difference between reporting this defect and
+ * missing it.
+ */
+async function worstTextContrast(page, selector) {
+  const info = await page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) return null;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    return {
+      lines: [...range.getClientRects()].map((r) => ({ x: r.left, y: r.top, w: r.width, h: r.height })),
+      color: getComputedStyle(el).color,
+    };
+  }, selector);
+  assert.ok(info, `${selector} is not on the page`);
+  assert.ok(info.lines.length, `${selector} renders no text`);
+
+  await page.addStyleTag({ content: `${selector} { visibility: hidden !important }` });
+  await page.waitForTimeout(100);
+
+  const scroll = await page.evaluate(() => ({ x: window.scrollX, y: window.scrollY }));
+  const [r, g, b] = info.color.match(/[\d.]+/g).map(Number);
+  const text = luminance(r, g, b);
+  let worst = Infinity;
+  for (const line of info.lines) {
+    // inset by a pixel: the glyph box's own edge carries the antialiasing of whatever sits beside it
+    // `fullPage` so the clip is document-relative: a viewport-bounded shot throws on a line below the fold,
+    // and that reads as a contrast failure rather than as the tooling problem it is
+    const clip = {
+      x: Math.round(line.x + scroll.x) + 1,
+      y: Math.round(line.y + scroll.y) + 1,
+      width: Math.round(line.w) - 2,
+      height: Math.round(line.h) - 2,
+    };
+    if (clip.width < 1 || clip.height < 1 || clip.y < 0) continue;
+    const shot = (await page.screenshot({ clip, fullPage: true })).toString('base64');
+    const seen = await page.evaluate(async (data) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${data}`;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const px = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      const f = (c) => (c / 255 <= 0.04045 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4);
+      let min = 2;
+      let max = -1;
+      for (let i = 0; i < px.length; i += 4) {
+        const l = 0.2126 * f(px[i]) + 0.7152 * f(px[i + 1]) + 0.0722 * f(px[i + 2]);
+        if (l < min) min = l;
+        if (l > max) max = l;
+      }
+      return { min, max };
+    }, shot);
+    worst = Math.min(worst, contrast(text, seen.min), contrast(text, seen.max));
+  }
+  assert.ok(Number.isFinite(worst), `${selector}: no line box could be sampled`);
+  return worst;
+}
+
+for (const width of [320, 390, 768, 1024, 1440]) {
+  await check(`hero glow at ${width}px: off the copy, on the map`, async () => {
+    const { page, context } = await open({ width });
+    const f = await page.evaluate(
+      ({ copySel }) => {
+        const hero = document.querySelector('section.kx-chapter');
+        const glow = hero?.querySelector('.kx-glow');
+        const copy = document.querySelector(copySel);
+        const map = document.querySelector('[data-hero-system-map]');
+        if (!hero || !glow || !copy || !map) return null;
+        const box = (el) => el.getBoundingClientRect();
+        const share = (a, b) => {
+          const w = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+          const h = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+          return (100 * w * h) / (b.width * b.height);
+        };
+        const g = box(glow);
+        // the branch comes from the layout that is actually on screen, not from a width this script holds a
+        // copy of: if `lg-rem` moves in the config, or the glow's own breakpoint drifts away from the grid's,
+        // this still asks the question that matters — where the map is, is the glow over it?
+        const grid = copy.parentElement;
+        const columns = getComputedStyle(grid).gridTemplateColumns.split(/\s+/).filter(Boolean).length;
+        return {
+          columns,
+          onCopy: share(g, box(copy)),
+          onMap: share(g, box(map)),
+          mapTop: box(map).top,
+          copyBottom: box(copy).bottom,
+          glowTop: g.top,
+        };
+      },
+      { copySel: COPY },
+    );
+    assert.ok(f, 'hero, glow, copy column and system map are all on the page');
+    assert.ok(f.columns === 1 || f.columns === 2, `the hero grid resolved to ${f.columns} columns`);
+    if (f.columns === 1) {
+      // one column: the map is under the copy, so the glow belongs to the map and must not reach the type
+      assert.ok(f.mapTop > f.copyBottom, `the map starts at ${Math.round(f.mapTop)}px, above the copy's end`);
+      assert.equal(Math.round(f.onCopy), 0, `the glow covers ${f.onCopy.toFixed(1)}% of the copy column`);
+      assert.ok(f.onMap > 25, `the glow covers only ${f.onMap.toFixed(1)}% of the map`);
+    } else {
+      // two columns: the map is beside the copy and the glow sits under it, as the approved composition has it.
+      // The copy column's own edge is inside the glow's box here — 2.6% of it at 1024, 0% at 1440 — so this
+      // asks for a bound rather than for nothing, which is what an unqualified `onMap` test would be: a glow
+      // covering the whole hero would satisfy that and fail a reader.
+      assert.ok(f.onMap > 25, `the glow covers only ${f.onMap.toFixed(1)}% of the map`);
+      assert.ok(f.onCopy < 10, `the glow covers ${f.onCopy.toFixed(1)}% of the copy column`);
+      // and it comes down from above the map, as the top anchor puts it. Without this a glow still anchored
+      // to the bottom here — the one-column treatment left on past the grid's switch — reads as 80% of the
+      // map and passes, which is the composition the owner approved in reverse.
+      assert.ok(f.glowTop <= f.mapTop, `the glow starts ${Math.round(f.glowTop - f.mapTop)}px below the map's top`);
+    }
+    await context.close();
+  });
+}
+
+for (const width of [320, 390, 768, 1024, 1440]) {
+  await check(`hero lede at ${width}px: AA against whatever is rendered behind it`, async () => {
+    const { page, context } = await open({ width });
+    const worst = await worstTextContrast(page, LEDE);
+    assert.ok(worst >= AA, `the lede's worst point is ${worst.toFixed(2)}:1, under ${AA}:1`);
+    await context.close();
+  });
+}
+
+await check('hero glow: it stays a wash, whatever is behind it', async () => {
+  const { page, context } = await open({ width: 1440 });
+  const box = await page.evaluate(() => {
+    const glow = document.querySelector('section.kx-chapter .kx-glow');
+    if (!glow) return null;
+    const r = glow.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.round(r.left)),
+      y: Math.max(0, Math.round(r.top)),
+      width: Math.min(window.innerWidth, Math.round(r.right)) - Math.max(0, Math.round(r.left)),
+      height: Math.min(window.innerHeight, Math.round(r.bottom)) - Math.max(0, Math.round(r.top)),
+    };
+  });
+  assert.ok(box && box.width > 1 && box.height > 1, 'the glow has a box inside the viewport at 1440px');
+  // the same pixels with the gradient and without it: the difference is the decoration's whole contribution,
+  // whatever it happens to be sitting on, so this does not depend on the map's layout staying put
+  const pixels = async () => {
+    const shot = (await page.screenshot({ clip: box })).toString('base64');
+    return page.evaluate(async (data) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${data}`;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      return [...ctx.getImageData(0, 0, canvas.width, canvas.height).data];
+    }, shot);
+  };
+  const lit = await pixels();
+  await page.addStyleTag({ content: '.kx-glow { display: none !important }' });
+  await page.waitForTimeout(100);
+  const unlit = await pixels();
+  let tint = 0;
+  for (let i = 0; i < lit.length; i += 4) {
+    for (let c = 0; c < 3; c += 1) tint = Math.max(tint, Math.abs(lit[i + c] - unlit[i + c]));
+  }
+  assert.ok(tint <= MAX_TINT, `the glow shifts a channel by ${tint}, over ${MAX_TINT}`);
+  await context.close();
+});
+
 await browser.close();
 if (failures.length) {
   console.error(`\nhome-systems: ${failures.length} check(s) failed`);
   process.exit(1);
 }
-console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, overlays (height and hit testing), tour, structure');
+console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, overlays (height and hit testing), tour, hero decoration (placement, lede contrast and gradient strength), structure');

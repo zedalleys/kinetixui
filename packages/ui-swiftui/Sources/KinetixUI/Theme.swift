@@ -62,6 +62,13 @@ public struct KinetixColors {
     /// its own 10% tint in light; this role clears AA. A theme built before the role existed gets `info`, which
     /// is what those views drew before.
     public let onInfoContainer: Color
+    /// Text and icons on a tinted `success` surface — Banner and Inform `success`. A set built before the
+    /// role existed gets `success`, which is what those views drew before.
+    public let onSuccessContainer: Color
+    /// Text and icons on a tinted `warning` surface. Falls back to `warning`.
+    public let onWarningContainer: Color
+    /// Text and icons on a tinted `destructive` surface — Banner and Inform `error`. Falls back to `destructive`.
+    public let onDestructiveContainer: Color
     /// The dimming layer behind a modal surface: Dialog, Sheet, Sidebar. Carries its own alpha, so draw it as
     /// is. A theme built before the role existed gets black at 40%, which is what those views drew before.
     public let scrim: Color
@@ -105,6 +112,9 @@ public struct KinetixColors {
         popover: Color,
         popoverForeground: Color,
         onInfoContainer: Color? = nil,
+        onSuccessContainer: Color? = nil,
+        onWarningContainer: Color? = nil,
+        onDestructiveContainer: Color? = nil,
         scrim: Color? = nil,
         chart: [Color]
     ) {
@@ -144,6 +154,9 @@ public struct KinetixColors {
         self.popover = popover
         self.popoverForeground = popoverForeground
         self.onInfoContainer = onInfoContainer ?? info
+        self.onSuccessContainer = onSuccessContainer ?? success
+        self.onWarningContainer = onWarningContainer ?? warning
+        self.onDestructiveContainer = onDestructiveContainer ?? destructive
         self.scrim = scrim ?? Color.black.opacity(0.4)
         self.chart = chart
     }
@@ -188,6 +201,9 @@ public extension KinetixColors {
         popover: KinetixColorsSwiftUI.popover,
         popoverForeground: KinetixColorsSwiftUI.popoverForeground,
         onInfoContainer: KinetixColorsSwiftUI.onInfoContainer,
+        onSuccessContainer: KinetixColorsSwiftUI.onSuccessContainer,
+        onWarningContainer: KinetixColorsSwiftUI.onWarningContainer,
+        onDestructiveContainer: KinetixColorsSwiftUI.onDestructiveContainer,
         scrim: KinetixColorsSwiftUI.scrim,
         chart: [
             KinetixColorsSwiftUI.chart1,
@@ -237,6 +253,9 @@ public extension KinetixColors {
         popover: KinetixColorsSwiftUIDark.popover,
         popoverForeground: KinetixColorsSwiftUIDark.popoverForeground,
         onInfoContainer: KinetixColorsSwiftUIDark.onInfoContainer,
+        onSuccessContainer: KinetixColorsSwiftUIDark.onSuccessContainer,
+        onWarningContainer: KinetixColorsSwiftUIDark.onWarningContainer,
+        onDestructiveContainer: KinetixColorsSwiftUIDark.onDestructiveContainer,
         scrim: KinetixColorsSwiftUIDark.scrim,
         chart: [
             KinetixColorsSwiftUIDark.chart1,
