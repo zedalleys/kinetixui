@@ -58,12 +58,12 @@ const markVariants = cva(
   {
     variants: {
       status: {
-        success: "bg-success/15 text-success",
-        error: "bg-destructive/10 text-destructive",
-        warning: "bg-warning/15 text-warning",
+        success: "bg-success/15 text-success-on-container",
+        error: "bg-destructive/10 text-destructive-on-container",
+        warning: "bg-warning/15 text-warning-on-container",
         pending: "bg-muted text-muted-foreground",
         info: "bg-info/10 text-info-on-container",
-        partial: "bg-warning/15 text-warning",
+        partial: "bg-warning/15 text-warning-on-container",
       },
     },
     defaultVariants: { status: "info" },

@@ -17,9 +17,9 @@ const informVariants = cva(
     variants: {
       variant: {
         information: "bg-info/10 text-info-on-container",
-        warning: "bg-warning/15 text-warning",
-        success: "bg-success/15 text-success",
-        error: "bg-destructive/10 text-destructive",
+        warning: "bg-warning/15 text-warning-on-container",
+        success: "bg-success/15 text-success-on-container",
+        error: "bg-destructive/10 text-destructive-on-container",
         action: "bg-foreground text-background",
       },
     },
