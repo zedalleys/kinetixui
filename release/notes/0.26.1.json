@@ -1,0 +1,24 @@
+{
+  "version": "0.26.1",
+  "summary": "KinetixUI 0.26.1 is a single accessibility fix. DatePicker rendered its visible label and helper text as elements nothing referenced, so the field's accessible name was \"Select date\" or the formatted date and never said which field it was, and the hint or error message was sighted-only. The trigger's accessible name is now the label followed by the shown date, and helperText is its accessible description. No API changed: the same props, read correctly. A new check:label-association gate runs in CI so no component may render a <label> that labels nothing, and every component rendering a visible label prop must be proven by a test to put it in its control's accessible name. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together to 0.26.1; @kinetixui/tokens and @kinetixui/cli carry no change of their own. @kinetixui/angular is unchanged on its own line at 0.26.1 and remains Preview, and @kinetixui/iot stays on 0.5.0 while its device-integration work awaits real-device validation.",
+  "breaking": [],
+  "changes": [
+    {
+      "kind": "accessibility",
+      "area": "components",
+      "title": "A date field's visible label now names the field",
+      "body": "DatePicker's label was a bare <label> with no htmlFor, beside a trigger that carried no naming attribute, so the label was associated with nothing: the accessible name was \"Select date\", or the formatted date once one was chosen, and a screen reader never said which field it was. helperText had the same shape — visible, referenced by nothing — so a hint and an error message were sighted-only. The trigger's accessible name is now the label followed by the shown date, helperText is its accessible description, and the open calendar is named by the same label. DateRangeInput and GuestPicker already state this contract; this is their pattern rather than a new one. The label renders as a <span> the trigger references rather than as a <label for>: a <button> is labelable, so a <label> would work, but the name computation prefers a label element over the contents, which would drop the chosen date out of the name, and clicking the label would open the calendar. Nothing is added for a field with no label and no helper text — no attribute, and no reference to an element that does not exist."
+    },
+    {
+      "kind": "improved",
+      "area": "components",
+      "title": "CI gates that a visible label names its field",
+      "body": "check:label-association joins the CI run: no component may render a <label> that labels nothing, and every component rendering a visible label prop must be proven by a test to put that label in its control's accessible name. axe cannot see this class of defect, because a trigger carrying the wrong accessible name still has one — the control passes every rule while telling a screen-reader user the wrong thing. The gate is a repository check, not a runtime behaviour change, so it affects no published artifact."
+    }
+  ],
+  "limitations": [
+    "The fix and its gate are React-only. The SwiftUI, Compose and Flutter DatePicker label contracts were not examined in this release and are tracked as separate follow-up work.",
+    "@kinetixui/tokens and @kinetixui/cli are published at 0.26.1 by the fixed core cohort and carry no change of their own.",
+    "@kinetixui/angular remains Preview. Its graduation criteria are tracked separately and this release does not move them."
+  ]
+}
