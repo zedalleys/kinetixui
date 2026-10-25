@@ -401,10 +401,38 @@ describe("initAttribution — session entry and first touch", () => {
   it("L. later navigation in the same session does not change the session attribution", () => {
     initAttribution(input(LINKEDIN, "", "/"), false);
     const first = { ...getAttributionContext() };
-    // a later page in the same tab — even one carrying a different UTM — must not replace the session entry
-    initAttribution(input(REDDIT, "https://www.reddit.com/", "/docs/installation"), false);
+    // a later untagged page in the same tab — from a referrer, a UTM without our campaign, or our own site — keeps it
+    initAttribution(input("", "https://www.reddit.com/", "/docs/installation"), false);
+    expect(getAttributionContext()).toEqual(first);
+    initAttribution(input("?utm_source=reddit&utm_medium=community", "", "/docs/installation"), false);
     expect(getAttributionContext()).toEqual(first);
     initAttribution(input("", "https://kinetixui.com/", "/docs/components/button"), false);
+    expect(getAttributionContext()).toEqual(first);
+    initAttribution(input(LINKEDIN, "", "/"), false); // the same tagged URL again
+    expect(getAttributionContext()).toEqual(first);
+  });
+
+  it("L2. a new arrival carrying a different kx_ campaign tag starts a new session entry; first touch stays", () => {
+    initAttribution(input(LINKEDIN, "", "/"), false);
+    initAttribution(input(REDDIT, "https://www.reddit.com/", "/docs/installation"), false);
+    expect(getAttributionContext()).toMatchObject({
+      kx_source: "reddit",
+      kx_campaign: "kx_other_campaign",
+      kx_landing_page: "/docs/installation",
+      kx_first_source: "linkedin",
+      kx_first_campaign: "kx_launch_2026",
+    });
+    expect(JSON.parse(window.sessionStorage.getItem(SESSION_KEY)!)).toMatchObject({ source: "reddit", campaign: "kx_other_campaign" });
+  });
+
+  it("L3. a tagged URL with no utm_source keeps its referred channel when the same URL is reloaded", () => {
+    // the source here comes from the referrer, not the query; reloading gives an internal referrer and would
+    // derive `direct`, so comparing derived sources would treat a reload as a new arrival and lose the channel
+    const tagged = "?utm_campaign=kx_launch_2026&utm_content=hero_a";
+    initAttribution(input(tagged, "https://www.linkedin.com/feed/", "/docs/platforms"), false);
+    const first = { ...getAttributionContext() };
+    expect(first).toMatchObject({ kx_source: "linkedin", kx_campaign: "kx_launch_2026", kx_landing_page: "/docs/platforms" });
+    initAttribution(input(tagged, "https://kinetixui.com/docs/platforms", "/docs/platforms"), false);
     expect(getAttributionContext()).toEqual(first);
   });
 
@@ -472,7 +500,7 @@ describe("initAttribution — session entry and first touch", () => {
       SESSION_KEY,
       JSON.stringify({ source: "linkedin", medium: "social", referrer: "direct", campaign: "launch John Smith", content: "hero_a", email: "a@b.co", landing: "/x?y=1" }),
     );
-    initAttribution(input(REDDIT), false);
+    initAttribution(input("", "https://www.reddit.com/"), false);
     const ctx = getAttributionContext();
     expect(ctx).toMatchObject({ kx_source: "linkedin" });
     expect(ctx).not.toHaveProperty("kx_campaign");
