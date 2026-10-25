@@ -65,6 +65,12 @@ jobs:
       - name: Accessibility gate covers every package with stories
         run: pnpm check:a11y-coverage
 
+      # A field's visible label has to name the field. No <label> that labels nothing, and every
+      # rendered `label` prop proven to reach its control's accessible name — axe cannot see this,
+      # because a trigger with the wrong name still has a name.
+      - name: A visible label names its field
+        run: pnpm check:label-association
+
       # A group that claims one choice has to hold choices: a radiogroup needs real radios and
       # cannot describe them with aria-pressed. axe is green on that contradiction, because no
       # single element is wrong -- only the pair.
@@ -332,6 +338,13 @@ jobs:
       # scripts/editorial-negative-controls.mjs.
       - name: Editorial gate (intros, intent ownership, typed counts)
         run: pnpm check:editorial
+
+      # A release note's links, against the pages the build just wrote: the path and the #fragment.
+      # 0.25.0's notes linked /docs/motion, a route that does not exist, and nothing in the pipeline
+      # resolved it — the curated note is not on any page until the Version PR activates it, and
+      # check:seo strips the fragment before resolving. Same inventory as check:seo, no second route list.
+      - name: Release note links resolve (paths and anchors)
+        run: pnpm check:release-links
 
       # Every workspace with a `typecheck` script (@kinetixui/ui, @kinetixui/cli, @kinetixui/web) via turbo.
       # Was `--filter @kinetixui/ui` + `continue-on-error`, which let real apps/web type errors through unseen.

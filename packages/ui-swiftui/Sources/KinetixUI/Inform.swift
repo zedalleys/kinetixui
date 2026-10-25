@@ -64,9 +64,9 @@ public struct KinetixInform: View {
     private var tint: (container: Color, content: Color) {
         switch variant {
         case .information: return (colors.info.opacity(0.1), colors.onInfoContainer)
-        case .warning: return (colors.warning.opacity(0.15), colors.warning)
-        case .success: return (colors.success.opacity(0.15), colors.success)
-        case .error: return (colors.destructive.opacity(0.1), colors.destructive)
+        case .warning: return (colors.warning.opacity(0.15), colors.onWarningContainer)
+        case .success: return (colors.success.opacity(0.15), colors.onSuccessContainer)
+        case .error: return (colors.destructive.opacity(0.1), colors.onDestructiveContainer)
         case .action: return (colors.foreground, colors.background)
         }
     }

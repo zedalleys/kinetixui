@@ -62,6 +62,22 @@ data class KinetixColors(
      */
     val scrim: Color = Color.Black.copy(alpha = 0.4f),
     /**
+     * Text and icons on a tinted `success` surface — Banner and Inform `Success`. `success` itself is 4.20:1
+     * on its own 15% tint over `muted` in light and 4.4982:1 in dark, so it fails AA there; this role clears
+     * it. A set built before the role existed gets `success`, which is what those composables drew before.
+     */
+    val onSuccessContainer: Color = success,
+    /**
+     * Text and icons on a tinted `warning` surface. `warning` already clears AA on its own tint; the role
+     * exists so all four statuses are addressed the same way. Falls back to `warning`.
+     */
+    val onWarningContainer: Color = warning,
+    /**
+     * Text and icons on a tinted `destructive` surface — Banner and Inform `Error`. `destructive` is 4.28:1
+     * on its own 10% tint over `muted` in dark and fails AA there. Falls back to `destructive`.
+     */
+    val onDestructiveContainer: Color = destructive,
+    /**
      * The categorical chart palette, in order. A list rather than five named fields because callers index
      * into it by series — `chart[series % chart.size]` — which is what makes a chart with six series wrap
      * instead of crashing. Same shape as SwiftUI's `KinetixColors.chart`.
@@ -117,6 +133,9 @@ val LightKinetixColors = KinetixColors(
     popover = GeneratedLight.colorPopover,
     popoverForeground = GeneratedLight.colorPopoverForeground,
     onInfoContainer = GeneratedLight.colorOnInfoContainer,
+    onSuccessContainer = GeneratedLight.colorOnSuccessContainer,
+    onWarningContainer = GeneratedLight.colorOnWarningContainer,
+    onDestructiveContainer = GeneratedLight.colorOnDestructiveContainer,
     scrim = GeneratedLight.colorScrim,
 )
 
@@ -162,6 +181,9 @@ val DarkKinetixColors = KinetixColors(
     popover = GeneratedDark.colorPopover,
     popoverForeground = GeneratedDark.colorPopoverForeground,
     onInfoContainer = GeneratedDark.colorOnInfoContainer,
+    onSuccessContainer = GeneratedDark.colorOnSuccessContainer,
+    onWarningContainer = GeneratedDark.colorOnWarningContainer,
+    onDestructiveContainer = GeneratedDark.colorOnDestructiveContainer,
     scrim = GeneratedDark.colorScrim,
 )
 
