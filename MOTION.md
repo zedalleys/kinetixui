@@ -274,3 +274,59 @@ logic are asserted, the announcement is not. There is no iOS Simulator job, so R
 Known gap: the announcement strings ("Unchecked", "Mixed", "Checked", "On", "Off") are English literals. The
 package ships no string catalogue, and adding one for an accessibility fix would be a localisation decision
 taken in the wrong slice.
+### Selection controls (Compose, MX1d)
+
+Two things were wrong on Compose, and only one of them was reported. `Switch.kt` animated `thumbOffset`
+and handed `trackColor` straight to `.background`, so the track cut between `tertiary` and `action` in one
+frame while the thumb slid for 100ms — `selection-control` covers both, which is why Compose's Switch was
+not ticked for Impl. And Toggle, Checkbox and RadioButton did not animate at all.
+
+| | Switch track | Toggle / Checkbox / Radio |
+| --- | --- | --- |
+| Trigger | `checked`, and `enabled` (the disabled alpha is part of the animated target) | `pressed`, the `ToggleableState`, `selected` |
+| Property | `background-color` via `animateColorAsState` | container, text, border and fill colour via `animateColorAsState`; the radio dot's `alpha` via `animateFloatAsState` |
+| Tier · easing | `instant` 100ms · `standard` (`selection-control`), the same spec as the thumb | `fast` 200ms · `standard` (`selection-state`) |
+| Reduced form | `tween(0)` at `ANIMATOR_DURATION_SCALE` 0, through the one shared reader | the same |
+| Interruption | Compose retargets from the current colour | the same |
+| Final state | the state's colour; the semantics (`Role.Switch`, `triStateToggleable`, `selectable`) never wait for paint | the same |
+| Focus / SR | unchanged. ToggleGroup gains an optional `accessibleLabel`: a named traversal group, not a merged element, so each item still reports its own on/off | — |
+| RTL | the thumb's `Modifier.offset` resolves against layout direction, so travel mirrors; colour is direction-free | colour is direction-free |
+
+The Checkbox glyph still swaps in one frame while the fill settles — a stated difference from React, which
+fades the tick in on `fast` and removes it at once. Doing that properly here means composing both glyphs and
+animating their alpha so a box leaving mixed never shows a tick on the way out (the defect #400 fixed on the
+web); the fill already carries the state change, so it is recorded rather than half-built.
+
+Evidence, stated exactly: **Headless verified** for interaction and accessibility —
+`SelectionMotionTest.kt` composes each control through Robolectric and reads the semantics tree, and
+`./gradlew :ui:testDebugUnitTest` runs it in `native-compose.yml`. No emulator job exists, so Runtime stays
+open. Robolectric is a JVM host; it renders nothing a person could see.
+
+**The switch's track is measured.** `SwitchMotionTest` stops the test clock, advances it half a duration
+into the gesture, and reads the colour the switch actually rasterised, in both directions. The colour is
+taken as the most common fully opaque pixel rather than from a fixed
+coordinate, because the thumb is moving and any coordinate that is track at one point in the gesture is
+thumb at another; the track is the larger opaque area by roughly 840 pixels to 310, so the mode is the
+track whatever the thumb is doing. It runs under Robolectric's NATIVE graphics mode, since LEGACY draws
+nothing and would compare two blank bitmaps and pass.
+
+Reading suppression off the pixels, rather than off the spec, was tried and dropped; the measurement is
+kept in a comment in that file. With the animator scale at 0 the track is exactly at its destination from
+the third frame on, so it does not travel — but the first two frames after a click paint each end
+multiplied by about 0.916, so something composites over the track briefly and then stops. Telling that
+apart from a real traversal needs a tolerance, and a traversal's own first frames also sit near the
+starting end, so the threshold would have been tuned against a module that cannot be run outside CI.
+Compose's `reducedMotion` evidence is the spec tests, which read the duration the control is handed.
+
+That closes a gap this slice first recorded rather than fixed, and it is worth saying why the obvious
+routes did not: `animateColorAsState` does not expose which spec it was handed, so no assertion can read
+the track's *spec*; `check:native-motion` stays green if the track reverts, because `Switch.kt` still names
+`KinetixSwitchMotion` for the thumb; and the contract cannot pin it, because `check:motion-tokens` requires
+a consumer's `expects` to name the role's own duration and easing, which `Switch.kt` deliberately does not —
+it delegates both to the helper. **On every native platform the contract can pin the helper that holds the
+timing and never the component that consumes it**, where React and Angular pin the component directly
+because their timing is written in the component's own classes and stylesheet. The painted test goes around
+that limit for one control rather than removing it: the same idiom is not yet extended to the checkbox's
+fill, the radio's dot or the toggle's surface, each of which needs its own answer to which pixel is the
+subject while a glyph moves over it. Watching the thumb's position and the track's colour at one instant,
+rather than each on its own, still wants an on-device capture.
