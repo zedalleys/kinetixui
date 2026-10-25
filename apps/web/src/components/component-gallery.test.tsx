@@ -251,6 +251,47 @@ describe("ComponentGallery thumbnails", () => {
     expect(none.querySelectorAll("[data-gallery-card]").length).toBe(0);
   });
 
+  /**
+   * `Foundations` went to five categories at once, so no alias can answer for it and a redirect would be
+   * wrong for a reader four times out of five. Before CAT-BUG-021 the reader who followed that shared link
+   * and the reader who mistyped saw the identical panel, while all nine components were still published.
+   */
+  it("tells a reader where a retired category's components went, and still calls a typo a typo", async () => {
+    const user = userEvent.setup();
+    nav.search = "cat=Foundations";
+    const { container } = render(<ComponentGallery facets={FACETS} />);
+
+    const panel = container.querySelector<HTMLElement>('[data-gallery-retired="Foundations"]');
+    expect(panel).not.toBeNull();
+    expect(panel!.textContent).toContain("was retired because it");
+
+    const successors = [...panel!.querySelectorAll<HTMLElement>("[data-gallery-successor]")].map((el) =>
+      el.getAttribute("data-gallery-successor"),
+    );
+    expect(successors).toEqual([
+      "Layout & Structure",
+      "Forms & Inputs",
+      "Feedback & Status",
+      "Data Display",
+      "Media & Content",
+    ]);
+    // every chip leads somewhere: a successor holding nothing would just be a second dead end
+    for (const cat of successors) expect(CATEGORY_COUNT[cat as keyof typeof CATEGORY_COUNT]).toBeGreaterThan(0);
+
+    // the chip is not decoration — it sets the filter it names
+    nav.replace.mockClear();
+    await user.click(panel!.querySelector<HTMLElement>('[data-gallery-successor="Data Display"]')!);
+    expect(nav.replace.mock.calls.at(-1)?.[0]).toContain("cat=Data+Display");
+
+    // negative control: a value that is a typo rather than a retired label keeps the plain empty state, so
+    // the assertions above are about the retirement record and not about any empty view growing chips
+    nav.search = "cat=Nonsense";
+    const { container: typo } = render(<ComponentGallery facets={FACETS} />);
+    expect(typo.querySelector("[data-gallery-retired]")).toBeNull();
+    expect(typo.querySelector("[data-gallery-successor]")).toBeNull();
+    expect(typo.textContent).toContain("No components match");
+  });
+
   /** The technology did not disappear with the pill: it is still how a reader can search for a component. */
   it("still finds a component by the technology behind it", async () => {
     const user = userEvent.setup();

@@ -19,6 +19,7 @@ import {
   facetsOf,
   kindOf,
   resolveCategoryParam,
+  retiredCategory,
 } from "./component-taxonomy";
 import { recipes } from "./platform-support";
 import { componentDocs, docsNav } from "./site";
@@ -113,10 +114,54 @@ describe("shared ?cat= links across the renames", () => {
   it("leaves a current label and an absent one alone", () => {
     for (const label of CATEGORY_ORDER) expect(resolveCategoryParam(label)).toBe(label);
     expect(resolveCategoryParam(null)).toBeNull();
-    // negative control: a retired category has no successor, so it is NOT quietly mapped onto one — the
-    // gallery's empty state, with its "Clear filters" button, is what a reader meets
+    // negative control: a retired category has no single successor, so it is NOT quietly mapped onto one.
+    // What the reader meets instead is `retiredCategory`'s business, below.
     expect(resolveCategoryParam("Foundations")).toBe("Foundations");
     expect(CATEGORY_ORDER as readonly string[]).not.toContain("Foundations");
+  });
+
+  /**
+   * A rename has one answer and `formerly` gives it. A retirement may not: `Foundations` described how
+   * mature a component was, and its nine went to five categories, so the only honest answer is all five.
+   */
+  it("knows a retired category from a typo", () => {
+    const foundations = retiredCategory("Foundations");
+    expect(foundations).not.toBeNull();
+    expect(foundations!.label).toBe("Foundations");
+    expect(foundations!.becauseIt.length).toBeGreaterThan(19);
+    expect(foundations!.successors).toEqual([
+      "Layout & Structure",
+      "Forms & Inputs",
+      "Feedback & Status",
+      "Data Display",
+      "Media & Content",
+    ]);
+
+    // a typo, a current label, a former label and nothing at all are all "not retired" — four separate
+    // controls, because conflating any of them with a retirement is how the dead end came back
+    expect(retiredCategory("Nonsense")).toBeNull();
+    expect(retiredCategory(null)).toBeNull();
+    for (const label of CATEGORY_ORDER) expect(retiredCategory(label)).toBeNull();
+    for (const prev of Object.keys(taxonomy.categoryAliases)) expect(retiredCategory(prev)).toBeNull();
+  });
+
+  /**
+   * The record is only as good as the categories it names. A successor that is not current, or is current
+   * and empty, would hand the reader a chip that leads to the view they were already looking at.
+   */
+  it("points every retirement at categories that exist and hold something", () => {
+    const entries = Object.entries(taxonomy.retiredCategories);
+    expect(entries.length).toBeGreaterThan(0);
+    for (const [label, record] of entries) {
+      expect(CATEGORY_ORDER as readonly string[], `${label} is retired`).not.toContain(label);
+      expect(record.successors.length, `${label} needs somewhere to send a reader`).toBeGreaterThan(0);
+      for (const s of record.successors) {
+        expect(CATEGORY_ORDER as readonly string[], `${label} → ${s}`).toContain(s);
+        expect(CATEGORY_COUNT[s as keyof typeof CATEGORY_COUNT], `${label} → ${s} is empty`).toBeGreaterThan(0);
+      }
+      // the chips read in the catalogue's own order, not in whatever order someone typed them
+      expect(record.successors).toEqual(CATEGORY_ORDER.filter((c) => record.successors.includes(c)));
+    }
   });
 });
 

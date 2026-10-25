@@ -112,6 +112,38 @@ const CONTROLS = [
     expect: /formerly lists "Form Inputs", already claimed by "Forms & Inputs"/,
     edit: (m) => (m.categoryDefinitions.Navigation.formerly = ["Form Inputs"]),
   },
+  /* `retiredCategories` answers for a category that did not become one other category, and all of its value
+   * is in the chips it puts in front of a reader. Each control below is a way those chips could lie while
+   * the page still rendered: a destination that is not a category, one that is empty, a label that already
+   * had an answer, an order that is not the catalogue's, and a missing reason. (CAT-BUG-021) */
+  {
+    rule: "a retired category's successor must be a current category",
+    expect: /retiredCategories\["Foundations"\]: successor "Widgets" is not a current category/,
+    edit: (m) => (m.retiredCategories.Foundations.successors = ["Widgets"]),
+  },
+  {
+    rule: "a successor that holds nothing would be a second dead end",
+    expect: /retiredCategories\["Foundations"\]: successor "Navigation" holds no components/,
+    edit: (m) => {
+      for (const c of Object.values(m.components)) if (c.category === "Navigation") c.category = "Data Display";
+      m.retiredCategories.Foundations.successors = ["Navigation"];
+    },
+  },
+  {
+    rule: "a retired label that is also a former label already has an answer",
+    expect: /retiredCategories\["Foundations"\]: is also a "formerly" label of "Navigation"/,
+    edit: (m) => (m.categoryDefinitions.Navigation.formerly = ["Foundations"]),
+  },
+  {
+    rule: "successors read in the catalogue's own order, not the order someone typed",
+    expect: /retiredCategories\["Foundations"\]: successors must be in categoryOrder order/,
+    edit: (m) => m.retiredCategories.Foundations.successors.reverse(),
+  },
+  {
+    rule: 'a retirement needs the clause the page prints after "was retired because it"',
+    expect: /retiredCategories\["Foundations"\]: needs "becauseIt"/,
+    edit: (m) => (m.retiredCategories.Foundations.becauseIt = "reasons"),
+  },
   {
     rule: "a slug declared twice loses one copy, so it must fail",
     expect: /button: appears twice in components/,

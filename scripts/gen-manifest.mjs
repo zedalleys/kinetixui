@@ -69,7 +69,7 @@ const COMPONENT_KEYS = new Set([
   "category", "kind", "facets", "status", "lifecycleReason", "since", "platforms",
   "platformNote", "platformNotes", "platformGuidance", "registry", "composition", "sourceNames",
 ]);
-const MANIFEST_KEYS = new Set(["$schema", "$description", "categoryDefinitions", "platformDefinitions", "components"]);
+const MANIFEST_KEYS = new Set(["$schema", "$description", "categoryDefinitions", "retiredCategories", "platformDefinitions", "components"]);
 const FAMILIES = new Set(["web", "native"]);
 /**
  * What a platform tab shows when the component is not implemented on that platform.
@@ -188,6 +188,57 @@ for (const [label, def] of Object.entries(manifest.categoryDefinitions ?? {})) {
       if (current.has(prev)) errors.push(`categoryDefinitions["${label}"]: formerly lists "${prev}", which is itself a current category`);
       if (claimed.has(prev)) errors.push(`categoryDefinitions["${label}"]: formerly lists "${prev}", already claimed by "${claimed.get(prev)}"`);
       claimed.set(prev, label);
+    }
+  }
+}
+
+/**
+ * `retiredCategories` carries a category that was removed and did NOT become one other category, so
+ * `formerly` cannot answer for it. `Foundations` is the case: its nine components went to five different
+ * categories, so a redirect would have to pick one and be wrong for a reader four times out of five.
+ *
+ * Without this, `/components?cat=Foundations` and `/components?cat=Nonsense` render the identical dead end —
+ * a reader who followed a link someone sent them is told the same thing as a reader who mistyped, while all
+ * nine components are still published under other names. Listing the successors is what lets the gallery
+ * say what happened instead.
+ *
+ * A retired label must not be a current category or a `formerly` value — those already have answers — and
+ * every successor must be a current category that actually holds something, or the page offers a chip that
+ * leads nowhere. Successors are held in `categoryOrder` order so the chips read in the catalogue's own
+ * order rather than whatever order someone typed.
+ */
+{
+  const current = new Set(CATEGORIES);
+  const claimed = new Map(
+    Object.entries(manifest.categoryDefinitions ?? {})
+      .flatMap(([label, def]) => (Array.isArray(def?.formerly) ? def.formerly.map((prev) => [prev, label]) : [])),
+  );
+  const counts = new Map(
+    CATEGORIES.map((label) => [label, Object.values(manifest.components ?? {}).filter((c) => c.category === label).length]),
+  );
+  for (const [label, def] of Object.entries(manifest.retiredCategories ?? {})) {
+    const at = `retiredCategories["${label}"]`;
+    if (current.has(label)) errors.push(`${at}: is a current category, so it is not retired`);
+    if (claimed.has(label)) errors.push(`${at}: is also a "formerly" label of "${claimed.get(label)}", which already answers for it`);
+    for (const k of Object.keys(def ?? {})) {
+      if (!["retiredIn", "becauseIt", "successors"].includes(k)) errors.push(`${at}: unknown key "${k}"`);
+    }
+    if (!def?.retiredIn) errors.push(`${at}: needs "retiredIn", the slice that retired it`);
+    if (typeof def?.becauseIt !== "string" || def.becauseIt.length < 20) {
+      errors.push(`${at}: needs "becauseIt", one clause the page can print after "was retired because it"`);
+    }
+    if (!Array.isArray(def?.successors) || !def.successors.length) {
+      errors.push(`${at}: successors must be a non-empty array of the categories its components went to`);
+      continue;
+    }
+    if (new Set(def.successors).size !== def.successors.length) errors.push(`${at}: successors lists the same category twice`);
+    for (const s of def.successors) {
+      if (!current.has(s)) errors.push(`${at}: successor "${s}" is not a current category`);
+      else if (!counts.get(s)) errors.push(`${at}: successor "${s}" holds no components, so its chip would lead to an empty view`);
+    }
+    const ordered = CATEGORIES.filter((c) => def.successors.includes(c));
+    if (ordered.join("|") !== def.successors.filter((s) => current.has(s)).join("|")) {
+      errors.push(`${at}: successors must be in categoryOrder order — ${ordered.join(", ")}`);
     }
   }
 }
@@ -430,6 +481,8 @@ const taxonomy = {
     Object.entries(manifest.categoryDefinitions)
       .flatMap(([label, def]) => (def.formerly ?? []).map((prev) => [prev, label])),
   ),
+  /** retired label → why it went and where its components are now, for the categories a rename cannot answer. */
+  retiredCategories: manifest.retiredCategories ?? {},
   categories: Object.fromEntries(
     CATEGORIES.map((label) => [
       label,

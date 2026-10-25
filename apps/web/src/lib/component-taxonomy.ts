@@ -71,12 +71,42 @@ export function categoryOf(slug: string): ComponentCategory {
  * `/components?cat=Form%20Inputs` must still land on the filtered view, not on an empty one. `formerly` in the
  * manifest is where the old names live, so a future rename is one field rather than another lookup table here.
  * A value that is neither a current nor a former label (a retired category such as `Foundations`, or a typo) is
- * returned unchanged, and the gallery's own empty state, with its "Clear filters" button, handles it.
+ * returned unchanged. What the gallery then shows depends on `retiredCategory` below, not on this.
  */
 export function resolveCategoryParam(value: string | null): string | null {
   if (!value) return null;
   if ((CATEGORY_ORDER as readonly string[]).includes(value)) return value;
   return (taxonomyData.categoryAliases as Record<string, string>)[value] ?? value;
+}
+
+/** A category that was removed and did not become one other category. */
+export type RetiredCategory = {
+  /** The label as it appears in a shared link. */
+  readonly label: string;
+  /** One clause, printed after "was retired because it". */
+  readonly becauseIt: string;
+  /** Where its components are now, in `categoryOrder` order. */
+  readonly successors: readonly ComponentCategory[];
+};
+
+/**
+ * The retirement record for a `?cat=` value, or null if the value is current, a former label, or a typo.
+ *
+ * `resolveCategoryParam` answers "which category is this today", and for `Foundations` there is no answer:
+ * its nine components went to five different categories, so a rename alias would have to pick one and be
+ * wrong for a reader four times out of five. Without this the gallery gives that reader the same dead end
+ * as someone who mistyped — measured on #430's head, `?cat=Foundations` and `?cat=Nonsense` rendered the
+ * identical "No components match" panel, while all nine components were still published elsewhere
+ * (CAT-BUG-021).
+ *
+ * Separate from `resolveCategoryParam` rather than folded into its return type on purpose: every other
+ * caller wants the string, and only the empty state needs to tell a retired label from a typo.
+ */
+export function retiredCategory(value: string | null): RetiredCategory | null {
+  if (!value) return null;
+  const record = (taxonomyData.retiredCategories as Record<string, { becauseIt: string; successors: string[] }>)[value];
+  if (!record) return null;
+  return { label: value, becauseIt: record.becauseIt, successors: record.successors as ComponentCategory[] };
 }
 
 export function kindOf(slug: string): ComponentKind {

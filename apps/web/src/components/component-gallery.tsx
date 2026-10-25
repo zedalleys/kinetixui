@@ -20,7 +20,7 @@ import {
 } from "@kinetixui/ui";
 import { cn } from "@/lib/utils";
 import { componentDocs } from "@/lib/site";
-import { CATEGORY_ORDER, PRIMITIVE, categoryOf, resolveCategoryParam } from "@/lib/component-registry";
+import { CATEGORY_ORDER, PRIMITIVE, categoryOf, resolveCategoryParam, retiredCategory } from "@/lib/component-registry";
 import {
   NATIVE_PLATFORMS,
   PLATFORMS,
@@ -263,6 +263,10 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
   // CAT-2 renamed three categories, and links to the old names are already out there; `formerly` in the
   // manifest is what turns `?cat=Form%20Inputs` back into a filter instead of an empty grid.
   const activeCat = resolveCategoryParam(params.get("cat"));
+  // `Foundations` went to five categories at once, so no alias can answer for it. Knowing a link names a
+  // retired category rather than a typo is the whole difference between "here is where those nine went"
+  // and the same dead end a misspelling gets (CAT-BUG-021).
+  const retired = retiredCategory(params.get("cat"));
   const activePlatform = resolvePlatformParam(params.get("platform"));
   const activePlatformLabel = activePlatform ? PLATFORM_DEFINITIONS[activePlatform].label : null;
   const activeStatus = params.get("status") === "beta" ? "beta" : null;
@@ -610,7 +614,33 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
         {q ? ` · “${query.trim()}”` : ""}
       </p>
 
-      {filtered.length === 0 ? (
+      {filtered.length === 0 && retired ? (
+        <div
+          data-gallery-retired={retired.label}
+          className="mt-10 rounded-xl border border-dashed border-border px-6 py-16 text-center"
+        >
+          <p className="text-sm text-muted-foreground">
+            <span className="text-foreground">{retired.label}</span> was retired because it {retired.becauseIt}. Its
+            components are still here, under these categories:
+          </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            {retired.successors.map((cat) => (
+              <Button
+                key={cat}
+                variant="Secondary"
+                size="sm"
+                data-gallery-successor={cat}
+                onClick={() => setCat(cat)}
+              >
+                {cat}
+              </Button>
+            ))}
+          </div>
+          <Button variant="Link" onClick={clearAll} className="mt-5 font-mono uppercase tracking-[0.12em]">
+            Clear filters
+          </Button>
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="mt-10 rounded-xl border border-dashed border-border py-16 text-center">
           <p className="text-sm text-muted-foreground">
             No components match{q ? ` “${query.trim()}”` : ""}

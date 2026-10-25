@@ -30,6 +30,19 @@
       "rule": "Presents authored media or editorial content."
     }
   },
+  "retiredCategories": {
+    "Foundations": {
+      "retiredIn": "CAT-2",
+      "becauseIt": "described how mature a component was rather than what it does",
+      "successors": [
+        "Layout & Structure",
+        "Forms & Inputs",
+        "Feedback & Status",
+        "Data Display",
+        "Media & Content"
+      ]
+    }
+  },
   "platformDefinitions": {
     "React": {
       "family": "web",

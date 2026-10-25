@@ -10,11 +10,13 @@ export {
   RECIPE_SLUGS,
   categoryOf,
   resolveCategoryParam,
+  retiredCategory,
   kindOf,
   facetsOf,
   type ComponentCategory,
   type ComponentFacet,
   type ComponentKind,
+  type RetiredCategory,
 } from "@/lib/component-taxonomy";
 
 /**

@@ -16,6 +16,19 @@
     "Controls & Actions": "Actions & Controls",
     "Feedback": "Feedback & Status"
   },
+  "retiredCategories": {
+    "Foundations": {
+      "retiredIn": "CAT-2",
+      "becauseIt": "described how mature a component was rather than what it does",
+      "successors": [
+        "Layout & Structure",
+        "Forms & Inputs",
+        "Feedback & Status",
+        "Data Display",
+        "Media & Content"
+      ]
+    }
+  },
   "categories": {
     "Layout & Structure": {
       "rule": "Arranges or contains other components and has no content of its own.",
