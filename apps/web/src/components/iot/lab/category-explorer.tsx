@@ -55,8 +55,19 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
   const root = React.useRef<HTMLDivElement>(null);
   const bar = React.useRef<HTMLDivElement>(null);
 
+  /**
+   * Teardown for the alignment in flight. `alignPanel` is a callback, not an effect, so React does not
+   * collect anything it returns: the cleanup has to be held and invoked by hand, both when a new alignment
+   * supersedes this one and when the component goes away.
+   */
+  const endAlignment = React.useRef<(() => void) | undefined>(undefined);
+  React.useEffect(() => () => endAlignment.current?.(), []);
+
   /** Bring the start of `id`'s panel to just under the sticky bar, if the reader is past it. */
   const alignPanel = React.useCallback((id: string, always: boolean) => {
+    // A second alignment replaces the first, whose timer and listeners would otherwise keep running.
+    endAlignment.current?.();
+    endAlignment.current = undefined;
     // Measured against where the bar sits once stuck, not where it is now: above the explorer the bar scrolls
     // with the page and the panel is always right under it, so "panel minus bar" would read as already aligned.
     const offsetOf = () => {
@@ -95,7 +106,7 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
     // Unmounting before the correction lands has to drop it: `stop()` alone leaves the timer holding `settle`,
     // which would scroll a page this component no longer belongs to.
     const timer = window.setTimeout(settle, 1500);
-    return () => {
+    endAlignment.current = () => {
       window.clearTimeout(timer);
       stop();
     };
