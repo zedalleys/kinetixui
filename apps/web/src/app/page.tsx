@@ -192,8 +192,10 @@ export default function HomePage() {
           took the most adverse background pixel under its glyphs to 4.28:1 against the 4.5 floor, with 39%
           of that paragraph's glyph pixels below the floor. The statistic matters: against the mean of the
           same background it measured 4.59:1 and would have looked compliant. It was worst at 390px but not
-          confined to it — the same measurement fails from 320px to roughly 740px, and again at 1200px for a
-          reader whose browser font size is 32px, which is what the `-rem` breakpoints exist to track. axe
+          confined to it — glyph-sampled it fails from 320px to at least 768px, where it reads 4.51:1 by
+          that statistic and 4.47:1 by the whole-line-box one `check:home-systems` uses, and again at 1200px
+          for a reader whose browser font size is 32px, which is what the `-rem` breakpoints exist to track.
+          axe
           cannot see any of it, because it will not resolve a background behind a gradient and reports
           "incomplete" rather than a failure.
 
@@ -213,7 +215,8 @@ export default function HomePage() {
           */}
           <div className="grid grid-cols-1 gap-14 py-12 sm:py-16 md:py-24 lg-rem:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg-rem:items-center lg-rem:gap-12 xl-rem:gap-20">
             {/* a size container: the headline is sized against this column, so its longest word always fits it */}
-            <div className="max-w-3xl [container-type:inline-size]">
+            {/* `data-hero-copy`: what the hero's decoration must stay off below `lg-rem`, which check:home-systems asserts */}
+            <div data-hero-copy className="max-w-3xl [container-type:inline-size]">
               {/*
                 The headline names the architecture rather than counting platforms: one shared language, and an
                 implementation per platform written in that platform's idiom (CLAIMS.md A2, A3). The number is
