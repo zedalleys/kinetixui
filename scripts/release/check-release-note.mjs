@@ -150,6 +150,16 @@ export function main() {
     return 0;
   }
 
+  // version-release-meta.mjs reads the note only when releases.ts does not already carry an entry
+  // for that version. Mirror that condition exactly, or this gate fails a pull request the real
+  // step would wave through — a version already written into the changelog needs no note file.
+  // This condition comes from #463, which found it independently.
+  const releases = readTree("apps/web/src/lib/releases.ts") ?? "";
+  if (releases.includes(`version: "${core}"`)) {
+    console.log(`check:release-note — ok, apps/web/src/lib/releases.ts already carries ${core}; version-release-meta.mjs needs no curated note for it.`);
+    return 0;
+  }
+
   const rel = `release/notes/${core}.json`;
   const abs = path.join(root, rel);
 
