@@ -79,6 +79,13 @@ jobs:
       - name: Motion tokens and contract agree
         run: pnpm check:motion-tokens
 
+      # The step above validates the consumers the contract HAS, so it cannot see one that has gone
+      # missing — deleting SwiftUI's selection-control entry left it and check:native-motion both green.
+      # tokens/contracts/motion-consumers.json closes that, and this proves the closure still works:
+      # a dropped, retyped or unregistered consumer must each fail, in memory, with no build.
+      - name: Motion consumer-identity controls (a dropped platform really fails)
+        run: pnpm check:motion-identity-controls
+
       - name: Changelog page is current with the packages
         run: pnpm check:releases
 
