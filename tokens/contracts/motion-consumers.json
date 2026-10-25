@@ -21,6 +21,7 @@
     "selection-state|react|packages/ui/src/components/checkbox.tsx",
     "selection-state|react|packages/ui/src/components/radio-group.tsx",
     "selection-state|react|packages/ui/src/components/toggle.tsx",
+    "selection-state|swiftui|packages/ui-swiftui/Sources/KinetixUI/KinetixSelectionMotion.swift",
     "spatial|react|packages/ui/src/components/sheet.tsx"
   ]
 }
