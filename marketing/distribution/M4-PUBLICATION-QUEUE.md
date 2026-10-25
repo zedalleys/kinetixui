@@ -145,8 +145,8 @@ optional — so what authorises this row is the owner's own act of posting, not 
 
 > **0 sessions carried `kx_p2_f_two_trades` and 0 carried `kx_source=x`**, 14 hours after the thread
 > went out. 17 sessions arrived in the window and none was tagged. One landed on `/components` itself
-> (01:09 UTC) but arrived direct, untagged, one page, 0 seconds, so it is not this post's. The
-> window's strongest session (02:22 UTC, 270 s, 6 pages including `/components`, with `page_engaged`
+> (01:09 UTC) but arrived direct, untagged, one page, 0 seconds, so it cannot be attributed to this
+> post, which is not the same as ruling the post out as its source. The window's strongest session (02:22 UTC, 270 s, 6 pages including `/components`, with `page_engaged`
 > and `component_viewed`) also arrived direct and untagged: a reader who lost the query string looks
 > exactly like that, so it is recorded as unattributable rather than claimed for X-008. Four 0-second
 > `/docs/tokens` sessions carried a bing referrer. The pipeline was live throughout, so this is "no
