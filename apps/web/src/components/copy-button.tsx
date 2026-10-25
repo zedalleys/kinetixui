@@ -23,6 +23,19 @@ export function CopyButton({
 }) {
   const [copied, setCopied] = React.useState(false);
 
+  /**
+   * The reset timer is held so it can be cleared. A timer started in a handler outlives the component that
+   * started it: the reader navigates away inside the 1500ms window and the callback still runs, holding the
+   * closure and setting state on something that is gone. React 18 makes that a silent no-op, so nothing
+   * complains in a browser — but under vitest the same orphan can fire after jsdom is torn down, and then
+   * surfaces as `ReferenceError: window is not defined` in an unrelated test file.
+   *
+   * Clearing on each copy as well as on unmount: a second click inside the window would otherwise leave the
+   * first timer running, and the earlier one would clear `copied` while the later copy is still fresh.
+   */
+  const resetTimer = React.useRef<ReturnType<typeof setTimeout>>(undefined);
+  React.useEffect(() => () => clearTimeout(resetTimer.current), []);
+
   // The icon swap is visual only; the live region is what tells a screen reader the copy happened.
   return (
     <>
@@ -36,7 +49,8 @@ export function CopyButton({
             () => {
               onCopy?.();
               setCopied(true);
-              setTimeout(() => setCopied(false), 1500);
+              clearTimeout(resetTimer.current);
+              resetTimer.current = setTimeout(() => setCopied(false), 1500);
             },
             // clipboard blocked (permissions, insecure context): nothing was copied, so nothing is reported
             () => {},
