@@ -160,9 +160,10 @@ What the link gate does **not** check, so that nobody reads more into a green ru
 - **Link shapes it does not extract.** It reads a value of an `href` field, in either quote, and a
   CommonMark inline link — including a titled or angle-bracketed destination. A raw `<a href="...">`, a
   reference-style `[text][id]` with its definition elsewhere, and a destination containing balanced
-  parentheses are not read. None of those spellings occurs in release content today, and the changelog
-  page renders a note's `body` as plain text, so the exposure is the GitHub Release body and the
-  generated posts.
+  parentheses are not read. No release note links that way today — the one raw `<a href>` in the
+  content, in a `body` in `releases.ts`, is a code example in prose rather than a link a reader can
+  click — and the changelog page renders a note's `body` as plain text, so the exposure is the GitHub
+  Release body and the generated posts.
 - **Links the generator synthesises.** `scripts/release-notes.mjs` builds
   `/docs/changelog#<version>` and a `/docs/components/<slug>` link for each entry in `newComponents`.
   Neither comes from an `href` field, so neither is audited. The changelog anchor exists by
@@ -178,6 +179,10 @@ What the link gate does **not** check, so that nobody reads more into a green ru
   repo-relative Markdown link to an extensionless file is reported, and an absolute URL is the answer.
 - **A trailing slash.** `/docs/angular/` is reported as unresolved although Next redirects it. That is
   `check:seo`'s own path semantics, shared deliberately rather than forked.
+- **A relative Markdown destination whose last segment looks like a file.** `[x](docs/changelog/0.25.0)`
+  reads as the extension `.0` and is left alone as a repo-file link. A value of an `href` field is not
+  affected — those are reported whatever they look like — so this is confined to prose, where the
+  alternative is failing a release over a sentence.
 - **A field rename.** The per-source coverage floor fails a file that still carries an `href` field but
   yields no destination — a value that is no longer a string, a spelling the reader stopped matching. It
   counts destinations read, not links audited, so a note whose only `href` is external or a bare

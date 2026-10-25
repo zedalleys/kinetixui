@@ -76,7 +76,7 @@ const errors = auditLinks(links, {
 // `#anchor` or a repo file carries a working link field and nothing for this gate to resolve; failing it
 // would be the gate blocking correct release content, which is the mistake this file has already made
 // once.
-const barren = sources.filter(({ source, text }) => carriesLinkKey(text) && !keyedDestinations(text, source).length);
+const barren = sources.filter(({ source, text }) => carriesLinkKey(text, source) && !keyedDestinations(text, source).length);
 if (barren.length) {
   for (const { source } of barren) {
     console.error(`  ✗ ${source} carries an \`href\` field but no destination could be read out of it — the rules have stopped matching this file`);

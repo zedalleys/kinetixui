@@ -210,15 +210,46 @@ function parsedKeyedDestinations(text, keys) {
  * to catch, in the file class where the original dead link was.
  */
 function keyedPattern(keys) {
-  return new RegExp(
-    String.raw`["']?(?:${keys.join("|")})["']?\s*:\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)')`,
-    "g",
-  );
+  return new RegExp(String.raw`${KEY_POSITION}${keyAlternation(keys)}\s*:\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)')`, "gm");
 }
 
+/**
+ * Where a field name can begin: the start of a line, or just after the `{`, `,` or `[` that opens its
+ * slot. Both `releases.ts` and the curated notes write one field per line, and a field in an inline
+ * object follows a bracket or a comma, so nothing a formatter produces is lost by requiring it.
+ *
+ * Unanchored, the scan read a field name out of the middle of a sentence. `"a change entry now sets
+ * href: 'docs/motion' only when …"` is release prose about this very gate, and it was reported as a dead
+ * link — the mistake this module has already made twice. It also read the tail of another name:
+ * `data-href: "/docs/motion"` was taken for a release link. Both stop here.
+ */
+const KEY_POSITION = String.raw`(?:^|[{,[])\s*`;
+
+const keyAlternation = (keys) => String.raw`["']?(?:${keys.join("|")})["']?`;
+
 /** Whether a source carries a link-bearing field at all, however its value is spelled. @see keyedPattern */
-export function carriesLinkKey(text, { keys = LINK_KEYS } = {}) {
-  return new RegExp(String.raw`["']?(?:${keys.join("|")})["']?\s*:`).test(text);
+export function carriesLinkKey(text, source = "", { keys = LINK_KEYS } = {}) {
+  if (source.endsWith(".json")) {
+    const present = parsedCarriesKey(text, keys);
+    if (present !== null) return present;
+  }
+  return new RegExp(String.raw`${KEY_POSITION}${keyAlternation(keys)}\s*:`, "m").test(text);
+}
+
+/** Whether parsed JSON has a link-carrying property anywhere, whatever its value is, or null if not JSON. */
+function parsedCarriesKey(text, keys) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  const seen = (node) => {
+    if (Array.isArray(node)) return node.some(seen);
+    if (node === null || typeof node !== "object") return false;
+    return Object.entries(node).some(([key, value]) => keys.includes(key) || seen(value));
+  };
+  return seen(data);
 }
 
 /**
@@ -233,12 +264,23 @@ export function auditLinks(links, { pathUnresolved, idsFor }) {
   const at = (l) => `${l.source}:${l.line}`;
   for (const link of links) {
     if (link.path === null) {
-      // A route reference that is not a site path: written relative, or padded. Name the route it would
-      // be read as when that route exists, since that is the correction the author wants.
-      const asRoute = `/${link.href.trim().replace(/^(?:\.{0,2}\/)+/, "")}`;
-      const names = pathUnresolved(asRoute) === null ? ` It names ${asRoute}, which exists.` : "";
+      // A route reference that is not a site path. Say what is actually wrong with it, because the
+      // corrections differ and an author reads this message instead of this file: an empty value, a
+      // site path with padding, a `..` walk whose destination genuinely depends on the reader's page,
+      // and a plain relative path are four different mistakes.
+      const trimmed = link.href.trim();
+      const asRoute = `/${trimmed.replace(/^\.\//, "")}`;
+      const problem = !trimmed
+        ? "is empty, so it points at whatever page the reader is already on"
+        : sitePath(trimmed) !== null
+          ? `is ${trimmed} with whitespace around it`
+          : /(^|\/)\.\.(\/|$)/.test(trimmed)
+            ? "walks up from the page the reader is on, so where it lands depends on that page"
+            : pathUnresolved(asRoute) === null
+              ? `is resolved against the page the reader is on, and it names ${asRoute}, which exists`
+              : "is resolved against the page the reader is on";
       errors.push(
-        `${at(link)}: ${link.href} → not a path on this site; the reader's browser resolves it against the page they are on.${names} Write it \`/docs/...\` or as an absolute URL on ${SITE_ORIGIN}`,
+        `${at(link)}: ${JSON.stringify(link.href)} → not a path on this site: it ${problem}. Write it \`/docs/...\` or as an absolute URL on ${SITE_ORIGIN}`,
       );
       continue;
     }

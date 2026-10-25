@@ -208,7 +208,8 @@ it("reads a .json source by parsing it, so no spelling of the field can hide a l
   // activates the destination. A parser cannot be spelled around.
   const hidden = '{ "changes": [{ "\\u0068ref": "/docs/motion" }] }';
   assert.equal(Object.keys(JSON.parse(hidden).changes[0])[0], "href", "the fixture really is an href field");
-  assert.equal(carriesLinkKey(hidden), false, "the text scan cannot see it, which is why the parse exists");
+  assert.equal(carriesLinkKey(hidden, "hidden.ts"), false, "a text scan cannot see it, which is why a .json source is parsed");
+  assert.equal(carriesLinkKey(hidden, "release/notes/0.0.0.json"), true, "parsed, the field is there and the floor can hold the file to it");
   assert.deepEqual(internalLinksIn(hidden, "release/notes/0.0.0.json").map((l) => l.href), ["/docs/motion"]);
   assert.equal(internalLinksIn(hidden, "release/notes/0.0.0.json").length, 1);
   // Nested shapes are walked, and a non-string value yields no destination, which is what the floor sees.
@@ -217,6 +218,39 @@ it("reads a .json source by parsing it, so no spelling of the field can hide a l
     ["/docs/a", "/docs/b"],
   );
   assert.deepEqual(keyedDestinations('{ "href": ["/docs/a"] }', "x.json"), [], "a value that is not a string is not a destination");
+});
+
+it("reads a field name only where a field can begin, so prose is not mistaken for one", () => {
+  // Unanchored, the scan found a field name inside a sentence. This is release prose about this gate,
+  // and it was reported as a dead link — the mistake this module had already made twice.
+  const prose = '{ "changes": [{ "body": "a change entry now sets href: \'docs/motion\' only when it points at a built route" }] }';
+  assert.deepEqual(internalLinksIn(prose, "release/notes/0.0.0.json"), []);
+  assert.equal(carriesLinkKey(prose, "release/notes/0.0.0.json"), false, "the file carries no href field, and the floor must not say it does");
+  assert.deepEqual(internalLinksIn('  body: "it now sets href: \'docs/motion\' at render",', "releases.ts"), [], "the same in TypeScript, where the value really is single-quoted");
+  // Nor the tail of another name.
+  for (const line of ['  xhref: "/docs/motion",', '  data-href: "/docs/motion",', '  lastHref: "/docs/motion",']) {
+    assert.deepEqual(internalLinksIn(line, "releases.ts"), [], line);
+    assert.equal(carriesLinkKey(line, "releases.ts"), false, line);
+  }
+  // And the shapes a formatter does produce are all still read.
+  for (const line of ['  href: "/docs/tokens",', '{ "href": "/docs/tokens" }', '[{ "href": "/docs/tokens" }]', '{ "a": 1, "href": "/docs/tokens" }']) {
+    assert.deepEqual(internalLinksIn(line, "src").map((l) => l.href), ["/docs/tokens"], line);
+  }
+});
+
+it("names what is wrong with a destination, because the author reads the message and not the rules", () => {
+  // Four different mistakes, four corrections. `""` and `"TODO"` are the routine authoring slips — an
+  // entry stubbed and its link never filled — and both reach the reader through `changelog-view.tsx`.
+  const reasonFor = (href) => check(href)[0] ?? "";
+  assert.match(reasonFor(""), /it is empty, so it points at whatever page the reader is already on/);
+  assert.match(reasonFor("TODO"), /it is resolved against the page the reader is on/);
+  assert.match(reasonFor(" /docs/foundations "), /it is \/docs\/foundations with whitespace around it/);
+  assert.match(reasonFor("../../docs/foundations"), /it walks up from the page the reader is on/);
+  assert.doesNotMatch(reasonFor("../../docs/foundations"), /which exists/, "a `..` walk's destination depends on the reader's page, so naming one would be a guess");
+  assert.match(reasonFor("docs/foundations"), /it names \/docs\/foundations, which exists/);
+  // The href is quoted in the message, so padding and emptiness are visible rather than invisible.
+  assert.match(reasonFor(" /docs/foundations "), /" \/docs\/foundations "/);
+  for (const href of ["", "TODO", "changelog", "docs/foundations"]) assert.equal(check(href).length, 1, href);
 });
 
 it("counts destinations read, not links audited, so an off-site-only note is not failed", () => {
@@ -286,7 +320,7 @@ it("states which fields carry a route, so a new one is a deliberate change", () 
   const gate = readFileSync(`${root}scripts/check-release-links.mjs`, "utf8");
   assert.ok(existsSync(`${root}scripts/check-release-links.mjs`));
   assert.match(gate, /if \(!links\.length\)/, "the gate no longer fails when the rules match nothing at all");
-  assert.match(gate, /carriesLinkKey\(text\) && !keyedDestinations\(text, source\)\.length/, "the floor no longer counts destinations read, per source");
+  assert.match(gate, /carriesLinkKey\(text, source\) && !keyedDestinations\(text, source\)\.length/, "the floor no longer counts destinations read, per source");
   assert.equal(carriesLinkKey('{ "href": "/docs/tokens" }'), true);
   assert.equal(carriesLinkKey("  href: '/docs/tokens',"), true, "a quote-style flip must still be seen as a link-bearing file");
   assert.equal(carriesLinkKey('{ "title": "no link here" }'), false, "a release that links nowhere must not be failed for it");
