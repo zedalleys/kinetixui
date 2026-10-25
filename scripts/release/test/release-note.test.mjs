@@ -72,3 +72,49 @@ it("accepts a site-absolute route or an absolute URL as a link, and nothing else
   assert.equal(linkErrors("", "href").length, 1);
   assert.equal(linkErrors(undefined, "href").length, 1);
 });
+
+// --- the projection half -------------------------------------------------------------------
+// `projectedCore` takes a tree reader, so the same function runs over the working tree and over a
+// git ref. Both sides of the base-attribution comparison must therefore agree by construction;
+// these exercise it over an in-memory tree. Cases contributed by #463's thread.
+import { projectedCore } from "../check-release-note.mjs";
+
+/** A throwaway tree: `files` maps a path to its text, directories are inferred. */
+const tree = (files) => ({
+  show: (p) => files[p] ?? null,
+  list: (dir) =>
+    [...new Set(Object.keys(files).filter((p) => p.startsWith(`${dir}/`)).map((p) => p.slice(dir.length + 1).split("/")[0]))],
+});
+const CONFIG = JSON.stringify({ fixed: [["@kinetixui/cli", "@kinetixui/tokens", "@kinetixui/ui"]], ignore: ["@kinetixui/web"] });
+const CORE = {
+  "packages/ui/package.json": JSON.stringify({ name: "@kinetixui/ui", version: "0.26.1" }),
+  "packages/tokens/package.json": JSON.stringify({ name: "@kinetixui/tokens", version: "0.26.1" }),
+  "packages/cli/package.json": JSON.stringify({ name: "@kinetixui/cli", version: "0.26.1" }),
+  "packages/ui-angular/package.json": JSON.stringify({ name: "@kinetixui/angular", version: "0.26.1" }),
+  ".changeset/config.json": CONFIG,
+};
+const cs = (body) => `---\n${body}\n---\n\nprose\n`;
+
+it("projects nothing when no changeset moves the core", () => {
+  assert.equal(projectedCore(tree({ ...CORE })), undefined);
+  assert.equal(projectedCore(tree({ ...CORE, ".changeset/README.md": "not a changeset" })), undefined);
+  assert.equal(projectedCore(tree({ ...CORE, ".changeset/a.md": cs('"@kinetixui/angular": patch') })), undefined);
+});
+
+it("projects the fixed cohort's version from the strongest bump", () => {
+  assert.equal(projectedCore(tree({ ...CORE, ".changeset/a.md": cs('"@kinetixui/ui": patch') })), "0.26.2");
+  assert.equal(projectedCore(tree({ ...CORE, ".changeset/a.md": cs('"@kinetixui/ui": minor') })), "0.27.0");
+  // two patches do not stack past one bump — this is why #455 and #456 share 0.26.1
+  assert.equal(
+    projectedCore(tree({ ...CORE, ".changeset/a.md": cs('"@kinetixui/ui": patch'), ".changeset/b.md": cs('"@kinetixui/ui": patch') })),
+    "0.26.2",
+  );
+  // a minor anywhere in the cohort carries the whole cohort
+  assert.equal(projectedCore(tree({ ...CORE, ".changeset/a.md": cs('"@kinetixui/tokens": minor') })), "0.27.0");
+});
+
+it("reads the same way over any tree, so the base comparison cannot disagree with itself", () => {
+  const files = { ...CORE, ".changeset/a.md": cs('"@kinetixui/ui": minor') };
+  // the working tree and a git ref differ only in how bytes are fetched
+  assert.equal(projectedCore(tree(files)), projectedCore(tree({ ...files })));
+});

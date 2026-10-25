@@ -25,7 +25,7 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { fileURLToPath } from "node:url";
-import { plannedVersions, readPendingChangesets } from "./peers.mjs";
+import { plannedVersions, parseChangeset } from "./peers.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const read = (p) => JSON.parse(readFileSync(p, "utf8"));
@@ -55,14 +55,15 @@ function fromRef(ref) {
 }
 
 /** The core version a tree's pending changesets would publish, or undefined for a release-inert tree. */
-function projectedCore({ show, list }) {
+export function projectedCore({ show, list }) {
   const config = JSON.parse(show(".changeset/config.json") ?? "{}");
   const changesets = [];
   for (const name of list(".changeset")) {
-    if (!name.endsWith(".md") || name === "README.md") continue;
+    if (!name.endsWith(".md") || name.toLowerCase() === "readme.md") continue;
     const text = show(`.changeset/${name}`);
     if (text === null) continue;
-    changesets.push(...parseOne(name.replace(/\.md$/, ""), text));
+    const releases = parseChangeset(text);
+    if (releases.length) changesets.push({ id: name.replace(/\.md$/, ""), releases });
   }
   const packages = [];
   for (const base of ["packages", "apps"]) {
@@ -79,18 +80,6 @@ function projectedCore({ show, list }) {
     ignore: config.ignore ?? [],
   });
   return planned.get(CORE);
-}
-
-/** The frontmatter of one changeset, in the shape `plannedVersions` consumes. */
-function parseOne(id, text) {
-  const front = text.match(/^---\n([\s\S]*?)\n---/);
-  if (!front) return [];
-  const releases = [];
-  for (const line of front[1].split("\n")) {
-    const m = line.match(/^\s*["']?(@?[^"':]+)["']?\s*:\s*(major|minor|patch)\s*$/);
-    if (m) releases.push({ name: m[1].trim(), type: m[2] });
-  }
-  return releases.length ? [{ id, releases }] : [];
 }
 
 /** Everything wrong with a curated note, as a list. Empty means it is fit to be injected. */
