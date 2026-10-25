@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
 import { ComponentGallery } from "./component-gallery";
 import { THUMBNAIL_MOCKS } from "./component-thumbnails";
 import { catalogueFacets } from "@/lib/business-discovery";
-import { CATEGORY_ORDER, PRIMITIVE } from "@/lib/component-registry";
+import { CATEGORY_COUNT, CATEGORY_ORDER, PRIMITIVE } from "@/lib/component-registry";
 
 const FACETS = catalogueFacets();
 
@@ -200,6 +200,55 @@ describe("ComponentGallery thumbnails", () => {
     const technologies = new Set(Object.values(PRIMITIVE));
     expect(technologies.size).toBeGreaterThan(0);
     for (const t of technologies) expect(categories).not.toContain(t);
+  });
+
+  /**
+   * CAT-2. The chips and the grouped headings are the taxonomy as a reader meets it. Both read the generated
+   * category order now, so the one thing worth asserting is that the number on a chip is the number of cards
+   * the chip's filter produces — a count computed from a different map than the filter is how a reader ends
+   * up on an empty category.
+   */
+  it("gives every category a filter chip whose count matches the cards behind it", () => {
+    const { container } = render(<ComponentGallery facets={FACETS} />);
+    const chips = within(screen.getByRole("group", { name: "Filter by category" })).getAllByRole("button");
+    const labelled = chips.map((c) => c.textContent?.trim() ?? "");
+    for (const cat of CATEGORY_ORDER) {
+      const chip = labelled.find((t) => t.startsWith(cat));
+      expect(chip, `${cat}: no filter chip`).toBeTruthy();
+      const cards = [...container.querySelectorAll<HTMLElement>("[data-gallery-card]")].filter(
+        (card) => card.querySelector<HTMLElement>("[data-gallery-category]")?.textContent?.trim() === cat,
+      );
+      expect(cards.length, `${cat}: cards in the grid`).toBeGreaterThan(0);
+      // the chip's number, the cards on the page, and the generator's own count: all three or it is wrong
+      expect(chip).toBe(`${cat} ${cards.length}`);
+      expect(CATEGORY_COUNT[cat], `${cat}: generated count`).toBe(cards.length);
+    }
+    // negative control: the chips are exactly the declared categories, so a retired label cannot linger
+    const categoryChips = labelled.filter((t) => CATEGORY_ORDER.some((c) => t.startsWith(c)));
+    expect(categoryChips.length).toBe(CATEGORY_ORDER.length);
+    expect(labelled.some((t) => t.startsWith("Foundations"))).toBe(false);
+  });
+
+  /**
+   * CAT-2 renamed three categories. A link to an old name is a link someone has already sent, so the gallery
+   * resolves it rather than showing an empty grid. This covers the wiring; the resolver's own cases are in
+   * `component-taxonomy.test.ts`.
+   */
+  it("still filters from a link that names a category by its old label", () => {
+    nav.search = "cat=Form+Inputs";
+    const { container } = render(<ComponentGallery facets={FACETS} />);
+    const pills = new Set(
+      [...container.querySelectorAll<HTMLElement>("[data-gallery-card]")].map(
+        (c) => c.querySelector<HTMLElement>("[data-gallery-category]")?.textContent?.trim(),
+      ),
+    );
+    expect(pills).toEqual(new Set(["Forms & Inputs"]));
+    expect(container.querySelectorAll("[data-gallery-card]").length).toBe(CATEGORY_COUNT["Forms & Inputs"]);
+    // negative control: an unaliased value is not quietly mapped onto a category, so the assertion above is
+    // about the alias and not about the filter ignoring its input
+    nav.search = "cat=Nonsense";
+    const { container: none } = render(<ComponentGallery facets={FACETS} />);
+    expect(none.querySelectorAll("[data-gallery-card]").length).toBe(0);
   });
 
   /** The technology did not disappear with the pill: it is still how a reader can search for a component. */

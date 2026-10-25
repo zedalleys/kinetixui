@@ -12,7 +12,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Foundations/Label",
+  title: "Forms & Inputs/Label",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<Label htmlFor=\"email\">Your email address</Label>", language: "tsx" } },

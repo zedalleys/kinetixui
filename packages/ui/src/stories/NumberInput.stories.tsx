@@ -10,7 +10,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Form Inputs/NumberInput",
+  title: "Forms & Inputs/NumberInput",
   component: NumberInput,
   args: { defaultValue: 2, min: 0, max: 10, step: 1 },
   argTypes: {

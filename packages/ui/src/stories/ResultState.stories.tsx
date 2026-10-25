@@ -24,7 +24,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Feedback/ResultState",
+  title: "Feedback & Status/ResultState",
   parameters: {
     layout: "padded",
     docs: { source: { code: "<ResultState\n  status=\"success\"\n  title=\"Payment received\"\n  description=\"We've emailed a receipt to sam@example.com.\"\n  reference={<ReferenceCode label=\"Transaction ID\" value=\"TX-48C2-91QZ\" size=\"lg\" />}\n  primaryAction={<Button>View receipt</Button>}\n  secondaryAction={<Button variant=\"Outline\">Back to dashboard</Button>}\n>\n  <PriceBreakdown aria-label=\"Payment summary\">\n    <PriceBreakdownLine label=\"Annual plan\" description=\"5 seats × €96.00\" value=\"€480.00\" />\n    <PriceBreakdownLine label=\"Discount\" description=\"Code LAUNCH20\" value=\"−€96.00\" kind=\"deduction\" />\n    <PriceBreakdownLine label=\"VAT\" description=\"20%\" value=\"€76.80\" />\n    <PriceBreakdownTotal label=\"Paid\" description=\"Visa ending 4242\" value=\"€460.80\" />\n  </PriceBreakdown>\n</ResultState>", language: "tsx" } },

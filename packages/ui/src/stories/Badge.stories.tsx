@@ -15,7 +15,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Feedback/Badge",
+  title: "Feedback & Status/Badge",
   component: Badge,
   args: { variant: "default", children: "Badge" },
   argTypes: {

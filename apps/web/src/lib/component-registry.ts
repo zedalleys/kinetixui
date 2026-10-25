@@ -1,6 +1,21 @@
-import { COMPONENT_CATEGORY, CATEGORY_ORDER } from "@/lib/site";
-
-export { COMPONENT_CATEGORY, CATEGORY_ORDER };
+/**
+ * Category data is re-exported from the generated taxonomy so the gallery and the doc pages keep their
+ * existing imports. The data itself is generated from `components.manifest.json` — see component-taxonomy.ts.
+ */
+export {
+  COMPONENT_CATEGORY,
+  CATEGORY_ORDER,
+  CATEGORY_RULE,
+  CATEGORY_COUNT,
+  RECIPE_SLUGS,
+  categoryOf,
+  resolveCategoryParam,
+  kindOf,
+  facetsOf,
+  type ComponentCategory,
+  type ComponentFacet,
+  type ComponentKind,
+} from "@/lib/component-taxonomy";
 
 /**
  * slug → the primitive the component is built on (only the ones we're sure of).
@@ -49,8 +64,3 @@ export const PRIMITIVE: Record<string, string> = {
   form: "React Hook Form + Radix",
   chart: "Recharts",
 };
-
-/** Category for a component slug, falling back to the sidebar default. */
-export function categoryOf(slug: string): string {
-  return COMPONENT_CATEGORY[slug] ?? "Data Display";
-}
