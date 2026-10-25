@@ -43,9 +43,9 @@ class KinetixBanner extends StatelessWidget {
     final c = KinetixTheme.of(context);
     final (Color container, Color content) = switch (variant) {
       KinetixBannerVariant.information => (c.info.withValues(alpha: 0.1), c.onInfoContainer),
-      KinetixBannerVariant.warning => (c.warning.withValues(alpha: 0.15), c.warning),
-      KinetixBannerVariant.success => (c.success.withValues(alpha: 0.15), c.success),
-      KinetixBannerVariant.error => (c.destructive.withValues(alpha: 0.1), c.destructive),
+      KinetixBannerVariant.warning => (c.warning.withValues(alpha: 0.15), c.onWarningContainer),
+      KinetixBannerVariant.success => (c.success.withValues(alpha: 0.15), c.onSuccessContainer),
+      KinetixBannerVariant.error => (c.destructive.withValues(alpha: 0.1), c.onDestructiveContainer),
       KinetixBannerVariant.action => (c.foreground, c.background),
     };
 
