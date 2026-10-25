@@ -174,8 +174,8 @@ export function keyedDestinations(text, source = "", { keys = LINK_KEYS } = {}) 
   const pattern = keyedPattern(keys);
   const out = [];
   for (const [i, line] of text.split("\n").entries()) {
-    const spans = quotedSpans(line);
-    for (const m of line.matchAll(pattern)) {
+    const { spans, code } = lineRegions(line);
+    for (const m of code.matchAll(pattern)) {
       if (insideQuotes(spans, m.index)) continue;
       out.push({ href: unescaped(m[1] ?? m[2]), line: i + 1 });
     }
@@ -213,36 +213,51 @@ function parsedKeyedDestinations(text, keys) {
 }
 
 /**
- * The spans of a line that are inside a string literal, so a field name written in prose is not read as
- * a field.
+ * A line split into what the scan may read and what it may not: the code, with comment text blanked
+ * out, and the index spans that are inside a string literal.
  *
  * `releases.ts` is TypeScript and cannot be parsed here, so its fields are found by pattern. Anchoring
  * the field name to the start of a line or to the `{`, `,` or `[` that opens its slot was not enough:
- * release prose quotes object literals, which is how a component library documents a prop, and an `href`
- * key inside one sits in exactly those positions. `"Breadcrumb now accepts items={[{ label: 'Docs',
- * href: '/docs/intro' }]}"` was reported as a dead link — and the same sentence in the curated note
- * passed, because a note is parsed, so a correct note went green on its own pull request and failed on
- * the Version PR that `version-release-meta.mjs` copies it into. Masking string interiors makes the two
- * files answer the same question about the same bytes.
+ * release prose quotes object literals, which is how a component library documents a prop, and an
+ * `href` key inside one sits in exactly those positions. `"Breadcrumb now accepts items={[{ label:
+ * 'Docs', href: '/docs/intro' }]}"` was reported as a dead link — and the same sentence in the curated
+ * note passed, because a note is parsed, so a correct note went green on its own pull request and
+ * failed on the Version PR that `version-release-meta.mjs` copies it into. Masking string interiors
+ * makes the two files answer the same question about the same bytes.
  *
- * The scan is line-local and only masks a quote that has a partner on its own line. A stray apostrophe
- * — in a comment, in prose that a string literal does not close — therefore masks nothing, so the
- * failure direction is a field still being read rather than a field going quiet. Every link-carrying
- * line in `releases.ts` is written on one line; a value that spanned lines would be scanned as it is
- * today.
+ * Comment text is blanked rather than skipped, so the indices still line up and a field is read even
+ * when a comment precedes it on the same line — `/* note *\/ href: "/docs/motion"` was dropped outright
+ * by the anchor before, and an apostrophe in `// the reader's text size` could pair with a later quote
+ * and mask the field after it.
+ *
+ * What is guaranteed, stated exactly rather than as "nothing can be masked": a span always begins at
+ * least one character into the line, so a field at the start of its line can never be masked — and
+ * every `href` `version-release-meta.mjs` writes is at the start of its own line, because it serialises
+ * with `JSON.stringify(entry, null, 2)`. A hand-written line that puts a field after other content AND
+ * an unbalanced quote outside both a string and a comment — a lone `"` inside a regexp literal, say —
+ * can still have that field masked. The scan is line-local, so an unterminated string or block comment
+ * affects only its own line.
  */
-function quotedSpans(line) {
+function lineRegions(line) {
   const spans = [];
+  const code = [...line];
   for (let i = 0; i < line.length; i += 1) {
-    const quote = line[i];
-    if (quote !== '"' && quote !== "'" && quote !== "`") continue;
+    const ch = line[i];
+    if (ch === "/" && (line[i + 1] === "/" || line[i + 1] === "*")) {
+      const close = line[i + 1] === "*" ? line.indexOf("*/", i + 2) : -1;
+      const stop = close === -1 ? line.length : close + 2;
+      for (let j = i; j < stop; j += 1) code[j] = " ";
+      i = stop - 1;
+      continue;
+    }
+    if (ch !== '"' && ch !== "'" && ch !== "`") continue;
     let j = i + 1;
-    while (j < line.length && line[j] !== quote) j += line[j] === "\\" ? 2 : 1;
+    while (j < line.length && line[j] !== ch) j += line[j] === "\\" ? 2 : 1;
     if (j >= line.length) continue;
     spans.push([i + 1, j]);
     i = j;
   }
-  return spans;
+  return { spans, code: code.join("") };
 }
 
 const insideQuotes = (spans, index) => spans.some(([from, to]) => index >= from && index < to);
@@ -291,8 +306,8 @@ export function carriesLinkKey(text, source = "", { keys = LINK_KEYS } = {}) {
   // carrying an `href` key would otherwise make the coverage floor assert a field the file has not got.
   const pattern = new RegExp(String.raw`${KEY_POSITION}${keyAlternation(keys)}\s*:`, "gm");
   return text.split("\n").some((line) => {
-    const spans = quotedSpans(line);
-    return [...line.matchAll(pattern)].some((m) => !insideQuotes(spans, m.index));
+    const { spans, code } = lineRegions(line);
+    return [...code.matchAll(pattern)].some((m) => !insideQuotes(spans, m.index));
   });
 }
 
@@ -319,6 +334,25 @@ function parsedCarriesKey(text, keys) {
  * target page, or null when no page can be read for it. A fragment pointing at a page whose ids cannot
  * be read is an error, not a pass: that is the shape of the defect this gate exists for.
  */
+/**
+ * Why a site path does not lead anywhere, fragment included, or null when it does.
+ *
+ * The main loop and the padded-href message ask the same question, so they ask it the same way: a
+ * padded `/docs/cli#nope` says the anchor is missing in the same breath as the padding, rather than
+ * failing a second time once the author has trimmed it.
+ */
+function whyUnresolved(href, { pathUnresolved, idsFor }) {
+  const path = sitePath(href);
+  if (path === null) return null;
+  const reason = pathUnresolved(path);
+  if (reason) return reason;
+  const fragment = fragmentOf(path);
+  if (fragment === null) return null;
+  const ids = idsFor(path);
+  if (ids === null) return `${pathOf(path)} resolves, but no page HTML could be read to check #${fragment}`;
+  return ids.has(fragment) ? null : `${pathOf(path)} has no element with id "${fragment}"`;
+}
+
 export function auditLinks(links, { pathUnresolved, idsFor }) {
   const errors = [];
   const at = (l) => `${l.source}:${l.line}`;
@@ -330,11 +364,16 @@ export function auditLinks(links, { pathUnresolved, idsFor }) {
       // and a plain relative path are four different mistakes.
       const trimmed = link.href.trim();
       const asRoute = `/${trimmed.replace(/^\.\//, "")}`;
+      // Whether trimming is the whole fix, asked of the site the same way a link is. Comparing the
+      // untrimmed string's `pathOf` against the inventory told an author that
+      // ` https://kinetixui.com/docs/tokens` names no page on this site, in the same sentence that
+      // tells them to write it as a full URL on that origin — and /docs/tokens is a live page.
+      const stillWrong = whyUnresolved(trimmed, { pathUnresolved, idsFor });
       const padded = sitePath(trimmed) !== null;
       const problem = !trimmed
         ? "is empty, so it points at whatever page the reader is already on"
         : padded
-          ? `is ${trimmed} with whitespace around it${pathUnresolved(pathOf(trimmed)) === null ? "" : `, and ${pathOf(trimmed)} is no page on this site either`}`
+          ? `is ${trimmed} with whitespace around it${stillWrong ? `, and ${stillWrong}` : ""}`
           : /(^|\/)\.\.(\/|$)/.test(trimmed)
             ? "walks up from the page the reader is on, so where it lands depends on that page"
             : pathUnresolved(asRoute) === null

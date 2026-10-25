@@ -256,9 +256,22 @@ it("reads a field name only in a field position outside a string, so prose is no
   for (const line of ['  href: "/docs/tokens",', '{ "href": "/docs/tokens" }', '[{ "href": "/docs/tokens" }]', '{ "a": 1, "href": "/docs/tokens" }']) {
     assert.deepEqual(internalLinksIn(line, "src").map((l) => l.href), ["/docs/tokens"], line);
   }
-  // A quote with no partner on its line masks nothing, so an unbalanced apostrophe cannot make a real
-  // field go quiet — the failure direction has to be a field still read, never one dropped.
-  assert.deepEqual(internalLinksIn("  // the reader's page\n  href: \"/docs/tokens\",", "releases.ts").map((l) => l.href), ["/docs/tokens"]);
+  // What the masking guarantees, as narrowly as it actually holds. A span begins at least one character
+  // into a line, so a field at the start of its line cannot be masked — and `version-release-meta.mjs`
+  // serialises with `JSON.stringify(entry, null, 2)`, so every href it writes is at the start of one.
+  const generated = ['        "href": "/docs/tokens"', '  href: "/docs/tokens",'];
+  for (const line of generated) assert.deepEqual(internalLinksIn(line, "releases.ts").map((l) => l.href), ["/docs/tokens"], line);
+  // Comment text is blanked, so an apostrophe in a comment cannot pair with a later quote and swallow
+  // the field after it — the shape that did: `title: "the reader's size" /* isn't */, href: "…", /* ' */`.
+  const commented = [
+    `        title: "the reader's size" /* isn't pinned */, href: "/docs/tokens", /* ' */`,
+    '        title: "x", /* note */ href: "/docs/tokens",',
+    `        // the reader's size\n        href: "/docs/tokens",`,
+  ];
+  for (const line of commented) assert.deepEqual(internalLinksIn(line, "releases.ts").map((l) => l.href), ["/docs/tokens"], line);
+  // And the case the guarantee deliberately does not cover, asserted so it is a known limitation rather
+  // than a surprise: an unbalanced quote outside both a string and a comment still masks what follows.
+  assert.deepEqual(internalLinksIn('        reX: /["]/.source, href: "/docs/tokens",', "releases.ts"), [], "a lone quote in a regexp literal masks the field after it");
 });
 
 it("names what is wrong with a destination, because the author reads the message and not the rules", () => {
@@ -271,8 +284,14 @@ it("names what is wrong with a destination, because the author reads the message
   assert.match(reasonFor("../../docs/foundations"), /it walks up from the page the reader is on/);
   assert.doesNotMatch(reasonFor("../../docs/foundations"), /which exists/, "a `..` walk's destination depends on the reader's page, so naming one would be a guess");
   assert.match(reasonFor("docs/foundations"), /you may have meant \/docs\/foundations/);
-  // A padded path that is also dead says both halves, so trimming it is not a second round of feedback.
-  assert.match(reasonFor(" /docs/motion "), /with whitespace around it, and \/docs\/motion is no page on this site either/);
+  // A padded href that is also dead says both halves, so trimming it is not a second round of feedback —
+  // and it asks the site the same way a link does, so the fragment is included and a padded href whose
+  // trimmed form is fine says only that it is padded. Telling an author that `/docs/foundations` is no
+  // page on this site, in the sentence that tells them to write a full URL to it, was the bug here.
+  assert.match(reasonFor(" /docs/motion "), /with whitespace around it, and no built page, public file or redirect for \/docs\/motion/);
+  assert.match(reasonFor(" /docs/foundations#nope "), /with whitespace around it, and \/docs\/foundations has no element with id "nope"/);
+  assert.doesNotMatch(reasonFor(" https:\/\/kinetixui.com\/docs\/foundations "), /is no page|no built page/, "the trimmed form resolves, so only the padding is wrong");
+  assert.doesNotMatch(reasonFor(" /docs/foundations "), /is no page|no built page/);
   // And the correction offered for a repo-relative path names the repository, not only the site: told to
   // write `packages/tokens` as "an absolute URL on the site", an author produces another 404.
   assert.match(reasonFor("packages/tokens"), /github\.com\/zedalleys\/kinetixui\/blob\/main/);

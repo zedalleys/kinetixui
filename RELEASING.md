@@ -204,11 +204,18 @@ What the link gate does **not** check, so that nobody reads more into a green ru
   entirely is indistinguishable from a release that links nowhere, so `LINK_KEYS` is pinned by a test.
 - A curated `release/notes/*.json` is read by **parsing** it, not by scanning its text, so no valid JSON
   spelling of the field — `"\u0068ref"` — can hide a link from the gate while `JSON.parse` activates it
-  into the site. `releases.ts` is TypeScript and keeps the text scan, with string interiors masked so
-  that the prose `version-release-meta.mjs` copies verbatim out of a note reads the same in both files:
-  without that, an `href` key quoted inside release prose — `items={[{ label: 'Docs', href: '/docs/intro'
-  }]}`, how a component library documents a prop — passed on the authoring pull request and failed on
-  the Version PR whose merge publishes.
+  into the site. `releases.ts` is TypeScript and keeps the text scan, with string interiors masked and
+  comment text blanked, so that the prose `version-release-meta.mjs` copies verbatim out of a note reads
+  the same in both files: without that, an `href` key quoted inside release prose — `items={[{ label:
+  'Docs', href: '/docs/intro' }]}`, how a component library documents a prop — passed on the authoring
+  pull request and failed on the Version PR whose merge publishes.
+- **A field after an unbalanced quote on the same line is masked**, and this is the one place the scan
+  can lose a real link rather than report a false one. What holds: a masked span always begins at least
+  one character into a line, so a field at the **start** of its line can never be masked — and every
+  `href` the generator writes is at the start of one, because `version-release-meta.mjs` serialises with
+  `JSON.stringify(entry, null, 2)`. What does not hold: a hand-written line that puts a field after other
+  content *and* an unbalanced quote outside both a string and a comment, such as a lone `"` inside a
+  regexp literal, loses that field. A test pins both halves so neither is a surprise.
 - **A link on this site's own host is resolved whatever scheme it is written with.** `http://` and
   `https://`, and the default port written out, all resolve to the same path and are audited; a
   different host or a non-default port is an external link and is left alone.
