@@ -6,6 +6,7 @@ import { Check, Copy } from "lucide-react";
 import Link from "next/link";
 import { Button, Card, SegmentedControl, SegmentedControlItem } from "@kinetixui/ui";
 import { useDocumentDirection } from "@/lib/use-document-direction";
+import { useTransientState } from "@/lib/use-transient-state";
 import { tokenNameForHex, hexToRgb, rgbToHsl, contrastRatio } from "@kinetixui/create-theme";
 import { SectionHead } from "@/components/section-head";
 
@@ -34,14 +35,13 @@ function formatValue(hex: string, fmt: Format) {
 }
 
 export function ColorsContent() {
-  const [copied, setCopied] = React.useState<string>("");
+  const [copied, showCopied] = useTransientState<string>("", 1200);
   const [format, setFormat] = React.useState<Format>("hex");
   const dir = useDocumentDirection();
 
   function copy(value: string) {
     navigator.clipboard.writeText(value).then(() => {
-      setCopied(value);
-      setTimeout(() => setCopied(""), 1200);
+      showCopied(value);
     });
   }
 

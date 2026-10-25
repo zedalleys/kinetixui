@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Check, Copy } from "lucide-react";
 import { Button } from "@kinetixui/ui";
+import { useTransientState } from "@/lib/use-transient-state";
 
 /* ---- DOM → Markdown (best-effort, for pasting a page into an LLM) ---- */
 
@@ -122,13 +123,12 @@ function pageToMarkdown(): string {
 }
 
 export function DocsPageActions() {
-  const [copied, setCopied] = React.useState(false);
+  const [copied, showCopied] = useTransientState(false, 2000);
 
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(pageToMarkdown());
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      showCopied(true);
     } catch {
       /* clipboard blocked — no-op */
     }

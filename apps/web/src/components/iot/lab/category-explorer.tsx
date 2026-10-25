@@ -92,7 +92,13 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
     };
     window.addEventListener("scrollend", settle);
     for (const type of USER_SCROLL) window.addEventListener(type, stop, { passive: true });
-    window.setTimeout(settle, 1500);
+    // Unmounting before the correction lands has to drop it: `stop()` alone leaves the timer holding `settle`,
+    // which would scroll a page this component no longer belongs to.
+    const timer = window.setTimeout(settle, 1500);
+    return () => {
+      window.clearTimeout(timer);
+      stop();
+    };
   }, []);
 
   /**
