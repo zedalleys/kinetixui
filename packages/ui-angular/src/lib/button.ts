@@ -166,6 +166,12 @@ export class KxButton {
   constructor() {
     const el = this.host.nativeElement;
     el.addEventListener('click', (event) => this.blockWhenAriaDisabled(event), true);
+    // Middle-click is NOT a `click`: the browser dispatches `auxclick` for any non-primary button, and an
+    // anchor's default action for it is to open the href in a new tab. While the stylesheet said
+    // `pointer-events: none` that was unreachable; replacing it with `cursor: not-allowed` made it
+    // reachable again, so the guard has to cover it or this slice trades a keyboard hole for a pointer one.
+    // Ctrl- and Cmd-click need no separate guard — those are primary-button `click`s with a modifier.
+    el.addEventListener('auxclick', (event) => this.blockWhenAriaDisabled(event), true);
     el.addEventListener('keydown', (event) => this.blockKeyWhenAriaDisabled(event), true);
 
     // The attributes are written here rather than host-bound because `aria-disabled` is also the
@@ -272,7 +278,8 @@ export class KxButton {
   }
 
   /**
-   * A native `<button disabled>` never dispatches these, so this only ever fires for the anchor form.
+   * Click and auxclick (middle- or right-button activation). A native `<button disabled>` never dispatches
+   * these, so this only ever fires for the anchor form.
    *
    * What this stops: the navigation, every ancestor handler, and the caller's own handler on this same
    * element. The last of those is why the listeners are registered in the constructor rather than declared
