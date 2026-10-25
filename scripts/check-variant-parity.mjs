@@ -39,13 +39,13 @@
  *                `default`. That is this repository's established Flutter naming strategy, so it is
  *                a rule here and not five separate exceptions.
  *
- * What this cannot tell, stated rather than discovered later. A KNOWN entry covers the whole pair,
- * not the specific delta that was measured: once `badge/Angular` is recorded, a NEW divergence on
- * that same pair is absorbed into the recorded line instead of failing. Negative control NC-4 shows
- * it — adding a React option no platform has fails SwiftUI, Compose and Flutter and leaves Angular
- * recorded. Narrowing KNOWN to the exact delta is the obvious next step and is deliberately not
- * done in a proof of concept. It also compares option NAMES, not
- * rendering. Two platforms can agree on `warning` and draw different colours, and nothing here
+ * A KNOWN entry is pinned to the exact delta measured when it was recorded, so it excuses that
+ * divergence and no other. A pair that drifts further fails and names both shapes; negative
+ * control NC-6 proves it.
+ *
+ * What this cannot tell, stated rather than discovered later. The pin cannot distinguish a
+ * divergence that happens to produce the identical delta string for a different underlying
+ * reason. It compares option NAMES, not rendering. Two platforms can agree on `warning` and draw different colours, and nothing here
  * would notice. It also only reads a declared enum or union — a platform that takes its variant as
  * a free string is invisible to it.
  */
@@ -73,18 +73,55 @@ const ENUM_NAMES = {
 };
 
 /** `component/platform` → why the option sets differ. Every entry is a measured gap, not a waiver. */
+const NO_ENUM = "declares no variant enum";
+
 const KNOWN = {
-  "badge/Angular":
-    "Angular Badge carries success and warning and has no subtle; React, SwiftUI and Compose have subtle and neither status colour. WP-3 records Angular's set as the reference the others should move to.",
-  "toggle/Angular": "No pill option. WP-3 gap, not yet reconciled.",
-  "toggle/SwiftUI": "No pill option. WP-3 gap, not yet reconciled.",
-  "toggle/Compose": "No pill option. WP-3 gap, not yet reconciled.",
-  "toggle/Flutter": "No pill option, and standard for default. WP-3 gap, not yet reconciled.",
-  "sidebar/Angular": "The React axis belongs to sidebarMenuButtonVariants, a sub-part, and is attributed to the component by extractVariants. No platform declares it. Generator defect, recorded.",
-  "sidebar/SwiftUI": "As sidebar/Angular.",
-  "sidebar/Compose": "As sidebar/Angular.",
-  "sidebar/Flutter": "As sidebar/Angular.",
+  "badge/Angular": {
+    delta: "missing subtle; extra success, warning",
+    why: "Angular Badge carries success and warning and has no subtle; React, SwiftUI and Compose have subtle and neither status colour. WP-3 records Angular's set as the reference the others should move to.",
+  },
+  "toggle/Angular": { delta: "missing pill", why: "No pill option. WP-3 gap, not yet reconciled." },
+  "toggle/SwiftUI": { delta: "missing pill", why: "No pill option. WP-3 gap, not yet reconciled." },
+  "toggle/Compose": { delta: "missing pill", why: "No pill option. WP-3 gap, not yet reconciled." },
+  "toggle/Flutter": {
+    delta: "missing pill",
+    why: "No pill option. Flutter spells the first option standard, which the alias rule normalises to default, so that is not part of the delta. WP-3 gap, not yet reconciled.",
+  },
+  "sidebar/Angular": {
+    delta: NO_ENUM,
+    why: "The React axis belongs to sidebarMenuButtonVariants, a sub-part, and is attributed to the component by extractVariants. No platform declares it. Generator defect, recorded.",
+  },
+  "sidebar/SwiftUI": { delta: NO_ENUM, why: "As sidebar/Angular." },
+  "sidebar/Compose": { delta: NO_ENUM, why: "As sidebar/Angular." },
+  "sidebar/Flutter": { delta: NO_ENUM, why: "As sidebar/Angular." },
 };
+
+/**
+ * A recorded divergence is pinned to the exact delta that was measured when it was
+ * recorded, so the entry excuses that divergence and nothing else. If the same pair
+ * drifts further — Angular's Badge also losing outline, say — the delta no longer
+ * matches and the pair fails, naming both the recorded and the current shape.
+ */
+/**
+ * One of three outcomes, kept in one place so the two call sites cannot drift: the delta is
+ * exactly what KNOWN records (report it as debt), the pair is known but has drifted past that
+ * record (fail with both shapes), or it was never recorded at all (fail with the unrecorded
+ * message the call site supplies).
+ */
+function pushResult(known, failures, verdict, unrecorded) {
+  if (verdict.ok) known.push(verdict.line);
+  else failures.push(verdict.line ?? unrecorded);
+}
+
+function classify(key, delta) {
+  const entry = KNOWN[key];
+  if (!entry) return { ok: false, line: null };
+  if (entry.delta === delta) return { ok: true, line: `${key} — ${delta}. ${entry.why}` };
+  return {
+    ok: false,
+    line: `${key}: recorded divergence was "${entry.delta}", but it is now "${delta}". The pair drifted past what KNOWN excuses. Reconcile the platform, or update the entry to the new delta with the reason.`,
+  };
+}
 
 function readAll({ dir, ext }) {
   const base = join(root, dir);
@@ -136,10 +173,11 @@ for (const file of readdirSync(SPECS).filter((f) => f.endsWith(".json")).sort())
     const key = `${spec.name}/${platform}`;
     const got = optionsFor(spec.name, platform);
     if (got === null) {
-      (KNOWN[key] ? known : failures).push(
-        KNOWN[key]
-          ? `${key} — declares no variant enum. ${KNOWN[key]}`
-          : `${key}: the spec claims this platform, and no ${SOURCES[platform].prefix}…Variant declaration for it exists. Either the platform does not have the axis the spec publishes, or it names the enum differently — declare the name in ENUM_NAMES.`,
+      pushResult(
+        known,
+        failures,
+        classify(key, NO_ENUM),
+        `${key}: the spec claims this platform, and no ${SOURCES[platform].prefix}…Variant declaration for it exists. Either the platform does not have the axis the spec publishes, or it names the enum differently — declare the name in ENUM_NAMES.`,
       );
       continue;
     }
@@ -158,8 +196,11 @@ for (const file of readdirSync(SPECS).filter((f) => f.endsWith(".json")).sort())
     const delta = [missing.length ? `missing ${missing.join(", ")}` : "", extra.length ? `extra ${extra.join(", ")}` : ""]
       .filter(Boolean)
       .join("; ");
-    (KNOWN[key] ? known : failures).push(
-      KNOWN[key] ? `${key} — ${delta}. ${KNOWN[key]}` : `${key}: ${delta}. The spec publishes React's set for this platform without ever reading it. Reconcile the platform, or record the divergence in KNOWN with the reason.`,
+    pushResult(
+      known,
+      failures,
+      classify(key, delta),
+      `${key}: ${delta}. The spec publishes React's set for this platform without ever reading it. Reconcile the platform, or record the divergence in KNOWN with the reason.`,
     );
   }
 }
