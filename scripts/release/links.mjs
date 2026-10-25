@@ -95,6 +95,13 @@ const unescaped = (raw) =>
 export const LINK_KEYS = ["href"];
 
 /**
+ * Where a file in this repository is read on the web. Release prose links repo files — a package
+ * CHANGELOG, RELEASING.md — and the correction for a repo-relative path is its URL here, not a site
+ * path: `/packages/tokens` on this site is a 404. `scripts/release-notes.mjs` writes the same origin.
+ */
+const REPO_URL = "https://github.com/zedalleys/kinetixui/blob/main";
+
+/**
  * Every internal link in a release-content source.
  *
  * `text` is read as text rather than parsed, so one set of rules covers the curated
@@ -155,8 +162,9 @@ export function internalLinksIn(text, source, { keys = LINK_KEYS } = {}) {
  * defeated by any valid JSON spelling of the field — `"\u0068ref"` makes both the scan and
  * `carriesLinkKey` see nothing, while `version-release-meta.mjs` parses the same file and activates the
  * destination — and a parser cannot be, so the curated notes are read exactly. `releases.ts` is
- * TypeScript and cannot be parsed here, so it keeps the text scan; it is generated from those notes, and
- * a renamed field there is held by the `LINK_KEYS` test.
+ * TypeScript and cannot be parsed here, so it keeps the text scan, with string interiors masked
+ * (`quotedSpans`) so that the prose copied verbatim out of a note is read there as it is here; it is
+ * generated from those notes, and a renamed field there is held by the `LINK_KEYS` test.
  */
 export function keyedDestinations(text, source = "", { keys = LINK_KEYS } = {}) {
   if (source.endsWith(".json")) {
@@ -166,7 +174,11 @@ export function keyedDestinations(text, source = "", { keys = LINK_KEYS } = {}) 
   const pattern = keyedPattern(keys);
   const out = [];
   for (const [i, line] of text.split("\n").entries()) {
-    for (const m of line.matchAll(pattern)) out.push({ href: unescaped(m[1] ?? m[2]), line: i + 1 });
+    const spans = quotedSpans(line);
+    for (const m of line.matchAll(pattern)) {
+      if (insideQuotes(spans, m.index)) continue;
+      out.push({ href: unescaped(m[1] ?? m[2]), line: i + 1 });
+    }
   }
   return out;
 }
@@ -201,6 +213,41 @@ function parsedKeyedDestinations(text, keys) {
 }
 
 /**
+ * The spans of a line that are inside a string literal, so a field name written in prose is not read as
+ * a field.
+ *
+ * `releases.ts` is TypeScript and cannot be parsed here, so its fields are found by pattern. Anchoring
+ * the field name to the start of a line or to the `{`, `,` or `[` that opens its slot was not enough:
+ * release prose quotes object literals, which is how a component library documents a prop, and an `href`
+ * key inside one sits in exactly those positions. `"Breadcrumb now accepts items={[{ label: 'Docs',
+ * href: '/docs/intro' }]}"` was reported as a dead link — and the same sentence in the curated note
+ * passed, because a note is parsed, so a correct note went green on its own pull request and failed on
+ * the Version PR that `version-release-meta.mjs` copies it into. Masking string interiors makes the two
+ * files answer the same question about the same bytes.
+ *
+ * The scan is line-local and only masks a quote that has a partner on its own line. A stray apostrophe
+ * — in a comment, in prose that a string literal does not close — therefore masks nothing, so the
+ * failure direction is a field still being read rather than a field going quiet. Every link-carrying
+ * line in `releases.ts` is written on one line; a value that spanned lines would be scanned as it is
+ * today.
+ */
+function quotedSpans(line) {
+  const spans = [];
+  for (let i = 0; i < line.length; i += 1) {
+    const quote = line[i];
+    if (quote !== '"' && quote !== "'" && quote !== "`") continue;
+    let j = i + 1;
+    while (j < line.length && line[j] !== quote) j += line[j] === "\\" ? 2 : 1;
+    if (j >= line.length) continue;
+    spans.push([i + 1, j]);
+    i = j;
+  }
+  return spans;
+}
+
+const insideQuotes = (spans, index) => spans.some(([from, to]) => index >= from && index < to);
+
+/**
  * The pattern for a link-carrying field, in either quote.
  *
  * `apps/web/src/lib/releases.ts` is a checked-in TypeScript file that invites hand-editing, and the repo
@@ -225,7 +272,14 @@ function keyedPattern(keys) {
  */
 const KEY_POSITION = String.raw`(?:^|[{,[])\s*`;
 
-const keyAlternation = (keys) => String.raw`["']?(?:${keys.join("|")})["']?`;
+/**
+ * `LINK_KEYS` is data, so a metacharacter in a key would be read as pattern syntax — the
+ * `js/incomplete-sanitization` class `scripts/release/test/regexp.test.mjs` exists to retire. The
+ * current keys carry none; escaping them means a future key cannot change what the scan matches.
+ */
+const escapeForPattern = (key) => key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const keyAlternation = (keys) => String.raw`["']?(?:${keys.map(escapeForPattern).join("|")})["']?`;
 
 /** Whether a source carries a link-bearing field at all, however its value is spelled. @see keyedPattern */
 export function carriesLinkKey(text, source = "", { keys = LINK_KEYS } = {}) {
@@ -233,7 +287,13 @@ export function carriesLinkKey(text, source = "", { keys = LINK_KEYS } = {}) {
     const present = parsedCarriesKey(text, keys);
     if (present !== null) return present;
   }
-  return new RegExp(String.raw`${KEY_POSITION}${keyAlternation(keys)}\s*:`, "m").test(text);
+  // Same masking as the destination scan, for the same reason: prose that quotes an object literal
+  // carrying an `href` key would otherwise make the coverage floor assert a field the file has not got.
+  const pattern = new RegExp(String.raw`${KEY_POSITION}${keyAlternation(keys)}\s*:`, "gm");
+  return text.split("\n").some((line) => {
+    const spans = quotedSpans(line);
+    return [...line.matchAll(pattern)].some((m) => !insideQuotes(spans, m.index));
+  });
 }
 
 /** Whether parsed JSON has a link-carrying property anywhere, whatever its value is, or null if not JSON. */
@@ -270,20 +330,23 @@ export function auditLinks(links, { pathUnresolved, idsFor }) {
       // and a plain relative path are four different mistakes.
       const trimmed = link.href.trim();
       const asRoute = `/${trimmed.replace(/^\.\//, "")}`;
+      const padded = sitePath(trimmed) !== null;
       const problem = !trimmed
         ? "is empty, so it points at whatever page the reader is already on"
-        : sitePath(trimmed) !== null
-          ? `is ${trimmed} with whitespace around it`
+        : padded
+          ? `is ${trimmed} with whitespace around it${pathUnresolved(pathOf(trimmed)) === null ? "" : `, and ${pathOf(trimmed)} is no page on this site either`}`
           : /(^|\/)\.\.(\/|$)/.test(trimmed)
             ? "walks up from the page the reader is on, so where it lands depends on that page"
             : pathUnresolved(asRoute) === null
-              ? `is resolved against the page the reader is on, and it names ${asRoute}, which exists`
+              ? `is resolved against the page the reader is on; you may have meant ${asRoute}`
               : "is resolved against the page the reader is on";
       errors.push(
-        `${at(link)}: ${JSON.stringify(link.href)} → not a path on this site: it ${problem}. Write it \`/docs/...\` or as an absolute URL on ${SITE_ORIGIN}`,
+        `${at(link)}: ${JSON.stringify(link.href)} → not a path on this site: it ${problem}. Write it \`/docs/...\`, or as a full URL — on ${SITE_ORIGIN} for a page on this site, on ${REPO_URL}/... for a file in this repository`,
       );
       continue;
     }
+    // `?? link.href` for a caller that builds a link without resolving a path — `internalLinksIn` always
+    // sets one, and a null path was handled above, so this only covers a hand-built link object.
     const target = link.path ?? link.href;
     const reason = pathUnresolved(target);
     if (reason) {

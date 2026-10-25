@@ -57,15 +57,20 @@ export const SITE_ORIGIN = "https://kinetixui.com";
  * A link on this site can be written `/docs/tokens` or `https://kinetixui.com/docs/tokens`, and the
  * second reaches the reader just as the first does — `scripts/release-notes.mjs` passes an already
  * absolute href straight through, and the changelog page renders it verbatim. So a dead route is dead
- * either way, and both have to be resolved. The origin is parsed, not prefix-matched:
+ * either way, and both have to be resolved. The host is parsed, not prefix-matched:
  * `https://kinetixui.com.evil.example/docs` is a different site.
+ *
+ * The host, not the origin, because comparing origins made the scheme part of the question and
+ * `http://kinetixui.com/docs/motion` — a staging or local URL pasted into a note — came out as a
+ * deliberately external link and was dropped unaudited. It is the same dead route either way: the host
+ * redirects to https and serves the 404. `URL` normalises the default port, so `:443` resolves too.
  */
 export function sitePath(href, origin = SITE_ORIGIN) {
   if (isInternalHref(href)) return href;
   if (!/^https?:\/\//i.test(href)) return null;
   try {
     const url = new URL(href);
-    return url.origin === origin ? `${url.pathname}${url.hash}` || "/" : null;
+    return url.host === new URL(origin).host ? `${url.pathname}${url.hash}` : null;
   } catch {
     return null;
   }
@@ -73,7 +78,10 @@ export function sitePath(href, origin = SITE_ORIGIN) {
 
 export class MissingBuildError extends Error {
   constructor(appDir) {
-    super(`No built site at ${appDir}. Run \`pnpm build:web\` first.`);
+    // `pnpm build:web` is the house instruction and is what CI runs, but it is `pnpm --filter
+    // @kinetixui/web build`, which cannot resolve @kinetixui/ui from a cold checkout — and whoever
+    // reads this message has no build at all. So the turbo graph build is named first.
+    super(`No built site at ${appDir}. Run \`pnpm build\` first, or \`pnpm build:web\` once the workspace packages are built.`);
     this.name = "MissingBuildError";
     this.appDir = appDir;
   }
@@ -120,8 +128,6 @@ export function unresolvedPath(inventory, href) {
   return `no built page, public file or redirect for ${path}`;
 }
 
-/** Back-compat shape for callers that only want the boolean. */
-export const pathResolves = (inventory, href) => unresolvedPath(inventory, href) === null;
 
 let JSDOM;
 /** The element ids in a page's built HTML. Parsed, not pattern-matched: an `id="…"` inside the Flight payload is not an anchor. */

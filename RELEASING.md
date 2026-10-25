@@ -160,10 +160,12 @@ What the link gate does **not** check, so that nobody reads more into a green ru
 - **Link shapes it does not extract.** It reads a value of an `href` field, in either quote, and a
   CommonMark inline link — including a titled or angle-bracketed destination. A raw `<a href="...">`, a
   reference-style `[text][id]` with its definition elsewhere, and a destination containing balanced
-  parentheses are not read. No release note links that way today — the one raw `<a href>` in the
-  content, in a `body` in `releases.ts`, is a code example in prose rather than a link a reader can
-  click — and the changelog page renders a note's `body` as plain text, so the exposure is the GitHub
-  Release body and the generated posts.
+  parentheses are not read. There is one raw `<a href>` in the content today — `<Badge asChild><a
+  href="/new">` in a `body` in `releases.ts`, written as a code example — and `/new` is not a route.
+  On the changelog page that body renders as plain text, so no reader can click it there; in the GitHub
+  Release body, which renders inline HTML, the same sentence is a clickable dead link. It is historical
+  content in an already-published release, so this is recorded as the live example of the gap rather
+  than edited away: a raw `<a href>` in a future note would not be caught either.
 - **Links the generator synthesises.** `scripts/release-notes.mjs` builds
   `/docs/changelog#<version>` and a `/docs/components/<slug>` link for each entry in `newComponents`.
   Neither comes from an `href` field, so neither is audited. The changelog anchor exists by
@@ -176,21 +178,40 @@ What the link gate does **not** check, so that nobody reads more into a green ru
   Markdown candidate, where `](…)` matches sentences as well as links: there a destination with a slash
   and no file extension is read as a route and reported, and one with a file extension
   (`packages/ui/CHANGELOG.md`) or no slash at all is left alone as a repo-file link or prose. So a
-  repo-relative Markdown link to an extensionless file is reported, and an absolute URL is the answer.
+  repo-relative Markdown link to an extensionless file is reported, and a full URL is the answer — on
+  `https://github.com/zedalleys/kinetixui/blob/main/...` for a file in this repository, not on the site
+  origin, where `/packages/tokens` is a 404. The error message names both, because following "write it
+  as an absolute URL on the site" for a repo path produces another dead link.
 - **A trailing slash.** `/docs/angular/` is reported as unresolved although Next redirects it. That is
   `check:seo`'s own path semantics, shared deliberately rather than forked.
+- **A fragment on a target that is not an HTML page.** `/sitemap.xml#urlset` or `/brand/logo.svg#mark`
+  resolves as a path and then fails, because ids are read out of built page HTML and those targets have
+  none. The message says so rather than claiming the id is missing. No release note links that way, so
+  this is left as a false failure the author can see the reason for rather than fixed speculatively.
 - **A relative Markdown destination whose last segment looks like a file.** `[x](docs/changelog/0.25.0)`
   reads as the extension `.0` and is left alone as a repo-file link. A value of an `href` field is not
   affected — those are reported whatever they look like — so this is confined to prose, where the
   alternative is failing a release over a sentence.
-- **A field rename.** The per-source coverage floor fails a file that still carries an `href` field but
-  yields no destination — a value that is no longer a string, a spelling the reader stopped matching. It
-  counts destinations read, not links audited, so a note whose only `href` is external or a bare
-  `#anchor` is not failed for having nothing to resolve. Renaming or removing the field is
-  indistinguishable from a release that links nowhere, so `LINK_KEYS` is pinned by a test instead.
+- **A partial loss of coverage, and a field rename.** The per-source coverage floor fails a file that
+  still carries an `href` field but yields **no** destination at all — every value a non-string, every
+  spelling unmatched. It does not fire on a partial loss: three of a note's four hrefs turned into
+  arrays, or 67 of the 68 keys in `releases.ts` renamed, leaves one destination behind and the gate
+  passes, auditing fewer links than the file carries. So the floor is a floor, not the protection. What
+  makes a silent partial loss unlikely is that both readers are structural — a curated note is parsed,
+  and `releases.ts` is scanned with string interiors masked — so there is no quote style or prose shape
+  left to flip. It counts destinations read, not links audited, so a note whose only `href` is external
+  or a bare `#anchor` is not failed for having nothing to resolve. Renaming or removing the field
+  entirely is indistinguishable from a release that links nowhere, so `LINK_KEYS` is pinned by a test.
 - A curated `release/notes/*.json` is read by **parsing** it, not by scanning its text, so no valid JSON
   spelling of the field — `"\u0068ref"` — can hide a link from the gate while `JSON.parse` activates it
-  into the site. `releases.ts` is TypeScript and keeps the text scan; it is generated from those notes.
+  into the site. `releases.ts` is TypeScript and keeps the text scan, with string interiors masked so
+  that the prose `version-release-meta.mjs` copies verbatim out of a note reads the same in both files:
+  without that, an `href` key quoted inside release prose — `items={[{ label: 'Docs', href: '/docs/intro'
+  }]}`, how a component library documents a prop — passed on the authoring pull request and failed on
+  the Version PR whose merge publishes.
+- **A link on this site's own host is resolved whatever scheme it is written with.** `http://` and
+  `https://`, and the default port written out, all resolve to the same path and are audited; a
+  different host or a non-default port is an external link and is left alone.
 
 **Registry state**: whether each allowlisted version already exists, read from the packument rather
 than parsed out of CLI output. An unreachable registry, an authentication failure or a malformed

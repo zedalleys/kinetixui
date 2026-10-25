@@ -65,12 +65,19 @@ const errors = auditLinks(links, {
 // satisfied by that one file while every curated note matches nothing — and the curated note is where the
 // dead link was.
 //
-// What it can see is a file that still carries an `href` field out of which no destination could be
-// read: a value that is no longer a string, a spelling the reader stopped matching. What it cannot see is
-// the field being renamed or removed, because at that point nothing in the text distinguishes it from a
-// release that simply links nowhere — and failing that would block a legitimate release. `LINK_KEYS` is
-// pinned by a test instead (scripts/release/test/release-links.test.mjs), so renaming the field is a
-// deliberate change that fails there rather than going quiet here.
+// What it sees is narrow, and worth stating exactly rather than leaving a future reviewer to assume it
+// is broader. It fires only when a file yields NO destination at all — every `href` in it a non-string,
+// or every spelling unmatched. A PARTIAL loss is invisible: turning three of 0.25.0's four hrefs into
+// arrays, or renaming 67 of the 68 keys in `releases.ts`, leaves one destination behind and this passes,
+// quietly auditing fewer links than the file carries. That is the same shape as the quote-flip incident
+// above, which is why the floor is a floor and not the protection: what makes a silent partial loss
+// unlikely is that both readers are now structural — a curated note is parsed, and `releases.ts` is
+// scanned with string interiors masked, so there is no quote style or prose shape left to flip.
+//
+// It also cannot see the field being renamed or removed, because at that point nothing in the text
+// distinguishes it from a release that simply links nowhere — and failing that would block a legitimate
+// release. `LINK_KEYS` is pinned by a test instead (scripts/release/test/release-links.test.mjs), so
+// renaming the field is a deliberate change that fails there rather than going quiet here.
 //
 // It counts destinations read, not links audited. A note whose only `href` is an external URL, a bare
 // `#anchor` or a repo file carries a working link field and nothing for this gate to resolve; failing it
@@ -84,6 +91,8 @@ if (barren.length) {
   console.error(`\ncheck:release-links failed (${barren.length} release-content file(s) the rules no longer match).`);
   process.exit(1);
 }
+// A total of zero as well. Unreachable while `releases.ts` carries a single link, which it always does,
+// so this is a backstop for the case where the per-source floor has been satisfied and nothing resolved.
 if (!links.length) {
   console.error(`  ✗ no internal links found in ${sources.length} release-content file(s): ${sources.map((s) => s.source).join(", ")}`);
   console.error("\ncheck:release-links failed (the release content carries no internal links at all, which means the rules stopped matching it).");

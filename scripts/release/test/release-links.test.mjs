@@ -8,7 +8,7 @@
  * because two lists of routes maintained separately is the defect this gate exists to prevent.
  */
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { LINK_KEYS, auditLinks, carriesLinkKey, internalLinksIn, keyedDestinations, releaseContentSources } from "../links.mjs";
@@ -220,7 +220,7 @@ it("reads a .json source by parsing it, so no spelling of the field can hide a l
   assert.deepEqual(keyedDestinations('{ "href": ["/docs/a"] }', "x.json"), [], "a value that is not a string is not a destination");
 });
 
-it("reads a field name only where a field can begin, so prose is not mistaken for one", () => {
+it("reads a field name only in a field position outside a string, so prose is not mistaken for one", () => {
   // Unanchored, the scan found a field name inside a sentence. This is release prose about this gate,
   // and it was reported as a dead link — the mistake this module had already made twice.
   const prose = '{ "changes": [{ "body": "a change entry now sets href: \'docs/motion\' only when it points at a built route" }] }';
@@ -232,10 +232,33 @@ it("reads a field name only where a field can begin, so prose is not mistaken fo
     assert.deepEqual(internalLinksIn(line, "releases.ts"), [], line);
     assert.equal(carriesLinkKey(line, "releases.ts"), false, line);
   }
+  // Nor a field name inside a quoted object literal, which is how a component library documents a prop
+  // in prose. Anchoring to `{`, `,` or `[` admits exactly those positions, so the anchor alone read
+  // `items={[{ label: 'Docs', href: '/docs/intro' }]}` in a release body as a dead link.
+  const proseLiteral = "Breadcrumb now accepts items={[{ label: 'Docs', href: '/docs/intro' }]}.";
+  for (const [source, line] of [
+    ["releases.ts", `        body: ${JSON.stringify(proseLiteral)},`],
+    ["release/notes/0.0.0.json", JSON.stringify({ changes: [{ body: proseLiteral }] })],
+  ]) {
+    assert.deepEqual(internalLinksIn(line, source), [], source);
+    assert.equal(carriesLinkKey(line, source), false, source);
+  }
+  // The two files have to answer alike: `version-release-meta.mjs` copies a note's body verbatim into
+  // `releases.ts`, so prose that passes on the authoring PR and fails on the Version PR is a release day
+  // lost to a sentence.
+  const body = "A nav entry is { title: 'Docs', href: '/docs/intro' } now.";
+  assert.deepEqual(
+    internalLinksIn(`        body: ${JSON.stringify(body)},`, "apps/web/src/lib/releases.ts"),
+    internalLinksIn(JSON.stringify({ changes: [{ body }] }), "release/notes/0.0.0.json"),
+    "the generated TypeScript and the curated note must read the same prose the same way",
+  );
   // And the shapes a formatter does produce are all still read.
   for (const line of ['  href: "/docs/tokens",', '{ "href": "/docs/tokens" }', '[{ "href": "/docs/tokens" }]', '{ "a": 1, "href": "/docs/tokens" }']) {
     assert.deepEqual(internalLinksIn(line, "src").map((l) => l.href), ["/docs/tokens"], line);
   }
+  // A quote with no partner on its line masks nothing, so an unbalanced apostrophe cannot make a real
+  // field go quiet — the failure direction has to be a field still read, never one dropped.
+  assert.deepEqual(internalLinksIn("  // the reader's page\n  href: \"/docs/tokens\",", "releases.ts").map((l) => l.href), ["/docs/tokens"]);
 });
 
 it("names what is wrong with a destination, because the author reads the message and not the rules", () => {
@@ -247,10 +270,25 @@ it("names what is wrong with a destination, because the author reads the message
   assert.match(reasonFor(" /docs/foundations "), /it is \/docs\/foundations with whitespace around it/);
   assert.match(reasonFor("../../docs/foundations"), /it walks up from the page the reader is on/);
   assert.doesNotMatch(reasonFor("../../docs/foundations"), /which exists/, "a `..` walk's destination depends on the reader's page, so naming one would be a guess");
-  assert.match(reasonFor("docs/foundations"), /it names \/docs\/foundations, which exists/);
+  assert.match(reasonFor("docs/foundations"), /you may have meant \/docs\/foundations/);
+  // A padded path that is also dead says both halves, so trimming it is not a second round of feedback.
+  assert.match(reasonFor(" /docs/motion "), /with whitespace around it, and \/docs\/motion is no page on this site either/);
+  // And the correction offered for a repo-relative path names the repository, not only the site: told to
+  // write `packages/tokens` as "an absolute URL on the site", an author produces another 404.
+  assert.match(reasonFor("packages/tokens"), /github\.com\/zedalleys\/kinetixui\/blob\/main/);
   // The href is quoted in the message, so padding and emptiness are visible rather than invisible.
   assert.match(reasonFor(" /docs/foundations "), /" \/docs\/foundations "/);
   for (const href of ["", "TODO", "changelog", "docs/foundations"]) assert.equal(check(href).length, 1, href);
+});
+
+it("resolves a link on this site's host however its scheme and port are written", () => {
+  // Comparing origins made the scheme part of the question, so `http://` on our own host read as a
+  // deliberately external link and was dropped unaudited. It is the same dead route either way.
+  for (const href of ["http://kinetixui.com/docs/motion", "HTTPS://kinetixui.com/docs/motion", "https://kinetixui.com:443/docs/motion"]) {
+    assert.equal(check(href).length, 1, href);
+  }
+  assert.equal(sitePath("https://kinetixui.com.evil.example/docs"), null, "a different host is a different site");
+  assert.equal(sitePath("http://kinetixui.com:8080/docs"), null, "and so is a different port");
 });
 
 it("counts destinations read, not links audited, so an off-site-only note is not failed", () => {
@@ -270,6 +308,27 @@ it("rejects a relative href rather than skipping it, because the browser resolve
     assert.match(errors[0], /not a path on this site/, href);
   }
   assert.deepEqual(check("/docs/foundations"), [], "a site path is still resolved normally");
+});
+
+it("fires the coverage floor on a file whose fields no longer yield a destination, and only then", () => {
+  // The floor the gate enforces is `carriesLinkKey(text, source) && !keyedDestinations(...).length`.
+  // It was pinned only by matching that expression in the gate's source, which says nothing about
+  // whether it fires, so here is the behaviour on both sides of it.
+  const fires = (text, source) => carriesLinkKey(text, source) && !keyedDestinations(text, source).length;
+  assert.equal(fires('{ "changes": [{ "href": ["/docs/tokens"] }] }', "note.json"), true, "a value that is no longer a string");
+  assert.equal(fires('        hrefX: "/docs/tokens",', "releases.ts"), false, "a renamed field is indistinguishable from a note that links nowhere");
+  assert.equal(fires('{ "changes": [{ "href": "/docs/tokens" }] }', "note.json"), false, "a file that still reads must not be failed");
+  assert.equal(fires('{ "href": "https://example.com/x" }', "note.json"), false, "an external destination was still read");
+  assert.equal(fires('{ "title": "no link here" }', "note.json"), false, "a release that links nowhere is legitimate");
+  // What it cannot see, stated as a test rather than only as a comment: a partial loss leaves one
+  // destination behind and passes. Both readers are structural now, which is what makes that unlikely.
+  const partial = '{ "changes": [{ "href": ["/docs/a"] }, { "href": "/docs/b" }] }';
+  assert.equal(fires(partial, "note.json"), false);
+  assert.deepEqual(keyedDestinations(partial, "note.json").map((d) => d.href), ["/docs/b"], "and it audits only what it read");
+  // The gate is where the floor runs, because only it is guaranteed a build.
+  const gate = readFileSync(`${root}scripts/check-release-links.mjs`, "utf8");
+  assert.match(gate, /carriesLinkKey\(text, source\) && !keyedDestinations\(text, source\)\.length/, "the floor is no longer wired into the gate");
+  assert.match(gate, /if \(!links\.length\)/, "the gate no longer fails when the rules match nothing at all");
 });
 
 /* ------------------------------------------------------------------------------------- the real repo */
@@ -317,10 +376,6 @@ it("states which fields carry a route, so a new one is a deliberate change", () 
   assert.equal(isInternalHref("//evil.example/x"), false);
   assert.equal(sitePath("//evil.example/x"), null);
   assert.equal(sitePath("mailto:hi@example.com"), null);
-  const gate = readFileSync(`${root}scripts/check-release-links.mjs`, "utf8");
-  assert.ok(existsSync(`${root}scripts/check-release-links.mjs`));
-  assert.match(gate, /if \(!links\.length\)/, "the gate no longer fails when the rules match nothing at all");
-  assert.match(gate, /carriesLinkKey\(text, source\) && !keyedDestinations\(text, source\)\.length/, "the floor no longer counts destinations read, per source");
   assert.equal(carriesLinkKey('{ "href": "/docs/tokens" }'), true);
   assert.equal(carriesLinkKey("  href: '/docs/tokens',"), true, "a quote-style flip must still be seen as a link-bearing file");
   assert.equal(carriesLinkKey('{ "title": "no link here" }'), false, "a release that links nowhere must not be failed for it");
