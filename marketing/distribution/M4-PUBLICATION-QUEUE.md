@@ -25,7 +25,7 @@ difference is named.
 | **LI-001** | Mon 19 Oct, 14:00 / 17:00 | **READY TO PUBLISH** | Nothing gating. One optional owner decision: the stale "today" paragraph in the dev.to article it links to |
 | **X-001** | Tue 20 Oct, 15:00 / 18:00 | **READY WITH NOTES** — ready for owner approval | The owner's approval reply, and LI-001 live the day before |
 | **LI-008** | Thu 22 Oct, 14:00 / 17:00 | **READY WITH NOTES** — ready for owner approval | The owner's approval reply |
-| **X-008** | Published Sat 24 Oct, 21:25 UTC | **PUBLISHED** — closed out in both registers | The day-after link check, queued below for 2026-10-25 |
+| **X-008** | Published Sat 24 Oct, 21:25 UTC | **PUBLISHED** — closed out in both registers | The click-test on the live post, which needs x.com |
 
 Approving all three outstanding assets is one reply in the thread. The decision packet, with the exact copy and the
 pins, is [`../content/drafts/m3/APPROVAL-QUEUE-2026-10-20.md`](../content/drafts/m3/APPROVAL-QUEUE-2026-10-20.md);
@@ -141,7 +141,16 @@ the calendar now say `published`, dated 2026-10-24, and `check:content` and `che
 published rows, 5 on X). The asset carries no `approval` block in the content register — the rules make one
 optional — so what authorises this row is the owner's own act of posting, not a recorded editorial approval.
 
-**Queued: the day-after link check, 2026-10-25.** Two reads, both absolute counts only:
+**The day-after link check, run 2026-10-25 11:40 UTC.** The result first, then the reads it was made with. Absolute counts only:
+
+> **0 sessions carried `kx_p2_f_two_trades` and 0 carried `kx_source=x`**, 14 hours after the thread
+> went out. 17 sessions arrived in the window and none was tagged. One landed on `/components` itself
+> (01:09 UTC) but arrived direct, untagged, one page, 0 seconds, so it is not this post's. The
+> window's strongest session (02:22 UTC, 270 s, 6 pages including `/components`, with `page_engaged`
+> and `component_viewed`) also arrived direct and untagged: a reader who lost the query string looks
+> exactly like that, so it is recorded as unattributable rather than claimed for X-008. Four 0-second
+> `/docs/tokens` sessions carried a bing referrer. The pipeline was live throughout, so this is "no
+> tagged arrival observed", not "no clicks". The click-test needs x.com and is the owner's to run.
 
 ```sql
 -- 1. did anything arrive on the tagged /components link in the first day
