@@ -117,6 +117,15 @@ export const PLATFORMS = {
         members: ["switch.dart"],
         test: "packages/ui-flutter/test/switch_motion_test.dart",
       },
+      // The second selection role, kept separate from `selection` above because the two durations are
+      // separate by owner decision: a thumb lands on `instant`, a colour settles on `fast`.
+      // toggle_group.dart is deliberately not a member — it is a pass-through to toggle.dart and
+      // animates nothing of its own, and a member that never animates makes the wiring check vacuous.
+      selectionState: {
+        helper: "kinetix_selection_motion.dart",
+        members: ["toggle.dart", "checkbox.dart", "radio_group.dart"],
+        test: "packages/ui-flutter/test/selection_motion_test.dart",
+      },
       loop: {
         // A loop has no destination to keep, so its reduced form is not a shorter duration but no loop
         // at all plus a static state that says the same thing. See the helper's header.

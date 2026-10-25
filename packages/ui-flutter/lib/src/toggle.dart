@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'app_text.dart';
+import 'kinetix_selection_motion.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/toggle.tsx` (`toggleVariants`).
@@ -48,27 +49,63 @@ class KinetixToggle extends StatelessWidget {
       KinetixToggleSize.lg => (40, 10),
     };
     final bool showBorder = pressed || variant == KinetixToggleVariant.outline;
+    // The edge is always ONE pixel wide and only its colour changes, transparent when there is no
+    // edge to show. Handing `AnimatedContainer` a decoration whose border appears and disappears
+    // makes it interpolate the border's WIDTH, and a `BoxDecoration` border insets its child, so
+    // pressing a standard toggle slid its label a pixel inward over `fast` — layout movement again,
+    // in the same colour-and-surface role, found by re-reading the fix for the `size` case. React
+    // transitions `border-color` against a border box that never changes: the variants that have an
+    // edge keep it in every state, and the default variant's pressed emphasis is an inset ring,
+    // which cannot move anything. Keeping the width constant is what matches that.
+    final Color borderColor = showBorder
+        ? (pressed ? c.focus : c.input)
+        : const Color(0x00000000);
     final Color contentColor = pressed ? c.accentForeground : c.foreground;
 
     return Opacity(
       opacity: enabled ? 1 : 0.5,
       child: GestureDetector(
         onTap: enabled ? () => onChanged!(!pressed) : null,
-        child: Container(
+        // `selection-state` (fast, standard) on the background and the border, and on the
+        // content colour through one ColorTween that feeds both the text style and the icon
+        // theme. `DefaultTextStyle.merge` is kept rather than swapped for
+        // `AnimatedDefaultTextStyle`, which SETS a style instead of merging one: that would
+        // have dropped whatever the surrounding app contributes, a visual change nobody asked
+        // for in a motion slice.
+        // The geometry that `size` decides — height, minimum width and the horizontal padding —
+        // stays OUTSIDE the animated box on purpose. Inside it, a caller moving `size` at a
+        // breakpoint would interpolate all three over `fast`, and `selection-state` is a colour and
+        // surface role: it sanctions no layout movement, which is the one thing Reduce Motion exists
+        // to remove. Only the decoration settles.
+        child: SizedBox(
           height: dim,
-          constraints: BoxConstraints(minWidth: dim),
-          padding: EdgeInsets.symmetric(horizontal: hPad),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: pressed ? c.accent : const Color(0x00000000),
-            borderRadius: BorderRadius.circular(8),
-            border: showBorder ? Border.all(color: pressed ? c.focus : c.input, width: 1) : null,
-          ),
-          child: DefaultTextStyle.merge(
-            style: AppText.labelLg.copyWith(color: contentColor),
-            child: IconTheme.merge(
-              data: IconThemeData(color: contentColor, size: 16),
-              child: child,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: dim),
+            child: AnimatedContainer(
+              duration: KinetixSelectionMotion.durationOf(context),
+              curve: KinetixSelectionMotion.curve,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: pressed ? c.accent : const Color(0x00000000),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: borderColor, width: 1),
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: hPad),
+                child: TweenAnimationBuilder<Color?>(
+                  tween: ColorTween(end: contentColor),
+                  duration: KinetixSelectionMotion.durationOf(context),
+                  curve: KinetixSelectionMotion.curve,
+                  builder: (context, color, child) => DefaultTextStyle.merge(
+                    style: AppText.labelLg.copyWith(color: color),
+                    child: IconTheme.merge(
+                      data: IconThemeData(color: color, size: 16),
+                      child: child!,
+                    ),
+                  ),
+                  child: child,
+                ),
+              ),
             ),
           ),
         ),
