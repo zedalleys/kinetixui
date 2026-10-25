@@ -58,9 +58,21 @@ const SPECS = join(root, "specs/components");
 
 const SOURCES = {
   Angular: { dir: "packages/ui-angular/src/lib", ext: ".ts", prefix: "Kx" },
-  SwiftUI: { dir: "packages/ui-swiftui/Sources/KinetixUI", ext: ".swift", prefix: "Kinetix" },
-  Compose: { dir: "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui", ext: ".kt", prefix: "Kinetix" },
-  Flutter: { dir: "packages/ui-flutter/lib/src", ext: ".dart", prefix: "Kinetix" },
+  SwiftUI: {
+    dir: "packages/ui-swiftui/Sources/KinetixUI",
+    ext: ".swift",
+    prefix: "Kinetix",
+  },
+  Compose: {
+    dir: "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui",
+    ext: ".kt",
+    prefix: "Kinetix",
+  },
+  Flutter: {
+    dir: "packages/ui-flutter/lib/src",
+    ext: ".dart",
+    prefix: "Kinetix",
+  },
 };
 
 /** Flutter's first option, by this repository's established naming strategy. */
@@ -80,9 +92,18 @@ const KNOWN = {
     delta: "missing subtle; extra success, warning",
     why: "Angular Badge carries success and warning and has no subtle; React, SwiftUI and Compose have subtle and neither status colour. WP-3 records Angular's set as the reference the others should move to.",
   },
-  "toggle/Angular": { delta: "missing pill", why: "No pill option. WP-3 gap, not yet reconciled." },
-  "toggle/SwiftUI": { delta: "missing pill", why: "No pill option. WP-3 gap, not yet reconciled." },
-  "toggle/Compose": { delta: "missing pill", why: "No pill option. WP-3 gap, not yet reconciled." },
+  "toggle/Angular": {
+    delta: "missing pill",
+    why: "No pill option. WP-3 gap, not yet reconciled.",
+  },
+  "toggle/SwiftUI": {
+    delta: "missing pill",
+    why: "No pill option. WP-3 gap, not yet reconciled.",
+  },
+  "toggle/Compose": {
+    delta: "missing pill",
+    why: "No pill option. WP-3 gap, not yet reconciled.",
+  },
   "toggle/Flutter": {
     delta: "missing pill",
     why: "No pill option. Flutter spells the first option standard, which the alias rule normalises to default, so that is not part of the delta. WP-3 gap, not yet reconciled.",
@@ -116,7 +137,8 @@ function pushResult(known, failures, verdict, unrecorded) {
 function classify(key, delta) {
   const entry = KNOWN[key];
   if (!entry) return { ok: false, line: null };
-  if (entry.delta === delta) return { ok: true, line: `${key} — ${delta}. ${entry.why}` };
+  if (entry.delta === delta)
+    return { ok: true, line: `${key} — ${delta}. ${entry.why}` };
   return {
     ok: false,
     line: `${key}: recorded divergence was "${entry.delta}", but it is now "${delta}". The pair drifted past what KNOWN excuses. Reconcile the platform, or update the entry to the new delta with the reason.`,
@@ -132,7 +154,9 @@ function readAll({ dir, ext }) {
     .join("\n");
 }
 
-const CORPUS = Object.fromEntries(Object.entries(SOURCES).map(([p, s]) => [p, readAll(s)]));
+const CORPUS = Object.fromEntries(
+  Object.entries(SOURCES).map(([p, s]) => [p, readAll(s)]),
+);
 
 function enumBase(component, platform) {
   const entry = ENUM_NAMES[component];
@@ -148,9 +172,18 @@ function optionsFor(component, platform) {
   const name = `${SOURCES[platform].prefix}${enumBase(component, platform)}Variant`;
   if (platform === "Angular") {
     const m = new RegExp(`type\\s+${name}\\s*=\\s*([^;]+);`).exec(code);
-    return m ? m[1].split("|").map((o) => o.trim().replace(/^['"]|['"]$/g, "").toLowerCase()) : null;
+    return m
+      ? m[1].split("|").map((o) =>
+          o
+            .trim()
+            .replace(/^['"]|['"]$/g, "")
+            .toLowerCase(),
+        )
+      : null;
   }
-  const m = new RegExp(`enum(?:\\s+class)?\\s+${name}\\s*\\{([^}]*)\\}`).exec(code);
+  const m = new RegExp(`enum(?:\\s+class)?\\s+${name}\\s*\\{([^}]*)\\}`).exec(
+    code,
+  );
   if (!m) return null;
   return m[1]
     .replace(/\bcase\b/g, " ")
@@ -163,7 +196,9 @@ const failures = [];
 const known = [];
 let compared = 0;
 
-for (const file of readdirSync(SPECS).filter((f) => f.endsWith(".json")).sort()) {
+for (const file of readdirSync(SPECS)
+  .filter((f) => f.endsWith(".json"))
+  .sort()) {
   const spec = JSON.parse(readFileSync(join(SPECS, file), "utf8"));
   const react = spec.variants?.variant;
   if (!react) continue;
@@ -186,14 +221,25 @@ for (const file of readdirSync(SPECS).filter((f) => f.endsWith(".json")).sort())
     // not: Button and Fab spell the first option `primary` on both sides, and rewriting Flutter's
     // would invent a divergence rather than find one.
     const aliasable =
-      platform === "Flutter" && wanted.has("default") && !got.includes("default");
+      platform === "Flutter" &&
+      wanted.has("default") &&
+      !got.includes("default");
     const normalised = new Set(
-      got.map((o) => (aliasable && FLUTTER_DEFAULT_ALIASES.has(o) ? "default" : o)),
+      got.map((o) =>
+        aliasable && FLUTTER_DEFAULT_ALIASES.has(o) ? "default" : o,
+      ),
     );
-    const missing = [...wanted].filter((o) => !normalised.has(o));
-    const extra = [...normalised].filter((o) => !wanted.has(o));
+    // Sorted, because the delta string is what the pin compares: without this, reordering a
+    // union without changing its options would produce a different string and fail a pair whose
+    // option set has not moved. The delta is a set difference, not a transcript of declaration
+    // order.
+    const missing = [...wanted].filter((o) => !normalised.has(o)).sort();
+    const extra = [...normalised].filter((o) => !wanted.has(o)).sort();
     if (!missing.length && !extra.length) continue;
-    const delta = [missing.length ? `missing ${missing.join(", ")}` : "", extra.length ? `extra ${extra.join(", ")}` : ""]
+    const delta = [
+      missing.length ? `missing ${missing.join(", ")}` : "",
+      extra.length ? `extra ${extra.join(", ")}` : "",
+    ]
       .filter(Boolean)
       .join("; ");
     pushResult(
