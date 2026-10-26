@@ -89,6 +89,13 @@ export interface Operation {
   readonly script?: string;
   /** The parameter this operation takes, if any. */
   readonly parameter?: ParameterKind;
+  /**
+   * The parameter is optional by the CLI's own contract, so the bare command is already complete and
+   * carries no placeholder. `parity` with no names prints the whole matrix; `lint` with no path falls
+   * back to the aliases in `kinetixui.json`. For every other operation, omitting the parameter yields a
+   * `<placeholder>` and `placeholder: true`, because the bare command would do the wrong thing.
+   */
+  readonly parameterOptional?: true;
   /** Optional flags this operation accepts, in the order they are rendered. */
   readonly flags?: readonly OperationFlag[];
   /**
@@ -224,6 +231,10 @@ export const OPERATIONS = {
     label: "Show which platforms carry each component",
     executePackage: CLI,
     args: ["parity"],
+    // `parity` declares `[components...]` — "omit for the full matrix" — so names must reach the command
+    // when the page supplies them, and the bare form stays a complete command when it does not.
+    parameter: "components",
+    parameterOptional: true,
     cwd: "project-root",
     minNode: "18",
   },
@@ -242,7 +253,10 @@ export const OPERATIONS = {
     label: "Scan for hardcoded colors and spacing",
     executePackage: CLI,
     args: ["lint"],
+    // `lint` declares `[path]` — with none it scans the aliases from kinetixui.json, so the bare command
+    // is complete rather than a placeholder.
     parameter: "path",
+    parameterOptional: true,
     cwd: "project-root",
     minNode: "18",
   },
@@ -466,7 +480,7 @@ const PLACEHOLDER: Record<ParameterKind, string> = {
   component: "<component>",
   theme: "<theme>",
   preset: "<KX1_…>",
-  path: "", // `lint` with no path falls back to the configured aliases, so the bare command is complete
+  path: "<path>",
 };
 
 /** The parameter tokens for an operation, validated — or the labelled placeholder when none was supplied. */
@@ -476,7 +490,11 @@ function parameterTokens(op: Operation, params: RenderParams): { tokens: string[
       return { tokens: [], placeholder: false };
     case "components": {
       const list = params.components ?? [];
-      if (list.length === 0) return { tokens: [PLACEHOLDER.components], placeholder: true };
+      if (list.length === 0) {
+        return op.parameterOptional
+          ? { tokens: [], placeholder: false }
+          : { tokens: [PLACEHOLDER.components], placeholder: true };
+      }
       return { tokens: list.map((c) => assertName(c, "component name")), placeholder: false };
     }
     case "component":
@@ -492,8 +510,35 @@ function parameterTokens(op: Operation, params: RenderParams): { tokens: string[
         ? { tokens: [assertPreset(params.preset)], placeholder: false }
         : { tokens: [PLACEHOLDER.preset], placeholder: true };
     case "path":
-      // optional by the CLI's own contract: no path means "the aliases from kinetixui.json"
-      return params.path ? { tokens: [assertPath(params.path)], placeholder: false } : { tokens: [], placeholder: false };
+      if (params.path) return { tokens: [assertPath(params.path)], placeholder: false };
+      return op.parameterOptional
+        ? { tokens: [], placeholder: false }
+        : { tokens: [PLACEHOLDER.path], placeholder: true };
+  }
+}
+
+/**
+ * Refuse a parameter the operation does not take, rather than dropping it.
+ *
+ * This is the root cause of a defect Codex caught on this PR's first commit: `/docs/cli` passed
+ * `components={["button","card","kanban-board"]}` to `cli-parity`, the operation declared no parameter,
+ * and the names were silently discarded — so the page rendered `npx @kinetixui/cli parity`, which prints
+ * the entire matrix, under prose promising three components. Every other gate passed: the operation id was
+ * real, the component names were real, the command was valid. A command can be valid and still not be the
+ * command the page is describing, and silence is what let that through.
+ *
+ * Throwing makes it a build failure instead, which is the right time to find it.
+ */
+function assertParamsAccepted(op: Operation, params: RenderParams): void {
+  const accepted = new Set<keyof RenderParams>([...(op.parameter ? [op.parameter] : []), ...(op.flags ?? [])]);
+  const supplied = (Object.keys(params) as (keyof RenderParams)[]).filter((key) => params[key] !== undefined);
+  const extra = supplied.filter((key) => !accepted.has(key));
+  if (extra.length > 0) {
+    throw new Error(
+      `${op.id} does not take ${extra.join(", ")}. It takes ${
+        accepted.size > 0 ? [...accepted].join(", ") : "no parameters"
+      }. Passing one it does not take would silently drop it from the command.`,
+    );
   }
 }
 
@@ -515,6 +560,7 @@ function flagTokens(op: Operation, params: RenderParams): string[] {
  */
 export function renderCommand(id: OperationId, pm: PackageManager, params: RenderParams = {}): RenderedCommand {
   const op = OPERATIONS[id] as Operation;
+  assertParamsAccepted(op, params);
   const prefix = SYNTAX[op.kind][pm];
 
   let tokens: string[];

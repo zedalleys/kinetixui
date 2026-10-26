@@ -10,8 +10,10 @@ import {
   parsePackageManager,
   renderAll,
   renderCommand,
+  type Operation,
   type OperationId,
   type PackageManager,
+  type RenderParams,
 } from "./pm-commands";
 
 const REPO = path.resolve(__dirname, "../../../..");
@@ -245,12 +247,90 @@ describe("package-manager syntax", () => {
   });
 });
 
+/**
+ * Exactly the parameters one operation accepts, which is what a correct caller supplies.
+ *
+ * The loops below used to pass a kitchen-sink object to every operation. That is now a refusal, and
+ * rightly: an operation silently dropping a parameter it does not take is the defect that put
+ * `npx @kinetixui/cli parity` on a page promising three named components.
+ */
+function paramsFor(id: OperationId): RenderParams {
+  const op: Operation = OPERATIONS[id];
+  const sample: Record<string, unknown> = {
+    components: ["button", "card"],
+    component: "button",
+    theme: "acme",
+    preset: "KX1_ok",
+    path: "src",
+    symbol: "AcmeTheme",
+    output: "theme.css",
+  };
+  const out: Record<string, unknown> = {};
+  if (op.parameter) out[op.parameter] = sample[op.parameter];
+  for (const flag of op.flags ?? []) out[flag] = sample[flag];
+  return out as RenderParams;
+}
+
+describe("a parameter is never silently dropped", () => {
+  // Codex caught this on this PR's first commit. /docs/cli passed three component names to `cli-parity`,
+  // the operation declared no parameter, and the names vanished — so the page rendered the command that
+  // prints the ENTIRE matrix under prose promising button, card and kanban-board. Every other gate passed:
+  // real operation id, real component names, valid command. Valid is not the same as correct.
+  it("passes component names through to parity, which declares [components...]", () => {
+    expect(renderCommand("cli-parity", "npm", { components: ["button", "card", "kanban-board"] }).command).toBe(
+      "npx @kinetixui/cli parity button card kanban-board",
+    );
+    expect(renderCommand("cli-parity", "pnpm", { components: ["button"] }).tokens).toEqual([
+      "pnpm",
+      "dlx",
+      "@kinetixui/cli",
+      "parity",
+      "button",
+    ]);
+  });
+
+  it("leaves parity and lint complete with no parameter, because the CLI declares both optional", () => {
+    const parity = renderCommand("cli-parity", "npm");
+    expect(parity.command).toBe("npx @kinetixui/cli parity");
+    expect(parity.placeholder).toBe(false);
+
+    const lint = renderCommand("cli-lint", "npm");
+    expect(lint.command).toBe("npx @kinetixui/cli lint");
+    expect(lint.placeholder).toBe(false);
+  });
+
+  it("still placeholders an operation whose parameter is required", () => {
+    const add = renderCommand("cli-add", "npm");
+    expect(add.command).toBe("npx @kinetixui/cli add <component\u2026>");
+    expect(add.placeholder).toBe(true);
+  });
+
+  it("refuses a parameter the operation does not take, rather than discarding it", () => {
+    expect(() => renderCommand("cli-init", "npm", { components: ["button"] })).toThrow(/does not take components/);
+    expect(() => renderCommand("install-react", "npm", { theme: "acme" })).toThrow(/does not take theme/);
+    expect(() => renderCommand("cli-add", "npm", { components: ["button"], preset: "KX1_ok" })).toThrow(
+      /does not take preset/,
+    );
+  });
+
+  it("treats an undefined value as not supplied, so an optional caller argument is fine", () => {
+    expect(() => renderCommand("cli-preset-css", "npm", { preset: "KX1_ok", symbol: undefined })).not.toThrow();
+  });
+
+  it("accepts every parameter each operation declares", () => {
+    // the negative control for the test above: the refusal must not be refusing correct callers
+    for (const id of OPERATION_IDS) {
+      expect(() => renderCommand(id, "npm", paramsFor(id)), id).not.toThrow();
+    }
+  });
+});
+
 describe("an unsupported combination is explained, not faked", () => {
   it("warns about Yarn Classic on every execute operation and only there", () => {
     for (const id of OPERATION_IDS) {
       const kind = OPERATIONS[id].kind;
       for (const pm of PACKAGE_MANAGERS) {
-        const notes = renderCommand(id, pm, { components: ["button"], theme: "acme", preset: "KX1_x", component: "button" }).caveats;
+        const notes = renderCommand(id, pm, paramsFor(id)).caveats;
         const dlx = notes.filter((n) => /\bdlx\b/.test(n));
         if (kind === "execute" && pm === "yarn") {
           expect(dlx, `${id}/${pm}`).toHaveLength(1);
@@ -348,7 +428,7 @@ describe("no shell injection through a parameter", () => {
   it("renders no whitespace inside any single token", () => {
     for (const id of OPERATION_IDS) {
       for (const pm of PACKAGE_MANAGERS) {
-        for (const token of renderCommand(id, pm, { components: ["button", "card"], theme: "acme", preset: "KX1_ok", component: "button", path: "src" }).tokens) {
+        for (const token of renderCommand(id, pm, paramsFor(id)).tokens) {
           expect(token, `${id}/${pm}`).not.toMatch(/\s/);
         }
       }
@@ -377,9 +457,13 @@ describe("preset exporter flags", () => {
   });
 
   it("offers -o but not -n on the CSS exporter, which generates no symbol", () => {
-    expect(renderCommand("cli-preset-css", "pnpm", { preset: "KX1_ok", output: "src/theme.css", symbol: "Ignored" }).command).toBe(
+    expect(renderCommand("cli-preset-css", "pnpm", { preset: "KX1_ok", output: "src/theme.css" }).command).toBe(
       "pnpm dlx @kinetixui/cli preset css KX1_ok -o src/theme.css",
     );
+    // and it refuses -n rather than accepting the argument and dropping it
+    expect(() =>
+      renderCommand("cli-preset-css", "pnpm", { preset: "KX1_ok", symbol: "AcmeTheme" }),
+    ).toThrow(/does not take symbol/);
   });
 
   it("omits a flag that was not supplied", () => {
