@@ -82,6 +82,10 @@ class KinetixDatePicker extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      // Shrink-wrap, as KinetixField's own column does. A Column defaults to MainAxisSize.max,
+      // so under bounded height — a Center, a Row, any fixed-height slot — adding a label would
+      // make the field swallow all of it and sit at the top of the empty space.
+      mainAxisSize: MainAxisSize.min,
       children: [
         KinetixLabel(name),
         const SizedBox(height: 6),

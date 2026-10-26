@@ -2753,7 +2753,7 @@
           "packages/ui-flutter (compiled by CI)"
         ],
         "accessibility": [
-          "packages/ui-flutter/test/date_picker_label_test.dart:25-101"
+          "packages/ui-flutter/test/date_picker_label_test.dart:24-113"
         ]
       }
     },

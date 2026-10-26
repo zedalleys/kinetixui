@@ -95,5 +95,18 @@ void main() {
       );
       expect(find.text('2026-03-09'), findsOneWidget);
     });
+
+    testWidgets('the labelled field shrink-wraps instead of swallowing the available height', (tester) async {
+      // A Column defaults to MainAxisSize.max, so the first version of this fix turned a centred
+      // 44-pixel field into one pinned to the top of 600 pixels of empty space the moment a label
+      // was passed. Caught in review, not by me. The label and the trigger are about 70 pixels
+      // together; the host below is 600 tall, so the bound is generous and still fails without
+      // mainAxisSize: MainAxisSize.min.
+      await tester.pumpWidget(
+        host(KinetixDatePicker(selectedDate: _date, onChanged: (_) {}, label: 'Due date')),
+      );
+      final column = find.descendant(of: find.byType(KinetixDatePicker), matching: find.byType(Column));
+      expect(tester.getSize(column.first).height, lessThan(150));
+    });
   });
 }
