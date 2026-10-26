@@ -149,4 +149,37 @@ describe("Rating is a radio group", () => {
     render(<Rating value={3} onChange={() => {}} aria-label="Rate this article" />);
     expect(screen.getByRole("radiogroup", { name: "Rate this article" })).toBeInTheDocument();
   });
+
+  // The group's own state, rather than its keyboard. Asked for in IA-5.3 C1; each of these
+  // already behaved correctly and none of it was asserted, which is the gap being closed.
+
+  it("is uncontrolled from defaultValue, and moves without a value prop", async () => {
+    const user = userEvent.setup();
+    render(<Rating defaultValue={2} />);
+    expect(screen.getByRole("radio", { name: "2 stars" })).toBeChecked();
+    await user.click(screen.getByRole("radio", { name: "4 stars" }));
+    expect(screen.getByRole("radio", { name: "4 stars" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "2 stars" })).not.toBeChecked();
+  });
+
+  it("is controlled by value: without an onChange to answer, a click changes nothing", async () => {
+    const user = userEvent.setup();
+    render(<Rating value={3} />);
+    await user.click(screen.getByRole("radio", { name: "1 star" }));
+    expect(screen.getByRole("radio", { name: "3 stars" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "1 star" })).not.toBeChecked();
+  });
+
+  it("renders the same group and the same order under dir=rtl", () => {
+    render(
+      <div dir="rtl">
+        <Rating value={3} onChange={() => {}} />
+      </div>,
+    );
+    expect(screen.getByRole("radiogroup")).toBeInTheDocument();
+    const radios = screen.getAllByRole("radio") as HTMLInputElement[];
+    const values = radios.map((r) => r.value);
+    expect(values).toEqual(["1", "2", "3", "4", "5"]);
+    expect(screen.getByRole("radio", { name: "3 stars" })).toBeChecked();
+  });
 });
