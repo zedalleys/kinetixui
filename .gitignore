@@ -31,3 +31,10 @@ packages/ui-compose/.idea/
 packages/ui-compose/**/*.iml
 # Generated release worksheets only — hand-written drafts under drafts/<id>/ ARE tracked.
 marketing/content/drafts/release-*.md
+
+# Impeccable design-hook config: the shared project settings in
+# .impeccable/config.json ARE tracked; per-developer state (install consent,
+# private detector exceptions) and the hook's dedup cache are local only.
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+.impeccable/cursor-pending.json
