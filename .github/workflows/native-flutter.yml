@@ -89,10 +89,30 @@ jobs:
           set -euo pipefail
           STAGED="$RUNNER_TEMP/kinetix_ui"
           cp -r packages/ui-flutter "$STAGED"
+          # Staging refuses a version the changelog does not mention, because `pub publish` warns
+          # about it and a warning alone makes it exit non-zero. The probe version is invented for
+          # this run, so the throwaway copy gets an entry for it. The committed CHANGELOG is
+          # untouched; a real publish needs a real entry, which is the point of the refusal.
+          printf '## %s\n\nProbe entry written by native-flutter.yml. Not a release.\n\n' \
+            9.9.9-dry-run | cat - "$STAGED/CHANGELOG.md" > "$RUNNER_TEMP/changelog" \
+            && mv "$RUNNER_TEMP/changelog" "$STAGED/CHANGELOG.md"
           node scripts/publish/stage-flutter-package.mjs 9.9.9-dry-run --package-dir="$STAGED"
           cd "$STAGED"
           flutter pub get
           flutter pub publish --dry-run
+
+      - name: Staging refuses a version the changelog does not mention
+        run: |
+          set -uo pipefail
+          UNLOGGED="$RUNNER_TEMP/kinetix_ui_unlogged"
+          cp -r packages/ui-flutter "$UNLOGGED"
+          if node scripts/publish/stage-flutter-package.mjs 9.9.9-unlogged --package-dir="$UNLOGGED" > "$RUNNER_TEMP/unlogged.log" 2>&1; then
+            echo "::error::Staging accepted a version with no changelog entry. pub would warn and exit non-zero mid-publish, and the entry cannot be added once the version is permanent."
+            exit 1
+          fi
+          grep -q "does not mention 9.9.9-unlogged" "$RUNNER_TEMP/unlogged.log" \
+            || { echo '::error::Staging failed for some other reason, so this control proves nothing.'; cat "$RUNNER_TEMP/unlogged.log"; exit 1; }
+          echo "::notice::Staging refused a version the changelog does not mention."
 
       - name: Staging refuses a pubspec it cannot rewrite
         run: |

@@ -64,6 +64,7 @@ const NEGATIVES = {
   "compose-integrity-gate-removed": { file: ".github/workflows/native-compose.yml", from: "VERSION_NAME is not set", to: "the build failed", breaks: "VI-COMPOSE-INTEGRITY-GATE" },
   "swiftui-tag-not-from-input": { file: ".github/workflows/publish-swiftui.yml", from: 'git push "$MIRROR" "$SHA:refs/tags/$VERSION"', to: 'git push "$MIRROR" "$SHA:refs/tags/$(date +%Y.%m.%d)"', breaks: "VI-SWIFTUI-TAG-FROM-VALIDATED-INPUT" },
   "flutter-version-not-asserted": { file: "scripts/publish/stage-flutter-package.mjs", from: "if (!lines.includes(`version: ${version}`)) {", to: "if (false) {", breaks: "VI-FLUTTER-VERSION-ASSERTED" },
+  "flutter-changelog-ungated": { file: "scripts/publish/stage-flutter-package.mjs", from: "does not mention ${version}", to: "has no entry", breaks: "VI-FLUTTER-CHANGELOG-GATES-VERSION" },
 };
 
 if (process.argv.includes("--list-negatives")) {
@@ -348,6 +349,12 @@ check(
   /node scripts\/publish\/stage-flutter-package\.mjs/.test(flutterWorkflow) &&
     /lines\.includes\(`version: \$\{version\}`\)/.test(flutterStaging),
   "publish-flutter.yml must stage through scripts/publish/stage-flutter-package.mjs, and that script must read pubspec.yaml back off disk and assert it carries exactly `version: <the requested version>`. Without the read-back, a rewrite that quietly did nothing publishes the committed placeholder under the requested version — permanently, because a pub.dev version cannot be reused.",
+);
+
+check(
+  "VI-FLUTTER-CHANGELOG-GATES-VERSION",
+  /does not mention \$\{version\}/.test(flutterStaging),
+  "scripts/publish/stage-flutter-package.mjs must refuse a version packages/ui-flutter/CHANGELOG.md does not mention. `pub publish` only warns, and a warning is enough to abort the publish mid-run; worse, a published version whose changelog never mentions it cannot be corrected, because the version is immutable.",
 );
 
 // ---------------------------------------------------------------------------

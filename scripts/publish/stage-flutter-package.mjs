@@ -84,4 +84,19 @@ if (!existsSync(join(packageDir, "LICENSE"))) {
   die(`LICENSE was not copied into ${packageDir}.`);
 }
 
-console.log(`PASS: ${packageDir} staged for publish as ${version} (publish_to removed, LICENSE copied).`);
+/*
+ * `pub publish` warns when CHANGELOG.md does not mention the version being published, and a
+ * warning is enough to make it exit non-zero. More to the point, a published version whose
+ * changelog never mentions it is a package page that cannot say what the release contained — and
+ * the entry cannot be added afterwards, because the version is immutable. So the warning becomes a
+ * refusal here, before anything is uploaded, rather than a surprise mid-publish.
+ */
+const changelogPath = join(packageDir, "CHANGELOG.md");
+if (!existsSync(changelogPath)) {
+  die(`${changelogPath} does not exist. pub.dev renders it as the Changelog tab and scores its absence.`);
+}
+if (!readFileSync(changelogPath, "utf8").includes(version)) {
+  die(`${changelogPath} does not mention ${version}. \`pub publish\` warns about this and exits non-zero, and the entry cannot be added after the version is published. Add the section for ${version} first.`);
+}
+
+console.log(`PASS: ${packageDir} staged for publish as ${version} (publish_to removed, LICENSE copied, CHANGELOG mentions the version).`);
