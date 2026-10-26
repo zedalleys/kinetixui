@@ -15,6 +15,40 @@ export default {
   theme: {
     extend: {
       fontFamily: { sans: "var(--font-sans)" },
+
+      /**
+       * Breakpoints measured in the reader's own text size rather than in device pixels.
+       *
+       * In the shared preset rather than in one app's config, so that every surface built from it —
+       * the website, and Storybook via apps/docs — resolves the same breakpoint. While these lived only
+       * in apps/web, Tailwind generated no rule for `sm-rem:` in the Storybook build, and a generated
+       * story that used one rendered its narrow layout at every width with nothing reporting it.
+       *
+       * Tailwind's `sm`/`lg`/`xl` are `640px`/`1024px`/`1280px`, and a `px` media query cannot know
+       * that the reader has doubled their default font size. A layout gated on one therefore commits
+       * to a desktop composition on a 1280px screen whether the text in it is 16px or 32px — and a
+       * column sized in `rem` doubles underneath that commitment. On /create that combination crushed
+       * the preview: at 1280px/200% the two-column grid resolved to `[832px 256px]`, and inside the
+       * 254px pane the scene still laid itself out as a desktop app, leaving its cards 2px wide.
+       *
+       * A `rem` media query *does* track that preference — verified in Chromium before these were
+       * added: at 1280px with a 32px root, `min-width: 64rem` is false while `min-width: 1024px` is
+       * still true, and at 2100px it is true again. So these ask the question the layout actually
+       * needs answered — "is there room for this composition, in the units the reader reads in?" —
+       * instead of "is the device wide?".
+       *
+       * The values are the default breakpoints converted at the default root size, so `sm-rem` is
+       * `sm`, `lg-rem` is `lg` and `xl-rem` is `xl` for every reader who has not changed their font
+       * size. Nothing moves at 100% text; they diverge only once the text grows, which is the only
+       * case they exist for.
+       */
+      screens: {
+        "sm-rem": "40rem",
+        "lg-rem": "64rem",
+        "xl-rem": "80rem",
+      },
+
+
       // Material-3 type scale — `text-body-md`, `text-headline-lg`, … each carries
       // its line-height, tracking and weight. Mirrors tokens/semantic/typography.json.
       //
