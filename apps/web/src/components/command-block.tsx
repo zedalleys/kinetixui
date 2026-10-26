@@ -85,7 +85,13 @@ export function CommandBlock({
           const c = commands[m];
           return (
             <TabsContent key={m} value={m}>
-              <div className="relative">
+              {/* `dir="ltr"` belongs on the whole command region, not only on the `pre`. The copy button is
+                  positioned with the logical `end-2` and the command is padded with the logical `pe-12`; if
+                  the two resolve against different directions — the page's for the button, the `pre`'s own
+                  for the padding — then on an RTL page the button sits over the left edge of the command
+                  while the reserved space sits on the right, and the button covers the first token. Measured
+                  at 390px RTL before this: the copy icon sat on top of `npx`. */}
+              <div dir="ltr" className="relative">
                 <CopyButton
                   value={c.command}
                   label={`Copy the ${PACKAGE_MANAGER_LABELS[m]} command`}

@@ -178,6 +178,21 @@ describe("RTL", () => {
     render(<CommandBlock op="install-react" />);
     expect(screen.getByRole("tabpanel").querySelector("pre")).toHaveAttribute("dir", "ltr");
   });
+
+  it("puts the copy button and the command in the same direction", () => {
+    // The button is placed with the logical `end-2` and the command reserves space with the logical
+    // `pe-12`. If only the `pre` is `dir="ltr"`, those two resolve against different directions on an
+    // RTL page: the button lands on the left while the reserved space stays on the right, and it covers
+    // the first token. Measured at 390px RTL before this fix, the copy icon sat on top of `npx`. jsdom
+    // cannot measure that, so the gate is that the positioning context itself carries the direction.
+    document.documentElement.setAttribute("dir", "rtl");
+    render(<CommandBlock op="install-react" />);
+    const pre = screen.getByRole("tabpanel").querySelector("pre")!;
+    const positioned = pre.closest(".relative");
+    expect(positioned).not.toBeNull();
+    expect(positioned).toHaveAttribute("dir", "ltr");
+    expect(positioned!.querySelector("button")).not.toBeNull();
+  });
 });
 
 describe("truthfulness", () => {

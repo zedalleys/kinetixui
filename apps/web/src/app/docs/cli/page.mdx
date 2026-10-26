@@ -23,7 +23,7 @@ prompts.
   `init` writes the token stylesheet; it does **not** set up Tailwind. The
   components use Tailwind CSS 3 utilities that the KinetixUI preset maps onto the
   tokens, and the preset ships in the npm package, so the registry route still
-  needs `npm i @kinetixui/ui` and the preset in `tailwind.config.ts`. Without it,
+  needs the `@kinetixui/ui` package and the preset in `tailwind.config.ts`. Without it,
   utilities such as `animate-in` and `duration-fast` do not exist. Tailwind 4 setup
   is not verified. See [Installation → Tailwind](/docs/installation#tailwind).
 </Callout>
@@ -47,6 +47,17 @@ alias directory. Existing files are left alone unless you pass
 Want everything at once instead of naming each one?
 
 <Command op="cli-add-all" />
+
+### What `add` takes, and what it does not
+
+The registry holds **components and the token contract**, and nothing else — it holds no blocks. Coming from
+another library you might expect `add` to take a block name; here a block is code you copy from
+[Blocks](/blocks), and each block shows the `add` command for the components its code imports.
+Asking for a block name gets you `Component "…" not found`, which is correct rather than a bug.
+
+`add` also works before `init`. Without a `kinetixui.json` it says so and falls back to the default aliases
+(`components/ui`, `lib`) rather than refusing, so you can try one component and configure the project after.
+Run [`init`](#init) when you want the component and token paths to be yours.
 
 ## list
 

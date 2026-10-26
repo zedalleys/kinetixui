@@ -6,6 +6,7 @@ import { ComponentApi } from "@/components/component-api";
 import { ComponentKeyboard } from "@/components/component-keyboard";
 import { ComponentMeta } from "@/components/component-meta";
 import { NpmLinks } from "@/components/npm-links";
+import { PackageVersions } from "@/components/package-versions";
 import { Callout } from "@/components/callout";
 import { DocsH2, DocsH3, DocsH4 } from "@/components/docs-heading";
 import { ComponentGuide, ComponentIntro } from "@/components/component-guide";
@@ -90,6 +91,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     FurtherReading,
     FirstUseNextSteps,
     NpmLinks,
+    PackageVersions,
     Callout,
     Steps,
     Step,
