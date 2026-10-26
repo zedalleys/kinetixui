@@ -49,19 +49,14 @@ jobs:
       - name: Test
         run: flutter test
 
+      # Removes `publish_to: none`, writes the version and copies the LICENSE in,
+      # asserting each edit afterwards against the file on disk. In a script
+      # rather than inline so native-flutter.yml can run this exact staging on a
+      # throwaway copy on every pull request — the old inline `sed` was only ever
+      # executed by a real dispatch, and `sed` exits 0 when it matches nothing.
       - name: Stage for publish
-        run: |
-          # `pub publish` refuses `publish_to: none`; it also wants a LICENSE
-          # in the package directory. Both are set up here, not committed.
-          sed -i '/^publish_to:/d' pubspec.yaml
-          sed -i "s/^version: .*/version: ${{ inputs.version }}/" pubspec.yaml
-          cp ../../LICENSE ./LICENSE
-          # sed exits 0 when it matches nothing, so assert the staging actually
-          # happened rather than publishing the committed 0.0.0.
-          grep -qx 'version: ${{ inputs.version }}' pubspec.yaml \
-            || { echo '::error::Staging did not set the version in pubspec.yaml.'; exit 1; }
-          ! grep -q '^publish_to:' pubspec.yaml \
-            || { echo '::error::Staging did not remove publish_to from pubspec.yaml.'; exit 1; }
+        working-directory: .
+        run: node scripts/publish/stage-flutter-package.mjs '${{ inputs.version }}'
 
       - name: Dry run
         run: flutter pub publish --dry-run

@@ -55,6 +55,15 @@ const NEGATIVES = {
   // A vendored copy drifting from its canonical source, which is what a publish from an
   // arbitrary ref can ship and ci.yml's pull-request-only drift step would never see.
   "vendored-token-drift": { file: "packages/ui-flutter/lib/src/kinetix_motion.dart", from: /^/, to: "// drifted\n", breaks: "VENDOR-CURRENT" },
+  // Version integrity: each of these is a way the number reaching a registry could differ from the
+  // number that was asked for.
+  "compose-version-defaults-silently": { file: "packages/ui-compose/ui/build.gradle.kts", from: 'version = requestedVersion.getOrElse(unversionedPlaceholder)', to: 'version = requestedVersion.getOrElse("0.1.0")', breaks: "VI-COMPOSE-NO-SILENT-DEFAULT" },
+  // Two distinct ways to lose the Compose guard: reintroduce a default, or delete the refusal.
+  "compose-refusal-removed": { file: "packages/ui-compose/ui/build.gradle.kts", from: '"VERSION_NAME is not set, so this publication would carry the " +', to: '"" +', breaks: "VI-COMPOSE-NO-SILENT-DEFAULT" },
+  "compose-publish-step-drops-version": { file: ".github/workflows/publish-compose.yml", from: "          VERSION_NAME: ${{ inputs.version }}\n          MAVEN_CENTRAL_USERNAME:", to: "          MAVEN_CENTRAL_USERNAME:", breaks: "VI-COMPOSE-VERSION-FORWARDED" },
+  "compose-integrity-gate-removed": { file: ".github/workflows/native-compose.yml", from: "VERSION_NAME is not set", to: "the build failed", breaks: "VI-COMPOSE-INTEGRITY-GATE" },
+  "swiftui-tag-not-from-input": { file: ".github/workflows/publish-swiftui.yml", from: 'git push "$MIRROR" "$SHA:refs/tags/$VERSION"', to: 'git push "$MIRROR" "$SHA:refs/tags/$(date +%Y.%m.%d)"', breaks: "VI-SWIFTUI-TAG-FROM-VALIDATED-INPUT" },
+  "flutter-version-not-asserted": { file: "scripts/publish/stage-flutter-package.mjs", from: "if (!lines.includes(`version: ${version}`)) {", to: "if (false) {", breaks: "VI-FLUTTER-VERSION-ASSERTED" },
 };
 
 if (process.argv.includes("--list-negatives")) {
@@ -171,24 +180,28 @@ check(
 
 // ---------------------------------------------------------------------------
 // Flutter — kinetix_ui to pub.dev. The committed pubspec is deliberately unpublishable
-// (`version: 0.0.0`, `publish_to: none`) and publish-flutter.yml edits it in place at publish
-// time, so what reaches pub.dev is not what is committed. That makes the staging transformation
-// itself the thing to check: two `sed` expressions that silently do nothing if the lines they
-// match are ever reformatted, and would publish 0.0.0, or fail, with no earlier warning.
+// (`version: 0.0.0`, `publish_to: none`) and it is rewritten in place at publish time by
+// scripts/publish/stage-flutter-package.mjs, so what reaches pub.dev is not what is committed.
+// That makes the staging transformation the thing to check: it rewrites two specific lines, and
+// if either is reformatted there is nothing for it to rewrite.
 // ---------------------------------------------------------------------------
 const pubspec = source("packages/ui-flutter/pubspec.yaml");
 const flutterWorkflow = source(".github/workflows/publish-flutter.yml");
 
-/** The `sed` expressions publish-flutter.yml applies, each paired with what it must still match. */
+/**
+ * The lines the staging script rewrites, each paired with the anchored pattern it uses. The script
+ * refuses outright when one of them does not match, so a mismatch here is a publish that cannot
+ * run — and finding that out on a pull request beats finding it out mid-dispatch.
+ */
 const STAGING = [
-  { sed: "/^publish_to:/d", matches: /^publish_to:/m, what: "the publish_to line it deletes" },
-  { sed: 's/^version: .*/version: ${{ inputs.version }}/', matches: /^version: .*/m, what: "the version line it rewrites" },
+  { matches: /^publish_to:\s*none\s*$/m, what: "the `publish_to: none` line it removes" },
+  { matches: /^version: .*$/m, what: "the `version:` line it rewrites" },
 ];
-const brokenStaging = STAGING.filter(({ sed, matches }) => !flutterWorkflow.includes(sed) || (pubspec.match(new RegExp(matches.source, "gm")) ?? []).length !== 1);
+const brokenStaging = STAGING.filter(({ matches }) => (pubspec.match(new RegExp(matches.source, "gm")) ?? []).length !== 1);
 check(
   "PUB-STAGING-PATTERNS",
   brokenStaging.length === 0,
-  `publish-flutter.yml stages pubspec.yaml with sed, and ${brokenStaging.map((s) => s.what).join(" and ")} no longer matches exactly one line. A sed that matches nothing exits 0, so the publish would continue with the committed version. Keep the pubspec lines in the plain \`key: value\` form, or update both together.`,
+  `scripts/publish/stage-flutter-package.mjs rewrites pubspec.yaml at publish time, and ${brokenStaging.map((s) => s.what).join(" and ")} no longer matches exactly one line. Keep those lines in the plain \`key: value\` form, or update the script alongside them.`,
 );
 
 check(
@@ -266,6 +279,78 @@ check(
 );
 
 // ---------------------------------------------------------------------------
+// Version integrity. A published version is the one decision that cannot be corrected later: a
+// Central coordinate and a pub.dev version are immutable, and a git tag is what `from:` resolves
+// against forever. These checks do not ask whether the version is valid — `--version=` does that —
+// but whether the number that reaches the registry can differ from the number that was asked for
+// without anyone noticing.
+// ---------------------------------------------------------------------------
+check(
+  "VI-COMPOSE-NO-SILENT-DEFAULT",
+  !/version\s*=[^\n]*getOrElse\(\s*"\d/.test(composeGradle) &&
+    /tasks\.matching[\s\S]{0,400}VERSION_NAME is not set/.test(composeGradle),
+  "packages/ui-compose/ui/build.gradle.kts must not resolve the publication version through a literal fallback, and every publish task must refuse when VERSION_NAME is absent. A silent default is the one defect that publishes a wrong and permanent version in total silence: the build succeeds, the upload succeeds, and the number simply is not the one anybody asked for.",
+);
+
+/*
+ * Each step that runs a Gradle `publish*` task has to carry VERSION_NAME itself, because GitHub
+ * step `env` blocks do not inherit from one another. A publish step added without it would hit the
+ * refusal above rather than publish a wrong number — but only while that refusal is there, which is
+ * why this is a separate check.
+ */
+const composeWorkflow = source(".github/workflows/publish-compose.yml");
+const publishStepsWithoutVersion = composeWorkflow
+  .split(/\n      - (?=name:|uses:)/)
+  .filter((step) => /gradle :ui:publish/.test(step) && !/VERSION_NAME:/.test(step))
+  .map((step) => step.match(/name: (.*)/)?.[1] ?? "an unnamed step");
+check(
+  "VI-COMPOSE-VERSION-FORWARDED",
+  publishStepsWithoutVersion.length === 0,
+  `In .github/workflows/publish-compose.yml these steps run a Gradle publish task without VERSION_NAME in their own \`env\`: ${publishStepsWithoutVersion.join(", ")}. Step env blocks are not inherited, so the version never reaches the build.`,
+);
+
+/*
+ * A refusal only means something if something exercises it. native-compose.yml holds the pair that
+ * does, on a runner that has the Android toolchain: publish to the local repository and read the
+ * version back out of the POM, then withhold VERSION_NAME and require the task to fail. Both are
+ * easy to delete while editing an unrelated job, so their absence is a gate failure.
+ */
+const composeCi = source(".github/workflows/native-compose.yml");
+check(
+  "VI-COMPOSE-INTEGRITY-GATE",
+  /publishReleasePublicationToMavenLocal/.test(composeCi) &&
+    /VERSION_NAME is not set/.test(composeCi) &&
+    /<version>\$VERSION_NAME<\/version>/.test(composeCi),
+  ".github/workflows/native-compose.yml must keep the version-integrity pair: a publishToMavenLocal whose version is read back out of the POM, and a run with no VERSION_NAME that is required to fail with the refusal. Without them the refusal in build.gradle.kts is never exercised and can rot unnoticed.",
+);
+
+/*
+ * SwiftPM has no version field — the tag is the version — so the only thing making the published
+ * version match the requested one is that the tag is built from the validated input and nothing
+ * derived at run time.
+ */
+const swiftuiWorkflow = source(".github/workflows/publish-swiftui.yml");
+check(
+  "VI-SWIFTUI-TAG-FROM-VALIDATED-INPUT",
+  /VERSION:\s*\$\{\{\s*inputs\.version\s*\}\}/.test(swiftuiWorkflow) &&
+    /refs\/tags\/\$VERSION/.test(swiftuiWorkflow),
+  ".github/workflows/publish-swiftui.yml must push the tag as refs/tags/$VERSION with VERSION bound to inputs.version. SwiftPM resolves `from:` against the tag alone, so the tag *is* the published version and must be the validated input.",
+);
+
+/*
+ * Flutter is the one platform whose version is rewritten in place at publish time, by a `sed` that
+ * exits 0 when it matches nothing. The assertion after the rewrite is what separates "published
+ * 0.1.0" from "published the committed placeholder because the line had been reformatted".
+ */
+const flutterStaging = source("scripts/publish/stage-flutter-package.mjs");
+check(
+  "VI-FLUTTER-VERSION-ASSERTED",
+  /node scripts\/publish\/stage-flutter-package\.mjs/.test(flutterWorkflow) &&
+    /lines\.includes\(`version: \$\{version\}`\)/.test(flutterStaging),
+  "publish-flutter.yml must stage through scripts/publish/stage-flutter-package.mjs, and that script must read pubspec.yaml back off disk and assert it carries exactly `version: <the requested version>`. Without the read-back, a rewrite that quietly did nothing publishes the committed placeholder under the requested version — permanently, because a pub.dev version cannot be reused.",
+);
+
+// ---------------------------------------------------------------------------
 // The natives vendor copies of packages/tokens/dist. ci.yml catches drift on pull requests, but a
 // publish is a workflow_dispatch against whatever ref it was given and never passes through that
 // step, so a publish could ship token values that are no longer the canonical ones.
@@ -315,4 +400,4 @@ if (failures.length) {
   console.error(`\n${failures.length} native publish preflight check(s) failed.`);
   process.exit(1);
 }
-console.log("PASS: native publish preflight — SwiftUI mirror layout, Maven Central POM requirements, pub.dev metadata, publish-workflow safety and vendored token currency. Source and workflow properties only; no toolchain ran and nothing was published.");
+console.log("PASS: native publish preflight — SwiftUI mirror layout, Maven Central POM requirements, pub.dev metadata, publish-workflow safety, version integrity and vendored token currency. Source and workflow properties only; no toolchain ran and nothing was published.");

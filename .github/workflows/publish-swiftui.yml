@@ -79,6 +79,9 @@ jobs:
             echo "::error::SWIFTUI_MIRROR_REPO is not set. Add the mirror's authenticated push URL as that secret, or run with dry_run: true."
             exit 1
           fi
+          # Before the force-push, not after: the tag push below would be rejected on its own, but
+          # by then main has already moved and the mirror is left ahead of its last tag.
+          node scripts/publish/swiftui-tag-available.mjs "$MIRROR" "$VERSION"
           git push --force "$MIRROR" swiftui-dist:main
           git push "$MIRROR" "$SHA:refs/tags/$VERSION"
           echo "Published. Consumers: .package(url: \"<mirror-url>\", from: \"$VERSION\")"

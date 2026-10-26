@@ -111,6 +111,25 @@ try {
     throw new Error(`tag ${TAG} is not in the mirror; a \`from:\` requirement has nothing to resolve.`);
   }
 
+  // ------------------------------------------------------------- republish refusal
+  // A SwiftPM version is the tag, so publishing one twice would serve different code under a
+  // version consumers have already locked. publish-swiftui.yml runs this same script before it
+  // force-pushes the mirror branch; running it here against a mirror that really does carry the
+  // tag is what proves the guard answers correctly. Both directions are asserted deliberately:
+  // "refuses an existing tag" alone would also pass if the guard refused everything.
+  if (!negative?.skipTag) {
+    const guard = version => spawnSync(process.execPath, [join(root, 'scripts/publish/swiftui-tag-available.mjs'), mirror, version], { encoding: 'utf8' });
+    const taken = guard(TAG);
+    if (taken.status !== 1) {
+      throw new Error(`the tag-availability guard exited ${taken.status} for ${TAG}, which is already on the mirror; it must refuse (1). A republish would move the mirror's main branch before git rejected the tag.`);
+    }
+    const free = guard('99.0.0');
+    if (free.status !== 0) {
+      throw new Error(`the tag-availability guard exited ${free.status} for 99.0.0, which is not on the mirror; it must permit (0). A guard that refuses everything blocks every publish instead of just a republish.`);
+    }
+    console.log(`PASS republish refusal: the guard refuses ${TAG} (already tagged) and permits 99.0.0.`);
+  }
+
   // Every target the manifest declares must have sources inside the split. This is the failure the
   // mirror route invites and the monorepo hides: in-repo the directory may exist above the prefix.
   const manifest = git(mirror, ['show', 'main:Package.swift']).stdout;
