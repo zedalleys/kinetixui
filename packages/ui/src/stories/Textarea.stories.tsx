@@ -6,7 +6,7 @@ import { Label } from "../components/label";
 const STATES = ["Default", "Focus", "Error", "Disabled"] as const;
 
 const meta = {
-  title: "Form Inputs/Textarea",
+  title: "Forms & Inputs/Textarea",
   component: Textarea,
   parameters: {
     layout: "centered",

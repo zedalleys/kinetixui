@@ -16,7 +16,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Form Inputs/ColorPicker",
+  title: "Forms & Inputs/ColorPicker",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<ColorPicker\\n  value={color}\\n  onValueChange={setColor}\\n  swatches={[\"#ef4444\", \"#f97316\", \"#eab308\", \"#22c55e\", \"#3b82f6\"]}\\n/>", language: "tsx" } },

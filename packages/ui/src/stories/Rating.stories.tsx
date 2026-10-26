@@ -15,7 +15,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Form Inputs/Rating",
+  title: "Forms & Inputs/Rating",
   component: Rating,
   args: { size: "md", readOnly: false, defaultValue: 3 },
   argTypes: {

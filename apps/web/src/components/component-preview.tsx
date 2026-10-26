@@ -185,22 +185,27 @@ export function ComponentPreview({
   return (
     <div data-cp className={cn("my-6 overflow-hidden rounded-xl border border-border", className)}>
       <div dir={dir}>
-        <SegmentedControl
-          value={mode}
-          dir={dir}
-          onValueChange={(next) => {
-            if (!next) return;
-            setMode(next);
-            if (next === "code") viewed(tabs.length > 1 ? platform : "react", "code_tab");
-          }}
-          aria-label="View preview or code"
-        >
-          {["preview", "code"].map((v) => (
-            <SegmentedControlItem key={v} value={v} className="capitalize">
-              {v}
-            </SegmentedControlItem>
-          ))}
-        </SegmentedControl>
+        {/* The control used to be a direct child of the panel, so it sat on the panel's own 1px border
+            (CAT-BUG-010). The inset is the one the environment toolbar below already uses — same row
+            rhythm, no new value. */}
+        <div className="px-3 py-2">
+          <SegmentedControl
+            value={mode}
+            dir={dir}
+            onValueChange={(next) => {
+              if (!next) return;
+              setMode(next);
+              if (next === "code") viewed(tabs.length > 1 ? platform : "react", "code_tab");
+            }}
+            aria-label="View preview or code"
+          >
+            {["preview", "code"].map((v) => (
+              <SegmentedControlItem key={v} value={v} className="capitalize">
+                {v}
+              </SegmentedControlItem>
+            ))}
+          </SegmentedControl>
+        </div>
 
         {mode === "preview" && (
           <div role="group" aria-label={"Component preview"}>

@@ -130,8 +130,14 @@ jobs:
       - name: Verification evidence is current with the tests
         run: pnpm check:verification
 
-      - name: Component manifest check (status, platforms, guidance, maturity)
+      - name: Component manifest check (taxonomy, status, platforms, guidance, maturity)
         run: pnpm check:manifest
+
+      # The gate above prints "ok" whether it is validating or quietly doing nothing, and most of what it
+      # validates is invisible while the tree is correct. This corrupts the manifest one rule at a time and
+      # asserts check:manifest fails with the right message each time, then restores it.
+      - name: Manifest gate negative controls (each rule really fails)
+        run: pnpm check:manifest-controls
 
       # The business capability roadmap may only call something existing if the manifest, the IoT package,
       # the blocks manifest or a file says so; its tables are generated from docs/business-capabilities.json.

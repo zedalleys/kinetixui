@@ -26,7 +26,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Form Inputs/AddressFields",
+  title: "Forms & Inputs/AddressFields",
   parameters: {
     layout: "padded",
     docs: { source: { code: "// The field list is yours: this one follows a Saudi national address. Pass a different array per country.\n<AddressFields\n  legend=\"Shipping address\"\n  section=\"shipping\"\n  value={address}\n  onValueChange={setAddress}\n  fields={[\n    { name: \"building\", label: \"Building number\", required: true, width: \"half\" },\n    { name: \"street\", label: \"Street\", required: true, width: \"half\" },\n    { name: \"district\", label: \"District\", required: true, width: \"half\" },\n    { name: \"locality\", label: \"City\", required: true, width: \"half\" },\n    { name: \"postalCode\", label: \"Postal code\", required: true, width: \"half\" },\n    { name: \"additional\", label: \"Additional number\", width: \"half\" },\n  ]}\n/>", language: "tsx" } },

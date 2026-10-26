@@ -17,6 +17,7 @@ import fs from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
 import { chromium } from "playwright";
+import { storyId } from "./story-id.mjs";
 
 const staticDir = join(process.cwd(), "apps/docs/storybook-static");
 if (!fs.existsSync(join(staticDir, "index.json"))) {
@@ -68,7 +69,7 @@ async function measure(page, selector) {
   };
 }
 
-const story = (args) => `${base}/iframe.html?id=form-inputs-slider--playground&viewMode=story${args ? `&args=${args}` : ""}`;
+const story = (args) => `${base}/iframe.html?id=${storyId("slider", "Playground")}&viewMode=story${args ? `&args=${args}` : ""}`;
 const results = {};
 try {
   const page = await browser.newPage();

@@ -18,7 +18,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Data Display/Accordion",
+  title: "Layout & Structure/Accordion",
   component: Accordion,
   args: { type: "single", collapsible: true },
   argTypes: {
