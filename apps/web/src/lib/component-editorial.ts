@@ -387,7 +387,7 @@ export const COMPONENT_EDITORIAL: Record<string, ComponentEditorial> = {
   // components-keyboard.test.tsx: "is one tab stop; arrows move and select; Tab leaves the group".
   "radio-group": {
     summary:
-      "Radio Group offers a set of options of which exactly one can be chosen, and behaves as a single stop in the tab order rather than one stop per option.",
+      "Radio Group offers a set of options of which exactly one can be chosen. On React and Angular it behaves as a single stop in the tab order rather than one stop per option; the SwiftUI and Flutter groups stack their buttons and leave focus to the platform.",
     useWhen: [
       "Two to about five options a reader should be able to compare side by side before choosing.",
       "A choice that must be made, where leaving every option unchosen is not a valid answer.",
@@ -438,7 +438,7 @@ export const COMPONENT_EDITORIAL: Record<string, ComponentEditorial> = {
   // with 200% text.
   "toggle-group": {
     summary:
-      "Toggle Group puts several toggles together as one control, in single or multiple selection, with one variant and size shared across its items.",
+      "Toggle Group puts several toggles together as one control, in single or multiple selection. On React one variant and size are shared across its items; Angular fixes the medium size; the SwiftUI, Compose and Flutter groups share styling but coordinate selection per item.",
     useWhen: [
       "A row of formatting buttons where one or several can be active at the same time.",
       "A small set of view options, such as alignment, that belong together as one control.",
@@ -449,7 +449,7 @@ export const COMPONENT_EDITORIAL: Record<string, ComponentEditorial> = {
       { slug: "radio-group", when: "when the options are an answer in a form rather than a toolbar action." },
     ],
     accessibility:
-      "A keyboard test checks that the group is one tab stop and that the arrow keys move between items. Items wrap onto a second line rather than overflowing, so a narrow screen at large text does not scroll sideways.",
+      "A React keyboard test checks that the group is one tab stop, that arrows move between items, and that items wrap onto a second line rather than scrolling a narrow screen sideways. Angular gives every item its own tab stop when several can be active, which is what a formatting toolbar wants; the native groups use one row and leave wrapping to the caller.",
   },
 
   /* ------------------------------------------------------------------------------------ waiting states
