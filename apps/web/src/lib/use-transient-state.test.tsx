@@ -107,4 +107,21 @@ describe("CopyButton", () => {
     unmount();
     expect(vi.getTimerCount()).toBe(0);
   });
+
+  // The positive case the whole fix exists to preserve. The hook's own test covers the value
+  // returning to its initial state, but only this one proves CopyButton is actually wired to it:
+  // a component that showed "Copied" and never went back would satisfy every other test here.
+  it("goes back to Copy on its own while it stays mounted", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<CopyButton value="npm i @kinetixui/ui" />);
+
+    await user.click(screen.getByRole("button", { name: "Copy" }));
+    expect(await screen.findByText("Copied")).toBeInTheDocument();
+
+    await act(async () => void vi.advanceTimersByTime(1600));
+
+    expect(screen.queryByText("Copied")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy" })).toBeInTheDocument();
+    expect(vi.getTimerCount()).toBe(0);
+  });
 });
