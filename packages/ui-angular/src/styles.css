@@ -630,9 +630,20 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 }
 .kx-metric__head { display: flex; align-items: center; justify-content: space-between; }
 .kx-metric__label { margin: 0; font: var(--text-body-sm); color: hsl(var(--muted-foreground)); }
-.kx-metric__body { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--spacing-2); }
-.kx-metric__value { margin: 0; font: var(--text-headline-sm); font-weight: var(--font-weight-medium); color: hsl(var(--foreground)); }
-.kx-metric__trend { display: inline-flex; align-items: center; gap: var(--spacing-1); font: var(--text-label-md); font-weight: var(--font-weight-medium); }
+/* Wraps rather than compresses, the same contract React's Metric carries: `space-between` between two
+   intrinsically-sized children has no give, so once the value and the trend together need more than the
+   card's content box the pair is painted outside it (measured at 14px past the box on a 149px card).
+   Neither child may absorb the loss — a numeral must not be truncated and an arrow must not be split from
+   its figure — so the row gives way and the trend drops under the value. The column gap is the system's
+   related-but-distinct spacing; `spacing-2` was the floor the compressed row was pinned at. */
+.kx-metric__body { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; column-gap: var(--spacing-3); row-gap: var(--spacing-1); }
+.kx-metric__value { margin: 0; min-width: 0; overflow-wrap: break-word; font: var(--text-headline-sm); font-weight: var(--font-weight-medium); color: hsl(var(--foreground)); }
+/* The same three rules React's trend carries, in the order flex applies them: the figure is never
+   broken mid-number (`white-space: nowrap`); the body's `flex-wrap` places the trend on its own line
+   before shrinking anything, so it arrives there whole; and `min-width: 0` with `flex-wrap` here is
+   the last resort once that line is still narrower than the trend, putting the figure under the
+   arrow. No `flex-shrink: 0` — it would hold the trend at its natural width and restore the overflow. */
+.kx-metric__trend { display: inline-flex; flex-wrap: wrap; min-width: 0; align-items: center; gap: var(--spacing-1); white-space: nowrap; font: var(--text-label-md); font-weight: var(--font-weight-medium); }
 .kx-metric__trend[data-trend='up'] { color: hsl(var(--success)); }
 .kx-metric__trend[data-trend='down'] { color: hsl(var(--destructive)); }
 .kx-metric__trend[data-trend='neutral'] { color: hsl(var(--muted-foreground)); }
