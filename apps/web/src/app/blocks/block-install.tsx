@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
 import { trackFenceCopy } from "@/lib/analytics-surfaces";
 import { PACKAGES } from "@/lib/packages";
+import { renderCommand } from "@/lib/pm-commands";
+import { usePreferredPackageManager } from "@/lib/pm-preference";
 import { PLATFORM_DEFINITIONS, type Platform } from "@/lib/platform-parity";
 import { manifestPlatformFor, usePreferredPlatform } from "@/lib/platform-preference";
 import { SETUP_SECTION_HREF } from "@/lib/platform-tabs";
@@ -22,6 +24,7 @@ const link = "text-primary underline underline-offset-2";
  */
 export function BlocksInstallGuide() {
   const platform = manifestPlatformFor(usePreferredPlatform()) ?? "React";
+  const pm = usePreferredPackageManager();
   const def = PLATFORM_DEFINITIONS[platform];
   const setup = (
     <Link href={SETUP_SECTION_HREF[platform]} className={link}>
@@ -39,12 +42,25 @@ export function BlocksInstallGuide() {
       </>
     );
   } else if (def.distribution.published) {
+    // Angular is the only published non-React platform, so it is the only one with an install operation in the
+    // command contract. Anything else that becomes published gets its own operation; until then the sentence
+    // names the coordinate without spelling a command it cannot derive.
+    const install = platform === "Angular" ? renderCommand("install-angular", pm).command : null;
     body = (
       <>
-        The {def.label} code imports from <code className="text-foreground">{def.distribution.coordinate}</code>: install{" "}
-        <code className="text-foreground">
-          npm i {def.distribution.coordinate} {PACKAGES.tokens}
-        </code>
+        The {def.label} code imports from <code className="text-foreground">{def.distribution.coordinate}</code>:{" "}
+        {install ? (
+          <>
+            install{" "}
+            <code dir="ltr" className="text-foreground">
+              {install}
+            </code>
+          </>
+        ) : (
+          <>
+            install it together with <code className="text-foreground">{PACKAGES.tokens}</code>
+          </>
+        )}
         , then follow {setup}. The React CLI does not install {def.label} components.
       </>
     );
@@ -79,8 +95,12 @@ export function BlockReactInstall({ components, platforms }: { components: strin
   const pathname = usePathname();
   const preferred = manifestPlatformFor(usePreferredPlatform());
   const shown = preferred && platforms.includes(preferred) ? preferred : platforms[0];
+  const pm = usePreferredPackageManager();
   if (shown !== "React" || components.length === 0) return null;
-  const command = `npx ${PACKAGES.cli} add ${components.join(" ")}`;
+  // the same contract the docs fences render from, so this line follows the reader's package manager
+  // rather than hard-coding npx; there is no room for four tabs under each block, so it follows the
+  // choice made elsewhere on the site instead of offering its own.
+  const command = renderCommand("cli-add", pm, { components }).command;
   return (
     <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
       <span>React components it uses:</span>

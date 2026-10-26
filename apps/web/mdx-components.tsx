@@ -13,6 +13,7 @@ import { FurtherReading, GuideCta, GuideFooter, GuideStatus } from "@/components
 import { FirstUseNextSteps } from "@/components/first-use-next-steps";
 import { Steps, Step } from "@/components/steps";
 import { CodePre } from "@/components/code-pre";
+import { CommandBlock } from "@/components/command-block";
 import { TokenTable } from "@/components/token-table";
 import { TokenAcrossPlatforms } from "@/components/token-evidence";
 import { ThemePreview } from "@/components/theme-preview";
@@ -74,6 +75,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     th: (p) => <th className="border border-border px-4 py-2 text-left font-semibold" {...p} />,
     td: (p) => <td className="border border-border px-4 py-2" {...p} />,
     pre: CodePre,
+    // every package-manager-aware command on the site; the string comes from lib/pm-commands.ts
+    Command: CommandBlock,
     ComponentPreview,
     UsageExampleTabs,
     ComponentApi,

@@ -9,12 +9,17 @@ import { BlockReactInstall, BlocksInstallGuide } from "./block-install";
 import { analytics } from "@/lib/analytics";
 import { INSTALLABLE, blockComponents, componentsFromBlockSource, kebab, kinetixImports } from "@/lib/block-components";
 import { blocks } from "@/lib/blocks";
+import { renderCommand } from "@/lib/pm-commands";
+import { PM_STORAGE_KEY, resetPackageManagerPreferenceForTests } from "@/lib/pm-preference";
 import { PLATFORM_STORAGE_KEY } from "@/lib/platform-preference";
 import manifest from "../../../../../blocks.manifest.json";
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  // both preferences live in a module-level store, so a choice made in one test would leak into the next
+  window.localStorage.clear();
+  resetPackageManagerPreferenceForTests();
 });
 
 const SOURCES = manifest.blocks as Record<string, { sources: Record<string, string> }>;
@@ -65,9 +70,20 @@ describe("installing a block on the reader's platform", () => {
     window.localStorage.setItem(PLATFORM_STORAGE_KEY, "angular");
     render(<BlocksInstallGuide />);
     const text = document.querySelector("[data-blocks-install]")!.textContent!;
-    expect(text).toMatch(/npm i @kinetixui\/angular @kinetixui\/tokens/);
+    // derived from the command contract rather than restated, so the two cannot drift apart
+    expect(text).toContain(renderCommand("install-angular", "npm").command);
     expect(text).toMatch(/preview/);
     expect(text).toMatch(/React CLI does not install Angular/);
+  });
+
+  it("on Angular, spells that install in the reader's own package manager", () => {
+    window.localStorage.setItem(PLATFORM_STORAGE_KEY, "angular");
+    window.localStorage.setItem(PM_STORAGE_KEY, "pnpm");
+    resetPackageManagerPreferenceForTests();
+    render(<BlocksInstallGuide />);
+    const text = document.querySelector("[data-blocks-install]")!.textContent!;
+    expect(text).toContain("pnpm add @kinetixui/angular @kinetixui/tokens");
+    expect(text).not.toContain("npm install @kinetixui/angular");
   });
 
   it.each([

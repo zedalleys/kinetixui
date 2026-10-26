@@ -27,8 +27,11 @@ React ships two ways. Both use the same tokens.
 
 | What you install | Registry (own the code) | npm (versioned dependency) |
 | --- | --- | --- |
-| Components | `npx @kinetixui/cli add <name>` | `npm i @kinetixui/ui` |
-| Tokens | `npx @kinetixui/cli init` | `npm i @kinetixui/tokens` |
+| Components | the CLI's `add` command | the `@kinetixui/ui` package |
+| Tokens | the CLI's `init` command | the `@kinetixui/tokens` package |
+
+Every command below is shown for npm, pnpm, Yarn and Bun; pick yours once and the rest of the
+documentation follows it.
 
 <NpmLinks names={["@kinetixui/ui", "@kinetixui/tokens", "@kinetixui/cli"]} />
 
@@ -41,9 +44,7 @@ Tokens are a good npm dependency; components are often nicer copied.
 **Registry** — writes `:root` (light) + `.dark` + the shadow / type composites
 into your global stylesheet:
 
-```bash
-npx @kinetixui/cli init
-```
+<Command op="cli-init" />
 
 **npm** — import the generated CSS, or the typed object:
 
@@ -71,9 +72,7 @@ Native text styles ship too: `KinetixType.swift`, `KinetixType.kt`,
 
 **Registry:**
 
-```bash
-npx @kinetixui/cli add button
-```
+<Command op="cli-add" components={["button"]} />
 
 The CLI resolves `tokens` first (a registry dependency), installs every npm
 package the delivered files import — for `button` that is
@@ -93,9 +92,7 @@ for every flag.
 **npm** — every component ships in the one package, so there's no
 per-component step:
 
-```bash
-npm i @kinetixui/ui @kinetixui/tokens
-```
+<Command op="install-react" />
 
 ```tsx
 import { Button, Field, FieldLabel } from "@kinetixui/ui";
@@ -106,10 +103,18 @@ import { Button, Field, FieldLabel } from "@kinetixui/ui";
 Install the preset's package for either React route, and install Tailwind's build tools if your app does
 not already have them:
 
-```bash
-npm i @kinetixui/ui
-npm i -D tailwindcss@3 postcss autoprefixer
-```
+<Command op="install-react" />
+
+<Command op="install-tailwind" />
+
+<Callout>
+  **On Yarn, add one more package.** `@kinetixui/ui` includes charts built on `recharts`, which declares
+  `react-is` as a peer dependency. npm, pnpm and Bun install a transitive peer for you; neither Yarn
+  Classic nor Yarn 4 does, so a Yarn build fails to resolve `react-is`. Run `yarn add react-is` as well.
+  Measured on Yarn 1.22.22 and Yarn 4.18.1 with `node scripts/adoption/pm-matrix.mjs`. Yarn 4 also
+  refuses a version published in the last week by default (`npmMinimalAgeGate`), so a brand-new KinetixUI
+  release needs `yarn config set npmMinimalAgeGate 0` or a few days' patience.
+</Callout>
 
 Map the utilities onto the contract — KinetixUI ships a preset:
 
