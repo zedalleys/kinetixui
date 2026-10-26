@@ -179,7 +179,16 @@
       "campaign": "kx_p1_a_parity_proof",
       "utm_content": "x_thread",
       "url": "https://kinetixui.com/docs/platforms?utm_source=x&utm_medium=social&utm_campaign=kx_p1_a_parity_proof&utm_content=x_thread",
-      "derived_from": "ART-001"
+      "derived_from": "ART-001",
+      "approval": {
+        "by": "owner",
+        "on": "2026-10-26",
+        "evidence": "Owner approved the complete fitted X-001 copy by its SHA-256 on 2026-10-26, naming the hash explicitly and covering posts 1-9 and standalone A-D. The fitted copy brings four posts that exceeded X's 280-character limit (2, 6, 7, 9) within it; the earlier Option A placement direction was approved separately and is not a copy approval. Publication itself is not authorized here: the owner publishes manually.",
+        "copy": {
+          "file": "marketing/content/drafts/a01/x-thread.md",
+          "sha256": "f6455e380c72b1cb5c4a4fb474b29327d35da4fcf1ee6bcaa19fcd58fe3a7d6c"
+        }
+      }
     },
     {
       "id": "LI-010",
