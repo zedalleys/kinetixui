@@ -107,11 +107,17 @@ export const routeRedirects = [
    *
    * Each sends the reader to the page that already does the job, rather than to a second one built to answer
    * the same question: `/capabilities` is the use-cases hub the domain pages already breadcrumb up to, and
-   * `/components` is the catalogue the docs component pages are generated from. Permanent, because these are
-   * aliases of a settled destination, not a staging post -- except `/demos`, which is temporary: there is one
-   * demo today, and a second one makes an index page the right answer instead.
+   * `/components` is the catalogue the docs component pages are generated from.
+   *
+   * Permanent only where the destination is settled, because a 308 is cached by browsers and CDNs and keeps
+   * sending a reader who followed it once even after the entry is removed -- it outlives its own revert.
+   * `/docs/components` and `/platforms` are aliases of pages that are not going to move, so permanent is
+   * right for them. The other two are temporary for the same reason as each other: the destination is the
+   * best page that exists today, not the page that will always be right. There is one demo today, and a
+   * second makes an index the right answer; `/use-cases` points at `/capabilities` only until a dedicated
+   * use-cases index exists, and a cached 308 would fight that future IA.
    */
-  { source: "/use-cases", destination: "/capabilities", permanent: true },
+  { source: "/use-cases", destination: "/capabilities", permanent: false },
   { source: "/docs/components", destination: "/components", permanent: true },
   { source: "/demos", destination: "/demos/building-operations", permanent: false },
 
