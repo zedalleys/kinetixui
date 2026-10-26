@@ -19,6 +19,11 @@ on:
 permissions:
   contents: read
 
+# Two dispatches must not race for the same immutable Central coordinate.
+concurrency:
+  group: publish-compose
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -27,6 +32,16 @@ jobs:
         working-directory: packages/ui-compose
     steps:
       - uses: actions/checkout@v4
+
+      # A Central coordinate is immutable, so the version is rejected before
+      # the toolchain is warmed up rather than after the upload.
+      - name: Validate version
+        working-directory: .
+        run: node scripts/check-native-publish-preflight.mjs --version='${{ inputs.version }}'
+
+      - name: Preflight
+        working-directory: .
+        run: node scripts/check-native-publish-preflight.mjs
 
       - uses: actions/setup-java@v5
         with:
@@ -43,6 +58,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
         with:
           gradle-version: "9.7.1"
+
+      # publishToMavenLocal compiles the release variant but does not run the
+      # test task, so the suite is an explicit step.
+      - name: Test
+        run: gradle :ui:testDebugUnitTest
 
       - name: Dry run — build + publishToMavenLocal (unsigned)
         env:
