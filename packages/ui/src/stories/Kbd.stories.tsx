@@ -15,7 +15,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Foundations/Kbd",
+  title: "Data Display/Kbd",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<Kbd>⏎</Kbd>\\n<KbdGroup>\\n  <Kbd>⌘</Kbd>\\n  <Kbd>K</Kbd>\\n</KbdGroup>", language: "tsx" } },

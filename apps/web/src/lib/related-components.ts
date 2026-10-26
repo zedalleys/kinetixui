@@ -5,14 +5,12 @@
  * reader may want an Alert Dialog, a Sheet or a Drawer instead). Whatever that leaves of the four is filled with the
  * component's neighbours in its own catalogue category, nearest first either side and wrapping round, so every page gets the same number of
  * inbound links from its siblings and none is left out because it sorts last. Nothing is per-page copy: a new
- * component joins its category's ring the moment it is in `componentDocs` and `COMPONENT_CATEGORY`.
+ * component joins its category's ring the moment it is in `componentDocs` and the manifest.
  */
-import { componentDocs, COMPONENT_CATEGORY } from "./site";
+import { categoryOf } from "./component-taxonomy";
+import { componentDocs } from "./site";
 
 export type RelatedComponent = { slug: string; title: string; href: string };
-
-// the sidebar's own fallback for an uncategorised component
-const categoryOf = (slug: string) => COMPONENT_CATEGORY[slug] ?? "Data Display";
 
 const SLUG = (href: string) => href.split("/").pop() ?? "";
 

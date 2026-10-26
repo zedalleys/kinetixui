@@ -12,7 +12,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Feedback/Metric",
+  title: "Data Display/Metric",
   component: Metric,
   args: { label: "Active users", value: "2,420", trend: "up", change: "12%" },
   argTypes: {

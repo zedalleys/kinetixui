@@ -2,6 +2,21 @@ import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+/**
+ * This file is the slowest in the suite, and it had no headroom.
+ *
+ * Every test here drives cmdk through `userEvent`, which re-filters the whole destination list on each
+ * keystroke: measured in isolation on a quiet machine, the slowest test takes 3.4s and several take over 1.5s,
+ * against vitest's 5s default. The web suite runs 123 files in parallel, so on a loaded runner the slowest of
+ * these crosses 5s, times out mid-typing, and leaves the input populated — which then fails the next three
+ * tests for reasons that have nothing to do with them.
+ *
+ * 20s is headroom for the measured worst case, not a licence for a slow test: a real hang still fails, just
+ * later. The alternative — trimming what these tests cover — would trade the command menu's keyboard and
+ * announcement coverage for a few seconds of CI.
+ */
+vi.setConfig({ testTimeout: 20_000 });
+
 const nav = vi.hoisted(() => ({ push: vi.fn() }));
 const theme = vi.hoisted(() => ({ setTheme: vi.fn() }));
 const analyticsTrack = vi.hoisted(() => vi.fn());

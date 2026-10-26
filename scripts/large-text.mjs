@@ -107,6 +107,7 @@ import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { OPEN_STATES, openSurface } from "./open-states.mjs";
 import { coverageForRoot } from "./covered-slugs.mjs";
+import { storyId } from "./story-id.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -131,11 +132,11 @@ assertUiDistMatchesSource("large-text");
  * whose size is the hit target, not the label beside it.
  */
 const SUBJECTS = [
-  { component: "Checkbox", story: "form-inputs-checkbox--default", control: "[role=checkbox]" },
-  { component: "RadioGroup", story: "form-inputs-radiogroup--default", control: "[role=radio]" },
-  { component: "Switch", story: "form-inputs-switch--default", control: "[role=switch]" },
-  { component: "Toggle", story: "controls-actions-toggle--default", control: "button[data-state]" },
-  { component: "ToggleGroup", story: "controls-actions-togglegroup--default", control: "button[data-state]" },
+  { component: "Checkbox", story: storyId("checkbox", "Default"), control: "[role=checkbox]" },
+  { component: "RadioGroup", story: storyId("radio-group", "Default"), control: "[role=radio]" },
+  { component: "Switch", story: storyId("switch", "Default"), control: "[role=switch]" },
+  { component: "Toggle", story: storyId("toggle", "Default"), control: "button[data-state]" },
+  { component: "ToggleGroup", story: storyId("toggle-group", "Default"), control: "button[data-state]" },
 ];
 
 /**
@@ -162,20 +163,20 @@ const SUBJECTS = [
  * stay within their container, and `stack` a field column whose parts must not collide.
  */
 const FORM_SUBJECTS = [
-  { component: "Input", story: "form-inputs-input--playground", control: "input", text: "input" },
-  { component: "Textarea", story: "form-inputs-textarea--playground", control: "textarea", text: "textarea" },
+  { component: "Input", story: storyId("input", "Playground"), control: "input", text: "input" },
+  { component: "Textarea", story: storyId("textarea", "Playground"), control: "textarea", text: "textarea" },
   {
     component: "Select",
-    story: "form-inputs-select--default",
+    story: storyId("select", "Default"),
     control: "[role=combobox]",
     text: "[role=combobox] span",
     opens: "[role=combobox]",
     overlay: "[role=listbox]",
   },
-  { component: "Slider", story: "form-inputs-slider--default", control: "[role=slider]", model: "control" },
+  { component: "Slider", story: storyId("slider", "Default"), control: "[role=slider]", model: "control" },
   {
     component: "InputOTP",
-    story: "form-inputs-inputotp--default",
+    story: storyId("input-otp", "Default"),
     control: "[class*='size-9']",
     model: "control",
     text: "[class*='size-9']",
@@ -185,31 +186,31 @@ const FORM_SUBJECTS = [
   },
   {
     component: "MultiSelect",
-    story: "form-inputs-multiselect--default",
+    story: storyId("multi-select", "Default"),
     control: "[role=combobox]",
     text: "[role=combobox] span",
     inside: "[role=combobox] > *",
   },
-  { component: "NativeSelect", story: "form-inputs-nativeselect--default", control: "select", text: "select" },
+  { component: "NativeSelect", story: storyId("native-select", "Default"), control: "select", text: "select" },
   {
     component: "InputGroup",
-    story: "form-inputs-inputgroup--default",
+    story: storyId("input-group", "Default"),
     control: "[data-slot=input-group]",
     text: "[data-slot=input-group-input]",
     inside: "[data-slot=input-group] > *",
   },
   {
     component: "NumberInput",
-    story: "form-inputs-numberinput--default",
+    story: storyId("number-input", "Default"),
     control: "div:has(> input[type=number])",
     text: "input[type=number]",
     inside: "div:has(> input[type=number]) > *",
   },
-  { component: "Tabs", story: "navigation-tabs--states", control: "[role=tablist]", text: "[role=tab]", inside: "[role=tablist] > *" },
-  { component: "Label", story: "foundations-label--default", control: "label", text: "label" },
+  { component: "Tabs", story: storyId("tabs", "States"), control: "[role=tablist]", text: "[role=tab]", inside: "[role=tablist] > *" },
+  { component: "Label", story: storyId("label", "Default"), control: "label", text: "label" },
   // The Form story is the one place a label, a control, its help text and its error message share a
   // column, which is where 200% text makes them collide if anything in that stack is sized in px.
-  { component: "Form", story: "form-inputs-form--default", control: "input", text: "input", stack: "form" },
+  { component: "Form", story: storyId("form", "Default"), control: "input", text: "input", stack: "form" },
 ];
 
 /**
@@ -257,13 +258,13 @@ const base = `http://127.0.0.1:${server.address().port}`;
  * demo and the extra stories that reach every status and composition).
  */
 const DISPLAY_SUBJECTS = [
-  { component: "ResultState", story: "feedback-resultstate--default", root: "section", text: "section h2" },
-  { component: "ResultState", story: "feedback-resultstate--statuses", root: "section", text: "section h3" },
-  { component: "ReferenceCode", story: "data-display-referencecode--default", root: "[role=group]", text: "[translate=no]", target: "[role=group] button" },
-  { component: "PriceBreakdown", story: "data-display-pricebreakdown--default", root: "dl", text: "dl dd", ends: "dl > div" },
-  { component: "PriceBreakdown", story: "data-display-pricebreakdown--transfer-and-loading", root: "dl", text: "dl dt span", ends: "dl > div" },
-  { component: "PassCard", story: "data-display-passcard--default", root: "article", text: "article dd" },
-  { component: "PassCard", story: "data-display-passcard--compositions", root: "article", text: "article dd" },
+  { component: "ResultState", story: storyId("result-state", "Default"), root: "section", text: "section h2" },
+  { component: "ResultState", story: storyId("result-state", "Statuses"), root: "section", text: "section h3" },
+  { component: "ReferenceCode", story: storyId("reference-code", "Default"), root: "[role=group]", text: "[translate=no]", target: "[role=group] button" },
+  { component: "PriceBreakdown", story: storyId("price-breakdown", "Default"), root: "dl", text: "dl dd", ends: "dl > div" },
+  { component: "PriceBreakdown", story: storyId("price-breakdown", "Transfer And Loading"), root: "dl", text: "dl dt span", ends: "dl > div" },
+  { component: "PassCard", story: storyId("pass-card", "Default"), root: "article", text: "article dd" },
+  { component: "PassCard", story: storyId("pass-card", "Compositions"), root: "article", text: "article dd" },
   ...BUSINESS_SUBJECTS(),
 ];
 
@@ -277,14 +278,14 @@ const DISPLAY_SUBJECTS = [
  */
 function BUSINESS_SUBJECTS() {
   return [
-    { component: "AmountDisplay", story: "data-display-amountdisplay--default", root: "[data-slot=amount-display]", text: "[data-slot=amount-value]" },
-    { component: "Timeline", story: "data-display-timeline--statuses", root: "#storybook-root ol", text: "#storybook-root ol li p" },
-    { component: "TimeSlotPicker", story: "form-inputs-timeslotpicker--default", root: "[role=radiogroup]", text: "[role=radio] span", target: "[role=radio]" },
-    { component: "AddressFields", story: "form-inputs-addressfields--default", root: "fieldset", text: "fieldset input" },
-    { component: "PhoneInput", story: "form-inputs-phoneinput--default", root: "[data-slot=phone-input]", text: "input[type=tel]", target: "[data-slot=phone-input] select" },
-    { component: "GuestPicker", story: "form-inputs-guestpicker--default", root: "button[aria-labelledby]", text: "button[aria-labelledby] span" },
-    { component: "CountrySelect", story: "form-inputs-countryselect--default", root: "button[aria-labelledby]", text: "button[aria-labelledby] span" },
-    { component: "DateRangeInput", story: "form-inputs-daterangeinput--default", root: "button[aria-labelledby]", text: "button[aria-labelledby] bdi" },
+    { component: "AmountDisplay", story: storyId("amount-display", "Default"), root: "[data-slot=amount-display]", text: "[data-slot=amount-value]" },
+    { component: "Timeline", story: storyId("timeline", "Statuses"), root: "#storybook-root ol", text: "#storybook-root ol li p" },
+    { component: "TimeSlotPicker", story: storyId("time-slot-picker", "Default"), root: "[role=radiogroup]", text: "[role=radio] span", target: "[role=radio]" },
+    { component: "AddressFields", story: storyId("address-fields", "Default"), root: "fieldset", text: "fieldset input" },
+    { component: "PhoneInput", story: storyId("phone-input", "Default"), root: "[data-slot=phone-input]", text: "input[type=tel]", target: "[data-slot=phone-input] select" },
+    { component: "GuestPicker", story: storyId("guest-picker", "Default"), root: "button[aria-labelledby]", text: "button[aria-labelledby] span" },
+    { component: "CountrySelect", story: storyId("country-select", "Default"), root: "button[aria-labelledby]", text: "button[aria-labelledby] span" },
+    { component: "DateRangeInput", story: storyId("date-range-input", "Default"), root: "button[aria-labelledby]", text: "button[aria-labelledby] bdi" },
   ];
 }
 

@@ -33,10 +33,43 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const read = (p) => JSON.parse(readFileSync(`${root}/${p}`, "utf8"));
 const CHECK = process.argv.includes("--check");
 
-const manifest = read("components.manifest.json");
+const manifestText = readFileSync(`${root}/components.manifest.json`, "utf8");
+const manifest = JSON.parse(manifestText);
 const registry = read("registry/registry.json");
 const verification = read("verification.json");
 const STATUSES = new Set(["beta", "stable", "deprecated"]);
+
+/**
+ * The FUNCTIONAL TAXONOMY, and why it is declared in the manifest rather than in the surfaces that use it.
+ *
+ * Functional category used to be the one catalogue dimension with no canonical source: a 109-entry map in
+ * `apps/web/src/lib/site.ts` and a 107-entry map in `scripts/gen-stories.mjs`, each hand-maintained, each
+ * claiming in a comment to mirror the other. They had drifted on two slugs, and `categoryOf` fell back to
+ * "Data Display" for anything missing, so a component could be filed in one category on the website and
+ * another in Storybook, or silently land in Data Display, and nothing anywhere would say so (CAT-BUG-019).
+ *
+ * Both maps are now generated from `categoryDefinitions` plus each component's `category`, and the fallback
+ * is gone: an unknown slug is an error, not a default.
+ *
+ * `kind` is the distinction the repository already made by accident. `combobox` carries
+ * `platformNote: "not a component — a documented composition …"`, and `platform-support.ts` parses that prose
+ * to derive `recipes`, which is why the site says "108 components and 1 documented recipe". `kind` states it
+ * instead of inferring it from a sentence.
+ *
+ * `facets` is secondary and non-exclusive. It exists so a reader can see that `address-fields` and `form` are
+ * composed field groups rather than primitives, and that `direction-provider` renders nothing — without a
+ * one-item "Utilities" category, and without moving anything between Components and Blocks.
+ */
+const CATEGORIES = Object.keys(manifest.categoryDefinitions ?? {});
+const KINDS = new Set(["component", "recipe"]);
+const FACETS = new Set(["composed", "utility"]);
+
+/** Keys a manifest entry may carry. A typo like `catagory` must fail, not be ignored. */
+const COMPONENT_KEYS = new Set([
+  "category", "kind", "facets", "status", "lifecycleReason", "since", "platforms",
+  "platformNote", "platformNotes", "platformGuidance", "registry", "composition", "sourceNames",
+]);
+const MANIFEST_KEYS = new Set(["$schema", "$description", "categoryDefinitions", "platformDefinitions", "components"]);
 const FAMILIES = new Set(["web", "native"]);
 /**
  * What a platform tab shows when the component is not implemented on that platform.
@@ -101,6 +134,64 @@ const byFamily = (f) => platforms.filter((p) => defs[p].family === f);
 const catalogPlatforms = platforms.filter((p) => defs[p].catalogComplete);
 
 const errors = [];
+
+/* ── manifest shape ───────────────────────────────────────────────────────────
+ * Checked before anything reads a value, so a misspelled key fails loudly
+ * instead of being silently skipped by every consumer below.
+ */
+for (const k of Object.keys(manifest)) {
+  if (!MANIFEST_KEYS.has(k)) errors.push(`manifest: unknown top-level key "${k}" (allowed: ${[...MANIFEST_KEYS].join(", ")})`);
+}
+for (const k of MANIFEST_KEYS) if (!(k in manifest)) errors.push(`manifest: missing top-level key "${k}"`);
+
+/**
+ * Duplicate slugs, which `JSON.parse` cannot report: a repeated key silently keeps the last value, so a
+ * component pasted twice with two different categories would validate and generate from whichever copy
+ * happened to come second.
+ */
+{
+  const seen = new Set();
+  const dupes = new Set();
+  const body = manifestText.slice(manifestText.indexOf('"components"'));
+  for (const [, slug] of body.matchAll(/^\s{4}"([a-z0-9-]+)":\s*\{/gm)) {
+    if (seen.has(slug)) dupes.add(slug);
+    seen.add(slug);
+  }
+  for (const s of dupes) errors.push(`${s}: appears twice in components — JSON keeps only the last copy, so delete one`);
+}
+
+if (!CATEGORIES.length) errors.push(`manifest: categoryDefinitions must declare at least one category`);
+for (const [label, def] of Object.entries(manifest.categoryDefinitions ?? {})) {
+  if (!def || typeof def.rule !== "string" || def.rule.length < 20) {
+    errors.push(`categoryDefinitions["${label}"]: needs a "rule" saying what belongs in it, so an assignment can be argued with`);
+  }
+  for (const k of Object.keys(def ?? {})) {
+    if (k !== "rule" && k !== "formerly") errors.push(`categoryDefinitions["${label}"]: unknown key "${k}"`);
+  }
+}
+
+/**
+ * `formerly` carries a category's previous labels, so a shared `/components?cat=Form%20Inputs` link still
+ * filters after a rename instead of silently matching nothing. A former label must not collide with a current
+ * one, and two categories must not both claim it, or the alias has no single answer.
+ */
+{
+  const current = new Set(CATEGORIES);
+  const claimed = new Map();
+  for (const [label, def] of Object.entries(manifest.categoryDefinitions ?? {})) {
+    if (!("formerly" in (def ?? {}))) continue;
+    if (!Array.isArray(def.formerly) || !def.formerly.length) {
+      errors.push(`categoryDefinitions["${label}"]: formerly must be a non-empty array of previous labels, or absent`);
+      continue;
+    }
+    for (const prev of def.formerly) {
+      if (current.has(prev)) errors.push(`categoryDefinitions["${label}"]: formerly lists "${prev}", which is itself a current category`);
+      if (claimed.has(prev)) errors.push(`categoryDefinitions["${label}"]: formerly lists "${prev}", already claimed by "${claimed.get(prev)}"`);
+      claimed.set(prev, label);
+    }
+  }
+}
+
 for (const [p, d] of Object.entries(defs)) {
   if (!FAMILIES.has(d.family)) errors.push(`platformDefinitions.${p}: family must be "web" or "native", not "${d.family}"`);
   for (const k of ["label", "abbr", "package", "dir"]) if (!d[k]) errors.push(`platformDefinitions.${p}: missing "${k}"`);
@@ -117,6 +208,39 @@ for (const [s, c] of Object.entries(manifest.components)) {
   if (c.registry === false) {
     if (slugs.includes(s)) errors.push(`${s}: marked registry:false but is a registry item`);
   } else if (!slugs.includes(s)) errors.push(`${s}: in manifest but not a registry component (set registry:false for a docs-only companion)`);
+  for (const k of Object.keys(c)) {
+    if (!COMPONENT_KEYS.has(k)) errors.push(`${s}: unknown key "${k}" — check the spelling (allowed: ${[...COMPONENT_KEYS].join(", ")})`);
+  }
+  // the functional taxonomy. No default: an entry with no category is a missing decision, and the website
+  // used to answer it with "Data Display" rather than with an error.
+  if (!c.category) errors.push(`${s}: has no category — pick one of ${CATEGORIES.join(" | ")} (categoryDefinitions carries each rule)`);
+  else if (!CATEGORIES.includes(c.category)) errors.push(`${s}: category "${c.category}" is not in categoryDefinitions (${CATEGORIES.join(" | ")})`);
+  if (!c.kind) errors.push(`${s}: has no kind — "component" if it exports an API, "recipe" if it is a documented composition`);
+  else if (!KINDS.has(c.kind)) errors.push(`${s}: kind must be "component" or "recipe", not "${c.kind}"`);
+  if ("facets" in c) {
+    if (!Array.isArray(c.facets) || !c.facets.length) errors.push(`${s}: facets must be a non-empty array, or absent`);
+    else {
+      for (const f of c.facets) if (!FACETS.has(f)) errors.push(`${s}: unknown facet "${f}" (${[...FACETS].join(", ")})`);
+      if (new Set(c.facets).size !== c.facets.length) errors.push(`${s}: facets repeats a value`);
+    }
+  }
+  // A recipe has no export of its own, so it cannot be a registry component someone installs.
+  if (c.kind === "recipe" && c.registry !== false) errors.push(`${s}: is kind "recipe" but is a registry component — a recipe has no source to install`);
+  /**
+   * `kind` and the prose must agree.
+   *
+   * "not a component" in a platformNote is load-bearing outside this repo: marketing/CLAIMS.md B2 makes the
+   * phrasing a condition of quoting the entry count at all, and two pinned marketing drafts still derive the
+   * recipe list by matching it. `kind` is now what the site and the stats scripts read, so if the two could
+   * disagree the public number and the catalogue would quietly part company.
+   */
+  const saysRecipe = /not a component/i.test(c.platformNote ?? "");
+  if (c.kind === "recipe" && !saysRecipe) {
+    errors.push(`${s}: is kind "recipe" but its platformNote does not say "not a component" — say so there too, or make it a component`);
+  }
+  if (c.kind === "component" && saysRecipe) {
+    errors.push(`${s}: its platformNote says "not a component" but kind is "component" — set kind "recipe", or reword the note`);
+  }
   if (!STATUSES.has(c.status)) errors.push(`${s}: invalid status "${c.status}"`);
   /**
    * A beta component must say why it is beta, and a stable one must not carry a stale reason.
@@ -179,6 +303,17 @@ for (const [slug, c] of Object.entries(manifest.components)) {
     }
   }
   verificationLevel[slug] = per;
+  /**
+   * The other direction, which nothing checked: evidence recorded for a platform the manifest says the
+   * component is NOT on. A platform badge means "this library carries it", so the two files contradicting
+   * each other is exactly the over-claim the badges were suspected of (CAT-BUG-016 found 0 of these across
+   * 545 cells; this keeps that at 0 instead of re-auditing it by hand).
+   */
+  for (const platform of Object.keys(verification.components?.[slug] ?? {})) {
+    if (!c.platforms.includes(platform)) {
+      errors.push(`${slug}: verification.json records ${platform} evidence, but the manifest does not list ${platform} — one of the two is wrong`);
+    }
+  }
 }
 
 /**
@@ -278,8 +413,47 @@ const parity = {
   claimableEvidence: verification.claimableKinds,
 };
 
+/**
+ * The functional taxonomy, for the website's category map, filters and counts, and for the Storybook
+ * grouping. One file, so there is nothing left to keep in sync by hand.
+ */
+const taxonomy = {
+  $schema: "https://kinetixui.com/schema/component-taxonomy.json",
+  $description:
+    `slug → functional category, kind and facets, plus the declared category order and the rule behind each ` +
+    `category. ${GENERATED} Consumed by apps/web/src/lib/component-taxonomy.ts (the website's category map, ` +
+    `filters and counts) and scripts/gen-stories.mjs (the Storybook group titles). There is no default ` +
+    `category: a slug missing here is an error in both consumers, not a silent "Data Display".`,
+  categoryOrder: CATEGORIES,
+  /** previous label → the category it is now, so a shared ?cat= link survives a rename. */
+  categoryAliases: Object.fromEntries(
+    Object.entries(manifest.categoryDefinitions)
+      .flatMap(([label, def]) => (def.formerly ?? []).map((prev) => [prev, label])),
+  ),
+  categories: Object.fromEntries(
+    CATEGORIES.map((label) => [
+      label,
+      {
+        rule: manifest.categoryDefinitions[label].rule,
+        count: entries.filter(([, c]) => c.category === label).length,
+        ...(manifest.categoryDefinitions[label].formerly ? { formerly: manifest.categoryDefinitions[label].formerly } : {}),
+      },
+    ]),
+  ),
+  kinds: Object.fromEntries(
+    [...KINDS].map((k) => [k, entries.filter(([, c]) => c.kind === k).length]),
+  ),
+  /** facet → the slugs carrying it. A reader's answer to "which of these are composed field groups?". */
+  facets: Object.fromEntries(
+    [...FACETS].map((f) => [f, entries.filter(([, c]) => c.facets?.includes(f)).map(([s]) => s)]),
+  ),
+  components: Object.fromEntries(
+    entries.map(([s, c]) => [s, { category: c.category, kind: c.kind, ...(c.facets ? { facets: c.facets } : {}) }]),
+  ),
+};
+
 let stale = false;
-for (const [file, data] of [["component-status.json", status], ["platform-parity.json", parity]]) {
+for (const [file, data] of [["component-status.json", status], ["platform-parity.json", parity], ["component-taxonomy.json", taxonomy]]) {
   const out = JSON.stringify(data, null, 2) + "\n";
   if (CHECK) {
     if (readFileSync(`${root}/${file}`, "utf8") !== out) {
@@ -296,5 +470,7 @@ for (const [, c] of entries) for (const g of Object.values(c.platformGuidance ??
 console.log(
   `${CHECK ? "check:manifest ok" : "gen:manifest"} — ${entries.length} components (${coverage}); ` +
     `${full} on all ${catalogPlatforms.length} complete-catalogue platforms; ` +
-    `guidance ${Object.entries(guidanceCounts).map(([t, n]) => `${t} ${n}`).join(", ")}.`,
+    `guidance ${Object.entries(guidanceCounts).map(([t, n]) => `${t} ${n}`).join(", ")}; ` +
+    `${CATEGORIES.length} categories (${CATEGORIES.map((c) => `${c} ${taxonomy.categories[c].count}`).join(", ")}); ` +
+    `kinds ${Object.entries(taxonomy.kinds).map(([k, n]) => `${k} ${n}`).join(", ")}.`,
 );

@@ -36,7 +36,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Form Inputs/PhoneInput",
+  title: "Forms & Inputs/PhoneInput",
   parameters: {
     layout: "padded",
     docs: { source: { code: "<PhoneInput\n  label=\"Mobile number\"\n  countries={[{ code: \"SA\", name: \"Saudi Arabia\", callingCode: \"966\" }]}\n  value={phone}\n  onValueChange={({ raw, ...value }) => { setPhone(value); setRaw(raw); }}\n/>", language: "tsx" } },

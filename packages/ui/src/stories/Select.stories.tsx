@@ -18,7 +18,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Form Inputs/Select",
+  title: "Forms & Inputs/Select",
   component: Select,
   args: { disabled: false },
   argTypes: { disabled: { control: "boolean" } },
