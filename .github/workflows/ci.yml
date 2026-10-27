@@ -377,10 +377,18 @@ jobs:
             https://github.com/oven-sh/bun/releases/download/bun-v1.4.4/bun-linux-x64.zip
           echo "bf8ccbfb2b0b80159e0f9a6d15c55317add8077534dbc6130a3edb52fccb395c  bun-linux-x64.zip" | sha256sum --check
           unzip -q bun-linux-x64.zip
+          # The archive ships the `bun` binary alone. `bunx` is a symlink to it that Bun's own install
+          # script creates, and the matrix's execute route runs `bunx`, so unpacking the zip is not
+          # enough: without this the route dies on `spawnSync bunx ENOENT`. Bun dispatches on argv[0].
+          ln -s bun bun-linux-x64/bunx
           echo "$RUNNER_TEMP/bun-linux-x64" >> "$GITHUB_PATH"
 
+      # Both binaries, because the matrix uses both and `bun --version` alone passed happily on a runner
+      # that had no `bunx` at all.
       - name: Bun is the pinned version the expectations were measured with
-        run: bun --version
+        run: |
+          bun --version
+          bunx --version
 
       - name: Every documented package manager, against its measured outcome
         run: node scripts/adoption/pm-matrix.mjs --check
