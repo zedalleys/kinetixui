@@ -349,6 +349,19 @@ jobs:
       - name: Documented React onboarding in a clean consumer
         run: node scripts/adoption/react-consumer.mjs
 
+      # The same fixture, once per package manager the site offers, compared against the outcome we have
+      # measured for each (scripts/adoption/pm-matrix-expectations.json). It fails on any DIFFERENCE, not
+      # on any failure: the Yarn install cell is a known, documented failure and stays recorded as one, so
+      # this gate is neither red forever nor quietly missing its broken cell. A Yarn cell that starts
+      # passing fails this job too, because the caveats the docs carry for it would then be wrong.
+      #
+      # Cost: four real installs and four Vite builds on top of the npm cell above. Yarn Berry is not
+      # covered here — `yarn` on a runner is Classic, and the second line needs a binary supplied
+      # explicitly; its two cells are marked optional and are measured by hand. Adding corepack for Berry
+      # is a follow-up, deliberately not bundled in.
+      - name: Every documented package manager, against its measured outcome
+        run: node scripts/adoption/pm-matrix.mjs --check
+
       - name: Build site
         run: pnpm build:web
 

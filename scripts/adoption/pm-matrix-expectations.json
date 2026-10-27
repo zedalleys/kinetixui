@@ -1,0 +1,53 @@
+{
+  "measured": "2026-10-27",
+  "why": [
+    "A gate that only asserts success cannot carry a known failure: it is either red forever, and then",
+    "disabled, or the failing cell is quietly dropped and the documentation keeps offering a broken route.",
+    "So each cell records the outcome we have MEASURED, and the gate fails on any difference in either",
+    "direction. A cell that starts passing is as much a failure here as one that starts failing, because",
+    "the documentation written around it is now wrong — and that is the moment to notice, not months later."
+  ],
+  "cells": {
+    "execute/npm": {
+      "expect": "pass"
+    },
+    "execute/pnpm": {
+      "expect": "pass"
+    },
+    "execute/yarn": {
+      "expect": "pass",
+      "note": "Yarn Classic has no dlx. The script already treats that refusal as the expected outcome, so the cell passes while the command fails; /docs says so on the Yarn tab."
+    },
+    "execute/yarn-berry": {
+      "expect": "pass",
+      "optional": true,
+      "note": "Only measured when --yarn-berry=<path> supplies a Berry binary, because `yarn` on PATH can be only one of Yarn's two product lines. Berry has dlx, so unlike Classic this one really passes."
+    },
+    "execute/bun": {
+      "expect": "pass"
+    },
+    "install/npm": {
+      "expect": "pass"
+    },
+    "install/pnpm": {
+      "expect": "pass"
+    },
+    "install/yarn": {
+      "expect": "fail",
+      "reason": "recharts@3.10.1 declares react-is as a peer dependency and neither Yarn line installs a transitive peer, so a clean Yarn consumer typechecks and then fails its build on 'Rolldown failed to resolve import react-is'. Confirmed by mutation: yarn add react-is@19 makes the same fixture build.",
+      "fix": "declare react-is in @kinetixui/ui dependencies — a published-package change that needs its own changeset, held out of the 0.26.1 boundary. Open owner decision for 0.26.2.",
+      "documented": "apps/web/src/lib/pm-commands.ts YARN_NEEDS_REACT_IS, shown on the Yarn tab of every @kinetixui/ui install command, plus a callout on /docs/installation.",
+      "when_this_starts_passing": "the fix has landed. Update this file to expect pass, and remove the Yarn caveat from pm-commands.ts and the callout from /docs/installation in the same change."
+    },
+    "install/yarn-berry": {
+      "expect": "fail",
+      "optional": true,
+      "reason": "the same missing react-is peer as install/yarn. Measured on Yarn 4.18.1 with nodeLinker: node-modules, so it is not a Plug'n'Play artefact and not a Classic quirk — both Yarn lines fail identically.",
+      "also": "Yarn 4 additionally refuses any version published in the last ~7 days (npmMinimalAgeGate), which the fixture sets to 0 so it tests our packaging rather than Yarn's clock.",
+      "when_this_starts_passing": "same as install/yarn — update both cells and the docs together."
+    },
+    "install/bun": {
+      "expect": "pass"
+    }
+  }
+}

@@ -25,7 +25,7 @@
  * What it does NOT do: reach the component registry at kinetixui.com, or publish anything. `cli add` needs the
  * registry origin; that is a separate check and its absence is stated rather than papered over.
  */
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -230,9 +230,54 @@ for (const pm of managers) {
 
 console.log('\nMatrix');
 for (const r of results) console.log(`  ${r.route.padEnd(8)} ${r.pm.padEnd(5)} ${r.ok ? 'ok' : 'FAILED'}`);
+
+/*
+ * `--check` compares what just happened against `pm-matrix-expectations.json` and fails on any difference
+ * IN EITHER DIRECTION. Without it the script asserts that everything passes, which is a gate this project
+ * cannot currently run: one cell — a Yarn install — is known to fail for a reason whose fix is a published
+ * package change. A gate that is red forever gets turned off, and a gate that drops its failing cell lets
+ * the documentation keep offering a route that does not work. Recording the measured outcome keeps the
+ * failure visible, dated and attributed, and still breaks the moment reality moves — including when the
+ * Yarn cell starts passing, which means the docs written around it are now wrong.
+ */
+if (has('check')) {
+  const expectations = JSON.parse(readFileSync(join(root, 'scripts/adoption/pm-matrix-expectations.json'), 'utf8'));
+  const measured = new Map(results.filter((r) => r.route !== 'both').map((r) => [`${r.route}/${r.pm}`, r.ok]));
+  const problems = [];
+
+  for (const [cell, { expect, reason, optional }] of Object.entries(expectations.cells)) {
+    if (!measured.has(cell)) {
+      // Berry is optional because `yarn` on PATH can only be one of Yarn's two product lines, so the
+      // second one has to be supplied explicitly. Everything else not measured is a hole in the run.
+      if (!optional) problems.push(`${cell}: expected ${expect}, but the run did not measure it`);
+      continue;
+    }
+    const actual = measured.get(cell) ? 'pass' : 'fail';
+    if (actual === expect) continue;
+    problems.push(
+      actual === 'pass'
+        ? `${cell}: recorded as a known failure, but it PASSED. If the cause is fixed, update this file and remove the caveat the docs carry for it. Recorded reason: ${reason ?? '(none)'}`
+        : `${cell}: expected pass, but it FAILED. This is a regression in a route the documentation offers.`,
+    );
+  }
+  for (const cell of measured.keys()) {
+    if (!(cell in expectations.cells)) problems.push(`${cell}: measured, but no expectation is recorded for it`);
+  }
+
+  console.log(`\nChecked ${Object.keys(expectations.cells).length} cell(s) against expectations measured ${expectations.measured}.`);
+  if (problems.length) {
+    console.error(`\n${problems.length} cell(s) do not match:`);
+    for (const p of problems) console.error(`  ${p}`);
+    process.exit(1);
+  }
+  console.log('Every cell matches what was measured, including the failures that are known and documented.');
+  process.exit(0);
+}
+
 const failures = results.filter((r) => !r.ok);
 if (failures.length) {
   console.error(`\n${failures.length} cell(s) failed. The documentation must not offer a route this says is broken.`);
+  console.error('If a failure is known and documented, run with --check, which compares against pm-matrix-expectations.json.');
   process.exit(1);
 }
 console.log('\nEvery advertised route was exercised on this machine.');
