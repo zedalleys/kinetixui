@@ -29,9 +29,24 @@ the card that used to collide, and the **minimum gap anywhere in the sweep 18.09
 **No API change.** `MetricProps` is untouched. A `data-kx-metric-pair` attribute is added to the row
 as the handle the rendered gate measures it by; it is a marker, never a styling hook.
 
-**One further published change.** `sm-rem`, `lg-rem` and `xl-rem` move into
-`packages/ui/tailwind.config.ts`, which this package publishes and exports as
+**One further published change, and a bug it uncovered.** `sm-rem`, `lg-rem` and `xl-rem` now live
+in `packages/ui/tailwind.config.ts`, which this package publishes and exports as
 `./tailwind.config`. They previously existed only in the website's own config, so any consumer of
-the preset — the repository's own Storybook included — generated **no rule at all** for a
-`sm-rem:` utility. The change is additive: three screen names appear in the preset's
-`theme.extend.screens`, and nothing is renamed or removed.
+the preset — the repository's own Storybook included — generated **no rule at all** for a `sm-rem:`
+utility.
+
+They are registered as **variants**, not as `theme.screens`, and that distinction is the whole
+point. Tailwind 3.4 emits no rule for **any** `min-*` or `max-*` variant once the screen map mixes
+units, silently: no warning, no error, the class is simply absent. Three `rem` entries beside
+Tailwind's `px` defaults are exactly that mixture. Measured on one stub carrying `max-md:hidden`,
+`min-[420px]:grid-cols-2`, `md:flex` and `sm-rem:grid-cols-2`:
+
+- as `theme.extend.screens` — `max-md:hidden` **0 rules**, `min-[420px]:grid-cols-2` **0 rules**
+  (`md:flex` survives; plain responsive variants are unaffected)
+- as variants — all four emitted
+
+This had already cost something before the preset carried the breakpoints: the website's own config
+had them, and `min-[420px]:grid-cols-2` on the blocks gallery emitted **no `min-width: 420px` rule
+in the built site**, so that grid never took its two-column step. It does now. `check:breakpoints`
+is a new CI gate that compiles both halves against the published preset and carries its own
+negative control.
