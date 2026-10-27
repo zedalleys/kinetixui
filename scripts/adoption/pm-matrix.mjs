@@ -312,11 +312,41 @@ if (has('check')) {
     }
   }
 
+  /*
+   * A scoped run (`--pm=<manager>`, `--execute-only`) deliberately measures a subset, so requiring every
+   * recorded cell would fail it for cells it was never asked to visit — and the missing-manager message
+   * above recommends `--pm=<manager>` as the way to proceed, which would then be useless advice in check
+   * mode. Coverage is required of the cells the run's scope actually selects.
+   *
+   * What a scoped run must never be is mistakable for a full one, so it is reported as scoped and the
+   * unchecked cells are named. CI runs unscoped, where every non-optional cell is still required.
+   */
+  const inScope = (cell) => {
+    const [route, pm] = cell.split('/');
+    if (has('execute-only') && route !== 'execute') return false;
+    if (only && pm !== only && !(only === 'yarn' && pm === 'yarn-berry')) return false;
+    return true;
+  };
+  const outOfScope = [];
+
+  /*
+   * Fail closed when nothing was exercised. Scoping the run narrows what coverage it can claim; it must
+   * never be able to claim coverage of nothing. Every earlier version of this failure was a false pass
+   * (an unmeasured manager reading as clean), so the empty case gets its own explicit refusal rather than
+   * falling through a loop that happens to find no disagreement.
+   */
+  if (measured.size === 0) {
+    console.error('\nNo route was exercised by this run, so there is nothing to compare and no claim to make.');
+    console.error(`Scope: ${only ? `--pm=${only}` : 'all managers'}${has('execute-only') ? ', --execute-only' : ''}.`);
+    process.exit(1);
+  }
+
   for (const [cell, { expect, reason, optional }] of Object.entries(expectations.cells)) {
     if (!measured.has(cell)) {
       // Berry is optional because `yarn` on PATH can only be one of Yarn's two product lines, so the
-      // second one has to be supplied explicitly. Everything else not measured is a hole in the run.
-      if (!optional) problems.push(`${cell}: expected ${expect}, but the run did not measure it`);
+      // second one has to be supplied explicitly. Everything else IN SCOPE and not measured is a hole.
+      if (!inScope(cell)) outOfScope.push(cell);
+      else if (!optional) problems.push(`${cell}: expected ${expect}, but the run did not measure it`);
       continue;
     }
     const actual = measured.get(cell) ? 'pass' : 'fail';
@@ -331,13 +361,21 @@ if (has('check')) {
     if (!(cell in expectations.cells)) problems.push(`${cell}: measured, but no expectation is recorded for it`);
   }
 
-  console.log(`\nChecked ${Object.keys(expectations.cells).length} cell(s) against expectations measured ${expectations.measured}.`);
+  const checked = Object.keys(expectations.cells).length - outOfScope.length;
+  console.log(`\nChecked ${checked} of ${Object.keys(expectations.cells).length} cell(s) against expectations measured ${expectations.measured}.`);
+  if (outOfScope.length) {
+    console.log(`SCOPED RUN — ${outOfScope.length} cell(s) outside this run's scope were NOT checked: ${outOfScope.join(', ')}.`);
+    console.log('This run does not establish coverage of the documented routes. CI runs unscoped, where every');
+    console.log('non-optional cell is required.');
+  }
   if (problems.length) {
     console.error(`\n${problems.length} cell(s) do not match:`);
     for (const p of problems) console.error(`  ${p}`);
     process.exit(1);
   }
-  console.log('Every cell matches what was measured, including the failures that are known and documented.');
+  console.log(outOfScope.length
+    ? 'Every cell this run checked matches what was measured, including the failures that are known and documented.'
+    : 'Every cell matches what was measured, including the failures that are known and documented.');
   process.exit(0);
 }
 
@@ -349,7 +387,11 @@ if (has('check')) {
  * documented manager was never run.
  */
 const failures = results.filter((r) => !r.ok);
-if (failures.length || notInstalled.length) {
+const exercised = results.filter((r) => r.route !== 'both');
+if (failures.length || notInstalled.length || exercised.length === 0) {
+  if (exercised.length === 0) {
+    console.error('\nNo route was exercised by this run, so it cannot speak for any documented route.');
+  }
   if (notInstalled.length) {
     console.error(`\n${notInstalled.length} documented package manager(s) are not installed here: ${notInstalled.join(', ')}.`);
     console.error('No route was exercised for them, so this run cannot speak for the documentation.');
