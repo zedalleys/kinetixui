@@ -294,19 +294,20 @@ if (has('check')) {
    * install semantics really do change across one, which is why Yarn 1 and Yarn 4 are two cells here.
    */
   const recordedWith = expectations.measured_with ?? {};
-  const major = (v) => String(v).split('.')[0];
+  const major = (v) => Number(String(v).split('.')[0]);
   console.log('\nMeasured with');
   for (const [m, v] of Object.entries(measuredVersions)) {
     const rec = recordedWith[m];
-    console.log(`  ${m.padEnd(11)} ${v}${rec && rec !== v ? `   (recorded ${rec})` : ''}`);
+    const known = Array.isArray(rec?.majors) ? rec.majors : [];
+    console.log(`  ${m.padEnd(11)} ${v.padEnd(9)} ${known.includes(major(v)) ? `major ${major(v)}, measured` : `major ${major(v)}, NOT in the measured set [${known.join(', ')}]`}`);
   }
   for (const [m, v] of Object.entries(measuredVersions)) {
     const rec = recordedWith[m];
-    if (!rec) {
-      problems.push(`${m}: this run measured with ${m} ${v}, but no version for it is recorded in measured_with`);
-    } else if (major(rec) !== major(v)) {
+    if (!Array.isArray(rec?.majors) || rec.majors.length === 0) {
+      problems.push(`${m}: this run measured with ${m} ${v}, but measured_with records no majors for it`);
+    } else if (!rec.majors.includes(major(v))) {
       problems.push(
-        `${m}: the cells were measured with ${m} ${rec} and this run used ${v} — a different major, across which install semantics change. Re-measure the ${m} cells and update measured_with, rather than reading the result as a change in this project.`,
+        `${m}: this run used ${m} ${v}, whose major ${major(v)} has never been measured against these expectations (measured: ${rec.majors.join(', ')}). Install semantics change across a major, so measure the ${m} cells under it and add the major to measured_with — do not assume the recorded outcomes carry over.`,
       );
     }
   }
@@ -340,10 +341,23 @@ if (has('check')) {
   process.exit(0);
 }
 
+/*
+ * Outside --check too. A manager that is not installed removes its cells from `results` rather than
+ * failing any of them, so without this the script printed "Every advertised route was exercised on this
+ * machine" and exited 0 having measured nothing — a false pass, and a regression on the raw ENOENT crash
+ * it replaced. The sentence is the claim that matters here, and it must not be printable when a
+ * documented manager was never run.
+ */
 const failures = results.filter((r) => !r.ok);
-if (failures.length) {
-  console.error(`\n${failures.length} cell(s) failed. The documentation must not offer a route this says is broken.`);
-  console.error('If a failure is known and documented, run with --check, which compares against pm-matrix-expectations.json.');
+if (failures.length || notInstalled.length) {
+  if (notInstalled.length) {
+    console.error(`\n${notInstalled.length} documented package manager(s) are not installed here: ${notInstalled.join(', ')}.`);
+    console.error('No route was exercised for them, so this run cannot speak for the documentation.');
+  }
+  if (failures.length) {
+    console.error(`\n${failures.length} cell(s) failed. The documentation must not offer a route this says is broken.`);
+    console.error('If a failure is known and documented, run with --check, which compares against pm-matrix-expectations.json.');
+  }
   process.exit(1);
 }
 console.log('\nEvery advertised route was exercised on this machine.');
