@@ -5,7 +5,7 @@
     "disabled, or the failing cell is quietly dropped and the documentation keeps offering a broken route.",
     "So each cell records the outcome we have MEASURED, and the gate fails on any difference in either",
     "direction. A cell that starts passing is as much a failure here as one that starts failing, because",
-    "the documentation written around it is now wrong — and that is the moment to notice, not months later."
+    "the documentation written around it is now wrong \u2014 and that is the moment to notice, not months later."
   ],
   "measured_with": {
     "_why": [
@@ -14,12 +14,12 @@
       "regression or fix when it is neither.",
       "",
       "Each manager records the MAJORS its cells have actually been measured against, and --check fails",
-      "when it meets a major that is not in the list — i.e. one nobody has ever checked these expectations",
+      "when it meets a major that is not in the list \u2014 i.e. one nobody has ever checked these expectations",
       "against. It is a SET, not one version, because two environments legitimately differ: see pnpm below.",
       "",
       "DELIBERATELY MAJOR-ONLY, AND PLEASE DO NOT 'TIGHTEN' IT TO EXACT VERSIONS. Patch and minor drift on",
       "a hosted runner is constant, and a gate that goes red for a patch bump is a gate someone switches",
-      "off — which is the exact fate this whole design exists to avoid. A major is different: install",
+      "off \u2014 which is the exact fate this whole design exists to avoid. A major is different: install",
       "semantics really do change across one, which is why Yarn 1 and Yarn 4 are two separate cells here.",
       "The exact version measured is printed on every run regardless, so drift stays visible before it",
       "matters. Adding a major to a list means MEASURING it first; listing one unmeasured would be exactly",
@@ -30,8 +30,10 @@
         10
       ],
       "versions": [
-        "10.9.4"
-      ]
+        "10.9.4",
+        "10.9.9"
+      ],
+      "note": "Two patch versions of the same major, both measured and both passing: 10.9.4 in a review container and 10.9.9 on a GitHub-hosted ubuntu-latest runner (CI run 40506108993, 2026-10-27). Recorded because this is precisely the runner-image drift the comparison is major-only to tolerate \u2014 the set check passed on major 10 while the exact versions differed, which is the intended behaviour and not a near miss."
     },
     "pnpm": {
       "majors": [
@@ -42,7 +44,7 @@
         "10.28.0",
         "12.3.1"
       ],
-      "note": "Two majors, both measured, both passing. CI and a local checkout genuinely run different pnpm: `pnpm/action-setup` with no `version` input installs the repository's `packageManager` version (12.3.1), so that is what CI measures, while an ambient pnpm outside the repository is 10.28.0 — and pnpm 10+ self-switches to `packageManager` inside the repo, which is why `pnpm --version` differs by directory here. Recording only 10.28.0 would have made this gate fail every CI run on a major mismatch while every install outcome matched: red forever, for a reason that is not about this project. Measured 2026-10-27: install and execute both pass under 12.3.1, same as under 10.28.0."
+      "note": "Two majors, both measured, both passing. CI and a local checkout genuinely run different pnpm: `pnpm/action-setup` with no `version` input installs the repository's `packageManager` version (12.3.1), so that is what CI measures, while an ambient pnpm outside the repository is 10.28.0 \u2014 and pnpm 10+ self-switches to `packageManager` inside the repo, which is why `pnpm --version` differs by directory here. Recording only 10.28.0 would have made this gate fail every CI run on a major mismatch while every install outcome matched: red forever, for a reason that is not about this project. Measured 2026-10-27: install and execute both pass under 12.3.1, same as under 10.28.0."
     },
     "yarn": {
       "majors": [
@@ -99,16 +101,16 @@
     "install/yarn": {
       "expect": "fail",
       "reason": "recharts@3.10.1 declares react-is as a peer dependency and neither Yarn line installs a transitive peer, so a clean Yarn consumer typechecks and then fails its build on 'Rolldown failed to resolve import react-is'. Confirmed by mutation: yarn add react-is@19 makes the same fixture build.",
-      "fix": "declare react-is in @kinetixui/ui dependencies — a published-package change that needs its own changeset, held out of the 0.26.1 boundary. Open owner decision for 0.26.2.",
+      "fix": "declare react-is in @kinetixui/ui dependencies \u2014 a published-package change that needs its own changeset, held out of the 0.26.1 boundary. Open owner decision for 0.26.2.",
       "documented": "apps/web/src/lib/pm-commands.ts YARN_NEEDS_REACT_IS, shown on the Yarn tab of every @kinetixui/ui install command, plus a callout on /docs/installation.",
       "when_this_starts_passing": "the fix has landed. Update this file to expect pass, and remove the Yarn caveat from pm-commands.ts and the callout from /docs/installation in the same change."
     },
     "install/yarn-berry": {
       "expect": "fail",
       "optional": true,
-      "reason": "the same missing react-is peer as install/yarn. Measured on Yarn 4.18.1 with nodeLinker: node-modules, so it is not a Plug'n'Play artefact and not a Classic quirk — both Yarn lines fail identically.",
+      "reason": "the same missing react-is peer as install/yarn. Measured on Yarn 4.18.1 with nodeLinker: node-modules, so it is not a Plug'n'Play artefact and not a Classic quirk \u2014 both Yarn lines fail identically.",
       "also": "Yarn 4 additionally refuses any version published in the last ~7 days (npmMinimalAgeGate), which the fixture sets to 0 so it tests our packaging rather than Yarn's clock.",
-      "when_this_starts_passing": "same as install/yarn — update both cells and the docs together."
+      "when_this_starts_passing": "same as install/yarn \u2014 update both cells and the docs together."
     },
     "install/bun": {
       "expect": "pass"
