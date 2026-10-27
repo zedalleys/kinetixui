@@ -30,6 +30,16 @@ const c = (v: string) => `hsl(var(${v}) / <alpha-value>)`;
  * site, so that grid never took its two-column step. `check:breakpoints` now fails if either half
  * of this regresses.
  *
+ * **A `px` breakpoint and a `-rem` one must never gate the same property on the same element.**
+ * Tailwind registers a plugin variant before its screen variants, so between `md:grid-cols-3` and
+ * `lg-rem:grid-cols-12` the `md:` rule is emitted later and wins at every width above 768px —
+ * measured in the built site CSS, `.md\:grid-cols-3` at byte 165744 against
+ * `.lg-rem\:grid-cols-12` at 154063. Source order cannot be made to resolve this correctly in any
+ * case: at 200% text `64rem` is 2048px, so the two queries overlap differently for every reader.
+ * The answer is not to fight the order but to keep a single ladder per property — which is why
+ * `md-rem` exists, so a composition that starts at `md` can stay in `rem` all the way up.
+ * `check:breakpoints` fails on any element that mixes them for one property.
+ *
  * Defined here as one object so a consumer reading the preset sees the constraint beside the
  * values rather than having to know it.
  *
@@ -62,6 +72,7 @@ const c = (v: string) => `hsl(var(${v}) / <alpha-value>)`;
  */
 const REM_BREAKPOINTS = {
   "sm-rem": "40rem",
+  "md-rem": "48rem",
   "lg-rem": "64rem",
   "xl-rem": "80rem",
 } as const;
