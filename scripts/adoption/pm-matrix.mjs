@@ -74,6 +74,26 @@ const yarnMajor = () => Number(execFileSync('yarn', ['--version'], { encoding: '
  */
 const version = (bin) => execFileSync(bin, ['--version'], { cwd: tmpdir(), encoding: 'utf8' }).trim();
 
+/**
+ * Is this manager's binary here at all? A missing one used to crash the run with a raw
+ * `spawnSync bun ENOENT` out of the unguarded `version()` in `checkInstall`, before any expectation was
+ * compared — so the gate died on its own instrument and said nothing about what it had measured. That is
+ * the one outcome a gate like this must never produce: not a crash, and above all not a pass. A documented
+ * manager that is not installed is reported as its own kind of failure, named, because it means the
+ * environment cannot answer the question rather than that the packaging is broken.
+ */
+const installed = (bin) => {
+  try {
+    version(bin);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/** Managers the docs promise that this machine cannot measure. Not the same as a cell that failed. */
+const notInstalled = [];
+
 /* ------------------------------------------------------------------ negative controls */
 
 /**
@@ -215,6 +235,14 @@ for (const pm of managers) {
     console.error(`Unknown package manager ${JSON.stringify(pm)}.`);
     process.exit(2);
   }
+  const bin = pm === 'npm' ? 'npm' : pm;
+  if (!installed(bin)) {
+    // Every cell for this manager is unanswerable, so none is recorded. --check turns this into a
+    // failure below rather than letting a missing manager read as a clean run.
+    notInstalled.push(pm);
+    console.log(`NOT INSTALLED  ${pm}  the documentation offers this manager and \`${bin}\` is not on PATH here`);
+    continue;
+  }
   checkExecute(pm);
   if (!has('execute-only')) checkInstall(pm);
   if (pm === 'yarn') {
@@ -242,6 +270,13 @@ for (const r of results) console.log(`  ${r.route.padEnd(8)} ${r.pm.padEnd(5)} $
  */
 if (has('check')) {
   const expectations = JSON.parse(readFileSync(join(root, 'scripts/adoption/pm-matrix-expectations.json'), 'utf8'));
+  if (notInstalled.length) {
+    console.error(`\n${notInstalled.length} documented package manager(s) are not installed here: ${notInstalled.join(', ')}.`);
+    console.error('The matrix cannot report on a manager it cannot run, and a run that silently skips one is');
+    console.error('worse than no run at all. Install it in the environment — in CI that means a setup step for');
+    console.error('it in the same job, before this one — or scope the run with --pm=<manager>.');
+    process.exit(1);
+  }
   const measured = new Map(results.filter((r) => r.route !== 'both').map((r) => [`${r.route}/${r.pm}`, r.ok]));
   const problems = [];
 
