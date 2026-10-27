@@ -7,6 +7,25 @@
     "direction. A cell that starts passing is as much a failure here as one that starts failing, because",
     "the documentation written around it is now wrong — and that is the moment to notice, not months later."
   ],
+  "measured_with": {
+    "_why": [
+      "A gate that asserts agreement with what was measured is only as meaningful as its record of WHAT",
+      "did the measuring. Without this, a runner image moving npm or pnpm, or an unpinned Bun changing",
+      "behaviour, would be reported as a KinetixUI regression or fix when it is neither.",
+      "--check compares the MAJOR of each manager it actually ran. Patch and minor drift on a hosted",
+      "runner is constant and gating on it would make this red for reasons that are not about us — the",
+      "exact fate this design exists to avoid. A major is different: install semantics genuinely change",
+      "across one, which is why Yarn 1 and Yarn 4 are two separate cells in this very matrix. The exact",
+      "version measured is printed on every run either way, so drift stays visible before it matters."
+    ],
+    "npm": "10.9.4",
+    "pnpm": "10.28.0",
+    "yarn": "1.22.22",
+    "yarn-berry": "4.18.1",
+    "bun": "1.4.4",
+    "_yarn_berry_provenance": "Measured by hand, not re-verified in this container: `yarn` on PATH can be only one of Yarn's two product lines, and this environment's network policy denies repo.yarnpkg.com, so no Berry binary can be fetched here. Both yarn-berry cells are optional and uncompared unless --yarn-berry=<path> supplies one.",
+    "_bun_pin": "Pinned in .github/workflows/ci.yml by sha256 bf8ccbfb2b0b80159e0f9a6d15c55317add8077534dbc6130a3edb52fccb395c (bun-v1.4.4/bun-linux-x64.zip, 51794595 bytes). Change the two together or --check fails."
+  },
   "cells": {
     "execute/npm": {
       "expect": "pass"

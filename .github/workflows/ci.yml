@@ -359,6 +359,29 @@ jobs:
       # covered here — `yarn` on a runner is Classic, and the second line needs a binary supplied
       # explicitly; its two cells are marked optional and are measured by hand. Adding corepack for Berry
       # is a follow-up, deliberately not bundled in.
+      # Bun is the one documented manager the runner image does not ship, and nothing else in this
+      # repository installs it — so without this the step above cannot run at all. Pinned by checksum
+      # rather than through `oven-sh/setup-bun`, following the shape `workflow-lint.yml` already uses for
+      # actionlint: pinning the installer action by commit SHA would pin the installer and not what it
+      # installs, leaving it free to fetch an arbitrary Bun at run time. The version here is the one the
+      # matrix's expectations were measured with, and `--check` compares the two, so they cannot drift
+      # apart silently.
+      - name: Download and verify Bun 1.4.4
+        shell: bash
+        run: |
+          # Into the runner's temp dir, not the workspace: an unpacked archive beside the checkout is an
+          # untracked directory in the repository, which any later cleanliness check would be right to fail.
+          cd "$RUNNER_TEMP"
+          curl --fail --location --silent --show-error \
+            --output bun-linux-x64.zip \
+            https://github.com/oven-sh/bun/releases/download/bun-v1.4.4/bun-linux-x64.zip
+          echo "bf8ccbfb2b0b80159e0f9a6d15c55317add8077534dbc6130a3edb52fccb395c  bun-linux-x64.zip" | sha256sum --check
+          unzip -q bun-linux-x64.zip
+          echo "$RUNNER_TEMP/bun-linux-x64" >> "$GITHUB_PATH"
+
+      - name: Bun is the pinned version the expectations were measured with
+        run: bun --version
+
       - name: Every documented package manager, against its measured outcome
         run: node scripts/adoption/pm-matrix.mjs --check
 

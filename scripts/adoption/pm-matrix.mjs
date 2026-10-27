@@ -94,6 +94,9 @@ const installed = (bin) => {
 /** Managers the docs promise that this machine cannot measure. Not the same as a cell that failed. */
 const notInstalled = [];
 
+/** What actually did the measuring, by manager label, for the `measured_with` comparison in --check. */
+const measuredVersions = {};
+
 /* ------------------------------------------------------------------ negative controls */
 
 /**
@@ -243,10 +246,12 @@ for (const pm of managers) {
     console.log(`NOT INSTALLED  ${pm}  the documentation offers this manager and \`${bin}\` is not on PATH here`);
     continue;
   }
+  measuredVersions[pm] = version(bin);
   checkExecute(pm);
   if (!has('execute-only')) checkInstall(pm);
   if (pm === 'yarn') {
     if (berryBin) {
+      measuredVersions['yarn-berry'] = version(berryBin);
       checkBerryExecute(berryBin);
       if (!has('execute-only')) checkInstall('yarn', berryBin, 'yarn-berry');
     } else {
@@ -279,6 +284,32 @@ if (has('check')) {
   }
   const measured = new Map(results.filter((r) => r.route !== 'both').map((r) => [`${r.route}/${r.pm}`, r.ok]));
   const problems = [];
+
+  /*
+   * What did the measuring. Agreement with "what was measured" means nothing unless the measuring tool is
+   * identified: a runner image moving npm, or an unpinned Bun changing behaviour, would otherwise be
+   * reported as a KinetixUI regression or fix when it is neither. Compared on the MAJOR only — patch and
+   * minor drift on a hosted runner is constant, and gating on it would make this gate red for reasons that
+   * are not about this project, which is the fate the whole design exists to avoid. A major is different:
+   * install semantics really do change across one, which is why Yarn 1 and Yarn 4 are two cells here.
+   */
+  const recordedWith = expectations.measured_with ?? {};
+  const major = (v) => String(v).split('.')[0];
+  console.log('\nMeasured with');
+  for (const [m, v] of Object.entries(measuredVersions)) {
+    const rec = recordedWith[m];
+    console.log(`  ${m.padEnd(11)} ${v}${rec && rec !== v ? `   (recorded ${rec})` : ''}`);
+  }
+  for (const [m, v] of Object.entries(measuredVersions)) {
+    const rec = recordedWith[m];
+    if (!rec) {
+      problems.push(`${m}: this run measured with ${m} ${v}, but no version for it is recorded in measured_with`);
+    } else if (major(rec) !== major(v)) {
+      problems.push(
+        `${m}: the cells were measured with ${m} ${rec} and this run used ${v} — a different major, across which install semantics change. Re-measure the ${m} cells and update measured_with, rather than reading the result as a change in this project.`,
+      );
+    }
+  }
 
   for (const [cell, { expect, reason, optional }] of Object.entries(expectations.cells)) {
     if (!measured.has(cell)) {
