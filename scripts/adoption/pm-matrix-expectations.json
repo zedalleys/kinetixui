@@ -1,0 +1,117 @@
+{
+  "measured": "2026-10-27",
+  "why": [
+    "A gate that only asserts success cannot carry a known failure: it is either red forever, and then",
+    "disabled, or the failing cell is quietly dropped and the documentation keeps offering a broken route.",
+    "So each cell records the outcome we have MEASURED, and the gate fails on any difference in either",
+    "direction. A cell that starts passing is as much a failure here as one that starts failing, because",
+    "the documentation written around it is now wrong — and that is the moment to notice, not months later."
+  ],
+  "measured_with": {
+    "_why": [
+      "Agreement with 'what was measured' means nothing unless the measuring tool is identified: a runner",
+      "image moving npm, or an unpinned Bun changing behaviour, would otherwise read as a KinetixUI",
+      "regression or fix when it is neither.",
+      "",
+      "Each manager records the MAJORS its cells have actually been measured against, and --check fails",
+      "when it meets a major that is not in the list — i.e. one nobody has ever checked these expectations",
+      "against. It is a SET, not one version, because two environments legitimately differ: see pnpm below.",
+      "",
+      "DELIBERATELY MAJOR-ONLY, AND PLEASE DO NOT 'TIGHTEN' IT TO EXACT VERSIONS. Patch and minor drift on",
+      "a hosted runner is constant, and a gate that goes red for a patch bump is a gate someone switches",
+      "off — which is the exact fate this whole design exists to avoid. A major is different: install",
+      "semantics really do change across one, which is why Yarn 1 and Yarn 4 are two separate cells here.",
+      "The exact version measured is printed on every run regardless, so drift stays visible before it",
+      "matters. Adding a major to a list means MEASURING it first; listing one unmeasured would be exactly",
+      "the verification inflation this file exists to prevent."
+    ],
+    "npm": {
+      "majors": [
+        10
+      ],
+      "versions": [
+        "10.9.4"
+      ]
+    },
+    "pnpm": {
+      "majors": [
+        10,
+        12
+      ],
+      "versions": [
+        "10.28.0",
+        "12.3.1"
+      ],
+      "note": "Two majors, both measured, both passing. CI and a local checkout genuinely run different pnpm: `pnpm/action-setup` with no `version` input installs the repository's `packageManager` version (12.3.1), so that is what CI measures, while an ambient pnpm outside the repository is 10.28.0 — and pnpm 10+ self-switches to `packageManager` inside the repo, which is why `pnpm --version` differs by directory here. Recording only 10.28.0 would have made this gate fail every CI run on a major mismatch while every install outcome matched: red forever, for a reason that is not about this project. Measured 2026-10-27: install and execute both pass under 12.3.1, same as under 10.28.0."
+    },
+    "yarn": {
+      "majors": [
+        1
+      ],
+      "versions": [
+        "1.22.22"
+      ]
+    },
+    "yarn-berry": {
+      "majors": [
+        4
+      ],
+      "versions": [
+        "4.18.1"
+      ],
+      "provenance": "Measured by hand and NOT re-verified in this container: `yarn` on PATH can be only one of Yarn's two product lines, and this environment's network policy denies repo.yarnpkg.com. Both yarn-berry cells are optional and uncompared unless --yarn-berry=<path> supplies a binary."
+    },
+    "bun": {
+      "majors": [
+        1
+      ],
+      "versions": [
+        "1.4.4"
+      ],
+      "pin": "Pinned in .github/workflows/ci.yml by sha256 bf8ccbfb2b0b80159e0f9a6d15c55317add8077534dbc6130a3edb52fccb395c (bun-v1.4.4/bun-linux-x64.zip, 51794595 bytes). Change the pin and this record together."
+    }
+  },
+  "cells": {
+    "execute/npm": {
+      "expect": "pass"
+    },
+    "execute/pnpm": {
+      "expect": "pass"
+    },
+    "execute/yarn": {
+      "expect": "pass",
+      "note": "Yarn Classic has no dlx. The script already treats that refusal as the expected outcome, so the cell passes while the command fails; /docs says so on the Yarn tab."
+    },
+    "execute/yarn-berry": {
+      "expect": "pass",
+      "optional": true,
+      "note": "Only measured when --yarn-berry=<path> supplies a Berry binary, because `yarn` on PATH can be only one of Yarn's two product lines. Berry has dlx, so unlike Classic this one really passes."
+    },
+    "execute/bun": {
+      "expect": "pass"
+    },
+    "install/npm": {
+      "expect": "pass"
+    },
+    "install/pnpm": {
+      "expect": "pass"
+    },
+    "install/yarn": {
+      "expect": "fail",
+      "reason": "recharts@3.10.1 declares react-is as a peer dependency and neither Yarn line installs a transitive peer, so a clean Yarn consumer typechecks and then fails its build on 'Rolldown failed to resolve import react-is'. Confirmed by mutation: yarn add react-is@19 makes the same fixture build.",
+      "fix": "declare react-is in @kinetixui/ui dependencies — a published-package change that needs its own changeset, held out of the 0.26.1 boundary. Open owner decision for 0.26.2.",
+      "documented": "apps/web/src/lib/pm-commands.ts YARN_NEEDS_REACT_IS, shown on the Yarn tab of every @kinetixui/ui install command, plus a callout on /docs/installation.",
+      "when_this_starts_passing": "the fix has landed. Update this file to expect pass, and remove the Yarn caveat from pm-commands.ts and the callout from /docs/installation in the same change."
+    },
+    "install/yarn-berry": {
+      "expect": "fail",
+      "optional": true,
+      "reason": "the same missing react-is peer as install/yarn. Measured on Yarn 4.18.1 with nodeLinker: node-modules, so it is not a Plug'n'Play artefact and not a Classic quirk — both Yarn lines fail identically.",
+      "also": "Yarn 4 additionally refuses any version published in the last ~7 days (npmMinimalAgeGate), which the fixture sets to 0 so it tests our packaging rather than Yarn's clock.",
+      "when_this_starts_passing": "same as install/yarn — update both cells and the docs together."
+    },
+    "install/bun": {
+      "expect": "pass"
+    }
+  }
+}
