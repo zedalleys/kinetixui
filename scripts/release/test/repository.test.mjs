@@ -500,7 +500,36 @@ describe("a release cannot run while changesets are pending", () => {
     const angularHeadings = headingsOf(readFileSync(`${root}packages/ui-angular/CHANGELOG.md`, "utf8"));
     assert.ok(angularHeadings.includes(heading), `the Angular changelog has no "${heading}" entry`);
 
-    // The core cohort was not dragged along: its changelogs have no entry at Angular's version.
+    // The core cohort was not dragged along. "No core entry at Angular's version" was the proxy for
+    // that, and it stops being sound the moment the two independent lines legitimately land on the
+    // same number — which is what happened when core reached 0.26.1 while Angular was already there.
+    // Absence of the heading is still the expected state; where the numbers collide, the mechanism
+    // itself is asserted instead, because that is the thing "coupled" actually means: Angular sitting
+    // in the core cohort's `fixed` group, where a bump to one would move the other.
+    const coreVersion = read("packages/ui/package.json").version;
+    const collides = coreVersion === angularPkg.version;
+
+    if (collides) {
+      const fixed = read(".changeset/config.json").fixed ?? [];
+      const coupled = fixed.filter((group) => group.includes(angularPkg.name));
+      assert.deepEqual(
+        coupled,
+        [],
+        `${angularPkg.name} is in a fixed group (${JSON.stringify(coupled)}), so a core bump moves it too`,
+      );
+      // And the collision must really be a collision rather than a shared release: the core entry at
+      // this version must not have been written by an Angular changeset.
+      const coreEntry = readFileSync(`${root}packages/ui/CHANGELOG.md`, "utf8")
+        .split(/\r?\n(?=## )/)
+        .find((section) => section.trim().startsWith(heading));
+      assert.ok(coreEntry, `packages/ui/CHANGELOG.md has no "${heading}" entry despite being at that version`);
+      assert.ok(
+        !coreEntry.includes(angularPkg.name),
+        `packages/ui/CHANGELOG.md's "${heading}" entry cites ${angularPkg.name} — the cohorts got coupled`,
+      );
+      return;
+    }
+
     for (const name of ["tokens", "ui", "cli"]) {
       const core = headingsOf(readFileSync(`${root}packages/${name}/CHANGELOG.md`, "utf8"));
       assert.ok(
