@@ -71,6 +71,12 @@ jobs:
       - name: A visible label names its field
         run: pnpm check:label-association
 
+      # A spec that lists five platforms and one variant set is publishing React's set for all of
+      # them: `platforms` comes from the manifest, `variants` from the React cva only. This reads
+      # each platform's own variant declaration and compares, with the real divergences recorded.
+      - name: Variant sets agree with the platforms that claim them
+        run: pnpm check:variant-parity
+
       - name: Token table matches the tokens
         run: pnpm check:token-contract
 
