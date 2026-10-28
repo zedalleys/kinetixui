@@ -137,11 +137,34 @@ const record = (route, pm, ok, detail, output = '') => {
  * say so where the failure is reported is withholding the only thing the reader needs.
  */
 const tailOf = (output, lines = 6) => {
-  const kept = `${output ?? ''}`
+  const cleaned = `${output ?? ''}`
     .split('\n')
     .map((l) => l.replace(/\u001b\[[0-9;]*m/g, '').trimEnd())
     .filter((l) => l.trim() !== '')
-    .slice(-lines);
+    // A failing Node subprocess ends with its OWN error dump — stack frames and an options object whose
+    // stdout/stderr are null because the grandchild inherited our streams. Those last lines are the most
+    // recent and the least informative, and taking them verbatim reported `stdout: null` as the reason a
+    // consumer install failed. The tool's real complaint sits above them.
+    .filter((l) => !/^\s*at\s/.test(l))
+    .filter((l) => !/^\s*(status|signal|output|pid|stdout|stderr|code|killed):/.test(l))
+    .filter((l) => !/^\s*[{}]\s*$/.test(l) && !/^Node\.js v/.test(l));
+  /*
+   * Rank, do not just filter. "Command failed: …/tsc" names the STAGE and arrives last; the line that
+   * names the CAUSE — a TS error code, an unresolved import — arrives earlier and is the one a reader
+   * needs. Taking the last N diagnostic lines dropped the cause and kept the stage, which is how a run
+   * reported `Command failed` as the reason a consumer install failed.
+   */
+  const CAUSE = /error TS\d+|Cannot find module|Failed to resolve|failed to resolve|ERR!|ENOENT/;
+  const STAGE = /Command failed|not found/;
+  // A `warning` line is never the cause of a failure, and Yarn emits several per install. They sit on
+  // stderr, which concatenates AFTER stdout, so ranking them with the real diagnostics put three
+  // irrelevant peer warnings ahead of the TS error that actually stopped the build.
+  const isWarning = (l) => /^warning\b/i.test(l.trim());
+  const cause = cleaned.filter((l) => !isWarning(l) && CAUSE.test(l));
+  const stage = cleaned.filter((l) => !isWarning(l) && !CAUSE.test(l) && STAGE.test(l));
+  const kept = cause.length || stage.length
+    ? [...cause.slice(-Math.max(2, lines - 2)), ...stage.slice(-1)]
+    : cleaned.slice(-lines);
   return kept.length ? kept.join(' | ') : '(no output captured)';
 };
 
