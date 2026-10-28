@@ -328,6 +328,7 @@ if (has('check')) {
     return true;
   };
   const outOfScope = [];
+  const optionalUnmeasured = [];
 
   /*
    * Fail closed when nothing was exercised. Scoping the run narrows what coverage it can claim; it must
@@ -346,7 +347,8 @@ if (has('check')) {
       // Berry is optional because `yarn` on PATH can only be one of Yarn's two product lines, so the
       // second one has to be supplied explicitly. Everything else IN SCOPE and not measured is a hole.
       if (!inScope(cell)) outOfScope.push(cell);
-      else if (!optional) problems.push(`${cell}: expected ${expect}, but the run did not measure it`);
+      else if (optional) optionalUnmeasured.push(cell);
+      else problems.push(`${cell}: expected ${expect}, but the run did not measure it`);
       continue;
     }
     const actual = measured.get(cell) ? 'pass' : 'fail';
@@ -361,8 +363,20 @@ if (has('check')) {
     if (!(cell in expectations.cells)) problems.push(`${cell}: measured, but no expectation is recorded for it`);
   }
 
-  const checked = Object.keys(expectations.cells).length - outOfScope.length;
-  console.log(`\nChecked ${checked} of ${Object.keys(expectations.cells).length} cell(s) against expectations measured ${expectations.measured}.`);
+  /*
+   * Count what was actually compared, not the total minus whatever this code remembered to subtract. The
+   * subtraction had no term for an IN-SCOPE optional cell that no binary was supplied for: with no Berry
+   * binary — which is every CI run — eight cells were compared and the summary still read
+   * `Checked 10 of 10`. A coverage number that counts cells nobody measured is exactly the verification
+   * inflation this gate exists to prevent, so it is derived from `measured` and nothing else. An
+   * unmeasured optional cell is reported on its own line; it still does not fail the gate.
+   */
+  const total = Object.keys(expectations.cells).length;
+  const checked = Object.keys(expectations.cells).filter((cell) => measured.has(cell)).length;
+  console.log(`\nChecked ${checked} of ${total} cell(s) against expectations measured ${expectations.measured}.`);
+  if (optionalUnmeasured.length) {
+    console.log(`${optionalUnmeasured.length} optional cell(s) in scope were NOT measured, so this run claims nothing about them: ${optionalUnmeasured.join(', ')}.`);
+  }
   if (outOfScope.length) {
     console.log(`SCOPED RUN — ${outOfScope.length} cell(s) outside this run's scope were NOT checked: ${outOfScope.join(', ')}.`);
     console.log('This run does not establish coverage of the documented routes. CI runs unscoped, where every');
@@ -373,7 +387,7 @@ if (has('check')) {
     for (const p of problems) console.error(`  ${p}`);
     process.exit(1);
   }
-  console.log(outOfScope.length
+  console.log(checked < total
     ? 'Every cell this run checked matches what was measured, including the failures that are known and documented.'
     : 'Every cell matches what was measured, including the failures that are known and documented.');
   process.exit(0);
