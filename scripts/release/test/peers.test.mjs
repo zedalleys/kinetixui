@@ -11,7 +11,7 @@
  */
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { auditPeerCompatibility, parseChangeset, plannedVersions } from "../peers.mjs";
+import { auditPeerCompatibility, auditPeerFloors, parseChangeset, plannedVersions } from "../peers.mjs";
 import { buildPlan } from "../plan.mjs";
 import { ROOT_SCRIPTS, TWO_COHORT_ALLOWLIST, twoCohortWorkspace } from "./fixtures.mjs";
 
@@ -328,6 +328,122 @@ describe("the release plan carries the verdict", () => {
     assert.ok(
       plan.peers.checked.some((e) => e.dependent === "@kinetixui/angular" && e.dependency === "@kinetixui/tokens"),
       "the plan must have checked Angular's token peer — an empty audit is not a pass",
+    );
+  });
+});
+
+/**
+ * The other direction: a range that accepts what ships but has stopped accepting what it used to.
+ *
+ * `auditPeerCompatibility` cannot see this — every case below passes it — which is why the floor is
+ * a declared value rather than something inferred from the range itself.
+ */
+describe("a peer range that narrowed", () => {
+  const floors = (packages, floor = "0.24.0") =>
+    auditPeerFloors({
+      packages,
+      allowlist: TWO_COHORT_ALLOWLIST.packages.map((entry) =>
+        entry.name === "@kinetixui/angular" ? { ...entry, peerFloor: { "@kinetixui/tokens": floor } } : entry,
+      ),
+    });
+
+  it("accepts a range that keeps its lower bound while raising the ceiling", () => {
+    const result = floors(workspace({ peer: ">=0.24.0 <0.28.0" }));
+    assert.equal(result.ok, true, result.errors.join("\n"));
+    assert.equal(result.checked.length, 1);
+    assert.equal(result.checked[0].keeps, true);
+  });
+
+  it("rejects the range `changeset version` writes when it fixes a breached ceiling itself", () => {
+    // The measured rewrite: the ceiling moves up and the floor comes with it.
+    const result = floors(workspace({ peer: ">=0.27.0 <0.28.0" }));
+    assert.equal(result.ok, false);
+    includes(result.errors.join("\n"), "no longer accepts @kinetixui/tokens@0.24.0");
+  });
+
+  it("catches the case the forward audit cannot see, with nothing pending at all", () => {
+    // The forward audit asks only whether the range accepts the version in play. Put the published
+    // tokens version inside the narrowed range and it has nothing to say — which is precisely the
+    // state `changeset version` leaves behind, since it rewrites the range to fit what it just
+    // published. The dropped support is in the versions neither of them looks at.
+    const packages = workspace({ core: "0.27.0", peer: ">=0.27.0 <0.28.0" });
+    assert.equal(audit(packages).ok, true);
+    assert.equal(floors(packages).ok, false);
+  });
+
+  it("rejects a caret range that excludes the floor", () => {
+    assert.equal(floors(workspace({ peer: "^0.26.0" })).ok, false);
+  });
+
+  it("reports a floor that names a version the manifest no longer mentions", () => {
+    const packages = workspace();
+    for (const pkg of packages) {
+      if (pkg.name === "@kinetixui/angular") delete pkg.manifest.peerDependencies["@kinetixui/tokens"];
+    }
+    const result = floors(packages);
+    assert.equal(result.ok, false);
+    includes(result.errors.join("\n"), "declares no @kinetixui/tokens peer range at all");
+  });
+
+  it("rejects a floor that is a range rather than one version", () => {
+    const result = floors(workspace({ peer: ">=0.24.0 <0.28.0" }), ">=0.24.0");
+    assert.equal(result.ok, false);
+    includes(result.errors.join("\n"), "not a single semver version");
+  });
+
+  it("says nothing about a package that declares no floor", () => {
+    const result = auditPeerFloors({ packages: workspace({ peer: "^0.26.0" }), allowlist: TWO_COHORT_ALLOWLIST.packages });
+    assert.equal(result.ok, true);
+    assert.equal(result.checked.length, 0);
+  });
+});
+
+/**
+ * The same invariant through `buildPlan`, which is what `pnpm release:check` actually calls.
+ *
+ * The suite above calls `auditPeerFloors` with an allowlist built by hand, and that is precisely how
+ * the first version of this guard shipped inert: `validateAllowlist` rebuilds every entry from a
+ * fixed field list, dropped `peerFloor` on the floor, and the direct-call tests could not tell.
+ * These go in through the entry point with the raw allowlist *file*, so the field has to survive the
+ * validator to reach the audit at all.
+ */
+describe("the floor guard through the release-check entry point", () => {
+  const allowlistFile = (floor = "0.24.0") => ({
+    ...TWO_COHORT_ALLOWLIST,
+    packages: TWO_COHORT_ALLOWLIST.packages.map((entry) =>
+      entry.name === "@kinetixui/angular" ? { ...entry, peerFloor: { "@kinetixui/tokens": floor } } : entry,
+    ),
+  });
+
+  const plan = (file, packages) => buildPlan({ allowlistFile: file, packages, rootScriptNames: ROOT_SCRIPTS });
+
+  it("carries peerFloor through the allowlist validator and fails the plan on a narrowed range", () => {
+    const result = plan(allowlistFile(), workspace({ core: "0.27.0", peer: ">=0.27.0 <0.28.0" }));
+    assert.equal(result.errors.length > 0, true, "the plan should carry the floor error");
+    includes(result.errors.join("\n"), "no longer accepts @kinetixui/tokens@0.24.0");
+  });
+
+  it("passes the plan on the deliberately widened range", () => {
+    const result = plan(allowlistFile(), workspace({ core: "0.27.0", peer: ">=0.24.0 <0.28.0" }));
+    assert.deepEqual(result.errors, []);
+  });
+
+  it("rejects a peerFloor the allowlist cannot read, rather than ignoring it", () => {
+    const broken = {
+      ...TWO_COHORT_ALLOWLIST,
+      packages: TWO_COHORT_ALLOWLIST.packages.map((entry) =>
+        entry.name === "@kinetixui/angular" ? { ...entry, peerFloor: "0.24.0" } : entry,
+      ),
+    };
+    const result = plan(broken, workspace());
+    includes(result.errors.join("\n"), 'unusable "peerFloor"');
+  });
+
+  it("says nothing when no package declares a floor, so the field stays optional", () => {
+    const result = plan(TWO_COHORT_ALLOWLIST, workspace({ core: "0.27.0", peer: ">=0.27.0 <0.28.0" }));
+    assert.equal(
+      result.errors.some((error) => error.includes("no longer accepts")),
+      false,
     );
   });
 });
