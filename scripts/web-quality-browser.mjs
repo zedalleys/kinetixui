@@ -19,6 +19,11 @@
  *   touch     on a coarse pointer (touch emulation) at 390 and 768, each audited control's effective hit area — probed
  *             with `elementFromPoint`, so pseudo-element extensions count and clipped ones do not — is at least
  *             TOUCH_MIN on both axes, and no control's hit area covers the centre of another control.
+ *   phantom   nothing the reader cannot see can take a tap. On a coarse pointer, an interactive element whose
+ *             computed opacity is 0 — its own or inherited — must not answer `elementFromPoint` at its centre.
+ *             Hover-revealed affordances are what get this wrong: there is no hover on a touch device, so
+ *             `opacity-0` hides them from the eye and from nothing else, leaving a target that is invisible and
+ *             still live. `touch` cannot catch it, because it audits controls a reader can find.
  *   thumbs    every gallery thumbnail on /components is `aria-hidden`, contains nothing focusable and no heading, and
  *             its mock stays inside its frame in LTR and RTL.
  *   layout    no sideways page scroll at 320/375/390/768/1280, 100% and 200% text, LTR and RTL.
@@ -29,7 +34,7 @@ import { chromium } from "playwright";
 
 const arg = (name, fallback) => (process.argv.includes(name) ? process.argv[process.argv.indexOf(name) + 1] : fallback);
 const base = arg("--base", "http://127.0.0.1:3000").replace(/\/$/, "");
-const only = new Set(arg("--only", "type,contrast,touch,thumbs,layout").split(","));
+const only = new Set(arg("--only", "type,contrast,touch,phantom,thumbs,layout").split(","));
 const asJson = process.argv.includes("--json");
 /** Browser checks run against the deployed site's analytics code; mark the traffic so it never reads as a visit. */
 const url = (path) => `${base}${path}${path.includes("?") ? "&" : "?"}kx_traffic=diagnostic`;
@@ -42,7 +47,7 @@ const CONTRAST_MIN = 4.5;
 const TOUCH_MIN = 40;
 
 const failures = [];
-const report = { type: [], contrast: [], touch: [], thumbs: [], layout: [] };
+const report = { type: [], contrast: [], touch: [], phantom: [], thumbs: [], layout: [] };
 const fail = (msg) => failures.push(msg);
 
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
@@ -330,6 +335,56 @@ if (only.has("touch")) {
         fail(`touch ${label} @${width}: "${r.name}" hit area ${r.width}×${r.height}px (visual ${r.visual.join("×")}), below ${TOUCH_MIN}px`);
       if (r.stolen) fail(`touch ${label} @${width}: "${r.name}" hit area covers the centre of ${r.stolen} other control(s)`);
     }
+    await context.close();
+  }
+}
+
+/* ── phantom targets ──────────────────────────────────────────────────────────────────────── */
+
+/** Pages whose headings and chrome carry the hover-revealed affordances this rule is about. */
+const PHANTOM_PAGES = ["/docs/installation", "/docs/platforms", "/docs/components/button", "/docs", "/components"];
+
+if (only.has("phantom")) {
+  for (const path of PHANTOM_PAGES) {
+    const context = await browser.newContext({ viewport: { width: 390, height: 900 }, hasTouch: true, isMobile: true, reducedMotion: "reduce" });
+    const page = await open(context, path);
+    const coarse = await page.evaluate(() => matchMedia("(pointer: coarse)").matches);
+    if (!coarse) fail(`phantom ${path}: the context is not a coarse pointer — the emulation is not applied`);
+
+    const found = await page.evaluate(() => {
+      // effective opacity, not the element's own: a visible child of an opacity-0 parent is invisible too
+      const effectiveOpacity = (el) => {
+        let o = 1;
+        for (let n = el; n && n !== document.documentElement; n = n.parentElement) o *= Number(getComputedStyle(n).opacity);
+        return o;
+      };
+      const out = [];
+      for (const el of document.querySelectorAll("a[href], button, [role='button'], [role='tab']")) {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 || r.height === 0) continue;
+        if (effectiveOpacity(el) > 0.01) continue;
+        // scroll it in first: elementFromPoint cannot see past the viewport, and an off-screen element would
+        // otherwise read as "not hittable" for the wrong reason
+        el.scrollIntoView({ block: "center", inline: "nearest" });
+        const b = el.getBoundingClientRect();
+        const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+        if (!hit || !el.contains(hit)) continue;
+        out.push({
+          name: (el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 40),
+          tag: el.tagName.toLowerCase(),
+          size: [Math.round(b.width), Math.round(b.height)],
+          pointerEvents: getComputedStyle(el).pointerEvents,
+        });
+      }
+      return out;
+    });
+
+    report.phantom.push({ path, n: found.length, sample: found.slice(0, 3) });
+    for (const f of found)
+      fail(
+        `phantom ${path}: <${f.tag}> "${f.name}" is invisible (opacity 0) but still takes a tap at ` +
+          `${f.size[0]}×${f.size[1]}px — pointer-events: ${f.pointerEvents}`,
+      );
     await context.close();
   }
 }
