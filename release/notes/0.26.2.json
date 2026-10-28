@@ -1,0 +1,25 @@
+{
+  "version": "0.26.2",
+  "summary": "KinetixUI 0.26.2 is a single accessibility fix. Rating declared role=\"radiogroup\" and rendered five independent <button aria-pressed> stars inside it: a group claiming one choice of five, holding five toggles, with nothing ever announced as chosen, no \"3 of 5\" position, and five tab stops where a radio group is one stop the arrows move within. The stars are now <input type=\"radio\">s in one group per instance, so the roving tab stop, arrow movement, RTL mirroring and the position announcement come from the browser rather than from code. No API changed: value, defaultValue, max, readOnly, size, onChange and your own aria-label all behave as before, and every star keeps the classes it had, so nothing moves visually. A new check:role-coherence gate runs in CI so no component may declare a radiogroup without radios in it, or alongside aria-pressed. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together to 0.26.2; @kinetixui/tokens and @kinetixui/cli carry no change of their own. @kinetixui/angular is unchanged on its own line at 0.26.1 and remains Preview, and @kinetixui/iot stays on 0.5.0 while its device-integration work awaits real-device validation.",
+  "breaking": [],
+  "changes": [
+    {
+      "kind": "accessibility",
+      "area": "components",
+      "title": "A rating is one choice of five, so it is real radios",
+      "body": "Rating's group was coherent in neither direction: role=\"radiogroup\" promises exactly one chosen option among radios, and the stars inside it were <button aria-pressed> toggles. aria-pressed is a toggle's state, not aria-checked, so nothing was ever announced as the chosen value; there was no position to announce, because a toggle has no \"3 of 5\"; and each star was its own tab stop, where a radio group is a single stop the arrow keys move within. axe passes all of it, which is the point worth noting: every element is individually valid and only the combination is wrong, so a rule-based scan cannot see it. Each star is now an <input type=\"radio\"> in one React.useId()-named group, inside a <label> holding an sr-only input, so the roving tab stop, arrow movement, RTL mirroring and the \"3 of 5\" announcement are the browser's rather than code's. Only Home and End are implemented here, because the browser gives radio groups neither. readOnly keeps role=\"img\" named \"Rated N out of max\" — no control, no tab stop, unchanged in appearance. This is kx-rating's contract, which @kinetixui/angular already stated and asserted, and which this component was recorded as disagreeing with."
+    },
+    {
+      "kind": "improved",
+      "area": "release",
+      "title": "CI gates that a radiogroup holds radios",
+      "body": "check:role-coherence joins the CI run: a component file declaring \"radiogroup\" must contain a radio and must not contain aria-pressed. It is deliberately a pair check rather than a per-element one, because no single element in the old markup was invalid. The gate is a repository check, not a runtime behaviour change, so it affects no published artifact."
+    }
+  ],
+  "limitations": [
+    "The arrow-key behaviour this release relies on is the browser's, and the tests here exercise it through user-event's emulation of radio-group navigation under jsdom, not a real engine. That is stated in the docs rather than claimed as browser evidence.",
+    "The fix is React-only. Rating ships on five platforms and the other three natives have no control role at all: SwiftUI is an Image with .onTapGesture and per-star labels, Compose a Canvas with .clickable and no contentDescription, Flutter a GestureDetector with no Semantics wrapper. Each needs its own change with CI or device evidence, and none is included here. @kinetixui/angular's kx-rating already holds the contract.",
+    "@kinetixui/tokens and @kinetixui/cli are published at 0.26.2 by the fixed core cohort and carry no change of their own.",
+    "@kinetixui/angular remains Preview. Its graduation criteria are tracked separately and this release does not move them."
+  ]
+}
