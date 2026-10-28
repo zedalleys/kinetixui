@@ -9,12 +9,13 @@ import { CopyButton } from "./copy-button";
 import { PreviewEnvironment } from "./preview-environment";
 import { analytics } from "@/lib/analytics";
 import { useDocumentDirection } from "@/lib/use-document-direction";
-import { PLATFORM_FROM_CODE_TAB, componentSlugFor } from "@/lib/analytics-surfaces";
+import { PLATFORM_FROM_CODE_TAB, componentSlugFor, ctaAttrs } from "@/lib/analytics-surfaces";
 import { demoRegistry } from "@/registry/demos";
 import { platformCode } from "@/registry/platform-code";
 import {
   GUIDANCE_LABEL,
   PLATFORM_TABS,
+  SETUP_HREF,
   WAVE_LABEL,
   platformStateFor,
   type CodeTab,
@@ -165,7 +166,13 @@ export function ComponentPreview({
       <>
         <p className="border-b border-border px-4 py-2 text-body-md text-muted-foreground">
           {`${label} source; the live preview uses React. `}
-          <Link href={setupHref[tab]} className="text-primary underline underline-offset-2">
+          {/* Measured only for React, whose setup page is /docs/installation — the step the funnel breaks at.
+              The other platforms' setup pages are a different question and stay unmarked (WS4 follow-up). */}
+          <Link
+            href={setupHref[tab]}
+            {...(setupHref[tab] === SETUP_HREF.React ? ctaAttrs("component_page", "installation") : {})}
+            className="text-primary underline underline-offset-2"
+          >
             {label} installation and setup
           </Link>
         </p>
