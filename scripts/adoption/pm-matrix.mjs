@@ -130,6 +130,21 @@ const record = (route, pm, ok, detail, output = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${route.padEnd(8)} ${pm.padEnd(5)} ${detail}`);
 };
 
+/*
+ * The last few meaningful lines of a failing route's output, for the FAIL line itself. "See the output
+ * above" is adequate on a terminal and useless in CI, where "above" is three thousand lines of install
+ * chatter and the reader is looking at a one-line summary. A gate that knows why it failed and does not
+ * say so where the failure is reported is withholding the only thing the reader needs.
+ */
+const tailOf = (output, lines = 6) => {
+  const kept = `${output ?? ''}`
+    .split('\n')
+    .map((l) => l.replace(/\u001b\[[0-9;]*m/g, '').trimEnd())
+    .filter((l) => l.trim() !== '')
+    .slice(-lines);
+  return kept.length ? kept.join(' | ') : '(no output captured)';
+};
+
 /* ------------------------------------------------------------------ the execute route */
 
 function checkExecute(pm) {
@@ -180,7 +195,7 @@ function checkInstall(pm, bin = pm, label = pm) {
   } catch (err) {
     out = `${err.stdout ?? ''}${err.stderr ?? ''}${err.message ?? ''}`;
     process.stdout.write(out);
-    record('install', label, false, `clean consumer failed under ${label} ${v} — see the output above`, out);
+    record('install', label, false, `clean consumer failed under ${label} ${v} — ${tailOf(out)}`, out);
   }
 }
 
@@ -404,7 +419,7 @@ if (has('check')) {
       if (!signature) {
         problems.push(`${cell}: recorded as a known failure with no \`expect_error\`. Measure the failure, record the diagnostic it actually prints, and add it — otherwise this cell accepts any error at all, including one that has nothing to do with the documented cause.`);
       } else if (!(result.output ?? '').includes(signature)) {
-        problems.push(`${cell}: failed as recorded, but NOT with the recorded failure. The output does not contain ${JSON.stringify(signature)}, so this is some other error and is no evidence that the documented failure still holds. Either the environment broke before the route was exercised, or this is a new regression wearing the old one's record. Recorded reason: ${reason ?? '(none)'}`);
+        problems.push(`${cell}: failed as recorded, but NOT with the recorded failure. The output does not contain ${JSON.stringify(signature)}, so this is some other error and is no evidence that the documented failure still holds. Either the environment broke before the route was exercised, or this is a new regression wearing the old one's record.\n      WHAT IT ACTUALLY PRINTED: ${tailOf(result.output, 12)}\n      Recorded reason: ${reason ?? '(none)'}`);
       }
     }
   }
@@ -432,7 +447,16 @@ if (has('check')) {
     console.log('non-optional cell is required.');
   }
   if (problems.length) {
-    console.error(`\n${problems.length} cell(s) do not match:`);
+    /*
+     * Printed on stdout as well as stderr. The two streams are captured separately by some log readers,
+     * and a gate whose exit code is visible while its reason is not is a gate that reports "something is
+     * wrong" — which is the least useful true statement it could make. Measured: a CI job failed with the
+     * summary readable and this block absent, costing a whole verification round to recover.
+     */
+    const header = `\n${problems.length} cell(s) do not match:`;
+    console.log(header);
+    for (const p of problems) console.log(`  ${p}`);
+    console.error(header);
     for (const p of problems) console.error(`  ${p}`);
     process.exit(1);
   }
