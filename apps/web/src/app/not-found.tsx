@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ctaAttrs } from "@/lib/analytics-surfaces";
 
 // Next serves this with a 404 status, which is what keeps it out of the index; `noindex` is belt-and-braces
 // for the case where something links to a missing page and a crawler renders it anyway.
@@ -8,10 +9,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-const LINKS = [
+// As in the footer, only the installation link is measured: a 404 is a recovery surface, and the one thing
+// worth knowing is whether anyone recovers from it into setup.
+const LINKS: { href: string; label: string; cta?: "installation" }[] = [
   { href: "/docs", label: "Documentation" },
   { href: "/components", label: "Components" },
-  { href: "/docs/installation", label: "Installation" },
+  { href: "/docs/installation", label: "Installation", cta: "installation" },
   { href: "/docs/changelog", label: "Changelog" },
 ];
 
@@ -29,6 +32,7 @@ export default function NotFound() {
           <li key={l.href}>
             <Link
               href={l.href}
+              {...(l.cta ? ctaAttrs("not_found", l.cta) : {})}
               className="inline-flex rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               {l.label}

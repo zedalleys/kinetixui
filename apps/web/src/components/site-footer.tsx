@@ -1,13 +1,20 @@
 import Link from "next/link";
 import { Layers } from "lucide-react";
+import { ctaAttrs } from "@/lib/analytics-surfaces";
 import { siteConfig } from "@/lib/site";
 
-const COLS: { title: string; links: { label: string; href: string }[] }[] = [
+/*
+  `cta` marks a link whose following we measure as a `cta_clicked`. Only the installation link carries one:
+  it is the step the adoption funnel breaks at, and an ordinary internal footer link emits nothing, so a
+  visitor who reached setup from here was previously invisible. The rest stay unmarked on purpose — marking
+  every footer link would answer no question we are asking.
+*/
+const COLS: { title: string; links: { label: string; href: string; cta?: "installation" }[] }[] = [
   {
     title: "Docs",
     links: [
       { label: "Introduction", href: "/docs" },
-      { label: "Installation", href: "/docs/installation" },
+      { label: "Installation", href: "/docs/installation", cta: "installation" },
       { label: "Theming", href: "/docs/theming" },
       { label: "Accessibility", href: "/docs/accessibility" },
     ],
@@ -97,6 +104,7 @@ export function SiteFooter() {
                       <Link
                         href={l.href}
                         {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+                        {...(l.cta ? ctaAttrs("footer", l.cta) : {})}
                         className={`text-foreground/70 transition-colors hover:text-foreground ${focusRing}`}
                       >
                         {l.label}
