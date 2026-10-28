@@ -119,8 +119,14 @@ if (has('list-negatives')) {
 }
 
 const results = [];
-const record = (route, pm, ok, detail) => {
-  results.push({ route, pm, ok, detail });
+/*
+ * `output` is the subprocess output the outcome came from. A gate that records only a boolean cannot tell
+ * the documented failure from an unrelated one: every error collapses into "this cell failed", which then
+ * agrees with a cell recorded as a known failure. Keeping the text is what lets --check demand that a
+ * recorded failure be THAT failure.
+ */
+const record = (route, pm, ok, detail, output = '') => {
+  results.push({ route, pm, ok, detail, output });
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${route.padEnd(8)} ${pm.padEnd(5)} ${detail}`);
 };
 
@@ -159,11 +165,22 @@ function checkInstall(pm, bin = pm, label = pm) {
   if (bin !== pm) args.push(`--pm-bin=${bin}`);
   if (has('published')) args.push('--published');
   const v = version(bin);
+  /*
+   * Captured rather than inherited, because the previous version threw the output away and recorded a bare
+   * boolean. Any failure then satisfied a cell recorded as a known failure: a fixture that broke during
+   * packing, before the manager ever ran, read as "the documented Yarn failure". The output is still
+   * echoed, so a human watching a run sees exactly what they saw before; what changes is that the gate
+   * keeps it and can check WHICH failure happened.
+   */
+  let out = '';
   try {
-    execFileSync(process.execPath, args, { cwd: root, stdio: 'inherit' });
-    record('install', label, true, `clean consumer installed, typechecked and built (${label} ${v})`);
-  } catch {
-    record('install', label, false, `clean consumer failed under ${label} ${v} — see the output above`);
+    out = execFileSync(process.execPath, args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    process.stdout.write(out);
+    record('install', label, true, `clean consumer installed, typechecked and built (${label} ${v})`, out);
+  } catch (err) {
+    out = `${err.stdout ?? ''}${err.stderr ?? ''}${err.message ?? ''}`;
+    process.stdout.write(out);
+    record('install', label, false, `clean consumer failed under ${label} ${v} — see the output above`, out);
   }
 }
 
@@ -247,7 +264,22 @@ for (const pm of managers) {
     continue;
   }
   measuredVersions[pm] = version(bin);
-  checkExecute(pm);
+  /*
+   * `npm` runs `npx` and `bun` runs `bunx` — separate executables that PATH can resolve to separate
+   * installations. Recording only the manager's version certified the wrong program: an execute cell could
+   * pass under an unmeasured major while the summary said the major was measured. `pnpm dlx` and
+   * `yarn dlx` are subcommands of the same binary, so they need no second reading. This is the same defect
+   * as asserting `bun --version` for a route that runs `bunx`, which passed on a runner that had no `bunx`
+   * at all — fixed there in the workflow, and left in place here until a reviewer pointed at it.
+   */
+  const execBin = EXECUTE[pm][0];
+  if (execBin !== bin && !installed(execBin)) {
+    notInstalled.push(`${execBin} (the execute route for ${pm})`);
+    console.log(`NOT INSTALLED  ${execBin}  the execute route for ${pm} runs \`${execBin}\` and it is not on PATH here`);
+  } else {
+    if (execBin !== bin) measuredVersions[execBin] = version(execBin);
+    checkExecute(pm);
+  }
   if (!has('execute-only')) checkInstall(pm);
   if (pm === 'yarn') {
     if (berryBin) {
@@ -282,7 +314,7 @@ if (has('check')) {
     console.error('it in the same job, before this one — or scope the run with --pm=<manager>.');
     process.exit(1);
   }
-  const measured = new Map(results.filter((r) => r.route !== 'both').map((r) => [`${r.route}/${r.pm}`, r.ok]));
+  const measured = new Map(results.filter((r) => r.route !== 'both').map((r) => [`${r.route}/${r.pm}`, r]));
   const problems = [];
 
   /*
@@ -342,7 +374,7 @@ if (has('check')) {
     process.exit(1);
   }
 
-  for (const [cell, { expect, reason, optional }] of Object.entries(expectations.cells)) {
+  for (const [cell, { expect, reason, optional, expect_error: signature }] of Object.entries(expectations.cells)) {
     if (!measured.has(cell)) {
       // Berry is optional because `yarn` on PATH can only be one of Yarn's two product lines, so the
       // second one has to be supplied explicitly. Everything else IN SCOPE and not measured is a hole.
@@ -351,13 +383,30 @@ if (has('check')) {
       else problems.push(`${cell}: expected ${expect}, but the run did not measure it`);
       continue;
     }
-    const actual = measured.get(cell) ? 'pass' : 'fail';
-    if (actual === expect) continue;
-    problems.push(
-      actual === 'pass'
-        ? `${cell}: recorded as a known failure, but it PASSED. If the cause is fixed, update this file and remove the caveat the docs carry for it. Recorded reason: ${reason ?? '(none)'}`
-        : `${cell}: expected pass, but it FAILED. This is a regression in a route the documentation offers.`,
-    );
+    const result = measured.get(cell);
+    const actual = result.ok ? 'pass' : 'fail';
+    if (actual !== expect) {
+      problems.push(
+        actual === 'pass'
+          ? `${cell}: recorded as a known failure, but it PASSED. If the cause is fixed, update this file and remove the caveat the docs carry for it. Recorded reason: ${reason ?? '(none)'}`
+          : `${cell}: expected pass, but it FAILED. This is a regression in a route the documentation offers.`,
+      );
+      continue;
+    }
+    /*
+     * Agreement on the pass/fail bit is not enough for a cell recorded as a KNOWN FAILURE. "This failed"
+     * and "this failed for the documented reason" are different claims, and only the second one justifies
+     * the caveat the documentation carries. Without this, a fixture that broke before the manager ran
+     * satisfied the expectation, so the gate would have gone green while measuring nothing about the
+     * route — and a genuinely NEW Yarn regression would have been absorbed by the old one's record.
+     */
+    if (expect === 'fail') {
+      if (!signature) {
+        problems.push(`${cell}: recorded as a known failure with no \`expect_error\`. Measure the failure, record the diagnostic it actually prints, and add it — otherwise this cell accepts any error at all, including one that has nothing to do with the documented cause.`);
+      } else if (!(result.output ?? '').includes(signature)) {
+        problems.push(`${cell}: failed as recorded, but NOT with the recorded failure. The output does not contain ${JSON.stringify(signature)}, so this is some other error and is no evidence that the documented failure still holds. Either the environment broke before the route was exercised, or this is a new regression wearing the old one's record. Recorded reason: ${reason ?? '(none)'}`);
+      }
+    }
   }
   for (const cell of measured.keys()) {
     if (!(cell in expectations.cells)) problems.push(`${cell}: measured, but no expectation is recorded for it`);
