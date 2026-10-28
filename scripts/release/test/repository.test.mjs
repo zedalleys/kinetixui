@@ -372,12 +372,24 @@ describe("release tag names", () => {
   const angularAwaitingPublish = (newest) =>
     !localTags.has(releaseTagName("@kinetixui/angular", angularManifestVersion)) && semver.gt(angularManifestVersion, newest);
 
-  /** Angular versions on its own, and its newest tag is allowed — expected — to differ from core's. */
+  /**
+   * Angular versions on its own: its newest tag accounts for its own manifest, on its own schedule.
+   *
+   * This used to close by asserting Angular's newest tag differs from core's. That was never the
+   * subject — it was a proxy for independence, and a proxy that cannot tell a collision from a
+   * coupling, which is the reading #478 removed from two sibling tests. It outlived them because its
+   * input is *tags* rather than manifests: #478 was verified against the Version PR's tree, where no
+   * `@kinetixui/cli@0.26.1` tag existed yet. Publishing 0.26.1 created it, Angular had been 0.26.1
+   * since its own release, and the proxy went false — permanently, until one line moves.
+   *
+   * Independence is asserted where it is structural, not where it happens to show: "matches the
+   * Changesets fixed group, which owns core and not Angular" above checks that no `fixed` group
+   * contains Angular, which is what stops a core bump moving it.
+   */
   it("lets the Angular cohort sit at its own version", { skip: kinetixTags.length === 0 && "shallow checkout: no tags fetched" }, () => {
     const angular = newestVersionOf("@kinetixui/angular");
     if (!angular) return; // not yet released in this checkout
     if (!angularAwaitingPublish(angular)) assert.equal(angular, angularManifestVersion);
-    assert.notEqual(angular, newestVersionOf("@kinetixui/cli"), "this assertion is only meaningful while the cohorts differ");
   });
 
   /**
