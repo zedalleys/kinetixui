@@ -126,6 +126,8 @@
     "gen:angular-api": "node scripts/angular-package/api-snapshot.mjs",
     "gen:compose-api": "node scripts/compose-api-snapshot.mjs",
     "check:compose-api": "node scripts/compose-api-snapshot.mjs --check",
+  "check:native-publish-preflight": "node scripts/check-native-publish-preflight.mjs",
+  "check:swiftui-mirror": "node scripts/adoption/swiftui-mirror-consumer.mjs",
     "check:angular-api": "node scripts/angular-package/api-snapshot.mjs --check",
     "check:angular-graduation": "node scripts/check-angular-graduation.mjs",
     "check:angular-browser": "node scripts/angular-browser.mjs",
