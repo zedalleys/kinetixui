@@ -71,6 +71,25 @@
         "1.4.4"
       ],
       "pin": "Pinned in .github/workflows/ci.yml by sha256 bf8ccbfb2b0b80159e0f9a6d15c55317add8077534dbc6130a3edb52fccb395c (bun-v1.4.4/bun-linux-x64.zip, 51794595 bytes). Change the pin and this record together."
+    },
+    "npx": {
+      "majors": [
+        10
+      ],
+      "versions": [
+        "10.9.4"
+      ],
+      "note": "The EXECUTE route for npm runs `npx`, which is a different executable from `npm` and can be resolved by PATH from a different installation. Recorded separately because recording only npm's version certified the wrong program: an execute cell could pass under an unmeasured npx major while this file said the major was measured. Measured 2026-10-28 in a review container at 10.9.4, alongside npm 10.9.4. If CI reports a different npx major, that is the gap this entry exists to surface."
+    },
+    "bunx": {
+      "majors": [
+        1
+      ],
+      "versions": [
+        "1.4.4"
+      ],
+      "note": "The EXECUTE route for bun runs `bunx`. Same reasoning as npx, and this manager is where the defect was first demonstrated the hard way: the pinned Bun archive ships no `bunx` at all, and a workflow step asserting `bun --version` passed on a runner that had none. That was fixed in the workflow without fixing the same assumption here. Measured 2026-10-28 at 1.4.4, from the symlink the workflow creates beside the pinned binary.",
+      "pin": "Not pinned independently: `bunx` is a symlink to the `bun` binary pinned by sha256 in ci.yml, and Bun dispatches on argv[0]. If that ever stops being true, this entry needs its own pin."
     }
   },
   "cells": {
@@ -100,17 +119,22 @@
     },
     "install/yarn": {
       "expect": "fail",
-      "reason": "recharts@3.10.1 declares react-is as a peer dependency and neither Yarn line installs a transitive peer, so a clean Yarn consumer typechecks and then fails its build on 'Rolldown failed to resolve import react-is'. Confirmed by mutation: yarn add react-is@19 makes the same fixture build.",
-      "fix": "declare react-is in @kinetixui/ui dependencies \u2014 a published-package change that needs its own changeset, held out of the 0.26.1 boundary. Open owner decision for 0.26.2.",
+      "reason": "MEASURED 2026-10-28, twice on a clean tree: the Yarn Classic consumer fails at TYPECHECK with \"src/App.tsx(4,24): error TS2307: Cannot find module '@kinetixui/ui' or its corresponding type declarations\". The copy Yarn installs from the packed tarball contains package.json, src, README, LICENSE and tailwind.config.ts but NO dist/, while the package's own `exports` point at ./dist/index.d.ts. The tarball itself does carry dist/ (verified: package/dist/index.{js,d.ts} and kx-src-hash.json are in the archive), and npm, pnpm and bun install the SAME tarball and all pass, so this is something Yarn Classic does to a file: dependency rather than a packaging defect in the archive.",
+      "fix": "UNKNOWN AGAIN as of 2026-10-28. The previously recorded fix \u2014 declaring react-is in @kinetixui/ui dependencies \u2014 addresses the react-is build failure and would not fix a missing dist/ in the installed copy. Do not treat this cell as the justification for that change until the cause above is settled.",
       "documented": "apps/web/src/lib/pm-commands.ts YARN_NEEDS_REACT_IS, shown on the Yarn tab of every @kinetixui/ui install command, plus a callout on /docs/installation.",
-      "when_this_starts_passing": "the fix has landed. Update this file to expect pass, and remove the Yarn caveat from pm-commands.ts and the callout from /docs/installation in the same change."
+      "when_this_starts_passing": "Settle the cause first. If this cell starts passing while the recorded cause is still unsettled, that is itself information: record what changed. Updating this file to expect pass also means removing the Yarn caveat from pm-commands.ts and the callout from /docs/installation in the same change.",
+      "expect_error": "Cannot find module '@kinetixui/ui'",
+      "stage": "typecheck",
+      "previously_recorded": "Until 2026-10-28 this cell recorded a DIFFERENT failure: \"recharts@3.10.1 declares react-is as a peer dependency and neither Yarn line installs a transitive peer, so a clean Yarn consumer typechecks and then fails its build on 'Rolldown failed to resolve import react-is'. Confirmed by mutation: yarn add react-is@19 makes the same fixture build.\" That is a different STAGE (build, not typecheck) and a different CAUSE. It is not what this environment produces today, and it has NOT been re-confirmed here. The description was left in place by a gate that recorded only a pass/fail bit and therefore could not tell the two apart. It is kept verbatim rather than deleted because the react-is peer gap is real and is the subject of an open owner decision for 0.26.2 \u2014 but this cell is no longer evidence for it.",
+      "unresolved": "Which failure CI sees. A runner has no stale Yarn state, so if CI's Yarn cell matches the react-is build error instead of this typecheck error, the gate will now go RED there and say so, which is the point: two different failures were being counted as one. Do not reconcile this by widening expect_error to match both. Measure each environment and record what it produces."
     },
     "install/yarn-berry": {
       "expect": "fail",
       "optional": true,
       "reason": "the same missing react-is peer as install/yarn. Measured on Yarn 4.18.1 with nodeLinker: node-modules, so it is not a Plug'n'Play artefact and not a Classic quirk \u2014 both Yarn lines fail identically.",
       "also": "Yarn 4 additionally refuses any version published in the last ~7 days (npmMinimalAgeGate), which the fixture sets to 0 so it tests our packaging rather than Yarn's clock.",
-      "when_this_starts_passing": "same as install/yarn \u2014 update both cells and the docs together."
+      "when_this_starts_passing": "same as install/yarn \u2014 update both cells and the docs together.",
+      "expect_error_unmeasured": "No diagnostic is recorded for this cell because its failure has never been captured here: it is measured only when a Berry binary is supplied with --yarn-berry=<path>, and this container cannot install one (the network policy denies repo.yarnpkg.com). The gate now REFUSES a cell recorded as a known failure that carries no expect_error, so supplying a Berry binary will fail the run until someone measures the failure and records the diagnostic it actually prints. That refusal is deliberate: recording a signature nobody has observed is the verification inflation this file exists to prevent."
     },
     "install/bun": {
       "expect": "pass"
