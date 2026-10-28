@@ -97,6 +97,36 @@ const registryCorsHeaders = [
 export const routeRedirects = [
   { source: "/colors", destination: "/create", permanent: true },
   { source: "/theme-builder", destination: "/create", permanent: true },
+
+  /*
+   * Parent routes. Every one of these is a path a reader can reach by truncating a URL the site itself
+   * publishes -- `/use-cases/commerce` back to `/use-cases`, `/docs/components/button` back to
+   * `/docs/components` -- and each one returned a 404 until now. `check:seo`'s `route-parent` rule fails the
+   * build if a nested route's parent resolves to neither a page nor an entry here, so this list cannot fall
+   * behind the routes again.
+   *
+   * Each sends the reader to the page that already does the job, rather than to a second one built to answer
+   * the same question: `/capabilities` is the use-cases hub the domain pages already breadcrumb up to, and
+   * `/components` is the catalogue the docs component pages are generated from.
+   *
+   * Permanent only where the destination is settled, because a 308 is cached by browsers and CDNs and keeps
+   * sending a reader who followed it once even after the entry is removed -- it outlives its own revert.
+   * `/docs/components` and `/platforms` are aliases of pages that are not going to move, so permanent is
+   * right for them. The other two are temporary for the same reason as each other: the destination is the
+   * best page that exists today, not the page that will always be right. There is one demo today, and a
+   * second makes an index the right answer; `/use-cases` points at `/capabilities` only until a dedicated
+   * use-cases index exists, and a cached 308 would fight that future IA.
+   */
+  { source: "/use-cases", destination: "/capabilities", permanent: false },
+  { source: "/docs/components", destination: "/components", permanent: true },
+  { source: "/demos", destination: "/demos/building-operations", permanent: false },
+
+  /*
+   * `/platforms` is not a parent route; nothing nested lives under it. It is here because "platforms" is the
+   * word the site, the guides and the roadmap all use for the coverage page, which lives at `/docs/platforms`,
+   * so the short form is the one a reader types. No gate can derive this one -- it is a judgement about a name.
+   */
+  { source: "/platforms", destination: "/docs/platforms", permanent: true },
 ];
 
 /** @type {import('next').NextConfig} */

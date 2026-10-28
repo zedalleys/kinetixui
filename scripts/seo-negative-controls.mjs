@@ -10,7 +10,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const APP = resolve("apps/web/.next/server/app");
@@ -179,6 +179,16 @@ const CONTROLS = [
         .replace('"name":"Use cases","item":"https://kinetixui.com/capabilities"', '"name":"Use cases","item":"https://kinetixui.com/blocks"'),
     expect: "breadcrumb-missing",
   },
+  {
+    id: 23,
+    kind: "rename",
+    name: "take away a parent page, leaving its children published under a 404",
+    // /docs is a real page; without it every /docs/<page> route is published under a path that answers nothing.
+    // This is the only control that moves a file rather than editing one, because the defect route-parent exists
+    // for is a page that is ABSENT -- there is no file whose contents could express it.
+    file: "docs.html",
+    expect: "route-parent",
+  },
 ];
 
 function runGate() {
@@ -198,8 +208,17 @@ if (baseline.code !== 0) {
 const results = [];
 for (const c of CONTROLS) {
   const file = join(APP, c.file);
-  const original = readFileSync(file);
   const before = sha(file);
+  if (c.kind === "rename") {
+    // move it aside, run, move it back: the same contract as the content controls, byte-for-byte by definition
+    const aside = `${file}.control-${c.id}`;
+    renameSync(file, aside);
+    const { code, out } = runGate();
+    renameSync(aside, file);
+    results.push({ ...c, ok: code === 1 && out.includes(`[${c.expect}]`) && sha(file) === before, caught: code === 1 && out.includes(`[${c.expect}]`), restored: sha(file) === before, hash: before.slice(0, 12) });
+    continue;
+  }
+  const original = readFileSync(file);
   const mutated = c.mutate(original.toString("utf8"));
   if (mutated === original.toString("utf8")) {
     results.push({ ...c, ok: false, why: "mutation did not apply (pattern not found)" });
