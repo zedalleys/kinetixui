@@ -1,5 +1,5 @@
 ---
-"@kinetixui/ui": patch
+"@kinetixui/ui": minor
 ---
 
 `Metric`'s value and trend now wrap instead of colliding, and the shared Tailwind preset carries the
@@ -29,15 +29,20 @@ the card that used to collide, and the **minimum gap anywhere in the sweep 18.09
 **No API change.** `MetricProps` is untouched. A `data-kx-metric-pair` attribute is added to the row
 as the handle the rendered gate measures it by; it is a marker, never a styling hook.
 
-**One further published change, and a bug it uncovered.** `sm-rem`, `lg-rem` and `xl-rem` now live
-in `packages/ui/tailwind.config.ts`, which this package publishes and exports as
-`./tailwind.config`. They previously existed only in the website's own config, so any consumer of
-the preset — the repository's own Storybook included — generated **no rule at all** for a `sm-rem:`
-utility.
+**Why this is a minor and not a patch.** `sm-rem` (40rem), `md-rem` (48rem), `lg-rem` (64rem) and
+`xl-rem` (80rem) now live in `packages/ui/tailwind.config.ts`, which this package publishes and
+exports as `./tailwind.config`. Four new variant names a consumer can author against is **additive
+public API on a published artifact**, not an internal correction, so it takes a minor even though
+nothing existing changes meaning. `md-rem` is new in this change; the other three previously
+existed only in the website's own config, so any consumer of the preset — the repository's own
+Storybook included — generated **no rule at all** for a `sm-rem:` utility.
+
+Nothing is removed or renamed, and no existing utility changes which widths it applies at: `md-rem`
+is `48rem`, which is Tailwind's `md` for a reader who has not changed their text size.
 
 They are registered as **variants**, not as `theme.screens`, and that distinction is the whole
 point. Tailwind 3.4 emits no rule for **any** `min-*` or `max-*` variant once the screen map mixes
-units, silently: no warning, no error, the class is simply absent. Three `rem` entries beside
+units, silently: no warning, no error, the class is simply absent. Four `rem` entries beside
 Tailwind's `px` defaults are exactly that mixture. Measured on one stub carrying `max-md:hidden`,
 `min-[420px]:grid-cols-2`, `md:flex` and `sm-rem:grid-cols-2`:
 
