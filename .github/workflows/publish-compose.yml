@@ -37,7 +37,9 @@ jobs:
       # the toolchain is warmed up rather than after the upload.
       - name: Validate version
         working-directory: .
-        run: node scripts/check-native-publish-preflight.mjs --version='${{ inputs.version }}'
+        env:
+          VERSION: ${{ inputs.version }}
+        run: node scripts/check-native-publish-preflight.mjs --version="$VERSION"
 
       - name: Preflight
         working-directory: .
