@@ -79,6 +79,7 @@
     "check:global-search": "node scripts/global-search-browser.mjs --base http://127.0.0.1:3000",
     "check:use-cases": "node scripts/use-cases-browser.mjs --base http://127.0.0.1:3000",
     "check:grid": "node scripts/check-grid.mjs",
+    "check:breakpoints": "node scripts/check-breakpoints.mjs --prove",
     "build:registry": "node scripts/gen-registry.mjs && shadcn build registry/registry.json --output apps/web/public/r && node scripts/rewrite-schema.mjs && node scripts/gen-registry-index.mjs && node scripts/gen-component-specs.mjs",
     "check:registry-deps": "node scripts/check-registry-deps.mjs",
     "check:registry-motion": "node scripts/check-registry-motion.mjs",
