@@ -77,6 +77,7 @@ struct OnboardingChecklistBlock: View {
 
 final class OnboardingChecklistBlockTests: XCTestCase {
     func testOnboardingChecklistBlockCompiles() {
-        XCTAssertNotNil(OnboardingChecklistBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: OnboardingChecklistBlock = OnboardingChecklistBlock()
     }
 }

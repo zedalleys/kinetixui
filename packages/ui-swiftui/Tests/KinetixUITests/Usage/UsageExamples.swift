@@ -67,10 +67,10 @@ struct UsageExamplesView: View {
 }
 
 final class UsageExamplesTests: XCTestCase {
-    /// Constructing the view is what makes the snippets above evidence: it forces the compiler to resolve every
-    /// symbol and argument label in them against the real package.
+    /// The compiler type-checks the concrete view's body against the real package.
+    /// Do not evaluate body here: SwiftUI has not installed its @State storage.
+    /// Interaction behavior requires a separately hosted UI test.
     func testUsageExamplesCompileAndBuild() {
-        let view = UsageExamplesView()
-        XCTAssertNotNil(view.body)
+        let _: UsageExamplesView = UsageExamplesView()
     }
 }

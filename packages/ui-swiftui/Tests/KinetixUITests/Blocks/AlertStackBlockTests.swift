@@ -34,6 +34,7 @@ struct AlertStackBlock: View {
 
 final class AlertStackBlockTests: XCTestCase {
     func testAlertStackBlockCompiles() {
-        XCTAssertNotNil(AlertStackBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: AlertStackBlock = AlertStackBlock()
     }
 }

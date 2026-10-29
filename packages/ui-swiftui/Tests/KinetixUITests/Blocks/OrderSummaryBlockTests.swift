@@ -110,6 +110,7 @@ struct OrderSummaryBlock: View {
 
 final class OrderSummaryBlockTests: XCTestCase {
     func testOrderSummaryBlockCompiles() {
-        XCTAssertNotNil(OrderSummaryBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: OrderSummaryBlock = OrderSummaryBlock()
     }
 }
