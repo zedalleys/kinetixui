@@ -277,6 +277,19 @@
         "Flutter": "packages/ui-flutter/test/blocks/order_summary_block_test.dart"
       }
     },
+    "boarding-pass": {
+      "title": "Boarding pass",
+      "description": "PassCard fields, a tear line and a supplied code with its confirmation reference.",
+      "category": "Commerce",
+      "status": "beta",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/boarding-pass.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/boarding-pass.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/BoardingPassBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/boarding_pass_block_test.dart"
+      }
+    },
     "receipt": {
       "title": "Receipt",
       "description": "Issuer, amount paid, reference, payment details and the breakdown, with download, print and share actions.",

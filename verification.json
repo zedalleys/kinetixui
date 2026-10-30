@@ -9765,19 +9765,19 @@
       "source": 0,
       "build": 19,
       "headless": 0,
-      "runtime": 2
+      "runtime": 3
     },
     "Angular": {
       "not-implemented": 0,
       "source": 0,
-      "build": 20,
+      "build": 21,
       "headless": 1,
       "runtime": 0
     },
     "SwiftUI": {
       "not-implemented": 0,
       "source": 0,
-      "build": 21,
+      "build": 22,
       "headless": 0,
       "runtime": 0
     },
@@ -9785,14 +9785,14 @@
       "not-implemented": 0,
       "source": 0,
       "build": 18,
-      "headless": 3,
+      "headless": 4,
       "runtime": 0
     },
     "Flutter": {
       "not-implemented": 0,
       "source": 0,
       "build": 18,
-      "headless": 3,
+      "headless": 4,
       "runtime": 0
     }
   },
@@ -11887,6 +11887,128 @@
           ],
           "limitations": [
             "no interaction test",
+            "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
+          ]
+        }
+      }
+    },
+    "boarding-pass": {
+      "title": "Boarding pass",
+      "platforms": {
+        "React": {
+          "level": "runtime",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/boarding-pass.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:165-196",
+              "environment": "chromium"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/boarding-pass.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/BoardingPassBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "headless",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt:272-288",
+              "environment": "robolectric"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt:257-271",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (robolectric), not observed in a browser or on a device",
+            "accessibility tested headless only (robolectric), not observed in a browser or on a device"
+          ]
+        },
+        "Flutter": {
+          "level": "headless",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/boarding_pass_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/boarding_pass_block_test.dart:283-311",
+              "environment": "flutter_test"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/boarding_pass_block_test.dart:259-282",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (flutter_test), not observed in a browser or on a device",
             "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
           ]
         }
