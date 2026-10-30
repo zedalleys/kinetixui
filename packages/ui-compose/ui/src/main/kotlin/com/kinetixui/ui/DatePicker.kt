@@ -16,6 +16,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.text.SimpleDateFormat
@@ -30,6 +32,19 @@ import java.util.Date
  * re-implemented. Formatting uses `java.text.SimpleDateFormat` (works on
  * every API level, unlike `java.time` below `minSdk` 26) rather than
  * pulling in a date library like the source's `date-fns`.
+ *
+ * Naming follows the React source's stated contract rather than Compose's usual
+ * label pattern: the trigger's accessible name is the label PLUS the shown date,
+ * because a name of the label alone would drop the selected date out of it. React
+ * does this with `aria-labelledby="{labelId} {valueId}"`; here it is one
+ * `contentDescription` built from both. Without it the trigger was announced as
+ * the bare date with nothing saying which field it belongs to, while the visible
+ * [KinetixLabel] sat beside it associated with nothing.
+ *
+ * The visible label keeps its own semantics, as the React span does. Whether
+ * Compose should instead clear it — the pattern [KinetixInput]'s `accessibleLabel`
+ * overload uses — is a judgement about duplicate announcement that belongs to a
+ * reviewer, not to this fix.
  */
 @Composable
 fun KinetixDatePicker(
@@ -66,6 +81,9 @@ fun KinetixDatePicker(
             anchor = {
                 KinetixButton(
                     onClick = { open = true },
+                    modifier = Modifier.semantics {
+                        label?.takeIf { it.isNotBlank() }?.let { contentDescription = "$it, $display" }
+                    },
                     variant = KinetixButtonVariant.Outline,
                     enabled = enabled,
                 ) {
