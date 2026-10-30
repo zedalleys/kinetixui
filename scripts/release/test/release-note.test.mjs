@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { it } from "node:test";
-import { noteErrors, linkErrors } from "../check-release-note.mjs";
+import { noteErrors, linkErrors, allNoteErrors } from "../check-release-note.mjs";
 
 /** A note that is fit to be injected, so each case below changes exactly one thing. */
 const good = () => ({
@@ -117,4 +117,55 @@ it("reads the same way over any tree, so the base comparison cannot disagree wit
   const files = { ...CORE, ".changeset/a.md": cs('"@kinetixui/ui": minor') };
   // the working tree and a git ref differ only in how bytes are fetched
   assert.equal(projectedCore(tree(files)), projectedCore(tree({ ...files })));
+});
+
+// --- the sweep over every note, which is what covers a note-only pull request ----------------
+
+/** A notes directory as the sweep sees it: a lister and a reader, same shape as the tree helpers. */
+const notes = (files) => [
+  (dir) => (dir === "release/notes" ? Object.keys(files) : []),
+  (rel) => files[rel.replace("release/notes/", "")] ?? null,
+];
+
+it("sweeps every note and keys each one on its own filename", () => {
+  const [list, read] = notes({
+    "0.26.1.json": JSON.stringify({ ...good(), version: "0.26.1" }),
+    "0.27.0.json": JSON.stringify(good()),
+  });
+  assert.deepEqual(allNoteErrors(list, read), []);
+  // the filename is the authority, so a note under the wrong name is caught by the same assertion
+  const [l2, r2] = notes({ "0.26.1.json": JSON.stringify(good()) });
+  assert.equal(allNoteErrors(l2, r2).length, 1);
+});
+
+it("catches an out-of-union area or kind with nothing pending — the 0.27.0 note's own defect", () => {
+  // Three changes classified `tooling`, `angular` and `website` reached main this way: inert JSON,
+  // so main stayed green, and a build failure the moment the Version PR activated them.
+  const note = good();
+  note.changes = [
+    { title: "a", area: ["tokens", "tooling"] },
+    { title: "b", area: "angular" },
+    { title: "c", area: "website" },
+    { title: "d", kind: "tooling-change" },
+  ];
+  const [list, read] = notes({ "0.27.0.json": JSON.stringify(note) });
+  const e = allNoteErrors(list, read);
+  // each one is reported; the Next build stops at the first, which is how two of the three hid
+  assert.equal(e.length, 4);
+  for (const bad of ["tooling", "angular", "website", "tooling-change"]) {
+    assert.ok(e.some((m) => m.includes(`"${bad}"`)), `${bad} not reported: ${e.join(" | ")}`);
+  }
+});
+
+it("reports unparseable JSON rather than throwing", () => {
+  const [list, read] = notes({ "0.27.0.json": "{ not json" });
+  const e = allNoteErrors(list, read);
+  assert.equal(e.length, 1);
+  assert.match(e[0], /is not valid JSON/);
+});
+
+it("ignores non-JSON entries and an absent directory", () => {
+  const [list, read] = notes({ "README.md": "prose", "0.27.0.json": JSON.stringify(good()) });
+  assert.deepEqual(allNoteErrors(list, read), []);
+  assert.deepEqual(allNoteErrors(() => [], () => null), []);
 });
