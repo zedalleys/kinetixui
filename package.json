@@ -28,6 +28,7 @@
     "gen:release-meta": "node scripts/gen-release-meta.mjs",
     "check:releases": "node scripts/check-releases.mjs",
     "check:release-links": "node scripts/check-release-links.mjs",
+    "check:peer-claim": "node scripts/release/check-peer-claim.mjs",
     "release:notes": "node scripts/release-notes.mjs",
     "check:rtl": "node scripts/check-rtl.mjs",
     "check:swiftui-tokens": "node scripts/check-swiftui-tokens.mjs",
