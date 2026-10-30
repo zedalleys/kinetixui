@@ -16,6 +16,11 @@ on:
 permissions:
   contents: read
 
+# A pub.dev version is permanent once taken; two dispatches must not race for it.
+concurrency:
+  group: publish-flutter
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -25,19 +30,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # A burnt pub.dev version cannot be reused, so the version is rejected
+      # before the toolchain is warmed up.
+      - name: Validate version
+        working-directory: .
+        run: node scripts/check-native-publish-preflight.mjs --version='${{ inputs.version }}'
+
+      - name: Preflight
+        working-directory: .
+        run: node scripts/check-native-publish-preflight.mjs
+
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
 
       - run: flutter pub get
 
+      - name: Test
+        run: flutter test
+
+      # Removes `publish_to: none`, writes the version and copies the LICENSE in,
+      # asserting each edit afterwards against the file on disk. In a script
+      # rather than inline so native-flutter.yml can run this exact staging on a
+      # throwaway copy on every pull request — the old inline `sed` was only ever
+      # executed by a real dispatch, and `sed` exits 0 when it matches nothing.
       - name: Stage for publish
-        run: |
-          # `pub publish` refuses `publish_to: none`; it also wants a LICENSE
-          # in the package directory. Both are set up here, not committed.
-          sed -i '/^publish_to:/d' pubspec.yaml
-          sed -i "s/^version: .*/version: ${{ inputs.version }}/" pubspec.yaml
-          cp ../../LICENSE ./LICENSE 2>/dev/null || true
+        working-directory: .
+        run: node scripts/publish/stage-flutter-package.mjs '${{ inputs.version }}'
 
       - name: Dry run
         run: flutter pub publish --dry-run

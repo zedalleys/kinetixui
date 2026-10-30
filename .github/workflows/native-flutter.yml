@@ -11,6 +11,8 @@ on:
       - "style-dictionary/**"
       - "apps/web/src/app/docs/flutter/**"
       - "scripts/adoption/flutter-consumer.mjs"
+      - "scripts/publish/stage-flutter-package.mjs"
+      - ".github/workflows/native-flutter.yml"
   pull_request:
     paths:
       - "packages/ui-flutter/**"
@@ -18,6 +20,8 @@ on:
       - "style-dictionary/**"
       - "apps/web/src/app/docs/flutter/**"
       - "scripts/adoption/flutter-consumer.mjs"
+      - "scripts/publish/stage-flutter-package.mjs"
+      - ".github/workflows/native-flutter.yml"
 
 permissions:
   contents: read
@@ -62,6 +66,74 @@ jobs:
       - name: Documented Flutter setup in a clean app
         working-directory: .
         run: node scripts/adoption/flutter-consumer.mjs
+
+  # A pub.dev version is permanent the moment it is taken, and the committed pubspec deliberately
+  # carries a placeholder version plus `publish_to: none` — so what reaches pub.dev is never what is
+  # committed. publish-flutter.yml stages that rewrite at dispatch time, which meant the one
+  # transformation standing between a dispatch and a permanent wrong version was never exercised
+  # until someone dispatched it. This runs the real staging script on a throwaway copy, lets pub
+  # validate the result the way it will at publish time, and then requires the staging to refuse a
+  # pubspec it cannot rewrite. Nothing is published: --dry-run, no credentials, and the copy is
+  # outside the working tree.
+  publish-dry-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+
+      - name: pub validates the staged package
+        run: |
+          set -euo pipefail
+          STAGED="$RUNNER_TEMP/kinetix_ui"
+          cp -r packages/ui-flutter "$STAGED"
+          # Staging refuses a version the changelog does not mention, because `pub publish` warns
+          # about it and a warning alone makes it exit non-zero. The probe version is invented for
+          # this run, so the throwaway copy gets an entry for it. The committed CHANGELOG is
+          # untouched; a real publish needs a real entry, which is the point of the refusal.
+          printf '## %s\n\nProbe entry written by native-flutter.yml. Not a release.\n\n' \
+            9.9.9-dry-run | cat - "$STAGED/CHANGELOG.md" > "$RUNNER_TEMP/changelog" \
+            && mv "$RUNNER_TEMP/changelog" "$STAGED/CHANGELOG.md"
+          node scripts/publish/stage-flutter-package.mjs 9.9.9-dry-run --package-dir="$STAGED"
+          cd "$STAGED"
+          flutter pub get
+          flutter pub publish --dry-run
+
+      - name: Staging refuses a version the changelog does not mention
+        run: |
+          set -uo pipefail
+          UNLOGGED="$RUNNER_TEMP/kinetix_ui_unlogged"
+          cp -r packages/ui-flutter "$UNLOGGED"
+          if node scripts/publish/stage-flutter-package.mjs 9.9.9-unlogged --package-dir="$UNLOGGED" > "$RUNNER_TEMP/unlogged.log" 2>&1; then
+            echo "::error::Staging accepted a version with no changelog entry. pub would warn and exit non-zero mid-publish, and the entry cannot be added once the version is permanent."
+            exit 1
+          fi
+          grep -q "does not mention 9.9.9-unlogged" "$RUNNER_TEMP/unlogged.log" \
+            || { echo '::error::Staging failed for some other reason, so this control proves nothing.'; cat "$RUNNER_TEMP/unlogged.log"; exit 1; }
+          echo "::notice::Staging refused a version the changelog does not mention."
+
+      - name: Staging refuses a pubspec it cannot rewrite
+        run: |
+          set -uo pipefail
+          BROKEN="$RUNNER_TEMP/kinetix_ui_broken"
+          cp -r packages/ui-flutter "$BROKEN"
+          # The exact shape the old inline `sed` would have skipped silently: a version line it no
+          # longer matches, leaving the placeholder in place under the requested version.
+          sed -i 's/^version: 0.0.0/version:0.0.0/' "$BROKEN/pubspec.yaml"
+          if node scripts/publish/stage-flutter-package.mjs 9.9.9-dry-run --package-dir="$BROKEN" > "$RUNNER_TEMP/staging.log" 2>&1; then
+            echo "::error::Staging reported success on a pubspec whose version line it cannot rewrite. That is a publish of the committed placeholder under the requested version."
+            exit 1
+          fi
+          if ! grep -q "no top-level \`version:\` line to rewrite" "$RUNNER_TEMP/staging.log"; then
+            echo "::error::Staging failed, but not because the version line was unrewritable — so this control proves nothing."
+            cat "$RUNNER_TEMP/staging.log"
+            exit 1
+          fi
+          grep -qx 'version:0.0.0' "$BROKEN/pubspec.yaml" \
+            || { echo '::error::The refused run still modified the pubspec.'; exit 1; }
+          echo "::notice::Staging refused the unrewritable pubspec and left it untouched."
 
   # Proves the consumer gate above can fail: each control breaks one documented step (an import, a
   # constructor, an argument, the dependency name, the SDK constraint, a label, the runApp line, or a
