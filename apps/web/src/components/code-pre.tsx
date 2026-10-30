@@ -6,13 +6,14 @@ import { Button } from "@kinetixui/ui";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { trackFenceCopy } from "@/lib/analytics-surfaces";
+import { useTransientState } from "@/lib/use-transient-state";
 
 /** MDX <pre>: always-visible mobile copy control, revealed by hover/focus on desktop. */
 export function CodePre({ className, children, ...props }: React.ComponentPropsWithoutRef<"pre">) {
   const isTextDiagram = (props as { "data-language"?: string })["data-language"] === "text";
   const ref = React.useRef<HTMLPreElement>(null);
   const pathname = usePathname();
-  const [copied, setCopied] = React.useState(false);
+  const [copied, showCopied] = useTransientState(false, 2000);
 
   const copy = () => {
     const el = ref.current;
@@ -27,8 +28,7 @@ export function CodePre({ className, children, ...props }: React.ComponentPropsW
       () => {
         // rehype-pretty-code sets data-language on the <pre>; the copied text is inspected, never sent
         trackFenceCopy(text, (props as { "data-language"?: string })["data-language"], pathname);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        showCopied(true);
       },
       () => {},
     );
