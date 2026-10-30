@@ -80,6 +80,12 @@ jobs:
       - name: A visible label names its field
         run: pnpm check:label-association
 
+      # A group that claims one choice has to hold choices: a radiogroup needs real radios and
+      # cannot describe them with aria-pressed. axe is green on that contradiction, because no
+      # single element is wrong -- only the pair.
+      - name: A radiogroup holds radios
+        run: pnpm check:role-coherence
+
       - name: Token table matches the tokens
         run: pnpm check:token-contract
 
@@ -116,6 +122,37 @@ jobs:
       - name: Compose colour API snapshot is current
         run: pnpm check:compose-api
 
+      # The three native packages publish through workflow_dispatch workflows that have never run
+      # for real, and each ends at a door that only opens outwards: an immutable Central coordinate,
+      # a permanent pub.dev version, a git tag `from:` resolves against forever. This checks the
+      # part that cannot be checked afterwards — the mirror layout, the POM fields Central requires,
+      # pub.dev's metadata, the publish workflows' own safety, and vendored token currency. Source
+      # and workflow properties only, so it runs here rather than needing three toolchains.
+      - name: Native publish preflight
+        run: pnpm check:native-publish-preflight
+
+      # Proves the preflight can fail: each control breaks one property it asserts.
+      - name: "Native publish preflight: negative controls"
+        run: |
+          for control in $(node scripts/check-native-publish-preflight.mjs --list-negatives); do
+            echo "--- $control"
+            node scripts/check-native-publish-preflight.mjs --negative="$control"
+          done
+
+      # packages/ui-swiftui reaches a consumer as a `git subtree split` pushed to a mirror and
+      # resolved by `.package(url:, from:)`, which scripts/adoption/swiftui-consumer.mjs cannot
+      # cover because it resolves the vendored path. The layout layer needs no Swift; native-swiftui.yml
+      # runs the resolve/build layer on macOS. Local throwaway mirror, no remote is contacted.
+      - name: SwiftUI mirror publish route (layout)
+        run: node scripts/adoption/swiftui-mirror-consumer.mjs --layout-only
+
+      - name: "SwiftUI mirror publish route: negative controls"
+        run: |
+          for control in $(node scripts/adoption/swiftui-mirror-consumer.mjs --list-negatives); do
+            echo "--- $control"
+            node scripts/adoption/swiftui-mirror-consumer.mjs --negative="$control"
+          done
+
       - name: Typography alias guardrail
         run: pnpm check:typography
 
@@ -124,6 +161,12 @@ jobs:
 
       - name: Spatial grid guardrail (8-unit grid, 4-unit half-step)
         run: pnpm check:grid
+
+      # The published preset must not cost a consumer their `max-*` and `min-[…]` variants. Tailwind
+      # drops those wholesale, and silently, once `theme.screens` mixes units — which is why the
+      # `-rem` breakpoints are registered as variants. Runs its own negative control.
+      - name: Breakpoint variants survive the shared preset
+        run: pnpm check:breakpoints
 
       # What each platform implementation has actually been verified to do, derived from the test files
       # themselves. check:manifest below refuses a declared platform maturity this evidence does not support,

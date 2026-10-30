@@ -60,8 +60,14 @@ export function ComponentSpotlight({ items }: { items: SpotlightItem[] }) {
   return (
     // Tablet: the composed interface across the top, the three components in a row under it. Desktop: the
     // composed interface beside the three, which stack; no tile is stretched past what its content needs.
-    <div className="grid grid-cols-1 gap-4 [&>*]:min-w-0 md:grid-cols-3 lg-rem:grid-cols-12 lg-rem:items-start">
-      {lead ? <Tile item={lead} lead className="md:col-span-3 lg-rem:col-span-7 lg-rem:row-span-3" /> : null}
+    //
+    // One ladder, all `-rem`. `md-rem` is `48rem`, which is `md` for a reader who has not changed
+    // their text size, so nothing moves at 100%. It is not `md:`, because a `px` rung and a `rem`
+    // rung on the same property resolve by source order and the `px` one wins — which left this a
+    // three-column grid holding children that asked for five- and seven-column spans. See
+    // `remBreakpoints` in packages/ui/tailwind.config.ts.
+    <div className="grid grid-cols-1 gap-4 [&>*]:min-w-0 md-rem:grid-cols-3 lg-rem:grid-cols-12 lg-rem:items-start">
+      {lead ? <Tile item={lead} lead className="md-rem:col-span-3 lg-rem:col-span-7 lg-rem:row-span-3" /> : null}
       {rest.map((item) => (
         <Tile key={item.slug} item={item} className="lg-rem:col-span-5" />
       ))}

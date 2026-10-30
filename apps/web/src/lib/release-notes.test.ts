@@ -1,13 +1,30 @@
 // @vitest-environment node
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { loadReleaseData, renderReleaseNotes } from "../../../../scripts/release-notes.mjs";
 import { buildChangelogUrl } from "./changelog-filter";
 import { platformsFor } from "./platform-parity";
 
-const script = fileURLToPath(new URL("../../../../scripts/release-notes.mjs", import.meta.url));
+const root = fileURLToPath(new URL("../../../../", import.meta.url));
+const script = path.join(root, "scripts/release-notes.mjs");
 const run = (...args: string[]) => spawnSync(process.execPath, [script, ...args], { encoding: "utf8" });
+
+const readJson = (relative: string) => JSON.parse(readFileSync(path.join(root, relative), "utf8"));
+
+/**
+ * `RELEASES` is the `@kinetixui/{ui,tokens,cli}` history, and the core line can legitimately reach a
+ * number an independently versioned cohort already holds — core reached `0.26.1` while
+ * `@kinetixui/angular` was already there. `release:notes` then *correctly* refuses the bare form as
+ * ambiguous and `--ui` is how you say you meant the core line, so asserting the bare form exits 0
+ * would be asserting the guard is broken. See `scripts/release/test/release-notes-cohorts.test.mjs`.
+ */
+const collidingCohort = (version: string): string | undefined =>
+  (readJson("release/publish-packages.json").packages as { name: string; directory: string; releaseGroup?: string }[])
+    .filter((pkg) => pkg.releaseGroup !== "core")
+    .find((pkg) => readJson(path.join(pkg.directory, "package.json")).version === version)?.name;
 
 // A small, fixed dataset so the rendering rules are tested independently of the real release history.
 const fixture = {
@@ -108,9 +125,12 @@ describe("renderReleaseNotes", () => {
 describe("pnpm release:notes (the real script and real data)", () => {
   const data = loadReleaseData();
   const latest: string = data.RELEASES[0].version;
+  const collision = collidingCohort(latest);
+  // Empty while the latest core number is unshared, `--ui` once another cohort holds it too.
+  const cohort = collision ? ["--ui"] : [];
 
   it("prints notes for a known version and exits 0", () => {
-    const r = run(latest);
+    const r = run(latest, ...cohort);
     expect(r.status).toBe(0);
     expect(r.stdout).toContain(`## KinetixUI ${latest}`);
     expect(r.stdout).toContain("### Breaking changes");
@@ -118,7 +138,17 @@ describe("pnpm release:notes (the real script and real data)", () => {
   });
 
   it("accepts a leading v", () => {
-    expect(run(`v${latest}`).status).toBe(0);
+    expect(run(`v${latest}`, ...cohort).status).toBe(0);
+  });
+
+  it("answers the bare form, or refuses it by name once a cohort shares the number", () => {
+    const bare = run(latest);
+    if (!collision) {
+      expect(bare.status).toBe(0);
+      return;
+    }
+    expect(bare.status).toBe(1);
+    expect(bare.stderr).toContain(collision);
   });
 
   it("exits non-zero with a clear message for an unknown version", () => {
