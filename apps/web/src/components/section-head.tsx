@@ -8,11 +8,19 @@ export function SectionHead({
   index,
   label,
   meta,
+  actions,
   className,
 }: {
   index: string;
   label: string;
   meta?: string;
+  /**
+   * A control that belongs to this section, end-aligned on the rule. It is centred rather than
+   * baseline-aligned: a 34px control has no text baseline worth sharing with a 12px label, and
+   * aligning one to the other is what made the Create preview's head sit 11px below the
+   * configuration column's heads while both rules started on the same line.
+   */
+  actions?: React.ReactNode;
   className?: string;
 }) {
   return (
@@ -27,6 +35,11 @@ export function SectionHead({
         <span data-section-meta className="ms-auto font-mono text-label-md lowercase tracking-wide text-muted-foreground">
           {meta}
         </span>
+      ) : null}
+      {actions ? (
+        <div data-section-actions className="ms-auto self-center">
+          {actions}
+        </div>
       ) : null}
     </div>
   );
