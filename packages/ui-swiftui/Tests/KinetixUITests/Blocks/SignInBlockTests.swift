@@ -77,6 +77,7 @@ final class SignInBlockTests: XCTestCase {
     /// Constructing the view is what makes the published snippet evidence: it forces the compiler to resolve
     /// every symbol and argument label in it against the real package.
     func testSignInBlockCompiles() {
-        XCTAssertNotNil(SignInBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: SignInBlock = SignInBlock()
     }
 }

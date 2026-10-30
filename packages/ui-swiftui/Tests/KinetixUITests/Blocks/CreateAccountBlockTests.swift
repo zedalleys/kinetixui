@@ -79,6 +79,7 @@ struct CreateAccountBlock: View {
 
 final class CreateAccountBlockTests: XCTestCase {
     func testCreateAccountBlockCompiles() {
-        XCTAssertNotNil(CreateAccountBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: CreateAccountBlock = CreateAccountBlock()
     }
 }

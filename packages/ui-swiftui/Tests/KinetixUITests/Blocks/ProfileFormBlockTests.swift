@@ -108,6 +108,7 @@ struct ProfileFormBlock: View {
 
 final class ProfileFormBlockTests: XCTestCase {
     func testProfileFormBlockCompiles() {
-        XCTAssertNotNil(ProfileFormBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: ProfileFormBlock = ProfileFormBlock()
     }
 }
