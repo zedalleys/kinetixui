@@ -279,9 +279,10 @@
         "packages/ui/src/toggle-motion.test.tsx",
         "scripts/checkbox-radio-motion.mjs",
         "packages/ui/src/checkbox-radio-motion.test.tsx",
-        "scripts/angular-selection-motion.mjs"
+        "scripts/angular-selection-motion.mjs",
+        "packages/ui-flutter/test/selection_motion_test.dart"
       ],
-      "note": "Colour and surface change when a control becomes selected or unselected: Toggle, ToggleGroup items, Checkbox and Radio indicators. Owner decision 2026-10-17: fast (200ms). The semantic state changes at once; only the paint interpolates. Switch keeps selection-control (instant) unless a defect is shown. Adopted component by component from MX1b-1. Observed on React Toggle and ToggleGroup (MX1b-1a, which share toggleVariants): background, text and border colour on fast, measured in a browser. Observed on React Checkbox and RadioGroup (MX1b-1b): box fill, border and glyph colour on fast, and the tick, dash or dot fading in on fast (opacity). The Checkbox glyph leaves at once rather than fading, so a box going from mixed to unchecked never shows the tick on its way out. Promoted to proven when a second platform consumes it. MX1b-2 adopted it on Angular Checkbox, RadioGroup, Toggle and ToggleGroup: colour and edge on fast, the Checkbox glyph and the Radio dot fading on fast from their own layers, and the state layer kept on instant.",
+      "note": "Colour and surface change when a control becomes selected or unselected: Toggle, ToggleGroup items, Checkbox and Radio indicators. Owner decision 2026-10-17: fast (200ms). The semantic state changes at once; only the paint interpolates. Switch keeps selection-control (instant) unless a defect is shown. Adopted component by component from MX1b-1. Observed on React Toggle and ToggleGroup (MX1b-1a, which share toggleVariants): background, text and border colour on fast, measured in a browser. Observed on React Checkbox and RadioGroup (MX1b-1b): box fill, border and glyph colour on fast, and the tick, dash or dot fading in on fast (opacity). The Checkbox glyph leaves at once rather than fading, so a box going from mixed to unchecked never shows the tick on its way out. Promoted to proven when a second platform consumes it. MX1b-2 adopted it on Angular Checkbox, RadioGroup, Toggle and ToggleGroup: colour and edge on fast, the Checkbox glyph and the Radio dot fading on fast from their own layers, and the state layer kept on instant. MX1d adds Flutter as a consumer that also OBSERVES it, headlessly: selection_motion_test.dart stops the clock halfway through a checkbox's settle and reads the interpolated fill off the rendered tree, and the same for a toggle's background and a radio's edge and dot. flutter_test has no device, so this is a measured intermediate value at Headless, not a second browser measurement, and the role was already proven before it landed.",
       "consumers": [
         {
           "platform": "react",
@@ -316,6 +317,14 @@
             "background-color var(--duration-fast) var(--easing-standard)",
             "border-color var(--duration-fast) var(--easing-standard)",
             "opacity var(--duration-fast) var(--easing-standard)"
+          ]
+        },
+        {
+          "platform": "flutter",
+          "file": "packages/ui-flutter/lib/src/kinetix_selection_motion.dart",
+          "expects": [
+            "KinetixDuration.fast",
+            "KinetixEasing.standard"
           ]
         }
       ],

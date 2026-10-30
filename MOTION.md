@@ -248,3 +248,49 @@ because a background is repainted as `Canvas` there and both used to disappear i
 
 Reduced motion: the per-component block in `packages/ui-angular/src/styles.css` covers each new element, so
 every control lands on its end state with nothing running.
+
+### Selection controls (Flutter, MX1d)
+
+Flutter's gap was accessibility, not motion: `KinetixRadioButton` declared **no `Semantics` at all**, so a
+selected radio was indistinguishable from an unselected one to a screen reader and neither was announced as
+a radio. Switch, Checkbox and Toggle already declared theirs. Motion was missing too — Checkbox, Radio and
+Toggle were plain `Container`s.
+
+| | Selection | Dot / glyph |
+| --- | --- | --- |
+| Trigger | `value`, `selected`, `pressed` | `selected` |
+| Property | fill, border **colour** and content colour through `AnimatedContainer` and one `ColorTween` | the radio dot's `opacity` through `AnimatedOpacity` |
+| Tier · easing | `fast` 200ms · `standard` (`selection-state`) | the same |
+| Reduced form | `KinetixDisclosureMotion.suppressed` through `MediaQuery.disableAnimationsOf` — one shared reader, one shared suppressed value | the same |
+| Interruption | the implicit widgets retarget from the current value | the same |
+| Final state | the state's colour; `Semantics` is set from the state and never waits for the paint | dot shown on the chosen radio |
+| Focus / SR | Radio announces `checked`, `inMutuallyExclusiveGroup`, `enabled` and an optional `label`; RadioGroup takes an optional `label` and keeps `explicitChildNodes` so the options stay choosable | the dot is decorative |
+| RTL | colour is direction-free | — |
+
+Evidence, stated exactly: **Headless verified**, and the strongest this family has on any native platform.
+`test/selection_motion_test.dart` stops the clock 100ms into a 200ms settle and reads the **interpolated**
+fill off the rendered tree — `AnimatedContainer` builds a `Container` whose decoration is the evaluated
+tween, so that is a measurement of what is painted, not of a duration variable. The same test asserts that
+a radio's announced state flips in the frame of the tap, while the edge colour is still interpolating.
+`flutter_test` has no device or screen, so none of it is Runtime evidence. The `reducedMotion`
+kind is claimed for the **checkbox only**: this repository defines it as suppression measured with both
+directions exercised, and the radio's reduced-motion test is an RTL end-state check that the full settle
+would also satisfy, while the toggle has no reduced-motion test at all. The marked passage was narrowed to
+match, so the ledger credits what the tests hold and nothing more.
+
+Nothing about the geometry is animated, and that took two passes. `size` decided the Toggle's height,
+minimum width and horizontal padding from inside the `AnimatedContainer`, so a caller moving `size` at a
+breakpoint interpolated all three; those now sit in a `SizedBox` / `ConstrainedBox` / `Padding` outside it.
+Then the same mistake a second time, in the decoration itself: the border appeared on press and disappeared
+on release, and `AnimatedContainer` interpolates a border's **width**, which a `BoxDecoration` border
+charges to its child as an inset — so pressing a standard toggle slid its label a pixel inward over `fast`.
+The border is now always one pixel and transparent when there is no edge to show, which is also what React
+does: it transitions `border-color` against a border box that never changes. `selection-state` is a colour
+and surface role; it sanctions no layout movement, and positional movement is the one thing Reduce Motion
+exists to remove. Both are guarded by tests that read the rendered box.
+
+Two stated gaps. The Checkbox glyph swaps in one frame while the fill settles (as on Compose). And an icon
+inside a Toggle shares the text's `ColorTween`, so it settles — but **none of these controls is focusable or
+keyboard-operable**: they are bare `GestureDetector`s, as every other control in the package is. That is a
+package-wide gap, not a selection-control one, and it is left to its own slice rather than fixed for four
+widgets out of ninety.

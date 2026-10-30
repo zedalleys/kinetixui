@@ -19,6 +19,7 @@ export 'src/kinetix_type.dart';
 export 'src/kinetix_motion.dart';
 export 'src/kinetix_disclosure_motion.dart';
 export 'src/kinetix_loop_motion.dart';
+export 'src/kinetix_selection_motion.dart';
 export 'src/kinetix_switch_motion.dart';
 export 'src/kinetix_shadows.dart';
 export 'src/kinetix_foundation.dart';
