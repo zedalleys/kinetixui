@@ -34,7 +34,9 @@ jobs:
       # before the toolchain is warmed up.
       - name: Validate version
         working-directory: .
-        run: node scripts/check-native-publish-preflight.mjs --version='${{ inputs.version }}'
+        env:
+          VERSION: ${{ inputs.version }}
+        run: node scripts/check-native-publish-preflight.mjs --version="$VERSION"
 
       - name: Preflight
         working-directory: .
@@ -56,7 +58,9 @@ jobs:
       # executed by a real dispatch, and `sed` exits 0 when it matches nothing.
       - name: Stage for publish
         working-directory: .
-        run: node scripts/publish/stage-flutter-package.mjs '${{ inputs.version }}'
+        env:
+          VERSION: ${{ inputs.version }}
+        run: node scripts/publish/stage-flutter-package.mjs "$VERSION"
 
       - name: Dry run
         run: flutter pub publish --dry-run

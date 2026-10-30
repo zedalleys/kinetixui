@@ -65,6 +65,8 @@ const NEGATIVES = {
   "swiftui-tag-not-from-input": { file: ".github/workflows/publish-swiftui.yml", from: 'git push "$MIRROR" "$SHA:refs/tags/$VERSION"', to: 'git push "$MIRROR" "$SHA:refs/tags/$(date +%Y.%m.%d)"', breaks: "VI-SWIFTUI-TAG-FROM-VALIDATED-INPUT" },
   "flutter-version-not-asserted": { file: "scripts/publish/stage-flutter-package.mjs", from: "if (!lines.includes(`version: ${version}`)) {", to: "if (false) {", breaks: "VI-FLUTTER-VERSION-ASSERTED" },
   "flutter-changelog-ungated": { file: "scripts/publish/stage-flutter-package.mjs", from: "does not mention ${version}", to: "has no entry", breaks: "VI-FLUTTER-CHANGELOG-GATES-VERSION" },
+  "swiftui-version-interpolated": { file: ".github/workflows/publish-swiftui.yml", from: '--version="$VERSION"', to: "--version='${{ inputs.version }}'", breaks: "WF-VERSION-NOT-INTERPOLATED" },
+  "swiftui-version-interpolated-in-block": { file: ".github/workflows/publish-swiftui.yml", from: "          SHA=$(git rev-parse swiftui-dist)", to: "          SHA=$(git rev-parse swiftui-dist) # ${{ inputs.version }}", breaks: "WF-VERSION-NOT-INTERPOLATED" },
 };
 
 if (process.argv.includes("--list-negatives")) {
@@ -277,6 +279,60 @@ check(
   "WF-VERSION-VALIDATED",
   unvalidated.length === 0,
   `${unvalidated.map((w) => w.path).join(", ")} must validate its \`version\` input with \`node scripts/check-native-publish-preflight.mjs --version=…\` before anything is uploaded. A typo becomes a permanent tag, an immutable Central coordinate or a burnt pub.dev version.`,
+);
+
+/**
+ * Every `run:` script body in a workflow, with the line its `run:` key sits on. A body is either
+ * the rest of that line or, for a block scalar, the lines indented further than the key. Only
+ * `run:` bodies are of interest here: `env:`, `if:` and `with:` are the *correct* homes for a
+ * `${{ … }}` expression and must keep working.
+ */
+const runBodies = (text) => {
+  const lines = text.split("\n");
+  const bodies = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    const match = lines[i].match(/^(\s*)(?:- )?run:(.*)$/);
+    if (!match) continue;
+    const keyIndent = match[1].length + (/^\s*- /.test(lines[i]) ? 2 : 0);
+    const rest = match[2].trim();
+    if (/^[|>][-+\d]*$/.test(rest)) {
+      const block = [];
+      for (let j = i + 1; j < lines.length; j += 1) {
+        if (lines[j].trim() === "") { block.push(lines[j]); continue; }
+        if (lines[j].match(/^\s*/)[0].length <= keyIndent) break;
+        block.push(lines[j]);
+      }
+      bodies.push({ line: i + 1, text: block.join("\n") });
+    } else {
+      bodies.push({ line: i + 1, text: rest });
+    }
+  }
+  return bodies;
+};
+
+/*
+ * A `${{ inputs.… }}` expression inside a `run:` body is substituted into the script *text* before
+ * the shell parses it, so a quote in the dispatched value is a breakout rather than a character.
+ * That defeated the validation above in the most direct way available: three of the four sites this
+ * check was written for *were* the validation step, and a payload that re-invoked the validator
+ * afterwards left the step green while the version stayed an arbitrary string. The input has to
+ * cross an `env:` boundary and be read as a quoted "$VERSION".
+ *
+ * This is checked here rather than left to actionlint on purpose. actionlint treats
+ * `workflow_dispatch` inputs as trusted — dispatch needs write access — so the pinned v1.7.12 in
+ * workflow-lint.yml reports nothing on these files, while flagging the identical shape written with
+ * `github.event.*`. The lint job is not the instrument for this.
+ *
+ * The check is deliberately about the *class*, not the four call sites: a fifth one added later
+ * fails it.
+ */
+const interpolated = workflows.flatMap((w) =>
+  runBodies(w.text).filter((b) => /\$\{\{\s*inputs\./.test(b.text)).map((b) => `${w.path}:${b.line}`),
+);
+check(
+  "WF-VERSION-NOT-INTERPOLATED",
+  interpolated.length === 0,
+  `These \`run:\` bodies interpolate a dispatch input into the script text: ${interpolated.join(", ")}. GitHub substitutes the expression before the shell parses the line, so the value runs as script — ahead of any validation, and the step can still exit 0. Bind it to the step's \`env:\` and read it as a quoted "$VERSION" instead.`,
 );
 
 // ---------------------------------------------------------------------------
