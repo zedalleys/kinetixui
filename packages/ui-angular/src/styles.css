@@ -75,6 +75,52 @@
 .kx-btn[aria-disabled='true'] {
   cursor: not-allowed;
 }
+/*
+  A pending button is `aria-disabled`, so the rule above would dim it — and that is the wrong reading.
+  Dimmed means unavailable; this control is working, and the user is waiting for it. Full opacity, and
+  a cursor that says "in progress" rather than "not allowed".
+*/
+.kx-btn[data-pending] {
+  opacity: 1;
+  cursor: progress;
+}
+/*
+  The indicator is a pseudo-element, not a child node. A child inside a `<button>` becomes part of its
+  accessible name, which would turn "Save" into "Save Working…" mid-interaction; an empty `content: ''`
+  box contributes nothing to the name. The slot is reserved by `kx-btn--pending-aware` (added whenever
+  the call site uses the `pending` input at all) so the label does not shift when the ring appears, and
+  a button that never mentions `pending` gets neither rule.
+*/
+.kx-btn--pending-aware::before {
+  content: '';
+  flex: none;
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: var(--radius-full);
+}
+.kx-btn[data-pending]::before {
+  border: 2px solid currentColor;
+  border-block-start-color: transparent;
+  animation: kx-btn-pending-spin var(--duration-slower, 1000ms) linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* The same shape, not spinning — the reduced form this package already contracts for Spinner. */
+  .kx-btn[data-pending]::before {
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  /* `currentColor` is a system colour here; the transparent gap has to become one too or the ring
+     renders as a solid disc with no visible rotation. Matches Spinner's `forced-colors` treatment. */
+  .kx-btn[data-pending]::before {
+    border-block-start-color: Canvas;
+  }
+}
+@keyframes kx-btn-pending-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 .kx-btn > svg {
   pointer-events: none;
   flex-shrink: 0;

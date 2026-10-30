@@ -128,6 +128,16 @@
   "sources": {
     "React": [
       {
+        "file": "packages/ui/src/button-pending.test.tsx",
+        "environment": "jsdom",
+        "kinds": [
+          "accessibility"
+        ],
+        "components": [
+          "button"
+        ]
+      },
+      {
         "file": "packages/ui/src/checkbox-radio-motion.test.tsx",
         "environment": "jsdom",
         "kinds": [
@@ -1125,6 +1135,16 @@
         ]
       },
       {
+        "file": "packages/ui-flutter/test/button_pending_test.dart",
+        "environment": "flutter_test",
+        "kinds": [
+          "accessibility"
+        ],
+        "components": [
+          "button"
+        ]
+      },
+      {
         "file": "packages/ui-flutter/test/disclosure_motion_test.dart",
         "environment": "flutter_test",
         "kinds": [
@@ -1823,6 +1843,7 @@
           "packages/ui/src/components-behavior.test.tsx:17-214"
         ],
         "accessibility": [
+          "packages/ui/src/button-pending.test.tsx:26-578",
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "scripts/a11y-browser.mjs:35-560"
         ],
@@ -1874,6 +1895,7 @@
           "packages/ui-flutter/test/interaction_test.dart:18-111"
         ],
         "accessibility": [
+          "packages/ui-flutter/test/button_pending_test.dart:37-195",
           "packages/ui-flutter/test/semantics_test.dart:30-116"
         ],
         "rtl": [

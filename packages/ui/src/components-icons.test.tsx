@@ -191,7 +191,9 @@ describe("the /docs/icons example", () => {
     render(<IconsIconOnlyButtonExample />);
     const button = screen.getByRole("button", { name: "Delete draft" });
     expect(button.querySelector("svg")!.getAttribute("aria-hidden")).toBe("true");
-    // The label is in the DOM for assistive technology; size="icon" hides it visually.
-    expect(button.className).toContain("[&>*:not(svg)]:sr-only");
+    // The label is in the DOM for assistive technology; size="icon" hides it visually. The
+    // `:not([data-pending-slot])` part of the selector is WP-1's: a pending indicator is a direct
+    // non-svg child too, and collapsing it would hide the spinner on a pending icon button.
+    expect(button.className).toContain("[&>*:not(svg):not([data-pending-slot])]:sr-only");
   });
 });

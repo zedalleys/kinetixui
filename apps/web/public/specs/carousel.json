@@ -67,7 +67,7 @@
         },
         {
           "name": "state",
-          "type": "\"Default\" | \"Hover\" | \"Focus\" | \"Active\" | \"Disabled\" | null",
+          "type": "\"Default\" | \"Hover\" | \"Focus\" | \"Active\" | \"Disabled\" | \"Pending\" | null",
           "required": false,
           "description": "force a static visual state — leave undefined for real interaction"
         },
@@ -76,6 +76,18 @@
           "type": "\"default\" | \"sharp\" | \"pill\" | null",
           "required": false,
           "description": "corner style — matches the design source's Corners property"
+        },
+        {
+          "name": "pending",
+          "type": "boolean",
+          "required": false,
+          "description": "The action this button started is in flight. Controlled: the caller owns it and must move it back to `false` on both the confirmed and the failed path. The button stays focusable and keeps its access…"
+        },
+        {
+          "name": "pendingLabel",
+          "type": "string",
+          "required": false,
+          "description": "What a screen reader hears while `pending`, announced separately from the button's name. Defaults to the English \"Working…\"; pass your own string to localise, the same way `ResultState` and `Spinner`…"
         }
       ]
     },
@@ -100,7 +112,7 @@
         },
         {
           "name": "state",
-          "type": "\"Default\" | \"Hover\" | \"Focus\" | \"Active\" | \"Disabled\" | null",
+          "type": "\"Default\" | \"Hover\" | \"Focus\" | \"Active\" | \"Disabled\" | \"Pending\" | null",
           "required": false,
           "description": "force a static visual state — leave undefined for real interaction"
         },
@@ -109,6 +121,18 @@
           "type": "\"default\" | \"sharp\" | \"pill\" | null",
           "required": false,
           "description": "corner style — matches the design source's Corners property"
+        },
+        {
+          "name": "pending",
+          "type": "boolean",
+          "required": false,
+          "description": "The action this button started is in flight. Controlled: the caller owns it and must move it back to `false` on both the confirmed and the failed path. The button stays focusable and keeps its access…"
+        },
+        {
+          "name": "pendingLabel",
+          "type": "string",
+          "required": false,
+          "description": "What a screen reader hears while `pending`, announced separately from the button's name. Defaults to the English \"Working…\"; pass your own string to localise, the same way `ResultState` and `Spinner`…"
         }
       ]
     }
