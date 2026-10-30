@@ -19,19 +19,21 @@
     },
     {
       "kind": "new",
-      "area": ["tokens", "tooling"],
+      "area": [
+        "components",
+        "tokens"
+      ],
       "title": "Four rem-based responsive variants in the Tailwind preset",
       "body": "The preset exported as ./tailwind.config now registers sm-rem (40rem), md-rem (48rem), lg-rem (64rem) and xl-rem (80rem) as variants, so they follow the reader's text size. md-rem is new; the other three previously existed only in the website's own config, so a consumer's sm-rem: utility generated no rule. Nothing is removed or renamed and no existing utility changes the widths it applies at. They are variants rather than theme.screens entries because Tailwind 3.4 silently emits no min-* or max-* rules when screens mix units."
     },
     {
       "kind": "fixed",
-      "area": "angular",
+      "area": "platforms",
       "title": "kx-metric wraps, and the tokens peer range widens",
       "body": "@kinetixui/angular 0.26.2 applies the same wrapping contract to .kx-metric using the existing spacing tokens; no selector or public class name changed. Its @kinetixui/tokens peer range is >=0.24.0 <0.28.0, so it keeps supporting tokens 0.24 to 0.27. The Angular change was verified by the package's stylesheet gates, not by a rendered Angular measurement. Angular remains Preview."
     },
     {
       "kind": "fixed",
-      "area": "website",
       "title": "Documentation site layout corrections",
       "body": "The blocks gallery now takes its two-column step at 420px, which previously emitted no rule in the built site, and the homepage spotlight and preview toolbar spacing were corrected. These change the website only and are not published package API."
     },
