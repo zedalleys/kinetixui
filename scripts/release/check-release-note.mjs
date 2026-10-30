@@ -10,10 +10,19 @@
  * This asks the same question one step earlier, from the changesets the merge would actually carry.
  * It is an early warning, not a replacement: the post-merge throw stays exactly as it is.
  *
- * Two things it deliberately does not do:
- *
  *   - It does not require a note for a release-inert change. No pending changeset moves
  *     `@kinetixui/ui`, no note is wanted, and the check passes.
+ * It also validates the schema of *every* curated note in `release/notes/`, not only the one the
+ * projection asks for. A note is authored in its own pull request, usually one carrying no
+ * changeset at all, so at the moment it is written nothing moves `@kinetixui/ui` and the projection
+ * half has nothing to look at. That is how the 0.27.0 note reached `main` classifying three changes
+ * outside the `ChangeArea` union: inert JSON on `main`, so `main` stayed green, and a TypeScript
+ * error in `releases.ts` the moment `version-release-meta.mjs` activated it into the Version PR.
+ * The sweep is unconditional because a note is only ever wrong in one direction — it either
+ * typechecks once injected or it does not, whatever is pending when it is written.
+ *
+ * Two things it deliberately does not do:
+ *
  *   - It does not fail a pull request for a breakage that is already on the base branch. If `main`
  *     itself projects a core version whose note is missing, every open pull request inherits that
  *     through the merge commit, and failing all of them would say nothing about any of them. The
@@ -131,7 +140,42 @@ export function linkErrors(href, where) {
 // ---------------------------------------------------------------------------------------------
 
 /** The check itself. Returns the exit code rather than taking it, so a test can call it. */
+/** Every schema error across `release/notes/`, keyed on each file's own version. Independent of what
+ *  is pending: see the header for why the projection half cannot cover this. */
+export function allNoteErrors(list, readFile) {
+  const errors = [];
+  for (const name of list("release/notes").filter((n) => n.endsWith(".json")).sort()) {
+    const rel = `release/notes/${name}`;
+    const text = readFile(rel);
+    if (text === null) continue;
+    let note;
+    try {
+      note = JSON.parse(text);
+    } catch (err) {
+      errors.push(`${rel}: is not valid JSON — ${err.message}`);
+      continue;
+    }
+    errors.push(...noteErrors(note, name.replace(/\.json$/, ""), rel));
+  }
+  return errors;
+}
+
 export function main() {
+  // Validate every note first, whatever this pull request is otherwise doing. A note-only pull
+  // request carries no changeset, so the projection below would pass it unread.
+  const schema = allNoteErrors(listTree, readTree);
+  if (schema.length) {
+    console.error(`check:release-note — FAIL
+
+    A curated note is copied verbatim into apps/web/src/lib/releases.ts by
+    scripts/version-release-meta.mjs. These values do not satisfy the unions declared there, so the
+    Version PR generated from them would fail to typecheck and build:
+
+${schema.map((e) => `  ✗ ${e}`).join("\n")}
+`);
+    return 1;
+  }
+
   const core = projectedCore({ show: readTree, list: listTree });
 
   if (!core) {
