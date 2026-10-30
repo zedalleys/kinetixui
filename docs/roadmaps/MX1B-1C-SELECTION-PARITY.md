@@ -54,23 +54,51 @@ The milestones are those in MX1B-1-PLAN §6:
 
 | Component | React | Angular (Preview) | SwiftUI | Compose | Flutter |
 | --- | --- | --- | --- | --- | --- |
-| Toggle | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| ToggleGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| Checkbox | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| RadioGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| Switch | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓ ○ | ○ (thumb only) ✓ ○ | ✓ ✓ ○ |
+| Toggle | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ✓ ✓ ○ | ○ ○ ○ |
+| ToggleGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ✓[3] ✓ ○ | ○ ○ ○ |
+| Checkbox | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ✓[4] ✓ ○ | ○ ○ ○ |
+| RadioGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ✓ ✓ ○ | ○ ○ ○ |
+| Switch | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓ ○ | ✓ ✓ ○ | ✓ ✓ ○ |
 
 Angular's five cells moved in MX1b-2 (PR for this slice): each component now uses its role's pairing and is
 a contract consumer (Impl), `scripts/angular-selection-motion.mjs` fails on nine negative controls (Auto),
 and that gate drives the package as a live Angular application in Chromium rather than in jsdom (Runtime).
 Angular stays Preview: these are motion and accessibility cells, not a graduation.
 
-Compose's Switch is not ticked for Impl: `selection-control` covers the thumb and the track colour, and
-`Switch.kt` animates only `thumbOffset` while the track colour is applied directly. Its Auto tick is for the
-thumb, which `SwitchMotionTest.kt` checks. `KinetixSwitchMotion.kt` itself does use the pairing and stays a
-contract consumer, so the role's maturity is unchanged; the gap is the component not routing the track through it.
+MX1d moved the Compose column (2026-10-18). Footnote numbers are scoped by platform — SwiftUI owns [1] and
+[2], Compose [3] and [4], Flutter [5] and [6] — so the three columns can land in either order without two
+notes claiming the same marker. What each tick means here:
 
-What is there today, by platform (file:line from the tree at 4980c21):
+- **Impl ✓** — the control reads `KinetixSelectionMotion` (`fast` · `standard`), a `selection-state`
+  consumer in `tokens/contracts/motion.json`. Switch's Impl tick is now earned: the track colour joined the
+  thumb on `KinetixSwitchMotion`, which was the stated condition.
+- **Auto ✓** — `SelectionMotionTest.kt` composes each control through Robolectric and reads the semantics
+  tree, `SwitchMotionTest.kt` reads the track's painted colour halfway through the gesture, and
+  `check:motion-tokens` / `check:native-motion` fail on negative controls that were watched to fire. The
+  painted track test has its own demonstrated control: removing the track's `animateColorAsState` fails both
+  midpoint assertions, watched on CI, which is where the Robolectric suite runs — the module cannot be
+  compiled on the dev box, since its plugin repositories are unreachable from there. The semantics
+  assertions' own negative controls remain reasoning rather than observation.
+- **[3]** — ToggleGroup's Impl is its items': it is a pass-through to Toggle and animates nothing itself,
+  which is also why it is not a declared member of the motion family. Its own change is the optional
+  `accessibleLabel`.
+- **[4]** — Checkbox's fill and edge settle; the glyph still swaps in one frame, unlike React's fade. Stated
+  in MOTION.md rather than ticked over.
+- **Runtime ○** — no emulator job exists, and nothing measured an interpolated colour. Robolectric is a JVM
+  host.
+
+**Historical, superseded by the MX1d notes above.** The rest of this section is the audit as it stood
+before MX1d; where it and the notes above disagree, the notes above are current. It is kept because the
+matrix is only readable next to the state it was measured from.
+
+~~Compose's Switch is not ticked for Impl: `selection-control` covers the thumb and the track colour, and
+`Switch.kt` animates only `thumbOffset` while the track colour is applied directly.~~ The track joined the
+thumb on `KinetixSwitchMotion` in MX1d, which was the stated condition, and the Impl tick above is that
+change. `KinetixSwitchMotion.kt` itself always used the pairing and stays a contract consumer, so the role's
+maturity is unchanged either way.
+
+What was there **before MX1d**, by platform (file:line from the tree at 4980c21) — the audit record, not the
+current state:
 
 | | Angular | SwiftUI | Compose | Flutter |
 | --- | --- | --- | --- | --- |
@@ -271,9 +299,26 @@ motion.
   - The simulator run shows the duration change and Reduce Motion.
   - VoiceOver reads mixed and on/off correctly.
 
-### Jetpack Compose
+### Jetpack Compose — DONE in MX1d (2026-10-18)
+
+1. **The Switch track colour did not animate (confirmed).** `Switch.kt` applied it through `.background`
+   while only `thumbOffset` ran through `animateDpAsState`. It now takes the same `KinetixSwitchMotion`
+   spec as the thumb, with the disabled alpha folded into the animated target.
+2. **No selection-state motion anywhere (confirmed).** Toggle, Checkbox and RadioButton now animate their
+   colours through a new `KinetixSelectionMotion` (`fast` · `standard`, `tween(0)` at animator scale 0),
+   and the radio dot fades rather than appearing.
+3. **ToggleGroup had no group semantics (confirmed).** It gains an optional `accessibleLabel` and becomes a
+   named traversal group. `selectableGroup()` was NOT used: it describes a single-choice set of `selectable`
+   children, and these items are independently `toggleable`. Compose has no "group" role to announce, so
+   what was added is what the platform actually offers, and the items' own state is untouched.
+4. **`Role.Checkbox` on Toggle is kept**, as the handoff asked, because Compose has no toggle-button role.
+
+Not done: the Checkbox glyph cross-fade (recorded in MOTION.md), any press layer (this package ports no
+hover or press states for any control), and RTL thumb travel as *measured* behaviour — `Modifier.offset`
+resolves against layout direction by contract, and no test in this repository observes it.
+
 - **Source:** `Toggle.kt`, `ToggleGroup.kt`, `Checkbox.kt`, `RadioGroup.kt`, `Switch.kt`,
-  `KinetixSwitchMotion.kt`.
+  `KinetixSwitchMotion.kt`, `KinetixSelectionMotion.kt`.
 - **APIs:**
   - `animateColorAsState(tween(KinetixDuration.fast, easing = KinetixEasing.standard))` for selection
     colour.
