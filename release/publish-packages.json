@@ -21,7 +21,17 @@
     "package's own `main` / `module` / `types` / `exports` / `bin` fields, which are checked",
     "automatically.",
     "",
-    "`artifactDirectory` is for a package whose publishable artifact is not its workspace root.",
+    "`peerFloor` names the oldest version of a workspace peer this package is published as",
+  "supporting. It exists because the forward peer check only asks whether a range accepts what is",
+  "about to ship, and a range can satisfy that while having become narrower: when tokens crossed",
+  "@kinetixui/angular's ceiling, `changeset version` rewrote `>=0.24.0 <0.27.0` to",
+  "`>=0.27.0 <0.28.0` — still valid for the new tokens, but silently dropping 0.24\u20130.26 in a",
+  "patch release. `pnpm release:check` asserts the manifest range still accepts everything the",
+  "floor names, so raising a floor takes an edit here as well as in the manifest, and is visible in",
+  "review rather than computed. There is no waiver: dropping peer support edits this value and",
+  "says why in a changeset.",
+  "",
+  "`artifactDirectory` is for a package whose publishable artifact is not its workspace root.",
     "@kinetixui/angular is built by ng-packagr, which generates the Angular Package Format manifest",
     "into `dist/` \u2014 that is the package npm receives, while `directory` stays the workspace identity",
     "the allowlist is matched against. See RELEASING.md."
@@ -83,6 +93,9 @@
       "name": "@kinetixui/angular",
       "releaseGroup": "angular",
       "directory": "packages/ui-angular",
+      "peerFloor": {
+        "@kinetixui/tokens": "0.24.0"
+      },
       "artifactDirectory": "packages/ui-angular/dist",
       "build": [
         "build:tokens",

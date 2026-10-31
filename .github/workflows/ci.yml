@@ -71,6 +71,12 @@ jobs:
       - name: A visible label names its field
         run: pnpm check:label-association
 
+      # A group that claims one choice has to hold choices: a radiogroup needs real radios and
+      # cannot describe them with aria-pressed. axe is green on that contradiction, because no
+      # single element is wrong -- only the pair.
+      - name: A radiogroup holds radios
+        run: pnpm check:role-coherence
+
       - name: Token table matches the tokens
         run: pnpm check:token-contract
 
@@ -146,6 +152,12 @@ jobs:
 
       - name: Spatial grid guardrail (8-unit grid, 4-unit half-step)
         run: pnpm check:grid
+
+      # The published preset must not cost a consumer their `max-*` and `min-[…]` variants. Tailwind
+      # drops those wholesale, and silently, once `theme.screens` mixes units — which is why the
+      # `-rem` breakpoints are registered as variants. Runs its own negative control.
+      - name: Breakpoint variants survive the shared preset
+        run: pnpm check:breakpoints
 
       # What each platform implementation has actually been verified to do, derived from the test files
       # themselves. check:manifest below refuses a declared platform maturity this evidence does not support,

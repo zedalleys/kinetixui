@@ -20,7 +20,36 @@ npx @kinetixui/cli add rating
 
 ```tsx
 import { Rating } from "@kinetixui/ui";
+
+<Rating value={stars} onChange={setStars} aria-label="Rate this article" />
+<Rating value={4} readOnly />
 ```
+
+## How it behaves
+
+A rating is one choice out of five, so it is a radio group of real radios — "3 stars, radio,
+checked, 3 of 5". That makes the keyboard behaviour the browser's rather than ours: **one tab stop**
+(the chosen star, or the first when nothing is chosen yet), and the **arrow keys move and choose**,
+mirrored in a right-to-left page. Home and End choose the lowest and highest. Clicking a star
+chooses it; hovering previews the fill without changing the value.
+
+Give the group a name with `aria-label` or `aria-labelledby` — it is "Rating" if you give neither,
+which is rarely what you want on a page with more than one.
+
+`readOnly` is a rating that is shown rather than given: `role="img"` named "Rated 3 out of 5", the
+stars hidden from assistive technology, and no tab stop.
+
+This is the same contract Angular's `kx-rating` states and asserts. The arrow-key half of it is the
+browser's, so no test here proves it on a real engine: the unit tests exercise it through
+`user-event`'s emulation of radio-group navigation, and the structural half —
+a component claiming a `radiogroup` must contain real radios and must not describe them with
+`aria-pressed`, which is a toggle button's state and cannot say which one of a group is chosen — is
+held by `check:role-coherence`. An automated accessibility scan passes that contradiction, because
+no single element in it is wrong.
+
+SwiftUI, Compose and Flutter render the stars as tappable images with no control role and no
+selected state, so the announcement above is React's and Angular's only; see the cross-platform note
+in the pull request that introduced this.
 
 Styled entirely from the KinetixUI token contract — `bg-action`,
 `text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
