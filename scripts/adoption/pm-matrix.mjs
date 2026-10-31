@@ -25,10 +25,10 @@
  * What it does NOT do: reach the component registry at kinetixui.com, or publish anything. `cli add` needs the
  * registry origin; that is a separate check and its absence is stated rather than papered over.
  */
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -88,6 +88,7 @@ const NEGATIVES = {
   'bad-package': 'install a package name that does not exist — the install must fail',
   'bare-bin-name': 'the bin name `kinetixui` is not an installable package (checked, never executed)',
   'yarn-classic-dlx': 'yarn dlx under Yarn Classic must fail, which is what the docs caveat claims',
+  'berry-unmeasured-pass': 'an unmeasured yarn-berry must not read as a pass, nor let the run claim every route was exercised',
 };
 
 if (has('list-negatives')) {
@@ -208,6 +209,67 @@ if (negative) {
     console.log(ok ? 'PASS  negative yarn-classic-dlx: the caveat matches this yarn' : 'FAIL  negative yarn-classic-dlx');
     process.exit(ok ? 0 : 1);
   }
+  /*
+   * The defect this guards is a FALSE PASS, so asserting the fixed behaviour alone would prove nothing: a
+   * run that never reaches the claim at all would satisfy it. The control therefore mutates a temp copy of
+   * this file back to the single line that caused it — `ok: true` for the unmeasured Berry row — and
+   * requires the false sentence to REAPPEAR. If the mutation cannot be applied, or is a no-op, the control
+   * aborts rather than reporting a pass: a control that silently measures nothing is the very thing the
+   * matrix exists to catch.
+   */
+  if (negative === 'berry-unmeasured-pass') {
+    const CLAIM = 'Every advertised route was exercised on this machine.';
+    /*
+     * Built from fragments on purpose. Written as plain literals, these two strings appear in THIS block as
+     * well as in the statement under test, and `String.replace` takes the first match — so the control
+     * rewrote its own anchor, left the real `results.push` untouched, and the mutation silently tested
+     * nothing while still changing the file. The occurrence count below is what makes that unmissable;
+     * `mutated !== source` is not, because the wrong edit also changes the file.
+     */
+    const pushLine = (v) => `results.push({ route: 'both', pm: 'yarn-berry', ok: ${v},`;
+    const FIXED = pushLine('null');
+    const BROKEN = pushLine('true');
+    const source = readFileSync(fileURLToPath(import.meta.url), 'utf8');
+    const occurrences = source.split(FIXED).length - 1;
+    if (occurrences !== 1) {
+      console.error(`FAIL  negative berry-unmeasured-pass: expected exactly 1 occurrence of the anchor, found ${occurrences}.`);
+      console.error(`Anchor: ${JSON.stringify(FIXED)}`);
+      console.error('A control that cannot name one unambiguous line refuses rather than reporting a pass.');
+      process.exit(1);
+    }
+    const dir = mkdtempSync(join(tmpdir(), 'kinetixui-berry-control-'));
+    const run = (file) => {
+      const r = spawnSync(process.execPath, [file, '--execute-only', '--pm=yarn'], { encoding: 'utf8' });
+      return `${r.stdout ?? ''}${r.stderr ?? ''}`;
+    };
+    const fixedFile = join(dir, 'fixed.mjs');
+    const brokenFile = join(dir, 'broken.mjs');
+    const mutated = source.replace(FIXED, BROKEN);
+    if (mutated === source) {
+      console.error('FAIL  negative berry-unmeasured-pass: the mutation was a no-op, so nothing was tested.');
+      process.exit(1);
+    }
+    console.log(`  mutation: -${FIXED}\n            +${BROKEN}`);
+    writeFileSync(fixedFile, source);
+    writeFileSync(brokenFile, mutated);
+    const fixedOut = run(fixedFile);
+    const brokenOut = run(brokenFile);
+    rmSync(dir, { recursive: true, force: true });
+
+    const checks = [
+      ['the fixed file must not claim every route was exercised', !fixedOut.includes(CLAIM)],
+      ['the fixed file must name yarn-berry as unexercised', fixedOut.includes('claims nothing about: both/yarn-berry')],
+      ['the fixed file must not print yarn-berry as ok', !/yarn-berry\s+ok\b/.test(fixedOut)],
+      ['the mutation must bring the false claim back', brokenOut.includes(CLAIM)],
+      ['the mutation must print yarn-berry as ok', /yarn-berry\s+ok\b/.test(brokenOut)],
+    ];
+    for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
+    const ok = checks.every(([, held]) => held);
+    console.log(ok
+      ? 'PASS  negative berry-unmeasured-pass: an unmeasured Berry reads as NOT MEASURED, and the old line restores the false claim'
+      : 'FAIL  negative berry-unmeasured-pass');
+    process.exit(ok ? 0 : 1);
+  }
 }
 
 for (const pm of managers) {
@@ -223,16 +285,37 @@ for (const pm of managers) {
       if (!has('execute-only')) checkInstall('yarn', berryBin, 'yarn-berry');
     } else {
       console.log('NOT MEASURED  execute/install yarn-berry  pass --yarn-berry=<path> (see the comment on berryBin)');
-      results.push({ route: 'both', pm: 'yarn-berry', ok: true, detail: 'not measured — no Berry binary supplied' });
+      results.push({ route: 'both', pm: 'yarn-berry', ok: null, detail: 'not measured — no Berry binary supplied' });
     }
   }
 }
 
 console.log('\nMatrix');
-for (const r of results) console.log(`  ${r.route.padEnd(8)} ${r.pm.padEnd(5)} ${r.ok ? 'ok' : 'FAILED'}`);
-const failures = results.filter((r) => !r.ok);
+for (const r of results) {
+  const state = r.ok === null ? 'NOT MEASURED' : r.ok ? 'ok' : 'FAILED';
+  console.log(`  ${r.route.padEnd(8)} ${r.pm.padEnd(5)} ${state}`);
+}
+
+/*
+ * `ok: null` is a third state, and it exists because `ok: true` was being used for it. With no Berry binary
+ * to run, the yarn-berry row was pushed as a PASS: the matrix printed `both yarn-berry ok`, the failure
+ * filter skipped it because `!true` is false, and the run still closed with "Every advertised route was
+ * exercised on this machine" — a sentence that was false, about the one route most likely to be missing.
+ * Yarn Berry IS advertised, so the claim shrinks to what was exercised instead of rounding up to all of it.
+ *
+ * It deliberately does NOT exit non-zero. Berry is optional precisely because `yarn` on a runner is only
+ * ever Classic, so failing here would be red on every CI run forever, and a gate that is always red is a
+ * gate someone turns off. The exit code is unchanged; what changes is the CLAIM the run is allowed to make.
+ */
+const failures = results.filter((r) => r.ok === false);
+const unmeasured = results.filter((r) => r.ok === null);
 if (failures.length) {
   console.error(`\n${failures.length} cell(s) failed. The documentation must not offer a route this says is broken.`);
   process.exit(1);
 }
-console.log('\nEvery advertised route was exercised on this machine.');
+if (unmeasured.length) {
+  const cells = unmeasured.map((r) => `${r.route}/${r.pm}`).join(', ');
+  console.log(`\nEvery route this run exercised passed. NOT exercised, so this run claims nothing about: ${cells}.`);
+} else {
+  console.log('\nEvery advertised route was exercised on this machine.');
+}
