@@ -3695,6 +3695,7 @@
       "React": [
         "accessibility",
         "build",
+        "interaction",
         "published"
       ],
       "Angular": [
@@ -4434,7 +4435,7 @@
   "evidenceCounts": {
     "React": {
       "build": 109,
-      "interaction": 48,
+      "interaction": 49,
       "accessibility": 109,
       "rtl": 38,
       "largeText": 39,
