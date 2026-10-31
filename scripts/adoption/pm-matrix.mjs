@@ -88,6 +88,7 @@ const NEGATIVES = {
   'bad-package': 'install a package name that does not exist — the install must fail',
   'bare-bin-name': 'the bin name `kinetixui` is not an installable package (checked, never executed)',
   'yarn-classic-dlx': 'yarn dlx under Yarn Classic must fail, which is what the docs caveat claims',
+  'bare-bin-lookup-failure': 'an unreachable registry must make bare-bin-name report NOT MEASURED, never a pass',
   'berry-unmeasured-pass': 'an unmeasured yarn-berry must not read as a pass, nor let the run claim every route was exercised',
 };
 
@@ -191,15 +192,40 @@ if (negative) {
     process.exit(failed ? 0 : 1);
   }
   if (negative === 'bare-bin-name') {
+    /*
+     * This is the supply-chain control: it asserts that the bin name the docs must never render is not an
+     * installable package. So "I could not reach the registry" and "the registry serves no version" have to
+     * be told apart. They were not: the catch handler reported `latest: null` and the verdict was
+     * `latest === null`, so an offline runner printed PASS and exited 0 having consulted nothing — a false
+     * pass on the one check whose whole job is to notice a name becoming installable. The `exists` field
+     * needed to tell them apart was already being computed, and then discarded by the destructuring.
+     *
+     * A `--negative=` run is an explicit request to exercise one control. If it cannot be exercised, the
+     * request failed, so an unreachable registry exits non-zero rather than claiming either outcome. That is
+     * the opposite of the unmeasured Berry cell below, which exits 0 — Berry is optional on every runner,
+     * whereas this control was asked for by name.
+     */
     const res = execFileSync('node', ['-e', `
-      fetch('https://registry.npmjs.org/kinetixui').then(r => r.json()).then(d => {
-        console.log(JSON.stringify({ exists: !!d.name, latest: d['dist-tags'] && d['dist-tags'].latest || null }));
-      }).catch(() => console.log(JSON.stringify({ exists: null, latest: null })));
-    `], { encoding: 'utf8' }).trim();
-    const { latest } = JSON.parse(res);
+      const done = (o) => console.log(JSON.stringify(o));
+      fetch('https://registry.npmjs.org/kinetixui', { signal: AbortSignal.timeout(15000) })
+        .then(async (r) => {
+          // 404 is a SUCCESSFUL lookup that says the name publishes nothing; 5xx and the rest are not answers
+          if (r.status === 404) return done({ lookup: 'ok', status: 404, latest: null });
+          if (!r.ok) return done({ lookup: 'failed', status: r.status, latest: null });
+          const d = await r.json();
+          done({ lookup: 'ok', status: r.status, latest: (d['dist-tags'] && d['dist-tags'].latest) || null });
+        })
+        .catch((e) => done({ lookup: 'failed', status: null, latest: null, why: String((e && e.message) || e) }));
+    `], { encoding: 'utf8', timeout: 30000 }).trim();
+    const { lookup, status, latest, why } = JSON.parse(res);
+    if (lookup !== 'ok') {
+      console.error(`NOT MEASURED  negative bare-bin-name: the registry lookup failed, so this run proves nothing about whether \`kinetixui\` is installable${status ? ` (HTTP ${status})` : ''}${why ? ` — ${why}` : ''}.`);
+      console.error('A control that cannot run must not report a pass. Re-run it with registry access.');
+      process.exit(2);
+    }
     const ok = latest === null;
     console.log(ok
-      ? 'PASS  negative bare-bin-name: `kinetixui` publishes no version, so `npx kinetixui` cannot be the CLI'
+      ? `PASS  negative bare-bin-name: the registry answered (HTTP ${status}) and \`kinetixui\` publishes no version, so \`npx kinetixui\` cannot be the CLI`
       : `FAIL  negative bare-bin-name: npm now serves kinetixui@${latest} — re-check what the docs may render`);
     process.exit(ok ? 0 : 1);
   }
@@ -207,6 +233,46 @@ if (negative) {
     checkExecute('yarn');
     const ok = results.every((r) => r.ok);
     console.log(ok ? 'PASS  negative yarn-classic-dlx: the caveat matches this yarn' : 'FAIL  negative yarn-classic-dlx');
+    process.exit(ok ? 0 : 1);
+  }
+  /*
+   * The control for the control above. `bare-bin-name` used to report PASS when it could not reach the
+   * registry at all, so asserting its fixed behaviour against a registry that happens to be reachable
+   * proves nothing: the bug only ever showed when the lookup failed. This points a temp copy at an
+   * unresolvable host and requires NOT MEASURED and a non-zero exit — the two things the broken version
+   * got wrong.
+   *
+   * The anchor is assembled rather than written out, because a literal copy of the URL would also match
+   * this control's own source and the rewrite would land here instead of on the statement under test. That
+   * is not hypothetical: it is exactly how `berry-unmeasured-pass` first failed to test anything. Hence the
+   * exact-occurrence guard.
+   */
+  if (negative === 'bare-bin-lookup-failure') {
+    const REAL = `fetch('https://registry.` + `npmjs.org/kinetixui'`;
+    const DEAD = `fetch('https://registry.` + `invalid.example/kinetixui'`;
+    const self = fileURLToPath(import.meta.url);
+    const source = readFileSync(self, 'utf8');
+    const occurrences = source.split(REAL).length - 1;
+    if (occurrences !== 1) {
+      console.error(`FAIL  negative bare-bin-lookup-failure: the anchor occurs ${occurrences} times, not once, so the mutation would not land on the statement under test. Refusing rather than reporting a result.`);
+      process.exit(1);
+    }
+    const dir = mkdtempSync(join(tmpdir(), 'kinetixui-neg-lookup-'));
+    const copy = join(dir, 'pm-matrix.mjs');
+    writeFileSync(copy, source.replace(REAL, DEAD));
+    const run = spawnSync(process.execPath, [copy, '--negative=bare-bin-name'], { encoding: 'utf8' });
+    rmSync(dir, { recursive: true, force: true });
+    const out = `${run.stdout || ''}${run.stderr || ''}`;
+    const checks = [
+      ['an unreachable registry must not report a pass', !/^PASS/m.test(out)],
+      ['it must say NOT MEASURED', /NOT MEASURED/.test(out)],
+      ['it must say the lookup failed', /registry lookup failed/.test(out)],
+      ['it must not exit 0', run.status !== 0],
+    ];
+    for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
+    const ok = checks.every(([, held]) => held);
+    console.log(ok ? 'PASS  negative bare-bin-lookup-failure' : `FAIL  negative bare-bin-lookup-failure (exit was ${run.status})`);
+    if (!ok) console.error(out);
     process.exit(ok ? 0 : 1);
   }
   /*
