@@ -29,15 +29,13 @@ Not partial. No file.
 
 The component was `direction-provider`.
 
-Turns out SwiftUI, Compose and Flutter all carry layout direction in the
-framework itself:
+SwiftUI, Compose and Flutter all carry layout direction in the framework itself:
 
 `environment(\.layoutDirection)`
 `LocalLayoutDirection`
 `Directionality`
 
-Nothing to port. React-only by design — a better thing to document than a claim
-that isn't true.
+Nothing to port. React-only by design — better documented than claimed.
 
 ---
 
@@ -80,11 +78,11 @@ and goes green.
 
 **6/**
 
-Level 2 found this on our Chart page:
+Level 2, on our Chart page:
 
 > `KinetixChart` is a hand-drawn CustomPaint bar chart…
 
-`KinetixChart` didn't exist. There was no Chart in our Compose package.
+`KinetixChart` did not exist. We had no Compose Chart.
 
 `CustomPaint` is Flutter. The Flutter rationale had been pasted onto an invented
 Compose API.
@@ -97,17 +95,17 @@ Rendered under a tab labelled "Android".
 
 **7/**
 
-Symbol checking is cheap and catches a lot. It isn't enough.
+Symbol checking catches a lot. Not enough.
 
-This passed the audit:
+This passed:
 
 ```kotlin
 KinetixDataColumn("Invoice", sortKey = { … }) { it.invoice }
 ```
 
 Wrong class name — caught.
-Wrong param name (`rows` vs `data`) — missed.
-Trailing lambda binds to `weight: Float`, not `cell` — missed.
+Wrong param name — missed.
+Trailing lambda binds to `weight`, not `cell` — missed.
 
 Only a compiler catches those.
 
@@ -128,11 +126,14 @@ Mine found four more problems.
 
 **9/**
 
-Examples are migrating into files CI compiles, with the site quoting the
-extracted region. Six of a hundred-odd so far.
+Examples are moving into files CI compiles, the site quoting the extracted
+region. Six of a hundred-odd so far.
 
-Current coverage is generated from the manifest — edit it by hand and the build
-fails.
+Coverage is generated from the manifest — edit it by hand and the build fails:
+
+https://kinetixui.com/docs/platforms
+
+The longer write-up, with the audit:
 
 https://dev.to/zedalleys/your-cross-platform-design-system-may-be-lying-about-parity-4bj0
 
