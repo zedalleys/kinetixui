@@ -22,7 +22,7 @@
  */
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { publicationEvidenceProblems } from "./marketing-publication-rules.mjs";
+import { publicationEvidenceProblems, publicationSlotProblems } from "./marketing-publication-rules.mjs";
 
 const problems = [];
 const fail = (where, msg) => problems.push(`${where}: ${msg}`);
@@ -176,6 +176,15 @@ for (const asset of content.assets) {
     fail(asset.id, "the content register says published, but no row here logs the act — add the row with its date and result");
   }
 }
+
+/* ---------------------------------------------- every ready asset has a slot to be logged in */
+
+/**
+ * One step earlier than the rule above: an asset whose copy checks have passed needs the row it will be
+ * published into to exist already, on its own channel. The rule and its negative controls live in
+ * marketing-publication-rules.mjs / .test.mjs.
+ */
+problems.push(...publicationSlotProblems(content.assets, register.rows));
 
 /* ---------------------------------------------- publication evidence (M1) */
 

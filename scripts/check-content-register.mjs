@@ -11,7 +11,7 @@
  *   node scripts/check-content-register.mjs
  */
 import { readFileSync, existsSync, readdirSync } from "node:fs";
-import { approvalProblems } from "./marketing-publication-rules.mjs";
+import { approvalProblems, visualIdProblems } from "./marketing-publication-rules.mjs";
 
 const register = JSON.parse(readFileSync("marketing/content/register.json", "utf8"));
 const problems = [];
@@ -106,6 +106,24 @@ for (const asset of register.assets) {
  * explicit owner decision recorded on the asset: who, when, and where it was given. Nothing sets it by default.
  */
 problems.push(...approvalProblems(register.assets, (f) => readFileSync(f, "utf8")));
+
+/*
+ * Every id in `visuals` is a real brief or a produced asset. The list is the authority for an asset's
+ * `visual` field and used to validate nothing about itself, so `VIS-999` passed. It deliberately holds BOTH
+ * kinds — VIS-004 is briefed and deferred on purpose, while SOCIAL-PREVIEW, VIS-008 and VIS-009 are produced
+ * with no brief — so the rule keeps them separate rather than requiring one and breaking the other.
+ */
+{
+  const briefs = [...readFileSync("marketing/content/visual-briefs.md", "utf8").matchAll(/^## ([A-Z][A-Z0-9-]*)\b/gm)].map((m) => m[1]);
+  const manifestPath = "marketing/content/visuals/manifest.json";
+  const produced = existsSync(manifestPath)
+    ? JSON.parse(readFileSync(manifestPath, "utf8")).assets.map((a) => a.id)
+    : [];
+  if (produced.length === 0) {
+    problems.push(`${manifestPath}: no produced visuals read — refusing to validate the visuals list against an empty set`);
+  }
+  problems.push(...visualIdProblems(register.visuals, briefs, produced));
+}
 
 /* Families must reference real assets, or the repurposing map is decoration. */
 for (const [family, def] of Object.entries(register.families)) {
