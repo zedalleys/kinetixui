@@ -13,6 +13,20 @@
  * equivalent contract is asserted in a real browser by scripts/angular-browser.mjs; React has no
  * such harness, and this file does not pretend otherwise.
  */
+
+// These assertions drive Rating and assert what it did, so they are claimed evidence rather than
+// prose: a click chooses and reports, the arrow keys move the choice, Home and End take the ends,
+// the group is one tab stop landing on the chosen star, hover previews without choosing, and a
+// controlled Rating with no `onChange` to answer does not move. The accessibility claim is the
+// radio-group semantics the header describes: five radios named by their count, one checked, one
+// group per Rating, and a read-only Rating that is a labelled image with no control.
+//
+// ENVIRONMENT: jsdom, via `pnpm --filter @kinetixui/ui test`. This earns Rating `headless`, NOT
+// `runtime` — the ladder reserves `runtime` for a real browser, and the header above is explicit
+// that the arrow keys and the single tab stop are user-event's model of native radio behaviour and
+// not a browser measurement. A Chromium gate for Rating is separate, unwritten work.
+//
+// kx-verify: interaction, accessibility
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
