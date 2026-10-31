@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { it } from "node:test";
+import { readdirSync, readFileSync } from "node:fs";
 import { noteErrors, linkErrors, allNoteErrors, manifestSlugs } from "../check-release-note.mjs";
 import { offSite } from "../links.mjs";
 
@@ -328,4 +329,24 @@ it("accepts the key order every note on main already uses", () => {
     noteErrors({ version: "0.27.0", summary: "s", breaking: [], changes: [{ title: "t" }], migration: "m" }, "0.27.0", "r"),
     [],
   );
+});
+
+// --- the shipped notes themselves ----------------------------------------------------------------
+//
+// The sweep above runs over a fabricated tree, which proves the mechanism and nothing about the data.
+// This runs the gate over the repository's REAL notes. It is the control for the failure mode that
+// costs a release day: a gate that rejects content already published. It also pins the shapes those
+// notes actually use — an `area` that is an array, `newComponents`, `migration`, `githubReleaseUrl` —
+// so a future tightening cannot quietly outlaw them.
+it("accepts every curated note the repository ships", () => {
+  const dir = new URL("../../../release/notes/", import.meta.url);
+  const names = readdirSync(dir).filter((n) => n.endsWith(".json")).sort();
+  assert.ok(names.length >= 5, `expected the shipped notes to be found, saw ${names.length}`);
+  const failures = [];
+  for (const name of names) {
+    const note = JSON.parse(readFileSync(new URL(name, dir), "utf8"));
+    const e = noteErrors(note, name.replace(/\.json$/, ""), `release/notes/${name}`);
+    if (e.length) failures.push(...e);
+  }
+  assert.deepEqual(failures, [], `the gate rejects notes that are already on main:\n${failures.join("\n")}`);
 });
