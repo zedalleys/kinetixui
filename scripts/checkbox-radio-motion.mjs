@@ -29,6 +29,17 @@
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary for local runs.
  */
+
+// This gate is what earns Checkbox and RadioGroup their Chromium `interaction` evidence. It navigates to
+// their stories and drives the real controls, asserting that the glyph DRAWN is the state ANNOUNCED on
+// every move — including the dash under an uncontrolled mixed box, which used to be a tick — plus touch,
+// rapid input, forced colours and RTL placement and keys.
+//
+// Subjects are declared, not inferred: this file imports no component. See switch-motion.mjs.
+//
+// kx-verify: interaction
+// kx-verify-only: checkbox, radio-group
+
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";

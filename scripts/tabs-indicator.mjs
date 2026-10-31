@@ -28,6 +28,17 @@
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary for local runs.
  */
+
+// This gate is what earns Tabs its Chromium `interaction` evidence. It navigates to the Tabs stories and
+// drives the real control with clicks and arrow-key presses, measuring the indicator's geometry against
+// the selected tab through scrolling, dynamic tabs, a resize, a growing label, the chosen tab disabled or
+// removed, flipped direction and orientation, 200% text and reduced motion.
+//
+// Subjects are declared, not inferred: this file imports no component. See switch-motion.mjs.
+//
+// kx-verify: interaction
+// kx-verify-only: tabs
+
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
