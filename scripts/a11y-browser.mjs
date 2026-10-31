@@ -34,6 +34,10 @@
  *
  * kx-verify: accessibility
  * kx-verify-covers: packages/ui/src/stories/*.stories.tsx
+ * A SECOND passage, at the focus contract inside the open-states loop, claims `interaction` for the
+ * thirteen declared surfaces. It is separate because its subjects are those thirteen and not the story
+ * directory; see the comment there for what is asserted for which, and for why the two are interleaved.
+ *
  * This is the strongest accessibility evidence in the repository, and `verification.json` records it as such:
  * every story, in a real browser, in light and dark, with every axe rule on. The subjects come from the story
  * directory rather than from anything named here, so a component with no story gets no credit from it.
@@ -389,6 +393,29 @@ const focusContract = [];
         const surface = await openSurface(page, entry);
 
         // ── the focus contract, which axe cannot judge ────────────────────────────────────────
+        //
+        // This block is a second evidence passage, and the marker below is why. Everything above is the
+        // axe scan, whose subjects are the story directory; everything here is driven behaviour on the
+        // thirteen surfaces `open-states.mjs` declares, and its subjects are exactly those thirteen. One
+        // passage cannot say both, because `kx-verify-covers` over the story glob would hand the
+        // interaction claim all 109 components, 96 of which nothing here opens.
+        //
+        // The split is by CONTRACT, not by line: the axe re-scan further down this same loop belongs to
+        // the accessibility claim declared in the file header, although it falls inside this passage's
+        // line range. The two are interleaved because they share one page and one open surface, and
+        // separating them into two passes would double every Storybook navigation in the job.
+        //
+        // What is claimed here, and it is deliberately less than it could be. For all thirteen: the
+        // surface is opened by a real `click`, `rightClick` or `focus` on its trigger (openSurface), a
+        // real Escape dismisses it, and focus is polled across frames until it returns to the trigger.
+        // For the five declared `modal`: focus is additionally asserted to have ENTERED the surface, and
+        // Tab is pressed eight times without leaving it. So the evidence is weaker for the eight
+        // non-modal entries than for the five modal ones — three driven assertions rather than five —
+        // and the ladder has no vocabulary for that difference. It is recorded here rather than averaged
+        // away, and it is the same shape as open item D-8.
+        //
+        // kx-verify: interaction
+        // kx-verify-only: dialog, alert-dialog, sheet, drawer, modal, popover, tooltip, dropdown-menu, context-menu, menubar, guest-picker, country-select, date-range-input
         //
         // Worth stating why this is here and not left to the scan: axe's `aria-hidden-focus` rule
         // excuses an aria-hidden page whenever a modal dialog is open, wherever focus actually sits.
