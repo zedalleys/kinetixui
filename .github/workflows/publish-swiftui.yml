@@ -71,8 +71,12 @@ jobs:
             echo "::error::Package.swift is not at the root of the subtree split. A .package(url:) consumer cannot resolve this mirror."
             exit 1
           fi
-          if [ "$DRY_RUN" = "true" ]; then
-            echo "::notice::Dry run — would tag $SHA as $VERSION. Nothing pushed."
+          # Affirmative polarity, deliberately. Asking "is the safe flag set?" let every value that
+          # is not the exact string `true` — empty, unset, `False`, `yes` — fall through to the two
+          # pushes below, which are a permanent tag on a public mirror. Asking "was a live publish
+          # explicitly requested?" means only `false` can reach them.
+          if [ "${DRY_RUN:-}" != "false" ]; then
+            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — would tag $SHA as $VERSION. Nothing pushed."
             exit 0
           fi
           if [ -z "$MIRROR" ]; then

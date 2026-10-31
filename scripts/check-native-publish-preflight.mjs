@@ -48,6 +48,15 @@ const NEGATIVES = {
   "pubspec-publish-to-removed": { file: "packages/ui-flutter/pubspec.yaml", from: "publish_to: none", to: "# publish_to: none", breaks: "PUB-UNPUBLISHABLE-AS-COMMITTED" },
   "pubspec-claims-status": { file: "packages/ui-flutter/pubspec.yaml", from: "carrying the same semantics", to: "not published to pub.dev, carrying the same semantics", breaks: "PUB-DESCRIPTION-IS-STATUS-FREE" },
   "pubspec-description-too-short": { file: "packages/ui-flutter/pubspec.yaml", from: /^description: >-\n(?:  .*\n)+/m, to: "description: A Flutter port.\n", breaks: "PUB-DESCRIPTION-LENGTH" },
+  // Dry-run polarity: six ways to put the fail-open shape back. The first two are the defect this
+  // gate was written for; the other four are the two workflows that were already fail-closed, and
+  // are where it is most likely to reappear.
+  "swiftui-dry-run-guard-inverted": { file: ".github/workflows/publish-swiftui.yml", from: 'if [ "${DRY_RUN:-}" != "false" ]; then', to: 'if [ "$DRY_RUN" = "true" ]; then', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "swiftui-dry-run-guard-removed": { file: ".github/workflows/publish-swiftui.yml", from: /^          if \[ "\$\{DRY_RUN:-\}" != "false" \]; then\n(?:          .*\n)*?          fi\n/m, to: "", breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "compose-publish-if-removed": { file: ".github/workflows/publish-compose.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION_NAME:", to: "        env:\n          VERSION_NAME:", breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "compose-publish-if-negated": { file: ".github/workflows/publish-compose.yml", from: "if: ${{ inputs.dry_run == false }}", to: "if: ${{ inputs.dry_run != true }}", breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "flutter-publish-if-removed": { file: ".github/workflows/publish-flutter.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          PUB_DEV_CREDENTIALS:", to: "        env:\n          PUB_DEV_CREDENTIALS:", breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "flutter-publish-if-negated": { file: ".github/workflows/publish-flutter.yml", from: "if: ${{ inputs.dry_run == false }}", to: "if: ${{ inputs.dry_run != true }}", breaks: "WF-DRY-RUN-FAILS-CLOSED" },
   "swiftui-publish-always-live": { file: ".github/workflows/publish-swiftui.yml", from: /^      dry_run:\n(?:        .*\n)+/m, to: "", breaks: "WF-DRY-RUN-DEFAULT" },
   "compose-publish-unserialised": { file: ".github/workflows/publish-compose.yml", from: /^concurrency:\n(?:  .*\n)+/m, to: "", breaks: "WF-CONCURRENCY" },
   "flutter-publish-skips-tests": { file: ".github/workflows/publish-flutter.yml", from: "flutter test", to: "flutter --version" , breaks: "WF-TESTS-BEFORE-PUBLISH" },
@@ -389,6 +398,47 @@ check(
   "VENDOR-CURRENT",
   stale.length === 0,
   `the native packages carry vendored token copies that differ from packages/tokens/dist: ${stale.map(([, vendored]) => vendored).join(", ")}. Run \`pnpm build:tokens && pnpm vendor:swiftui && pnpm vendor:compose && pnpm vendor:flutter\` and commit the result. ci.yml catches this on pull requests, but a publish is a workflow_dispatch against an arbitrary ref and never passes through that step.`,
+);
+
+// ---------------------------------------------------------------------------
+// Dry-run polarity. `dry_run` is the only thing standing between a dispatch and an irreversible
+// public coordinate, so the question the code asks has to be "was a live publish explicitly
+// requested?" and never "is the safe flag set?". The second shape is fail-open: every value that
+// is not the exact string it tests for — empty, unset, a wrong case, a different word — falls
+// through to the publish. WF-DRY-RUN-DEFAULT asserts what the input defaults to; this asserts what
+// the code then does with the value it actually receives.
+//
+// A publish side effect is a line that uploads or pushes for real. `flutter pub publish --dry-run`
+// and `publishReleasePublicationToMavenLocal` are rehearsals and are deliberately not counted: a
+// gate that fails on a correct file is a gate that gets deleted.
+// ---------------------------------------------------------------------------
+const SIDE_EFFECT = /git push|pub publish|publishReleasePublicationToCentralPortalRepository/;
+const REHEARSAL = /--dry-run|MavenLocal/;
+const DRY_RUN_IS_TRUE = /"?\$\{?DRY_RUN(?::-[^}]*)?\}?"?\s*={1,2}\s*"?true"?/;
+const DRY_RUN_IS_NOT_FALSE = /"?\$\{?DRY_RUN(?::-[^}]*)?\}?"?\s*!=\s*"?false"?/;
+const STEP_IF_REQUIRES_FALSE = /^\s*if:\s*\$\{\{\s*inputs\.dry_run\s*==\s*false\s*\}\}\s*$/m;
+
+const polarity = [];
+for (const workflow of workflows) {
+  for (const step of workflow.text.split(/\n(?=      - )/)) {
+    const code = step.replace(/^[ \t]*#.*$/gm, ""); // a comment that mentions a push is not a push
+    const publishes = code.split("\n").some((line) => SIDE_EFFECT.test(line) && !REHEARSAL.test(line));
+    if (!publishes) continue;
+    const name = (step.match(/^      - name: (.*)$/m)?.[1] ?? "an unnamed step").trim();
+    const where = `${workflow.path} → "${name}"`;
+    if (DRY_RUN_IS_TRUE.test(code)) {
+      polarity.push(`${where} decides a live publish by comparing dry_run with \`true\`, so every other value — empty, unset, \`False\`, \`yes\` — reaches the publish`);
+    } else if (!DRY_RUN_IS_NOT_FALSE.test(code) && !STEP_IF_REQUIRES_FALSE.test(step)) {
+      polarity.push(`${where} reaches a publish side effect with no fail-closed dry-run guard: it needs either \`if: \${{ inputs.dry_run == false }}\` on the step or a \`[ "\${DRY_RUN:-}" != "false" ]\` guard that exits before the publish`);
+    } else if (workflow.path.endsWith("publish-swiftui.yml") && !DRY_RUN_IS_NOT_FALSE.test(code)) {
+      polarity.push(`${where} must carry the guard in the script itself. Its pushes share one step with the subtree split and the manifest probe, so a step-level \`if:\` would gate all of it or none of it.`);
+    }
+  }
+}
+check(
+  "WF-DRY-RUN-FAILS-CLOSED",
+  polarity.length === 0,
+  `${polarity.join("; ")}. A publish must happen only when it was asked for by name: require dry_run to be exactly \`false\` rather than stopping when it is exactly \`true\`. Measured: the pre-fix SwiftUI guard reached both mirror pushes for empty, unset, \`False\` and \`yes\`.`,
 );
 
 // ---------------------------------------------------------------------------
