@@ -55,6 +55,66 @@ for (const entry of allowlist.packages) {
   }
 }
 
+/** Every string inside the `slugs:` arrays of a generated `newComponents` value.
+ *
+ * Scanned character by character rather than matched with a regexp. `version-release-meta.mjs` writes
+ * this file with `JSON.stringify`, so slug values keep JSON string escaping and may contain any
+ * character at all — including the `]` and `"` that terminate a pattern. Measured on the previous
+ * `\[([\s\S]*?)\]` extraction, a note declaring `slugs: ["input]", "date-pikcer"]` yielded NO slugs,
+ * so two invalid slugs both went unchecked and the release validated. The scanner reads strings as
+ * strings and finds each array by bracket depth, so punctuation inside one slug cannot hide the rest.
+ *
+ * Returns the slugs it could read. On input that does not close its brackets the depth never returns
+ * to zero and the scan simply ends at the end of the block, reporting what it saw — such a file does
+ * not typecheck and never reaches `main`, but reading part of it beats reading none of it.
+ */
+function newComponentSlugs(block) {
+  const key = "newComponents:";
+  const start = block.indexOf(key);
+  if (start === -1) return [];
+  const slugs = [];
+  let depth = 0; // bracket/brace depth inside the newComponents value
+  let slugsAt = null; // the depth at which the `slugs:` array currently being read opened
+  let armed = false; // the bare key `slugs` was just read, so its `[` is the next one
+  for (let i = start + key.length; i < block.length; i++) {
+    const c = block[i];
+    if (c === '"') {
+      let j = i + 1;
+      for (; j < block.length; j++) {
+        if (block[j] === "\\") j++;
+        else if (block[j] === '"') break;
+      }
+      if (slugsAt !== null) {
+        const raw = block.slice(i, j + 1);
+        let value;
+        try {
+          value = JSON.parse(raw);
+        } catch {
+          value = raw.slice(1, -1);
+        }
+        slugs.push(value);
+      }
+      armed = false;
+      i = j;
+    } else if (c === "[" || c === "{") {
+      depth++;
+      if (armed && c === "[") slugsAt = depth;
+      armed = false;
+    } else if (c === "]" || c === "}") {
+      if (slugsAt === depth) slugsAt = null;
+      armed = false;
+      depth--;
+      if (depth <= 0) break; // the end of the newComponents value itself
+    } else if (/[A-Za-z_$]/.test(c)) {
+      let j = i;
+      while (j < block.length && /[A-Za-z0-9_$]/.test(block[j])) j++;
+      if (block.slice(i, j) === "slugs") armed = true;
+      i = j - 1;
+    }
+  }
+  return slugs;
+}
+
 // parse the entries out of releases.ts
 const src = read("apps/web/src/lib/releases.ts");
 const body = src.slice(src.indexOf("export const RELEASES"));
@@ -64,14 +124,7 @@ const entries = blocks.map((b) => ({
   date: b.match(/date: "([^"]+)"/)?.[1],
   hasBreaking: /\n    breaking:/.test(b),
   releaseUrl: b.match(/\n    githubReleaseUrl: "([^"]*)"/)?.[1],
-  // Read the `slugs` arrays only. Scanning the whole newComponents block for slug-shaped strings and
-  // filtering the literal key name `"group"` swept up the group's VALUE too, so a lowercase display
-  // label was checked for membership in components.manifest.json: `group: "Forms"` passed and
-  // `group: "forms"` failed with `newComponents slug "forms" is not in components.manifest.json`.
-  // Taking any quoted string inside `slugs` rather than only `[a-z][a-z0-9-]*` ones also means a
-  // miscapitalised slug is now reported instead of silently skipped by the shape filter.
-  slugs: [...(b.match(/newComponents:[\s\S]*?\n    \],/)?.[0] ?? "").matchAll(/slugs:\s*\[([\s\S]*?)\]/g)]
-    .flatMap((m) => [...m[1].matchAll(/"([^"]*)"/g)].map((q) => q[1])),
+  slugs: newComponentSlugs(b),
 }));
 if (entries.length < 5 || entries.some((e) => !e.version || !e.date)) errors.push("could not parse RELEASES in apps/web/src/lib/releases.ts");
 

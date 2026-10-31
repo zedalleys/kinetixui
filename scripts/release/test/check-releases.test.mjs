@@ -105,34 +105,77 @@ it("accepts an empty slugs array and a group list with no slugs at all", () => {
 });
 
 it("does not crash on malformed newComponents data, and says what it can", () => {
-  // An unterminated block: the outer match cannot find `\n    ],`, so no slugs are extracted. That is
-  // fail-open for rule 6 specifically, and stated here rather than left to be discovered — such a
-  // file does not typecheck and never reaches `main`, so rule 6 is not its guard.
+  // An unterminated block. The depth-based scan never gets back to zero, so it ends at the end of the
+  // block and reports the slug it did read — strictly more than the previous extraction, which needed
+  // to match a closing `\n    ],` and so found nothing at all here. Such a file does not typecheck and
+  // never reaches `main`; this pins that the failure mode is a report, not a crash and not silence.
   const r = run({ raw: '    newComponents: [ { group: "Forms", slugs: ["nope-not-real"' });
-  assert.equal(r.status, 0, `expected no rule-6 verdict on unparseable input, got:\n${r.out}`);
+  assert.equal(r.status, 1, `expected the readable slug to be reported, got:\n${r.out}`);
+  assert.match(r.out, /newComponents slug "nope-not-real" is not in components\.manifest\.json/);
   assert.doesNotMatch(r.out, /Cannot read|undefined is not|TypeError/);
+});
+
+// --- Codex finding, 2026-10-31: punctuation inside a slug must not hide the slugs after it --------
+
+it("reads slugs whose own text contains the characters that end a pattern", () => {
+  // Measured on the `\[([\s\S]*?)\]` extraction this replaces: `slugs: ["input]", "date-pikcer"]`
+  // extracted NOTHING, so BOTH slugs went unchecked and the release validated. The `]` inside the
+  // first slug closed the array early and left the rest of it outside every match.
+  const bracket = run({ groups: [{ group: "Forms", slugs: ["input]", "date-pikcer"] }] });
+  assert.equal(bracket.status, 1, `a "]" inside a slug suppressed the whole array:\n${bracket.out}`);
+  assert.match(bracket.out, /newComponents slug "input\]" is not in components\.manifest\.json/);
+  assert.match(bracket.out, /newComponents slug "date-pikcer" is not in components\.manifest\.json/);
+
+  // The same for a `"`, which ends a string pattern, and for a `]` in the group's display label.
+  const quoted = run({ groups: [{ group: "Forms", slugs: ['in"put', "date-pikcer"] }] });
+  assert.equal(quoted.status, 1, quoted.out);
+  assert.match(quoted.out, /newComponents slug "date-pikcer" is not in components\.manifest\.json/);
+
+  const label = run({ groups: [{ group: "For]ms", slugs: ["date-pikcer"] }] });
+  assert.equal(label.status, 1, label.out);
+  assert.match(label.out, /newComponents slug "date-pikcer" is not in components\.manifest\.json/);
 });
 
 // The structured-parser comparison the brief asks for. There is no TypeScript parser available to a
 // `.mjs` release script, so the honest comparison is against the JSON the file is GENERATED from:
-// `version-release-meta.mjs` writes `releases.ts` by serializing a curated note, so the note is the
-// structured source of truth and this regexp is the reader. They must agree about the same release.
-it("extracts the same slugs a structured read of the source note gives", () => {
+// `version-release-meta.mjs` writes `releases.ts` with `JSON.stringify`, so the note is the
+// structured source of truth and this scanner is the reader. They must agree about the same release.
+it("extracts exactly the slugs a structured read of the same data gives", () => {
+  // A synthetic populated note, so the comparison is exercised today rather than when some future
+  // note first uses the feature. Slugs chosen to carry the punctuation a pattern would trip over.
+  const groups = [
+    { group: "Forms", slugs: ["input", "nope-one"] },
+    { group: "Data]", slugs: ["date-picker", "brack]et", 'quo"te', "nope-two"] },
+  ];
+  const structured = groups.flatMap((g) => g.slugs);
+  const missing = structured.filter((x) => !(x in MANIFEST.components)).sort();
+  const r = run({ groups });
+  assert.equal(r.status, 1, r.out);
+  // Nothing dropped and nothing invented: the slugs rule 6 rejected are exactly the structured slugs
+  // absent from the manifest. A reader that stopped early would report fewer; one that swept up group
+  // labels or key names would report more.
+  const reported = [...r.out.matchAll(/newComponents slug "(.*)" is not in components\.manifest\.json/g)]
+    .map((m) => m[1])
+    .sort();
+  assert.deepEqual(reported, missing, `reader and structured read disagree:\n${r.out}`);
+});
+
+it("agrees with a structured read of every curated note that uses newComponents", () => {
   const notes = new URL("../../../release/notes/", import.meta.url);
-  const names = readdirSync(notes).filter((n) => n.endsWith(".json"));
   let compared = 0;
-  for (const name of names) {
+  for (const name of readdirSync(notes).filter((n) => n.endsWith(".json"))) {
     const note = JSON.parse(readFileSync(new URL(name, notes), "utf8"));
     if (!Array.isArray(note.newComponents) || note.newComponents.length === 0) continue;
-    const structured = note.newComponents.flatMap((g) => g.slugs ?? []).sort();
-    const r = run({ groups: note.newComponents.map((g) => ({ group: g.group, slugs: g.slugs ?? [] })) });
-    // Every slug a real note declares is in the manifest, so agreement shows as a pass; a
-    // disagreement would surface as a slug the reader invented or dropped.
-    assert.equal(r.status, 0, `${name}: structured slugs ${JSON.stringify(structured)} but the reader said:\n${r.out}`);
+    const groups = note.newComponents.map((g) => ({ group: g.group, slugs: g.slugs ?? [] }));
+    const r = run({ groups });
+    // Every slug a curated note declares is a real component, so agreement shows as a pass; a reader
+    // that invented or dropped a slug would fail here.
+    assert.equal(r.status, 0, `${name}: structured slugs ${JSON.stringify(groups.flatMap((g) => g.slugs))} but the reader said:\n${r.out}`);
     compared++;
   }
-  // No note on main uses newComponents today. Assert that rather than silently comparing nothing.
-  assert.equal(compared, 0, `expected no shipped note to use newComponents; ${compared} now do, so this test is live and should assert on them`);
+  // No note on `main` uses newComponents today, so this loop may legitimately compare nothing. The
+  // case above is what keeps the comparison live; this one must not fail a note for using the feature.
+  assert.ok(compared >= 0);
 });
 
 it("accepts the real repository as it stands", () => {
