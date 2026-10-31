@@ -93,8 +93,8 @@
       "not-implemented": 0,
       "source": 0,
       "build": 61,
-      "headless": 48,
-      "runtime": 0
+      "headless": 42,
+      "runtime": 6
     },
     "Angular": {
       "not-implemented": 29,
@@ -600,6 +600,17 @@
         ]
       },
       {
+        "file": "scripts/checkbox-radio-motion.mjs",
+        "environment": "chromium",
+        "kinds": [
+          "interaction"
+        ],
+        "components": [
+          "checkbox",
+          "radio-group"
+        ]
+      },
+      {
         "file": "scripts/large-text.mjs",
         "environment": "chromium",
         "kinds": [
@@ -660,6 +671,37 @@
           "radio-group",
           "switch",
           "tabs",
+          "toggle",
+          "toggle-group"
+        ]
+      },
+      {
+        "file": "scripts/switch-motion.mjs",
+        "environment": "chromium",
+        "kinds": [
+          "interaction"
+        ],
+        "components": [
+          "switch"
+        ]
+      },
+      {
+        "file": "scripts/tabs-indicator.mjs",
+        "environment": "chromium",
+        "kinds": [
+          "interaction"
+        ],
+        "components": [
+          "tabs"
+        ]
+      },
+      {
+        "file": "scripts/toggle-motion.mjs",
+        "environment": "chromium",
+        "kinds": [
+          "interaction"
+        ],
+        "components": [
           "toggle",
           "toggle-group"
         ]
@@ -2117,7 +2159,8 @@
           "packages/ui/src/checkbox-radio-motion.test.tsx:253-448",
           "packages/ui/src/checkbox-radio-motion.test.tsx:50-252",
           "packages/ui/src/components-keyboard.test.tsx:315-544",
-          "packages/ui/src/components-selection.test.tsx:27-137"
+          "packages/ui/src/components-selection.test.tsx:27-137",
+          "scripts/checkbox-radio-motion.mjs:40-451"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -4938,7 +4981,8 @@
           "packages/ui/src/checkbox-radio-motion.test.tsx:50-252",
           "packages/ui/src/components-keyboard.test.tsx:315-544",
           "packages/ui/src/components-selection.test.tsx:138-208",
-          "packages/ui/src/components-selection.test.tsx:27-137"
+          "packages/ui/src/components-selection.test.tsx:27-137",
+          "scripts/checkbox-radio-motion.mjs:40-451"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -5833,7 +5877,8 @@
           "packages/ui/src/components-keyboard.test.tsx:315-544",
           "packages/ui/src/components-selection.test.tsx:138-208",
           "packages/ui/src/components-selection.test.tsx:27-137",
-          "packages/ui/src/switch-motion.test.tsx:27-262"
+          "packages/ui/src/switch-motion.test.tsx:27-262",
+          "scripts/switch-motion.mjs:44-475"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -6075,7 +6120,8 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:259-314"
+          "packages/ui/src/components-keyboard.test.tsx:259-314",
+          "scripts/tabs-indicator.mjs:39-453"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -6362,7 +6408,8 @@
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:1242-1653",
           "packages/ui/src/components-selection.test.tsx:27-137",
-          "packages/ui/src/toggle-motion.test.tsx:110-216"
+          "packages/ui/src/toggle-motion.test.tsx:110-216",
+          "scripts/toggle-motion.mjs:40-351"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -6440,7 +6487,8 @@
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:1242-1653",
           "packages/ui/src/components-selection.test.tsx:27-137",
-          "packages/ui/src/toggle-motion.test.tsx:110-216"
+          "packages/ui/src/toggle-motion.test.tsx:110-216",
+          "scripts/toggle-motion.mjs:40-351"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
@@ -7210,8 +7258,9 @@
     },
     "checkbox": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -8844,8 +8893,9 @@
     },
     "radio-group": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -9294,8 +9344,9 @@
     },
     "switch": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -9417,8 +9468,9 @@
     },
     "tabs": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -9577,8 +9629,9 @@
     },
     "toggle": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -9618,8 +9671,9 @@
     },
     "toggle-group": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [

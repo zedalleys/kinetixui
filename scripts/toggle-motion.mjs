@@ -28,6 +28,18 @@
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary for local runs.
  */
+
+// This gate is what earns Toggle and ToggleGroup their Chromium `interaction` evidence. It navigates to
+// their stories and drives the real controls: clicks and pointer hover, with the selected item's state and
+// its painted colour read back off the screen, plus a burst of clicks landing on the last one, the
+// hover state not sticking on a device that cannot hover, forced colours and RTL order and keys.
+//
+// Subjects are declared, not inferred: this file imports no component, so there is no coverage fact in its
+// source to read. See the note in switch-motion.mjs.
+//
+// kx-verify: interaction
+// kx-verify-only: toggle, toggle-group
+
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
