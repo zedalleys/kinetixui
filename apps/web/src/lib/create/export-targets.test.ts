@@ -1,4 +1,6 @@
 // @vitest-environment node
+import { PACKAGE_MANAGERS, type PackageManager } from "../pm-commands";
+import { commandStringsOnPage } from "../pm-commands-mdx";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_PRESET } from "@kinetixui/create-preset";
@@ -319,8 +321,8 @@ describe("the terminal command", () => {
   const cli = readFileSync("../../packages/cli/src/program.ts", "utf8");
   const theme = themeOf(cfg({ brand: "#c2410c" }));
   const code = "KX1_EXAMPLE";
-  const commandFor = (id: ExportTarget, symbol = TARGETS[id].symbol?.default ?? "") =>
-    generateExport(theme, id, symbol, code).command!;
+  const commandFor = (id: ExportTarget, symbol = TARGETS[id].symbol?.default ?? "", pm: PackageManager = "npm") =>
+    generateExport(theme, id, symbol, code, pm).command!;
 
   it("names a subcommand the CLI actually registers", () => {
     for (const id of EXPORT_TARGETS) {
@@ -330,8 +332,29 @@ describe("the terminal command", () => {
 
   it("maps web-css to `preset css`, which is not its id", () => {
     expect(TARGETS["web-css"].cliSubcommand).toBe("css");
-    expect(commandFor("web-css")).toContain("kinetixui preset css ");
+    expect(commandFor("web-css")).toContain("@kinetixui/cli preset css ");
     expect(commandFor("web-css")).not.toContain("web-css");
+  });
+
+  it("is runnable as written, rather than naming the bin nobody has on PATH", () => {
+    // the defect this replaced: a bare `kinetixui preset …` behind a Copy button fails with
+    // `command not found` for anyone who has not installed @kinetixui/cli globally
+    for (const id of EXPORT_TARGETS) {
+      expect(commandFor(id), id).toMatch(/^npx @kinetixui\/cli preset /);
+      expect(commandFor(id), id).not.toMatch(/^kinetixui /);
+    }
+  });
+
+  it("spells the execute route in each package manager", () => {
+    const expected: Record<PackageManager, string> = {
+      npm: "npx @kinetixui/cli preset css",
+      pnpm: "pnpm dlx @kinetixui/cli preset css",
+      yarn: "yarn dlx @kinetixui/cli preset css",
+      bun: "bunx @kinetixui/cli preset css",
+    };
+    for (const pm of PACKAGE_MANAGERS) {
+      expect(commandFor("web-css", TARGETS["web-css"].symbol?.default ?? "", pm), pm).toContain(expected[pm]);
+    }
   });
 
   it("passes the design, so the command writes this theme and not a default", () => {
@@ -420,8 +443,12 @@ describe("the docs describe the targets that exist", () => {
       expect(text, slug).toContain("(/create)");
       expect(text, slug).toContain("**Export**");
       expect(text, slug).toContain(label);
-      // The command is still there — the browser is an alternative, not a replacement.
-      expect(text, slug).toContain(`kinetixui preset ${TARGETS[slug].cliSubcommand}`);
+      // The command is still there — the browser is an alternative, not a replacement. The page writes the
+      // operation; the command it resolves to is the runnable `npx @kinetixui/cli preset …` form, which the
+      // bare `kinetixui preset …` it replaced was not for anyone who had not installed the CLI globally.
+      expect(commandStringsOnPage(text).join("\n"), slug).toContain(
+        `@kinetixui/cli preset ${TARGETS[slug].cliSubcommand}`,
+      );
     }
   });
 

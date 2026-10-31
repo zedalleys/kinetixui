@@ -19,6 +19,7 @@
  * it is one of two front ends over the same exporter. The subcommand is stored rather than derived
  * from the id, because for CSS they differ: the target is `web-css` and the command is `preset css`.
  */
+import { renderCommand, type OperationId, type PackageManager } from "../pm-commands";
 import {
   exportCompose,
   exportCss,
@@ -129,20 +130,32 @@ export const TARGETS: Record<ExportTarget, TargetConfig> = {
 export const TARGET_LIST: TargetConfig[] = EXPORT_TARGETS.map((id) => TARGETS[id]);
 
 /**
- * The `kinetixui preset …` invocation that writes the same file.
+ * The command that writes the same file without a browser, in the reader's package manager.
+ *
+ * It used to be a bare `kinetixui preset …`, built here by hand. That was not runnable: `kinetixui` is the
+ * bin *inside* `@kinetixui/cli`, so anyone who had not installed that package globally got
+ * `command not found` from a button labelled "Copy command". It now goes through the site's command
+ * contract, which spells the execute route per manager (`npx` / `pnpm dlx` / `yarn dlx` / `bunx`) and
+ * validates the preset code, the symbol and the filename before any of them reaches a clipboard.
  *
  * `-n` appears only when the name is not the exporter's default, so the common case stays short and a
- * flag in the command means someone actually chose something. Nothing is quoted: a preset code is
- * base64url, a symbol has already been validated to an identifier, and the filename is ours — so
- * there is no shell metacharacter to escape, which `export-targets.test.ts` asserts rather than
- * assumes. If that ever stopped being true, quoting would be the fix, not a looser test.
+ * flag in the command means someone actually chose something.
  */
-function cliCommand(target: ExportTarget, presetCode: string, symbol: string): string {
+const PRESET_OPERATION: Record<ExportTarget, OperationId> = {
+  "web-css": "cli-preset-css",
+  swiftui: "cli-preset-swiftui",
+  compose: "cli-preset-compose",
+  flutter: "cli-preset-flutter",
+};
+
+function cliCommand(target: ExportTarget, presetCode: string, symbol: string, pm: PackageManager = "npm"): string {
   const config = TARGETS[target];
-  const parts = ["kinetixui", "preset", config.cliSubcommand, presetCode];
-  if (config.symbol && symbol !== config.symbol.default) parts.push("-n", symbol);
-  parts.push("-o", config.filename);
-  return parts.join(" ");
+  const named = config.symbol && symbol !== config.symbol.default;
+  return renderCommand(PRESET_OPERATION[target], pm, {
+    preset: presetCode,
+    symbol: named ? symbol : undefined,
+    output: config.filename,
+  }).command;
 }
 
 /**
@@ -160,6 +173,8 @@ export function generateExport(
   target: ExportTarget,
   symbol: string,
   presetCode = "",
+  /** The reader's package manager, so the command the panel shows is one they can run as written. */
+  pm: PackageManager = "npm",
 ): { code: string; command: string; error: null } | { code: null; command: null; error: string } {
   const config = TARGETS[target];
   if (config.symbol) {
@@ -168,7 +183,7 @@ export function generateExport(
   }
   return {
     code: config.generate(theme, symbol),
-    command: cliCommand(target, presetCode, symbol),
+    command: cliCommand(target, presetCode, symbol, pm),
     error: null,
   };
 }

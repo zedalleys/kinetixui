@@ -596,10 +596,16 @@ describe("the browser and the terminal produce the same file", () => {
     const config = preset({ brand: "#c2410c" });
     const code = encodePreset(config);
     const { command } = generateExport(resolveCreateTheme(config), "swiftui", "AcmeTheme", code);
-    expect(command).toBe(`kinetixui preset swiftui ${code} -n AcmeTheme -o CreateTheme.swift`);
+    expect(command).toBe(`npx @kinetixui/cli preset swiftui ${code} -n AcmeTheme -o CreateTheme.swift`);
 
-    // Run it the way the command line would parse it, and get the file the panel showed.
-    const [, , , preset_, , name, , output] = command!.split(" ");
+    // Run it the way the command line would parse it, and get the file the panel showed. Read by flag
+    // rather than by position: the execute route puts a different number of tokens in front of the
+    // subcommand for each package manager, and the point of this test is the arguments, not the prefix.
+    const tokens = command!.split(" ");
+    const after = (flag: string) => tokens[tokens.indexOf(flag) + 1];
+    const preset_ = tokens[tokens.indexOf("swiftui") + 1];
+    const name = after("-n");
+    const output = after("-o");
     expect(preset_).toBe(code);
     const file = join(mkdtempSync(join(tmpdir(), "kx-cmd-")), output!);
     await presetSwiftUi(preset_!, { name, output: file });

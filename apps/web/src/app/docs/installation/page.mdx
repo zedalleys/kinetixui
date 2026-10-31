@@ -4,31 +4,54 @@ export const metadata = routeMetadata("/docs/installation");
 
 # Installation
 
-KinetixUI is cross-platform design system infrastructure. Choose your platform first:
+KinetixUI is cross-platform design system infrastructure, so the first question is not *how* but *which
+starting point*. There are four, and only the first is this page.
 
-- **React** — use the registry or npm instructions below in an existing React app.
-- **[Angular (Preview)](/docs/angular)** — Angular 21, standalone components, and plain CSS; the React CLI does not install Angular components.
-- **[SwiftUI](/docs/swiftui)** — a local SwiftPM package from a repository checkout; iOS 16 / macOS 13 or newer.
-- **[Jetpack Compose](/docs/compose)** — the Android library module from a repository checkout; no Maven Central install yet.
-- **[Flutter](/docs/flutter)** — a local path dependency from a repository checkout; no pub.dev install yet.
+- **Add KinetixUI to a React app** — the rest of this page. Two routes: copy the source into your repo, or
+  take a versioned npm dependency. Both use the same tokens.
+- **Add it to Angular, SwiftUI, Compose or Flutter** — [other platforms](#other-platforms) below. Each has
+  its own setup page, and the React CLI installs none of them.
+- **Design a theme first** — [Kinetix Create](/create) lets you change the design in the browser, then
+  [apply it](#applying-a-theme-you-designed) to any of the five platforms. It customises an existing
+  project; it does not create one.
+- **Decide whether to adopt it at all** — [Platforms](/docs/platforms) carries the coverage and verification
+  evidence, and the guide below is written for that question.
+
+<FurtherReading guides={["evaluate-cross-platform-component-library"]} />
+
+## Before you start
+
+The CLI adds component source and tokens. **It does not create an app, configure Tailwind, or configure
+your import aliases** — so start from an app that already:
+
+- renders React 18 or newer (`react` and `react-dom` are peer dependencies),
+- loads a global stylesheet you can add imports to,
+- builds with **Tailwind CSS 3**. Tailwind 4 setup is not verified here,
+- runs on Node 18 or newer, which is what `@kinetixui/cli` requires.
+
+Versions in this repository, which is what the next release publishes:
+
+<PackageVersions names={["@kinetixui/ui", "@kinetixui/tokens", "@kinetixui/cli"]} />
 
 React is the reference implementation and the most complete library: every catalogue entry has a React
 implementation, and the other platforms are compared with it. In one place:
 
 <PlatformAtAGlance platform="React" />
 
-<FurtherReading guides={["evaluate-cross-platform-component-library"]} />
-
-The rest of this page covers **React with Tailwind CSS 3**. Tailwind 4 setup is not verified here.
-Start with an app that already renders React and loads a global stylesheet. The CLI adds component source
-and tokens; it does not create an app, configure Tailwind, or configure your import aliases.
+## Two React routes
 
 React ships two ways. Both use the same tokens.
 
 | What you install | Registry (own the code) | npm (versioned dependency) |
 | --- | --- | --- |
-| Components | `npx @kinetixui/cli add <name>` | `npm i @kinetixui/ui` |
-| Tokens | `npx @kinetixui/cli init` | `npm i @kinetixui/tokens` |
+| Components | the CLI's `add` command | the `@kinetixui/ui` package |
+| Tokens | the CLI's `init` command | the `@kinetixui/tokens` package |
+
+Every command below is shown for npm, pnpm, Yarn and Bun; pick yours once and the rest of the
+documentation follows it. Each one was run in a clean project outside this repository: **npm, pnpm and
+Bun install and build with no extra steps; Yarn needs one more package**, for the reason in the callout
+below. Running the CLI works on all four, except that Yarn Classic has no `dlx` — the Yarn tab says so
+where it matters.
 
 <NpmLinks names={["@kinetixui/ui", "@kinetixui/tokens", "@kinetixui/cli"]} />
 
@@ -41,9 +64,7 @@ Tokens are a good npm dependency; components are often nicer copied.
 **Registry** — writes `:root` (light) + `.dark` + the shadow / type composites
 into your global stylesheet:
 
-```bash
-npx @kinetixui/cli init
-```
+<Command op="cli-init" />
 
 **npm** — import the generated CSS, or the typed object:
 
@@ -71,9 +92,7 @@ Native text styles ship too: `KinetixType.swift`, `KinetixType.kt`,
 
 **Registry:**
 
-```bash
-npx @kinetixui/cli add button
-```
+<Command op="cli-add" components={["button"]} />
 
 The CLI resolves `tokens` first (a registry dependency), installs every npm
 package the delivered files import — for `button` that is
@@ -93,9 +112,7 @@ for every flag.
 **npm** — every component ships in the one package, so there's no
 per-component step:
 
-```bash
-npm i @kinetixui/ui @kinetixui/tokens
-```
+<Command op="install-react" />
 
 ```tsx
 import { Button, Field, FieldLabel } from "@kinetixui/ui";
@@ -106,10 +123,18 @@ import { Button, Field, FieldLabel } from "@kinetixui/ui";
 Install the preset's package for either React route, and install Tailwind's build tools if your app does
 not already have them:
 
-```bash
-npm i @kinetixui/ui
-npm i -D tailwindcss@3 postcss autoprefixer
-```
+<Command op="install-react" />
+
+<Command op="install-tailwind" />
+
+<Callout>
+  **On Yarn, add one more package.** `@kinetixui/ui` includes charts built on `recharts`, which declares
+  `react-is` as a peer dependency. npm, pnpm and Bun install a transitive peer for you; neither Yarn
+  Classic nor Yarn 4 does, so a Yarn build fails to resolve `react-is`. Run `yarn add react-is` as well.
+  Measured on Yarn 1.22.22 and Yarn 4.18.1 with `node scripts/adoption/pm-matrix.mjs`. Yarn 4 also
+  refuses a version published in the last week by default (`npmMinimalAgeGate`), so a brand-new KinetixUI
+  release needs `yarn config set npmMinimalAgeGate 0` or a few days' patience.
+</Callout>
 
 Map the utilities onto the contract — KinetixUI ships a preset:
 
@@ -197,6 +222,45 @@ TypeScript and your bundler. Import the copied Button from `@/components/ui/butt
 the Tailwind layers there; you do not need to import a second copy of the token CSS.
 
 [Explore components](/components) once your first button works.
+
+## Applying a theme you designed
+
+[Kinetix Create](/create) is where you change the design — brand colour, radius, surface — and watch the
+components move. It exports the same design four ways, and the Export panel shows both the file and the
+command that writes it:
+
+| Target | What you get | How to apply it |
+| --- | --- | --- |
+| Web CSS | a `:root` + `.dark` override block | paste it after the token imports, or write it with the command below |
+| SwiftUI | `KinetixColors`, light and dark | pass it to `KinetixTheme` |
+| Jetpack Compose | `KinetixColors`, light and dark | pass it to the Compose theme |
+| Flutter | `KinetixColors`, light and dark | pass it to the Flutter theme |
+
+Every design is also a portable `KX1_…` preset code, so the same design can be regenerated from a terminal
+without reopening the browser:
+
+<Command op="cli-preset-css" output="src/theme.css" />
+
+What this does **not** do: Create does not scaffold an application, and it does not install anything. It
+produces a theme file for a project you already have. Radius and elevation reach the web CSS; on the three
+native targets the exporter writes colours, and the Export panel says so per target.
+
+## Other platforms
+
+The React CLI installs React components only. Each other platform has its own setup page, and its own
+distribution reality:
+
+- **[Angular (Preview)](/docs/angular)** — `@kinetixui/angular` on npm, Angular 21, standalone components
+  and plain CSS. Published, and still Preview: see [the graduation contract](/docs/angular).
+- **[SwiftUI](/docs/swiftui)** — a local SwiftPM package from a repository checkout; iOS 16 / macOS 13 or
+  newer. **Not published to any registry.**
+- **[Jetpack Compose](/docs/compose)** — the Android library module from a repository checkout.
+  **Not on Maven Central.**
+- **[Flutter](/docs/flutter)** — a local path dependency from a repository checkout. **Not on pub.dev.**
+
+For the three source-only platforms that means pinning a commit of this repository rather than resolving a
+version range, and taking an upgrade by moving that pin. [Platforms](/docs/platforms) carries what each one
+is verified for.
 
 ## Dark mode
 

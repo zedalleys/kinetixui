@@ -13,9 +13,7 @@ account, no build step to consume it, just files you own.
 
 Set up `kinetixui.json` (your aliases) and pull in the token contract:
 
-```bash
-npx @kinetixui/cli init
-```
+<Command op="cli-init" />
 
 You'll be asked where your global CSS file lives and which import aliases to
 use for components and utils. Pass `-y` to accept the defaults and skip the
@@ -25,22 +23,18 @@ prompts.
   `init` writes the token stylesheet; it does **not** set up Tailwind. The
   components use Tailwind CSS 3 utilities that the KinetixUI preset maps onto the
   tokens, and the preset ships in the npm package, so the registry route still
-  needs `npm i @kinetixui/ui` and the preset in `tailwind.config.ts`. Without it,
+  needs the `@kinetixui/ui` package and the preset in `tailwind.config.ts`. Without it,
   utilities such as `animate-in` and `duration-fast` do not exist. Tailwind 4 setup
   is not verified. See [Installation → Tailwind](/docs/installation#tailwind).
 </Callout>
 
 ## add
 
-```bash
-npx @kinetixui/cli add button
-```
+<Command op="cli-add" components={["button"]} />
 
 Add more than one at once:
 
-```bash
-npx @kinetixui/cli add button card dialog
-```
+<Command op="cli-add" components={["button","card","dialog"]} />
 
 `add` resolves registry dependencies automatically — asking for `button`
 also pulls in `tokens` the first time, installs the npm packages it needs
@@ -52,17 +46,24 @@ alias directory. Existing files are left alone unless you pass
 
 Want everything at once instead of naming each one?
 
-```bash
-npx @kinetixui/cli add --all
-```
+<Command op="cli-add-all" />
+
+### What `add` takes, and what it does not
+
+The registry holds **components and the token contract**, and nothing else — it holds no blocks. Coming from
+another library you might expect `add` to take a block name; here a block is code you copy from
+[Blocks](/blocks), and each block shows the `add` command for the components its code imports.
+Asking for a block name gets you `Component "…" not found`, which is correct rather than a bug.
+
+`add` also works before `init`. Without a `kinetixui.json` it says so and falls back to the default aliases
+(`components/ui`, `lib`) rather than refusing, so you can try one component and configure the project after.
+Run [`init`](#init) when you want the component and token paths to be yours.
 
 ## list
 
 Not sure what's available? List every component in the registry:
 
-```bash
-npx @kinetixui/cli list
-```
+<Command op="cli-list" />
 
 ## inspect
 
@@ -70,9 +71,7 @@ Look at one component before (or after) adding it — description, npm
 dependencies, other registry items it needs, the files it writes, and
 whether it's already installed in the current project:
 
-```bash
-npx @kinetixui/cli inspect button
-```
+<Command op="cli-inspect" component="button" />
 
 `inspect` also prints the component's first release and status, its variant
 axes and each axis's option names (`Primary`/`Secondary`/`Outline`/… for
@@ -88,10 +87,11 @@ every component has one. See [Component specs](/docs/component-specs).
 
 See which native platforms carry a component — or every component at once:
 
-```bash
-npx @kinetixui/cli parity button card kanban-board
-npx @kinetixui/cli parity          # every component in the registry
-```
+<Command op="cli-parity" components={["button","card","kanban-board"]} />
+
+With no names, it prints the matrix for every component in the registry:
+
+<Command op="cli-parity" />
 
 Prints a matrix (`✓`/`—` per platform, plus a status tag for anything
 `beta`/`deprecated`) straight from the registry index, so it stays in
@@ -107,9 +107,7 @@ your `ui` directory still match a name the registry knows about. Each
 check prints pass / warn / fail; `doctor` exits non-zero if anything
 failed outright (not just warned), so it's safe to run in CI:
 
-```bash
-npx @kinetixui/cli doctor
-```
+<Command op="cli-doctor" />
 
 ## theme
 
@@ -120,11 +118,11 @@ listed and commented out; uncomment and edit the ones you want to change.
 override block — paste it after `@import "@kinetixui/tokens/css";`) and
 prints a WCAG AA contrast report for every base/foreground pair you set:
 
-```bash
-npx @kinetixui/cli theme create acme
-# … edit kinetixui-themes/acme.csv …
-npx @kinetixui/cli theme build acme
-```
+<Command op="cli-theme-create" theme="acme" />
+
+Edit `kinetixui-themes/acme.csv`, then compile it:
+
+<Command op="cli-theme-build" theme="acme" />
 
 Setting a base color (e.g. `primary`) without its `-foreground` pair
 auto-derives the foreground by contrast (best of white or black) — you
@@ -146,18 +144,17 @@ from the workspace.
 
 ## Presets
 
-```bash
-kinetixui preset decode KX1_…
-```
+<Command op="cli-preset-decode" />
 
 Prints what a [Create](/create) preset contains — theme colour, neutral, radius,
 surface, chart palette and any manual overrides. It accepts a bare `KX1_` code or
 a full `/create?preset=…` URL, and `--json` prints the same thing for piping.
 
-```bash
-kinetixui preset css KX1_…
-kinetixui preset css KX1_… --output src/theme.css
-```
+<Command op="cli-preset-css" />
+
+Or write it to a file:
+
+<Command op="cli-preset-css" output="src/theme.css" />
 
 Resolves a preset into the web CSS override block — the `:root` and `.dark`
 declarations, including the radius and elevation variables that `theme build`
@@ -170,10 +167,11 @@ prints nothing, so `> theme.css` writes an empty file rather than a comment.
 why it is named `preset css` rather than `preset apply` — the name says what
 comes out.
 
-```bash
-kinetixui preset swiftui KX1_…
-kinetixui preset swiftui KX1_… --name AcmeTheme --output Sources/AcmeTheme.swift
-```
+<Command op="cli-preset-swiftui" />
+
+Or name the generated enum and write it to a file:
+
+<Command op="cli-preset-swiftui" symbol="AcmeTheme" output="Sources/AcmeTheme.swift" />
 
 Resolves the same preset into a SwiftUI theme file: a `public enum` holding a
 light and a dark [`KinetixColors`](/docs/swiftui), built from the same resolved
@@ -203,10 +201,11 @@ today's numbers, so it keeps following the library — the same rule the colours
 follow. A field the design did not change is
 written as a reference to the shipped token, so it keeps following the library.
 
-```bash
-kinetixui preset compose KX1_…
-kinetixui preset compose KX1_… --name AcmeTheme --output AcmeTheme.kt
-```
+<Command op="cli-preset-compose" />
+
+Or name the generated object and write it to a file:
+
+<Command op="cli-preset-compose" symbol="AcmeTheme" output="AcmeTheme.kt" />
 
 The same design as a Jetpack Compose theme: a Kotlin `object` holding a light and
 a dark [`KinetixColors`](/docs/compose). Apply it with
@@ -234,10 +233,11 @@ older gap in the Compose theme rather than anything a preset can reach.
 Compose writes `Color(0xffRRGGBB)`, which is the resolved colour exactly, so
 nothing is lost between the engine and the platform.
 
-```bash
-kinetixui preset flutter KX1_…
-kinetixui preset flutter KX1_… --name AcmeTheme --output acme_theme.dart
-```
+<Command op="cli-preset-flutter" />
+
+Or name the generated class and write it to a file:
+
+<Command op="cli-preset-flutter" symbol="AcmeTheme" output="acme_theme.dart" />
 
 The same design as a Flutter theme: a Dart class holding a light and a dark
 [`KinetixColors`](/docs/flutter). Apply it to Kinetix widgets with
@@ -273,9 +273,7 @@ represent, which is smaller than the Kinetix contract — wrap the app in
 There is **no Android XML exporter.** `preset swiftui`, `preset compose` and
 `preset flutter` are the native targets that exist.
 
-```bash
-kinetixui preset url KX1_…
-```
+<Command op="cli-preset-url" />
 
 Prints the canonical share URL. It prints rather than launching a browser: piping
 it to `open`, `xdg-open` or `start` is one character, and a command that spawns a
@@ -303,10 +301,11 @@ tokens instead — a raw hex color in a Tailwind arbitrary-value utility
 scans the `components`/`ui` aliases from `kinetixui.json`; pass a path to
 scan anywhere else:
 
-```bash
-npx @kinetixui/cli lint
-npx @kinetixui/cli lint src/app
-```
+<Command op="cli-lint" />
+
+Or scan one directory:
+
+<Command op="cli-lint" path="src/app" />
 
 Each hit prints as `file:line` with the offending line and a suggestion.
 Comments are skipped (a hex mentioned in a `//` or `/* */` comment won't

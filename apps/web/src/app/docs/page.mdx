@@ -84,9 +84,7 @@ reaches every platform; a component change is made on each platform that has it.
 
 <Step>Initialise</Step>
 
-```bash
-npx @kinetixui/cli init
-```
+<Command op="cli-init" />
 
 Writes `kinetixui.json` and pulls the token contract into your `globals.css`.
 It does not configure Tailwind: the components need Tailwind CSS 3 and the
@@ -95,9 +93,7 @@ preset from `@kinetixui/ui`, set up as in
 
 <Step>Add a component</Step>
 
-```bash
-npx @kinetixui/cli add button
-```
+<Command op="cli-add" components={["button"]} />
 
 The source lands in your repo under the path from `kinetixui.json` — no runtime
 package.

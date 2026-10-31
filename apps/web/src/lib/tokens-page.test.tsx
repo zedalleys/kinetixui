@@ -13,6 +13,8 @@ import publishPackages from "../../../../release/publish-packages.json";
 import { analytics } from "./analytics";
 import { isAdoptionIntent, isQualifiedEvaluation } from "./analytics-measurement";
 import { classifyCommand, componentSlugFor, trackFenceCopy } from "./analytics-surfaces";
+import { PACKAGE_MANAGERS, renderCommand } from "./pm-commands";
+import { commandStringsOnPage } from "./pm-commands-mdx";
 import { PACKAGES } from "./packages";
 import { publicRoutes } from "./seo";
 import { tokenEvidence } from "./token-evidence";
@@ -141,12 +143,13 @@ describe("/docs/tokens — the adoption bridge only offers what exists", () => {
   const PUBLISHED = new Set(publishPackages.packages.map((p) => p.name));
 
   it("every install command on the page installs a package KinetixUI publishes to npm", () => {
-    const commands = fences(PAGE)
-      .filter((f) => ["bash", "sh", "shell"].includes(f.language))
-      .flatMap((f) => f.body.split("\n"))
-      .filter((l) => /^(npm|pnpm|yarn|bun)\s+(i|install|add)\b/.test(l.trim()));
-    expect(commands).toEqual(["npm install @kinetixui/tokens"]);
-    for (const c of commands) expect(PUBLISHED.has(c.split(/\s+/).pop()!)).toBe(true);
+    // The page renders its command from the contract, so the check resolves the `<Command>` blocks and
+    // asserts the same thing for every manager, not only for the one spelling that used to be typed in.
+    for (const pm of PACKAGE_MANAGERS) {
+      const commands = commandStringsOnPage(PAGE, pm);
+      expect(commands, pm).toEqual([renderCommand("install-tokens", pm).command]);
+      for (const c of commands) expect(PUBLISHED.has(c.split(/\s+/).pop()!), `${pm}: ${c}`).toBe(true);
+    }
   });
 
   it("copying it is the existing Adoption Intent signal, carrying the package and nothing else", () => {
