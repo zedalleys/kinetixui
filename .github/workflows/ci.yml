@@ -358,6 +358,20 @@ jobs:
             exit 1
           fi
 
+      # recharts needs a react-is of the SAME major as React: react-is 18 beside React 19 returns
+      # false from isFragment() for a real Fragment, and recharts flattens Fragments that way before
+      # it looks for <Cell> children — so a Fragment-wrapped <Cell>'s fill is silently dropped. The
+      # peer range admits the broken pairing without a warning, so the agreement is asserted here.
+      - name: recharts' react-is agrees with React
+        run: pnpm check:react-is
+
+      - name: "recharts' react-is agreement: negative controls"
+        run: |
+          for control in $(node scripts/adoption/react-is-agreement.mjs --list-negatives); do
+            echo "--- $control"
+            node scripts/adoption/react-is-agreement.mjs --negative="$control"
+          done
+
       - name: Documented React onboarding in a clean consumer
         run: node scripts/adoption/react-consumer.mjs
 
