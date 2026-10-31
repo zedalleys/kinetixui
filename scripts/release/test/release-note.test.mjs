@@ -278,6 +278,31 @@ it("refuses a protocol-relative URL instead of reading it as a site route", () =
   assert.ok(offSite("//evil.test/x"), "links.mjs calls it off-site; this gate must not call it a route");
 });
 
+// Codex finding, 2026-10-31: the protocol-relative ban above is not the whole of it. A browser reads
+// "\\" as "/" and DELETES embedded tab, LF and CR characters before resolving, so spellings that begin
+// with a single "/" still reach another origin. Measured against
+// `new URL(href, "https://kinetixui.com/docs/changelog")` on the previous policy, every case below
+// resolved to https://evil.test/x and this gate accepted all five.
+it("refuses a site-absolute route a browser would normalise onto another origin", () => {
+  const B = String.fromCharCode(92);
+  for (const href of [`/${B}evil.test/x`, `/${B}/evil.test/x`, "/\t/evil.test/x", "/\n/evil.test/x", "/\r/evil.test/x"]) {
+    // The destination the reader's browser actually reaches, which is the thing that matters.
+    assert.equal(new URL(href, "https://kinetixui.com/docs/changelog").origin, "https://evil.test",
+      `fixture is wrong: ${JSON.stringify(href)} does not resolve cross-origin`);
+    const e = linkErrors(href, "where");
+    assert.equal(e.length, 1, `${JSON.stringify(href)} was accepted as a route on this site`);
+    assert.match(e[0], /another origin|does not say where the link goes/);
+  }
+});
+
+it("refuses a route whose text is not how a browser reads it", () => {
+  // Not cross-origin, but the note still does not say where the link goes, and `check:release-links`
+  // would look for the literal text as a route and find nothing. The two gates must not disagree.
+  const e = linkErrors("/../../x", "where");
+  assert.equal(e.length, 1);
+  assert.match(e[0], /is read by a browser as "\/x"/);
+});
+
 // Compatibility, measured rather than asserted: every link the project has ever shipped must pass.
 // This is what makes the narrowing safe to land, and it would fail loudly if the allowlist were cut
 // further without checking.

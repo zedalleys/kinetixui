@@ -232,6 +232,9 @@ export function noteErrors(note, version, rel, known = manifestSlugs()) {
  *  assumption. */
 const ALLOWED_SCHEMES = new Set(["https:"]);
 
+/** Resolution base for site-absolute routes. Only its origin is compared, never emitted as a link. */
+const SITE_ORIGIN = "https://release-note-gate.invalid";
+
 export function linkErrors(href, where) {
   if (typeof href !== "string" || href.trim() === "") return [`${where} must be a non-empty string`];
   if (href !== href.trim()) return [`${where}: "${href}" has leading or trailing whitespace`];
@@ -243,7 +246,33 @@ export function linkErrors(href, where) {
   if (href.startsWith("//")) {
     return [`${where}: "${href}" is a protocol-relative URL, which points at another origin rather than a route on this site. Write the full https:// URL if that is what you mean.`];
   }
-  if (href.startsWith("/")) return [];
+  if (href.startsWith("/")) {
+    // A leading "/" does not by itself mean a route on this site. A browser reads "\\" as "/" and
+    // deletes embedded tab, LF and CR characters BEFORE resolving, so several spellings that begin
+    // with a single "/" reach another origin and so slip past the protocol-relative check above.
+    // Measured against `new URL(href, "https://kinetixui.com/docs/changelog")`, every one of
+    // "/\\evil.test/x", "/\\/evil.test/x", "/<tab>/evil.test/x", "/<LF>/evil.test/x" and
+    // "/<CR>/evil.test/x" resolves to https://evil.test/x, and changelog-view.tsx renders the
+    // destination straight into an <a href>. `check:release-links` meanwhile looks for the literal
+    // text as a route and finds none, so the two gates would disagree about what was accepted.
+    //
+    // So decide on the destination the browser actually reaches, and require it to be both this
+    // origin and spelled the way it will be read: two readers of the same bytes must answer alike.
+    let resolved;
+    try {
+      resolved = new URL(href, `${SITE_ORIGIN}/docs/changelog`);
+    } catch {
+      return [`${where}: "${href}" begins with "/" but is not a parseable route`];
+    }
+    const normalised = `${resolved.pathname}${resolved.search}${resolved.hash}`;
+    if (resolved.origin !== SITE_ORIGIN) {
+      return [`${where}: "${href}" begins with "/" but a browser resolves it to ${JSON.stringify(resolved.href.replace(SITE_ORIGIN, "<this site>"))} — on another origin, because "\\" is read as "/" and embedded tabs and newlines are deleted first. Write the full https:// URL if you mean another site.`];
+    }
+    if (normalised !== href) {
+      return [`${where}: "${href}" is read by a browser as ${JSON.stringify(normalised)}, so the note does not say where the link goes. Write the route exactly as it resolves.`];
+    }
+    return [];
+  }
 
   // `offSite` stays the single source of truth for "does this name a route here?" — the question
   // `check:release-links` asks. This gate then asks a SECOND, different question of the destinations
