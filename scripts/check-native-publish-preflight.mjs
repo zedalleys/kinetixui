@@ -68,6 +68,8 @@ const NEGATIVES = {
   "flutter-guard-does-not-exit": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          mkdir -p "\$HOME\/\.config\/dart"$/m, to: '$1          if [ "${DRY_RUN:-}" != "false" ]; then echo "not publishing"; fi\n          mkdir -p "$HOME/.config/dart"', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
   "flutter-guard-after-the-publish": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          flutter pub publish --force$/m, to: '$1          flutter pub publish --force\n          if [ "${DRY_RUN:-}" != "false" ]; then exit 0; fi', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
   "flutter-publish-in-a-nested-substitution": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          flutter pub publish --force$/m, to: '$1          echo "--dry-run output: $( (flutter pub publish --force) )"', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "swiftui-guard-exit-made-conditional": { file: ".github/workflows/publish-swiftui.yml", from: /^            exit 0$/m, to: '            if false; then exit 0; fi', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "swiftui-guard-exit-only-quoted": { file: ".github/workflows/publish-swiftui.yml", from: /^            exit 0$/m, to: '            echo "exit 0"', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
   "swiftui-publish-always-live": { file: ".github/workflows/publish-swiftui.yml", from: /^      dry_run:\n(?:        .*\n)+/m, to: "", breaks: "WF-DRY-RUN-DEFAULT" },
   "compose-publish-unserialised": { file: ".github/workflows/publish-compose.yml", from: /^concurrency:\n(?:  .*\n)+/m, to: "", breaks: "WF-CONCURRENCY" },
   "flutter-publish-skips-tests": { file: ".github/workflows/publish-flutter.yml", from: "flutter test", to: "flutter --version" , breaks: "WF-TESTS-BEFORE-PUBLISH" },
@@ -521,30 +523,64 @@ const DRY_RUN_COMPARED_WITH_A_DEFAULT = /"?\$\{DRY_RUN:[-=][ \t]*[^}\s][^}]*\}"?
 const comparesDryRunWithTrue = (code) => new RegExp(`${DRY_RUN_REF}\\s*={1,2}\\s*"?true"?`).test(code);
 
 /**
- * The offset of a guard that compares dry_run against `false` **and leaves the step** when the
- * comparison holds, or -1.
+ * The offset of a guard that stops the step when dry_run is not exactly `false`, or -1.
  *
- * The comparison alone proves nothing. `if [ "${DRY_RUN:-}" != "false" ]; then echo "not
- * publishing"; fi` contains it and then carries straight on to the publish, so the branch has to be
- * read, not merely found: `exit` must appear between the `then` and the branch's `fi`.
+ * Reading shell semantics out of a regex does not work, and two rounds of review proved it: a
+ * comparison whose branch merely logged passed; `if false; then exit 0; fi` nested inside the branch
+ * passed; a quoted message containing the word `exit` passed; and locating the branch's end by the
+ * first `fi` rejected a correct guard that had `echo "fi"` in it.
+ *
+ * So the check stops trying to decide what arbitrary shell does and requires a canonical shape
+ * instead. This guard exists to be audited at a glance by whoever is about to publish, so being
+ * simple enough to recognise is a property worth demanding rather than a limitation of the checker.
+ * Two forms are accepted, and the failure message names them:
+ *
+ *   if [ "${DRY_RUN:-}" != "false" ]; then exit 0; fi
+ *
+ *   if [ "${DRY_RUN:-}" != "false" ]; then
+ *     <plain commands, no nested block>
+ *     exit 0
+ *   fi
+ *
+ * `exit` must be the branch's last statement, so it cannot be skipped by anything after it, and no
+ * nested block may open inside the branch, so it cannot be made conditional. A quoted `exit` is not
+ * a statement and does not satisfy it. That rejects a nested conditional used for logging, which is
+ * deliberate: rewrite it above the guard.
  */
+const GUARD_HEAD = `if\\s*\\[\\[?\\s*${DRY_RUN_REF_UNDEFAULTED}\\s*!=\\s*"?false"?\\s*\\]\\]?\\s*;\\s*then`;
+const GUARD_ONE_LINE = new RegExp(`^[ \\t]*${GUARD_HEAD}\\s+exit\\s+\\d+\\s*;\\s*fi[ \\t]*$`);
+const GUARD_OPENS = new RegExp(`^[ \\t]*${GUARD_HEAD}[ \\t]*$`);
+const BLOCK_OPENS = /^(if|for|while|until|case|select|function)\b|(?:;|&&|\|\|)\s*(?:if|for|while|until|case|select)\b/;
+const EXIT_STATEMENT = /^exit\s+\d+[ \t]*;?$/;
+
 const terminatingGuardAt = (code) => {
-  const pattern = new RegExp(
-    `if\\s*\\[\\[?\\s*${DRY_RUN_REF_UNDEFAULTED}\\s*!=\\s*"?false"?\\s*\\]\\]?\\s*;?\\s*then\\b([\\s\\S]*?)\\bfi\\b`,
-    "g",
-  );
-  for (let match = pattern.exec(code); match; match = pattern.exec(code)) {
-    if (/\bexit\b/.test(match[1])) return match.index;
+  const lines = code.split("\n");
+  let offset = 0;
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (GUARD_ONE_LINE.test(line)) return offset;
+    if (GUARD_OPENS.test(line)) {
+      const body = [];
+      let closed = false;
+      for (let j = i + 1; j < lines.length; j += 1) {
+        if (lines[j].trim() === "fi") { closed = true; break; }
+        body.push(lines[j].trim());
+      }
+      const statements = body.filter(Boolean);
+      if (
+        closed &&
+        statements.length > 0 &&
+        !statements.some((statement) => BLOCK_OPENS.test(statement)) &&
+        EXIT_STATEMENT.test(statements[statements.length - 1])
+      ) {
+        return offset;
+      }
+    }
+    offset += line.length + 1;
   }
   return -1;
 };
 
-/**
- * The offset of the first line carrying an unguarded publish, or -1.
- *
- * A guard that runs after the publish is not a guard. Ordering is checked at line granularity,
- * which is the unit these scripts are written in.
- */
 const firstPublishAt = (code) => {
   let offset = 0;
   for (const line of code.split("\n")) {
@@ -593,7 +629,7 @@ for (const workflow of workflows) {
     } else if (!gatedByStepCondition && DRY_RUN_COMPARED_WITH_A_DEFAULT.test(code)) {
       polarity.push(`${where} guards the publish with a \`\${DRY_RUN:-…}\` expansion that supplies a default. The default is substituted before the comparison, so the guard is only as fail-closed as a value this checker cannot evaluate — and the obvious ones are not: \`\${DRY_RUN:-false}\` and \`\${DRY_RUN:-$(printf false)}\` both publish when the variable is unset or empty, which are exactly the two values this check exists to stop. Drop the default: \`\${DRY_RUN:-}\``);
     } else if (!gatedByStepCondition && !guardStopsThePublish(code)) {
-      polarity.push(`${where} reaches a publish side effect with no fail-closed dry-run guard that stops it: it needs either \`if: \${{ inputs.dry_run == false }}\` on the step, or a \`[ "\${DRY_RUN:-}" != "false" ]\` guard whose branch \`exit\`s and which appears before the publish. A comparison that is present but does not leave the step, or one written after the publish, is not a guard`);
+      polarity.push(`${where} reaches a publish side effect with no fail-closed dry-run guard that stops it. It needs either \`if: \${{ inputs.dry_run == false }}\` on the step, or, before the publish, a guard in one of these two shapes — \`if [ "\${DRY_RUN:-}" != "false" ]; then exit 0; fi\`, or the same opener on its own line with plain commands and \`exit 0\` as the branch's last statement, closed by \`fi\`. A comparison whose branch only logs, an \`exit\` nested inside another conditional, the word \`exit\` in a quoted message, and a guard written after the publish are each not a guard`);
     } else if (gatedByStepCondition && workflow.path.endsWith("publish-swiftui.yml")) {
       polarity.push(`${where} must carry the guard in the script itself. Its pushes share one step with the subtree split and the manifest probe, so a step-level \`if:\` would gate all of it or none of it.`);
     }
