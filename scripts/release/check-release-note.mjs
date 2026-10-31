@@ -120,6 +120,21 @@ export function noteErrors(note, version, rel, known = manifestSlugs()) {
   const e = [];
   const at = (what) => `${rel}: ${what}`;
   if (note.version !== version) e.push(at(`describes version "${note.version}", not ${version} — version-release-meta.mjs asserts these match and throws after the merge`));
+  // `version` must be the note's FIRST key, and this is not a style rule.
+  // version-release-meta.mjs serializes the note with JSON.stringify, which preserves its key
+  // order, and check-releases.mjs discovers entries by splitting releases.ts on the literal
+  // `\n  {\n    version: "`. A note whose first key is anything else produces an entry that
+  // discovery cannot see, so check:releases reports the PREVIOUS version as the top entry and
+  // Version PR generation fails — after the merge. Measured end to end on the real scripts: the
+  // same note with `summary` first gives
+  //   ✗ top RELEASES entry is 0.26.1, but the packages are at 0.27.0
+  // where version-first gives `check:releases ok — 44 entries, latest 0.27.0`.
+  // All five notes on main already put `version` first; this records that invariant rather than
+  // inventing one. The brittleness is check-releases.mjs's regex discovery, which is not this
+  // file's to fix — see the note on the pull request.
+  if (Object.keys(note)[0] !== "version") {
+    e.push(at(`\`version\` must be the first key (it is "${Object.keys(note)[0]}") — version-release-meta.mjs preserves this file's key order, and check-releases.mjs only finds an entry whose first property is \`version\`, so Version PR generation would not see this release at all`));
+  }
   if (typeof note.summary !== "string" || note.summary.trim() === "") e.push(at("`summary` is required and must be a non-empty string"));
   if (!Array.isArray(note.breaking)) e.push(at("`breaking` is required — use [] to state \"none, and I checked\""));
   if (!Array.isArray(note.changes) || note.changes.length === 0) e.push(at("`changes` is required and must list at least one change"));

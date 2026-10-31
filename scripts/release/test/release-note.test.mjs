@@ -303,3 +303,29 @@ it("reads the real manifest, so the fail-closed path is not silently active", ()
   assert.ok(known.size > 50, `manifest declared only ${known.size} slugs, which is not a real read`);
   assert.ok(known.has("date-picker"));
 });
+
+// --- `version` first, because downstream discovery depends on it ---------------------------------
+//
+// version-release-meta.mjs serializes the note with JSON.stringify, preserving its key order, and
+// check-releases.mjs discovers entries by splitting releases.ts on the literal `\n  {\n    version: "`.
+// Measured end to end on the real scripts, the only difference being the note's key order:
+//   version first  → check:releases ok — 44 entries, latest 0.27.0
+//   summary first  → ✗ top RELEASES entry is 0.26.1, but the packages are at 0.27.0
+// So an accepted note can be invisible to the very step that activates it.
+
+it("requires `version` to be the note's first key", () => {
+  const reordered = { summary: "s", version: "0.27.0", breaking: [], changes: [{ title: "t" }] };
+  const e = noteErrors(reordered, "0.27.0", "r");
+  assert.equal(e.length, 1);
+  assert.match(e[0], /must be the first key/);
+  // and the version assertion itself still passes, so this is the ONLY thing wrong with it
+  assert.ok(!e[0].includes("describes version"));
+});
+
+it("accepts the key order every note on main already uses", () => {
+  assert.deepEqual(errs(() => {}), []);
+  assert.deepEqual(
+    noteErrors({ version: "0.27.0", summary: "s", breaking: [], changes: [{ title: "t" }], migration: "m" }, "0.27.0", "r"),
+    [],
+  );
+});
