@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(nav.search),
 }));
 
-import { ComponentGallery } from "./component-gallery";
+import { ComponentGallery, ComponentGalleryFallback } from "./component-gallery";
 import { THUMBNAIL_MOCKS } from "./component-thumbnails";
 import { catalogueFacets } from "@/lib/business-discovery";
 
@@ -302,3 +302,50 @@ describe("ComponentGallery business filters", () => {
       expect(svg.closest("button")).toHaveAccessibleName(/React|Angular|SwiftUI|Jetpack Compose|Flutter/);
     }
   });
+
+/**
+ * The Suspense fallback the /components page renders into its static HTML.
+ *
+ * It used to be a one-line `<p>Loading…</p>`, so the served HTML carried no cards and the footer sat ~300px up the
+ * page until 109 of them appeared beneath it on hydration — a single reflow measuring CLS 0.674 at 1440px and 0.723
+ * at 375px, the worst metric on the site. The fix is the shape `/blocks` already uses: render the same gallery with
+ * no filters, so the HTML and the hydrated page lay out identically.
+ *
+ * These assert the two properties that actually keep CLS down — the fallback carries the whole catalogue, and it is
+ * the same markup as the live gallery — because a fallback that silently went back to being a placeholder would
+ * restore the shift with every other test still passing.
+ */
+describe("ComponentGalleryFallback is the markup the static HTML carries", () => {
+  it("renders the whole catalogue, not a loading placeholder", () => {
+    render(<ComponentGalleryFallback facets={FACETS} />);
+    const links = screen
+      .getAllByRole("link")
+      .filter((a) => (a.getAttribute("href") ?? "").startsWith("/docs/components/"));
+    expect(new Set(links.map((a) => a.getAttribute("href"))).size).toBeGreaterThan(100);
+    expect(screen.getByRole("status")).toHaveTextContent(/^\d+ entries$/);
+  });
+
+  it("renders the same filter controls as the live gallery, so nothing resizes on hydration", () => {
+    const { unmount } = render(<ComponentGalleryFallback facets={FACETS} />);
+    const fallbackGroups = screen.getAllByRole("group").map((g) => g.getAttribute("aria-label")).sort();
+    const fallbackCards = screen
+      .getAllByRole("link")
+      .filter((a) => (a.getAttribute("href") ?? "").startsWith("/docs/components/")).length;
+    unmount();
+
+    nav.search = "";
+    render(<ComponentGallery facets={FACETS} />);
+    expect(screen.getAllByRole("group").map((g) => g.getAttribute("aria-label")).sort()).toEqual(fallbackGroups);
+    expect(
+      screen.getAllByRole("link").filter((a) => (a.getAttribute("href") ?? "").startsWith("/docs/components/")).length,
+    ).toBe(fallbackCards);
+  });
+
+  it("ignores the URL, because the server cannot read one", () => {
+    // the live gallery would filter on this; the fallback must still carry everything
+    nav.search = "cat=Overlays&q=dialog";
+    render(<ComponentGalleryFallback facets={FACETS} />);
+    expect(screen.getByRole("status")).toHaveTextContent(/^\d+ entries$/);
+    expect(screen.getByRole("searchbox")).toHaveValue("");
+  });
+});
