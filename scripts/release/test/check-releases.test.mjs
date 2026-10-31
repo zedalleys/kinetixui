@@ -24,8 +24,9 @@ const VERSIONS = ["0.27.0", "0.26.1", "0.26.0", "0.25.0", "0.24.1"];
 /** A tree holding the five entries rule 1 needs, the newest carrying the given newComponents groups.
  *  `groups` is [{ group, slugs }]; `raw` replaces the whole newComponents block for malformed cases.
  *  `manifest` defaults to the two-component MANIFEST above; pass the repository's own to check a note
- *  that names any real component, which the restricted one would reject for existing. */
-const tree = ({ group, slug, groups, raw, manifest = MANIFEST }) => {
+ *  that names any real component, which the restricted one would reject for existing. `summary` is the
+ *  newest entry's prose, which matters because prose can contain anything the reader looks for. */
+const tree = ({ group, slug, groups, raw, manifest = MANIFEST, summary = "s" }) => {
   const root = mkdtempSync(path.join(tmpdir(), "kinetix-check-releases-"));
   for (const dir of ["scripts", "packages/ui", "packages/tokens", "packages/cli", "apps/web/src/lib", "release"]) mkdirSync(path.join(root, dir), { recursive: true });
   copyFileSync(new URL("../../check-releases.mjs", import.meta.url), path.join(root, "scripts/check-releases.mjs"));
@@ -51,7 +52,7 @@ ${g.slugs.map((x) => `          ${JSON.stringify(x)}`).join(",\n")}
   const newest = `  {
     version: "0.27.0",
     date: "2026-10-31",
-    summary: "s",
+    summary: ${JSON.stringify(summary)},
     breaking: [],
 ${block}
   },\n`;
@@ -88,6 +89,24 @@ it("rejects a miscapitalised slug, which the old shape filter skipped silently",
   const r = run({ group: "Forms", slug: "Date-Picker" });
   assert.equal(r.status, 1, `"Date-Picker" is not a manifest slug and must be reported:\n${r.out}`);
   assert.match(r.out, /newComponents slug "Date-Picker" is not in components\.manifest\.json/);
+});
+
+// Codex finding, 2026-10-31: prose must not be able to switch the check off. Reproduced at c8f591c3,
+// where `indexOf("newComponents:")` began the scan inside the summary string, lost the string
+// boundaries from there, and read NO slugs at all — so `slugs: ["date-pikcer"]` validated.
+it("finds the newComponents key outside quoted strings, so prose cannot disable the check", () => {
+  for (const summary of [
+    "Adds newComponents: groups to release notes.",
+    'Documents slugs: ["x"] and newComponents: in the note schema.',
+  ]) {
+    const r = run({ summary, group: "Forms", slug: "date-pikcer" });
+    assert.equal(r.status, 1, `a summary mentioning the key suppressed slug validation:\n${r.out}`);
+    assert.match(r.out, /newComponents slug "date-pikcer" is not in components\.manifest\.json/);
+  }
+
+  // And the same prose must not invent a verdict when there is no newComponents value to read.
+  const none = run({ summary: "Adds newComponents: groups to release notes.", raw: "" });
+  assert.equal(none.status, 0, none.out);
 });
 
 // --- the remaining cases from the verification list ----------------------------------------------

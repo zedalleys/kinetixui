@@ -58,33 +58,37 @@ for (const entry of allowlist.packages) {
 /** Every string inside the `slugs:` arrays of a generated `newComponents` value.
  *
  * Scanned character by character rather than matched with a regexp. `version-release-meta.mjs` writes
- * this file with `JSON.stringify`, so slug values keep JSON string escaping and may contain any
- * character at all — including the `]` and `"` that terminate a pattern. Measured on the previous
- * `\[([\s\S]*?)\]` extraction, a note declaring `slugs: ["input]", "date-pikcer"]` yielded NO slugs,
- * so two invalid slugs both went unchecked and the release validated. The scanner reads strings as
- * strings and finds each array by bracket depth, so punctuation inside one slug cannot hide the rest.
+ * this file with `JSON.stringify`, so every string keeps JSON escaping and may contain any character
+ * at all — including the `]` and `"` that terminate a pattern, and the text `newComponents:` itself in
+ * a summary. Two defects measured on earlier readers of this value:
+ *   - `\[([\s\S]*?)\]` on `slugs: ["input]", "date-pikcer"]` yielded NO slugs, so two invalid slugs
+ *     went unchecked and the release validated.
+ *   - `indexOf("newComponents:")` on a note whose summary reads "Adds newComponents: groups to
+ *     release notes." began scanning inside that string, lost the string boundaries, and again
+ *     yielded nothing — valid prose disabling the check.
+ * So the key itself is located outside quoted strings, and each array is found by bracket depth. A
+ * single pass does both, because only a scan that already tracks strings can say where a key is.
  *
  * Returns the slugs it could read. On input that does not close its brackets the depth never returns
  * to zero and the scan simply ends at the end of the block, reporting what it saw — such a file does
  * not typecheck and never reaches `main`, but reading part of it beats reading none of it.
  */
 function newComponentSlugs(block) {
-  const key = "newComponents:";
-  const start = block.indexOf(key);
-  if (start === -1) return [];
   const slugs = [];
+  let started = false; // the bare key `newComponents` has been seen OUTSIDE any string
   let depth = 0; // bracket/brace depth inside the newComponents value
   let slugsAt = null; // the depth at which the `slugs:` array currently being read opened
   let armed = false; // the bare key `slugs` was just read, so its `[` is the next one
-  for (let i = start + key.length; i < block.length; i++) {
+  for (let i = 0; i < block.length; i++) {
     const c = block[i];
     if (c === '"') {
+      // Consume the whole string literal, so nothing inside it is ever read as syntax.
       let j = i + 1;
       for (; j < block.length; j++) {
         if (block[j] === "\\") j++;
         else if (block[j] === '"') break;
       }
-      if (slugsAt !== null) {
+      if (started && slugsAt !== null) {
         const raw = block.slice(i, j + 1);
         let value;
         try {
@@ -96,7 +100,22 @@ function newComponentSlugs(block) {
       }
       armed = false;
       i = j;
-    } else if (c === "[" || c === "{") {
+      continue;
+    }
+    if (/[A-Za-z_$]/.test(c)) {
+      let j = i;
+      while (j < block.length && /[A-Za-z0-9_$]/.test(block[j])) j++;
+      const word = block.slice(i, j);
+      if (!started) {
+        if (word === "newComponents") started = true;
+      } else if (word === "slugs") {
+        armed = true;
+      }
+      i = j - 1;
+      continue;
+    }
+    if (!started) continue;
+    if (c === "[" || c === "{") {
       depth++;
       if (armed && c === "[") slugsAt = depth;
       armed = false;
@@ -105,11 +124,6 @@ function newComponentSlugs(block) {
       armed = false;
       depth--;
       if (depth <= 0) break; // the end of the newComponents value itself
-    } else if (/[A-Za-z_$]/.test(c)) {
-      let j = i;
-      while (j < block.length && /[A-Za-z0-9_$]/.test(block[j])) j++;
-      if (block.slice(i, j) === "slugs") armed = true;
-      i = j - 1;
     }
   }
   return slugs;
