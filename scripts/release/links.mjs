@@ -36,8 +36,13 @@ const MARKDOWN_LINK = /\]\(\s*(<[^<>\n]*>|[^()\s]+)(?:\s+(?:\\?"[^"]*\\?"|'[^']*
 const unwrapped = (destination) =>
   destination.startsWith("<") && destination.endsWith(">") ? destination.slice(1, -1) : destination;
 
-/** A href in a link position that deliberately names no route on this site. */
-const offSite = (href) =>
+/** A href in a link position that deliberately names no route on this site.
+ *
+ *  Exported because `check-release-note.mjs` must answer the same way about the same bytes. A note
+ *  is scanned twice — once at authoring time by that gate, once against the built site by this one —
+ *  and a destination that one accepts and the other rejects is a release lost to a sentence. One
+ *  policy, read from here, rather than two lists kept in step by hand. */
+export const offSite = (href) =>
   href.startsWith("#") ||
   href.startsWith("//") ||
   /^[a-z][a-z0-9+.-]*:/i.test(href);
