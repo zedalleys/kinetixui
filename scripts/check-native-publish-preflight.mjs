@@ -55,6 +55,24 @@ const NEGATIVES = {
   // A vendored copy drifting from its canonical source, which is what a publish from an
   // arbitrary ref can ship and ci.yml's pull-request-only drift step would never see.
   "vendored-token-drift": { file: "packages/ui-flutter/lib/src/kinetix_motion.dart", from: /^/, to: "// drifted\n", breaks: "VENDOR-CURRENT" },
+  // Published identity: every one of these is a way the artifact could reach a registry under a
+  // name nobody asked for. Each was demonstrated to pass the pre-NPG-2 gate.
+  "pub-name-wrong": { file: "packages/ui-flutter/pubspec.yaml", from: /^name: kinetix_ui$/m, to: "name: kinetix_ui_typo", breaks: "ID-PUB-NAME" },
+  // The same mutation, asserted against the other check it has to break: a drifted name also makes
+  // the documented `package:<name>/<name>.dart` import unresolvable. Registered separately because
+  // a control proves one named check, and these two fail for different reasons.
+  "pub-name-points-at-missing-library": { file: "packages/ui-flutter/pubspec.yaml", from: /^name: kinetix_ui$/m, to: "name: kinetix_ui_typo", breaks: "ID-PUB-LIBRARY-ENTRY" },
+  "flutter-staging-name-unasserted": { file: "scripts/publish/stage-flutter-package.mjs", from: "lines.includes(`name: ${CANONICAL_NAME}`)", to: "false", breaks: "ID-PUB-NAME-ASSERTED-AT-STAGING" },
+  // Two independent ways to lose the Maven coordinate, because groupId and artifactId are separate
+  // declarations and MVN-POM-COMPLETE is satisfied by any values at all.
+  "mvn-group-wrong": { file: "packages/ui-compose/ui/build.gradle.kts", from: 'groupId = "com.kinetixui"', to: 'groupId = "com.notkinetixui"', breaks: "ID-MVN-COORDINATES" },
+  "mvn-artifact-wrong": { file: "packages/ui-compose/ui/build.gradle.kts", from: 'artifactId = "ui-compose"', to: 'artifactId = "ui-komposs"', breaks: "ID-MVN-COORDINATES" },
+  "mvn-namespace-escapes-group": { file: "packages/ui-compose/ui/build.gradle.kts", from: 'namespace = "com.kinetixui.ui"', to: 'namespace = "com.example.ui"', breaks: "ID-MVN-NAMESPACE-UNDER-GROUP" },
+  "swift-package-renamed": { file: "packages/ui-swiftui/Package.swift", from: /Package\(\n    name: "KinetixUI"/, to: 'Package(\n    name: "Kinetix"', breaks: "ID-SWIFT-PACKAGE-AND-LIBRARY" },
+  "swift-library-renamed": { file: "packages/ui-swiftui/Package.swift", from: '.library(name: "KinetixUI", targets: ["KinetixUI"])', to: '.library(name: "KinetixKit", targets: ["KinetixUI"])', breaks: "ID-SWIFT-PACKAGE-AND-LIBRARY" },
+  // SwiftUI has no manifest coordinate: the split prefix is the identity, so this is the only
+  // wrong-identity publication no manifest field would reveal.
+  "swiftui-subtree-prefix-wrong": { file: ".github/workflows/publish-swiftui.yml", from: "--prefix=packages/ui-swiftui", to: "--prefix=packages/iot", breaks: "ID-SWIFTUI-SUBTREE-PREFIX" },
   // Version integrity: each of these is a way the number reaching a registry could differ from the
   // number that was asked for.
   "compose-version-defaults-silently": { file: "packages/ui-compose/ui/build.gradle.kts", from: 'version = requestedVersion.getOrElse(unversionedPlaceholder)', to: 'version = requestedVersion.getOrElse("0.1.0")', breaks: "VI-COMPOSE-NO-SILENT-DEFAULT" },
@@ -279,6 +297,117 @@ check(
   `${unvalidated.map((w) => w.path).join(", ")} must validate its \`version\` input with \`node scripts/check-native-publish-preflight.mjs --version=…\` before anything is uploaded. A typo becomes a permanent tag, an immutable Central coordinate or a burnt pub.dev version.`,
 );
 
+const flutterStaging = source("scripts/publish/stage-flutter-package.mjs");
+const swiftuiWorkflow = source(".github/workflows/publish-swiftui.yml");
+
+// ---------------------------------------------------------------------------
+// Published identity. Version integrity below asks whether the artifact can carry a different
+// *number* than the one requested. This asks the other half: whether it can carry a different
+// *name*. A wrong number is at least visible on the package page it lands on; a wrong name lands
+// on a different package page altogether, and on Maven Central and pub.dev that coordinate is then
+// taken forever by something nobody meant to publish. Neither is correctable.
+//
+// Every check here compares a value, not the presence of a field. MVN-POM-COMPLETE above looks for
+// the *strings* `groupId` and `artifactId` in the Kotlin DSL and is satisfied by any values at all,
+// which is how `com.notkinetixui:ui-komposs` passed the whole gate; nothing read the pubspec's
+// `name:` at any point. The pins live in one object so that the published identity of this project
+// is a thing you can read, and so that changing one is a visible diff rather than a typo.
+// ---------------------------------------------------------------------------
+/**
+ * The identities KinetixUI publishes under, by value.
+ *
+ * These are not style preferences. A Maven coordinate and a pub.dev package name are permanent: a
+ * published package can be deprecated or discontinued but never renamed, so the first publish
+ * decides them for good. `kinetix_ui` is settled in master report §27.B (R-8); `com.kinetixui`
+ * additionally requires namespace verification with Central before anything can be uploaded under
+ * it, so a drifted groupId is also a deployment that cannot authenticate.
+ *
+ * Changing a value here is a deliberate decision about what this project publishes, and it should
+ * fail every check below until the manifests are moved to match.
+ */
+const IDENTITY = {
+  pubName: "kinetix_ui",
+  mavenGroupId: "com.kinetixui",
+  mavenArtifactId: "ui-compose",
+  swiftPackage: "KinetixUI",
+  swiftLibrary: "KinetixUI",
+  swiftuiSubtreePrefix: "packages/ui-swiftui",
+};
+
+const pubspecName = pubspec.match(/^name:\s*(\S+)\s*$/m)?.[1];
+check(
+  "ID-PUB-NAME",
+  pubspecName === IDENTITY.pubName,
+  `packages/ui-flutter/pubspec.yaml declares \`name: ${pubspecName ?? "(no top-level name: line)"}\`; pub.dev would publish under that, and the expected package is ${IDENTITY.pubName}. The name is the package's permanent identity — a published package cannot be renamed, only discontinued — and nothing else in this gate reads it.`,
+);
+
+/*
+ * pub.dev resolves `package:<name>/<name>.dart` as the conventional entry point, and every import
+ * in this repo's tests and docs is written against it. Derived from the name the pubspec *declares*
+ * rather than from the pin above, deliberately: the question this answers is whether the package as
+ * it would be published is importable, which a drifted `name:` breaks even though the file is right
+ * where it always was.
+ */
+const declaredEntry = `packages/ui-flutter/lib/${pubspecName ?? IDENTITY.pubName}.dart`;
+check(
+  "ID-PUB-LIBRARY-ENTRY",
+  existsSync(`${root}${declaredEntry}`),
+  `${declaredEntry} must exist: with \`name: ${pubspecName ?? IDENTITY.pubName}\` in the pubspec, that is the file \`package:${pubspecName ?? IDENTITY.pubName}/${pubspecName ?? IDENTITY.pubName}.dart\` resolves to, and that import is what the docs, the tests and the consumer rehearsal are written against.`,
+);
+
+/*
+ * The gate above reads the committed pubspec. The file that actually reaches pub.dev is the one
+ * staging rewrites, so the name has to be asserted there too, off disk, in the same place the
+ * version already is. Otherwise a staging step that rewrote the name — or a package directory
+ * pointed somewhere else by `--package-dir=` — would publish under a name this check never saw.
+ */
+check(
+  "ID-PUB-NAME-ASSERTED-AT-STAGING",
+  new RegExp(`CANONICAL_NAME\\s*=\\s*"${IDENTITY.pubName}"`).test(flutterStaging) &&
+    /lines\.includes\(`name: \$\{CANONICAL_NAME\}`\)/.test(flutterStaging),
+  `scripts/publish/stage-flutter-package.mjs must pin CANONICAL_NAME = "${IDENTITY.pubName}" and assert \`name: <that>\` against the staged pubspec read back off disk. The committed pubspec being right says nothing about the file that is uploaded, which is the one staging produces.`,
+);
+
+const mavenGroupId = composeGradle.match(/groupId\s*=\s*"([^"]*)"/)?.[1];
+const mavenArtifactId = composeGradle.match(/artifactId\s*=\s*"([^"]*)"/)?.[1];
+check(
+  "ID-MVN-COORDINATES",
+  mavenGroupId === IDENTITY.mavenGroupId && mavenArtifactId === IDENTITY.mavenArtifactId,
+  `packages/ui-compose/ui/build.gradle.kts publishes as ${mavenGroupId ?? "(no groupId)"}:${mavenArtifactId ?? "(no artifactId)"}; the expected coordinate is ${IDENTITY.mavenGroupId}:${IDENTITY.mavenArtifactId}. A Central coordinate is immutable and the groupId additionally has to be a namespace this account has verified, so a drifted value is either a permanent wrong publication or an upload that cannot authenticate.`,
+);
+
+/*
+ * The Android namespace is the AAR's own package and the import path consumers write. It is a
+ * separate declaration from the Maven coordinate and can drift from it independently — which would
+ * ship `com.kinetixui:ui-compose` whose classes live under somebody else's package name.
+ */
+const composeNamespace = composeGradle.match(/namespace\s*=\s*"([^"]*)"/)?.[1];
+check(
+  "ID-MVN-NAMESPACE-UNDER-GROUP",
+  typeof composeNamespace === "string" && composeNamespace.startsWith(`${IDENTITY.mavenGroupId}.`),
+  `packages/ui-compose/ui/build.gradle.kts declares \`namespace = "${composeNamespace ?? "(none)"}"\`, which is not under ${IDENTITY.mavenGroupId}. The namespace is the published AAR's package and the import path a consumer writes; it must sit inside the group the artifact is published under.`,
+);
+
+check(
+  "ID-SWIFT-PACKAGE-AND-LIBRARY",
+  new RegExp(`Package\\(\\s*\\n?\\s*name:\\s*"${IDENTITY.swiftPackage}"`).test(packageSwift) &&
+    new RegExp(`\\.library\\(\\s*name:\\s*"${IDENTITY.swiftLibrary}"`).test(packageSwift),
+  `packages/ui-swiftui/Package.swift must declare \`Package(name: "${IDENTITY.swiftPackage}")\` and \`.library(name: "${IDENTITY.swiftLibrary}", …)\`. The library product name is what a consumer writes in \`.product(name:, package:)\`, and renaming it breaks every consumer of an already-published tag — which, unlike the mirror branch, cannot be moved.`,
+);
+
+/*
+ * SwiftUI has no manifest coordinate at all: the published package *is* whatever the subtree split
+ * extracts, pushed to the mirror and tagged. So the prefix is the identity. A wrong prefix publishes
+ * a different package's source under the KinetixUI tag, and the tag is then permanent — the one
+ * failure here that no manifest field would reveal.
+ */
+const splitPrefixes = [...swiftuiWorkflow.matchAll(/--prefix=["']?([^\s"']+)/g)].map((m) => m[1]);
+check(
+  "ID-SWIFTUI-SUBTREE-PREFIX",
+  splitPrefixes.length > 0 && splitPrefixes.every((prefix) => prefix === IDENTITY.swiftuiSubtreePrefix),
+  `.github/workflows/publish-swiftui.yml must split exactly \`--prefix=${IDENTITY.swiftuiSubtreePrefix}\`; it splits ${splitPrefixes.length ? splitPrefixes.join(", ") : "nothing — there is no --prefix= at all"}. The split result is the published package — there is no name field to disagree with it — so any other prefix pushes a different package's source to the mirror and tags it as KinetixUI.`,
+);
+
 // ---------------------------------------------------------------------------
 // Version integrity. A published version is the one decision that cannot be corrected later: a
 // Central coordinate and a pub.dev version are immutable, and a git tag is what `from:` resolves
@@ -330,7 +459,6 @@ check(
  * version match the requested one is that the tag is built from the validated input and nothing
  * derived at run time.
  */
-const swiftuiWorkflow = source(".github/workflows/publish-swiftui.yml");
 check(
   "VI-SWIFTUI-TAG-FROM-VALIDATED-INPUT",
   /VERSION:\s*\$\{\{\s*inputs\.version\s*\}\}/.test(swiftuiWorkflow) &&
@@ -343,7 +471,6 @@ check(
  * exits 0 when it matches nothing. The assertion after the rewrite is what separates "published
  * 0.1.0" from "published the committed placeholder because the line had been reformatted".
  */
-const flutterStaging = source("scripts/publish/stage-flutter-package.mjs");
 check(
   "VI-FLUTTER-VERSION-ASSERTED",
   /node scripts\/publish\/stage-flutter-package\.mjs/.test(flutterWorkflow) &&
@@ -407,4 +534,4 @@ if (failures.length) {
   console.error(`\n${failures.length} native publish preflight check(s) failed.`);
   process.exit(1);
 }
-console.log("PASS: native publish preflight — SwiftUI mirror layout, Maven Central POM requirements, pub.dev metadata, publish-workflow safety, version integrity and vendored token currency. Source and workflow properties only; no toolchain ran and nothing was published.");
+console.log("PASS: native publish preflight — SwiftUI mirror layout, Maven Central POM requirements, pub.dev metadata, publish-workflow safety, published identity, version integrity and vendored token currency. Source and workflow properties only; no toolchain ran and nothing was published.");

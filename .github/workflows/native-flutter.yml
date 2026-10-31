@@ -114,6 +114,29 @@ jobs:
             || { echo '::error::Staging failed for some other reason, so this control proves nothing.'; cat "$RUNNER_TEMP/unlogged.log"; exit 1; }
           echo "::notice::Staging refused a version the changelog does not mention."
 
+      - name: Staging refuses a pubspec that is not the published package
+        run: |
+          set -uo pipefail
+          RENAMED="$RUNNER_TEMP/kinetix_ui_renamed"
+          cp -r packages/ui-flutter "$RENAMED"
+          printf '## %s\n\nProbe entry written by native-flutter.yml. Not a release.\n\n' \
+            9.9.9-renamed | cat - "$RENAMED/CHANGELOG.md" > "$RUNNER_TEMP/renamed-changelog" \
+            && mv "$RUNNER_TEMP/renamed-changelog" "$RENAMED/CHANGELOG.md"
+          # The version is right and the changelog agrees with it; only the name is wrong. pub.dev
+          # takes the name from this file, and the coordinate it lands on is permanent.
+          sed -i 's/^name: kinetix_ui$/name: kinetix_ui_typo/' "$RENAMED/pubspec.yaml"
+          if node scripts/publish/stage-flutter-package.mjs 9.9.9-renamed --package-dir="$RENAMED" > "$RUNNER_TEMP/renamed.log" 2>&1; then
+            echo "::error::Staging accepted a pubspec whose name is not the published package name. That is a permanent publication under a package nobody meant to create."
+            exit 1
+          fi
+          # The backticks the message puts around the name are matched with `.` rather than written
+          # literally: a backtick inside double quotes is command substitution, and inside single
+          # quotes shellcheck reports SC2016. The trailing `. Found` keeps this specific to the
+          # refusal rather than matching the typo it quotes back.
+          grep -qE 'does not declare .name: kinetix_ui.\. Found' "$RUNNER_TEMP/renamed.log" \
+            || { echo '::error::Staging failed for some other reason, so this control proves nothing.'; cat "$RUNNER_TEMP/renamed.log"; exit 1; }
+          echo "::notice::Staging refused a pubspec whose name is not the published package name."
+
       - name: Staging refuses a pubspec it cannot rewrite
         run: |
           set -uo pipefail
