@@ -1,0 +1,143 @@
+{
+  "measured": "2026-10-27",
+  "why": [
+    "A gate that only asserts success cannot carry a known failure: it is either red forever, and then",
+    "disabled, or the failing cell is quietly dropped and the documentation keeps offering a broken route.",
+    "So each cell records the outcome we have MEASURED, and the gate fails on any difference in either",
+    "direction. A cell that starts passing is as much a failure here as one that starts failing, because",
+    "the documentation written around it is now wrong — and that is the moment to notice, not months later."
+  ],
+  "measured_with": {
+    "_why": [
+      "Agreement with 'what was measured' means nothing unless the measuring tool is identified: a runner",
+      "image moving npm, or an unpinned Bun changing behaviour, would otherwise read as a KinetixUI",
+      "regression or fix when it is neither.",
+      "",
+      "Each manager records the MAJORS its cells have actually been measured against, and --check fails",
+      "when it meets a major that is not in the list — i.e. one nobody has ever checked these expectations",
+      "against. It is a SET, not one version, because two environments legitimately differ: see pnpm below.",
+      "",
+      "DELIBERATELY MAJOR-ONLY, AND PLEASE DO NOT 'TIGHTEN' IT TO EXACT VERSIONS. Patch and minor drift on",
+      "a hosted runner is constant, and a gate that goes red for a patch bump is a gate someone switches",
+      "off — which is the exact fate this whole design exists to avoid. A major is different: install",
+      "semantics really do change across one, which is why Yarn 1 and Yarn 4 are two separate cells here.",
+      "The exact version measured is printed on every run regardless, so drift stays visible before it",
+      "matters. Adding a major to a list means MEASURING it first; listing one unmeasured would be exactly",
+      "the verification inflation this file exists to prevent."
+    ],
+    "npm": {
+      "majors": [
+        10
+      ],
+      "versions": [
+        "10.9.4",
+        "10.9.9"
+      ],
+      "note": "Two patch versions of the same major, both measured and both passing: 10.9.4 in a review container and 10.9.9 on a GitHub-hosted ubuntu-latest runner (CI run 40506108993, 2026-10-27). Recorded because this is precisely the runner-image drift the comparison is major-only to tolerate — the set check passed on major 10 while the exact versions differed, which is the intended behaviour and not a near miss."
+    },
+    "pnpm": {
+      "majors": [
+        10,
+        12
+      ],
+      "versions": [
+        "10.28.0",
+        "12.3.1"
+      ],
+      "note": "Two majors, both measured, both passing. CI and a local checkout genuinely run different pnpm: `pnpm/action-setup` with no `version` input installs the repository's `packageManager` version (12.3.1), so that is what CI measures, while an ambient pnpm outside the repository is 10.28.0 — and pnpm 10+ self-switches to `packageManager` inside the repo, which is why `pnpm --version` differs by directory here. Recording only 10.28.0 would have made this gate fail every CI run on a major mismatch while every install outcome matched: red forever, for a reason that is not about this project. Measured 2026-10-27: install and execute both pass under 12.3.1, same as under 10.28.0."
+    },
+    "yarn": {
+      "majors": [
+        1
+      ],
+      "versions": [
+        "1.22.22"
+      ]
+    },
+    "yarn-berry": {
+      "majors": [
+        4
+      ],
+      "versions": [
+        "4.18.1"
+      ],
+      "provenance": "Measured by hand and NOT re-verified in this container: `yarn` on PATH can be only one of Yarn's two product lines, and this environment's network policy denies repo.yarnpkg.com. Both yarn-berry cells are optional and uncompared unless --yarn-berry=<path> supplies a binary."
+    },
+    "bun": {
+      "majors": [
+        1
+      ],
+      "versions": [
+        "1.4.4"
+      ],
+      "pin": "Pinned in .github/workflows/ci.yml by sha256 bf8ccbfb2b0b80159e0f9a6d15c55317add8077534dbc6130a3edb52fccb395c (bun-v1.4.4/bun-linux-x64.zip, 51794595 bytes). Change the pin and this record together."
+    },
+    "npx": {
+      "majors": [
+        10
+      ],
+      "versions": [
+        "10.9.4"
+      ],
+      "note": "The EXECUTE route for npm runs `npx`, which is a different executable from `npm` and can be resolved by PATH from a different installation. Recorded separately because recording only npm's version certified the wrong program: an execute cell could pass under an unmeasured npx major while this file said the major was measured. Measured 2026-10-28 in a review container at 10.9.4, alongside npm 10.9.4. If CI reports a different npx major, that is the gap this entry exists to surface."
+    },
+    "bunx": {
+      "majors": [
+        1
+      ],
+      "versions": [
+        "1.4.4"
+      ],
+      "note": "The EXECUTE route for bun runs `bunx`. Same reasoning as npx, and this manager is where the defect was first demonstrated the hard way: the pinned Bun archive ships no `bunx` at all, and a workflow step asserting `bun --version` passed on a runner that had none. That was fixed in the workflow without fixing the same assumption here. Measured 2026-10-28 at 1.4.4, from the symlink the workflow creates beside the pinned binary.",
+      "pin": "Not pinned independently: `bunx` is a symlink to the `bun` binary pinned by sha256 in ci.yml, and Bun dispatches on argv[0]. If that ever stops being true, this entry needs its own pin."
+    }
+  },
+  "cells": {
+    "execute/npm": {
+      "expect": "pass"
+    },
+    "execute/pnpm": {
+      "expect": "pass"
+    },
+    "execute/yarn": {
+      "expect": "pass",
+      "note": "Yarn Classic has no dlx. The script already treats that refusal as the expected outcome, so the cell passes while the command fails; /docs says so on the Yarn tab."
+    },
+    "execute/yarn-berry": {
+      "expect": "pass",
+      "optional": true,
+      "note": "Only measured when --yarn-berry=<path> supplies a Berry binary, because `yarn` on PATH can be only one of Yarn's two product lines. Berry has dlx, so unlike Classic this one really passes."
+    },
+    "execute/bun": {
+      "expect": "pass"
+    },
+    "install/npm": {
+      "expect": "pass"
+    },
+    "install/pnpm": {
+      "expect": "pass"
+    },
+    "install/yarn": {
+      "expect": "fail",
+      "reason": "MEASURED IN CI 2026-10-28, run 40643580887 job 122667114143 (ubuntu-latest, yarn 1.22.22, no pre-existing Yarn state): recharts@3.10.1 declares react-is as a peer dependency and neither Yarn line installs a transitive peer, so a clean Yarn consumer TYPECHECKS and then fails its BUILD on '[vite]: Rolldown failed to resolve import \"react-is\" from .../node_modules/recharts/es6/util/ReactUtils.js'. The other three managers install the same packed tarball and pass, so this is the unmet peer and not a packaging defect.",
+      "fix": "UNKNOWN, and the remedy this field used to state is WRONG — do not apply it. It read \"Declare react-is as a dependency of @kinetixui/ui\". There is no correct entry for that manifest: react-is predicates are major-locked to React in BOTH directions (React 19 renamed the element brand from Symbol(react.element) to Symbol(react.transitional.element), and react-is only recognises its own major's brand), while @kinetixui/ui's peer is react \">=18\", which admits React 18 AND 19. Any fixed major would therefore be wrong for one of them, and wrong SILENTLY: the predicate returns false for a genuine Fragment, recharts drops Fragment-wrapped <Cell> children in findAllByType, and cell fills are lost with no error. Declaring it as a peer instead does not fix this cell either, because Yarn does not install a peer automatically — which is the failure being recorded here. The real remedy is consumer-side resolution and is an OPEN DESIGN QUESTION, not a one-line manifest edit. Source: scripts/adoption/react-is-agreement.mjs (PR #493), whose header states \"@kinetixui/ui does not declare react-is and must not\"; verified against packages/ui/package.json on main d5390810, which declares no react-is and peers only react/react-dom at \">=18\". Corrected 2026-10-31. The earlier withdraw-and-restore of this cell's CAUSE is a separate matter and is unaffected; see `history`.",
+      "documented": "apps/web/src/lib/pm-commands.ts YARN_NEEDS_REACT_IS, shown on the Yarn tab of every @kinetixui/ui install command, plus a callout on /docs/installation.",
+      "when_this_starts_passing": "Settle the cause first. If this cell starts passing while the recorded cause is still unsettled, that is itself information: record what changed. Do NOT read this as waiting on a react-is entry in @kinetixui/ui — see `fix`: that remedy is wrong and must not be applied. Updating this file to expect pass also means removing the Yarn caveat from pm-commands.ts and the callout from /docs/installation in the same change.",
+      "expect_error": "Rolldown failed to resolve import \"react-is\"",
+      "stage": "build",
+      "history": "This cell's recorded cause was WITHDRAWN and then RESTORED on 2026-10-28, and the round trip is worth keeping. The gate used to record only a pass/fail bit, so 'this cell failed' and 'this cell failed for the documented reason' were one fact. When the signature check was added, this review container produced a DIFFERENT failure — typecheck, 'error TS2307: Cannot find module '@kinetixui/ui'', because the copy Yarn Classic installed from the tarball had no dist/ — and the react-is description could not be confirmed from it. Rather than average the two, the container's diagnostic was recorded and CI was allowed to adjudicate: run 40643580887 went red, named the react-is build error, and settled which environment is representative. The container-local dist-absence has never reproduced anywhere else and is NOT a product claim; its six verified facts are in the master report §26.U.10.6, root cause unknown.",
+      "do_not": "Do not widen expect_error to accept both the build-stage react-is error and the container-local typecheck error. A cell that matches any failure is a cell that verifies nothing, which is the defect the signature check exists to catch. If an environment produces a third failure, measure it and record it as its own fact."
+    },
+    "install/yarn-berry": {
+      "expect": "fail",
+      "optional": true,
+      "reason": "the same missing react-is peer as install/yarn. Measured on Yarn 4.18.1 with nodeLinker: node-modules, so it is not a Plug'n'Play artefact and not a Classic quirk — both Yarn lines fail identically.",
+      "also": "Yarn 4 additionally refuses any version published in the last ~7 days (npmMinimalAgeGate), which the fixture sets to 0 so it tests our packaging rather than Yarn's clock.",
+      "when_this_starts_passing": "same as install/yarn — update both cells and the docs together.",
+      "expect_error_unmeasured": "No diagnostic is recorded for this cell because its failure has never been captured here: it is measured only when a Berry binary is supplied with --yarn-berry=<path>, and this container cannot install one (the network policy denies repo.yarnpkg.com). The gate now REFUSES a cell recorded as a known failure that carries no expect_error, so supplying a Berry binary will fail the run until someone measures the failure and records the diagnostic it actually prints. That refusal is deliberate: recording a signature nobody has observed is the verification inflation this file exists to prevent."
+    },
+    "install/bun": {
+      "expect": "pass"
+    }
+  }
+}

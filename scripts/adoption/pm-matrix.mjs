@@ -25,7 +25,7 @@
  * What it does NOT do: reach the component registry at kinetixui.com, or publish anything. `cli add` needs the
  * registry origin; that is a separate check and its absence is stated rather than papered over.
  */
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -74,6 +74,29 @@ const yarnMajor = () => Number(execFileSync('yarn', ['--version'], { encoding: '
  */
 const version = (bin) => execFileSync(bin, ['--version'], { cwd: tmpdir(), encoding: 'utf8' }).trim();
 
+/**
+ * Is this manager's binary here at all? A missing one used to crash the run with a raw
+ * `spawnSync bun ENOENT` out of the unguarded `version()` in `checkInstall`, before any expectation was
+ * compared — so the gate died on its own instrument and said nothing about what it had measured. That is
+ * the one outcome a gate like this must never produce: not a crash, and above all not a pass. A documented
+ * manager that is not installed is reported as its own kind of failure, named, because it means the
+ * environment cannot answer the question rather than that the packaging is broken.
+ */
+const installed = (bin) => {
+  try {
+    version(bin);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/** Managers the docs promise that this machine cannot measure. Not the same as a cell that failed. */
+const notInstalled = [];
+
+/** What actually did the measuring, by manager label, for the `measured_with` comparison in --check. */
+const measuredVersions = {};
+
 /* ------------------------------------------------------------------ negative controls */
 
 /**
@@ -96,9 +119,53 @@ if (has('list-negatives')) {
 }
 
 const results = [];
-const record = (route, pm, ok, detail) => {
-  results.push({ route, pm, ok, detail });
+/*
+ * `output` is the subprocess output the outcome came from. A gate that records only a boolean cannot tell
+ * the documented failure from an unrelated one: every error collapses into "this cell failed", which then
+ * agrees with a cell recorded as a known failure. Keeping the text is what lets --check demand that a
+ * recorded failure be THAT failure.
+ */
+const record = (route, pm, ok, detail, output = '') => {
+  results.push({ route, pm, ok, detail, output });
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${route.padEnd(8)} ${pm.padEnd(5)} ${detail}`);
+};
+
+/*
+ * The last few meaningful lines of a failing route's output, for the FAIL line itself. "See the output
+ * above" is adequate on a terminal and useless in CI, where "above" is three thousand lines of install
+ * chatter and the reader is looking at a one-line summary. A gate that knows why it failed and does not
+ * say so where the failure is reported is withholding the only thing the reader needs.
+ */
+const tailOf = (output, lines = 6) => {
+  const cleaned = `${output ?? ''}`
+    .split('\n')
+    .map((l) => l.replace(/\u001b\[[0-9;]*m/g, '').trimEnd())
+    .filter((l) => l.trim() !== '')
+    // A failing Node subprocess ends with its OWN error dump — stack frames and an options object whose
+    // stdout/stderr are null because the grandchild inherited our streams. Those last lines are the most
+    // recent and the least informative, and taking them verbatim reported `stdout: null` as the reason a
+    // consumer install failed. The tool's real complaint sits above them.
+    .filter((l) => !/^\s*at\s/.test(l))
+    .filter((l) => !/^\s*(status|signal|output|pid|stdout|stderr|code|killed):/.test(l))
+    .filter((l) => !/^\s*[{}]\s*$/.test(l) && !/^Node\.js v/.test(l));
+  /*
+   * Rank, do not just filter. "Command failed: …/tsc" names the STAGE and arrives last; the line that
+   * names the CAUSE — a TS error code, an unresolved import — arrives earlier and is the one a reader
+   * needs. Taking the last N diagnostic lines dropped the cause and kept the stage, which is how a run
+   * reported `Command failed` as the reason a consumer install failed.
+   */
+  const CAUSE = /error TS\d+|Cannot find module|Failed to resolve|failed to resolve|ERR!|ENOENT/;
+  const STAGE = /Command failed|not found/;
+  // A `warning` line is never the cause of a failure, and Yarn emits several per install. They sit on
+  // stderr, which concatenates AFTER stdout, so ranking them with the real diagnostics put three
+  // irrelevant peer warnings ahead of the TS error that actually stopped the build.
+  const isWarning = (l) => /^warning\b/i.test(l.trim());
+  const cause = cleaned.filter((l) => !isWarning(l) && CAUSE.test(l));
+  const stage = cleaned.filter((l) => !isWarning(l) && !CAUSE.test(l) && STAGE.test(l));
+  const kept = cause.length || stage.length
+    ? [...cause.slice(-Math.max(2, lines - 2)), ...stage.slice(-1)]
+    : cleaned.slice(-lines);
+  return kept.length ? kept.join(' | ') : '(no output captured)';
 };
 
 /* ------------------------------------------------------------------ the execute route */
@@ -136,11 +203,22 @@ function checkInstall(pm, bin = pm, label = pm) {
   if (bin !== pm) args.push(`--pm-bin=${bin}`);
   if (has('published')) args.push('--published');
   const v = version(bin);
+  /*
+   * Captured rather than inherited, because the previous version threw the output away and recorded a bare
+   * boolean. Any failure then satisfied a cell recorded as a known failure: a fixture that broke during
+   * packing, before the manager ever ran, read as "the documented Yarn failure". The output is still
+   * echoed, so a human watching a run sees exactly what they saw before; what changes is that the gate
+   * keeps it and can check WHICH failure happened.
+   */
+  let out = '';
   try {
-    execFileSync(process.execPath, args, { cwd: root, stdio: 'inherit' });
-    record('install', label, true, `clean consumer installed, typechecked and built (${label} ${v})`);
-  } catch {
-    record('install', label, false, `clean consumer failed under ${label} ${v} — see the output above`);
+    out = execFileSync(process.execPath, args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    process.stdout.write(out);
+    record('install', label, true, `clean consumer installed, typechecked and built (${label} ${v})`, out);
+  } catch (err) {
+    out = `${err.stdout ?? ''}${err.stderr ?? ''}${err.message ?? ''}`;
+    process.stdout.write(out);
+    record('install', label, false, `clean consumer failed under ${label} ${v} — ${tailOf(out)}`, out);
   }
 }
 
@@ -215,10 +293,35 @@ for (const pm of managers) {
     console.error(`Unknown package manager ${JSON.stringify(pm)}.`);
     process.exit(2);
   }
-  checkExecute(pm);
+  const bin = pm === 'npm' ? 'npm' : pm;
+  if (!installed(bin)) {
+    // Every cell for this manager is unanswerable, so none is recorded. --check turns this into a
+    // failure below rather than letting a missing manager read as a clean run.
+    notInstalled.push(pm);
+    console.log(`NOT INSTALLED  ${pm}  the documentation offers this manager and \`${bin}\` is not on PATH here`);
+    continue;
+  }
+  measuredVersions[pm] = version(bin);
+  /*
+   * `npm` runs `npx` and `bun` runs `bunx` — separate executables that PATH can resolve to separate
+   * installations. Recording only the manager's version certified the wrong program: an execute cell could
+   * pass under an unmeasured major while the summary said the major was measured. `pnpm dlx` and
+   * `yarn dlx` are subcommands of the same binary, so they need no second reading. This is the same defect
+   * as asserting `bun --version` for a route that runs `bunx`, which passed on a runner that had no `bunx`
+   * at all — fixed there in the workflow, and left in place here until a reviewer pointed at it.
+   */
+  const execBin = EXECUTE[pm][0];
+  if (execBin !== bin && !installed(execBin)) {
+    notInstalled.push(`${execBin} (the execute route for ${pm})`);
+    console.log(`NOT INSTALLED  ${execBin}  the execute route for ${pm} runs \`${execBin}\` and it is not on PATH here`);
+  } else {
+    if (execBin !== bin) measuredVersions[execBin] = version(execBin);
+    checkExecute(pm);
+  }
   if (!has('execute-only')) checkInstall(pm);
   if (pm === 'yarn') {
     if (berryBin) {
+      measuredVersions['yarn-berry'] = version(berryBin);
       checkBerryExecute(berryBin);
       if (!has('execute-only')) checkInstall('yarn', berryBin, 'yarn-berry');
     } else {
@@ -230,9 +333,183 @@ for (const pm of managers) {
 
 console.log('\nMatrix');
 for (const r of results) console.log(`  ${r.route.padEnd(8)} ${r.pm.padEnd(5)} ${r.ok ? 'ok' : 'FAILED'}`);
+
+/*
+ * `--check` compares what just happened against `pm-matrix-expectations.json` and fails on any difference
+ * IN EITHER DIRECTION. Without it the script asserts that everything passes, which is a gate this project
+ * cannot currently run: one cell — a Yarn install — is known to fail for a reason whose fix is a published
+ * package change. A gate that is red forever gets turned off, and a gate that drops its failing cell lets
+ * the documentation keep offering a route that does not work. Recording the measured outcome keeps the
+ * failure visible, dated and attributed, and still breaks the moment reality moves — including when the
+ * Yarn cell starts passing, which means the docs written around it are now wrong.
+ */
+if (has('check')) {
+  const expectations = JSON.parse(readFileSync(join(root, 'scripts/adoption/pm-matrix-expectations.json'), 'utf8'));
+  if (notInstalled.length) {
+    console.error(`\n${notInstalled.length} documented package manager(s) are not installed here: ${notInstalled.join(', ')}.`);
+    console.error('The matrix cannot report on a manager it cannot run, and a run that silently skips one is');
+    console.error('worse than no run at all. Install it in the environment — in CI that means a setup step for');
+    console.error('it in the same job, before this one — or scope the run with --pm=<manager>.');
+    process.exit(1);
+  }
+  const measured = new Map(results.filter((r) => r.route !== 'both').map((r) => [`${r.route}/${r.pm}`, r]));
+  const problems = [];
+
+  /*
+   * What did the measuring. Agreement with "what was measured" means nothing unless the measuring tool is
+   * identified: a runner image moving npm, or an unpinned Bun changing behaviour, would otherwise be
+   * reported as a KinetixUI regression or fix when it is neither. Compared on the MAJOR only — patch and
+   * minor drift on a hosted runner is constant, and gating on it would make this gate red for reasons that
+   * are not about this project, which is the fate the whole design exists to avoid. A major is different:
+   * install semantics really do change across one, which is why Yarn 1 and Yarn 4 are two cells here.
+   */
+  const recordedWith = expectations.measured_with ?? {};
+  const major = (v) => Number(String(v).split('.')[0]);
+  console.log('\nMeasured with');
+  for (const [m, v] of Object.entries(measuredVersions)) {
+    const rec = recordedWith[m];
+    const known = Array.isArray(rec?.majors) ? rec.majors : [];
+    console.log(`  ${m.padEnd(11)} ${v.padEnd(9)} ${known.includes(major(v)) ? `major ${major(v)}, measured` : `major ${major(v)}, NOT in the measured set [${known.join(', ')}]`}`);
+  }
+  for (const [m, v] of Object.entries(measuredVersions)) {
+    const rec = recordedWith[m];
+    if (!Array.isArray(rec?.majors) || rec.majors.length === 0) {
+      problems.push(`${m}: this run measured with ${m} ${v}, but measured_with records no majors for it`);
+    } else if (!rec.majors.includes(major(v))) {
+      problems.push(
+        `${m}: this run used ${m} ${v}, whose major ${major(v)} has never been measured against these expectations (measured: ${rec.majors.join(', ')}). Install semantics change across a major, so measure the ${m} cells under it and add the major to measured_with — do not assume the recorded outcomes carry over.`,
+      );
+    }
+  }
+
+  /*
+   * A scoped run (`--pm=<manager>`, `--execute-only`) deliberately measures a subset, so requiring every
+   * recorded cell would fail it for cells it was never asked to visit — and the missing-manager message
+   * above recommends `--pm=<manager>` as the way to proceed, which would then be useless advice in check
+   * mode. Coverage is required of the cells the run's scope actually selects.
+   *
+   * What a scoped run must never be is mistakable for a full one, so it is reported as scoped and the
+   * unchecked cells are named. CI runs unscoped, where every non-optional cell is still required.
+   */
+  const inScope = (cell) => {
+    const [route, pm] = cell.split('/');
+    if (has('execute-only') && route !== 'execute') return false;
+    if (only && pm !== only && !(only === 'yarn' && pm === 'yarn-berry')) return false;
+    return true;
+  };
+  const outOfScope = [];
+  const optionalUnmeasured = [];
+
+  /*
+   * Fail closed when nothing was exercised. Scoping the run narrows what coverage it can claim; it must
+   * never be able to claim coverage of nothing. Every earlier version of this failure was a false pass
+   * (an unmeasured manager reading as clean), so the empty case gets its own explicit refusal rather than
+   * falling through a loop that happens to find no disagreement.
+   */
+  if (measured.size === 0) {
+    console.error('\nNo route was exercised by this run, so there is nothing to compare and no claim to make.');
+    console.error(`Scope: ${only ? `--pm=${only}` : 'all managers'}${has('execute-only') ? ', --execute-only' : ''}.`);
+    process.exit(1);
+  }
+
+  for (const [cell, { expect, reason, optional, expect_error: signature }] of Object.entries(expectations.cells)) {
+    if (!measured.has(cell)) {
+      // Berry is optional because `yarn` on PATH can only be one of Yarn's two product lines, so the
+      // second one has to be supplied explicitly. Everything else IN SCOPE and not measured is a hole.
+      if (!inScope(cell)) outOfScope.push(cell);
+      else if (optional) optionalUnmeasured.push(cell);
+      else problems.push(`${cell}: expected ${expect}, but the run did not measure it`);
+      continue;
+    }
+    const result = measured.get(cell);
+    const actual = result.ok ? 'pass' : 'fail';
+    if (actual !== expect) {
+      problems.push(
+        actual === 'pass'
+          ? `${cell}: recorded as a known failure, but it PASSED. If the cause is fixed, update this file and remove the caveat the docs carry for it. Recorded reason: ${reason ?? '(none)'}`
+          : `${cell}: expected pass, but it FAILED. This is a regression in a route the documentation offers.`,
+      );
+      continue;
+    }
+    /*
+     * Agreement on the pass/fail bit is not enough for a cell recorded as a KNOWN FAILURE. "This failed"
+     * and "this failed for the documented reason" are different claims, and only the second one justifies
+     * the caveat the documentation carries. Without this, a fixture that broke before the manager ran
+     * satisfied the expectation, so the gate would have gone green while measuring nothing about the
+     * route — and a genuinely NEW Yarn regression would have been absorbed by the old one's record.
+     */
+    if (expect === 'fail') {
+      if (!signature) {
+        problems.push(`${cell}: recorded as a known failure with no \`expect_error\`. Measure the failure, record the diagnostic it actually prints, and add it — otherwise this cell accepts any error at all, including one that has nothing to do with the documented cause.`);
+      } else if (!(result.output ?? '').includes(signature)) {
+        problems.push(`${cell}: failed as recorded, but NOT with the recorded failure. The output does not contain ${JSON.stringify(signature)}, so this is some other error and is no evidence that the documented failure still holds. Either the environment broke before the route was exercised, or this is a new regression wearing the old one's record.\n      WHAT IT ACTUALLY PRINTED: ${tailOf(result.output, 12)}\n      Recorded reason: ${reason ?? '(none)'}`);
+      }
+    }
+  }
+  for (const cell of measured.keys()) {
+    if (!(cell in expectations.cells)) problems.push(`${cell}: measured, but no expectation is recorded for it`);
+  }
+
+  /*
+   * Count what was actually compared, not the total minus whatever this code remembered to subtract. The
+   * subtraction had no term for an IN-SCOPE optional cell that no binary was supplied for: with no Berry
+   * binary — which is every CI run — eight cells were compared and the summary still read
+   * `Checked 10 of 10`. A coverage number that counts cells nobody measured is exactly the verification
+   * inflation this gate exists to prevent, so it is derived from `measured` and nothing else. An
+   * unmeasured optional cell is reported on its own line; it still does not fail the gate.
+   */
+  const total = Object.keys(expectations.cells).length;
+  const checked = Object.keys(expectations.cells).filter((cell) => measured.has(cell)).length;
+  console.log(`\nChecked ${checked} of ${total} cell(s) against expectations measured ${expectations.measured}.`);
+  if (optionalUnmeasured.length) {
+    console.log(`${optionalUnmeasured.length} optional cell(s) in scope were NOT measured, so this run claims nothing about them: ${optionalUnmeasured.join(', ')}.`);
+  }
+  if (outOfScope.length) {
+    console.log(`SCOPED RUN — ${outOfScope.length} cell(s) outside this run's scope were NOT checked: ${outOfScope.join(', ')}.`);
+    console.log('This run does not establish coverage of the documented routes. CI runs unscoped, where every');
+    console.log('non-optional cell is required.');
+  }
+  if (problems.length) {
+    /*
+     * Printed on stdout as well as stderr. The two streams are captured separately by some log readers,
+     * and a gate whose exit code is visible while its reason is not is a gate that reports "something is
+     * wrong" — which is the least useful true statement it could make. Measured: a CI job failed with the
+     * summary readable and this block absent, costing a whole verification round to recover.
+     */
+    const header = `\n${problems.length} cell(s) do not match:`;
+    console.log(header);
+    for (const p of problems) console.log(`  ${p}`);
+    console.error(header);
+    for (const p of problems) console.error(`  ${p}`);
+    process.exit(1);
+  }
+  console.log(checked < total
+    ? 'Every cell this run checked matches what was measured, including the failures that are known and documented.'
+    : 'Every cell matches what was measured, including the failures that are known and documented.');
+  process.exit(0);
+}
+
+/*
+ * Outside --check too. A manager that is not installed removes its cells from `results` rather than
+ * failing any of them, so without this the script printed "Every advertised route was exercised on this
+ * machine" and exited 0 having measured nothing — a false pass, and a regression on the raw ENOENT crash
+ * it replaced. The sentence is the claim that matters here, and it must not be printable when a
+ * documented manager was never run.
+ */
 const failures = results.filter((r) => !r.ok);
-if (failures.length) {
-  console.error(`\n${failures.length} cell(s) failed. The documentation must not offer a route this says is broken.`);
+const exercised = results.filter((r) => r.route !== 'both');
+if (failures.length || notInstalled.length || exercised.length === 0) {
+  if (exercised.length === 0) {
+    console.error('\nNo route was exercised by this run, so it cannot speak for any documented route.');
+  }
+  if (notInstalled.length) {
+    console.error(`\n${notInstalled.length} documented package manager(s) are not installed here: ${notInstalled.join(', ')}.`);
+    console.error('No route was exercised for them, so this run cannot speak for the documentation.');
+  }
+  if (failures.length) {
+    console.error(`\n${failures.length} cell(s) failed. The documentation must not offer a route this says is broken.`);
+    console.error('If a failure is known and documented, run with --check, which compares against pm-matrix-expectations.json.');
+  }
   process.exit(1);
 }
 console.log('\nEvery advertised route was exercised on this machine.');
