@@ -333,7 +333,15 @@ export function sanitizeAttributionProps(bag: Record<string, unknown>): void {
 const SESSION_KEY = "kx_analytics_session_v1";
 const FIRST_TOUCH_KEY = "kx_analytics_first_touch_v1";
 const TRAFFIC_KEY = "kx_analytics_traffic_v1";
-const INTERNAL_KEY = "kx_analytics_internal_v1";
+const INTERNAL_KEY = "kx_analytics_internal_v2";
+/*
+ * `internal` used to be DEVICE-scoped, in `localStorage` under `kx_analytics_internal_v1`, so a new browser session
+ * inherited the classification. IA-5.21 §4.1 settles it as SESSION-scoped instead, so the mark now lives in
+ * `sessionStorage` under a new key. The old key is actively deleted the first time this module runs in a browser
+ * that still carries it: leaving it would be a persistent marker nothing reads any more, and the marker is meant to
+ * be reversible and to hold no durable identifier.
+ */
+const LEGACY_INTERNAL_DEVICE_KEY = "kx_analytics_internal_v1";
 
 type Where = "session" | "local";
 
@@ -402,19 +410,37 @@ function diagnosticMark(search: string): boolean {
   return memoryMark;
 }
 
-/** The device mark for this page load when `localStorage` is blocked; a full reload forgets it. */
+/** The session mark for this page load when `sessionStorage` is blocked; a full reload forgets it. */
 let memoryInternal = false;
 
 /**
- * `?kx_traffic=internal` marks this browser, `?kx_traffic=clear` unmarks it (and the tab's diagnostic mark, in
- * `diagnosticMark`), anything else leaves it as it is. Returns whether the browser is marked.
+ * Delete the device-scoped key the marker used before IA-5.21 §4.1. Nothing reads it any more, so a browser that
+ * still carries it would be holding a durable marker for no purpose. Best effort: storage may be blocked or throw.
+ */
+function dropLegacyInternalDeviceMark(): void {
+  try {
+    store("local")?.removeItem(LEGACY_INTERNAL_DEVICE_KEY);
+  } catch {
+    // nothing to do: the stale key is unreachable, and it is not read on any path
+  }
+}
+
+/**
+ * `?kx_traffic=internal` marks THIS SESSION, `?kx_traffic=clear` unmarks it (and the tab's diagnostic mark, in
+ * `diagnosticMark`), anything else leaves it as it is. Returns whether the session is marked.
+ *
+ * Session-scoped, per IA-5.21 §4.1: the mark lives in `sessionStorage`, so it survives client-side navigation and
+ * a reload within the tab, and a new independent browser session does NOT inherit it (§4.2.5). It is an exclusion
+ * HINT, never proof of identity — anyone can append the parameter, and nothing here authenticates or identifies
+ * anyone. Marking is explicit and opt-in, and `?kx_traffic=clear` reverses it.
  */
 function internalMark(search: string): boolean {
   const requested = new URLSearchParams(search).get("kx_traffic");
   if (requested === INTERNAL_TRAFFIC_TYPE) memoryInternal = true;
   else if (requested === "clear") memoryInternal = false;
+  dropLegacyInternalDeviceMark();
   try {
-    const s = store("local");
+    const s = store("session");
     if (requested === INTERNAL_TRAFFIC_TYPE) s?.setItem(INTERNAL_KEY, INTERNAL_TRAFFIC_TYPE);
     else if (requested === "clear") s?.removeItem(INTERNAL_KEY);
     if (s) return s.getItem(INTERNAL_KEY) === INTERNAL_TRAFFIC_TYPE;
@@ -424,7 +450,7 @@ function internalMark(search: string): boolean {
   return memoryInternal;
 }
 
-/** This page load's traffic type: diagnostic (tab) wins over internal (browser); genuine traffic has none. */
+/** This page load's traffic type: diagnostic (tab) wins over internal (session); genuine traffic has none. */
 function trafficType(search: string): typeof DIAGNOSTIC_TRAFFIC_TYPE | typeof INTERNAL_TRAFFIC_TYPE | null {
   // both marks are applied first, so `?kx_traffic=clear` clears both in one visit
   const diagnostic = diagnosticMark(search);
@@ -433,10 +459,10 @@ function trafficType(search: string): typeof DIAGNOSTIC_TRAFFIC_TYPE | typeof IN
 }
 
 /**
- * Whether this browser is marked as internal, applying `?kx_traffic=` from the current URL first. For
+ * Whether this SESSION is marked as internal, applying `?kx_traffic=` from the current URL first. For
  * analytics-vercel.ts, which drops such traffic for the same reason it drops a diagnostic tab.
  */
-export function isInternalBrowser(search: string = typeof window === "undefined" ? "" : window.location.search): boolean {
+export function isInternalSession(search: string = typeof window === "undefined" ? "" : window.location.search): boolean {
   return internalMark(search);
 }
 
