@@ -3691,6 +3691,24 @@
         "block": "editor-toolbar",
         "reason": "A write/preview switch and formatting marks. The closest rows (CodeEditorShell, CommentComposer) describe a code editor and a comment thread, which this toolbar is not on its own."
       }
+    ],
+    "unresolvedDependencies": [
+      {
+        "dependency": "`<time>`",
+        "reason": "An HTML element, not a capability, component or block. Cited by FlightCard and SLAIndicator to mean \"renders a machine-readable timestamp\", which is a requirement on those rows rather than a dependency on something the roadmap tracks. Needs a decision: move it into each row's notes, or introduce a real row for relative/absolute time display."
+      },
+      {
+        "dependency": "Toolbar",
+        "reason": "No Toolbar component or row exists. DocumentViewer shell's own parts include DocumentToolbar, so this may have meant a generic toolbar primitive that was never built, or may be a stale reference to that part. Needs a decision: add the primitive, point it at DocumentToolbar, or drop it."
+      },
+      {
+        "dependency": "DeviceHealthSummary",
+        "reason": "Named by DeviceMaintenance and defined nowhere — no row, part, component or block carries the name. Most likely a planned IoT capability that was never given a row of its own. Needs a decision: add the row, or correct the reference."
+      },
+      {
+        "dependency": "—",
+        "reason": "A placeholder, not a name: an em dash standing for \"unknown\", carried by AmountDisplay, SignaturePad and DependencyGraph. It is the quiet kind of wrong, because it passes every shape check while saying nothing. The fix is an empty dependsOn array, which states the same thing honestly; it is registered rather than edited here so that the correction is a deliberate change to the data and not a side effect of adding this gate."
+      }
     ]
   }
 }
