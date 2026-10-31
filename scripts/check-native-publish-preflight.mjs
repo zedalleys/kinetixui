@@ -61,6 +61,9 @@ const NEGATIVES = {
   // each of these before the per-command classification and the `:-false` rejection went in.
   "flutter-publish-masked-by-trailing-comment": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          flutter pub publish --force$/m, to: '$1          flutter pub publish --force # --dry-run already ran above', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
   "flutter-dry-run-defaults-to-false": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          mkdir -p "\$HOME\/\.config\/dart"$/m, to: '$1          if [ "${DRY_RUN:-false}" != "false" ]; then exit 0; fi\n          mkdir -p "$HOME/.config/dart"', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "flutter-dry-run-default-computed": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          mkdir -p "\$HOME\/\.config\/dart"$/m, to: '$1          if [ "${DRY_RUN:-$(printf false)}" != "false" ]; then exit 0; fi\n          mkdir -p "$HOME/.config/dart"', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "flutter-step-condition-only-in-the-script": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          mkdir -p "\$HOME\/\.config\/dart"$/m, to: '$1          cat >/dev/null <<\'NOTE\'\n          if: ${{ inputs.dry_run == false }}\n          NOTE\n          mkdir -p "$HOME/.config/dart"', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "flutter-publish-hidden-in-a-substitution": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          flutter pub publish --force$/m, to: '$1          echo "--dry-run output: $(flutter pub publish --force)"', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
   "swiftui-publish-always-live": { file: ".github/workflows/publish-swiftui.yml", from: /^      dry_run:\n(?:        .*\n)+/m, to: "", breaks: "WF-DRY-RUN-DEFAULT" },
   "compose-publish-unserialised": { file: ".github/workflows/publish-compose.yml", from: /^concurrency:\n(?:  .*\n)+/m, to: "", breaks: "WF-CONCURRENCY" },
   "flutter-publish-skips-tests": { file: ".github/workflows/publish-flutter.yml", from: "flutter test", to: "flutter --version" , breaks: "WF-TESTS-BEFORE-PUBLISH" },
@@ -435,8 +438,30 @@ const stripShellComment = (line) => {
 };
 
 /**
- * A step's shell commands, with comments removed and backslash continuations joined, so that a
- * `--dry-run` flag is read against the command it actually belongs to.
+ * The commands inside `$(…)` and backticks, plus what is left of the text once they are lifted out.
+ *
+ * A substitution runs its own command, so its flags belong to it and not to the command that quotes
+ * it. `echo "--dry-run output: $(flutter pub publish --force)"` is a live publish; read as one
+ * string it looks like a rehearsal, because the outer label carries `--dry-run` while the inner
+ * command does the publishing. Innermost first, and the lifted text is replaced by a space so the
+ * outer command no longer claims the inner one's words.
+ */
+const liftSubstitutions = (text) => {
+  const lifted = [];
+  let rest = text;
+  for (let guard = 0; guard < 64; guard += 1) {
+    const match = /\$\(([^()`]*)\)|`([^`]*)`/.exec(rest);
+    if (!match) break;
+    lifted.push(match[1] ?? match[2]);
+    rest = `${rest.slice(0, match.index)} ${rest.slice(match.index + match[0].length)}`;
+  }
+  return [...lifted, rest];
+};
+
+/**
+ * A step's shell commands, with comments removed, backslash continuations joined and command
+ * substitutions lifted out, so that a `--dry-run` flag is read against the command it actually
+ * belongs to.
  *
  * Classifying per physical line was wrong in both directions, and the dangerous direction is the
  * reason this exists: `flutter pub publish --force # --dry-run already ran above` is a live publish
@@ -444,39 +469,69 @@ const stripShellComment = (line) => {
  * problem rather than a safety one — a rehearsal split over a continuation would have been read as a
  * publish — and a gate that fails on a correct file is a gate that gets deleted.
  */
-const shellCommands = (step) =>
+const shellText = (step) =>
   step
     .replace(/\\\n[ \t]*/g, " ")
     .split("\n")
-    .flatMap((line) => stripShellComment(line).split(/;|&&|\|\|/))
+    .map((line) => stripShellComment(line))
+    .join("\n");
+
+const shellCommands = (step) =>
+  shellText(step)
+    .split("\n")
+    .flatMap((line) => liftSubstitutions(line))
+    .flatMap((command) => command.split(/;|&&|\|\||\|/))
     .map((command) => command.trim())
     .filter(Boolean);
 
 /**
- * `${DRY_RUN:-false}` reads as a fail-closed comparison and is not one: the default makes
- * `[ "${DRY_RUN:-false}" != "false" ]` false for an unset *and* an empty value, so a guard built on
- * it lets through exactly the two values this check exists to stop.
+ * Any mention of the variable at all, used only on the rejection paths.
  */
-const DRY_RUN_DEFAULTS_TO_FALSE = /\$\{DRY_RUN:-\s*"?false"?\s*\}/;
-const DRY_RUN_REF = `"?\\$\\{?DRY_RUN(?::-[^}]*)?\\}?"?`;
+const DRY_RUN_REF = `"?\\$\\{?DRY_RUN(?::[-=][^}]*)?\\}?"?`;
+
+/**
+ * The only two expansions a fail-closed guard may be built from: no default, or an empty one.
+ *
+ * Accepting a default was the mistake. `${DRY_RUN:-false}` publishes on unset and empty, which are
+ * exactly the values this check exists to stop, and once any default is allowed the checker has to
+ * decide what an arbitrary word resolves to — `${DRY_RUN:-$(printf false)}` is the same hole wearing
+ * a substitution. So the accepted set is closed rather than filtered: `$DRY_RUN`, `${DRY_RUN}` and
+ * `${DRY_RUN:-}`. `${DRY_RUN:-}` is never worse than a defaulted form, so nothing correct is lost.
+ */
+const DRY_RUN_REF_UNDEFAULTED = `"?\\$(?:DRY_RUN\\b|\\{DRY_RUN(?::-[ \\t]*)?\\})"?`;
+const DRY_RUN_COMPARED_WITH_A_DEFAULT = /"?\$\{DRY_RUN:[-=][ \t]*[^}\s][^}]*\}"?\s*(?:!=|={1,2})/;
+
 const comparesDryRunWithTrue = (code) => new RegExp(`${DRY_RUN_REF}\\s*={1,2}\\s*"?true"?`).test(code);
 const requiresDryRunToBeFalse = (code) =>
-  new RegExp(`${DRY_RUN_REF}\\s*!=\\s*"?false"?`).test(code) && !DRY_RUN_DEFAULTS_TO_FALSE.test(code);
-const STEP_IF_REQUIRES_FALSE = /^\s*if:\s*\$\{\{\s*inputs\.dry_run\s*==\s*false\s*\}\}\s*$/m;
+  new RegExp(`${DRY_RUN_REF_UNDEFAULTED}\\s*!=\\s*"?false"?`).test(code);
+
+/**
+ * The step-level condition, matched only where GitHub Actions would read one: a `if:` key at the
+ * step's own indentation, in the mapping above the step's `run:` block.
+ *
+ * Searching the whole step text accepted an `if: ${{ inputs.dry_run == false }}` written *inside*
+ * the script — in a heredoc, say — where Actions interpolates the expression into the shell's input
+ * and gates nothing at all.
+ */
+const stepMapping = (step) => step.split(/\n(?=        run:)/)[0];
+const STEP_IF_REQUIRES_FALSE = /^        if: \$\{\{\s*inputs\.dry_run\s*==\s*false\s*\}\}[ \t]*$/m;
 
 const polarity = [];
 for (const workflow of workflows) {
   for (const step of workflow.text.split(/\n(?=      - )/)) {
     const commands = shellCommands(step);
     if (!commands.some((command) => SIDE_EFFECT.test(command) && !/--dry-run\b/.test(command))) continue;
-    const code = commands.join("\n");
+    // The guards are read against the text as written, not against the lifted commands: lifting the
+    // substitution out of `${DRY_RUN:-$(printf false)}` would leave `${DRY_RUN:- }`, which reads as
+    // the accepted empty default.
+    const code = shellText(step);
     const name = (step.match(/^      - name: (.*)$/m)?.[1] ?? "an unnamed step").trim();
     const where = `${workflow.path} → "${name}"`;
-    const gatedByStepCondition = STEP_IF_REQUIRES_FALSE.test(step);
+    const gatedByStepCondition = STEP_IF_REQUIRES_FALSE.test(stepMapping(step));
     if (comparesDryRunWithTrue(code)) {
       polarity.push(`${where} decides a live publish by comparing dry_run with \`true\`, so every other value — empty, unset, \`False\`, \`yes\` — reaches the publish`);
-    } else if (!gatedByStepCondition && DRY_RUN_DEFAULTS_TO_FALSE.test(code)) {
-      polarity.push(`${where} guards the publish with a \`\${DRY_RUN:-false}\` expansion, which resolves to \`false\` when the variable is unset or empty — so the guard reads as fail-closed and publishes on exactly the two values it is supposed to stop. Drop the default: \`\${DRY_RUN:-}\``);
+    } else if (!gatedByStepCondition && DRY_RUN_COMPARED_WITH_A_DEFAULT.test(code)) {
+      polarity.push(`${where} guards the publish with a \`\${DRY_RUN:-…}\` expansion that supplies a default. The default is substituted before the comparison, so the guard is only as fail-closed as a value this checker cannot evaluate — and the obvious ones are not: \`\${DRY_RUN:-false}\` and \`\${DRY_RUN:-$(printf false)}\` both publish when the variable is unset or empty, which are exactly the two values this check exists to stop. Drop the default: \`\${DRY_RUN:-}\``);
     } else if (!gatedByStepCondition && !requiresDryRunToBeFalse(code)) {
       polarity.push(`${where} reaches a publish side effect with no fail-closed dry-run guard: it needs either \`if: \${{ inputs.dry_run == false }}\` on the step or a \`[ "\${DRY_RUN:-}" != "false" ]\` guard that exits before the publish`);
     } else if (gatedByStepCondition && workflow.path.endsWith("publish-swiftui.yml")) {
