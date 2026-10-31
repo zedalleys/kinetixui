@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { it } from "node:test";
-import { noteErrors, linkErrors, allNoteErrors } from "../check-release-note.mjs";
+import { noteErrors, linkErrors, allNoteErrors, manifestSlugs } from "../check-release-note.mjs";
 import { offSite } from "../links.mjs";
 
 /** A note that is fit to be injected, so each case below changes exactly one thing. */
@@ -194,7 +194,10 @@ it("requires group and slugs on every newComponents entry", () => {
   assert.match(errs((n) => (n.newComponents = ["x"]))[0], /must be an object/);
   assert.match(errs((n) => (n.newComponents = [{ group: "Forms", slugs: [7] }]))[0], /slugs\[0\]/);
   assert.equal(errs((n) => (n.newComponents = [{ slugs: ["input"] }])).length, 1);
-  assert.deepEqual(errs((n) => (n.newComponents = [{ group: "Forms", slugs: ["input"] }])), []);
+  assert.deepEqual(
+    noteErrors({ ...good(), newComponents: [{ group: "Forms", slugs: ["input"] }] }, "0.27.0", "r", new Set(["input"])),
+    [],
+  );
 });
 
 it("reports a malformed change element instead of throwing on it", () => {
@@ -212,7 +215,7 @@ it("still accepts a note using every optional field correctly", () => {
     errs((n) => {
       n.breaking = ["a breaking change"];
       n.limitations = ["what it does not do"];
-      n.newComponents = [{ group: "Forms", slugs: ["input", "select"] }];
+      n.newComponents = [{ group: "Forms", slugs: [] }];
       n.migration = "what to do about it";
       n.changes[0].href = "/docs/forms#input";
     }),
@@ -259,4 +262,44 @@ it("rejects a padded or empty href", () => {
 it("carries the href rules into a note's changes", () => {
   assert.deepEqual(errs((n) => (n.changes[0].href = "mailto:security@example.com")), []);
   assert.equal(errs((n) => (n.changes[0].href = "docs/motion")).length, 1);
+});
+
+// --- component slugs are real -------------------------------------------------------------------
+//
+// check-releases.mjs rule 6 rejects a newComponents slug absent from components.manifest.json, and
+// version-release-meta.mjs:27 runs that script right after generating releases.ts — so a misspelled
+// slug fails Version PR *generation*, after the merge. Neither PR-side gate saw it: measured on a
+// notes-only tree carrying slugs: ["date-pikcer"], both check:release-note and check:releases
+// reported ok. Defensive rather than an observed save: no note on main uses newComponents today.
+
+const withSlugs = (slugs, known) =>
+  noteErrors({ ...good(), newComponents: [{ group: "Forms", slugs }] }, "0.27.0", "r", known);
+
+it("rejects a newComponents slug the manifest does not declare", () => {
+  const known = new Set(["date-picker", "input"]);
+  assert.deepEqual(withSlugs(["date-picker"], known), []);
+  assert.equal(withSlugs(["date-pikcer"], known).length, 1);
+  assert.match(withSlugs(["date-pikcer"], known)[0], /components\.manifest\.json/);
+  // the index names the offender, so a long list is actionable
+  assert.match(withSlugs(["input", "date-pikcer"], known)[1 - 1] ?? "", /slugs\[1\]/);
+});
+
+it("fails rather than skips when the manifest cannot be read", () => {
+  // A gate that cannot reach its input has to fail. Passing here would make the check vanish
+  // silently on any tree where the manifest moved or was unparseable.
+  const e = withSlugs(["date-picker"], null);
+  assert.equal(e.length, 1);
+  assert.match(e[0], /could not be read/);
+  assert.equal(manifestSlugs(() => null), null);
+  assert.equal(manifestSlugs(() => "{ not json"), null);
+  assert.equal(manifestSlugs(() => '{"components": "not an object"}'), null);
+});
+
+it("reads the real manifest, so the fail-closed path is not silently active", () => {
+  // If this ever returns null in CI, every slug error above becomes a "could not be read" error and
+  // the real check is gone. Asserting it here is what makes the rest of these cases meaningful.
+  const known = manifestSlugs();
+  assert.ok(known instanceof Set, "components.manifest.json was not readable from the repo root");
+  assert.ok(known.size > 50, `manifest declared only ${known.size} slugs, which is not a real read`);
+  assert.ok(known.has("date-picker"));
 });

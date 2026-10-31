@@ -92,8 +92,31 @@ export function projectedCore({ show, list }) {
   return planned.get(CORE);
 }
 
-/** Everything wrong with a curated note, as a list. Empty means it is fit to be injected. */
-export function noteErrors(note, version, rel) {
+/** The component slugs `components.manifest.json` declares, or null when it cannot be read.
+ *
+ *  `check-releases.mjs` rule 6 rejects a `newComponents` slug that is not in the manifest, and
+ *  `version-release-meta.mjs:27` runs that script immediately after generating `releases.ts` — so a
+ *  misspelled slug fails Version PR *generation*, after the merge, which is the class of failure
+ *  this file exists to move earlier. Neither PR-side gate sees it today: `check:releases` reads the
+ *  already-activated history, where a pending note does not appear, and `check:release-links` looks
+ *  at link destinations. Measured on a notes-only tree carrying `slugs: ["date-pikcer"]` — both
+ *  reported ok. */
+export function manifestSlugs(read = readTree) {
+  const text = read("components.manifest.json");
+  if (text === null) return null;
+  try {
+    const components = JSON.parse(text).components;
+    return components && typeof components === "object" ? new Set(Object.keys(components)) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Everything wrong with a curated note, as a list. Empty means it is fit to be injected.
+ *
+ *  `known` is the manifest's slug set, injected so this stays a pure function. `null` is reported
+ *  rather than skipped: a gate that cannot reach its input has to fail, not pass. */
+export function noteErrors(note, version, rel, known = manifestSlugs()) {
   const e = [];
   const at = (what) => `${rel}: ${what}`;
   if (note.version !== version) e.push(at(`describes version "${note.version}", not ${version} — version-release-meta.mjs asserts these match and throws after the merge`));
@@ -145,7 +168,15 @@ export function noteErrors(note, version, rel) {
           continue;
         }
         for (const [j, slug] of g.slugs.entries()) {
-          if (typeof slug !== "string") e.push(at(`${where}.slugs[${j}] must be a string, not ${JSON.stringify(slug)}`));
+          if (typeof slug !== "string") {
+            e.push(at(`${where}.slugs[${j}] must be a string, not ${JSON.stringify(slug)}`));
+            continue;
+          }
+          if (known === null) {
+            e.push(at(`${where}.slugs[${j}]: components.manifest.json could not be read, so "${slug}" cannot be checked against it`));
+          } else if (!known.has(slug)) {
+            e.push(at(`${where}.slugs[${j}]: "${slug}" is not in components.manifest.json — check-releases.mjs rejects it, and version-release-meta.mjs runs that during Version PR generation`));
+          }
         }
       }
     }
