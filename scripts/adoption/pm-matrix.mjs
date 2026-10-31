@@ -74,6 +74,28 @@ const yarnMajor = () => Number(execFileSync('yarn', ['--version'], { encoding: '
  */
 const version = (bin) => execFileSync(bin, ['--version'], { cwd: tmpdir(), encoding: 'utf8' }).trim();
 
+/*
+ * The version this tree expects the CLI to report. The execute route fetches `@kinetixui/cli` from the
+ * REGISTRY, so what comes back is whatever is published — which is not automatically what this tree
+ * says. Until now the cell only tested that the output had the SHAPE of a version
+ * (`/^\d+\.\d+\.\d+/`) and never read the manifest at all, so an `npx` resolving a stale release
+ * passed: measured with a shim reporting `0.0.1` against a manifest of `0.27.0`, the cell printed
+ * PASS and exited 0. The PR body nevertheless claimed this cell "asserts the CLI reports the
+ * repository's own version, read from the manifest rather than a literal". That claim was false, and
+ * it was repeated as evidence that the 0.26.1 -> 0.27.0 bump had been checked. It had not: the two
+ * numbers agreed by coincidence, because npm serves the newest publication.
+ *
+ * So the comparison is now made rather than described. It is strict equality, deliberately:
+ * a mismatch in EITHER direction is worth a red cell. Registry newer than the tree means the tree is
+ * stale; tree newer than the registry means this version has not published yet, which is a real and
+ * legitimate state during a Version PR — and the right place to record a legitimate failure is the
+ * expectation file (`pm-matrix-expectations.json`, added by #482), whose whole purpose is to carry a
+ * known failure with its named diagnostic. Guessing from the direction or the size of the gap would
+ * be a heuristic, and a heuristic here is how a false pass gets back in.
+ */
+const expectedCliVersion = () =>
+  JSON.parse(readFileSync(join(root, 'packages/cli/package.json'), 'utf8')).version;
+
 /* ------------------------------------------------------------------ negative controls */
 
 /**
@@ -89,6 +111,7 @@ const NEGATIVES = {
   'bare-bin-name': 'the bin name `kinetixui` is not an installable package (checked, never executed)',
   'yarn-classic-dlx': 'yarn dlx under Yarn Classic must fail, which is what the docs caveat claims',
   'bare-bin-lookup-failure': 'an unreachable registry must make bare-bin-name report NOT MEASURED, never a pass',
+  'stale-cli-version': 'an execute route resolving a CLI version this tree does not declare must fail',
   'berry-unmeasured-pass': 'an unmeasured yarn-berry must not read as a pass, nor let the run claim every route was exercised',
 };
 
@@ -127,8 +150,15 @@ function checkExecute(pm) {
       : `yarn ${version('yarn')} ran "yarn dlx" and the docs say it cannot: ${out}`);
     return;
   }
-  const ok = !failed && /^\d+\.\d+\.\d+/.test(out);
-  record('execute', pm, ok, ok ? `${bin} ${args.join(' ')} --version -> ${out}` : out);
+  if (failed) {
+    record('execute', pm, false, out);
+    return;
+  }
+  const want = expectedCliVersion();
+  const ok = out === want;
+  record('execute', pm, ok, ok
+    ? `${bin} ${args.join(' ')} --version -> ${out}, which is what packages/cli/package.json declares`
+    : `${bin} ${args.join(' ')} --version -> ${JSON.stringify(out)}, but this tree declares ${want} in packages/cli/package.json`);
 }
 
 /* ------------------------------------------------------------------ the install route */
@@ -162,8 +192,17 @@ function checkBerryExecute(bin) {
     out = `${err.message}`.split('\n')[0];
   }
   rmSync(fixture, { recursive: true, force: true });
-  const ok = !failed && /\d+\.\d+\.\d+/.test(out);
-  record('execute', 'yarn-berry', ok, ok ? `yarn ${v} dlx @kinetixui/cli --version -> ${out.split('\n').pop()}` : out);
+  if (failed) {
+    record('execute', 'yarn-berry', false, out);
+    return;
+  }
+  // Berry's dlx prints progress before the version, so the version is the last line rather than the whole output
+  const reported = out.split('\n').pop().trim();
+  const want = expectedCliVersion();
+  const ok = reported === want;
+  record('execute', 'yarn-berry', ok, ok
+    ? `yarn ${v} dlx @kinetixui/cli --version -> ${reported}, which is what packages/cli/package.json declares`
+    : `yarn ${v} dlx @kinetixui/cli --version -> ${JSON.stringify(reported)}, but this tree declares ${want} in packages/cli/package.json`);
 }
 
 /* ------------------------------------------------------------------ run */
@@ -247,6 +286,40 @@ if (negative) {
    * is not hypothetical: it is exactly how `berry-unmeasured-pass` first failed to test anything. Hence the
    * exact-occurrence guard.
    */
+  /*
+   * An environment control rather than a source mutation: it puts an `npx` on PATH that reports a
+   * version this tree does not declare, and requires the execute cell to FAIL and to name both
+   * numbers. Before the manifest comparison existed this shim passed at exit 0, which is how the
+   * cell came to be described as checking something it never checked.
+   */
+  if (negative === 'stale-cli-version') {
+    const want = expectedCliVersion();
+    const WRONG = '0.0.1';
+    if (WRONG === want) {
+      console.error(`FAIL  negative stale-cli-version: the tree declares ${WRONG}, the same version this control uses as its wrong one, so the control would prove nothing. Refusing.`);
+      process.exit(1);
+    }
+    const dir = mkdtempSync(join(tmpdir(), 'kinetixui-neg-stalecli-'));
+    writeFileSync(join(dir, 'npx'), `#!/bin/sh\necho "${WRONG}"\n`, { mode: 0o755 });
+    const run = spawnSync(process.execPath, [fileURLToPath(import.meta.url), '--pm=npm', '--execute-only'], {
+      encoding: 'utf8',
+      env: { ...process.env, PATH: `${dir}:${process.env.PATH}` },
+    });
+    rmSync(dir, { recursive: true, force: true });
+    const out = `${run.stdout || ''}${run.stderr || ''}`;
+    const checks = [
+      ['a CLI version the tree does not declare must not pass', !/^PASS {2}execute {2}npm/m.test(out)],
+      ['the cell must be recorded as FAILED', /FAIL {2}execute {2}npm/.test(out)],
+      ['it must name the version the CLI reported', out.includes(WRONG)],
+      ['it must name the version the manifest declares', out.includes(want)],
+      ['the run must not exit 0', run.status !== 0],
+    ];
+    for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
+    const ok = checks.every(([, held]) => held);
+    console.log(ok ? `PASS  negative stale-cli-version: a CLI reporting ${WRONG} against a manifest of ${want} fails the cell` : 'FAIL  negative stale-cli-version');
+    if (!ok) console.error(out);
+    process.exit(ok ? 0 : 1);
+  }
   if (negative === 'bare-bin-lookup-failure') {
     const REAL = `fetch('https://registry.` + `npmjs.org/kinetixui'`;
     const DEAD = `fetch('https://registry.` + `invalid.example/kinetixui'`;
