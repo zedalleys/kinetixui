@@ -103,6 +103,12 @@ export function noteErrors(note, version, rel) {
 
   for (const [i, c] of (Array.isArray(note.changes) ? note.changes : []).entries()) {
     const where = `${rel}: changes[${i}]`;
+    // Report a non-object element rather than throwing on it: `"body" in 42` is a TypeError, and a
+    // gate that dies with a stack trace naming its own source tells the author nothing about theirs.
+    if (c === null || typeof c !== "object" || Array.isArray(c)) {
+      e.push(`${where}: must be an object, not ${Array.isArray(c) ? "an array" : JSON.stringify(c)}`);
+      continue;
+    }
     if (typeof c?.title !== "string" || c.title.trim() === "") e.push(`${where}: \`title\` is required`);
     if ("body" in c && typeof c.body !== "string") e.push(`${where}: \`body\` must be a string`);
     if ("kind" in c && !KINDS.includes(c.kind)) e.push(`${where}: kind "${c.kind}" is not one of ${KINDS.join(", ")}`);
@@ -111,9 +117,39 @@ export function noteErrors(note, version, rel) {
     }
     if ("href" in c) e.push(...linkErrors(c.href, `${where}: href`));
   }
-  for (const key of ["limitations", "newComponents"]) {
-    if (key in note && !Array.isArray(note[key])) e.push(at(`\`${key}\`, when present, must be an array`));
+  // `Release` in apps/web/src/lib/releases.ts types these as `string[]` and
+  // `{ group: string; slugs: string[] }[]`, and version-release-meta.mjs copies them verbatim, so a
+  // malformed *element* fails the generated TypeScript exactly as a malformed `area` does. Measured:
+  // `breaking: [42]`, `limitations: [{}]` and `newComponents: [{ group: "Forms" }]` each produce
+  // their own `error TS` in releases.ts under the site's own tsconfig.
+  for (const key of ["breaking", "limitations"]) {
+    if (!(key in note) || !Array.isArray(note[key])) continue;
+    for (const [i, v] of note[key].entries()) {
+      if (typeof v !== "string") e.push(at(`\`${key}[${i}]\` must be a string, not ${JSON.stringify(v)} — releases.ts types ${key} as string[]`));
+    }
   }
+  if ("newComponents" in note) {
+    if (!Array.isArray(note.newComponents)) {
+      e.push(at("`newComponents`, when present, must be an array"));
+    } else {
+      for (const [i, g] of note.newComponents.entries()) {
+        const where = `\`newComponents[${i}]\``;
+        if (g === null || typeof g !== "object" || Array.isArray(g)) {
+          e.push(at(`${where} must be an object with \`group\` and \`slugs\``));
+          continue;
+        }
+        if (typeof g.group !== "string" || g.group.trim() === "") e.push(at(`${where}.group must be a non-empty string`));
+        if (!Array.isArray(g.slugs)) {
+          e.push(at(`${where}.slugs is required and must be an array of strings`));
+          continue;
+        }
+        for (const [j, slug] of g.slugs.entries()) {
+          if (typeof slug !== "string") e.push(at(`${where}.slugs[${j}] must be a string, not ${JSON.stringify(slug)}`));
+        }
+      }
+    }
+  }
+  if ("limitations" in note && !Array.isArray(note.limitations)) e.push(at("`limitations`, when present, must be an array"));
   if ("migration" in note && typeof note.migration !== "string") e.push(at("`migration`, when present, must be a string"));
   if ("githubReleaseUrl" in note) {
     const url = note.githubReleaseUrl;

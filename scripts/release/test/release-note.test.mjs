@@ -169,3 +169,52 @@ it("ignores non-JSON entries and an absent directory", () => {
   assert.deepEqual(allNoteErrors(list, read), []);
   assert.deepEqual(allNoteErrors(() => [], () => null), []);
 });
+
+// --- metadata array ELEMENTS, not only the arrays -------------------------------------------------
+//
+// `Release` in apps/web/src/lib/releases.ts types `breaking` and `limitations` as `string[]` and
+// `newComponents` as `{ group: string; slugs: string[] }[]`. version-release-meta.mjs copies them
+// verbatim, so a malformed element fails the generated TypeScript exactly as a bad `area` does.
+// Measured on the real path: splicing `breaking: [42]`, `limitations: [{}]` and
+// `newComponents: [{ group: "Forms" }]` into releases.ts produces three distinct `error TS` under
+// the site's own tsconfig — TS2322, TS2322 and TS2741 — one per value.
+
+it("rejects a non-string element of breaking or limitations", () => {
+  assert.equal(errs((n) => (n.breaking = [42])).length, 1);
+  assert.equal(errs((n) => (n.breaking = [null])).length, 1);
+  assert.equal(errs((n) => (n.limitations = [{}])).length, 1);
+  assert.match(errs((n) => (n.breaking = ["ok", 7]))[0], /breaking\[1\]/);
+  // the outer-shape rules still hold
+  assert.equal(errs((n) => (n.limitations = "not an array")).length, 1);
+});
+
+it("requires group and slugs on every newComponents entry", () => {
+  assert.match(errs((n) => (n.newComponents = [{ group: "Forms" }]))[0], /slugs/);
+  assert.match(errs((n) => (n.newComponents = ["x"]))[0], /must be an object/);
+  assert.match(errs((n) => (n.newComponents = [{ group: "Forms", slugs: [7] }]))[0], /slugs\[0\]/);
+  assert.equal(errs((n) => (n.newComponents = [{ slugs: ["input"] }])).length, 1);
+  assert.deepEqual(errs((n) => (n.newComponents = [{ group: "Forms", slugs: ["input"] }])), []);
+});
+
+it("reports a malformed change element instead of throwing on it", () => {
+  // `"body" in 42` is a TypeError. A gate that dies with a stack trace naming its own source tells
+  // the author nothing about their note, so the element is reported like any other error.
+  for (const bad of [42, null, "a string", ["an", "array"]]) {
+    const e = errs((n) => (n.changes = [bad]));
+    assert.equal(e.length, 1, `${JSON.stringify(bad)} gave ${e.length} errors`);
+    assert.match(e[0], /changes\[0\]/);
+  }
+});
+
+it("still accepts a note using every optional field correctly", () => {
+  assert.deepEqual(
+    errs((n) => {
+      n.breaking = ["a breaking change"];
+      n.limitations = ["what it does not do"];
+      n.newComponents = [{ group: "Forms", slugs: ["input", "select"] }];
+      n.migration = "what to do about it";
+      n.changes[0].href = "/docs/forms#input";
+    }),
+    [],
+  );
+});
