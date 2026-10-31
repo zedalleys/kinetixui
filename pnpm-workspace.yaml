@@ -11,6 +11,15 @@ overrides:
   # arbitrary file read on Windows) is fixed in 0.28.1. API-compatible for
   # vite's use. Drop once vite bumps its esbuild floor.
   "esbuild@<0.28.1": "^0.28.2"
+  # recharts declares react-is as a REQUIRED peer over `^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0`,
+  # and react-is predicates are not version-agnostic: React 19 renamed the element brand to
+  # `react.transitional.element`, and react-is only recognises its own major's brand. react-is 18
+  # beside React 19 therefore returns false from isFragment() for a real Fragment. recharts uses
+  # isFragment() to flatten children before findAllByType(children, Cell), so a Fragment-wrapped
+  # <Cell> is dropped and its fill is silently lost — measured in Chromium. Pin the peer to the
+  # major of the React this repo develops against. scripts/adoption/react-is-agreement.mjs holds it.
+  # Drop once recharts stops detecting Fragments with react-is.
+  "recharts>react-is": "^19.0.0"
 allowBuilds:
   # ng-packagr pulls this in for `--watch`; the library is only ever built one-shot, so its native
   # binary is dead weight and its install script is declined rather than approved.
