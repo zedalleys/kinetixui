@@ -221,12 +221,51 @@ export function noteErrors(note, version, rel, known = manifestSlugs()) {
  *  different spelling, and root-relative is the required spelling for a route on this site.
  *
  *  Nothing here resolves a route to a page: that is `check:release-links`, which needs a built site. */
+/** The schemes a curated release note may carry off-site. An allowlist, not a denylist: an unknown
+ *  scheme is refused, so a destination nobody considered cannot arrive by default.
+ *
+ *  Measured against the real contract before narrowing to this, across all 43 entries of
+ *  `apps/web/src/lib/releases.ts` and all five notes in `release/notes/`: every link is either a
+ *  site-absolute route (26 distinct, some with a `#anchor`) or an `https://github.com/zedalleys/...`
+ *  URL (3). Nothing uses `mailto:`, `tel:`, `http:`, `//host`, a bare `#anchor`, or any other scheme.
+ *  So this refuses nothing the project has ever shipped. It is the compatibility assessment, not an
+ *  assumption. */
+const ALLOWED_SCHEMES = new Set(["https:"]);
+
 export function linkErrors(href, where) {
   if (typeof href !== "string" || href.trim() === "") return [`${where} must be a non-empty string`];
   if (href !== href.trim()) return [`${where}: "${href}" has leading or trailing whitespace`];
+
+  // `//host/path` begins with "/" but is NOT a route here — it is another origin, inheriting the
+  // page's scheme. Tested before this check for exactly that reason: a plain startsWith("/") read it
+  // as a site-absolute route, so a cross-origin destination was classified as local and `offSite`
+  // was never consulted. Measured on the previous policy: `//evil.test/x` was accepted.
+  if (href.startsWith("//")) {
+    return [`${where}: "${href}" is a protocol-relative URL, which points at another origin rather than a route on this site. Write the full https:// URL if that is what you mean.`];
+  }
   if (href.startsWith("/")) return [];
-  if (offSite(href)) return [];
-  return [`${where}: "${href}" is neither a site-absolute route ("/docs/...") nor an off-site destination (an absolute URL, mailto:, tel:, //host/path or #anchor). A relative href resolves against the reader's page, not the site root.`];
+
+  // `offSite` stays the single source of truth for "does this name a route here?" — the question
+  // `check:release-links` asks. This gate then asks a SECOND, different question of the destinations
+  // it says are off-site: is this one permitted in a curated note? Two questions, not two answers to
+  // the same one, so the divergence that made this gate reject a legitimate `mailto:` cannot recur.
+  if (!offSite(href)) {
+    return [`${where}: "${href}" is a relative href, which resolves against the reader's page rather than the site root. Write it as a site-absolute route ("/docs/...").`];
+  }
+
+  const scheme = /^[a-z][a-z0-9+.-]*:/i.exec(href)?.[0].toLowerCase();
+  if (scheme === undefined) {
+    return [`${where}: "${href}" names no scheme and no route. A curated note takes a site-absolute route ("/docs/...") or an ${[...ALLOWED_SCHEMES].join(", ")} URL.`];
+  }
+  if (!ALLOWED_SCHEMES.has(scheme)) {
+    return [`${where}: "${href}" uses the scheme "${scheme}", which a release note may not carry. changelog-view.tsx renders this straight into an <a href>, so "javascript:" and "data:" are executable there and "http:" is not encrypted. Permitted: a site-absolute route ("/docs/...") or ${[...ALLOWED_SCHEMES].join(", ")}.`];
+  }
+  // An allowed scheme still has to be a URL with a host: "https:///x" and "https://" are neither a
+  // route nor a reachable destination.
+  let url;
+  try { url = new URL(href); } catch { return [`${where}: "${href}" is not a parseable URL`]; }
+  if (url.host === "") return [`${where}: "${href}" has no host`];
+  return [];
 }
 
 // ---------------------------------------------------------------------------------------------

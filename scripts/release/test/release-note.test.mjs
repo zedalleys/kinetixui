@@ -232,11 +232,70 @@ it("still accepts a note using every optional field correctly", () => {
 // destinations changelog-view.tsx renders straight into an anchor and check:release-links
 // deliberately leaves alone. This asserts the two agree rather than restating the policy.
 
-it("accepts every destination check:release-links treats as off-site", () => {
-  for (const href of ["https://x.test/a", "http://x.test/a", "mailto:security@example.com", "tel:+15551234", "//cdn.test/a.png", "#anchor"]) {
+// This test USED to assert that every destination `links.mjs` calls off-site is accepted here, and
+// that was the right shape while this gate had no policy of its own. It is now deliberately reversed
+// by owner decision: a curated note may carry only a site-absolute route or an https: URL.
+//
+// The reversal is not a return to the divergence that earlier made this gate reject a legitimate
+// `mailto:`. `offSite` is still the single answer to "does this name a route here?" — the question
+// `check:release-links` asks. This gate asks a second, different question of the off-site ones: may a
+// note carry it? So the two gates still cannot disagree about what they both decide.
+it("asks links.mjs what is off-site, then applies its own narrower policy to those", () => {
+  for (const href of ["https://x.test/a", "http://x.test/a", "mailto:security@example.com", "tel:+15551234", "#anchor"]) {
     assert.ok(offSite(href), `${href} is not off-site by links.mjs, so this case tests nothing`);
-    assert.deepEqual(linkErrors(href, "where"), [], `${href} should be accepted`);
   }
+  // Permitted off-site: https only.
+  assert.deepEqual(linkErrors("https://x.test/a", "where"), []);
+  // Refused, each naming its scheme, though links.mjs calls them all off-site.
+  for (const href of ["http://x.test/a", "mailto:security@example.com", "tel:+15551234", "ftp://x.test/a", "data:text/html,x"]) {
+    const e = linkErrors(href, "where");
+    assert.equal(e.length, 1, `${href} should be refused`);
+    assert.match(e[0], /may not carry/);
+  }
+  // A bare fragment is off-site to links.mjs but names no destination a note can link to.
+  assert.equal(linkErrors("#anchor", "where").length, 1);
+});
+
+// The one that matters most, and the reason an allowlist beats a denylist: these are executable or
+// unencrypted in the anchor `changelog-view.tsx:100,146` renders.
+it("refuses javascript:, data: and http:, and names why", () => {
+  for (const href of ["javascript:alert(1)", "JavaScript:alert(1)", "data:text/html;base64,PHNjcmlwdD4="]) {
+    const e = linkErrors(href, "where");
+    assert.equal(e.length, 1, `${href} must be refused`);
+    assert.match(e[0], /may not carry/);
+  }
+  assert.match(linkErrors("http://x.test/a", "where")[0], /not encrypted/);
+  // An unknown future scheme is refused by default rather than accepted by default.
+  assert.equal(linkErrors("wss://x.test", "where").length, 1);
+});
+
+// A protocol-relative URL begins with "/" but is another origin. The previous policy read it as a
+// site-absolute route on the first branch, so it was classified LOCAL and never reached `offSite`.
+it("refuses a protocol-relative URL instead of reading it as a site route", () => {
+  const e = linkErrors("//evil.test/x", "where");
+  assert.equal(e.length, 1);
+  assert.match(e[0], /protocol-relative/);
+  assert.ok(offSite("//evil.test/x"), "links.mjs calls it off-site; this gate must not call it a route");
+});
+
+// Compatibility, measured rather than asserted: every link the project has ever shipped must pass.
+// This is what makes the narrowing safe to land, and it would fail loudly if the allowlist were cut
+// further without checking.
+it("accepts every link in the shipped notes and in the whole activated history", () => {
+  const notes = new URL("../../../release/notes/", import.meta.url);
+  const hrefs = [];
+  const walk = (o) => {
+    if (Array.isArray(o)) o.forEach(walk);
+    else if (o && typeof o === "object") for (const [k, v] of Object.entries(o)) (k === "href" ? hrefs.push(v) : walk(v));
+  };
+  for (const name of readdirSync(notes).filter((n) => n.endsWith(".json"))) walk(JSON.parse(readFileSync(new URL(name, notes), "utf8")));
+
+  const history = readFileSync(new URL("../../../apps/web/src/lib/releases.ts", import.meta.url), "utf8");
+  for (const m of history.matchAll(/\bhref: "([^"]*)"/g)) hrefs.push(m[1]);
+
+  assert.ok(hrefs.length >= 30, `expected the shipped links to be found, saw ${hrefs.length}`);
+  const refused = hrefs.filter((h) => linkErrors(h, "shipped").length > 0);
+  assert.deepEqual(refused, [], `the narrowed policy refuses links already published:\n${refused.join("\n")}`);
 });
 
 it("accepts a site-absolute route, fragment and all", () => {
@@ -261,8 +320,10 @@ it("rejects a padded or empty href", () => {
 });
 
 it("carries the href rules into a note's changes", () => {
-  assert.deepEqual(errs((n) => (n.changes[0].href = "mailto:security@example.com")), []);
+  assert.deepEqual(errs((n) => (n.changes[0].href = "https://github.com/zedalleys/kinetixui")), []);
+  assert.deepEqual(errs((n) => (n.changes[0].href = "/docs/motion")), []);
   assert.equal(errs((n) => (n.changes[0].href = "docs/motion")).length, 1);
+  assert.equal(errs((n) => (n.changes[0].href = "javascript:alert(1)")).length, 1);
 });
 
 // --- component slugs are real -------------------------------------------------------------------
