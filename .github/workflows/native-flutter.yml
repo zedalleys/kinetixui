@@ -129,7 +129,11 @@ jobs:
             echo "::error::Staging accepted a pubspec whose name is not the published package name. That is a permanent publication under a package nobody meant to create."
             exit 1
           fi
-          grep -q 'does not declare `name: kinetix_ui`' "$RUNNER_TEMP/renamed.log" \
+          # The backticks the message puts around the name are matched with `.` rather than written
+          # literally: a backtick inside double quotes is command substitution, and inside single
+          # quotes shellcheck reports SC2016. The trailing `. Found` keeps this specific to the
+          # refusal rather than matching the typo it quotes back.
+          grep -qE 'does not declare .name: kinetix_ui.\. Found' "$RUNNER_TEMP/renamed.log" \
             || { echo '::error::Staging failed for some other reason, so this control proves nothing.'; cat "$RUNNER_TEMP/renamed.log"; exit 1; }
           echo "::notice::Staging refused a pubspec whose name is not the published package name."
 
