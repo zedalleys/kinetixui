@@ -157,6 +157,88 @@ describe("a marker cannot claim what its passage does not exercise", () => {
   });
 });
 
+/**
+ * `kx-verify-only:` exists for a browser gate, which imports no component — it navigates to a story id and
+ * drives the page — so its source holds no coverage fact and inference falls back to whatever names happen
+ * to appear in the file. On the real Switch gate that read `new FormData(...)` as coverage of the `form`
+ * component. Because the directive is authoritative for its passage rather than derived, every one of these
+ * tests is about the fence around it: it must not name a component that does not exist, nor one the platform
+ * does not implement, nor coexist with the other subject source, and it must not reach `runtime` from a
+ * headless environment just because the subjects were declared.
+ */
+describe("kx-verify-only: an explicit subject list, and the fence around it", () => {
+  it("replaces inference, so an incidental symbol in the passage cannot widen the claim", () => {
+    const dir = fixture(reactTest(`// kx-verify: interaction\n// kx-verify-only: dialog\n<Button />\n`));
+    const { ok } = run(script, [`--root=${dir}`]);
+    expect(ok).toBe(true);
+    const data = generated(dir);
+    expect(data.components.dialog.React.interaction).toBeTruthy();
+    // Button is used right there in the passage, and is still not credited: this is the FormData case.
+    expect(data.components.button.React?.interaction).toBeUndefined();
+  });
+
+  it("credits every declared subject when more than one is named", () => {
+    const dir = fixture(reactTest(`// kx-verify: interaction\n// kx-verify-only: button, dialog\n`));
+    const { ok } = run(script, [`--root=${dir}`]);
+    expect(ok).toBe(true);
+    const data = generated(dir);
+    expect(data.components.button.React.interaction).toBeTruthy();
+    expect(data.components.dialog.React.interaction).toBeTruthy();
+  });
+
+  it("rejects a subject that is not a component in the manifest", () => {
+    const dir = fixture(reactTest(`// kx-verify: interaction\n// kx-verify-only: swtich\n`));
+    const { ok, output } = run(script, [`--root=${dir}`]);
+    expect(ok).toBe(false);
+    expect(output).toMatch(/kx-verify-only names swtich — not a component in the manifest/);
+  });
+
+  it("rejects a subject the manifest does not implement on this platform", () => {
+    // `form` is an Angular-only component in the fixture manifest, so a React gate cannot verify it.
+    const dir = fixture(reactTest(`// kx-verify: interaction\n// kx-verify-only: form\n`));
+    const { ok, output } = run(script, [`--root=${dir}`]);
+    expect(ok).toBe(false);
+    expect(output).toMatch(/does not implement on React/);
+  });
+
+  it("refuses a passage that declares its subjects twice over", () => {
+    const dir = fixture(
+      reactTest(`// kx-verify: interaction\n// kx-verify-only: dialog\n// kx-verify-covers: packages/ui/src/stories/*.stories.tsx\n`),
+    );
+    const { ok, output } = run(script, [`--root=${dir}`]);
+    expect(ok).toBe(false);
+    expect(output).toMatch(/both kx-verify-only and kx-verify-covers/);
+  });
+
+  it("does not let a declared subject reach runtime from a headless environment", () => {
+    // The whole point of the ladder: declaring the subject says WHICH component, never HOW WELL observed.
+    const dir = fixture(reactTest(`// kx-verify: interaction, accessibility\n// kx-verify-only: dialog\n`));
+    const { ok } = run(script, [`--root=${dir}`]);
+    expect(ok).toBe(true);
+    const data = generated(dir);
+    expect(data.componentLevels.dialog.React.level).toBe("headless");
+    expect(data.componentLevels.dialog.React.interaction).toEqual(["jsdom"]);
+  });
+
+  it("reaches runtime only through a browser gate CI runs, and loses it when the step goes", () => {
+    const gate = "scripts/switch-motion.mjs";
+    const body = `// kx-verify: interaction, accessibility\n// kx-verify-only: dialog\n`;
+    const dir = fixture({ ...reactTest("// no markers\n"), [gate]: body });
+    const { ok } = run(script, [`--root=${dir}`]);
+    expect(ok).toBe(true);
+    const data = generated(dir);
+    expect(data.componentLevels.dialog.React.level).toBe("runtime");
+    expect(data.componentLevels.dialog.React.interaction).toEqual(["chromium"]);
+
+    // and with no CI step running that gate, the evidence it publishes is refused outright
+    const unrun = fixture({ ...reactTest("// no markers\n"), [gate]: body });
+    writeFileSync(join(unrun, ".github/workflows/ci.yml"), `jobs:\n  ci:\n    steps:\n${UNIT_SUITE_STEPS.map((c) => `      - run: ${c}\n`).join("")}`);
+    const second = run(script, [`--root=${unrun}`]);
+    expect(second.ok).toBe(false);
+    expect(second.output).toMatch(/no workflow in \.github\/workflows runs it/);
+  });
+});
+
 describe("a marker is scoped to its passage, not to its file", () => {
   it("gives RTL to the components in the RTL block and to no others", () => {
     const dir = fixture(
