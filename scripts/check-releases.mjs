@@ -64,7 +64,14 @@ const entries = blocks.map((b) => ({
   date: b.match(/date: "([^"]+)"/)?.[1],
   hasBreaking: /\n    breaking:/.test(b),
   releaseUrl: b.match(/\n    githubReleaseUrl: "([^"]*)"/)?.[1],
-  slugs: [...(b.match(/newComponents:[\s\S]*?\n    \],/)?.[0] ?? "").matchAll(/"([a-z][a-z0-9-]*)"/g)].map((m) => m[1]).filter((s) => s !== "group"),
+  // Read the `slugs` arrays only. Scanning the whole newComponents block for slug-shaped strings and
+  // filtering the literal key name `"group"` swept up the group's VALUE too, so a lowercase display
+  // label was checked for membership in components.manifest.json: `group: "Forms"` passed and
+  // `group: "forms"` failed with `newComponents slug "forms" is not in components.manifest.json`.
+  // Taking any quoted string inside `slugs` rather than only `[a-z][a-z0-9-]*` ones also means a
+  // miscapitalised slug is now reported instead of silently skipped by the shape filter.
+  slugs: [...(b.match(/newComponents:[\s\S]*?\n    \],/)?.[0] ?? "").matchAll(/slugs:\s*\[([\s\S]*?)\]/g)]
+    .flatMap((m) => [...m[1].matchAll(/"([^"]*)"/g)].map((q) => q[1])),
 }));
 if (entries.length < 5 || entries.some((e) => !e.version || !e.date)) errors.push("could not parse RELEASES in apps/web/src/lib/releases.ts");
 
