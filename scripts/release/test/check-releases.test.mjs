@@ -17,16 +17,20 @@ import { it } from "node:test";
 // miscapitalised slug through, because `[a-z][a-z0-9-]*` simply does not match `Date-Picker`.
 
 const MANIFEST = { components: { input: {}, "date-picker": {} } };
+// The repository's own manifest, for the cases that must accept whatever a real curated note names.
+const REAL_MANIFEST = JSON.parse(readFileSync(new URL("../../../components.manifest.json", import.meta.url), "utf8"));
 const VERSIONS = ["0.27.0", "0.26.1", "0.26.0", "0.25.0", "0.24.1"];
 
 /** A tree holding the five entries rule 1 needs, the newest carrying the given newComponents groups.
- *  `groups` is [{ group, slugs }]; `raw` replaces the whole newComponents block for malformed cases. */
-const tree = ({ group, slug, groups, raw }) => {
+ *  `groups` is [{ group, slugs }]; `raw` replaces the whole newComponents block for malformed cases.
+ *  `manifest` defaults to the two-component MANIFEST above; pass the repository's own to check a note
+ *  that names any real component, which the restricted one would reject for existing. */
+const tree = ({ group, slug, groups, raw, manifest = MANIFEST }) => {
   const root = mkdtempSync(path.join(tmpdir(), "kinetix-check-releases-"));
   for (const dir of ["scripts", "packages/ui", "packages/tokens", "packages/cli", "apps/web/src/lib", "release"]) mkdirSync(path.join(root, dir), { recursive: true });
   copyFileSync(new URL("../../check-releases.mjs", import.meta.url), path.join(root, "scripts/check-releases.mjs"));
   writeFileSync(path.join(root, "scripts/gen-release-meta.mjs"), "");
-  writeFileSync(path.join(root, "components.manifest.json"), JSON.stringify(MANIFEST));
+  writeFileSync(path.join(root, "components.manifest.json"), JSON.stringify(manifest));
   writeFileSync(path.join(root, "release/publish-packages.json"), JSON.stringify({ packages: [{ name: "@kinetixui/ui", directory: "packages/ui", releaseGroup: "core" }] }));
   writeFileSync(path.join(root, "packages/ui/package.json"), JSON.stringify({ version: "0.27.0" }));
   // Rule 3 reads the three core changelogs and reports any version they carry that RELEASES omits,
@@ -167,7 +171,11 @@ it("agrees with a structured read of every curated note that uses newComponents"
     const note = JSON.parse(readFileSync(new URL(name, notes), "utf8"));
     if (!Array.isArray(note.newComponents) || note.newComponents.length === 0) continue;
     const groups = note.newComponents.map((g) => ({ group: g.group, slugs: g.slugs ?? [] }));
-    const r = run({ groups });
+    // The REPOSITORY's manifest, not the two-component fixture one. Codex finding at 114e7a74,
+    // reproduced: with the fixture manifest a note naming any other real component failed here —
+    // measured on a synthetic note declaring `button`, which IS in components.manifest.json. That is
+    // the same "a legitimate note breaks CI" landmine as the zero-count assertion, one step along.
+    const r = run({ groups, manifest: REAL_MANIFEST });
     // Every slug a curated note declares is a real component, so agreement shows as a pass; a reader
     // that invented or dropped a slug would fail here.
     assert.equal(r.status, 0, `${name}: structured slugs ${JSON.stringify(groups.flatMap((g) => g.slugs))} but the reader said:\n${r.out}`);
