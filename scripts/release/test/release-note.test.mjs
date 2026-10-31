@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { it } from "node:test";
 import { noteErrors, linkErrors, allNoteErrors } from "../check-release-note.mjs";
+import { offSite } from "../links.mjs";
 
 /** A note that is fit to be injected, so each case below changes exactly one thing. */
 const good = () => ({
@@ -217,4 +218,45 @@ it("still accepts a note using every optional field correctly", () => {
     }),
     [],
   );
+});
+
+// --- the two readers of a href must answer alike ---------------------------------------------------
+//
+// A note's hrefs are scanned twice: here at authoring time, and by check:release-links against the
+// built site. A destination one accepts and the other rejects is a release lost to a sentence. An
+// earlier version of linkErrors allowed only http(s), which rejected `mailto:` and `tel:` —
+// destinations changelog-view.tsx renders straight into an anchor and check:release-links
+// deliberately leaves alone. This asserts the two agree rather than restating the policy.
+
+it("accepts every destination check:release-links treats as off-site", () => {
+  for (const href of ["https://x.test/a", "http://x.test/a", "mailto:security@example.com", "tel:+15551234", "//cdn.test/a.png", "#anchor"]) {
+    assert.ok(offSite(href), `${href} is not off-site by links.mjs, so this case tests nothing`);
+    assert.deepEqual(linkErrors(href, "where"), [], `${href} should be accepted`);
+  }
+});
+
+it("accepts a site-absolute route, fragment and all", () => {
+  assert.deepEqual(linkErrors("/docs/forms#input", "where"), []);
+  assert.deepEqual(linkErrors("/", "where"), []);
+});
+
+it("rejects a relative href rather than resolving it, and says why", () => {
+  // root-relative is the required spelling: the browser resolves a relative href against the page
+  // the reader is on, so `./docs/motion` on /docs/changelog is a 404 in a different spelling.
+  for (const href of ["./docs/motion", "docs/motion", "../motion"]) {
+    assert.ok(!offSite(href) && !href.startsWith("/"), `${href} would not reach the relative branch`);
+    assert.equal(linkErrors(href, "where").length, 1);
+    assert.match(linkErrors(href, "where")[0], /relative href/);
+  }
+});
+
+it("rejects a padded or empty href", () => {
+  assert.match(linkErrors(" /docs/forms", "where")[0], /whitespace/);
+  assert.match(linkErrors("", "where")[0], /non-empty string/);
+  assert.match(linkErrors(undefined, "where")[0], /non-empty string/);
+});
+
+it("carries the href rules into a note's changes", () => {
+  assert.deepEqual(errs((n) => (n.changes[0].href = "mailto:security@example.com")), []);
+  assert.equal(errs((n) => (n.changes[0].href = "docs/motion")).length, 1);
 });

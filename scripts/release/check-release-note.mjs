@@ -35,6 +35,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { fileURLToPath } from "node:url";
 import { plannedVersions, parseChangeset } from "./peers.mjs";
+import { offSite } from "./links.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const read = (p) => JSON.parse(readFileSync(p, "utf8"));
@@ -160,17 +161,26 @@ export function noteErrors(note, version, rel) {
   return e;
 }
 
-/** A link is either a site-absolute docs route or a well-formed absolute URL. Nothing here resolves
- *  a route to a page: that is `check:release-links`, which needs a built site and runs separately. */
+/** A link is either a site-absolute docs route or a destination that names no route on this site.
+ *
+ *  The second half is `offSite` from `links.mjs`, the same predicate `check:release-links` uses, and
+ *  it is imported rather than restated. An earlier version of this function allowed only `http(s):`,
+ *  which rejected `mailto:` and `tel:` — destinations `changelog-view.tsx` renders straight into an
+ *  anchor and `check:release-links` deliberately leaves alone, with coverage in
+ *  `release-links.test.mjs`. A note that passes one of the two gates and fails the other is the
+ *  failure mode worth most guarding against here, so the policy lives in one place.
+ *
+ *  What is still rejected is a *relative* href — `./docs/motion`, `docs/motion`, a padded value.
+ *  The browser resolves those against whatever page the reader is on, so they are a 404 in a
+ *  different spelling, and root-relative is the required spelling for a route on this site.
+ *
+ *  Nothing here resolves a route to a page: that is `check:release-links`, which needs a built site. */
 export function linkErrors(href, where) {
   if (typeof href !== "string" || href.trim() === "") return [`${where} must be a non-empty string`];
+  if (href !== href.trim()) return [`${where}: "${href}" has leading or trailing whitespace`];
   if (href.startsWith("/")) return [];
-  try {
-    const u = new URL(href);
-    return u.protocol === "https:" || u.protocol === "http:" ? [] : [`${where}: "${href}" is not an http(s) URL or a site-absolute route`];
-  } catch {
-    return [`${where}: "${href}" is neither a site-absolute route ("/docs/...") nor an absolute URL`];
-  }
+  if (offSite(href)) return [];
+  return [`${where}: "${href}" is neither a site-absolute route ("/docs/...") nor an off-site destination (an absolute URL, mailto:, tel:, //host/path or #anchor). A relative href resolves against the reader's page, not the site root.`];
 }
 
 // ---------------------------------------------------------------------------------------------
