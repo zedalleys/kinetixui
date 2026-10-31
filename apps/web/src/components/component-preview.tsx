@@ -9,7 +9,7 @@ import { CopyButton } from "./copy-button";
 import { PreviewEnvironment } from "./preview-environment";
 import { analytics } from "@/lib/analytics";
 import { useDocumentDirection } from "@/lib/use-document-direction";
-import { PLATFORM_FROM_CODE_TAB, componentSlugFor } from "@/lib/analytics-surfaces";
+import { PLATFORM_FROM_CODE_TAB, componentSlugFor, ctaAttrs } from "@/lib/analytics-surfaces";
 import { demoRegistry } from "@/registry/demos";
 import { platformCode } from "@/registry/platform-code";
 import {
@@ -165,7 +165,13 @@ export function ComponentPreview({
       <>
         <p className="border-b border-border px-4 py-2 text-body-md text-muted-foreground">
           {`${label} source; the live preview uses React. `}
-          <Link href={setupHref[tab]} className="text-primary underline underline-offset-2">
+          {/* Only React's destination is /docs/installation, so only it carries the `installation` CTA: the event
+              has no platform property, and tagging all five would merge five destinations into one count. */}
+          <Link
+            href={setupHref[tab]}
+            {...(tab === "react" ? ctaAttrs("component_page", "installation") : {})}
+            className="text-primary underline underline-offset-2"
+          >
             {label} installation and setup
           </Link>
         </p>

@@ -1,13 +1,19 @@
 import Link from "next/link";
 import { Layers } from "lucide-react";
 import { siteConfig } from "@/lib/site";
+import { ctaAttrs } from "@/lib/analytics-surfaces";
 
-const COLS: { title: string; links: { label: string; href: string }[] }[] = [
+/**
+ * `cta` marks a link whose click is a product CTA. Only the path to installation carries one: the footer is on
+ * every route, so tagging each link here would attribute ordinary navigation as intent. Plain data attributes,
+ * read by the provider's delegated listener, so this file stays a server component.
+ */
+const COLS: { title: string; links: { label: string; href: string; cta?: ReturnType<typeof ctaAttrs> }[] }[] = [
   {
     title: "Docs",
     links: [
       { label: "Introduction", href: "/docs" },
-      { label: "Installation", href: "/docs/installation" },
+      { label: "Installation", href: "/docs/installation", cta: ctaAttrs("footer", "installation") },
       { label: "Theming", href: "/docs/theming" },
       { label: "Accessibility", href: "/docs/accessibility" },
     ],
@@ -97,6 +103,7 @@ export function SiteFooter() {
                       <Link
                         href={l.href}
                         {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+                        {...(l.cta ?? {})}
                         className={`text-foreground/70 transition-colors hover:text-foreground ${focusRing}`}
                       >
                         {l.label}
