@@ -14,12 +14,14 @@ import {
   ANALYTICS_CTA_TARGETS,
   ANALYTICS_PLATFORMS,
   ANALYTICS_SOURCES,
+  CTA_LOCATIONS,
   analytics,
   cleanPath,
   type AnalyticsCtaTarget,
   type AnalyticsLocation,
   type AnalyticsPlatform,
   type AnalyticsSource,
+  type CtaLocation,
 } from "./analytics";
 import { PACKAGE_NAMES, PACKAGES } from "./packages";
 import { PLATFORMS, PLATFORM_DEFINITIONS, type Platform } from "./platform-parity";
@@ -117,8 +119,14 @@ export function trackPageEngaged(pathname: string): void {
  * Mark a link as a product CTA: `<Link href="/docs" {...ctaAttrs("homepage_hero", "get_started")}>`. Plain data
  * attributes, so a server-rendered page needs no client component for it. The provider's click listener reads them.
  */
-export function ctaAttrs(source: AnalyticsSource, target: AnalyticsCtaTarget) {
-  return { "data-analytics-cta": target, "data-analytics-source": source } as const;
+export function ctaAttrs(source: AnalyticsSource, target: AnalyticsCtaTarget, location?: CtaLocation) {
+  return {
+    "data-analytics-cta": target,
+    "data-analytics-source": source,
+    // Omitted, not emitted empty, when a call site names no location: the listener then tracks the event with no
+    // `location` property at all, exactly as it did before this existed (IA-5.21 §3.1, backward compatibility).
+    ...(location ? { "data-analytics-location": location } : {}),
+  } as const;
 }
 
 /* ------------------------------------------------------------------ verification inspection */
@@ -226,7 +234,12 @@ export function trackLinkClick(anchor: HTMLAnchorElement, pathname: string, curr
   const cta = anchor.getAttribute("data-analytics-cta");
   if (cta) {
     const source = anchor.getAttribute("data-analytics-source");
-    if (isMember(ANALYTICS_CTA_TARGETS, cta) && isMember(ANALYTICS_SOURCES, source)) analytics.track("cta_clicked", { source, target: cta });
+    if (isMember(ANALYTICS_CTA_TARGETS, cta) && isMember(ANALYTICS_SOURCES, source)) {
+      // An unrecognised or absent location is DROPPED, never forwarded and never a reason to drop the event: the
+      // CTA itself still counts (IA-5.21 §3.3). Only the four `CTA_LOCATIONS` can reach PostHog.
+      const location = anchor.getAttribute("data-analytics-location");
+      analytics.track("cta_clicked", isMember(CTA_LOCATIONS, location) ? { source, target: cta, location } : { source, target: cta });
+    }
     return;
   }
 
