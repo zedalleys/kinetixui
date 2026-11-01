@@ -8,6 +8,7 @@ Motion uses 114 fixed source shapes and three connector overlays, 16-second boun
 
 Validation:
 
+- Independent finish review: ship; the subsequent library Toggle substitution was reviewed as resolved with the visual verdict preserved.
 - Production build passed, including TypeScript and lint. Existing unused-variable warnings in unrelated tests remain.
 - Website suite: 125 files, 2,579 tests passed. Focused tests were rerun after responsive fixes.
 - Motion lifecycle tests cover offscreen/hidden-tab stopping, live reduced-motion changes, persisted pause and observer/listener cleanup.
