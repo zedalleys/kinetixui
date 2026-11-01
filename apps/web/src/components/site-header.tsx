@@ -14,7 +14,7 @@ export function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+    <header className="kx-polygon-surface sticky top-0 z-40 w-full border-b border-border">
       {/* row 1 — identity + tools */}
       {/*
         `min-h-12` and `flex-wrap`, not `h-12`: everything in this row is sized in `rem` — the mark is `size-8`
@@ -107,9 +107,6 @@ export function SiteHeader() {
           );
         })}
       </nav>
-
-      {/* kinetic hairline */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
     </header>
   );
 }

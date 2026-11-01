@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Boxes, Palette, Smartphone, Zap } from "lucide-react";
 import { Button } from "@kinetixui/ui";
+import { PolygonMesh } from "@/components/polygon-mesh";
 import { HeroCommand } from "@/components/hero-command";
 import { PlatformTicker } from "@/components/platform-ticker";
 import { Reveal } from "@/components/reveal";
@@ -101,10 +102,6 @@ const FEATURES = [
  * Every chapter follows the site theme; the header's toggle is the only theme control on the page.
  */
 
-/** "Five", from the platform count — a word in the headline, but never a typed one. */
-const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
-const countWord = (n: number) => COUNT_WORDS[n] ?? String(n);
-
 /** The flagship recipe's copies, by manifest platform: the generated registry's keys, not a typed list. */
 const RECIPE_PLATFORM: Record<string, string> = { react: "React", swiftui: "SwiftUI", compose: "Compose", flutter: "Flutter" };
 const recipePlatforms = new Set(Object.keys(flagshipExampleSource).map((k) => RECIPE_PLATFORM[k]));
@@ -170,127 +167,32 @@ export default function HomePage() {
   const container = "kx-edges relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8";
 
   return (
-    <div>
+    <div className="kx-polygon-surface">
       <StructuredData />
       <PlatformMarkSprite />
 
-      {/* ─── [01] hero ───────────────────────────────────────────────────────── */}
-      <section className="kx-chapter overflow-hidden border-b border-border">
-        {/*
-          The hero carries no decorative texture. It used to hold a 44px lattice whose mask was centred at
-          `30% 0%` — the middle of the copy column — so the texture was strongest across the headline and the
-          paragraph and had faded out by the time it reached the system map, the one thing it was meant to
-          sit behind. That position is physical, so under `dir="rtl"` it landed on the map instead. What is
-          left is the structure the whole page already carries: the `.kx-edges` margin rules, the type, and
-          the one glow below.
-
-          The glow is placed rather than centred, so an offset from one corner means different things at
-          different widths. Anchored to the top it sits under the map while the map is beside the copy, but
-          below `lg-rem` the map moves under the copy and the same offset puts the glow over the headline
-          instead — measured, 100% of the headline and 0% of the map at 390px. That is not free: the lede
-          paragraph is `muted-foreground` at 16px, which clears AA by 0.60 in light theme, and the gradient
-          took the most adverse background pixel under its glyphs to 4.28:1 against the 4.5 floor, with 39%
-          of that paragraph's glyph pixels below the floor. The statistic matters: against the mean of the
-          same background it measured 4.59:1 and would have looked compliant. It was worst at 390px but not
-          confined to it — glyph-sampled it fails from 320px to at least 768px, where it reads 4.51:1 by
-          that statistic and 4.47:1 by the whole-line-box one `check:home-systems` uses, and again at 1200px
-          for a reader whose browser font size is 32px, which is what the `-rem` breakpoints exist to track.
-          axe
-          cannot see any of it, because it will not resolve a background behind a gradient and reports
-          "incomplete" rather than a failure.
-
-          So the anchor follows the layout: bottom-anchored while the map is below the copy, top-anchored
-          from `lg-rem` up, where the composition — and the approved appearance — is unchanged. The 3.5rem
-          offset is cosmetic margin, not a guarantee: what keeps the targets ticker's own muted text safe is
-          `closest-side`, which puts the gradient's alpha at zero on the box's own edge. Measured, the ticker
-          text reads 5.10:1 with this offset and 5.06:1 with none, and under `prefers-reduced-motion` the
-          band wraps and grows into the glow's box by 26px with no change to that figure.
-        */}
-        <div aria-hidden="true" className="kx-glow kx-glow-soft -end-40 bottom-14 size-[46rem] lg-rem:bottom-auto lg-rem:-top-32" />
+      <section className="kx-polygon-hero border-b border-border" aria-labelledby="home-title">
         <div className={container}>
-          {/*
-            Hero vertical rhythm is a mobile-first decision. At 390×800 the primary CTA and the install command
-            have to land in the first viewport, so the copy column comes first in the DOM and the system map
-            follows it — beside it once there is room, below it on a phone.
-          */}
-          <div className="grid grid-cols-1 gap-14 py-12 sm:py-16 md:py-24 lg-rem:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg-rem:items-center lg-rem:gap-12 xl-rem:gap-20">
-            {/* a size container: the headline is sized against this column, so its longest word always fits it */}
-            {/* `data-hero-copy`: what the hero's decoration must stay off below `lg-rem`, which check:home-systems asserts */}
-            <div data-hero-copy className="max-w-3xl [container-type:inline-size]">
-              {/*
-                The headline names the architecture rather than counting platforms: one shared language, and an
-                implementation per platform written in that platform's idiom (CLAIMS.md A2, A3). The number is
-                the manifest's platform count, spelled out. The page title and share card keep
-                `siteConfig.tagline` — One design language. N platforms. Claims you can check. — whose last
-                sentence now heads the evidence chapter, where it is demonstrated rather than asserted.
-              */}
-              <h1 className="kx-hero-title min-w-0 font-display font-bold leading-[1.05] tracking-[-0.035em] sm:leading-[1.02]">
-                One design language.{" "}
-                <br className="hidden sm:block" />
-                <span className="kx-underline text-primary">{countWord(componentPlatformCount)} native</span>{" "}
-                implementations.
+          <div className="kx-polygon-hero-grid">
+            <div data-hero-copy className="min-w-0">
+              <h1 id="home-title" className="font-display font-bold tracking-[-0.03em]">
+                <span className="block">One design language.</span>
               </h1>
-
-              {/* One supporting paragraph, and only one: what this is and why it matters. The mechanism opens chapter 03. */}
-              <p className="mt-6 max-w-xl text-muted-foreground md:text-lg">
-                Shared tokens, native components, and platform differences documented instead of hidden — for teams
-                whose web and native apps drift apart the moment they are maintained separately.
+              <p className="mt-8 max-w-md text-lg text-muted-foreground">
+                Shared tokens. Components built for each platform.
               </p>
-
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button asChild size="lg">
+              <div className="mt-8 flex flex-wrap items-center gap-8">
+                <Button asChild size="lg" className="max-w-full whitespace-normal px-4">
                   <Link href="/components" {...ctaAttrs("homepage_hero", "browse_components")}>
-                    Explore components <ArrowUpRight className="size-4" />
+                    <span className="min-w-0 break-words">Explore components</span> <ArrowUpRight className="size-4 rtl:-scale-x-100" aria-hidden />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="Outline">
-                  <Link href="/docs/platforms" {...ctaAttrs("homepage_hero", "platform_coverage")}>
-                    See what each platform covers
-                  </Link>
-                </Button>
+                <Link href="/create" className="text-sm underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">
+                  Create a theme
+                </Link>
               </div>
-
-              {/*
-                The platform names, in static text, at every width — derived, with Angular's maturity carried.
-                The map beside this names them too, but as a control; this is the sentence.
-              */}
-              <p data-hero-platforms className="mt-5 max-w-xl text-sm text-muted-foreground">
-                {componentPlatformCount} implementations: {platformSentence}.
-              </p>
-
-              <div className="mt-7 w-full max-w-xl">
-                <HeroCommand />
-                <p className="mt-2 text-body-md text-muted-foreground sm:whitespace-nowrap">
-                  Example — adds one component.{" "}
-                  <Link
-                    href="/docs/installation"
-                    {...ctaAttrs("homepage_hero", "installation")}
-                    // Always underlined, for the same reason as the "What ships where" link below: inside
-                    // mixed foreground/muted text, colour alone does not mark a link. It measured 1.31:1
-                    // against the muted prose around it in light and 1.14:1 in dark, against the 3:1 that
-                    // technique G183 asks of a colour-only link under WCAG 1.4.1, which states no ratio of
-                    // its own — and the hero's old backdrop gradient hid that from axe, which could only report
-                    // "contrast could not be determined" while it was there.
-                    className="text-primary underline underline-offset-4"
-                  >
-                    Installation
-                  </Link>{" "}
-                  covers the full library.
-                </p>
-              </div>
-
-              {/* The beta disclosure qualifies the install command it sits under: every package is 0.x. */}
-              <Link
-                href="/docs/changelog"
-                {...ctaAttrs("homepage_hero", "view_changelog")}
-                className="eyebrow group mt-5 inline-flex min-h-9 items-center gap-2 transition-colors hover:text-foreground"
-              >
-                <span className="text-primary">[00]</span> Beta — every package is 0.x, MIT
-                <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100" />
-              </Link>
             </div>
-
-            <HeroSystemMap token={story.token} outputs={story.outputs} platforms={mapPlatforms} />
+            <PolygonMesh animated className="kx-polygon-hero-mesh" />
           </div>
         </div>
 
@@ -302,6 +204,26 @@ export default function HomePage() {
             </span>
             <PlatformTicker />
           </div>
+        </div>
+      </section>
+
+      <section className="border-b border-border" aria-labelledby="platforms-title">
+        <div className={`${container} grid items-center gap-16 py-16 lg-rem:grid-cols-2 lg-rem:py-24`}>
+          <div className="min-w-0">
+            <h2 id="platforms-title" className="font-display text-3xl font-semibold tracking-[-0.02em]">A shared foundation.<br />Built in each platform’s language.</h2>
+            <p data-hero-platforms className="mt-8 max-w-xl text-muted-foreground">{platformSentence}.</p>
+            <div className="mt-8 max-w-xl">
+              <HeroCommand />
+              <p className="mt-4 text-sm text-muted-foreground">
+                Example — adds one component. <Link href="/docs/installation" {...ctaAttrs("homepage_hero", "installation")} className="underline underline-offset-4">Installation</Link> covers the full library.
+              </p>
+            </div>
+            <p className="mt-8 text-sm text-muted-foreground">Beta — every package is 0.x. MIT.</p>
+            <Link href="/docs/platforms" {...ctaAttrs("homepage_hero", "platform_coverage")} className="mt-4 inline-flex min-h-10 items-center gap-2 text-sm underline underline-offset-4">
+              See what each platform covers <ArrowRight className="size-4 rtl:-scale-x-100" aria-hidden />
+            </Link>
+          </div>
+          <HeroSystemMap token={story.token} outputs={story.outputs} platforms={mapPlatforms} />
         </div>
       </section>
 

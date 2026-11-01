@@ -23,6 +23,7 @@ on:
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
+      - "scripts/polygon-refresh-browser.mjs"
       - "scripts/web-quality-browser.mjs"
       - "scripts/blocks-discovery-browser.mjs"
       - "scripts/blocks-runtime-browser.mjs"
@@ -55,6 +56,7 @@ on:
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
+      - "scripts/polygon-refresh-browser.mjs"
       - "scripts/web-quality-browser.mjs"
       - "scripts/blocks-discovery-browser.mjs"
       - "scripts/blocks-runtime-browser.mjs"
@@ -154,6 +156,9 @@ jobs:
       # running through an output it does not belong to.
       - name: Homepage systems visuals (tabs, type floor, headline, map, hero decoration)
         run: pnpm check:home-systems
+
+      - name: Polygon refresh (motion, pause, reduced motion, responsive, RTL, axe)
+        run: node scripts/polygon-refresh-browser.mjs
 
       # The website's own compact text, measured rather than read from source: no readable label under 12px, the
       # touched labels at 4.5:1 in light and dark, touch-sized hit areas on a coarse pointer with no overlaps, and

@@ -359,13 +359,12 @@ describe("systems in motion: weight and restraint", () => {
 
   it("never lets the headline hyphenate, and sizes it so its longest word fits its column", () => {
     const css = read("app/globals.css");
-    const rules = css.match(/\.kx-hero-title\s*\{[^}]*\}/g) ?? [];
-    expect(rules.length).toBeGreaterThan(1);
-    expect(rules[0]).toMatch(/hyphens:\s*manual/);
-    for (const r of rules) expect(r).toMatch(/font-size:\s*min\([^;]*cqi\)/);
+    const rule = css.match(/\.kx-polygon-hero h1\s*\{[^}]*\}/)?.[0];
+    expect(rule).toMatch(/hyphens:\s*manual/);
+    expect(rule).toMatch(/font-size:\s*min\(clamp/);
     const page = read("app/page.tsx");
     const h1 = page.slice(page.indexOf("<h1"), page.indexOf(">", page.indexOf("<h1")));
-    expect(h1).toMatch(/kx-hero-title/);
+    expect(h1).toMatch(/id="home-title"/);
     expect(h1).not.toMatch(/hyphens-auto/);
   });
 

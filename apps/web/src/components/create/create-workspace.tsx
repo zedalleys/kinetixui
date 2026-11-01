@@ -31,6 +31,7 @@ import { CreateExport } from "./create-export";
 import { CreatePreview, SCENE_LABELS } from "./create-preview";
 import { CreateSidebar } from "./create-sidebar";
 import { SectionHead } from "@/components/section-head";
+import { PolygonMesh } from "@/components/polygon-mesh";
 
 /**
  * The workspace shell.
@@ -111,15 +112,14 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
       0.07 content ratio — a worse collapse than the one at 1280px, on a bigger screen. Capping in the
       reader's own unit lets the container grow with what it has to hold.
     */
-    <div className="mx-auto w-full max-w-[96rem] px-4 py-8 sm:px-6 lg:px-8">
+    <div className="kx-polygon-surface mx-auto w-full max-w-[96rem] px-4 py-8 sm:px-6 lg:px-8">
       {/* ── header ───────────────────────────────────────────────────────── */}
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-6">
+      <header className="kx-create-heading relative flex flex-wrap items-end justify-between gap-8 border-b border-border pb-8">
+        <div className="kx-create-mesh" aria-hidden="true"><PolygonMesh /></div>
         <div>
-          <p className="eyebrow">Workspace</p>
           <h1 className="mt-2 font-display text-3xl font-bold tracking-[-0.02em] md:text-4xl">Create</h1>
           <p className="mt-2 max-w-xl text-muted-foreground">
-            Shape the Kinetix design language visually, preview it on real components, then export the
-            same theme for web and native platforms.
+            Shape a theme. Preview real components. Export for web and native platforms.
           </p>
         </div>
 

@@ -171,12 +171,12 @@ describe("hero hierarchy: action before architecture", () => {
     return (needle: string) => nodes.findIndex((n) => (n.textContent ?? "").includes(needle));
   };
 
-  it("puts the headline, the supporting paragraph and both CTAs before any architecture prose", () => {
+  it("puts the headline, the supporting paragraph and the component CTA before the detailed platform prose", () => {
     const { container } = render(<HomePage />);
     const at = order(container);
 
     const headline = at("One design language");
-    const supporting = at("drift apart the moment");
+    const supporting = at("Shared tokens. Components built for each platform.");
     const primary = at("Explore components");
     const secondary = at("See what each platform covers");
     const architecture = at("One DTCG token source generates");
@@ -199,8 +199,8 @@ describe("hero hierarchy: action before architecture", () => {
     expect(between.map((n) => n.textContent?.slice(0, 40))).toHaveLength(1);
     // Short enough to read before deciding, long enough to say something.
     const words = (between[0]!.textContent ?? "").trim().split(/\s+/).length;
-    expect(words, "the hero's supporting paragraph has grown back into an essay").toBeLessThanOrEqual(45);
-    expect(words).toBeGreaterThanOrEqual(20);
+    expect(words, "the hero's supporting paragraph has grown back into an essay").toBeLessThanOrEqual(15);
+    expect(words).toBeGreaterThanOrEqual(6);
   });
 
   it("does not make the beta badge the first thing in the hero", () => {

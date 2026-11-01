@@ -8,6 +8,89 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Brand surfaces only. Library tokens and Create's generated preview keep their own contracts. */
+.kx-polygon-surface {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 12%;
+  --muted-foreground: 0 0% 38%;
+  --border: 0 0% 85%;
+  --primary: 0 0% 16%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 0 0% 32%;
+  --action: var(--primary);
+  --action-foreground: var(--primary-foreground);
+  --action-hover: 0 0% 24%;
+  --action-pressed: 0 0% 8%;
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+}
+.dark .kx-polygon-surface {
+  --background: 0 0% 8%;
+  --foreground: 0 0% 94%;
+  --muted-foreground: 0 0% 70%;
+  --border: 0 0% 26%;
+  --primary: 0 0% 92%;
+  --primary-foreground: 0 0% 8%;
+  --ring: 0 0% 80%;
+  --action-hover: 0 0% 80%;
+  --action-pressed: 0 0% 100%;
+}
+.kx-polygon-hero-grid {
+  display: grid;
+  align-items: center;
+  gap: 4rem;
+  padding-block: 5rem;
+}
+.kx-polygon-hero [data-hero-copy] { container-type: inline-size; }
+.kx-polygon-hero h1 {
+  font-size: min(clamp(3rem, 6vw, 6.5rem), 17cqi);
+  max-width: 8em;
+  hyphens: manual;
+  line-height: 1.04;
+}
+.kx-polygon { position: relative; color: hsl(var(--foreground)); }
+.kx-polygon-art { display: block; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.kx-polygon-hero-mesh { width: 100%; max-width: 34rem; justify-self: end; }
+.kx-polygon-drift { animation: kx-mesh-drift 16s ease-in-out infinite alternate; }
+.kx-polygon [class^="kx-mesh-tone-"] { fill: currentColor; opacity: .08; }
+.kx-polygon .kx-mesh-tone-1, .kx-polygon .kx-mesh-tone-2 { fill: none; stroke: currentColor; stroke-width: 1; opacity: .24; }
+.kx-polygon .kx-mesh-tone-2 { opacity: .13; }
+.kx-polygon .kx-mesh-tone-9, .kx-polygon .kx-mesh-tone-14 { opacity: .32; animation: kx-mesh-node 8s ease-in-out infinite alternate; }
+.kx-polygon .kx-mesh-tone-3, .kx-polygon .kx-mesh-tone-11, .kx-polygon .kx-mesh-tone-13 { opacity: .035; }
+.kx-polygon .kx-mesh-tone-6, .kx-polygon .kx-mesh-tone-15 { opacity: .12; }
+.kx-polygon-signals { opacity: .4; }
+.kx-polygon-signals path { stroke-dasharray: .16 .84; animation: kx-mesh-link 12s linear infinite; }
+.kx-polygon-signals path:nth-child(2) { animation-delay: -4s; }
+.kx-polygon-signals path:nth-child(3) { animation-delay: -8s; }
+.kx-polygon:not([data-polygon-running="true"]) .kx-polygon-art * { animation-play-state: paused; }
+.kx-polygon-pause {
+  display: inline-flex; align-items: center; gap: .5rem; min-height: 2.75rem;
+  position: absolute; inset-inline-end: 0; bottom: 0;
+  padding: .5rem; border: 1px solid hsl(var(--border)); border-radius: .5rem;
+  font-size: .75rem; color: hsl(var(--muted-foreground)); background: hsl(var(--background));
+}
+.kx-polygon-pause:hover { color: hsl(var(--foreground)); }
+.kx-polygon-pause:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 4px; }
+.kx-polygon-footer-art {
+  position: absolute; inset-inline-end: -3rem; bottom: -8rem; width: 28rem;
+  opacity: .3; pointer-events: none;
+}
+.kx-polygon-footer-art .kx-polygon { transform: rotate(180deg); }
+.kx-create-heading > :not(.kx-create-mesh) { position: relative; }
+.kx-create-mesh { position: absolute; inset-inline-end: 0; top: 0; width: 8rem; height: 4rem; overflow: hidden; opacity: .25; pointer-events: none; }
+.kx-create-mesh .kx-polygon { transform: rotate(90deg); }
+@keyframes kx-mesh-drift { to { transform: translate(4px, -4px); } }
+@keyframes kx-mesh-node { to { opacity: .16; } }
+@keyframes kx-mesh-link { to { stroke-dashoffset: -1; } }
+@media (min-width: 64rem) {
+  .kx-polygon-hero-grid { grid-template-columns: 1fr 1fr; gap: 5rem; padding-block: 6rem; }
+}
+@media (max-width: 63.999rem) {
+  .kx-polygon-hero-mesh { max-width: 24rem; height: 16rem; overflow: hidden; }
+  .kx-polygon-hero-mesh .kx-polygon-art { height: auto; transform: translateY(-20%); }
+}
+
+
 /*
  * Force the full light contract on a subtree regardless of the <html> class
  * (Themes / Theming docs previews). Mirrors :root in
@@ -1170,3 +1253,18 @@
   width: max-content;
   min-width: 100%;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .kx-polygon .kx-polygon-art * { animation: none !important; }
+  .kx-polygon-signals { display: none; }
+  .kx-polygon-pause { display: none; }
+}
+
+/* At narrow widths with enlarged text, stack proof-map groups instead of squeezing two columns. */
+@container (max-width: 12rem) {
+  .kx-map-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; padding-inline-start: 0; }
+  .kx-map-outputs, .kx-map-tabs { grid-column: 1; grid-row: auto; grid-template-rows: none; gap: .5rem; }
+  .kx-map-chip { grid-row: auto; }
+  .kx-map-rule { display: none; }
+}
+.kx-polygon-surface .kx-pipe-impl { min-width: 0; overflow-wrap: anywhere; }

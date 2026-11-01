@@ -1,0 +1,486 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-01T20:05:08.752087+00:00",
+  "title": "Design System: KinetixUI polygon brand surfaces",
+  "extensions": {
+    "scope": {
+      "surfaces": [
+        "homepage",
+        "shared website header",
+        "shared website footer",
+        "Create chrome"
+      ],
+      "excluded": [
+        "library public APIs",
+        "generated token contracts",
+        "Create generated preview theme",
+        "Create exports",
+        "future Studio roadmap"
+      ],
+      "sources": [
+        "apps/web/src/app/globals.css",
+        "apps/web/src/components/polygon-mesh.tsx",
+        "apps/web/src/components/site-header.tsx",
+        "apps/web/src/components/site-footer.tsx",
+        "packages/ui/src/components/button.tsx",
+        "packages/ui/src/components/input.tsx",
+        "packages/ui/src/components/card.tsx",
+        "design-assets/polygon/REFERENCE.md"
+      ]
+    },
+    "colorMeta": {
+      "brand-background": {
+        "role": "neutral",
+        "displayName": "Brand Background",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "brand-foreground": {
+        "role": "neutral",
+        "displayName": "Brand Foreground",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "brand-muted-foreground": {
+        "role": "neutral",
+        "displayName": "Brand Muted Foreground",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "brand-border": {
+        "role": "neutral",
+        "displayName": "Brand Border",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "brand-primary": {
+        "role": "primary",
+        "displayName": "Brand Primary",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "brand-primary-foreground": {
+        "role": "primary",
+        "displayName": "Brand Primary Foreground",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "brand-ring": {
+        "role": "neutral",
+        "displayName": "Brand Ring",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "brand-action-hover": {
+        "role": "neutral",
+        "displayName": "Brand Action Hover",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "brand-action-pressed": {
+        "role": "neutral",
+        "displayName": "Brand Action Pressed",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "dark-brand-background": {
+        "role": "neutral",
+        "displayName": "Dark Brand Background",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "dark-brand-foreground": {
+        "role": "neutral",
+        "displayName": "Dark Brand Foreground",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "dark-brand-muted-foreground": {
+        "role": "neutral",
+        "displayName": "Dark Brand Muted Foreground",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "dark-brand-border": {
+        "role": "neutral",
+        "displayName": "Dark Brand Border",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "dark-brand-primary": {
+        "role": "primary",
+        "displayName": "Dark Brand Primary",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "dark-brand-primary-foreground": {
+        "role": "primary",
+        "displayName": "Dark Brand Primary Foreground",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "dark-brand-ring": {
+        "role": "neutral",
+        "displayName": "Dark Brand Ring",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "dark-brand-action-hover": {
+        "role": "neutral",
+        "displayName": "Dark Brand Action Hover",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      },
+      "dark-brand-action-pressed": {
+        "role": "neutral",
+        "displayName": "Dark Brand Action Pressed",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ],
+        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Space Grotesk display",
+        "purpose": "Homepage headline, sized by the DESIGN.md expression inside an inline-size copy container; the 17cqi cap keeps whole words at narrow widths and enlarged text. Manual hyphenation; maximum measure 8em. The shared library scale is unchanged."
+      },
+      "body": {
+        "displayName": "Inter body",
+        "purpose": "Website prose."
+      },
+      "label": {
+        "displayName": "Inter label",
+        "purpose": "Existing large CTA label."
+      },
+      "index": {
+        "displayName": "JetBrains Mono index",
+        "purpose": "Navigation numbering and metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "library-focus",
+        "value": "var(--shadow-focus)",
+        "purpose": "Preserve inherited library focus treatment; not redefined by brand scope."
+      },
+      {
+        "name": "library-card",
+        "value": "var(--shadow-md)",
+        "purpose": "Existing card elevation independent of flat brand framing."
+      }
+    ],
+    "motion": [
+      {
+        "name": "mesh-drift",
+        "value": "16s ease-in-out infinite alternate; translate(4px, -4px)",
+        "purpose": "Connected group drift only."
+      },
+      {
+        "name": "mesh-node",
+        "value": "8s ease-in-out infinite alternate; opacity .32 to .16",
+        "purpose": "Source node groups only."
+      },
+      {
+        "name": "mesh-links",
+        "value": "12s linear infinite; stroke-dasharray .16 .84; stroke-dashoffset -1; delays 0s, -4s, -8s",
+        "purpose": "Exactly three overlay paths."
+      }
+    ],
+    "motionControls": {
+      "geometryShapeBudget": 114,
+      "overlayPathBudget": 3,
+      "baseCoordinates": "static; no morphing",
+      "homepageOnly": true,
+      "secondaryInstances": "static",
+      "runningWhen": [
+        "animated prop enabled",
+        "intersection visible",
+        "document visible",
+        "prefers-reduced-motion off",
+        "persisted user pause off"
+      ],
+      "pauseStorageKey": "kx-polygon-motion",
+      "storageUnavailableFallback": "pause retained for current view",
+      "intersectionObserverUnavailableFallback": "static",
+      "reducedMotion": "Remove all polygon animation; hide signal overlays and motion toggle; retain base mesh.",
+      "decorativeSvg": "aria-hidden=true; focusable=false; pointer-events=none"
+    },
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "hero-wide",
+        "value": "64rem"
+      }
+    ],
+    "layoutFallbacks": {
+      "homepageCta": "max-width:100%; white-space:normal; padding:12px 16px; label min-width:0 and overflow-wrap:break-word. Local override; library default remains unchanged.",
+      "proofMap": {
+        "query": "@container (max-width: 12rem)",
+        "grid": "grid-template-columns:minmax(0,1fr); grid-template-rows:auto; padding-inline-start:0",
+        "outputsAndTabs": "grid-column:1; grid-row:auto; grid-template-rows:none; gap:.5rem",
+        "chips": "grid-row:auto",
+        "rule": "display:none"
+      },
+      "brandImplementationLabels": "min-width:0; overflow-wrap:anywhere",
+      "purpose": "Avoid cramped proof rows and overflowing CTA labels with enlarged text; preserve existing proof and workflow semantics."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary CTA",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Existing large Primary Button with homepage-only wrapping and narrower inline padding; library API and defaults are unchanged.",
+      "html": "<button class=\"ds-primary\"><span class=\"ds-primary-label\">Explore components</span><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M7 17 17 7M7 7h10v10\"/></svg></button>",
+      "css": ".ds-primary{display:inline-flex;align-items:center;justify-content:center;gap:4px;border:0;border-radius:var(--radius-md,8px);padding:12px 16px;max-width:100%;white-space:normal;font-family:var(--font-sans,Inter),system-ui,sans-serif;font-size:.875rem;line-height:1.25rem;letter-spacing:.1px;font-weight:500;background:hsl(var(--action,0 0% 16%));color:hsl(var(--action-foreground,0 0% 100%));transition:background-color var(--duration-instant,100ms) var(--easing-standard,cubic-bezier(.4,0,.2,1))}.ds-primary:hover{background:hsl(var(--action,0 0% 16%)/.9)}.ds-primary:active{background:hsl(var(--action,0 0% 16%)/.85)}.ds-primary:focus-visible{outline:none;box-shadow:var(--shadow-focus,0 0 0 1px hsl(var(--focus,var(--ring,0 0% 32%))),0 0 0 4px hsl(var(--focus,var(--ring,0 0% 32%))/.2));}.ds-primary:disabled{pointer-events:none;opacity:var(--opacity-disabled,.5);background:hsl(var(--border,0 0% 85%));color:hsl(var(--muted-foreground,0 0% 38%))}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}.ds-primary-label{min-width:0;overflow-wrap:break-word}.ds-primary svg{flex-shrink:0}"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "description": "Existing library field using inherited semantic roles; not a new brand input variant.",
+      "html": "<input class=\"ds-input\" aria-label=\"Theme name\" placeholder=\"Theme name\">",
+      "css": ".ds-input{width:100%;border:1px solid hsl(var(--muted-foreground,0 0% 38%)/.8);border-radius:var(--radius-field,4px);background:hsl(var(--background,0 0% 100%));color:hsl(var(--foreground,0 0% 12%));padding:12px;font-family:var(--font-sans,Inter),system-ui,sans-serif;font-size:.875rem;line-height:1.25rem;letter-spacing:.25px;transition:border-color var(--duration-instant,100ms) var(--easing-standard,cubic-bezier(.4,0,.2,1)),box-shadow var(--duration-instant,100ms) var(--easing-standard,cubic-bezier(.4,0,.2,1)),background-color var(--duration-instant,100ms) var(--easing-standard,cubic-bezier(.4,0,.2,1))}.ds-input::placeholder{color:hsl(var(--muted-foreground,0 0% 38%))}@media(hover:hover){.ds-input:enabled:hover:not(:focus):not([aria-invalid=true]):not([readonly]){border-color:hsl(var(--muted-foreground,0 0% 38%))}}.ds-input:focus-visible{outline:none;border-color:hsl(var(--action,0 0% 16%));box-shadow:var(--shadow-focus,0 0 0 1px hsl(var(--focus,var(--ring,0 0% 32%))),0 0 0 4px hsl(var(--focus,var(--ring,0 0% 32%))/.2))}.ds-input[readonly]{background:hsl(var(--muted,0 0% 96%))}.ds-input[aria-invalid=true]{border-color:hsl(var(--destructive,0 72% 45%))}.ds-input[aria-invalid=true]:focus-visible{box-shadow:var(--shadow-focus-destructive)}.ds-input:disabled{cursor:not-allowed;opacity:var(--opacity-disabled,.5)}@media(prefers-reduced-motion:reduce){.ds-input{transition:none}}"
+    },
+    {
+      "name": "Numbered navigation",
+      "kind": "nav",
+      "description": "Wrapping desktop section links with a structural current-page underline.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Primary\"><a class=\"ds-nav-link\" href=\"/components\" aria-current=\"page\"><span class=\"ds-index\">01</span>Components</a><a class=\"ds-nav-link\" href=\"/create\"><span class=\"ds-index\">02</span>Create</a></nav>",
+      "css": ".ds-nav{display:flex;flex-wrap:wrap;min-height:40px;border-top:1px solid hsl(var(--border,0 0% 85%));font-family:var(--font-sans,Inter),system-ui,sans-serif;}.ds-nav-link{position:relative;display:flex;align-items:center;gap:8px;padding:0 8px;min-height:40px;font-size:.875rem;font-weight:500;text-decoration:none;color:hsl(var(--muted-foreground,0 0% 38%));transition:color 150ms}.ds-nav-link:hover,.ds-nav-link[aria-current]{color:hsl(var(--foreground,0 0% 12%))}.ds-nav-link[aria-current]:after{content:\"\";position:absolute;inset-inline:12px;bottom:-1px;height:2px;background:hsl(var(--primary,0 0% 16%))}.ds-nav-link:focus-visible{outline:2px solid hsl(var(--ring,0 0% 32%));outline-offset:4px;}.ds-index{font-family:var(--font-mono,\"JetBrains Mono\"),monospace;font-size:.75rem;color:hsl(var(--muted-foreground,0 0% 38%))}"
+    },
+    {
+      "name": "Roadmap label",
+      "kind": "chip",
+      "refersTo": "roadmap-label",
+      "description": "Static soon marker from shared navigation; no fabricated interactive state.",
+      "html": "<span class=\"ds-soon\">soon</span>",
+      "css": ".ds-soon{display:inline-block;border:1px solid hsl(var(--border,0 0% 85%));border-radius:3px;padding:0 4px;font-family:var(--font-mono,\"JetBrains Mono\"),monospace;font-size:.75rem;line-height:1rem;letter-spacing:.05em;text-transform:uppercase;color:hsl(var(--muted-foreground,0 0% 38%))}"
+    },
+    {
+      "name": "Static library card",
+      "kind": "card",
+      "description": "Incumbent raised card; semantic card surface and elevation remain independent of brand framing.",
+      "html": "<div class=\"ds-card\"><strong>Theme preview</strong><p class=\"ds-card-copy\">Real components use their existing semantic contracts.</p></div>",
+      "css": ".ds-card{border:1px solid hsl(var(--border,0 0% 85%)/.5);border-radius:var(--radius-xl,16px);background:hsl(var(--card,0 0% 100%));color:hsl(var(--card-foreground,0 0% 12%));box-shadow:var(--shadow-md,0 1px 1px 0 #0000001f,0 2px 5px 0 #676e7614);padding:24px;font-family:var(--font-sans,Inter),system-ui,sans-serif;}.ds-card-copy{font-size:.875rem;color:hsl(var(--muted-foreground,0 0% 38%));margin:6px 0 0}"
+    },
+    {
+      "name": "Mesh motion toggle",
+      "kind": "button",
+      "refersTo": "motion-toggle",
+      "description": "Visual sample of the actual pause control; React supplies persisted pause and playback gating in production.",
+      "html": "<button class=\"ds-motion\" type=\"button\" aria-label=\"Pause polygon animation\" aria-pressed=\"false\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><rect x=\"6\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/><rect x=\"14\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/></svg>Pause motion</button>",
+      "css": ".ds-motion{display:inline-flex;align-items:center;gap:.5rem;min-height:2.75rem;padding:.5rem;border:1px solid hsl(var(--border,0 0% 85%));border-radius:.5rem;font-size:.75rem;font-family:var(--font-sans,Inter),system-ui,sans-serif;color:hsl(var(--muted-foreground,0 0% 38%));background:hsl(var(--background,0 0% 100%))}.ds-motion:hover{color:hsl(var(--foreground,0 0% 12%))}.ds-motion:focus-visible{outline:2px solid hsl(var(--ring,0 0% 32%));outline-offset:4px;}@media(prefers-reduced-motion:reduce){.ds-motion{display:none}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Connected grayscale facets",
+    "overview": "Connected grayscale facets carry the brand while plain typography and clear controls carry the task. White or charcoal surfaces, thin links and translucent triangles surround the existing component and theme workflows. The visual authority is the owner-supplied OH38WC1.svg and matching JPG; no alternative artwork or Arabian motifs belong to this refresh.\n\nThis document governs the implemented homepage, shared website header/footer and Create chrome only. Its brand color names describe local website overrides, not new library tokens. Library public APIs, semantic token contracts, status colors, component states and Create's generated preview/export semantics remain authoritative in their existing sources. Create remains the implemented theme editor; future Studio capabilities remain roadmap.",
+    "keyCharacteristics": [
+      "Grayscale brand surfaces with theme-aware neutral ink.",
+      "Exact source geometry, bounded motion and static secondary meshes.",
+      "Self-hosted Space Grotesk, Inter and JetBrains Mono.",
+      "Responsive spacing, wrapping controls, RTL and visible keyboard focus."
+    ],
+    "rules": [
+      {
+        "name": "Scope",
+        "body": "Apply neutral brand overrides only to the approved website surfaces; never propagate them into library token generation or Create preview/export contracts.",
+        "section": "colors"
+      },
+      {
+        "name": "Source Geometry",
+        "body": "Keep the 114 source shapes and only three overlay links; preserve source coordinates and provenance.",
+        "section": "shapes"
+      },
+      {
+        "name": "Motion Permission",
+        "body": "Animate only the visible homepage mesh while the document is visible, reduced motion is off and the user has not paused it.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do use the supplied grayscale geometry and keep its provenance with the implementation.",
+      "Do retain the 8px spacing foundation and allow text, controls and navigation to reflow.",
+      "Do preserve real component states and Create theme/export behavior.",
+      "Do keep secondary meshes static and respect reduced motion and the persisted pause choice."
+    ],
+    "donts": [
+      "Don't introduce Arabian motifs, the excluded coloured reference or replacement mesh artwork.",
+      "Don't apply brand surface values as replacements for library semantic tokens.",
+      "Don't advertise future Studio features as implemented.",
+      "Don't add unbounded particles, extra overlay links or animation behind Create controls."
+    ]
+  }
+}
