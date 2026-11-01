@@ -141,7 +141,7 @@ Controls keep modest rounding: field, control and card radii in the frontmatter 
 
 The whole connected group drifts by (4px, -4px) over (16s ease-in-out), alternating. Node opacity alternates from (.32) to (.16) over (8s ease-in-out). Exactly three overlay paths use a (.16 .84) dash pattern and (12s linear) cycle, staggered by (0s, -4s, -8s). Base coordinates never morph; links/nodes remain registered to their facets.
 
-The visible “Pause motion” / “Resume motion” control has a minimum height of (2.75rem), pressed state and a localStorage preference under `kx-polygon-motion`; unavailable storage falls back to the current view. Intersection observation, document visibility and the operating system motion preference gate playback. Missing IntersectionObserver leaves the mesh static. Reduced motion removes animation and hides signal overlays and the motion toggle while retaining the complete base mesh. No new animation library, timer loop or particle system is required.
+The visible “Pause motion” / “Resume motion” control uses the existing `@kinetixui/ui` Toggle and has a minimum height of (2.75rem), pressed state and a localStorage preference under `kx-polygon-motion`; unavailable storage falls back to the current view. Intersection observation, document visibility and the operating system motion preference gate playback. Missing IntersectionObserver leaves the mesh static. Reduced motion removes animation and hides signal overlays and the motion toggle while retaining the complete base mesh. No new animation library, timer loop or particle system is required.
 
 ## Do's and Don'ts
 

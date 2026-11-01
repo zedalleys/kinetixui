@@ -11,7 +11,7 @@ Validation:
 - Production build passed, including TypeScript and lint. Existing unused-variable warnings in unrelated tests remain.
 - Website suite: 125 files, 2,579 tests passed. Focused tests were rerun after responsive fixes.
 - Motion lifecycle tests cover offscreen/hidden-tab stopping, live reduced-motion changes, persisted pause and observer/listener cleanup.
-- Spatial grid and RTL guardrails passed.
+- Spatial grid, RTL, typography, type-scale and website component-dogfooding guardrails passed. The motion control uses the existing library Toggle.
 - Theme-isolation browser suite passed: Create edits, reset, navigation, light/dark preview isolation and focus rings.
 - Browser matrix passed all 16 route/config cases with zero axe violations, horizontal overflow or runtime errors. Browser evidence covers homepage and Create in desktop, mobile, dark/RTL, narrow/tablet and doubled text. See `browser-results.json` for exact cases. Entrance effects are settled and lazy previews mounted for capture only; product behavior is unchanged by the capture override.
 - Existing homepage browser suite retains keyboard/platform-map, headline, trace geometry, payload and rendered-pixel contrast checks. Decoration assertions now cover mesh/copy separation and a visible primary action instead of the removed glow.

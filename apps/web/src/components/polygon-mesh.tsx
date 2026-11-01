@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Pause, Play } from "lucide-react";
+import { Toggle } from "@kinetixui/ui";
 import { usePersistedPause } from "@/lib/use-persisted-pause";
 import geometry from "./polygon-mesh-geometry.json";
 
@@ -48,10 +49,10 @@ export function PolygonMesh({ animated = false, className = "" }: { animated?: b
         </g>
       </svg>
       {animated && (
-        <button type="button" className="kx-polygon-pause" aria-label="Pause polygon animation" aria-pressed={paused} onClick={togglePaused}>
+        <Toggle className="kx-polygon-pause" aria-label="Pause polygon animation" pressed={paused} onPressedChange={togglePaused}>
           {paused ? <Play size={16} aria-hidden="true" /> : <Pause size={16} aria-hidden="true" />}
           <span>{paused ? "Resume motion" : "Pause motion"}</span>
-        </button>
+        </Toggle>
       )}
     </div>
   );
