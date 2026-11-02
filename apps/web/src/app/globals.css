@@ -33,7 +33,7 @@
   hyphens: manual;
   line-height: 1.04;
 }
-.kx-polygon { position: relative; color: hsl(var(--foreground)); }
+.kx-polygon { position: relative; color: hsl(var(--primary)); }
 .kx-polygon-art { display: block; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .kx-polygon-hero-mesh { width: 100%; max-width: 34rem; justify-self: end; }
 
