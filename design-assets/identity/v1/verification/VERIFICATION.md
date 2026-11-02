@@ -1,5 +1,81 @@
 # Kinetic Weave verification — 2 November 2026
 
+## Finalization pass — exact head `aec1a655e10c01810d7f8a18d607200db4b6854f`
+
+Everything in this section was executed against this commit. The sections below
+it describe earlier revisions and are kept as history; where a figure here
+disagrees with one of them, this one is the measurement.
+
+**Dark-theme AA repair.** `check:a11y-browser` failed at `3cd10512` with 27 new
+dark colour-contrast violations. Reproduced in Chromium with node-level detail:
+all 27 reduce to two foregrounds — `#dd6969` (`destructive`) at 4.33:1 on `card`,
+4.42:1 on the list surface and 3.87:1 on its own 10% tint, and `#a689fa`
+(`primary`/`action`) at 4.43:1 on `bg-primary/10` over `card`, 3.72:1 on the same
+tint over `muted` and 4.31:1 on `accent`. Cause: the Kinetic Weave dark surfaces
+rose to `navy.800`/`navy.700` while both foregrounds kept steps sized for the old
+near-black page. Repaired in `tokens/semantic/color.dark.json` and
+`tokens/semantic/shadow.dark.json`; the generator chain (`build:tokens`,
+`vendor:compose`, `vendor:swiftui`, `vendor:flutter`) was run to a fixed point.
+No baseline entry, accessibility exception or threshold was changed.
+
+**Focus indicator.** Measured differentially — render the polygon unfocused and
+focused, take the pixels that changed as the indicator, compare each against its
+nearest unchanged neighbour. Before: 34% (light) and 14% (dark) of the indicator
+reached 3:1. After thickening the cage on focus: 54% and 45%, top decile 5.8:1
+and 9.1:1, best 7.2:1 and 9.8:1. No rectangular outline or box-shadow returns;
+`check:hero-beacon` asserts both and holds the 3:1 share at a 25% floor.
+
+**Loop duration, timed rather than quoted.** The traveling light's lap measures
+**16.7–16.8 s** in the browser across runs, and the floating rotation advances at
+12 deg/s, a 30-second revolution. The "24-second / 14-second" figures in the
+sections below predate the cage-tracing beacon and were wrong for this head.
+
+**Negative control.** With one circuit vertex moved off the cage in the served
+bundle (`635.06,257.55` → `560,180`), `check:hero-beacon` exits 1 with "the
+beacon never pulsed at the supplied junction node 635.06,257.55". Restoring the
+bundle returns it to green. Nothing sabotaged was committed.
+
+**Gate wiring.** `scripts/rebrand-browser.mjs` was referenced from no package
+script and no workflow, so the "seven hero browser cases" were never a gate.
+Both it and the new `scripts/hero-beacon-browser.mjs` now run in
+`.github/workflows/a11y-site.yml` against the production build.
+
+### Executed at this head
+
+| Check | Result |
+| --- | --- |
+| `check:a11y-browser` (Storybook, every story, light + dark) | ok — 276 stories × 2 themes, 4 known violations, **none new** |
+| `check:rebrand-hero` (7 viewports) | ok — 0 axe violations, 0 page errors |
+| `check:hero-beacon` | ok — 6 junction nodes pulsed, 0 units off any cage leg, lap 16.8 s, halo 6→17, drag/offscreen/reduced-motion as approved |
+| `check:contrast` | PASS |
+| `check:token-contract` | ok — 26 rows match the tokens |
+| `check:component-colors` | ok — 556 sources, 19 reviewed exceptions (unchanged) |
+| `check:verification` | ok — evidence for 109 components, no counter changed |
+| `check:home-systems` | ok |
+| `typecheck`, `lint`, `check:rtl`, `check:typography`, `check:releases`, `check:a11y-coverage`, `check:label-association`, `check:role-coherence`, `check:motion-tokens`, `check:web-dogfooding`, `check:stories` | all PASS |
+| Unit tests | web 2576, React 649, theme engine 668 — all passing |
+| Production website build | PASS |
+
+### Screenshots at this head
+
+`exact-head/` holds ten captures from the actual production render at
+1440 light, 1440 dark, 1920, 768, 390, 320, 390 dark, 200% text at 1280,
+reduced motion, and the polygon with keyboard focus visible. Every one reported
+zero page errors and zero horizontal overflow; the only console entry across all
+ten was one 403 rate-limit on an external badge request in the dark capture,
+which is an artifact of repeated local runs rather than page code.
+
+### Not verified here
+
+The Vercel preview could not be checked from the environment this pass ran in:
+the preview host does not resolve and the proxy refuses the tunnel, and the
+Vercel API rejects the `zed-alleys` scope. The PR's Vercel comment reports the
+deployment Ready and updated 2026-11-02T12:05:40Z, but **which commit it serves,
+its console and its rendered behaviour are unverified**. Every screenshot and
+browser measurement above is from a local production build of this branch, which
+is branch behaviour, not preview behaviour.
+
+
 Implementation revision: `7fba3a8af4560b30364efad942cdd8f1f46952ef`.
 Screenshots and browser results below are from its **actual production Next.js
 render**, not mockups. The later evidence commit changes only this directory.

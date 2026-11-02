@@ -40,12 +40,13 @@
   },
   "heroRefinement": {
     "visibleControls": 0,
-    "autoplay": "24-second floating loop and 14-second traveling light; fresh each visit",
+    "autoplay": "floating rotation at 12 deg/s (a 30-second revolution) and a traveling light whose lap is 16.7-16.8 seconds as timed in the browser by check:hero-beacon, not quoted \u2014 the lap follows the cage geometry, so it moves whenever the circuit does. The earlier \"24-second / 14-second\" figures predate the cage-tracing beacon and were wrong for this head. Fresh playback each visit.",
     "gradient": "four facet materials: luminous cyan, translucent glass, deeper teal shadows and indigo return edges",
     "checks": [
       "production build",
       "changed-component lint",
-      "seven hero browser cases",
+      "seven hero browser cases (check:rebrand-hero, now wired into CI)",
+      "hero beacon gate: cage traversal, junction pulses, timed loop, drag, offscreen, focus contrast (check:hero-beacon)",
       "homepage keyboard, contrast and aura safeguards",
       "component-use guard",
       "typography guard"
