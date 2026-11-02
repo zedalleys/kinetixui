@@ -1,0 +1,17 @@
+{
+  "status": "draft candidate, not active DTCG contract",
+  "version": "v1",
+  "name": "Kinetic Weave",
+  "brand": {
+    "electricIndigo": "#6054F4",
+    "softViolet": "#A78BFA",
+    "electricCyan": "#28C7D9",
+    "midnightNavy": "#17233D",
+    "cloudWhite": "#F6F7FC",
+    "deepCanvas": "#0C1229"
+  },
+  "semanticCandidates": {
+    "light": {"background": "#FFFFFF", "foreground": "#17233D", "primary": "#6054F4", "primaryForeground": "#FFFFFF"},
+    "dark": {"background": "#0C1229", "foreground": "#F6F7FC", "primary": "#A78BFA", "primaryForeground": "#0C1229"}
+  }
+}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Layers } from "lucide-react";
+import { BrandMark } from "./brand-mark";
 import { siteConfig } from "@/lib/site";
 
 const COLS: { title: string; links: { label: string; href: string }[] }[] = [
@@ -72,11 +72,9 @@ export function SiteFooter() {
         <div className="grid gap-10 pb-12 pt-16 lg:grid-cols-[2fr_repeat(3,minmax(0,1fr))] lg:pt-20">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground">
-                <Layers className="size-[18px]" />
-              </span>
-              <span className="font-display text-wordmark font-bold uppercase tracking-[0.18em]">
-                Kinetix<span className="text-primary">ui</span>
+              <BrandMark className="size-8 shrink-0" />
+              <span className="font-display text-wordmark font-bold tracking-[-0.035em]">
+                Kinetix<span className="text-[#6054F4] dark:text-[#A78BFA]">UI</span>
               </span>
             </div>
             {/* The canonical tagline, not a second copy of it: this paragraph carried the retired
