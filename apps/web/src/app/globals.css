@@ -8,33 +8,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Brand surfaces only. Library tokens and Create's generated preview keep their own contracts. */
-.kx-polygon-surface {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 12%;
-  --muted-foreground: 0 0% 38%;
-  --border: 0 0% 85%;
-  --primary: 0 0% 16%;
-  --primary-foreground: 0 0% 100%;
-  --ring: 0 0% 32%;
-  --action: var(--primary);
-  --action-foreground: var(--primary-foreground);
-  --action-hover: 0 0% 24%;
-  --action-pressed: 0 0% 8%;
-  color: hsl(var(--foreground));
-  background: hsl(var(--background));
-}
-.dark .kx-polygon-surface {
-  --background: 0 0% 8%;
-  --foreground: 0 0% 94%;
-  --muted-foreground: 0 0% 70%;
-  --border: 0 0% 26%;
-  --primary: 0 0% 92%;
-  --primary-foreground: 0 0% 8%;
-  --ring: 0 0% 80%;
-  --action-hover: 0 0% 80%;
-  --action-pressed: 0 0% 100%;
-}
+/* Brand and controls use the canonical KinetixUI tokens. Never override --primary to grayscale. */
 .kx-polygon-hero-grid {
   display: grid;
   align-items: center;
@@ -48,7 +22,7 @@
   hyphens: manual;
   line-height: 1.04;
 }
-.kx-polygon { position: relative; color: hsl(var(--foreground)); }
+.kx-polygon { position: relative; color: hsl(var(--primary)); }
 .kx-polygon-art { display: block; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .kx-polygon-hero-mesh { width: 100%; max-width: 34rem; justify-self: end; }
 .kx-polygon-drift { animation: kx-mesh-drift 16s ease-in-out infinite alternate; }
@@ -1268,3 +1242,79 @@
   .kx-map-rule { display: none; }
 }
 .kx-polygon-surface .kx-pipe-impl { min-width: 0; overflow-wrap: anywhere; }
+
+/* A newly composed SVG network for the hero (never the uploaded artwork placed unchanged).
+   It uses the original blue primary and background tokens, including their dark counterparts. */
+.kx-hero-constellation {
+  position: relative;
+  width: 100%;
+  max-width: 40rem;
+  min-width: 0;
+  justify-self: end;
+  color: hsl(var(--primary));
+  isolation: isolate;
+}
+.kx-hero-constellation::before {
+  content: "";
+  position: absolute;
+  inset: 6% 0;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 65% 50%, hsl(var(--primary) / .11), transparent 65%);
+  filter: blur(18px);
+}
+.kx-hero-constellation-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  pointer-events: none;
+}
+.kx-hero-constellation-drift {
+  transform-origin: 50% 50%;
+  animation: kx-hero-drift 18s ease-in-out infinite alternate;
+}
+.kx-hero-facets polygon {
+  stroke: none;
+  opacity: .45;
+  animation: kx-hero-facet 9s ease-in-out infinite alternate;
+}
+.kx-hero-facets .kx-hero-facet-strong { opacity: .85; animation-delay: -4s; }
+.kx-hero-links line {
+  stroke: currentColor;
+  stroke-width: 1.1;
+  opacity: .3;
+}
+.kx-hero-nodes circle {
+  fill: hsl(var(--background));
+  stroke: currentColor;
+  stroke-width: 2;
+  opacity: .88;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: kx-hero-node 7s ease-in-out infinite alternate;
+}
+.kx-hero-nodes circle:nth-child(3n) { animation-delay: -3s; }
+.kx-hero-nodes circle:nth-child(4n) { animation-delay: -5s; }
+.kx-hero-traces path {
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-dasharray: .12 .88;
+  opacity: .85;
+  animation: kx-hero-signal 9s linear infinite;
+}
+.kx-hero-traces path:nth-child(2) { animation-delay: -3s; }
+.kx-hero-traces path:nth-child(3) { animation-delay: -6s; }
+.kx-hero-motion-control { inset-inline-end: 0; bottom: -1.5rem; z-index: 1; }
+.kx-hero-constellation:not([data-polygon-running="true"]) .kx-hero-constellation-art * { animation-play-state: paused; }
+@keyframes kx-hero-drift { to { transform: translate3d(-7px, 5px, 0); } }
+@keyframes kx-hero-facet { to { opacity: .24; } }
+@keyframes kx-hero-node { to { transform: scale(1.4); opacity: .55; } }
+@keyframes kx-hero-signal { to { stroke-dashoffset: -1; } }
+@media (max-width: 63.999rem) {
+  .kx-hero-constellation { justify-self: center; max-width: 25rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kx-hero-constellation-art * { animation: none !important; }
+}

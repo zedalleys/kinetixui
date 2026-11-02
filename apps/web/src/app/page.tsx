@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Boxes, Palette, Smartphone, Zap } from "lucide-react";
 import { Button } from "@kinetixui/ui";
-import { PolygonMesh } from "@/components/polygon-mesh";
+import { HeroPolygonConstellation } from "@/components/hero-polygon-constellation";
 import { HeroCommand } from "@/components/hero-command";
 import { PlatformTicker } from "@/components/platform-ticker";
 import { Reveal } from "@/components/reveal";
@@ -176,7 +176,7 @@ export default function HomePage() {
           <div className="kx-polygon-hero-grid">
             <div data-hero-copy className="min-w-0">
               <h1 id="home-title" className="font-display font-bold tracking-[-0.03em]">
-                <span className="block">One design language.</span>
+                <span className="block">One design system.</span><span className="block text-primary">Every platform.</span>
               </h1>
               <p className="mt-8 max-w-md text-lg text-muted-foreground">
                 Shared tokens. Components built for each platform.
@@ -192,7 +192,7 @@ export default function HomePage() {
                 </Link>
               </div>
             </div>
-            <PolygonMesh animated className="kx-polygon-hero-mesh" />
+            <HeroPolygonConstellation />
           </div>
         </div>
 

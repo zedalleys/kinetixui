@@ -584,14 +584,14 @@ for (const width of [320, 390, 768, 1024, 1440]) {
     const { page, context } = await open({ width });
     const facts = await page.evaluate(() => {
       const copy = document.querySelector('[data-hero-copy]').getBoundingClientRect();
-      const mesh = document.querySelector('.kx-polygon-hero-mesh').getBoundingClientRect();
+      const mesh = document.querySelector('.kx-hero-constellation').getBoundingClientRect();
       const overlap = Math.max(0, Math.min(copy.right, mesh.right) - Math.max(copy.left, mesh.left)) *
         Math.max(0, Math.min(copy.bottom, mesh.bottom) - Math.max(copy.top, mesh.top));
       const cta = document.querySelector('[data-hero-copy] a').getBoundingClientRect();
       return { overlap, ctaBottom: cta.bottom, height: innerHeight, glow: !!document.querySelector('.kx-polygon-hero .kx-glow') };
     });
     assert.equal(facts.overlap, 0, 'mesh overlaps hero text');
-    assert.equal(facts.glow, false, 'the discarded colored glow returned');
+    assert.equal(facts.glow, false, 'the discarded hero glow overlay returned');
     assert.ok(facts.ctaBottom < facts.height, 'primary action is below the first viewport');
     await context.close();
   });

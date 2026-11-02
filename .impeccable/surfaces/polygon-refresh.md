@@ -1,3 +1,7 @@
+# Current approved direction — 2026-11-02
+
+Keep the original KinetixUI logo and brand colors. The hero is a newly composed, animated SVG. Any older grayscale surface guidance below is superseded if inconsistent.
+
 # Polygon refresh
 
 THESIS: Let the connected grayscale facets carry the identity; keep the primary task clear.

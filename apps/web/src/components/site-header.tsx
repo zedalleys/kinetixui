@@ -14,7 +14,7 @@ export function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="kx-polygon-surface sticky top-0 z-40 w-full border-b border-border">
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       {/* row 1 — identity + tools */}
       {/*
         `min-h-12` and `flex-wrap`, not `h-12`: everything in this row is sized in `rem` — the mark is `size-8`

@@ -112,7 +112,7 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
       0.07 content ratio — a worse collapse than the one at 1280px, on a bigger screen. Capping in the
       reader's own unit lets the container grow with what it has to hold.
     */
-    <div className="kx-polygon-surface mx-auto w-full max-w-[96rem] px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[96rem] px-4 py-8 sm:px-6 lg:px-8">
       {/* ── header ───────────────────────────────────────────────────────── */}
       <header className="kx-create-heading relative flex flex-wrap items-end justify-between gap-8 border-b border-border pb-8">
         <div className="kx-create-mesh" aria-hidden="true"><PolygonMesh /></div>

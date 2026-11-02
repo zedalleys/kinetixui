@@ -54,18 +54,21 @@ try {
       await page.addScriptTag({ path: require.resolve('axe-core/axe.min.js') });
       const axe = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] } })).violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.map(n => n.target) })));
       if (route === '/') {
-        const mesh = page.locator('.kx-polygon-hero-mesh');
-        const button = mesh.getByRole('button', { name: 'Pause polygon animation' });
-        const shapes = await mesh.locator('.kx-polygon-art path, .kx-polygon-art circle').count();
-        assert.equal(shapes, 117, 'source geometry or bounded signal budget changed');
+        const mesh = page.locator('.kx-hero-constellation');
+        const button = mesh.locator('.kx-hero-motion-control');
+        assert.equal(await button.getAttribute('aria-label'), 'Pause polygon animation');
+        const facets = await mesh.locator('.kx-hero-facets polygon').count();
+        const links = await mesh.locator('.kx-hero-links line').count();
+        assert.equal(facets, 18, 'original designed facets must be stable');
+        assert.ok(links > 20 && links < 50, 'bounded SVG connector budget changed');
         if (reduced) {
           assert.equal(await button.isVisible(), false);
           assert.equal(await mesh.getAttribute('data-polygon-running'), 'false');
-          assert.equal(await mesh.locator('.kx-polygon-drift').evaluate(el => getComputedStyle(el).animationName), 'none');
+          assert.equal(await mesh.locator('.kx-hero-constellation-drift').evaluate(el => getComputedStyle(el).animationName), 'none');
         } else {
           await mesh.scrollIntoViewIfNeeded();
-          await page.waitForFunction(() => document.querySelector('.kx-polygon-hero-mesh').dataset.polygonRunning === 'true');
-          const link = mesh.locator('.kx-polygon-signals path').first();
+          await page.waitForFunction(() => document.querySelector('.kx-hero-constellation').dataset.polygonRunning === 'true');
+          const link = mesh.locator('.kx-hero-traces path').first();
           const before = await link.evaluate(el => getComputedStyle(el).strokeDashoffset);
           await page.waitForTimeout(250);
           assert.notEqual(await link.evaluate(el => getComputedStyle(el).strokeDashoffset), before, 'links do not animate');
@@ -75,10 +78,10 @@ try {
           assert.equal(await mesh.getAttribute('data-polygon-running'), 'false');
           await page.keyboard.press('Enter');
           await page.locator('footer').scrollIntoViewIfNeeded();
-          await page.waitForFunction(() => document.querySelector('.kx-polygon-hero-mesh').dataset.polygonRunning === 'false');
+          await page.waitForFunction(() => document.querySelector('.kx-hero-constellation').dataset.polygonRunning === 'false');
           await page.evaluate(() => window.scrollTo(0, 0));
           await page.emulateMedia({ reducedMotion: 'reduce' });
-          await page.waitForFunction(() => document.querySelector('.kx-polygon-hero-mesh').dataset.polygonRunning === 'false');
+          await page.waitForFunction(() => document.querySelector('.kx-hero-constellation').dataset.polygonRunning === 'false');
           await page.emulateMedia({ reducedMotion: 'no-preference' });
         }
         const cta = await page.locator('[data-hero-copy] a').first().boundingBox();

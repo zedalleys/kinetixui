@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-11-01T20:05:08.752087+00:00",
-  "title": "Design System: KinetixUI polygon brand surfaces",
+  "title": "Design System: KinetixUI original-brand animated polygon hero",
   "extensions": {
     "scope": {
       "surfaces": [
@@ -30,274 +30,40 @@
     },
     "colorMeta": {
       "brand-background": {
-        "role": "neutral",
+        "role": "surface",
         "displayName": "Brand Background",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+        "source": "hsl(var(--background))",
+        "note": "Inherit the canonical KinetixUI theme; never overwrite brand colors with grayscale."
       },
       "brand-foreground": {
-        "role": "neutral",
+        "role": "text",
         "displayName": "Brand Foreground",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
-      },
-      "brand-muted-foreground": {
-        "role": "neutral",
-        "displayName": "Brand Muted Foreground",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
-      },
-      "brand-border": {
-        "role": "neutral",
-        "displayName": "Brand Border",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+        "source": "hsl(var(--foreground))",
+        "note": "Inherit the canonical KinetixUI theme; never overwrite brand colors with grayscale."
       },
       "brand-primary": {
         "role": "primary",
         "displayName": "Brand Primary",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+        "source": "hsl(var(--primary))",
+        "note": "Inherit the canonical KinetixUI theme; never overwrite brand colors with grayscale."
       },
       "brand-primary-foreground": {
-        "role": "primary",
+        "role": "on-primary",
         "displayName": "Brand Primary Foreground",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+        "source": "hsl(var(--primary-foreground))",
+        "note": "Inherit the canonical KinetixUI theme; never overwrite brand colors with grayscale."
       },
       "brand-ring": {
-        "role": "neutral",
+        "role": "focus",
         "displayName": "Brand Ring",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+        "source": "hsl(var(--ring))",
+        "note": "Inherit the canonical KinetixUI theme; never overwrite brand colors with grayscale."
       },
-      "brand-action-hover": {
-        "role": "neutral",
-        "displayName": "Brand Action Hover",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
-      },
-      "brand-action-pressed": {
-        "role": "neutral",
-        "displayName": "Brand Action Pressed",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
-      },
-      "dark-brand-background": {
-        "role": "neutral",
-        "displayName": "Dark Brand Background",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
-      },
-      "dark-brand-foreground": {
-        "role": "neutral",
-        "displayName": "Dark Brand Foreground",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
-      },
-      "dark-brand-muted-foreground": {
-        "role": "neutral",
-        "displayName": "Dark Brand Muted Foreground",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
-      },
-      "dark-brand-border": {
-        "role": "neutral",
-        "displayName": "Dark Brand Border",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
-      },
-      "dark-brand-primary": {
-        "role": "primary",
-        "displayName": "Dark Brand Primary",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
-      },
-      "dark-brand-primary-foreground": {
-        "role": "primary",
-        "displayName": "Dark Brand Primary Foreground",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
-      },
-      "dark-brand-ring": {
-        "role": "neutral",
-        "displayName": "Dark Brand Ring",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
-      },
-      "dark-brand-action-hover": {
-        "role": "neutral",
-        "displayName": "Dark Brand Action Hover",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
-      },
-      "dark-brand-action-pressed": {
-        "role": "neutral",
-        "displayName": "Dark Brand Action Pressed",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(26% 0 0)",
-          "oklch(38% 0 0)",
-          "oklch(49% 0 0)",
-          "oklch(61% 0 0)",
-          "oklch(72% 0 0)",
-          "oklch(84% 0 0)",
-          "oklch(95% 0 0)"
-        ],
-        "rampPurpose": "Synthesized grayscale preview strip; not additional implementation tokens."
+      "brand-border": {
+        "role": "border",
+        "displayName": "Brand Border",
+        "source": "hsl(var(--border))",
+        "note": "Inherit the canonical KinetixUI theme; never overwrite brand colors with grayscale."
       }
     },
     "typographyMeta": {
@@ -404,21 +170,21 @@
       "refersTo": "button-primary",
       "description": "Existing large Primary Button with homepage-only wrapping and narrower inline padding; library API and defaults are unchanged.",
       "html": "<button class=\"ds-primary\"><span class=\"ds-primary-label\">Explore components</span><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M7 17 17 7M7 7h10v10\"/></svg></button>",
-      "css": ".ds-primary{display:inline-flex;align-items:center;justify-content:center;gap:4px;border:0;border-radius:var(--radius-md,8px);padding:12px 16px;max-width:100%;white-space:normal;font-family:var(--font-sans,Inter),system-ui,sans-serif;font-size:.875rem;line-height:1.25rem;letter-spacing:.1px;font-weight:500;background:hsl(var(--action,0 0% 16%));color:hsl(var(--action-foreground,0 0% 100%));transition:background-color var(--duration-instant,100ms) var(--easing-standard,cubic-bezier(.4,0,.2,1))}.ds-primary:hover{background:hsl(var(--action,0 0% 16%)/.9)}.ds-primary:active{background:hsl(var(--action,0 0% 16%)/.85)}.ds-primary:focus-visible{outline:none;box-shadow:var(--shadow-focus,0 0 0 1px hsl(var(--focus,var(--ring,0 0% 32%))),0 0 0 4px hsl(var(--focus,var(--ring,0 0% 32%))/.2));}.ds-primary:disabled{pointer-events:none;opacity:var(--opacity-disabled,.5);background:hsl(var(--border,0 0% 85%));color:hsl(var(--muted-foreground,0 0% 38%))}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}.ds-primary-label{min-width:0;overflow-wrap:break-word}.ds-primary svg{flex-shrink:0}"
+      "css": ".ds-primary{display:inline-flex;align-items:center;justify-content:center;gap:4px;border:0;border-radius:var(--radius-md,8px);padding:12px 16px;max-width:100%;white-space:normal;font-family:var(--font-sans,Inter),system-ui,sans-serif;font-size:.875rem;line-height:1.25rem;letter-spacing:.1px;font-weight:500;background:hsl(var(--action,224 76% 48%));color:hsl(var(--action-foreground,0 0% 100%));transition:background-color var(--duration-instant,100ms) var(--easing-standard,cubic-bezier(.4,0,.2,1))}.ds-primary:hover{background:hsl(var(--action,224 76% 48%)/.9)}.ds-primary:active{background:hsl(var(--action,224 76% 48%)/.85)}.ds-primary:focus-visible{outline:none;box-shadow:var(--shadow-focus,0 0 0 1px hsl(var(--focus,var(--ring,0 0% 32%))),0 0 0 4px hsl(var(--focus,var(--ring,0 0% 32%))/.2));}.ds-primary:disabled{pointer-events:none;opacity:var(--opacity-disabled,.5);background:hsl(var(--border,0 0% 85%));color:hsl(var(--muted-foreground,0 0% 38%))}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}.ds-primary-label{min-width:0;overflow-wrap:break-word}.ds-primary svg{flex-shrink:0}"
     },
     {
       "name": "Input",
       "kind": "input",
       "description": "Existing library field using inherited semantic roles; not a new brand input variant.",
       "html": "<input class=\"ds-input\" aria-label=\"Theme name\" placeholder=\"Theme name\">",
-      "css": ".ds-input{width:100%;border:1px solid hsl(var(--muted-foreground,0 0% 38%)/.8);border-radius:var(--radius-field,4px);background:hsl(var(--background,0 0% 100%));color:hsl(var(--foreground,0 0% 12%));padding:12px;font-family:var(--font-sans,Inter),system-ui,sans-serif;font-size:.875rem;line-height:1.25rem;letter-spacing:.25px;transition:border-color var(--duration-instant,100ms) var(--easing-standard,cubic-bezier(.4,0,.2,1)),box-shadow var(--duration-instant,100ms) var(--easing-standard,cubic-bezier(.4,0,.2,1)),background-color var(--duration-instant,100ms) var(--easing-standard,cubic-bezier(.4,0,.2,1))}.ds-input::placeholder{color:hsl(var(--muted-foreground,0 0% 38%))}@media(hover:hover){.ds-input:enabled:hover:not(:focus):not([aria-invalid=true]):not([readonly]){border-color:hsl(var(--muted-foreground,0 0% 38%))}}.ds-input:focus-visible{outline:none;border-color:hsl(var(--action,0 0% 16%));box-shadow:var(--shadow-focus,0 0 0 1px hsl(var(--focus,var(--ring,0 0% 32%))),0 0 0 4px hsl(var(--focus,var(--ring,0 0% 32%))/.2))}.ds-input[readonly]{background:hsl(var(--muted,0 0% 96%))}.ds-input[aria-invalid=true]{border-color:hsl(var(--destructive,0 72% 45%))}.ds-input[aria-invalid=true]:focus-visible{box-shadow:var(--shadow-focus-destructive)}.ds-input:disabled{cursor:not-allowed;opacity:var(--opacity-disabled,.5)}@media(prefers-reduced-motion:reduce){.ds-input{transition:none}}"
+      "css": ".ds-input{width:100%;border:1px solid hsl(var(--muted-foreground,0 0% 38%)/.8);border-radius:var(--radius-field,4px);background:hsl(var(--background,0 0% 100%));color:hsl(var(--foreground,0 0% 12%));padding:12px;font-family:var(--font-sans,Inter),system-ui,sans-serif;font-size:.875rem;line-height:1.25rem;letter-spacing:.25px;transition:border-color var(--duration-instant,100ms) var(--easing-standard,cubic-bezier(.4,0,.2,1)),box-shadow var(--duration-instant,100ms) var(--easing-standard,cubic-bezier(.4,0,.2,1)),background-color var(--duration-instant,100ms) var(--easing-standard,cubic-bezier(.4,0,.2,1))}.ds-input::placeholder{color:hsl(var(--muted-foreground,0 0% 38%))}@media(hover:hover){.ds-input:enabled:hover:not(:focus):not([aria-invalid=true]):not([readonly]){border-color:hsl(var(--muted-foreground,0 0% 38%))}}.ds-input:focus-visible{outline:none;border-color:hsl(var(--action,224 76% 48%));box-shadow:var(--shadow-focus,0 0 0 1px hsl(var(--focus,var(--ring,0 0% 32%))),0 0 0 4px hsl(var(--focus,var(--ring,0 0% 32%))/.2))}.ds-input[readonly]{background:hsl(var(--muted,0 0% 96%))}.ds-input[aria-invalid=true]{border-color:hsl(var(--destructive,0 72% 45%))}.ds-input[aria-invalid=true]:focus-visible{box-shadow:var(--shadow-focus-destructive)}.ds-input:disabled{cursor:not-allowed;opacity:var(--opacity-disabled,.5)}@media(prefers-reduced-motion:reduce){.ds-input{transition:none}}"
     },
     {
       "name": "Numbered navigation",
       "kind": "nav",
       "description": "Wrapping desktop section links with a structural current-page underline.",
       "html": "<nav class=\"ds-nav\" aria-label=\"Primary\"><a class=\"ds-nav-link\" href=\"/components\" aria-current=\"page\"><span class=\"ds-index\">01</span>Components</a><a class=\"ds-nav-link\" href=\"/create\"><span class=\"ds-index\">02</span>Create</a></nav>",
-      "css": ".ds-nav{display:flex;flex-wrap:wrap;min-height:40px;border-top:1px solid hsl(var(--border,0 0% 85%));font-family:var(--font-sans,Inter),system-ui,sans-serif;}.ds-nav-link{position:relative;display:flex;align-items:center;gap:8px;padding:0 8px;min-height:40px;font-size:.875rem;font-weight:500;text-decoration:none;color:hsl(var(--muted-foreground,0 0% 38%));transition:color 150ms}.ds-nav-link:hover,.ds-nav-link[aria-current]{color:hsl(var(--foreground,0 0% 12%))}.ds-nav-link[aria-current]:after{content:\"\";position:absolute;inset-inline:12px;bottom:-1px;height:2px;background:hsl(var(--primary,0 0% 16%))}.ds-nav-link:focus-visible{outline:2px solid hsl(var(--ring,0 0% 32%));outline-offset:4px;}.ds-index{font-family:var(--font-mono,\"JetBrains Mono\"),monospace;font-size:.75rem;color:hsl(var(--muted-foreground,0 0% 38%))}"
+      "css": ".ds-nav{display:flex;flex-wrap:wrap;min-height:40px;border-top:1px solid hsl(var(--border,0 0% 85%));font-family:var(--font-sans,Inter),system-ui,sans-serif;}.ds-nav-link{position:relative;display:flex;align-items:center;gap:8px;padding:0 8px;min-height:40px;font-size:.875rem;font-weight:500;text-decoration:none;color:hsl(var(--muted-foreground,0 0% 38%));transition:color 150ms}.ds-nav-link:hover,.ds-nav-link[aria-current]{color:hsl(var(--foreground,0 0% 12%))}.ds-nav-link[aria-current]:after{content:\"\";position:absolute;inset-inline:12px;bottom:-1px;height:2px;background:hsl(var(--primary,224 76% 48%))}.ds-nav-link:focus-visible{outline:2px solid hsl(var(--ring,0 0% 32%));outline-offset:4px;}.ds-index{font-family:var(--font-mono,\"JetBrains Mono\"),monospace;font-size:.75rem;color:hsl(var(--muted-foreground,0 0% 38%))}"
     },
     {
       "name": "Roadmap label",
@@ -445,42 +211,42 @@
     }
   ],
   "narrative": {
-    "northStar": "Connected grayscale facets",
-    "overview": "Connected grayscale facets carry the brand while plain typography and clear controls carry the task. White or charcoal surfaces, thin links and translucent triangles surround the existing component and theme workflows. The visual authority is the owner-supplied OH38WC1.svg and matching JPG; no alternative artwork or Arabian motifs belong to this refresh.\n\nThis document governs the implemented homepage, shared website header/footer and Create chrome only. Its brand color names describe local website overrides, not new library tokens. Library public APIs, semantic token contracts, status colors, component states and Create's generated preview/export semantics remain authoritative in their existing sources. Create remains the implemented theme editor; future Studio capabilities remain roadmap.",
+    "northStar": "An original animated SVG network in the canonical KinetixUI primary blue, beside a simpler hero.",
+    "overview": "Keep the existing KinetixUI logo and brand palette. The old grayscale overrides are removed. Use the uploaded geometric art as inspiration, not as the unchanged hero image.",
     "keyCharacteristics": [
-      "Grayscale brand surfaces with theme-aware neutral ink.",
-      "Exact source geometry, bounded motion and static secondary meshes.",
-      "Self-hosted Space Grotesk, Inter and JetBrains Mono.",
-      "Responsive spacing, wrapping controls, RTL and visible keyboard focus."
+      "Original inline SVG hero constellation, triangular facets, node signals and subtle motion.",
+      "Existing brand blue, semantic tokens and unchanged header/footer logo markup.",
+      "Accessible motion pause, reduced-motion fallback, hidden-tab and offscreen pause.",
+      "Original library public API, 8px spacing, responsive and RTL behavior preserved."
     ],
     "rules": [
       {
-        "name": "Scope",
-        "body": "Apply neutral brand overrides only to the approved website surfaces; never propagate them into library token generation or Create preview/export contracts.",
+        "name": "Brand fidelity",
+        "body": "Website and Create inherit canonical CSS tokens with no local grayscale primary override.",
         "section": "colors"
       },
       {
-        "name": "Source Geometry",
-        "body": "Keep the 114 source shapes and only three overlay links; preserve source coordinates and provenance.",
-        "section": "shapes"
+        "name": "SVG motion",
+        "body": "Draw an original hero constellation with animated connector strokes and no frame-driven React updates.",
+        "section": "components"
       },
       {
-        "name": "Motion Permission",
-        "body": "Animate only the visible homepage mesh while the document is visible, reduced motion is off and the user has not paused it.",
+        "name": "Motion permission",
+        "body": "Animate only while visible, tab active, reduced motion off and user unpaused.",
         "section": "components"
       }
     ],
     "dos": [
-      "Do use the supplied grayscale geometry and keep its provenance with the implementation.",
-      "Do retain the 8px spacing foundation and allow text, controls and navigation to reflow.",
-      "Do preserve real component states and Create theme/export behavior.",
-      "Do keep secondary meshes static and respect reduced motion and the persisted pause choice."
+      "Use hsl(var(--primary)) and other existing KinetixUI semantic tokens.",
+      "Use the new hero SVG rather than placing uploaded artwork unchanged.",
+      "Keep original logo markup and all Create preview/export contracts unchanged.",
+      "Respect reduced motion, pause, mobile/RTL and the performance budget."
     ],
     "donts": [
-      "Don't introduce Arabian motifs, the excluded coloured reference or replacement mesh artwork.",
-      "Don't apply brand surface values as replacements for library semantic tokens.",
-      "Don't advertise future Studio features as implemented.",
-      "Don't add unbounded particles, extra overlay links or animation behind Create controls."
+      "Do not override the primary brand color to black, grayscale or newly invented teal.",
+      "Do not swap or redraw the KinetixUI logo.",
+      "Do not add Arabian motifs or broad visual redesign.",
+      "Do not claim future Create Studio features are already shipped."
     ]
   }
 }
