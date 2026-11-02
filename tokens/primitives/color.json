@@ -588,6 +588,11 @@
         "$type": "color",
         "$description": "Kinetic Weave v1 additive brand ramp."
       },
+      "600": {
+        "$value": "#4A5673",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp \u2014 the boundary step. Chosen to match the weight of the slate-blue `blue.400` it replaces on `border`, `input`, `sidebar-border` and the Switch off-track, not to change it: 2.53:1 against `background` and 1.98:1 against `card` in dark, the same figures `blue.400` measured, so these roles stay as deliberately subtle as ACCESSIBILITY-AUDIT.md \u00a7A3 and check-contrast.mjs\u0027 KNOWN_SUB3 describe. Hue 222 matches navy.700/800/950 rather than blue\u0027s 204."
+      },
       "700": {
         "$value": "#283656",
         "$type": "color",

@@ -141,6 +141,7 @@
   --navy-100: 225 39% 88%; /** Kinetic Weave v1 additive brand ramp. */
   --navy-300: 223 28% 68%; /** Kinetic Weave v1 additive brand ramp. */
   --navy-500: 220 20% 48%; /** Kinetic Weave v1 additive brand ramp. */
+  --navy-600: 222 22% 37%; /** Kinetic Weave v1 additive brand ramp — the boundary step. Chosen to match the weight of the slate-blue `blue.400` it replaces on `border`, `input`, `sidebar-border` and the Switch off-track, not to change it: 2.53:1 against `background` and 1.98:1 against `card` in dark, the same figures `blue.400` measured, so these roles stay as deliberately subtle as ACCESSIBILITY-AUDIT.md §A3 and check-contrast.mjs' KNOWN_SUB3 describe. Hue 222 matches navy.700/800/950 rather than blue's 204. */
   --navy-700: 222 37% 25%; /** Kinetic Weave v1 additive brand ramp. */
   --navy-800: 221 42% 19%; /** Kinetic Weave v1 additive brand ramp. */
   --navy-850: 223 51% 14%; /** Kinetic Weave v1 additive brand ramp. */
@@ -342,8 +343,8 @@
   --success-foreground: 120 8% 10%;
   --warning: 37 100% 73%;
   --warning-foreground: 37 100% 8%;
-  --border: 204 33% 33%;
-  --input: 204 33% 33%;
+  --border: 222 22% 37%; /** the Kinetic Weave boundary step. Was `blue.400`, a slate-blue (hue 204) the rebrand never revisited, while every dark surface moved to navy (hue 222). `navy.600` was chosen to match `blue.400`'s weight exactly — 2.53:1 against `background`, 1.98:1 against `card`, the same figures — so this stays the deliberately subtle boundary that ACCESSIBILITY-AUDIT.md §A3 describes and keeps its KNOWN_SUB3 entry. Hue only; nothing about the visual weight changed. */
+  --input: 222 22% 37%; /** the input outline. Same hue-only correction as `border`, which it has always matched: `blue.400` → `navy.600` at identical measured weight (2.53:1 on `background`). */
   --ring: 246 100% 85%; /** focus ring — tracks dark --primary, as it has since the azure palette. */
   --chart-1: 255 92% 76%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --chart-2: 116 8% 59%;
@@ -359,9 +360,9 @@
   --sidebar-primary-foreground: 228 55% 10%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --sidebar-accent: 222 37% 25%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --sidebar-accent-foreground: 230 50% 98%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
-  --sidebar-border: 204 33% 33%;
+  --sidebar-border: 222 22% 37%; /** the sidebar boundary. Same hue-only correction as `border`: `blue.400` → `navy.600` at identical measured weight. */
   --sidebar-ring: 246 100% 85%;
-  --tertiary: 204 33% 33%;
+  --tertiary: 222 22% 37%; /** the Switch off-track. Hue-only correction from the slate-blue `blue.400` to `navy.600` at identical measured weight (1.98:1 against `card`). This stays below 3:1 **by design** — switch.tsx and check-contrast.mjs' KNOWN_SUB3 both record that the thumb's travel and `aria-checked` carry the state, not the track's contrast — so the tracked SC 1.4.11 exception is unchanged, neither removed nor broadened. Raising the track to 3:1 would be a separate, cross-platform design call. */
   --tertiary-foreground: 212 100% 97%;
   --info: 204 33% 68%;
   --info-foreground: 205 55% 4%;

@@ -64,7 +64,8 @@ describe("colors: value format, copy ramp and swatch cards", { timeout: 20_000 }
     const writeText = vi.fn(() => Promise.resolve());
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
     render(<ColorsContent />);
-    const copyRamp = screen.getAllByRole("button", { name: "Copy ramp as CSS" })[0];
+    // Named by its ramp, so this does not depend on where azure sits in the page order.
+    const copyRamp = screen.getByRole("button", { name: "Copy azure ramp as CSS" });
     expect(copyRamp).toHaveAttribute("type", "button");
     fireEvent.click(copyRamp);
     expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/--azure-50: #eff6ff/));

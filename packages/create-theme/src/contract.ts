@@ -37,7 +37,7 @@ export const TOKEN_CONTRACT: TokenRow[] = [
   { token: "destructive", light: "#c60a0a", dark: "#e89999", note: "stepped for AA on the Kinetic Weave dark surfaces" },
   { token: "success", light: "#5d6d5c", dark: "#90a08f" },
   { token: "warning", light: "#7f5b21", dark: "#ffc975", note: "darkened for AA" },
-  { token: "border", light: "#92b2c8", dark: "#395a70" },
+  { token: "border", light: "#92b2c8", dark: "#4a5673" },
   { token: "ring", light: "#5143db", dark: "#bbb3ff", note: "synthesized" },
   // Role tokens layered over primary / ring (added after the shadcn-compatible set on purpose: the
   // first row for a given hex names it in tokenNameForHex, so `primary` stays the label).

@@ -131,6 +131,7 @@ class KinetixColors {
     static const colorNavy300 = Color(0xFF98A5C5); /** Kinetic Weave v1 additive brand ramp. */
     static const colorNavy50 = Color(0xFFF6F7FC); /** Kinetic Weave v1 additive brand ramp. */
     static const colorNavy500 = Color(0xFF637394); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorNavy600 = Color(0xFF4A5673); /** Kinetic Weave v1 additive brand ramp — the boundary step. Chosen to match the weight of the slate-blue `blue.400` it replaces on `border`, `input`, `sidebar-border` and the Switch off-track, not to change it: 2.53:1 against `background` and 1.98:1 against `card` in dark, the same figures `blue.400` measured, so these roles stay as deliberately subtle as ACCESSIBILITY-AUDIT.md §A3 and check-contrast.mjs' KNOWN_SUB3 describe. Hue 222 matches navy.700/800/950 rather than blue's 204. */
     static const colorNavy700 = Color(0xFF283656); /** Kinetic Weave v1 additive brand ramp. */
     static const colorNavy800 = Color(0xFF1C2945); /** Kinetic Weave v1 additive brand ramp. */
     static const colorNavy850 = Color(0xFF111B35); /** Kinetic Weave v1 additive brand ramp. */

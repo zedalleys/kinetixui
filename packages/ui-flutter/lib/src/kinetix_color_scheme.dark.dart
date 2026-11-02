@@ -28,8 +28,8 @@ class KinetixColorSchemeDark {
   static const successForeground = Color(0xFF171B17);
   static const warning = Color(0xFFFFC975);
   static const warningForeground = Color(0xFF2A1A00);
-  static const border = Color(0xFF395A70);
-  static const input = Color(0xFF395A70);
+  static const border = Color(0xFF4A5673);
+  static const input = Color(0xFF4A5673);
   static const ring = Color(0xFFBBB3FF);
   static const chart1 = Color(0xFFA78BFA);
   static const chart2 = Color(0xFF90A08F);
@@ -45,9 +45,9 @@ class KinetixColorSchemeDark {
   static const sidebarPrimaryForeground = Color(0xFF0C1229);
   static const sidebarAccent = Color(0xFF283656);
   static const sidebarAccentForeground = Color(0xFFF6F7FC);
-  static const sidebarBorder = Color(0xFF395A70);
+  static const sidebarBorder = Color(0xFF4A5673);
   static const sidebarRing = Color(0xFFBBB3FF);
-  static const tertiary = Color(0xFF395A70);
+  static const tertiary = Color(0xFF4A5673);
   static const tertiaryForeground = Color(0xFFF0F7FF);
   static const info = Color(0xFF92B2C8);
   static const infoForeground = Color(0xFF050C11);

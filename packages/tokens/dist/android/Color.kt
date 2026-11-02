@@ -99,6 +99,7 @@ object KinetixPalette {
   val colorNavy300 = Color(0xff98a5c5)
   val colorNavy50 = Color(0xfff6f7fc)
   val colorNavy500 = Color(0xff637394)
+  val colorNavy600 = Color(0xff4a5673)
   val colorNavy700 = Color(0xff283656)
   val colorNavy800 = Color(0xff1c2945)
   val colorNavy850 = Color(0xff111b35)

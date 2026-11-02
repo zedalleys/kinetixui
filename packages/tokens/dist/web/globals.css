@@ -139,6 +139,7 @@
   --navy-100: 225 39% 88%; /** Kinetic Weave v1 additive brand ramp. */
   --navy-300: 223 28% 68%; /** Kinetic Weave v1 additive brand ramp. */
   --navy-500: 220 20% 48%; /** Kinetic Weave v1 additive brand ramp. */
+  --navy-600: 222 22% 37%; /** Kinetic Weave v1 additive brand ramp — the boundary step. Chosen to match the weight of the slate-blue `blue.400` it replaces on `border`, `input`, `sidebar-border` and the Switch off-track, not to change it: 2.53:1 against `background` and 1.98:1 against `card` in dark, the same figures `blue.400` measured, so these roles stay as deliberately subtle as ACCESSIBILITY-AUDIT.md §A3 and check-contrast.mjs' KNOWN_SUB3 describe. Hue 222 matches navy.700/800/950 rather than blue's 204. */
   --navy-700: 222 37% 25%; /** Kinetic Weave v1 additive brand ramp. */
   --navy-800: 221 42% 19%; /** Kinetic Weave v1 additive brand ramp. */
   --navy-850: 223 51% 14%; /** Kinetic Weave v1 additive brand ramp. */

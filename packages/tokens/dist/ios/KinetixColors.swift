@@ -128,6 +128,7 @@ public enum KinetixColor {
     public static let colorNavy300 = UIColor(red: 0.596, green: 0.647, blue: 0.773, alpha: 1) /** Kinetic Weave v1 additive brand ramp. */
     public static let colorNavy50 = UIColor(red: 0.965, green: 0.969, blue: 0.988, alpha: 1) /** Kinetic Weave v1 additive brand ramp. */
     public static let colorNavy500 = UIColor(red: 0.388, green: 0.451, blue: 0.580, alpha: 1) /** Kinetic Weave v1 additive brand ramp. */
+    public static let colorNavy600 = UIColor(red: 0.290, green: 0.337, blue: 0.451, alpha: 1) /** Kinetic Weave v1 additive brand ramp — the boundary step. Chosen to match the weight of the slate-blue `blue.400` it replaces on `border`, `input`, `sidebar-border` and the Switch off-track, not to change it: 2.53:1 against `background` and 1.98:1 against `card` in dark, the same figures `blue.400` measured, so these roles stay as deliberately subtle as ACCESSIBILITY-AUDIT.md §A3 and check-contrast.mjs' KNOWN_SUB3 describe. Hue 222 matches navy.700/800/950 rather than blue's 204. */
     public static let colorNavy700 = UIColor(red: 0.157, green: 0.212, blue: 0.337, alpha: 1) /** Kinetic Weave v1 additive brand ramp. */
     public static let colorNavy800 = UIColor(red: 0.110, green: 0.161, blue: 0.271, alpha: 1) /** Kinetic Weave v1 additive brand ramp. */
     public static let colorNavy850 = UIColor(red: 0.067, green: 0.106, blue: 0.208, alpha: 1) /** Kinetic Weave v1 additive brand ramp. */

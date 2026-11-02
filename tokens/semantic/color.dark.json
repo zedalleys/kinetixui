@@ -99,12 +99,14 @@
       "$type": "color"
     },
     "border": {
-      "$value": "{color.blue.400}",
-      "$type": "color"
+      "$value": "{color.navy.600}",
+      "$type": "color",
+      "$description": "the Kinetic Weave boundary step. Was `blue.400`, a slate-blue (hue 204) the rebrand never revisited, while every dark surface moved to navy (hue 222). `navy.600` was chosen to match `blue.400`\u0027s weight exactly \u2014 2.53:1 against `background`, 1.98:1 against `card`, the same figures \u2014 so this stays the deliberately subtle boundary that ACCESSIBILITY-AUDIT.md \u00a7A3 describes and keeps its KNOWN_SUB3 entry. Hue only; nothing about the visual weight changed."
     },
     "input": {
-      "$value": "{color.blue.400}",
-      "$type": "color"
+      "$value": "{color.navy.600}",
+      "$type": "color",
+      "$description": "the input outline. Same hue-only correction as `border`, which it has always matched: `blue.400` \u2192 `navy.600` at identical measured weight (2.53:1 on `background`)."
     },
     "ring": {
       "$value": "{color.indigo.300}",
@@ -176,16 +178,18 @@
       "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "sidebar-border": {
-      "$value": "{color.blue.400}",
-      "$type": "color"
+      "$value": "{color.navy.600}",
+      "$type": "color",
+      "$description": "the sidebar boundary. Same hue-only correction as `border`: `blue.400` \u2192 `navy.600` at identical measured weight."
     },
     "sidebar-ring": {
       "$value": "{color.indigo.300}",
       "$type": "color"
     },
     "tertiary": {
-      "$value": "{color.blue.400}",
-      "$type": "color"
+      "$value": "{color.navy.600}",
+      "$type": "color",
+      "$description": "the Switch off-track. Hue-only correction from the slate-blue `blue.400` to `navy.600` at identical measured weight (1.98:1 against `card`). This stays below 3:1 **by design** \u2014 switch.tsx and check-contrast.mjs\u0027 KNOWN_SUB3 both record that the thumb\u0027s travel and `aria-checked` carry the state, not the track\u0027s contrast \u2014 so the tracked SC 1.4.11 exception is unchanged, neither removed nor broadened. Raising the track to 3:1 would be a separate, cross-platform design call."
     },
     "tertiary-foreground": {
       "$value": "{color.blue.50}",

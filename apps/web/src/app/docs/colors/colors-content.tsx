@@ -9,20 +9,27 @@ import { useDocumentDirection } from "@/lib/use-document-direction";
 import { tokenNameForHex, hexToRgb, rgbToHsl, contrastRatio } from "@kinetixui/create-theme";
 import { SectionHead } from "@/components/section-head";
 
-const RAMPS = ["azure", "blue", "green", "taupe", "cream", "amber", "red", "neutral"] as const;
+const RAMPS = ["indigo", "violet", "cyan", "navy", "blue", "green", "amber", "red", "taupe", "cream", "neutral", "azure"] as const;
 const STEPS = ["0", "50", "100", "150", "200", "300", "400", "500", "600", "700", "800", "850", "900", "950", "1000"];
 const FORMATS = ["hex", "hsl", "rgb"] as const;
 type Format = (typeof FORMATS)[number];
 
 const RAMP_NOTE: Record<(typeof RAMPS)[number], string> = {
-  azure: "Action blue — the interactive hue. Backs --primary, --ring and --accent-foreground (light = azure.700, dark = azure.400).",
-  blue: "Navy — backs --foreground and the dark surface scale, plus --border/--input and --accent on light.",
-  green: "Secondary + success — backs --secondary, --secondary-foreground, --success.",
-  amber: "Reserved for --warning and the data-viz palette (--chart-3).",
-  red: "Backs --destructive (light = red.500, dark = red.300) and the data-viz reds (--chart-4, --chart-7).",
+  indigo:
+    "Electric Indigo — the Kinetic Weave identity hue and the interactive one. Backs --brand (light, indigo.500), --primary / --action / --ring (light indigo.600, dark indigo.300) and --accent on light. The identity step and the action step are deliberately different: the action is one step darker in light and lighter in dark so it clears AA as a foreground.",
+  violet:
+    "Soft Violet — the dark identity. Backs --brand in dark (violet.400 #A78BFA) and --chart-1 in dark. It is not the dark action colour: that is indigo.300, because Soft Violet measures 3.72:1 on the Kinetic Weave dark surfaces.",
+  cyan: "Electric Cyan — the hero's atmosphere and glass shading, plus --chart-6. No surface or text role resolves to it.",
+  navy: "Midnight Navy — the Kinetic Weave neutral. Backs the whole dark scale (--background navy.950, --card navy.800, --muted / --accent navy.700), --foreground in both themes, and the boundary step navy.600 on --border / --input / --sidebar-border / --tertiary in dark.",
+  blue: "The inherited slate-blue. Now backs only the info family (--info, --info-foreground, --on-info-container, --tertiary-foreground) and --border / --input on light, where the values come from the Figma source.",
+  green: "Secondary + success — backs --secondary, --secondary-foreground, --success and the data-viz greens (--chart-2, --chart-8).",
+  amber: "Backs --warning / --on-warning-container and the data-viz palette (--chart-3).",
+  red: "Backs --destructive (light red.500, dark red.200) and the data-viz reds (--chart-4, --chart-7).",
   taupe: "Data-viz only today (--chart-5) — open for a semantic role in a future release.",
   cream: "Not yet wired to a semantic token — free for a future surface or accent.",
-  neutral: "Synthesized (Figma exposes only three anchors) — backs --background, --card, --muted.",
+  neutral: "Synthesized (Figma exposes only three anchors) — backs the light surfaces (--background, --card, --muted) and --sidebar-border on light.",
+  azure:
+    "The pre-Kinetic-Weave action blue. No semantic token in either theme resolves to it any more — indigo replaced it — and it is kept here so a theme pinned to an azure step still has its values documented.",
 };
 
 function formatValue(hex: string, fmt: Format) {
@@ -60,9 +67,14 @@ export function ColorsContent() {
         {copied ? `Copied ${copied}` : ""}
       </p>
       <p className="mt-3 max-w-2xl text-muted-foreground">
-        Seven brand ramps and a synthesized neutral, remapped to a 0–1000 scale — the navy family and
-        the sage/warm hues verbatim from Figma, plus an <code className="font-mono text-foreground">azure</code>{" "}
-        action-blue ramp for the interactive tokens. Every semantic token in the{" "}
+        Eleven ramps and a synthesized neutral, remapped to a 0–1000 scale — the four Kinetic Weave
+        families (<code className="font-mono text-foreground">indigo</code>,{" "}
+        <code className="font-mono text-foreground">violet</code>,{" "}
+        <code className="font-mono text-foreground">cyan</code>,{" "}
+        <code className="font-mono text-foreground">navy</code>) first, then the sage and warm hues
+        verbatim from Figma, and last the inherited{" "}
+        <code className="font-mono text-foreground">azure</code> action blue, which no semantic token
+        resolves to any more. Every semantic token in the{" "}
         <a href="/docs/theming" className="font-medium text-primary underline underline-offset-4">
           contract
         </a>{" "}
@@ -139,7 +151,10 @@ export function ColorsContent() {
                   className="max-w-full gap-1.5 whitespace-normal px-2.5 py-1.5 font-mono uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground"
                 >
                   <Copy aria-hidden className="!size-3.5" />
-                  Copy ramp as CSS
+                  {/* The page now carries twelve of these. Naming the ramp out of sight, the way the
+                      swatches below already name theirs, keeps each one distinguishable in a list of
+                      links and to a speech-input user, without repeating the ramp heading on screen. */}
+                  Copy {ramp} ramp as CSS
                 </Button>
               </div>
 
