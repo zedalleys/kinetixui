@@ -1,5 +1,5 @@
 {
-  "implementationCommit": "a68f0fdfed7d57faf25e99d23565b4dc0f582545",
+  "implementationCommit": "5bcd567b031991233b8c30965c54cfe51d22cfca",
   "productionBuild": {
     "pass": true,
     "staticPages": 154
@@ -37,5 +37,19 @@
   "repositoryGates": {
     "pass": 27,
     "details": "repository-checks.json"
+  },
+  "heroRefinement": {
+    "visibleControls": 0,
+    "autoplay": "24-second floating loop and 14-second traveling light; fresh each visit",
+    "gradient": "unified translucent violet/indigo/cyan with a soft cyan radial wash",
+    "checks": [
+      "production build",
+      "changed-component lint",
+      "seven hero browser cases",
+      "homepage keyboard, contrast and aura safeguards",
+      "component-use guard",
+      "typography guard"
+    ],
+    "platformTests": "original rebrand validation; platform and token sources unchanged"
   }
 }

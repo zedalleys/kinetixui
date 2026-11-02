@@ -1,9 +1,26 @@
 # Kinetic Weave verification — 2 November 2026
 
-Implementation revision: `a68f0fdfed7d57faf25e99d23565b4dc0f582545`.
+Implementation revision: `5bcd567b031991233b8c30965c54cfe51d22cfca`.
 Screenshots and browser results below are from its **actual production Next.js
 render**, not mockups. The later evidence commit changes only this directory.
 No merge, production promotion or package release was performed.
+
+## Autoplay / soft-gradient refinement
+
+The latest owner refinement removes the visible Reset/Pause controls and control
+caption. A unified translucent brand gradient softens the facets, and a broader
+cyan wash fades behind the artwork. The original facet and cage geometry stays
+intact. A 24-second floating rotation and 14-second traveling-light loop autoplay
+on each visit; an obsolete stored pause setting cannot suppress playback.
+
+The seven production browser cases verify actual transform changes, infinite
+iteration, absence of visible controls, drag / keyboard rotation, Home reset,
+Space / Escape motion control, offscreen suspension and live reduced-motion
+changes. Desktop, mobile and dark screenshots below were refreshed from the
+production build. The latest production build, changed-component lint,
+component-use guard and homepage pixel-contrast / aura-strength safeguards pass.
+Platform and token suite counts below are retained from the original rebrand
+validation; this refinement does not alter their source or token values.
 
 ## Hero evidence
 
@@ -22,7 +39,7 @@ No merge, production promotion or package release was performed.
 
 Seven browser cases pass with zero page errors and zero WCAG A/AA axe findings.
 The runner verifies source facet/cage counts, brand wireframe color, actual
-pointer drag, keyboard rotation, Home/Reset, Pause, offscreen suspension, live
+pointer drag, keyboard rotation, Home reset, Space/Escape pause, offscreen suspension, live
 reduced-motion preference changes, and horizontal reflow at 320px / 200% text.
 The original source coordinates are retained; the file's SHA-256 is recorded.
 
