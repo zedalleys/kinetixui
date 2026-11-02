@@ -9,7 +9,8 @@ Do not substitute the logo for the hero artwork.
 - Navigation, footer, favicon and Open Graph artwork use the Kinetic Weave mark.
   Inline logo gradients have instance-specific IDs.
 - The hero keeps the supplied SVG's nine facets, outlined cage and six junction
-  nodes. The inner faces use indigo/violet/cyan gradients; the overlaid cage uses
+  nodes. The faces use luminous cyan highlights, translucent glass and deeper
+  teal/indigo shading; the overlaid cage uses
   the theme's brand role. A blurred radial circle fades behind it.
 - Pointer capture supports click and drag rotation with a bounded ±28° range.
   Arrow keys rotate in 5° steps; Home restores the initial view.

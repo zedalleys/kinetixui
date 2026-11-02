@@ -3,6 +3,14 @@
 import { useEffect, useId, useRef, useState, type PointerEvent, type KeyboardEvent } from "react";
 import geometry from "./hero-polygon-geometry.json";
 
+// The source faces share vertices but receive distinct lighting materials.
+// Cyan carries the illustration; indigo appears in the shaded return faces.
+const facetMaterials: Record<string, string> = {
+  "cls-10": "glass", "cls-8": "light", "cls-3": "light",
+  "cls-7": "shadow", "cls-1": "shadow", "cls-2": "edge",
+  "cls-4": "edge", "cls-5": "light", "cls-6": "shadow",
+};
+
 const clamp = (value: number) => Math.max(-28, Math.min(28, value));
 
 /** Owner-supplied 189 [Converted].svg; its coordinates and outlined cage stay intact. */
@@ -79,16 +87,31 @@ export function HeroPolygon() {
           <div className="kx-polygon-idle">
             <svg className="kx-hero-polygon-art" viewBox="-35 -35 707.21 710.73" aria-hidden="true" focusable="false">
               <defs>
-                <linearGradient id={`${id}-facet`} x1="130" y1="65" x2="490" y2="510" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#A78BFA" stopOpacity=".42" />
-                  <stop offset=".48" stopColor="#6054F4" stopOpacity=".35" />
-                  <stop offset="1" stopColor="#28C7D9" stopOpacity=".68" />
+                <linearGradient id={`${id}-glass`} x1="150" y1="180" x2="450" y2="440" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#DDFBFC" stopOpacity=".78" />
+                  <stop offset=".48" stopColor="#62DCE4" stopOpacity=".42" />
+                  <stop offset="1" stopColor="#28C7D9" stopOpacity=".6" />
+                </linearGradient>
+                <linearGradient id={`${id}-light`} x1="140" y1="70" x2="475" y2="250" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#B7F5F4" stopOpacity=".85" />
+                  <stop offset=".52" stopColor="#28C7D9" stopOpacity=".82" />
+                  <stop offset="1" stopColor="#65A7E4" stopOpacity=".68" />
+                </linearGradient>
+                <linearGradient id={`${id}-shadow`} x1="230" y1="220" x2="470" y2="505" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#4E65BC" stopOpacity=".84" />
+                  <stop offset=".5" stopColor="#218FA5" stopOpacity=".9" />
+                  <stop offset="1" stopColor="#28C7D9" stopOpacity=".76" />
+                </linearGradient>
+                <linearGradient id={`${id}-edge`} x1="110" y1="125" x2="250" y2="500" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#9FEAF0" stopOpacity=".82" />
+                  <stop offset=".5" stopColor="#28C7D9" stopOpacity=".78" />
+                  <stop offset="1" stopColor="#6054F4" stopOpacity=".62" />
                 </linearGradient>
               </defs>
               <g>
                 <g className="kx-polygon-facets">
                   {geometry.facets.map((facet, i) => facet.type === "polygon" ?
-                    <polygon key={i} points={facet.data} fill={`url(#${id}-facet)`} opacity={facet.tone === "cls-10" ? .36 : [ .72, .9, .68, .82 ][Math.floor(i / 2) % 4]} /> :
+                    <polygon key={i} points={facet.data} fill={`url(#${id}-${facetMaterials[facet.tone] ?? "glass"})`} /> :
                     <path key={i} d={facet.data} className="kx-polygon-seam" />)}
                 </g>
                 {/* The supplied upper wireframe is drawn over the facets in the main brand colour. */}
