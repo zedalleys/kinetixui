@@ -39,6 +39,26 @@ function project(pitch: number, yaw: number) {
   });
 }
 
+// Closed circuit along the cage's original edges, including their intersections.
+const circuit = [[91.94,52.44],[190.84,2.34],[635.06,257.55],[603.05,374.32],
+  [234.38,638.34],[2.96,228.45],[135.6,234.55]];
+const legs = circuit.map(([x,y], i) => {
+  const [endX,endY] = circuit[(i + 1) % circuit.length];
+  return { x, y, dx: endX-x, dy: endY-y, travel: Math.hypot(endX-x,endY-y)/155 };
+});
+const dwell = .65;
+const lap = legs.reduce((sum, leg) => sum + leg.travel + dwell, 0);
+function signalAt(time: number) {
+  let t = time % lap;
+  for (const leg of legs) {
+    if (t < dwell) return { x: leg.x, y: leg.y, pulse: Math.sin(Math.PI*t/dwell)**2 };
+    t -= dwell;
+    if (t < leg.travel) return { x: leg.x + leg.dx*t/leg.travel, y: leg.y + leg.dy*t/leg.travel, pulse: 0 };
+    t -= leg.travel;
+  }
+  return { x: circuit[0][0], y: circuit[0][1], pulse: 0 };
+}
+
 /** Owner-supplied 189 [Converted].svg; its coordinates and outlined cage stay intact. */
 export function HeroPolygon() {
   const id = useId().replace(/:/g, "");
@@ -67,13 +87,22 @@ export function HeroPolygon() {
   }, []);
 
   const [pose, setPose] = useState(rotation.current);
+  const beacon = useRef<SVGGElement>(null);
+  const halo = useRef<SVGCircleElement>(null);
+  const elapsed = useRef(0);
   const [spin, setSpin] = useState(0);
   useEffect(() => {
     if (!active || paused) return;
     let frame: number, last = performance.now();
     function tick(now: number) {
       if (now - last >= 32) {
-        if (!drag.current) setSpin(angle => (angle + Math.min(now - last, 80) * .012) % 360);
+        const delta = Math.min(now - last, 80);
+        elapsed.current += delta / 1000;
+        const { x, y, pulse } = signalAt(elapsed.current);
+        beacon.current?.setAttribute("transform", `translate(${x} ${y})`);
+        halo.current?.setAttribute("r", String(6 + 11 * pulse));
+        halo.current?.setAttribute("opacity", String(.22 + .38 * pulse));
+        if (!drag.current) setSpin(angle => (angle + delta * .012) % 360);
         last = now;
       }
       frame = requestAnimationFrame(tick);
@@ -163,9 +192,9 @@ export function HeroPolygon() {
                 <g className="kx-polygon-wireframe">
                   {geometry.outline.map((path, i) => <path key={i} d={path.d} />)}
                 </g>
-                <g className="kx-polygon-signals" fill="none" strokeWidth="1.8">
-                  <path d="M92 52 190 2 635 257 603 374 234 638 3 228" pathLength="1" />
-                  <path d="M190 2 210 279 603 374" pathLength="1" />
+                <g ref={beacon} className="kx-polygon-signals" transform="translate(91.94 52.44)">
+                  <circle ref={halo} r="6" fill="#28c7d9" opacity=".22" />
+                  <circle r="4" fill="white" stroke="#169bae" strokeWidth="1.5" />
                 </g>
               </g>
             </svg>
