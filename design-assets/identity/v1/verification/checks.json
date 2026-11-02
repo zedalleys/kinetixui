@@ -1,0 +1,41 @@
+{
+  "implementationCommit": "a68f0fdfed7d57faf25e99d23565b4dc0f582545",
+  "productionBuild": {
+    "pass": true,
+    "staticPages": 154
+  },
+  "unitTests": {
+    "web": 2576,
+    "react": 649,
+    "themeEngine": 668,
+    "angular": 368,
+    "swiftui": 79,
+    "flutter": 172,
+    "compose": 101
+  },
+  "contrast": "pass; existing tracked non-text exceptions retained",
+  "tokenContractRows": 26,
+  "legacyPrimitiveValues": "unchanged",
+  "legacySemanticNames": "preserved",
+  "siteAccessibility": {
+    "initialSweep": {
+      "pages": 36,
+      "views": 720,
+      "viewFindings": 25,
+      "issue": "dark-mode linked inline-code contrast on five documentation pages"
+    },
+    "fix": "Dark-mode linked code retains its parent surface instead of a lighter code-chip fill.",
+    "affectedPageRetest": {
+      "views": 100,
+      "findings": 0,
+      "overflow": 0
+    },
+    "finalFullCI": "pending; required before merge"
+  },
+  "merged": false,
+  "released": false,
+  "repositoryGates": {
+    "pass": 27,
+    "details": "repository-checks.json"
+  }
+}
