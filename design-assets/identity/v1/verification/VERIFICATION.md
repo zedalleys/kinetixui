@@ -45,6 +45,7 @@ Both it and the new `scripts/hero-beacon-browser.mjs` now run in
 | Check | Result |
 | --- | --- |
 | `check:a11y-browser` (Storybook, every story, light + dark) | ok — 276 stories × 2 themes, 4 known violations, **none new** |
+| `check:a11y-site` (the site's own pages) | ok — 36 pages × 2 themes × 5 widths × 2 text sizes = **720 views**: no axe findings, no horizontal overflow, docs reading column never narrower than the rails beside it |
 | `check:rebrand-hero` (7 viewports) | ok — 0 axe violations, 0 page errors |
 | `check:hero-beacon` | ok — 6 junction nodes pulsed, 0 units off any cage leg, lap 16.8 s, halo 6→17, drag/offscreen/reduced-motion as approved |
 | `check:contrast` | PASS |
@@ -55,6 +56,7 @@ Both it and the new `scripts/hero-beacon-browser.mjs` now run in
 | `typecheck`, `lint`, `check:rtl`, `check:typography`, `check:releases`, `check:a11y-coverage`, `check:label-association`, `check:role-coherence`, `check:motion-tokens`, `check:web-dogfooding`, `check:stories` | all PASS |
 | Unit tests | web 2576, React 649, theme engine 668 — all passing |
 | Production website build | PASS |
+| Generated-output guard (CI `build` step 64) | failed at `11a3a9a9` on a stale `apps/web/public/r/tokens.json`; fixed in `619a3a7b`, which also re-ran `check:contrast`, `check:token-contract`, `check:registry-deps` and `check:registry-motion` green. The full generator chain now runs from a clean `HEAD` to a fixed point. |
 
 ### Screenshots at this head
 
