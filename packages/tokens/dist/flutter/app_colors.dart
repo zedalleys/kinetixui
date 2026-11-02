@@ -12,12 +12,12 @@ import 'dart:ui';
 class KinetixColors {
     KinetixColors._();
 
-    static const colorAccent = Color(0xFFF0F7FF); /** figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons) */
-    static const colorAccentForeground = Color(0xFF1D4ED8); /** synth: = primary for readable text on accent (#1d4ed8 on accent #f0f7ff ~5.7:1) */
-    static const colorAction = Color(0xFF1D4ED8); /** the interactive colour (buttons, selected controls). Defaults to `primary`; override `--action` on its own to split the interactive colour from `primary`. */
-    static const colorActionForeground = Color(0xFFF0F7FF); /** text/icons on `action` */
-    static const colorActionHover = Color(0xFF3460DC); /** explicit hover fill for native ports: `action` at 90% over `background` (#1d4ed8 over #ffffff). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree. */
-    static const colorActionPressed = Color(0xFF3F69DE); /** explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA. */
+    static const colorAccent = Color(0xFFF0EEFF); /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    static const colorAccentForeground = Color(0xFF5143DB); /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    static const colorAction = Color(0xFF5143DB); /** the interactive colour (buttons, selected controls). Defaults to `primary`; override `--action` on its own to split the interactive colour from `primary`. */
+    static const colorActionForeground = Color(0xFFF6F7FC); /** text/icons on `action` */
+    static const colorActionHover = Color(0xFF6256DF); /** Kinetic Weave action at 90% over background; mirrors web alpha state. */
+    static const colorActionPressed = Color(0xFF6B5FE0); /** Kinetic Weave action at 85% over background; mirrors web alpha state. */
     static const colorAmber0 = Color(0xFFFFFFFF);
     static const colorAmber100 = Color(0xFFFFF2DD);
     static const colorAmber1000 = Color(0xFF2A1A00);
@@ -65,16 +65,16 @@ class KinetixColors {
     static const colorBlue900 = Color(0xFF050C11);
     static const colorBlue950 = Color(0xFF030608);
     static const colorBorder = Color(0xFF92B2C8); /** figma: outline #92b2c8 */
-    static const colorBrand = Color(0xFF1B3C53); /** identity colour — the original Figma navy that `primary` was swapped away from for interactive use. Use it for logos, headers and brand surfaces, not for controls. */
-    static const colorBrandForeground = Color(0xFFF0F7FF); /** text/icons on `brand` */
+    static const colorBrand = Color(0xFF6054F4); /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    static const colorBrandForeground = Color(0xFFF6F7FC); /** Kinetic Weave v1 semantic role; existing token name preserved. */
     static const colorCard = Color(0xFFFFFFFF); /** synth: no Figma card token; = background */
-    static const colorCardForeground = Color(0xFF050C11); /** synth: = foreground */
-    static const colorChart1 = Color(0xFF1B3C53); /** synth: brand ramps for data viz */
+    static const colorCardForeground = Color(0xFF17233D); /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    static const colorChart1 = Color(0xFF6054F4); /** Kinetic Weave v1 semantic role; existing token name preserved. */
     static const colorChart2 = Color(0xFF748873);
     static const colorChart3 = Color(0xFFFFBC53);
     static const colorChart4 = Color(0xFFD13A3A);
     static const colorChart5 = Color(0xFFB4A499);
-    static const colorChart6 = Color(0xFF57778D); /** synth: 6th data-viz hue — steel blue, distinct from the navy chart-1 */
+    static const colorChart6 = Color(0xFF087D8B); /** Kinetic Weave v1 semantic role; existing token name preserved. */
     static const colorChart7 = Color(0xFF9E0808); /** synth: 7th data-viz hue — deep red, distinct from chart-4 */
     static const colorChart8 = Color(0xFF465245); /** synth: 8th data-viz hue — deep green, distinct from chart-2 */
     static const colorCream0 = Color(0xFFFFFFFF);
@@ -92,10 +92,13 @@ class KinetixColors {
     static const colorCream850 = Color(0xFFAD866C);
     static const colorCream900 = Color(0xFFA27659);
     static const colorCream950 = Color(0xFF976747);
+    static const colorCyan100 = Color(0xFFDFF8FB); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorCyan400 = Color(0xFF28C7D9); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorCyan700 = Color(0xFF087D8B); /** Kinetic Weave v1 additive brand ramp. */
     static const colorDestructive = Color(0xFFC60A0A); /** a11y: figma error #ec5047 is 3.33:1 under on-error / 3.62:1 as text on the page — fails WCAG AA. red.500 #c60a0a clears 5.6:1 / 6.1:1. See ACCESSIBILITY-AUDIT.md. */
     static const colorDestructiveForeground = Color(0xFFFEF3F2); /** figma: onError #fef3f2 */
-    static const colorFocus = Color(0xFF1D4ED8); /** focus indicator colour. Defaults to `ring`; override `--focus` to theme focus separately. */
-    static const colorForeground = Color(0xFF050C11); /** figma: onSurface #050c11 */
+    static const colorFocus = Color(0xFF5143DB); /** focus indicator colour. Defaults to `ring`; override `--focus` to theme focus separately. */
+    static const colorForeground = Color(0xFF17233D); /** Kinetic Weave v1 semantic role; existing token name preserved. */
     static const colorGreen0 = Color(0xFFFFFFFF);
     static const colorGreen100 = Color(0xFFE3E7E3);
     static const colorGreen1000 = Color(0xFF000000);
@@ -111,12 +114,28 @@ class KinetixColors {
     static const colorGreen850 = Color(0xFF232923);
     static const colorGreen900 = Color(0xFF171B17);
     static const colorGreen950 = Color(0xFF0C0E0C);
+    static const colorIndigo100 = Color(0xFFE2DEFF); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorIndigo300 = Color(0xFFBBB3FF); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorIndigo50 = Color(0xFFF0EEFF); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorIndigo500 = Color(0xFF6054F4); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorIndigo600 = Color(0xFF5143DB); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorIndigo700 = Color(0xFF4234BD); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorIndigo900 = Color(0xFF26205C); /** Kinetic Weave v1 additive brand ramp. */
     static const colorInfo = Color(0xFF57778D); /** synth: steel blue, distinct from navy primary */
     static const colorInfoForeground = Color(0xFFF0F7FF);
     static const colorInput = Color(0xFF92B2C8); /** figma: outline #92b2c8 (same as border) */
-    static const colorLink = Color(0xFF1D4ED8); /** inline link / Link-button text colour. Defaults to `primary`. */
+    static const colorLink = Color(0xFF5143DB); /** inline link / Link-button text colour. Defaults to `primary`. */
     static const colorMuted = Color(0xFFF6F6F6); /** figma: surfaceContainer #f6f6f6 */
     static const colorMutedForeground = Color(0xFF6D6D6D); /** figma: onSurfaceVariant #6d6d6d */
+    static const colorNavy100 = Color(0xFFD4DAEC); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorNavy300 = Color(0xFF98A5C5); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorNavy50 = Color(0xFFF6F7FC); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorNavy500 = Color(0xFF637394); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorNavy700 = Color(0xFF283656); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorNavy800 = Color(0xFF1C2945); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorNavy850 = Color(0xFF111B35); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorNavy900 = Color(0xFF17233D); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorNavy950 = Color(0xFF0C1229); /** Kinetic Weave v1 additive brand ramp. */
     static const colorNeutral0 = Color(0xFFFFFFFF);
     static const colorNeutral100 = Color(0xFFF6F6F6);
     static const colorNeutral1000 = Color(0xFF000000);
@@ -134,9 +153,9 @@ class KinetixColors {
     static const colorOnSuccessContainer = Color(0xFF465245); /** text and icons on a tinted success surface (`success` at 15% over the page) — Banner, Inform and ResultState success, on every platform. `success` itself is 4.20:1 on its own 15% tint over `muted` (a notice inside a muted panel, the tightest surface it ships on) and fails AA there; this is 6.26:1 at the same worst case. Web exposes it as `text-success-on-container`; SwiftUI, Compose and Flutter as `onSuccessContainer`. The same hex as the Figma `semantic.on-success-container`, but this is the per-mode role — the Figma block is light-only, so it cannot be used directly. */
     static const colorOnWarningContainer = Color(0xFF7F5B21); /** text and icons on a tinted warning surface (`warning` at 15%). Light: the same step as `warning`, which already clears AA at its worst case (4.63:1 over `muted`). It exists as its own role so all four statuses are addressed the same way and a theme that moves `warning` cannot silently take the on-container text with it. */
     static const colorPopover = Color(0xFFFFFFFF); /** synth: no Figma popover token; = background */
-    static const colorPopoverForeground = Color(0xFF050C11); /** synth: = foreground */
-    static const colorPrimary = Color(0xFF1D4ED8); /** was Figma 'Primay' navy (blue.500 -> blue.700). Swapped for a bright action blue #1d4ed8 (6.55:1 on bg) so primary buttons/links pop rather than reading as near-black. Dark uses a lighter step (#60a5fa) — navy/this hue would fail on the dark surface. */
-    static const colorPrimaryForeground = Color(0xFFF0F7FF); /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on #1d4ed8 primary ~6:1) */
+    static const colorPopoverForeground = Color(0xFF17233D); /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    static const colorPrimary = Color(0xFF5143DB); /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    static const colorPrimaryForeground = Color(0xFFF6F7FC); /** Kinetic Weave v1 semantic role; existing token name preserved. */
     static const colorRed0 = Color(0xFFFFF9F9);
     static const colorRed100 = Color(0xFFF4C9C9);
     static const colorRed1000 = Color(0xFF000000);
@@ -152,7 +171,7 @@ class KinetixColors {
     static const colorRed850 = Color(0xFF3B0303);
     static const colorRed900 = Color(0xFF280202);
     static const colorRed950 = Color(0xFF140101);
-    static const colorRing = Color(0xFF1D4ED8); /** focus ring — tracks --primary (#1d4ed8, 6.55:1 on bg) */
+    static const colorRing = Color(0xFF5143DB); /** Kinetic Weave v1 semantic role; existing token name preserved. */
     static const colorScrim = Color(0x66000000); /** the dimming layer behind a modal surface (Dialog, AlertDialog, Sheet, Drawer, Modal, Command, Tour, mobile Sidebar) on every platform: black at 40%. Black, not `foreground` — in dark `foreground` is near-white and would lift the page toward the dialog's own surface. The alpha is part of the role, so draw it as is (web `bg-scrim`, native `colors.scrim`) rather than adding opacity. */
     static const colorSecondary = Color(0xFFC7CFC7); /** figma secondaryContainer was green.50 #f1f3f1 (invisible on bg); deepened to green.200 #c7cfc7 so a secondary button/chip clearly stands off the white page — same sage hue */
     static const colorSecondaryForeground = Color(0xFF465245); /** green.700 #465245 on secondary green.200 #c7cfc7 clears ~5.2:1 */
@@ -169,13 +188,13 @@ class KinetixColors {
     static const colorSemanticWarning = Color(0xFFF97907);
     static const colorSemanticWarningContainer = Color(0xFFFFF8EB); /** figma: warningContainer */
     static const colorSidebar = Color(0xFFFAFAFA);
-    static const colorSidebarAccent = Color(0xFFF0F7FF);
-    static const colorSidebarAccentForeground = Color(0xFF1D4ED8);
+    static const colorSidebarAccent = Color(0xFFF0EEFF); /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    static const colorSidebarAccentForeground = Color(0xFF5143DB); /** Kinetic Weave v1 semantic role; existing token name preserved. */
     static const colorSidebarBorder = Color(0xFFE0E0E0);
-    static const colorSidebarForeground = Color(0xFF050C11);
-    static const colorSidebarPrimary = Color(0xFF1D4ED8);
-    static const colorSidebarPrimaryForeground = Color(0xFFF0F7FF);
-    static const colorSidebarRing = Color(0xFF1D4ED8);
+    static const colorSidebarForeground = Color(0xFF17233D); /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    static const colorSidebarPrimary = Color(0xFF5143DB); /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    static const colorSidebarPrimaryForeground = Color(0xFFF6F7FC); /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    static const colorSidebarRing = Color(0xFF5143DB);
     static const colorStaticBlack = Color(0xFF000000);
     static const colorStaticWhite = Color(0xFFFFFFFF);
     static const colorSuccess = Color(0xFF5D6D5C); /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */
@@ -198,6 +217,9 @@ class KinetixColors {
     static const colorTaupe950 = Color(0xFF4B3D34);
     static const colorTertiary = Color(0xFFB0B0B0); /** figma: tertiary — switch off-track */
     static const colorTertiaryForeground = Color(0xFFF0F7FF);
+    static const colorViolet100 = Color(0xFFEEE5FF); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorViolet400 = Color(0xFFA78BFA); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorViolet600 = Color(0xFF7850C6); /** Kinetic Weave v1 additive brand ramp. */
     static const colorWarning = Color(0xFF7F5B21); /** a11y: Figma onWarningContainer #f97907 is 2.7:1 as text on the page / 2.6:1 in the Tag warning variant — fails WCAG AA. amber.800 #7f5b21 clears 6.1:1 / 5.8:1. Dark --warning stays bright (amber.400). See ACCESSIBILITY-AUDIT.md. */
     static const colorWarningForeground = Color(0xFFFFF8EB); /** figma: warningContainer #fff8eb */
 }

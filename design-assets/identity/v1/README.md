@@ -1,27 +1,61 @@
 # KinetixUI — Kinetic Weave identity (draft)
 
-Rebrand direction: original three-ribbon **K** geometric symbol and a five-color brand palette.
+The three-ribbon K is the logo. The hero illustration is the owner's supplied
+`189 [Converted].svg`, preserved separately as `hero-polygon-source.svg`.
+Do not substitute the logo for the hero artwork.
 
-## Scope of this draft
-- Introduces canonical vector brand mark, dark app icon, and animated SVG variant.
-- Swaps website header/footer marks and favicon; updates wordmark capitalization and brand color.
-- Documents the proposed palette without changing the published DTCG component contract.
-- This is intentionally a **draft**, **not** the completed cross-platform color migration.
+## Implemented
+
+- Navigation, footer, favicon and Open Graph artwork use the Kinetic Weave mark.
+  Inline logo gradients have instance-specific IDs.
+- The hero keeps the supplied SVG's nine facets, outlined cage and six junction
+  nodes. The inner faces use indigo/violet/cyan gradients; the overlaid cage uses
+  the theme's brand role. A blurred radial circle fades behind it.
+- Pointer capture supports click and drag rotation with a bounded ±28° range.
+  Arrow keys rotate in 5° steps; Home and Reset restore the initial view.
+  Touch dragging yields to vertical page scrolling. Pointer cancellation releases
+  the interaction. Rotation updates CSS variables without React renders per move.
+- Idle suspension and traveling light pause offscreen, in hidden tabs, on hover,
+  on keyboard focus, or with the persisted Pause control. Reduced motion removes
+  autoplay; deliberate drag and keyboard rotation remain available.
+- Marketing copy, platform support disclosures, installation links and derived
+  counts remain intact. The interactive token-to-platform map follows the hero.
+- Additive DTCG ramps drive light/dark roles and generated CSS/TS, SwiftUI,
+  Compose and Flutter outputs. Angular consumes the shared CSS contract.
+  Existing primitive names, semantic names and status colors remain available.
+  Forced light previews and the Create theme baseline follow the new values.
+- Generated marketing SVGs use the new palette without changing their claims.
 
 ## Color roles
-- Electric Indigo `#6054F4` — brand, candidate light-theme action (5.16:1 against white).
-- Soft Violet `#A78BFA` — dark-theme action candidate (6.80:1 on `#0C1229`).
-- Electric Cyan `#28C7D9` — motif, chart/accent. Not small text on white.
-- Midnight Navy `#17233D` — light foreground.
-- Cloud White `#F6F7FC` — light neutral / dark foreground.
-- Deep Canvas `#0C1229` — dark background.
 
-## Blocking follow-up before merge
-1. Update `tokens/primitives/color.json` with new ramps and `tokens/semantic/color.{light,dark}.json` role mappings. Keep alerts/status semantics distinct.
-2. Rebuild `@kinetixui/tokens` via Style Dictionary; regenerate web, SwiftUI, Compose, Flutter and Angular outputs from the canonical DTCG source. Do not edit generated outputs manually.
-3. Update the website's `globals.css` forced `.theme-light` token parity overrides, chart palette, hero, documentation, marketing shares, OG image, example screenshots, and Figma assets.
-4. Make hero motion meaningful but subtle; respect reduced motion, reflow, RTL and contrast.
-5. Run full `check:contrast`, token-parity, website screenshot, browser accessibility, text resize, release tests and five-platform build gates.
-6. Verify header/footer logo legibility at 16/24/32 px, monochrome and low-resolution favicon, and color-aware dark mode.
+| Role | Light | Dark |
+| --- | --- | --- |
+| Identity | Electric Indigo `#6054F4` | Soft Violet `#A78BFA` |
+| Action / links / focus | Accessible Indigo `#5143DB` | Soft Violet `#A78BFA` |
+| Action foreground | Cloud White `#F6F7FC` | Deep Canvas `#0C1229` |
+| Foreground | Midnight Navy `#17233D` | Cloud White `#F6F7FC` |
+| Background | White `#FFFFFF` | Deep Canvas `#0C1229` |
+| Illustration accent | Electric Cyan `#28C7D9` | Electric Cyan `#28C7D9` |
 
-Publishing and merging remain blocked until visual and functional verification. Existing 0.27.0 release remains unchanged.
+Action is deeper than the identity color so text on its 90% hover and 85%
+pressed fills still clears AA. Cyan is decorative, not body text on white.
+Focus shadows and native interaction states are generated from their source
+values and checked against the same semantic roles.
+
+## Consumer migration
+
+This changes default appearance, not token names or platform support.
+Consumers with pinned colors or copied styles retain their overrides; check
+those overrides against the new surfaces. No old blue/azure primitives were
+renamed or recolored. The preset codec's original default-brand sentinel is
+retained so existing saved presets continue to decode consistently.
+Regenerate with `pnpm build:tokens` and the three `vendor:*` scripts; do not
+hand-edit platform token outputs. Release/package versions are unchanged.
+
+## Verification and remaining merge gates
+
+See `verification/VERIFICATION.md` for the tested revision, actual website
+screenshots and limits. PR #514 remains draft and must not be merged or released
+until the owner reviews the visuals and required CI passes. Connected Figma
+libraries and already published external marketing material have not been
+modified by this code change.

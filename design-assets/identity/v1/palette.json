@@ -1,5 +1,5 @@
 {
-  "status": "draft candidate, not active DTCG contract",
+  "status": "draft rebrand; implemented DTCG defaults, not released",
   "version": "v1",
   "name": "Kinetic Weave",
   "brand": {
@@ -11,7 +11,7 @@
     "deepCanvas": "#0C1229"
   },
   "semanticCandidates": {
-    "light": {"background": "#FFFFFF", "foreground": "#17233D", "primary": "#6054F4", "primaryForeground": "#FFFFFF"},
+    "light": {"background": "#FFFFFF", "foreground": "#17233D", "primary": "#5143DB", "primaryForeground": "#F6F7FC"},
     "dark": {"background": "#0C1229", "foreground": "#F6F7FC", "primary": "#A78BFA", "primaryForeground": "#0C1229"}
   }
 }

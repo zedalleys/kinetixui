@@ -9,34 +9,34 @@
 import SwiftUI
 
 public class KinetixTheme {
-    public static let colorAccent = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1) /** figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons) */
-    public static let colorAccentForeground = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1) /** synth: = primary for readable text on accent (#1d4ed8 on accent #f0f7ff ~5.7:1) */
-    public static let colorAction = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1) /** the interactive colour (buttons, selected controls). Defaults to `primary`; override `--action` on its own to split the interactive colour from `primary`. */
-    public static let colorActionForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1) /** text/icons on `action` */
-    public static let colorActionHover = UIColor(red: 0.204, green: 0.376, blue: 0.863, alpha: 1) /** explicit hover fill for native ports: `action` at 90% over `background` (#1d4ed8 over #ffffff). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree. */
-    public static let colorActionPressed = UIColor(red: 0.247, green: 0.412, blue: 0.871, alpha: 1) /** explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA. */
+    public static let colorAccent = UIColor(red: 0.941, green: 0.933, blue: 1.000, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    public static let colorAccentForeground = UIColor(red: 0.318, green: 0.263, blue: 0.859, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    public static let colorAction = UIColor(red: 0.318, green: 0.263, blue: 0.859, alpha: 1) /** the interactive colour (buttons, selected controls). Defaults to `primary`; override `--action` on its own to split the interactive colour from `primary`. */
+    public static let colorActionForeground = UIColor(red: 0.965, green: 0.969, blue: 0.988, alpha: 1) /** text/icons on `action` */
+    public static let colorActionHover = UIColor(red: 0.384, green: 0.337, blue: 0.875, alpha: 1) /** Kinetic Weave action at 90% over background; mirrors web alpha state. */
+    public static let colorActionPressed = UIColor(red: 0.420, green: 0.373, blue: 0.878, alpha: 1) /** Kinetic Weave action at 85% over background; mirrors web alpha state. */
     public static let colorBackground = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1) /** figma: surfaceContainerLowest #ffffff */
     public static let colorBorder = UIColor(red: 0.573, green: 0.698, blue: 0.784, alpha: 1) /** figma: outline #92b2c8 */
-    public static let colorBrand = UIColor(red: 0.106, green: 0.235, blue: 0.325, alpha: 1) /** identity colour — the original Figma navy that `primary` was swapped away from for interactive use. Use it for logos, headers and brand surfaces, not for controls. */
-    public static let colorBrandForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1) /** text/icons on `brand` */
+    public static let colorBrand = UIColor(red: 0.376, green: 0.329, blue: 0.957, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    public static let colorBrandForeground = UIColor(red: 0.965, green: 0.969, blue: 0.988, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
     public static let colorCard = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1) /** synth: no Figma card token; = background */
-    public static let colorCardForeground = UIColor(red: 0.020, green: 0.047, blue: 0.067, alpha: 1) /** synth: = foreground */
-    public static let colorChart1 = UIColor(red: 0.106, green: 0.235, blue: 0.325, alpha: 1) /** synth: brand ramps for data viz */
+    public static let colorCardForeground = UIColor(red: 0.090, green: 0.137, blue: 0.239, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    public static let colorChart1 = UIColor(red: 0.376, green: 0.329, blue: 0.957, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
     public static let colorChart2 = UIColor(red: 0.455, green: 0.533, blue: 0.451, alpha: 1)
     public static let colorChart3 = UIColor(red: 1.000, green: 0.737, blue: 0.325, alpha: 1)
     public static let colorChart4 = UIColor(red: 0.820, green: 0.227, blue: 0.227, alpha: 1)
     public static let colorChart5 = UIColor(red: 0.706, green: 0.643, blue: 0.600, alpha: 1)
-    public static let colorChart6 = UIColor(red: 0.341, green: 0.467, blue: 0.553, alpha: 1) /** synth: 6th data-viz hue — steel blue, distinct from the navy chart-1 */
+    public static let colorChart6 = UIColor(red: 0.031, green: 0.490, blue: 0.545, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
     public static let colorChart7 = UIColor(red: 0.620, green: 0.031, blue: 0.031, alpha: 1) /** synth: 7th data-viz hue — deep red, distinct from chart-4 */
     public static let colorChart8 = UIColor(red: 0.275, green: 0.322, blue: 0.271, alpha: 1) /** synth: 8th data-viz hue — deep green, distinct from chart-2 */
     public static let colorDestructive = UIColor(red: 0.776, green: 0.039, blue: 0.039, alpha: 1) /** a11y: figma error #ec5047 is 3.33:1 under on-error / 3.62:1 as text on the page — fails WCAG AA. red.500 #c60a0a clears 5.6:1 / 6.1:1. See ACCESSIBILITY-AUDIT.md. */
     public static let colorDestructiveForeground = UIColor(red: 0.996, green: 0.953, blue: 0.949, alpha: 1) /** figma: onError #fef3f2 */
-    public static let colorFocus = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1) /** focus indicator colour. Defaults to `ring`; override `--focus` to theme focus separately. */
-    public static let colorForeground = UIColor(red: 0.020, green: 0.047, blue: 0.067, alpha: 1) /** figma: onSurface #050c11 */
+    public static let colorFocus = UIColor(red: 0.318, green: 0.263, blue: 0.859, alpha: 1) /** focus indicator colour. Defaults to `ring`; override `--focus` to theme focus separately. */
+    public static let colorForeground = UIColor(red: 0.090, green: 0.137, blue: 0.239, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
     public static let colorInfo = UIColor(red: 0.341, green: 0.467, blue: 0.553, alpha: 1) /** synth: steel blue, distinct from navy primary */
     public static let colorInfoForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
     public static let colorInput = UIColor(red: 0.573, green: 0.698, blue: 0.784, alpha: 1) /** figma: outline #92b2c8 (same as border) */
-    public static let colorLink = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1) /** inline link / Link-button text colour. Defaults to `primary`. */
+    public static let colorLink = UIColor(red: 0.318, green: 0.263, blue: 0.859, alpha: 1) /** inline link / Link-button text colour. Defaults to `primary`. */
     public static let colorMuted = UIColor(red: 0.965, green: 0.965, blue: 0.965, alpha: 1) /** figma: surfaceContainer #f6f6f6 */
     public static let colorMutedForeground = UIColor(red: 0.427, green: 0.427, blue: 0.427, alpha: 1) /** figma: onSurfaceVariant #6d6d6d */
     public static let colorOnDestructiveContainer = UIColor(red: 0.776, green: 0.039, blue: 0.039, alpha: 1) /** text and icons on a tinted error surface (`destructive` at 10%). Light: the same step as `destructive`, which clears AA at its worst case (4.71:1 over `muted`). Named for the `destructive` role it sits on, not `error` — the two names are reconciled separately. */
@@ -44,10 +44,10 @@ public class KinetixTheme {
     public static let colorOnSuccessContainer = UIColor(red: 0.275, green: 0.322, blue: 0.271, alpha: 1) /** text and icons on a tinted success surface (`success` at 15% over the page) — Banner, Inform and ResultState success, on every platform. `success` itself is 4.20:1 on its own 15% tint over `muted` (a notice inside a muted panel, the tightest surface it ships on) and fails AA there; this is 6.26:1 at the same worst case. Web exposes it as `text-success-on-container`; SwiftUI, Compose and Flutter as `onSuccessContainer`. The same hex as the Figma `semantic.on-success-container`, but this is the per-mode role — the Figma block is light-only, so it cannot be used directly. */
     public static let colorOnWarningContainer = UIColor(red: 0.498, green: 0.357, blue: 0.129, alpha: 1) /** text and icons on a tinted warning surface (`warning` at 15%). Light: the same step as `warning`, which already clears AA at its worst case (4.63:1 over `muted`). It exists as its own role so all four statuses are addressed the same way and a theme that moves `warning` cannot silently take the on-container text with it. */
     public static let colorPopover = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1) /** synth: no Figma popover token; = background */
-    public static let colorPopoverForeground = UIColor(red: 0.020, green: 0.047, blue: 0.067, alpha: 1) /** synth: = foreground */
-    public static let colorPrimary = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1) /** was Figma 'Primay' navy (blue.500 -> blue.700). Swapped for a bright action blue #1d4ed8 (6.55:1 on bg) so primary buttons/links pop rather than reading as near-black. Dark uses a lighter step (#60a5fa) — navy/this hue would fail on the dark surface. */
-    public static let colorPrimaryForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1) /** figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on #1d4ed8 primary ~6:1) */
-    public static let colorRing = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1) /** focus ring — tracks --primary (#1d4ed8, 6.55:1 on bg) */
+    public static let colorPopoverForeground = UIColor(red: 0.090, green: 0.137, blue: 0.239, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    public static let colorPrimary = UIColor(red: 0.318, green: 0.263, blue: 0.859, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    public static let colorPrimaryForeground = UIColor(red: 0.965, green: 0.969, blue: 0.988, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    public static let colorRing = UIColor(red: 0.318, green: 0.263, blue: 0.859, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
     public static let colorScrim = UIColor(red: 0.000, green: 0.000, blue: 0.000, alpha: 0.4) /** the dimming layer behind a modal surface (Dialog, AlertDialog, Sheet, Drawer, Modal, Command, Tour, mobile Sidebar) on every platform: black at 40%. Black, not `foreground` — in dark `foreground` is near-white and would lift the page toward the dialog's own surface. The alpha is part of the role, so draw it as is (web `bg-scrim`, native `colors.scrim`) rather than adding opacity. */
     public static let colorSecondary = UIColor(red: 0.780, green: 0.812, blue: 0.780, alpha: 1) /** figma secondaryContainer was green.50 #f1f3f1 (invisible on bg); deepened to green.200 #c7cfc7 so a secondary button/chip clearly stands off the white page — same sage hue */
     public static let colorSecondaryForeground = UIColor(red: 0.275, green: 0.322, blue: 0.271, alpha: 1) /** green.700 #465245 on secondary green.200 #c7cfc7 clears ~5.2:1 */
@@ -64,13 +64,13 @@ public class KinetixTheme {
     public static let colorSemanticWarning = UIColor(red: 0.976, green: 0.475, blue: 0.027, alpha: 1)
     public static let colorSemanticWarningContainer = UIColor(red: 1.000, green: 0.973, blue: 0.922, alpha: 1) /** figma: warningContainer */
     public static let colorSidebar = UIColor(red: 0.980, green: 0.980, blue: 0.980, alpha: 1)
-    public static let colorSidebarAccent = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
-    public static let colorSidebarAccentForeground = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1)
+    public static let colorSidebarAccent = UIColor(red: 0.941, green: 0.933, blue: 1.000, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    public static let colorSidebarAccentForeground = UIColor(red: 0.318, green: 0.263, blue: 0.859, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
     public static let colorSidebarBorder = UIColor(red: 0.878, green: 0.878, blue: 0.878, alpha: 1)
-    public static let colorSidebarForeground = UIColor(red: 0.020, green: 0.047, blue: 0.067, alpha: 1)
-    public static let colorSidebarPrimary = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1)
-    public static let colorSidebarPrimaryForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
-    public static let colorSidebarRing = UIColor(red: 0.114, green: 0.306, blue: 0.847, alpha: 1)
+    public static let colorSidebarForeground = UIColor(red: 0.090, green: 0.137, blue: 0.239, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    public static let colorSidebarPrimary = UIColor(red: 0.318, green: 0.263, blue: 0.859, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    public static let colorSidebarPrimaryForeground = UIColor(red: 0.965, green: 0.969, blue: 0.988, alpha: 1) /** Kinetic Weave v1 semantic role; existing token name preserved. */
+    public static let colorSidebarRing = UIColor(red: 0.318, green: 0.263, blue: 0.859, alpha: 1)
     public static let colorSuccess = UIColor(red: 0.365, green: 0.427, blue: 0.361, alpha: 1) /** synth: no Figma success token; green ramp step 6 (distinct from secondary) */
     public static let colorSuccessForeground = UIColor(red: 0.945, green: 0.953, blue: 0.945, alpha: 1) /** synth */
     public static let colorSurfaceGrouped = UIColor(red: 0.965, green: 0.965, blue: 0.965, alpha: 1) /** A grouped section that raised content (Card) sits on. Light: the grey of `muted`. Its own role because dark `muted` is lighter than `card`, which made a card on a group read as recessed. Surface model: TOKENS.md. */

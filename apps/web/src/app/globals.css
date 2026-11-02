@@ -19,19 +19,19 @@
  */
 .theme-light {
   --background: var(--neutral-0);
-  --foreground: var(--blue-900);
+  --foreground: var(--navy-900);
   --card: var(--neutral-0);
-  --card-foreground: var(--blue-900);
+  --card-foreground: var(--navy-900);
   --popover: var(--neutral-0);
-  --popover-foreground: var(--blue-900);
-  --primary: 224 76% 48%; /* #1d4ed8 — action blue, not on the navy ramp */
-  --primary-foreground: var(--blue-50);
+  --popover-foreground: var(--navy-900);
+  --primary: var(--indigo-600); /* Accessible indigo action, one step deeper than the logo. */
+  --primary-foreground: var(--navy-50);
   --secondary: var(--green-200);
   --secondary-foreground: var(--green-700);
   --muted: var(--neutral-100);
   --muted-foreground: var(--neutral-600);
-  --accent: var(--blue-50);
-  --accent-foreground: 224 76% 48%;
+  --accent: var(--indigo-50);
+  --accent-foreground: var(--indigo-600);
   --destructive: var(--red-500);
   --destructive-foreground: var(--semantic-on-error);
   --success: var(--green-600);
@@ -44,23 +44,23 @@
   --info-foreground: var(--blue-50);
   --border: var(--blue-100);
   --input: var(--blue-100);
-  --ring: 224 76% 48%;
-  --chart-1: var(--blue-500);
+  --ring: var(--indigo-600);
+  --chart-1: var(--indigo-500);
   --chart-2: var(--green-500);
   --chart-3: var(--amber-500);
   --chart-4: var(--red-400);
   --chart-5: var(--taupe-600);
-  --chart-6: var(--blue-300);
+  --chart-6: var(--cyan-700);
   --chart-7: var(--red-600);
   --chart-8: var(--green-700);
   --sidebar: var(--neutral-50);
-  --sidebar-foreground: var(--blue-900);
-  --sidebar-primary: 224 76% 48%;
-  --sidebar-primary-foreground: var(--blue-50);
-  --sidebar-accent: var(--blue-50);
-  --sidebar-accent-foreground: 224 76% 48%;
+  --sidebar-foreground: var(--navy-900);
+  --sidebar-primary: var(--indigo-600);
+  --sidebar-primary-foreground: var(--navy-50);
+  --sidebar-accent: var(--indigo-50);
+  --sidebar-accent-foreground: var(--indigo-600);
   --sidebar-border: var(--neutral-300);
-  --sidebar-ring: 224 76% 48%;
+  --sidebar-ring: var(--indigo-600);
   /*
     Every token `.dark` redefines needs its light value here, or a light preview on a dark page shows the
     dark one. These were missing, and it was visible: on a dark page the Theming page's light preview drew
@@ -68,18 +68,18 @@
     `theme-light-parity.test.ts` now fails if a `.dark` token is missing here or disagrees with `:root`.
   */
   --surface-grouped: var(--neutral-100);
-  --on-info-container: 204 33% 33%;
+  --on-info-container: var(--blue-400);
   --on-success-container: var(--green-700);
   --on-warning-container: var(--amber-800);
   --on-destructive-container: var(--red-500);
   --semantic-on-info-container: var(--on-info-container);
   --semantic-muted-on-container: 0 0% 38%;
-  --brand: var(--blue-500);
-  --brand-foreground: var(--blue-50);
+  --brand: var(--indigo-500);
+  --brand-foreground: var(--navy-50);
   --action: var(--primary);
   --action-foreground: var(--primary-foreground);
-  --action-hover: 224 71% 53%;
-  --action-pressed: 224 71% 56%;
+  --action-hover: 245 68% 61%;
+  --action-pressed: 246 68% 63%;
   --focus: var(--ring);
   --link: var(--primary);
   --shadow-focus: 0 0 0 1px hsl(var(--focus)), 0 0 0 4px hsl(var(--focus) / 0.2);
@@ -635,6 +635,9 @@
     display: grid;
     grid-template-rows: subgrid;
   }
+  .kx-map-tab { flex-wrap: wrap; }
+  .kx-map-tab-text { flex-basis: 5rem; overflow-wrap: anywhere; }
+  .kx-map-tab-text > span { max-width: 100%; }
   .kx-map-panel {
     grid-column: 1 / -1;
     margin-block-start: 0.75rem;
@@ -681,6 +684,7 @@
       text-align: center;
     }
     .kx-map-tab-text {
+      flex-basis: auto;
       flex-direction: column;
       align-items: center;
     }

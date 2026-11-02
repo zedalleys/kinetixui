@@ -1,22 +1,67 @@
 {
   "color": {
     "azure": {
-      "$description": "Action blue — the brand's interactive hue. Backs --primary / --ring / --accent-foreground (light = azure.700 #1d4ed8, dark = azure.400 #60a5fa). Ramp follows the Tailwind blue scale, remapped to the 0–1000 / 15-step structure.",
-      "0": { "$value": "#f7faff", "$type": "color" },
-      "50": { "$value": "#eff6ff", "$type": "color" },
-      "100": { "$value": "#dbeafe", "$type": "color" },
-      "150": { "$value": "#cde1fd", "$type": "color" },
-      "200": { "$value": "#bfdbfe", "$type": "color" },
-      "300": { "$value": "#93c5fd", "$type": "color" },
-      "400": { "$value": "#60a5fa", "$type": "color" },
-      "500": { "$value": "#3b82f6", "$type": "color" },
-      "600": { "$value": "#2563eb", "$type": "color" },
-      "700": { "$value": "#1d4ed8", "$type": "color" },
-      "800": { "$value": "#1e40af", "$type": "color" },
-      "850": { "$value": "#1b3897", "$type": "color" },
-      "900": { "$value": "#1e3a8a", "$type": "color" },
-      "950": { "$value": "#172554", "$type": "color" },
-      "1000": { "$value": "#0f172a", "$type": "color" }
+      "$description": "Action blue \u2014 the brand's interactive hue. Backs --primary / --ring / --accent-foreground (light = azure.700 #1d4ed8, dark = azure.400 #60a5fa). Ramp follows the Tailwind blue scale, remapped to the 0\u20131000 / 15-step structure.",
+      "0": {
+        "$value": "#f7faff",
+        "$type": "color"
+      },
+      "50": {
+        "$value": "#eff6ff",
+        "$type": "color"
+      },
+      "100": {
+        "$value": "#dbeafe",
+        "$type": "color"
+      },
+      "150": {
+        "$value": "#cde1fd",
+        "$type": "color"
+      },
+      "200": {
+        "$value": "#bfdbfe",
+        "$type": "color"
+      },
+      "300": {
+        "$value": "#93c5fd",
+        "$type": "color"
+      },
+      "400": {
+        "$value": "#60a5fa",
+        "$type": "color"
+      },
+      "500": {
+        "$value": "#3b82f6",
+        "$type": "color"
+      },
+      "600": {
+        "$value": "#2563eb",
+        "$type": "color"
+      },
+      "700": {
+        "$value": "#1d4ed8",
+        "$type": "color"
+      },
+      "800": {
+        "$value": "#1e40af",
+        "$type": "color"
+      },
+      "850": {
+        "$value": "#1b3897",
+        "$type": "color"
+      },
+      "900": {
+        "$value": "#1e3a8a",
+        "$type": "color"
+      },
+      "950": {
+        "$value": "#172554",
+        "$type": "color"
+      },
+      "1000": {
+        "$value": "#0f172a",
+        "$type": "color"
+      }
     },
     "blue": {
       "0": {
@@ -449,6 +494,124 @@
       "black": {
         "$value": "#000000",
         "$type": "color"
+      }
+    },
+    "indigo": {
+      "50": {
+        "$value": "#F0EEFF",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "100": {
+        "$value": "#E2DEFF",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "300": {
+        "$value": "#BBB3FF",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "500": {
+        "$value": "#6054F4",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "600": {
+        "$value": "#5143DB",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "700": {
+        "$value": "#4234BD",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "900": {
+        "$value": "#26205C",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      }
+    },
+    "violet": {
+      "100": {
+        "$value": "#EEE5FF",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "400": {
+        "$value": "#A78BFA",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "600": {
+        "$value": "#7850C6",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      }
+    },
+    "cyan": {
+      "100": {
+        "$value": "#DFF8FB",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "400": {
+        "$value": "#28C7D9",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "700": {
+        "$value": "#087D8B",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      }
+    },
+    "navy": {
+      "50": {
+        "$value": "#F6F7FC",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "100": {
+        "$value": "#D4DAEC",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "300": {
+        "$value": "#98A5C5",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "500": {
+        "$value": "#637394",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "700": {
+        "$value": "#283656",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "800": {
+        "$value": "#1C2945",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "850": {
+        "$value": "#111B35",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "900": {
+        "$value": "#17233D",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
+      },
+      "950": {
+        "$value": "#0C1229",
+        "$type": "color",
+        "$description": "Kinetic Weave v1 additive brand ramp."
       }
     }
   }

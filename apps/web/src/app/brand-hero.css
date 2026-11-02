@@ -1,0 +1,41 @@
+/* Owner-supplied polygon: original facets and upper cage, recoloured with Kinetic Weave. */
+.kx-brand-hero { position: relative; isolation: isolate; }
+.kx-brand-hero-grid { position: relative; }
+.kx-brand-hero-copy { padding-bottom: 1rem; }
+.kx-hero-polygon { position: relative; min-width: 0; align-self: center; --polygon-pitch: 0deg; --polygon-yaw: 0deg; }
+.kx-polygon-aura { position: absolute; width: 85%; aspect-ratio: 1; left: 8%; top: 5%; border-radius: 50%; background: radial-gradient(circle, #a78bfa30 0%, #6054f41a 35%, #28c7d914 52%, #28c7d900 72%); filter: blur(22px); pointer-events: none; }
+.kx-polygon-interaction { position: relative; perspective: 1000px; cursor: grab; touch-action: pan-y; border-radius: 1rem; outline-offset: 3px; user-select: none; -webkit-user-select: none; }
+.kx-polygon-interaction:focus-visible { outline: 2px solid hsl(var(--focus)); }
+.kx-polygon-interaction[data-dragging="true"] { cursor: grabbing; }
+.kx-polygon-rotation { transform: rotateX(var(--polygon-pitch)) rotateY(var(--polygon-yaw)); }
+.kx-hero-polygon-art { display: block; width: 100%; height: auto; overflow: visible; }
+.kx-polygon-seam { fill: #f6f7fc; opacity: .65; }
+.kx-polygon-wireframe { fill: hsl(var(--brand)); }
+.kx-polygon-idle { transform-origin: 50% 50%; animation: kx-polygon-suspend 16s ease-in-out infinite; }
+.kx-polygon-signals { stroke: hsl(var(--brand)); stroke-dasharray: .045 .955; animation: kx-polygon-travel 14s linear infinite; }
+.kx-polygon-signals path:nth-child(2) { opacity: .45; }
+.kx-hero-polygon[data-running="false"] *, .kx-polygon-interaction:is(:hover, :focus-within, [data-dragging="true"]) * { animation-play-state: paused !important; }
+.kx-polygon-controls { display: flex; flex-direction: column; align-items: center; gap: .5rem; margin-top: .5rem; position: relative; }
+.kx-mesh-pause { display: inline-flex; gap: .5rem; font-size: .75rem; color: hsl(var(--foreground)); }
+.dark .kx-polygon-aura { opacity: .85; }
+@keyframes kx-polygon-travel { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes kx-polygon-suspend { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@media (min-width: 64rem) {
+  .kx-brand-hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3rem; align-items: center; }
+  .kx-hero-polygon { margin-inline-end: -1rem; }
+}
+@media (max-width: 63.999rem) {
+  .kx-hero-polygon { width: min(100%, 34rem); margin-inline: auto; margin-bottom: 2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kx-hero-polygon * { animation: none !important; }
+  /* No autoplay. Explicit drag/key rotation remains under the visitor's control. */
+  .kx-mesh-pause { display: none; }
+  .kx-polygon-signals { stroke-dasharray: none; opacity: .18; }
+}
+@media (forced-colors: active) {
+  .kx-polygon-wireframe { fill: CanvasText; }
+  .kx-polygon-aura, .kx-polygon-signals { display: none; }
+}
+
+.kx-polygon-controls > p { max-width: 100%; text-align: center; overflow-wrap: anywhere; }

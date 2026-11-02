@@ -280,6 +280,7 @@ for (const [width, dir] of [[320, 'ltr'], [390, 'ltr'], [390, 'rtl'], [768, 'ltr
     const { page, context } = await open({ width, height: width < 600 ? 844 : 900 });
     await setDir(page, dir);
     await page.waitForTimeout(200);
+    await page.locator('[data-hero-system-map]').scrollIntoViewIfNeeded();
     const f = await mapFacts(page);
     // the map switches from rows to columns at a container width of 34rem
     assert.equal(f.layout, f.mapWidth >= 34 * f.rem ? 'columns' : 'rows', `layout at a ${f.mapWidth}px map`);
@@ -368,7 +369,9 @@ const heroSelected = (page) => page.locator(`${HERO} [role="tab"][aria-selected=
 
 await check('hero tour: advances on its own, holds under the pointer, pauses from its button, stops on a choice', async () => {
   const { page, context } = await open({ width: 1440, reducedMotion: 'no-preference' });
+  await page.locator('[data-hero-system-map]').scrollIntoViewIfNeeded();
   await page.mouse.move(0, 890); // keep the pointer off the map
+  await page.locator('[data-hero-system-map]').scrollIntoViewIfNeeded();
   const first = await heroSelected(page);
   await page.waitForTimeout(5500);
   const second = await heroSelected(page);
@@ -406,6 +409,7 @@ await check('hero tour: advances on its own, holds under the pointer, pauses fro
 await check('hero tour: none under reduced motion, and no pause button', async () => {
   const { page, context } = await open({ width: 1440 });
   await page.mouse.move(0, 890);
+  await page.locator('[data-hero-system-map]').scrollIntoViewIfNeeded();
   const first = await heroSelected(page);
   await page.waitForTimeout(5500);
   assert.equal(await heroSelected(page), first, 'the tour ran under reduced motion');
@@ -608,14 +612,14 @@ async function worstTextContrast(page, selector) {
 }
 
 for (const width of [320, 390, 768, 1024, 1440]) {
-  await check(`hero glow at ${width}px: off the copy, on the map`, async () => {
+  await check(`hero glow at ${width}px: off the copy, behind the polygon`, async () => {
     const { page, context } = await open({ width });
     const f = await page.evaluate(
       ({ copySel }) => {
         const hero = document.querySelector('section.kx-chapter');
-        const glow = hero?.querySelector('.kx-glow');
+        const glow = hero?.querySelector('.kx-polygon-aura');
         const copy = document.querySelector(copySel);
-        const map = document.querySelector('[data-hero-system-map]');
+        const map = hero?.querySelector('.kx-hero-polygon');
         if (!hero || !glow || !copy || !map) return null;
         const box = (el) => el.getBoundingClientRect();
         const share = (a, b) => {
@@ -634,6 +638,7 @@ for (const width of [320, 390, 768, 1024, 1440]) {
           onCopy: share(g, box(copy)),
           onMap: share(g, box(map)),
           mapTop: box(map).top,
+          mapHeight: box(map).height,
           copyBottom: box(copy).bottom,
           glowTop: g.top,
         };
@@ -657,7 +662,7 @@ for (const width of [320, 390, 768, 1024, 1440]) {
       // and it comes down from above the map, as the top anchor puts it. Without this a glow still anchored
       // to the bottom here — the one-column treatment left on past the grid's switch — reads as 80% of the
       // map and passes, which is the composition the owner approved in reverse.
-      assert.ok(f.glowTop <= f.mapTop, `the glow starts ${Math.round(f.glowTop - f.mapTop)}px below the map's top`);
+      assert.ok(f.glowTop - f.mapTop <= f.mapHeight * .15, 'the glow belongs behind the upper polygon');
     }
     await context.close();
   });
@@ -675,7 +680,7 @@ for (const width of [320, 390, 768, 1024, 1440]) {
 await check('hero glow: it stays a wash, whatever is behind it', async () => {
   const { page, context } = await open({ width: 1440 });
   const box = await page.evaluate(() => {
-    const glow = document.querySelector('section.kx-chapter .kx-glow');
+    const glow = document.querySelector('section.kx-chapter .kx-polygon-aura');
     if (!glow) return null;
     const r = glow.getBoundingClientRect();
     return {
@@ -703,7 +708,7 @@ await check('hero glow: it stays a wash, whatever is behind it', async () => {
     }, shot);
   };
   const lit = await pixels();
-  await page.addStyleTag({ content: '.kx-glow { display: none !important }' });
+  await page.addStyleTag({ content: '.kx-polygon-aura { display: none !important }' });
   await page.waitForTimeout(100);
   const unlit = await pixels();
   let tint = 0;

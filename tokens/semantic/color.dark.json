@@ -1,38 +1,44 @@
 {
   "color": {
     "background": {
-      "$value": "{color.blue.900}",
-      "$type": "color"
+      "$value": "{color.navy.950}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "foreground": {
-      "$value": "{color.blue.50}",
-      "$type": "color"
+      "$value": "{color.navy.50}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "card": {
-      "$value": "{color.blue.800}",
-      "$type": "color"
+      "$value": "{color.navy.800}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "card-foreground": {
-      "$value": "{color.blue.50}",
-      "$type": "color"
+      "$value": "{color.navy.50}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "popover": {
-      "$value": "{color.blue.800}",
-      "$type": "color"
+      "$value": "{color.navy.800}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "popover-foreground": {
-      "$value": "{color.blue.50}",
-      "$type": "color"
+      "$value": "{color.navy.50}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "primary": {
-      "$value": "{color.azure.400}",
+      "$value": "{color.violet.400}",
       "$type": "color",
-      "$description": "light-theme primary is a bright #1d4ed8; on the near-black dark surface that would be ~2.9:1, so dark uses a lighter step of the same blue (#60a5fa, ~7.6:1 on bg). Two independent palettes — this is not a flip of the light value."
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "primary-foreground": {
-      "$value": "{color.blue.900}",
+      "$value": "{color.navy.950}",
       "$type": "color",
-      "$description": "near-black text on the light-blue dark --primary (~7:1)"
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "secondary": {
       "$value": "{color.green.800}",
@@ -43,25 +49,29 @@
       "$type": "color"
     },
     "muted": {
-      "$value": "{color.blue.700}",
-      "$type": "color"
+      "$value": "{color.navy.700}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "muted-foreground": {
-      "$value": "{color.blue.100}",
-      "$type": "color"
+      "$value": "{color.navy.100}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "surface-grouped": {
-      "$value": "{color.blue.850}",
+      "$value": "{color.navy.850}",
       "$type": "color",
-      "$description": "Between the page (blue.900) and `card` (blue.800), so a card on a grouped section reads as raised, as it does in light. Not an alias of `muted`: dark `muted` (blue.700) is lighter than `card`."
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "accent": {
-      "$value": "{color.blue.700}",
-      "$type": "color"
+      "$value": "{color.navy.700}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "accent-foreground": {
-      "$value": "{color.blue.50}",
-      "$type": "color"
+      "$value": "{color.navy.50}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "destructive": {
       "$value": "{color.red.300}",
@@ -96,13 +106,14 @@
       "$type": "color"
     },
     "ring": {
-      "$value": "{color.azure.400}",
+      "$value": "{color.violet.400}",
       "$type": "color",
-      "$description": "focus ring — tracks dark --primary (#60a5fa)"
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "chart-1": {
-      "$value": "{color.blue.100}",
-      "$type": "color"
+      "$value": "{color.violet.400}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "chart-2": {
       "$value": "{color.green.400}",
@@ -121,8 +132,9 @@
       "$type": "color"
     },
     "chart-6": {
-      "$value": "{color.blue.200}",
-      "$type": "color"
+      "$value": "{color.cyan.400}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "chart-7": {
       "$value": "{color.red.400}",
@@ -133,35 +145,41 @@
       "$type": "color"
     },
     "sidebar": {
-      "$value": "{color.blue.800}",
-      "$type": "color"
+      "$value": "{color.navy.800}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "sidebar-foreground": {
-      "$value": "{color.blue.50}",
-      "$type": "color"
+      "$value": "{color.navy.50}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "sidebar-primary": {
-      "$value": "{color.azure.400}",
-      "$type": "color"
+      "$value": "{color.violet.400}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "sidebar-primary-foreground": {
-      "$value": "{color.blue.900}",
-      "$type": "color"
+      "$value": "{color.navy.950}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "sidebar-accent": {
-      "$value": "{color.blue.700}",
-      "$type": "color"
+      "$value": "{color.navy.700}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "sidebar-accent-foreground": {
-      "$value": "{color.blue.50}",
-      "$type": "color"
+      "$value": "{color.navy.50}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "sidebar-border": {
       "$value": "{color.blue.400}",
       "$type": "color"
     },
     "sidebar-ring": {
-      "$value": "{color.azure.400}",
+      "$value": "{color.violet.400}",
       "$type": "color"
     },
     "tertiary": {
@@ -193,7 +211,7 @@
     "on-success-container": {
       "$value": "{color.green.300}",
       "$type": "color",
-      "$description": "text and icons on a tinted success surface. Dark: one step lighter than `success`, which measures 4.4982:1 on its own 15% tint over `muted` — at the AA threshold rather than clearly over it. This is 6.03:1 at the same worst case."
+      "$description": "text and icons on a tinted success surface. Dark: one step lighter than `success`, which measures 4.4982:1 on its own 15% tint over `muted` \u2014 at the AA threshold rather than clearly over it. This is 6.03:1 at the same worst case."
     },
     "on-warning-container": {
       "$value": "{color.amber.400}",
@@ -209,23 +227,23 @@
       "on-info-container": {
         "$value": "{color.on-info-container}",
         "$type": "color",
-        "$description": "text on a tinted info surface (bg-info/10). Dark: same as --info, which already clears AA on the dark tint. Light counterpart is darker — see color.light.json."
+        "$description": "text on a tinted info surface (bg-info/10). Dark: same as --info, which already clears AA on the dark tint. Light counterpart is darker \u2014 see color.light.json."
       },
       "muted-on-container": {
         "$value": "{color.blue.100}",
         "$type": "color",
-        "$description": "secondary text on a tinted container. Dark: identical to --muted-foreground, which already clears AA on every dark tint (6.92:1 on bg-primary/10 over --card, 7.24:1 on bg-destructive/10). Darkening is a light-mode problem only, because a 10% tint lightens a dark surface away from the text rather than toward it. Light counterpart is darker — see color.light.json."
+        "$description": "secondary text on a tinted container. Dark: identical to --muted-foreground, which already clears AA on every dark tint (6.92:1 on bg-primary/10 over --card, 7.24:1 on bg-destructive/10). Darkening is a light-mode problem only, because a 10% tint lightens a dark surface away from the text rather than toward it. Light counterpart is darker \u2014 see color.light.json."
       }
     },
     "brand": {
-      "$value": "{color.blue.200}",
+      "$value": "{color.violet.400}",
       "$type": "color",
-      "$description": "identity colour, lightened so it stays legible on the dark surface (the light navy would vanish). Independent of light, not a flip."
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "brand-foreground": {
-      "$value": "{color.blue.900}",
+      "$value": "{color.navy.950}",
       "$type": "color",
-      "$description": "text/icons on `brand`"
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "action": {
       "$value": "{color.primary}",
@@ -238,14 +256,14 @@
       "$description": "text/icons on `action`"
     },
     "action-hover": {
-      "$value": "#5796e3",
+      "$value": "#987fe5",
       "$type": "color",
-      "$description": "explicit hover fill for native ports: `action` at 90% over `background` (#60a5fa over #050c11). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree."
+      "$description": "Kinetic Weave action at 90% over background; mirrors web alpha state."
     },
     "action-pressed": {
-      "$value": "#528ed7",
+      "$value": "#9079db",
       "$type": "color",
-      "$description": "explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA."
+      "$description": "Kinetic Weave action at 85% over background; mirrors web alpha state."
     },
     "focus": {
       "$value": "{color.ring}",
