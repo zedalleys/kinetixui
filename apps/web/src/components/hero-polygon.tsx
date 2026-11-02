@@ -11,6 +11,38 @@ const facetMaterials: Record<string, string> = {
   "cls-4": "edge", "cls-5": "light", "cls-6": "shadow",
 };
 
+// The central face is the front plane. The surrounding faces taper back
+// to a second ring, with shared vertices so their edges stay joined.
+const faces = geometry.facets.filter(face => face.type === "polygon");
+const vertices = (data: string) => {
+  const values = data.split(/\s+/).map(Number);
+  return values.flatMap((x, i) => i % 2 ? [] : [[x, values[i + 1]]]);
+};
+const front = new Set(vertices(faces[0].data).map(([x, y]) => Math.round(x) + "," + Math.round(y)));
+const mesh = faces.map(face => ({
+  tone: face.tone,
+  points: vertices(face.data).map(([x, y]) => ({
+    x: x - 300, y: y - 285,
+    z: front.has(Math.round(x) + "," + Math.round(y)) ? 64 : -56,
+  })),
+}));
+
+function project(pitch: number, yaw: number) {
+  const p = pitch * Math.PI / 180, r = yaw * Math.PI / 180;
+  return mesh.map(face => {
+    let depth = 0;
+    const points = face.points.map(({ x, y, z }) => {
+      const rz = z * Math.cos(r) - x * Math.sin(r);
+      const dz = rz * Math.cos(p) + y * Math.sin(p);
+      depth += dz;
+      const scale = 960 / (960 - dz);
+      return [300 + (x * Math.cos(r) + z * Math.sin(r)) * scale,
+        285 + (y * Math.cos(p) - rz * Math.sin(p)) * scale].join(",");
+    });
+    return { tone: face.tone, points: points.join(" "), depth: depth / points.length };
+  }).sort((a, b) => a.depth - b.depth);
+}
+
 const clamp = (value: number) => Math.max(-28, Math.min(28, value));
 
 /** Owner-supplied 189 [Converted].svg; its coordinates and outlined cage stay intact. */
@@ -40,15 +72,17 @@ export function HeroPolygon() {
     };
   }, []);
 
-  // Pointer movement writes only two CSS variables; no React render per frame.
+  const [pose, setPose] = useState(rotation.current);
   const rotate = (pitch: number, yaw: number) => {
     rotation.current = { pitch: clamp(pitch), yaw: clamp(yaw) };
+    setPose(rotation.current);
     shape.current?.style.setProperty("--polygon-pitch", `${rotation.current.pitch}deg`);
     shape.current?.style.setProperty("--polygon-yaw", `${rotation.current.yaw}deg`);
   };
   const startDrag = (event: PointerEvent<HTMLDivElement>) => {
-    if (!event.isPrimary || event.button !== 0) return;
+    if (!event.isPrimary || event.button !== 0 || !(event.target instanceof SVGPolygonElement)) return;
     drag.current = { pointer: event.pointerId, x: event.clientX, y: event.clientY, ...rotation.current };
+    event.currentTarget.focus({ preventScroll: true });
     event.currentTarget.setPointerCapture(event.pointerId);
     event.currentTarget.dataset.dragging = "true";
   };
@@ -110,9 +144,10 @@ export function HeroPolygon() {
               </defs>
               <g>
                 <g className="kx-polygon-facets">
-                  {geometry.facets.map((facet, i) => facet.type === "polygon" ?
-                    <polygon key={i} points={facet.data} fill={`url(#${id}-${facetMaterials[facet.tone] ?? "glass"})`} /> :
-                    <path key={i} d={facet.data} className="kx-polygon-seam" />)}
+                  {project(pose.pitch, pose.yaw).map(face => (
+                    <polygon key={face.tone} points={face.points} fill={`url(#${id}-${facetMaterials[face.tone]})`}
+                      stroke="rgba(235,255,255,.55)" strokeWidth=".75" strokeLinejoin="round" />
+                  ))}
                 </g>
                 {/* The supplied upper wireframe is drawn over the facets in the main brand colour. */}
                 <g className="kx-polygon-wireframe">

@@ -54,9 +54,14 @@ try {
       await page.waitForTimeout(250);
       assert.notEqual(await idle.evaluate(el => getComputedStyle(el).transform), frame, 'autoplay is static');
       const rect = await handle.boundingBox();
+      const glass = root.locator('.kx-polygon-facets polygon[fill$="-glass)"]');
+      const initialPoints = await glass.getAttribute('points');
+      await page.mouse.move(rect.x + 4, rect.y + 4);
+      await page.mouse.down(); await page.mouse.move(rect.x + 30, rect.y + 20); await page.mouse.up();
+      assert.equal(await glass.getAttribute('points'), initialPoints, 'empty space rotated the mesh');
       await page.mouse.move(rect.x + rect.width * .4, rect.y + rect.height * .5);
       await page.mouse.down(); await page.mouse.move(rect.x + rect.width * .6, rect.y + rect.height * .6, { steps: 8 }); await page.mouse.up();
-      assert.notEqual(await root.locator('.kx-polygon-rotation').evaluate(el => getComputedStyle(el).transform), 'matrix(1, 0, 0, 1, 0, 0)', 'drag rotation missing');
+      assert.notEqual(await glass.getAttribute('points'), initialPoints, 'drag did not rotate vertices');
       await handle.focus(); await page.keyboard.press('Home');
       assert.equal(await root.locator('.kx-polygon-rotation').evaluate(el => el.style.getPropertyValue('--polygon-yaw')), '0deg');
       await handle.focus(); await page.keyboard.press('ArrowRight');
