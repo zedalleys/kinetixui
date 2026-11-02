@@ -23,6 +23,9 @@ on:
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
+      - "scripts/rebrand-browser.mjs"
+      - "scripts/hero-beacon-browser.mjs"
+      - "apps/web/src/components/hero-polygon-geometry.json"
       - "scripts/web-quality-browser.mjs"
       - "scripts/blocks-discovery-browser.mjs"
       - "scripts/blocks-runtime-browser.mjs"
@@ -55,6 +58,9 @@ on:
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
+      - "scripts/rebrand-browser.mjs"
+      - "scripts/hero-beacon-browser.mjs"
+      - "apps/web/src/components/hero-polygon-geometry.json"
       - "scripts/web-quality-browser.mjs"
       - "scripts/blocks-discovery-browser.mjs"
       - "scripts/blocks-runtime-browser.mjs"
@@ -154,6 +160,20 @@ jobs:
       # running through an output it does not belong to.
       - name: Homepage systems visuals (tabs, type floor, headline, map, hero decoration)
         run: pnpm check:home-systems
+
+      # The rebranded hero, against the running production build: the owner-supplied cage and its six
+      # junction nodes survive, the facets rotate by pointer and keyboard while the cage stays fixed under
+      # them, and no visible control row or rectangular focus frame returned. Run directly: this workflow's
+      # path filters cover the script, not package.json.
+      - name: Rebrand hero (cage, rotation, no control row)
+        run: REBRAND_BASE=http://127.0.0.1:3000 node scripts/rebrand-browser.mjs
+
+      # The beacon the rebrand introduced, measured rather than quoted: it traces real cage legs, pulses at
+      # each junction node read out of the supplied artwork, closes its loop (the lap is timed), keeps
+      # travelling during a drag, suspends offscreen, disappears under reduced motion, and keyboard focus
+      # stays perceptible on the polygon itself with no rectangular outline.
+      - name: Hero beacon (cage traversal, junction pulses, closed loop, focus)
+        run: node scripts/hero-beacon-browser.mjs --base http://127.0.0.1:3000
 
       # The website's own compact text, measured rather than read from source: no readable label under 12px, the
       # touched labels at 4.5:1 in light and dark, touch-sized hit areas on a coarse pointer with no overlaps, and

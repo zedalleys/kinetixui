@@ -6,7 +6,7 @@ const require = createRequire(import.meta.url);
 const base = process.env.REBRAND_BASE || 'http://127.0.0.1:3104';
 const output = process.env.REBRAND_OUTPUT || 'design-assets/identity/v1/verification';
 await mkdir(output, { recursive: true });
-const browser = await chromium.launch();
+const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 const results = [];
 try {
   for (const [name, width, dark, rtl, reduced, zoom] of [

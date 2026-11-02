@@ -319,15 +319,15 @@
 
 .dark {
   --scrim: 0 0% 0% / 0.6; /** black at 60%: a dark page is already near-black, so 40% would barely dim it; 60% keeps the modal separated from what is behind it. */
-  --action-hover: 255 66% 70%; /** Kinetic Weave action at 90% over background; mirrors web alpha state. */
-  --action-pressed: 254 58% 67%; /** Kinetic Weave action at 85% over background; mirrors web alpha state. */
+  --action-hover: 246 63% 78%; /** explicit hover fill for native ports: `action` at 90% over `background` (#BBB3FF over #0C1229). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree. */
+  --action-pressed: 245 52% 74%; /** explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA. */
   --background: 228 55% 10%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --foreground: 230 50% 98%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --card: 221 42% 19%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --card-foreground: 230 50% 98%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --popover: 221 42% 19%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --popover-foreground: 230 50% 98%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
-  --primary: 255 92% 76%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --primary: 246 100% 85%; /** the accessible dark-theme action colour, not the identity colour: `brand` keeps Soft Violet (violet.400). Soft Violet as text measured 4.43:1 on bg-primary/10 over `card`, 3.72:1 on the same tint over `muted` and 4.31:1 on `accent` once the Kinetic Weave dark surfaces rose to navy.800/navy.700, so it fails AA as a foreground. indigo.300 is the light step of Electric Indigo and measures 7.58:1 on `card`, 6.28:1 on `accent` and 5.13:1 at the worst tint. Mirrors light, where the action is indigo.600 rather than the identity indigo.500. */
   --primary-foreground: 228 55% 10%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --secondary: 120 8% 20%;
   --secondary-foreground: 120 8% 90%;
@@ -336,7 +336,7 @@
   --surface-grouped: 223 51% 14%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --accent: 222 37% 25%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --accent-foreground: 230 50% 98%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
-  --destructive: 0 63% 64%;
+  --destructive: 0 63% 75%; /** red.300 was sized for the old near-black dark page; on the Kinetic Weave navy.800 `card` it measures 4.33:1 and 3.87:1 on its own 10% tint, both below AA. red.200 measures 6.50:1 on `card`, 5.39:1 on `muted` and 5.46:1 on its own 10% tint over `card`; `destructive-foreground` on the solid fill is 8.59:1. */
   --destructive-foreground: 0 90% 8%;
   --success: 116 8% 59%;
   --success-foreground: 120 8% 10%;
@@ -344,7 +344,7 @@
   --warning-foreground: 37 100% 8%;
   --border: 204 33% 33%;
   --input: 204 33% 33%;
-  --ring: 255 92% 76%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --ring: 246 100% 85%; /** focus ring — tracks dark --primary, as it has since the azure palette. */
   --chart-1: 255 92% 76%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --chart-2: 116 8% 59%;
   --chart-3: 37 100% 73%;
@@ -355,12 +355,12 @@
   --chart-8: 117 8% 49%;
   --sidebar: 221 42% 19%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --sidebar-foreground: 230 50% 98%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
-  --sidebar-primary: 255 92% 76%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --sidebar-primary: 246 100% 85%; /** mirrors --primary, as it did under the azure palette. */
   --sidebar-primary-foreground: 228 55% 10%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --sidebar-accent: 222 37% 25%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --sidebar-accent-foreground: 230 50% 98%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --sidebar-border: 204 33% 33%;
-  --sidebar-ring: 255 92% 76%;
+  --sidebar-ring: 246 100% 85%;
   --tertiary: 204 33% 33%;
   --tertiary-foreground: 212 100% 97%;
   --info: 204 33% 68%;
@@ -368,8 +368,8 @@
   --on-info-container: 204 33% 68%; /** text and icons on a tinted info surface. Dark: the same step as `info`, which already clears AA on the dark tint (7.70:1 over the page) because a 10% tint lightens a dark surface away from light text. */
   --on-success-container: 115 8% 70%; /** text and icons on a tinted success surface. Dark: one step lighter than `success`, which measures 4.4982:1 on its own 15% tint over `muted` — at the AA threshold rather than clearly over it. This is 6.03:1 at the same worst case. */
   --on-warning-container: 37 100% 73%; /** text and icons on a tinted warning surface. Dark: the same step as `warning`, which already clears AA on the dark tint (7.38:1 at its worst case) because a tint lightens a dark surface away from light text. */
-  --on-destructive-container: 0 63% 75%; /** text and icons on a tinted error surface. Dark: one step lighter than `destructive`, which is 4.28:1 on its own 10% tint over `muted` and fails AA. This is 6.38:1 at the same worst case. */
-  --semantic-muted-on-container: 204 33% 68%; /** secondary text on a tinted container. Dark: identical to --muted-foreground, which already clears AA on every dark tint (6.92:1 on bg-primary/10 over --card, 7.24:1 on bg-destructive/10). Darkening is a light-mode problem only, because a 10% tint lightens a dark surface away from the text rather than toward it. Light counterpart is darker — see color.light.json. */
+  --on-destructive-container: 0 64% 81%; /** text and icons on a tinted error surface. Dark: one step lighter than `destructive`, so the container text stays distinct from the status colour itself. red.150 measures 5.57:1 on a destructive/10 tint over `muted` and 6.68:1 over `card`. */
+  --semantic-muted-on-container: 225 39% 88%; /** secondary text on a tinted container. Dark: identical to --muted-foreground, which Kinetic Weave moved to navy.100; it clears AA on every dark tint (6.96:1 on bg-primary/10 over --muted, the worst case this repository renders). Darkening is a light-mode problem only, because a 10% tint lightens a dark surface away from the text rather than toward it. Light counterpart is darker — see color.light.json. */
   --brand: 255 92% 76%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --brand-foreground: 228 55% 10%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --semantic-on-info-container: 204 33% 68%; /** text on a tinted info surface (bg-info/10). Dark: same as --info, which already clears AA on the dark tint. Light counterpart is darker — see color.light.json. */

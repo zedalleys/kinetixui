@@ -7,6 +7,15 @@
 .kx-polygon-interaction { position: relative; perspective: 1000px; pointer-events: none; border-radius: 1rem; outline-offset: 3px; user-select: none; -webkit-user-select: none; }
 .kx-polygon-interaction:focus, .kx-polygon-interaction:focus-visible { outline: none; box-shadow: none; }
 .kx-polygon-interaction:focus-visible:not([data-pointer-focus]) polygon { stroke: hsl(var(--focus)); stroke-width: 2; }
+/*
+  The facet stroke alone is not enough on its own terms: measured against the pixels next to it, only 34%
+  (light) and 14% (dark) of the pixels that change on focus reach 3:1, because over the indigo-ish shadow
+  facets a 2px --focus stroke is close in luminance to what it borders. The cage is the part of the artwork
+  that sits on the PAGE, where --focus measures 6.18:1 in light and 9.70:1 in dark, so thickening it on
+  focus gives the indicator a component whose contrast does not depend on which facet it crosses. It stays
+  polygon-integrated and non-rectangular: no frame is drawn around the box.
+*/
+.kx-polygon-interaction:focus-visible:not([data-pointer-focus]) .kx-polygon-wireframe { stroke: hsl(var(--focus)); stroke-width: 1.5; }
 .kx-polygon-interaction[data-dragging="true"] { cursor: grabbing; }
 .kx-polygon-facets polygon { pointer-events: visiblePainted; cursor: grab; touch-action: pan-y; }
 .kx-polygon-interaction[data-dragging="true"] polygon { cursor: grabbing; }

@@ -13,7 +13,7 @@ class KinetixColorSchemeDark {
   static const cardForeground = Color(0xFFF6F7FC);
   static const popover = Color(0xFF1C2945);
   static const popoverForeground = Color(0xFFF6F7FC);
-  static const primary = Color(0xFFA78BFA);
+  static const primary = Color(0xFFBBB3FF);
   static const primaryForeground = Color(0xFF0C1229);
   static const secondary = Color(0xFF2E362E);
   static const secondaryForeground = Color(0xFFE3E7E3);
@@ -22,7 +22,7 @@ class KinetixColorSchemeDark {
   static const surfaceGrouped = Color(0xFF111B35);
   static const accent = Color(0xFF283656);
   static const accentForeground = Color(0xFFF6F7FC);
-  static const destructive = Color(0xFFDD6A6A);
+  static const destructive = Color(0xFFE89999);
   static const destructiveForeground = Color(0xFF280202);
   static const success = Color(0xFF90A08F);
   static const successForeground = Color(0xFF171B17);
@@ -30,7 +30,7 @@ class KinetixColorSchemeDark {
   static const warningForeground = Color(0xFF2A1A00);
   static const border = Color(0xFF395A70);
   static const input = Color(0xFF395A70);
-  static const ring = Color(0xFFA78BFA);
+  static const ring = Color(0xFFBBB3FF);
   static const chart1 = Color(0xFFA78BFA);
   static const chart2 = Color(0xFF90A08F);
   static const chart3 = Color(0xFFFFC975);
@@ -41,12 +41,12 @@ class KinetixColorSchemeDark {
   static const chart8 = Color(0xFF748873);
   static const sidebar = Color(0xFF1C2945);
   static const sidebarForeground = Color(0xFFF6F7FC);
-  static const sidebarPrimary = Color(0xFFA78BFA);
+  static const sidebarPrimary = Color(0xFFBBB3FF);
   static const sidebarPrimaryForeground = Color(0xFF0C1229);
   static const sidebarAccent = Color(0xFF283656);
   static const sidebarAccentForeground = Color(0xFFF6F7FC);
   static const sidebarBorder = Color(0xFF395A70);
-  static const sidebarRing = Color(0xFFA78BFA);
+  static const sidebarRing = Color(0xFFBBB3FF);
   static const tertiary = Color(0xFF395A70);
   static const tertiaryForeground = Color(0xFFF0F7FF);
   static const info = Color(0xFF92B2C8);
@@ -55,13 +55,13 @@ class KinetixColorSchemeDark {
   static const onInfoContainer = Color(0xFF92B2C8);
   static const onSuccessContainer = Color(0xFFACB8AB);
   static const onWarningContainer = Color(0xFFFFC975);
-  static const onDestructiveContainer = Color(0xFFE89999);
+  static const onDestructiveContainer = Color(0xFFEEB1B1);
   static const brand = Color(0xFFA78BFA);
   static const brandForeground = Color(0xFF0C1229);
-  static const action = Color(0xFFA78BFA);
+  static const action = Color(0xFFBBB3FF);
   static const actionForeground = Color(0xFF0C1229);
-  static const actionHover = Color(0xFF987FE5);
-  static const actionPressed = Color(0xFF9079DB);
-  static const focus = Color(0xFFA78BFA);
-  static const link = Color(0xFFA78BFA);
+  static const actionHover = Color(0xFFAAA3EA);
+  static const actionPressed = Color(0xFFA19BDF);
+  static const focus = Color(0xFFBBB3FF);
+  static const link = Color(0xFFBBB3FF);
 }

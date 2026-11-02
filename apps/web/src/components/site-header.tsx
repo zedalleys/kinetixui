@@ -27,7 +27,7 @@ export function SiteHeader() {
         <Link href="/" className="group flex items-center gap-2.5">
           <BrandMark className="size-8 shrink-0 transition-transform duration-300 group-hover:-translate-y-0.5" />
           <span className="font-display text-wordmark font-bold tracking-[-0.035em]">
-            Kinetix<span className="text-[#6054F4] dark:text-[#A78BFA]">UI</span>
+            Kinetix<span className="text-brand">UI</span>
           </span>
         </Link>
 

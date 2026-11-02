@@ -74,7 +74,7 @@ export function SiteFooter() {
             <div className="flex items-center gap-2.5">
               <BrandMark className="size-8 shrink-0" />
               <span className="font-display text-wordmark font-bold tracking-[-0.035em]">
-                Kinetix<span className="text-[#6054F4] dark:text-[#A78BFA]">UI</span>
+                Kinetix<span className="text-brand">UI</span>
               </span>
             </div>
             {/* The canonical tagline, not a second copy of it: this paragraph carried the retired

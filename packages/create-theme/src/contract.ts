@@ -25,7 +25,7 @@ export const TOKEN_CONTRACT: TokenRow[] = [
   { token: "foreground", light: "#17233d", dark: "#f6f7fc" },
   { token: "card", light: "#ffffff", dark: "#1c2945", note: "synthesized" },
   { token: "popover", light: "#ffffff", dark: "#1c2945", note: "synthesized" },
-  { token: "primary", light: "#5143db", dark: "#a78bfa" },
+  { token: "primary", light: "#5143db", dark: "#bbb3ff", note: "accessible action step; identity stays on brand" },
   { token: "primary-foreground", light: "#f6f7fc", dark: "#0c1229" },
   { token: "secondary", light: "#c7cfc7", dark: "#2e362e" },
   { token: "secondary-foreground", light: "#465245", dark: "#e3e7e3" },
@@ -34,21 +34,21 @@ export const TOKEN_CONTRACT: TokenRow[] = [
   { token: "surface-grouped", light: "#f6f6f6", dark: "#111b35", note: "grouped section under a card" },
   { token: "accent", light: "#f0eeff", dark: "#283656" },
   { token: "accent-foreground", light: "#5143db", dark: "#f6f7fc" },
-  { token: "destructive", light: "#c60a0a", dark: "#dd6a6a", note: "darkened for AA" },
+  { token: "destructive", light: "#c60a0a", dark: "#e89999", note: "stepped for AA on the Kinetic Weave dark surfaces" },
   { token: "success", light: "#5d6d5c", dark: "#90a08f" },
   { token: "warning", light: "#7f5b21", dark: "#ffc975", note: "darkened for AA" },
   { token: "border", light: "#92b2c8", dark: "#395a70" },
-  { token: "ring", light: "#5143db", dark: "#a78bfa", note: "synthesized" },
+  { token: "ring", light: "#5143db", dark: "#bbb3ff", note: "synthesized" },
   // Role tokens layered over primary / ring (added after the shadcn-compatible set on purpose: the
   // first row for a given hex names it in tokenNameForHex, so `primary` stays the label).
   { token: "brand", light: "#6054f4", dark: "#a78bfa", note: "identity — Kinetic Weave indigo / violet" },
   { token: "brand-foreground", light: "#f6f7fc", dark: "#0c1229" },
-  { token: "action", light: "#5143db", dark: "#a78bfa", note: "defaults to primary" },
+  { token: "action", light: "#5143db", dark: "#bbb3ff", note: "defaults to primary" },
   { token: "action-foreground", light: "#f6f7fc", dark: "#0c1229", note: "defaults to primary-foreground" },
-  { token: "action-hover", light: "#6256df", dark: "#987fe5", note: "action @ 90% — native" },
-  { token: "action-pressed", light: "#6b5fe0", dark: "#9079db", note: "action @ 85% — native" },
-  { token: "link", light: "#5143db", dark: "#a78bfa", note: "defaults to primary" },
-  { token: "focus", light: "#5143db", dark: "#a78bfa", note: "defaults to ring" },
+  { token: "action-hover", light: "#6256df", dark: "#aaa3ea", note: "action @ 90% — native" },
+  { token: "action-pressed", light: "#6b5fe0", dark: "#a19bdf", note: "action @ 85% — native" },
+  { token: "link", light: "#5143db", dark: "#bbb3ff", note: "defaults to primary" },
+  { token: "focus", light: "#5143db", dark: "#bbb3ff", note: "defaults to ring" },
 ];
 
 export type TokenRow = { token: string; light: string; dark: string; note?: string };
