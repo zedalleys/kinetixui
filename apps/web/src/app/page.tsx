@@ -192,7 +192,7 @@ export default function HomePage() {
                 </Link>
               </div>
             </div>
-            <PolygonMesh animated className="kx-polygon-hero-mesh" />
+            <PolygonMesh animated variant="hero" className="kx-polygon-hero-mesh" />
           </div>
         </div>
 

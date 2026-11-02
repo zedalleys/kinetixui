@@ -71,3 +71,16 @@ describe("polygon motion lifecycle", () => {
     expect(container.firstElementChild).toHaveAttribute("data-polygon-running", "false");
   });
 });
+
+describe("original branded hero SVG", () => {
+  it("renders independent vector geometry with animated connector paths", () => {
+    const { container } = render(<PolygonMesh variant="hero" animated />);
+    expect(container.querySelector("svg")).toHaveAttribute("viewBox", "0 0 760 520");
+    expect(container.querySelector('[data-artwork="original-hero"]')).not.toBeNull();
+    expect(container.querySelectorAll(".kx-hero-link").length).toBeGreaterThan(20);
+    expect(container.querySelectorAll(".kx-hero-node").length).toBeGreaterThan(10);
+    expect(container.querySelectorAll(".kx-polygon-signals path")).toHaveLength(3);
+    expect(container.querySelectorAll('[class^="kx-mesh-tone-"]')).toHaveLength(0);
+    expect(screen.getByRole("button", { name: "Pause polygon animation" })).toBeInTheDocument();
+  });
+});

@@ -38,7 +38,7 @@ const focusRing =
 
 export function SiteFooter() {
   return (
-    <footer className="kx-polygon-surface relative overflow-hidden border-t border-border bg-background text-foreground">
+    <footer className="relative overflow-hidden border-t border-border bg-accent text-foreground">
       <div className="kx-polygon-footer-art" aria-hidden="true"><PolygonMesh /></div>
 
       <div className="relative z-10 mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">

@@ -57,7 +57,9 @@ try {
         const mesh = page.locator('.kx-polygon-hero-mesh');
         const button = mesh.getByRole('button', { name: 'Pause polygon animation' });
         const shapes = await mesh.locator('.kx-polygon-art path, .kx-polygon-art circle').count();
-        assert.equal(shapes, 117, 'source geometry or bounded signal budget changed');
+        assert.ok(shapes >= 20 && shapes <= 100, 'original hero SVG geometry budget changed');
+        assert.equal(await mesh.locator('[data-artwork="original-hero"]').count(), 1, 'hero must use its original SVG');
+        assert.ok(await mesh.locator('.kx-hero-link').count() > 20, 'SVG connectors missing');
         if (reduced) {
           assert.equal(await button.isVisible(), false);
           assert.equal(await mesh.getAttribute('data-polygon-running'), 'false');
