@@ -9,31 +9,16 @@
 @tailwind utilities;
 
 /* Brand surfaces only. Library tokens and Create's generated preview keep their own contracts. */
+/* Keep the released KinetixUI color contract: no monochrome redefinition of --primary,
+   --foreground, --background or focus states in marketing or Create chrome. */
 .kx-polygon-surface {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 12%;
-  --muted-foreground: 0 0% 38%;
-  --border: 0 0% 85%;
-  --primary: 0 0% 16%;
-  --primary-foreground: 0 0% 100%;
-  --ring: 0 0% 32%;
-  --action: var(--primary);
-  --action-foreground: var(--primary-foreground);
-  --action-hover: 0 0% 24%;
-  --action-pressed: 0 0% 8%;
   color: hsl(var(--foreground));
   background: hsl(var(--background));
 }
-.dark .kx-polygon-surface {
-  --background: 0 0% 8%;
-  --foreground: 0 0% 94%;
-  --muted-foreground: 0 0% 70%;
-  --border: 0 0% 26%;
-  --primary: 0 0% 92%;
-  --primary-foreground: 0 0% 8%;
-  --ring: 0 0% 80%;
-  --action-hover: 0 0% 80%;
-  --action-pressed: 0 0% 100%;
+.kx-polygon-hero {
+  isolation: isolate;
+  background: radial-gradient(ellipse at 82% 45%, hsl(var(--primary) / .085), transparent 60%),
+              hsl(var(--background));
 }
 .kx-polygon-hero-grid {
   display: grid;
@@ -51,6 +36,33 @@
 .kx-polygon { position: relative; color: hsl(var(--foreground)); }
 .kx-polygon-art { display: block; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .kx-polygon-hero-mesh { width: 100%; max-width: 34rem; justify-self: end; }
+
+/* Original SVG hero illustration. Facets, nodes and moving signals inherit the existing
+   KinetixUI action-blue token; no new palette, raster image or JS animation loop. */
+.kx-polygon--hero { color: hsl(var(--primary)); }
+.kx-polygon--hero .kx-hero-art { aspect-ratio: 960 / 620; }
+.kx-hero-drift { transform-origin: center; animation: kx-hero-float 18s ease-in-out infinite alternate; }
+.kx-hero-facets polygon { fill: url(#kx-hero-facet-shade); }
+.kx-hero-facets polygon:nth-child(3n + 2) { fill: hsl(var(--primary) / .065); }
+.kx-hero-facets polygon:nth-child(4n + 1) { fill: hsl(var(--primary) / .105); }
+.kx-hero-lines { fill: none; stroke: hsl(var(--primary) / .35); stroke-width: 1.15; stroke-linejoin: round; }
+.kx-hero-horizon { fill: none; stroke: hsl(var(--primary) / .26); stroke-width: 1.5; }
+.kx-hero-nodes circle { fill: hsl(var(--primary) / .8); stroke: hsl(var(--background)); stroke-width: 1.5; }
+.kx-hero-nodes circle:nth-child(3n) { animation: kx-hero-breathe 6s ease-in-out infinite alternate; }
+.kx-hero-traces { fill: none; stroke: hsl(var(--primary) / .82); stroke-width: 3; stroke-linecap: round; }
+.kx-hero-traces path { stroke-dasharray: .06 .94; animation: kx-hero-signal 11s linear infinite; }
+.kx-hero-traces path:nth-child(2) { animation-delay: -3.5s; }
+.kx-hero-traces path:nth-child(3) { animation-delay: -7s; }
+@keyframes kx-hero-float { to { transform: translate(-7px, 5px); } }
+@keyframes kx-hero-breathe { to { opacity: .35; } }
+@keyframes kx-hero-signal { to { stroke-dashoffset: -1; } }
+@media (prefers-reduced-motion: reduce) {
+  .kx-hero-drift, .kx-hero-nodes circle, .kx-hero-traces path { animation: none !important; }
+}
+@media (max-width: 63.999rem) {
+  .kx-polygon--hero .kx-hero-art { height: 100%; transform: none; }
+}
+
 .kx-polygon-drift { animation: kx-mesh-drift 16s ease-in-out infinite alternate; }
 .kx-polygon [class^="kx-mesh-tone-"] { fill: currentColor; opacity: .08; }
 .kx-polygon .kx-mesh-tone-1, .kx-polygon .kx-mesh-tone-2 { fill: none; stroke: currentColor; stroke-width: 1; opacity: .24; }
