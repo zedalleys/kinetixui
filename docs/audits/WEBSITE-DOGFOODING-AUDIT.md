@@ -243,3 +243,15 @@ The tests prove it fails on a new raw `<button>`, a raw `<select>`, direct Radix
 ## Evidence
 
 See `evidence/website-dogfooding/RESULTS.md`.
+
+
+## Rebrand hero spatial interaction — 2 November 2026 (#514)
+
+The supplied polygon artwork has one keyboard-focusable `div[role=group]`
+that captures pointer dragging to rotate the SVG on two axes. This is a spatial
+illustration interaction rather than a form control or button group; the library
+has no corresponding primitive. It is a single D exception, bounded to one
+occurrence. Arrow keys rotate and Home restores orientation; pointer cancellation
+releases capture, and vertical touch scrolling remains available. Reset and Pause
+use the library's Button and Toggle. The browser verification exercises these
+paths, reduced motion and 320px/200% reflow. No new B/C debt is approved.
