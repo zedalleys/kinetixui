@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "id": "proj_northwind01",
+  "name": "Northwind storefront",
+  "domain": "domain:commerce",
+  "designSystem": {
+    "preset": "KX1_eyJ2IjoxLCJiIjoiaW5kaWdvIn0",
+    "overrides": {
+      "tokens": {
+        "radius.lg": "0.75rem"
+      },
+      "typography": {
+        "displayTracking": "-0.02em"
+      }
+    }
+  },
+  "pages": [
+    {
+      "id": "page_home",
+      "name": "Home",
+      "route": "/",
+      "root": {
+        "id": "node_1",
+        "kind": "slot",
+        "name": "page",
+        "children": [
+          {
+            "id": "node_2",
+            "kind": "block",
+            "ref": "block:cta-banner",
+            "props": {
+              "heading": "Everything for the season",
+              "dismissible": false
+            }
+          },
+          {
+            "id": "node_1000",
+            "kind": "block",
+            "ref": "block:pricing-tier",
+            "props": {
+              "tiers": [
+                "Starter",
+                "Team",
+                "Business"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "page_checkout",
+      "name": "Checkout",
+      "route": "/checkout",
+      "root": {
+        "id": "node_4",
+        "kind": "slot",
+        "name": "page",
+        "children": [
+          {
+            "id": "node_5",
+            "kind": "block",
+            "ref": "block:order-summary"
+          },
+          {
+            "id": "node_6",
+            "kind": "component",
+            "ref": "component:Button",
+            "props": {
+              "children": "Pay now",
+              "variant": "default"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "retiredNodeIds": [
+    "node_7"
+  ]
+}

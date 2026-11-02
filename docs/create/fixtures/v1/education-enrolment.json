@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "proj_enrolment1",
+  "name": "Course enrolment",
+  "domain": "domain:education",
+  "designSystem": {
+    "preset": "KX1_eyJ2IjoxfQ"
+  },
+  "pages": [
+    {
+      "id": "page_home",
+      "name": "Home",
+      "route": "/",
+      "root": {
+        "id": "node_1",
+        "kind": "slot",
+        "name": "page",
+        "children": [
+          {
+            "id": "node_2",
+            "kind": "block",
+            "ref": "block:create-account"
+          },
+          {
+            "id": "node_3",
+            "kind": "block",
+            "ref": "block:onboarding-checklist"
+          },
+          {
+            "id": "node_4",
+            "kind": "block",
+            "ref": "block:loading-state"
+          }
+        ]
+      }
+    }
+  ]
+}

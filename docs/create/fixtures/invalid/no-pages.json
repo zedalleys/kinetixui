@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "proj_minimal01",
+  "name": "Minimal",
+  "domain": "domain:commerce",
+  "designSystem": {
+    "preset": "KX1_eyJ2IjoxfQ"
+  },
+  "pages": []
+}

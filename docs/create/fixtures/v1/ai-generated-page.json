@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "id": "proj_aidraft001",
+  "name": "AI-drafted marketing page",
+  "domain": "domain:saas-admin",
+  "designSystem": {
+    "preset": "KX1_eyJ2IjoxfQ"
+  },
+  "pages": [
+    {
+      "id": "page_landing",
+      "name": "Landing",
+      "route": "/landing",
+      "root": {
+        "id": "node_1",
+        "kind": "slot",
+        "name": "page",
+        "children": [
+          {
+            "id": "node_2",
+            "kind": "block",
+            "ref": "block:testimonial"
+          },
+          {
+            "id": "node_3",
+            "kind": "block",
+            "ref": "block:stat-cards"
+          }
+        ]
+      }
+    }
+  ],
+  "figmaBinding": {
+    "fileKey": "aBcD1234efGH",
+    "pageNodeId": "0:1",
+    "nodeIds": {
+      "page_landing": "2:24"
+    },
+    "lastSyncedAt": "2026-11-02T12:00:00Z",
+    "lastSyncedDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "provenance": {
+    "node_2": {
+      "by": "ai",
+      "requestId": "req_01hz9qk2",
+      "model": "a-model-identifier",
+      "at": "2026-11-02T11:58:00Z"
+    },
+    "node_3": {
+      "by": "human",
+      "at": "2026-11-02T11:59:30Z"
+    }
+  }
+}

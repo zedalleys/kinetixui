@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "proj_minimal01",
+  "name": "Minimal",
+  "domain": "domain:commerce",
+  "designSystem": {
+    "preset": "KX1_eyJ2IjoxfQ"
+  },
+  "pages": [
+    {
+      "id": "page_home",
+      "name": "Home",
+      "route": "/",
+      "root": {
+        "id": "node_1",
+        "kind": "slot",
+        "name": "page"
+      }
+    }
+  ],
+  "figmaBinding": {
+    "fileKey": "aBcD1234efGH",
+    "pageNodeId": "0:1",
+    "nodeIds": {
+      "page_nonexistent": "2:24"
+    },
+    "lastSyncedAt": "2026-11-02T12:00:00Z",
+    "lastSyncedDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}
