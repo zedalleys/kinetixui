@@ -14,7 +14,14 @@
 .kx-polygon-seam { fill: #f6f7fc; opacity: .38; }
 .kx-polygon-wireframe { fill: hsl(var(--brand)); }
 .kx-polygon-wireframe, .kx-polygon-signals { pointer-events: none; }
-.kx-polygon-signals { display: none; }
+.kx-polygon-signals {
+  stroke: #28c7d9;
+  stroke-linecap: round;
+  stroke-dasharray: .045 .955;
+  animation: kx-cage-light 14s linear infinite;
+}
+.kx-hero-polygon[data-running="false"] .kx-polygon-signals { animation-play-state: paused; }
+@keyframes kx-cage-light { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 .dark .kx-polygon-aura { background: radial-gradient(circle closest-side, #28c7d95e 0%, #6054f442 56%, #6054f41c 80%, #6054f400 100%); }
 @media (min-width: 64rem) {
   .kx-brand-hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3rem; align-items: center; }
