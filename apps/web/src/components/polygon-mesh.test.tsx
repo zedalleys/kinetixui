@@ -10,6 +10,7 @@ const disconnect = vi.fn();
 const removePreferenceListener = vi.fn();
 
 beforeEach(() => {
+  window.localStorage.removeItem("kx-polygon-motion");
   reduced = false;
   hidden = false;
   vi.clearAllMocks();
