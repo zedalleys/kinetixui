@@ -107,7 +107,7 @@
       "pattern": "div[role=group]",
       "maxCount": 1,
       "classification": "D",
-      "reason": "Owner-requested spatial SVG rotation surface (#514), not a replacement for a library button or field. Pointer capture rotates the supplied artwork on two axes; Arrow keys and Home provide the equivalent keyboard operation. KinetixUI has no spatial rotation primitive. Reset uses Button and motion pause uses Toggle; retain the specialized hit surface and its labelled group locally."
+      "reason": "Owner-requested spatial SVG rotation surface (#514), not a replacement for a library button or field. Pointer capture rotates the supplied artwork on two axes; Arrow keys and Home provide the equivalent keyboard operation. KinetixUI has no spatial rotation primitive. Home restores orientation, Space toggles autoplay and Escape pauses without visible controls; retain the specialized hit surface and its labelled group locally."
     },
     {
       "file": "apps/web/src/components/infographic/world-map.tsx",

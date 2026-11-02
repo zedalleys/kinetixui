@@ -12,11 +12,13 @@ Do not substitute the logo for the hero artwork.
   nodes. The inner faces use indigo/violet/cyan gradients; the overlaid cage uses
   the theme's brand role. A blurred radial circle fades behind it.
 - Pointer capture supports click and drag rotation with a bounded ±28° range.
-  Arrow keys rotate in 5° steps; Home and Reset restore the initial view.
+  Arrow keys rotate in 5° steps; Home restores the initial view.
   Touch dragging yields to vertical page scrolling. Pointer cancellation releases
   the interaction. Rotation updates CSS variables without React renders per move.
-- Idle suspension and traveling light pause offscreen, in hidden tabs, on hover,
-  on keyboard focus, or with the persisted Pause control. Reduced motion removes
+- Idle suspension and traveling light autoplay in a continuous loop. They pause
+  offscreen, in hidden tabs, during dragging, or using Space / Escape on the
+  focused artwork. There are no visible motion controls or control captions;
+  keyboard instructions remain available to assistive technology. Reduced motion removes
   autoplay; deliberate drag and keyboard rotation remain available.
 - Marketing copy, platform support disclosures, installation links and derived
   counts remain intact. The interactive token-to-platform map follows the hero.

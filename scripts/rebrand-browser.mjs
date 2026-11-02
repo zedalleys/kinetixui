@@ -21,6 +21,7 @@ try {
     const context = await browser.newContext({ viewport: { width, height: 960 }, colorScheme: dark ? 'dark' : 'light', reducedMotion: reduced ? 'reduce' : 'no-preference' });
     await context.addInitScript(({ dark, rtl }) => {
       localStorage.setItem('kx-consent', 'denied'); localStorage.setItem('theme', dark ? 'dark' : 'light');
+      localStorage.setItem('kx-hero-polygon-paused', 'paused'); // obsolete setting must not suppress autoplay
       if (rtl) document.addEventListener('DOMContentLoaded', () => document.documentElement.dir = 'rtl');
     }, { dark, rtl });
     const page = await context.newPage();
@@ -35,6 +36,8 @@ try {
     assert.equal(await page.locator('h1').count(), 1);
     const root = page.locator('.kx-hero-polygon');
     const handle = root.getByRole('group', { name: 'Rotate hero polygon' });
+    assert.equal(await root.getByRole('button').count(), 0, 'visible hero controls returned');
+    assert.equal(await root.locator('.kx-polygon-controls').count(), 0, 'control row returned');
     assert.equal(await root.locator('.kx-polygon-facets polygon').count(), 9, 'supplied facets preserved');
     assert.equal(await root.locator('.kx-polygon-wireframe path').count(), 7, 'supplied cage and nodes preserved');
     assert.equal(await root.locator('.kx-polygon-wireframe').evaluate(el => getComputedStyle(el).fill), await page.locator('html').evaluate(el => {
@@ -45,18 +48,27 @@ try {
     if (!reduced) {
       await handle.scrollIntoViewIfNeeded();
       await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'true');
+      const idle = root.locator('.kx-polygon-idle');
+      assert.equal(await idle.evaluate(el => getComputedStyle(el).animationIterationCount), 'infinite');
+      const frame = await idle.evaluate(el => getComputedStyle(el).transform);
+      await page.waitForTimeout(250);
+      assert.notEqual(await idle.evaluate(el => getComputedStyle(el).transform), frame, 'autoplay is static');
       const rect = await handle.boundingBox();
       await page.mouse.move(rect.x + rect.width * .4, rect.y + rect.height * .5);
       await page.mouse.down(); await page.mouse.move(rect.x + rect.width * .6, rect.y + rect.height * .6, { steps: 8 }); await page.mouse.up();
       assert.notEqual(await root.locator('.kx-polygon-rotation').evaluate(el => getComputedStyle(el).transform), 'matrix(1, 0, 0, 1, 0, 0)', 'drag rotation missing');
-      await root.getByRole('button', { name: 'Reset polygon rotation' }).click();
+      await handle.focus(); await page.keyboard.press('Home');
       assert.equal(await root.locator('.kx-polygon-rotation').evaluate(el => el.style.getPropertyValue('--polygon-yaw')), '0deg');
       await handle.focus(); await page.keyboard.press('ArrowRight');
       assert.equal(await root.locator('.kx-polygon-rotation').evaluate(el => el.style.getPropertyValue('--polygon-yaw')), '5deg');
       await page.keyboard.press('Home');
-      const pause = root.getByRole('button', { name: 'Pause polygon animation' });
-      await pause.click(); assert.equal(await root.getAttribute('data-running'), 'false');
-      await pause.click();
+      await page.keyboard.press('Space');
+      assert.equal(await root.getAttribute('data-running'), 'false');
+      await page.keyboard.press('Space');
+      assert.equal(await root.getAttribute('data-running'), 'true');
+      await page.keyboard.press('Escape');
+      assert.equal(await root.getAttribute('data-running'), 'false');
+      await page.keyboard.press('Space');
       await page.locator('footer').scrollIntoViewIfNeeded();
       await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'false');
       await root.scrollIntoViewIfNeeded();
@@ -67,7 +79,7 @@ try {
     } else {
       assert.equal(await root.getAttribute('data-running'), 'false');
       assert.equal(await root.locator('.kx-polygon-idle').evaluate(el => getComputedStyle(el).animationName), 'none');
-      assert.equal(await root.getByRole('button', { name: 'Pause polygon animation' }).isVisible(), false);
+      assert.equal(await root.getByRole('button').count(), 0);
     }
     await page.addScriptTag({ path: require.resolve('axe-core/axe.min.js') });
     const violations = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] } })).violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })));
