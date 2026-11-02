@@ -90,6 +90,7 @@ export function HeroPolygon() {
   const startDrag = (event: PointerEvent<HTMLDivElement>) => {
     if (!event.isPrimary || event.button !== 0 || !(event.target instanceof SVGPolygonElement)) return;
     drag.current = { pointer: event.pointerId, x: event.clientX, y: event.clientY, ...rotation.current };
+    event.currentTarget.dataset.pointerFocus = "true";
     event.currentTarget.focus({ preventScroll: true });
     event.currentTarget.setPointerCapture(event.pointerId);
     event.currentTarget.dataset.dragging = "true";
@@ -106,6 +107,7 @@ export function HeroPolygon() {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
   const keyboardRotate = (event: KeyboardEvent<HTMLDivElement>) => {
+    delete event.currentTarget.dataset.pointerFocus;
     const { pitch, yaw } = rotation.current;
     switch (event.key) {
       case "ArrowLeft": rotate(pitch, yaw - 5); break;
@@ -124,7 +126,7 @@ export function HeroPolygon() {
     <div ref={root} className="kx-hero-polygon" data-running={active && !paused}>
       <div className="kx-polygon-aura" aria-hidden="true" />
       <div className="kx-polygon-interaction" tabIndex={0} role="group" aria-label="Rotate hero polygon" aria-describedby={`${id}-instructions`}
-        onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag} onKeyDown={keyboardRotate}>
+        onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag} onKeyDown={keyboardRotate} onBlur={event => { delete event.currentTarget.dataset.pointerFocus; }}>
         <div ref={shape} className="kx-polygon-rotation">
           <div className="kx-polygon-idle">
             <svg className="kx-hero-polygon-art" viewBox="-35 -35 707.21 710.73" aria-hidden="true" focusable="false">

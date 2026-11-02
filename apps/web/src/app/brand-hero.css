@@ -5,7 +5,8 @@
 .kx-hero-polygon { position: relative; min-width: 0; align-self: center; --polygon-pitch: 0deg; --polygon-yaw: 0deg; }
 .kx-polygon-aura { position: absolute; width: 82%; aspect-ratio: 1; left: 9%; top: 9%; border-radius: 50%; background: radial-gradient(circle closest-side, #9ae9ee 0%, #b6edf3 64%, #d6dff5b3 83%, #d6dff500 100%); filter: blur(18px); pointer-events: none; }
 .kx-polygon-interaction { position: relative; perspective: 1000px; pointer-events: none; border-radius: 1rem; outline-offset: 3px; user-select: none; -webkit-user-select: none; }
-.kx-polygon-interaction:focus-visible { outline: 2px solid hsl(var(--focus)); }
+.kx-polygon-interaction[data-pointer-focus]:focus { outline: none; }
+.kx-polygon-interaction:focus-visible:not([data-pointer-focus]) { outline: 2px solid hsl(var(--focus)); }
 .kx-polygon-interaction[data-dragging="true"] { cursor: grabbing; }
 .kx-polygon-facets polygon { pointer-events: visiblePainted; cursor: grab; touch-action: pan-y; }
 .kx-polygon-interaction[data-dragging="true"] polygon { cursor: grabbing; }
