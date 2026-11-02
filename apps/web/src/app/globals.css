@@ -280,6 +280,44 @@
     position: relative;
     isolation: isolate;
   }
+  /*
+   * The cursor's ambient brightening, over the whole page.
+   *
+   * Fixed to the viewport and painted BEHIND everything in the layout's
+   * content wrapper, so it lights the page's own background and never sits
+   * over type. That placement is the accessibility decision: a brightening
+   * blended over body copy would move every foreground pair on the site, and
+   * no gate here would see it, because nothing in CI moves a mouse.
+   *
+   * `--background` is opaque and paints first, so z-index 0 keeps this above
+   * the page colour and below the content, which follows it in tree order.
+   * Inert until a mouse has actually moved: the default position is the middle
+   * of the viewport and the layer is transparent until then.
+   */
+  .kx-cursor-glow {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 600ms ease-out;
+    background: radial-gradient(
+      circle 22rem at var(--kx-cursor-x, 50%) var(--kx-cursor-y, 50%),
+      hsl(var(--brand) / 0.16) 0%,
+      hsl(var(--brand) / 0.06) 45%,
+      transparent 72%
+    );
+  }
+  .kx-cursor-glow[data-active="true"] {
+    opacity: 1;
+  }
+  /* The fade is the only motion here; the glow itself only ever moves because
+     the reader moved the mouse, which is direct manipulation, not animation. */
+  @media (prefers-reduced-motion: reduce) {
+    .kx-cursor-glow {
+      transition: none;
+    }
+  }
   /* A localised action-blue glow behind the chapter's subject. Low alpha, never behind body copy. */
   .kx-glow {
     pointer-events: none;

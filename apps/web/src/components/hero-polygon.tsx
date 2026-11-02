@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import mesh from "./hero-mesh.json";
 
 /**
@@ -10,7 +10,8 @@ import mesh from "./hero-mesh.json";
  * hash in `design-assets/polygon/REFERENCE.md`. Every coordinate is rendered
  * from that file, unmodified; `scripts/gen-hero-mesh.mjs` only classifies the
  * shapes and measures the junction centres so the light can be coupled to them.
- * This file is the presentation and interaction layer.
+ * This file is the presentation layer. The artwork is decorative: it carries
+ * no control, takes no focus, and is hidden from assistive technology.
  *
  * What moves, and how:
  *   - the mesh breathes as one body (a CSS transform on `.kx-mesh-body`, so the
@@ -19,44 +20,33 @@ import mesh from "./hero-mesh.json";
  *   - three light pulses travel the supplied graph's own edges (one rAF loop)
  *   - a junction brightens because a pulse is near it, not on a timer: the loop
  *     measures the distance and writes the glow
- *   - the pointer adds a local brightening, through a CSS gradient above the
- *     facets. It never displaces geometry.
+ *   - the cursor's brightening is no longer part of this component: it is one
+ *     site-wide layer now (`CursorGlow`), because scoped to the artwork it was
+ *     clipped by the artwork's own box.
  *
- * What the reader controls:
- *   - dragging a facet rotates the whole network in its plane. The rotation is
- *     a transform on `.kx-mesh-spin`, written with `setProperty` rather than
- *     through React, so a drag costs no render and cannot desynchronise the
- *     breath underneath it.
- *   - the arrow keys step the same rotation, Home returns it to the artwork's
- *     own pose, Space toggles the motion and Escape stops it. There is no
- *     visible control row: the group carries its name and its instructions, and
- *     a status region announces the pause.
+ * Rotation — pointer and keyboard alike — was removed on the owner's
+ * instruction (2026-11-02), and the focusable group and its focus ring went
+ * with it: with nothing left to operate, a tab stop on decorative art would be
+ * a tab stop that does nothing. The mouse still lights the artwork through the
+ * spotlight above; it no longer turns it.
  *
  * Per frame, at 30fps, while the hero is on screen: 3 pulse positions and 26
  * junction glows, all written imperatively. No SVG filter over a large area, no
  * React state in the loop, and the loop does not run offscreen, in a hidden tab,
- * under `prefers-reduced-motion`, or while the reader has paused it.
+ * under `prefers-reduced-motion`.
  */
 
 const FRAME_MS = 1000 / 30;
 /** Falloff of a junction's response to a passing pulse, in squared user units. */
 const REACH = 7000;
-/** One arrow press, in degrees. Small enough to aim, large enough to see. */
-const KEY_STEP = 4;
-/** Pointer travel to degrees. A drag across the artwork is about half a turn. */
-const DRAG_GAIN = 0.28;
 
 export function HeroPolygon() {
   const id = useId().replace(/:/g, "");
   const root = useRef<HTMLDivElement>(null);
-  const spin = useRef<SVGGElement>(null);
   const pulseRefs = useRef<(SVGCircleElement | null)[]>([]);
   const glowRefs = useRef<(SVGCircleElement | null)[]>([]);
-  const angle = useRef(0);
-  const drag = useRef<{ pointer: number; x: number; from: number } | null>(null);
   const [onScreen, setOnScreen] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const running = onScreen && !paused;
+  const running = onScreen;
 
   useEffect(() => {
     const preference = matchMedia("(prefers-reduced-motion: reduce)");
@@ -132,115 +122,14 @@ export function HeroPolygon() {
     return () => cancelAnimationFrame(frame);
   }, [running]);
 
-  /**
-   * The pointer's local brightening. A mouse affordance only — touch is left
-   * alone, so the hero scrolls the way the rest of the page does.
-   */
-  const trackPointer = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType !== "mouse" || !root.current) return;
-    const box = root.current.getBoundingClientRect();
-    root.current.style.setProperty("--kx-px", `${(((event.clientX - box.left) / box.width) * 100).toFixed(1)}%`);
-    root.current.style.setProperty("--kx-py", `${(((event.clientY - box.top) / box.height) * 100).toFixed(1)}%`);
-    root.current.dataset.pointer = "true";
-  };
-  const dropPointer = () => {
-    if (root.current) root.current.dataset.pointer = "false";
-  };
-
-  /**
-   * The one place the rotation is written. Never through React.
-   *
-   * `angle` is what the reader sees: degrees clockwise on screen. The artwork
-   * itself is mirrored in LTR (`.kx-hero-mesh` carries `scaleX(-1)`, so the
-   * supplied spur sweeps across the hero instead of out of it) and is not
-   * mirrored in RTL, and a mirror reverses the sense of a rotation. So the sign
-   * is chosen from the live direction at write time: without it, ArrowRight
-   * would turn the network clockwise on one page and anticlockwise on the other.
-   */
-  const turn = (degrees: number) => {
-    angle.current = ((degrees % 360) + 360) % 360;
-    const mirrored = document.documentElement.getAttribute("dir") !== "rtl";
-    spin.current?.style.setProperty("--kx-spin", `${(mirrored ? -angle.current : angle.current).toFixed(2)}deg`);
-  };
-
-  const startDrag = (event: PointerEvent<HTMLDivElement>) => {
-    // Only a facet starts a drag. The links, the junctions and the space around
-    // the artwork stay inert, so a touch there scrolls the page.
-    if (!event.isPrimary || event.button !== 0) return;
-    if (!(event.target instanceof SVGPathElement) || event.target.dataset.facet === undefined) return;
-    drag.current = { pointer: event.pointerId, x: event.clientX, from: angle.current };
-    event.currentTarget.dataset.pointerFocus = "true";
-    event.currentTarget.focus({ preventScroll: true });
-    event.currentTarget.setPointerCapture(event.pointerId);
-    event.currentTarget.dataset.dragging = "true";
-  };
-  const moveDrag = (event: PointerEvent<HTMLDivElement>) => {
-    const start = drag.current;
-    if (!start || start.pointer !== event.pointerId) return;
-    turn(start.from + (event.clientX - start.x) * DRAG_GAIN);
-  };
-  const endDrag = (event: PointerEvent<HTMLDivElement>) => {
-    if (drag.current?.pointer !== event.pointerId) return;
-    drag.current = null;
-    event.currentTarget.dataset.dragging = "false";
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-  };
-
-  const keyboardRotate = (event: KeyboardEvent<HTMLDivElement>) => {
-    // A key means this focus is a keyboard focus, whatever brought it here.
-    delete event.currentTarget.dataset.pointerFocus;
-    switch (event.key) {
-      case "ArrowLeft":
-      case "ArrowUp":
-        turn(angle.current - KEY_STEP);
-        break;
-      case "ArrowRight":
-      case "ArrowDown":
-        turn(angle.current + KEY_STEP);
-        break;
-      case "Home":
-        turn(0);
-        break;
-      case " ":
-        setPaused((was) => !was);
-        break;
-      case "Escape":
-        setPaused(true);
-        break;
-      default:
-        return;
-    }
-    event.preventDefault();
-  };
-
   return (
     <div
       ref={root}
       className="kx-hero-polygon"
       data-running={running}
-      data-pointer="false"
-      onPointerMove={trackPointer}
-      onPointerLeave={dropPointer}
     >
       <div className="kx-polygon-aura" aria-hidden="true" />
-      <div
-        className="kx-polygon-interaction"
-        tabIndex={0}
-        role="group"
-        aria-label="Rotate hero polygon network"
-        aria-describedby={`${id}-instructions`}
-        data-dragging="false"
-        onPointerDown={startDrag}
-        onPointerMove={moveDrag}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onLostPointerCapture={endDrag}
-        onKeyDown={keyboardRotate}
-        onBlur={(event) => {
-          delete event.currentTarget.dataset.pointerFocus;
-        }}
-      >
-        <svg className="kx-hero-mesh" viewBox={mesh.viewBox} aria-hidden="true" focusable="false" role="presentation">
+      <svg className="kx-hero-mesh" viewBox={mesh.viewBox} aria-hidden="true" focusable="false" role="presentation">
           <defs>
             {/* Four facet materials, from the deepest return face to the
                 highlight. Stop colours come from CSS so the dark theme re-tints
@@ -265,12 +154,10 @@ export function HeroPolygon() {
             </radialGradient>
           </defs>
 
-          {/* Two nested groups, and the nesting is the point: the reader's
-              rotation lives on the outer one and the breath on the inner one, so
-              a drag composes with the idle motion instead of fighting it for the
-              same `transform`. */}
-          <g ref={spin} className="kx-mesh-spin">
-            <g className="kx-mesh-body">
+          {/* One body group: the breath is a single transform over the facets
+              and the wireframe that outlines them, so the two can never slip
+              apart. Nothing else writes `transform` here any more. */}
+          <g className="kx-mesh-body">
               <g className="kx-mesh-facets">
                 {mesh.facets.map((facet) => (
                   <path
@@ -336,20 +223,8 @@ export function HeroPolygon() {
                   />
                 ))}
               </g>
-            </g>
           </g>
         </svg>
-      </div>
-      {/* The pointer's local brightening. Above the facets, below nothing that
-          carries meaning, and inert until a mouse is actually over the art. */}
-      <div className="kx-polygon-spotlight" aria-hidden="true" />
-      <p id={`${id}-instructions`} className="sr-only">
-        Drag a facet or use the arrow keys to rotate the network. Home returns it to its original angle. Space pauses or
-        resumes the moving light; Escape pauses it.
-      </p>
-      <span className="sr-only" role="status">
-        {paused ? "Hero network motion paused." : ""}
-      </span>
     </div>
   );
 }

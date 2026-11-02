@@ -8,15 +8,15 @@
  *
  * What it proves, in a real browser, at seven viewport/theme/motion cases:
  *   - the mesh renders, in full, with its facets, edge chains, junctions and
- *     light pulses; the drawing is hidden from AT and the one focus stop is the
- *     named rotation group, with no visible control row
+ *     light pulses; the drawing is hidden from AT and the hero takes NO focus
+ *     stop of its own, with no visible control row
  *   - the illustration moves — geometry, not just a class name — and the light
  *     pulses travel, and the junctions respond to them
- *   - the pointer response is local: a facet under the cursor lifts, one across
- *     the mesh does not
- *   - the reader can turn the network: a drag and the arrow keys both rotate it,
- *     Home returns it, Space and Escape stop the light, and keyboard focus is
- *     drawn on the artwork with no rectangle around it
+ *   - the artwork is inert: rotation (pointer and keyboard), the pause control
+ *     and the focus indicator were removed on the owner's instruction
+ *     (2026-11-02), and this gate now proves they stayed removed — a facet
+ *     cannot be dragged, the arrow keys do nothing, Space does not stop the
+ *     light, and the hero contributes nothing tabbable
  *   - under reduced motion nothing runs and the mesh sits at its generated rest
  *     pose, which is a complete composition rather than a stripped one
  *   - motion suspends offscreen and when the preference changes live
@@ -98,23 +98,17 @@ try {
     // The supplied coordinates are rendered, not a redrawing of them.
     assert.deepEqual(await facetPaths(root), mesh.facets.map((f) => f.d), 'a facet path was altered');
 
-    // ── One focus stop, named, and no control row ────────────────────────────
-    //    The drawing itself says nothing a screen reader needs, so the SVG stays
-    //    hidden; the single focusable group carries the name and the keys.
+    // ── No focus stop, and no control row ────────────────────────────────────
+    //    The artwork is decorative. It says nothing a screen reader needs, it
+    //    operates nothing, and so it must cost a keyboard reader nothing: a tab
+    //    stop on decoration is a tab stop that does nothing.
     assert.equal(await svg.getAttribute('aria-hidden'), 'true', 'the illustration is hidden from AT');
     assert.equal(
       await root.locator('[tabindex], a, button, input, select, textarea').count(),
-      1,
-      'the hero has exactly one focus stop: the rotation group',
+      0,
+      'the hero took a focus stop back — the artwork is decorative and must not be tabbable',
     );
-    const group = root.locator('.kx-polygon-interaction');
-    assert.equal(await group.getAttribute('role'), 'group');
-    assert.ok((await group.getAttribute('aria-label'))?.trim(), 'the rotation group has no accessible name');
-    const described = await group.getAttribute('aria-describedby');
-    assert.ok(
-      (await page.locator(`#${described}`).innerText()).includes('arrow keys'),
-      'the group does not point at instructions that name the keys',
-    );
+    assert.equal(await root.locator('[role="group"]').count(), 0, 'the rotation group returned');
     assert.equal(await root.getByRole('button').count(), 0, 'visible hero controls returned');
 
     // ── Nothing overflows ────────────────────────────────────────────────────
@@ -222,115 +216,84 @@ try {
         'every junction is equally lit — the glow is on a timer, not following the light',
       );
 
-      // ── 4. Pointer response is local, and is a brightening, not a distortion
+      // ── 4. The cursor's brightening is site-wide, and it never moves the art
+      //    It used to be scoped to this component, where the artwork's own box
+      //    clipped it. It is one fixed layer over the page now, so it is asserted
+      //    on the page, not on the hero — and it must sit BEHIND the content, or
+      //    it would be brightening type on every page at once.
       const box = await svg.boundingBox();
+      const glow = page.locator('.kx-cursor-glow');
+      assert.equal(await glow.count(), 1, 'the site-wide cursor glow is not on the page');
+      assert.equal(await root.locator('.kx-polygon-spotlight').count(), 0, 'the hero-scoped spotlight returned');
       await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.4);
-      await page.waitForTimeout(600);
-      assert.equal(await root.getAttribute('data-pointer'), 'true', 'the pointer was not picked up');
-      const spotlight = root.locator('.kx-polygon-spotlight');
+      await page.waitForTimeout(700);
+      assert.equal(await glow.getAttribute('data-active'), 'true', 'the pointer was not picked up');
       assert.ok(
-        Number(await spotlight.evaluate((el) => getComputedStyle(el).opacity)) > 0.5,
-        'the pointer brightening never came up',
+        Number(await glow.evaluate((el) => getComputedStyle(el).opacity)) > 0.5,
+        'the cursor brightening never came up',
       );
+      const glowPlacement = await glow.evaluate((el) => {
+        const s = getComputedStyle(el);
+        return { position: s.position, z: s.zIndex, events: s.pointerEvents };
+      });
+      assert.equal(glowPlacement.position, 'fixed', 'the cursor glow is not fixed to the viewport');
+      assert.ok(Number(glowPlacement.z) <= 0, `the cursor glow sits at z-index ${glowPlacement.z}, over the content`);
+      assert.equal(glowPlacement.events, 'none', 'the cursor glow swallows pointer events');
       assert.deepEqual(await facetPaths(root), mesh.facets.map((f) => f.d), 'the pointer displaced the artwork');
-      await page.mouse.move(box.x - 40, box.y - 40);
-      await page.waitForTimeout(600);
-      assert.equal(await root.getAttribute('data-pointer'), 'false', 'the brightening stayed after the pointer left');
 
-      // ── 4b. The reader turns the network ───────────────────────────────────
-      //    The rotation is a transform on `.kx-mesh-spin`, so every assertion
-      //    here reads the matrix the browser computed, not the custom property
-      //    the component wrote. The facet `d`s are re-checked after each one:
-      //    rotating the composition must never rewrite the supplied artwork.
-      const spinAngle = () =>
-        root.locator('.kx-mesh-spin').evaluate((el) => {
-          const m = new DOMMatrixReadOnly(getComputedStyle(el).transform);
-          return Math.round((Math.atan2(m.b, m.a) * 180) / Math.PI);
-        });
-      const facetBox = () => root.locator('.kx-mesh-facets path').first().boundingBox();
+      // ── 4b. The artwork is inert, and the light never stops ────────────────
+      //    Rotation, the pause control and the focus indicator were removed on
+      //    the owner's instruction (2026-11-02). These assertions are the record
+      //    that they stayed removed: each one would fail the moment any of them
+      //    came back, which is what makes this a gate and not a comment.
+      assert.equal(await root.locator('.kx-mesh-spin').count(), 0, 'the rotation group returned');
 
-      assert.equal(await spinAngle(), 0, 'the network does not start at the artwork\'s own angle');
-      const restBox = await facetBox();
+      const facetAt = () => root.locator('.kx-mesh-facets path').first().boundingBox();
+      const restBox = await facetAt();
 
-      // Drag: on a facet, and it must move the drawing on screen.
+      // A facet cannot be dragged: the artwork must not move, and the light
+      // must not pause because someone held the mouse down on it.
       const grab = await root.locator('.kx-mesh-facets path[data-material="3"]').first().boundingBox();
+      const beforeDrag = await pulseAt();
       await page.mouse.move(grab.x + grab.width / 2, grab.y + grab.height / 2);
       await page.mouse.down();
-      const duringDrag = await pulseAt();
       await page.mouse.move(grab.x + grab.width / 2 + 180, grab.y + grab.height / 2, { steps: 12 });
-      const dragged = await spinAngle();
-      assert.ok(Math.abs(dragged) > 10, `a 180px drag turned the network by ${dragged}°`);
-      assert.equal(await group.getAttribute('data-dragging'), 'true', 'the drag never registered');
-      // The light does not stop because a reader is holding the artwork.
-      await page.waitForTimeout(500);
-      assert.notDeepEqual(await pulseAt(), duringDrag, 'the light stopped while the reader was dragging');
       await page.mouse.up();
-      assert.equal(await group.getAttribute('data-dragging'), 'false', 'the drag never ended');
-      const draggedBox = await facetBox();
+      const afterDrag = await facetAt();
       assert.ok(
-        Math.hypot(draggedBox.x - restBox.x, draggedBox.y - restBox.y) > 4,
-        'the angle changed but nothing moved on screen',
+        Math.hypot(afterDrag.x - restBox.x, afterDrag.y - restBox.y) < 2,
+        'a drag still turns the network',
       );
-      assert.deepEqual(await facetPaths(root), mesh.facets.map((f) => f.d), 'the drag rewrote the artwork');
-
-      // Keyboard: the same rotation, and Home brings it back.
-      await group.focus();
-      const beforeKeys = await spinAngle();
-      await page.keyboard.press('ArrowRight');
-      await page.keyboard.press('ArrowRight');
-      const afterRight = await spinAngle();
-      assert.ok(afterRight !== beforeKeys, 'the arrow keys did not rotate the network');
-      await page.keyboard.press('ArrowLeft');
-      assert.ok(
-        Math.abs(afterRight - (await spinAngle())) > 0,
-        'ArrowLeft and ArrowRight move it the same way',
-      );
-      await page.keyboard.press('Home');
-      assert.equal(await spinAngle(), 0, 'Home did not return the network to its own angle');
-
-      // Keyboard focus is on the artwork, with no rectangle around it.
-      const focusRing = await group.evaluate((el) => {
-        const s = getComputedStyle(el);
-        return { outline: s.outlineStyle, width: parseFloat(s.outlineWidth) || 0, shadow: s.boxShadow };
-      });
-      assert.ok(
-        focusRing.outline === 'none' || focusRing.width === 0,
-        `a rectangular focus outline returned: ${JSON.stringify(focusRing)}`,
-      );
-      assert.equal(focusRing.shadow, 'none', 'a focus box-shadow returned');
-      const linkFocus = await root.locator('.kx-mesh-links').evaluate((el) => {
-        const s = getComputedStyle(el);
-        return { stroke: s.stroke, width: parseFloat(s.strokeWidth), opacity: Number(s.strokeOpacity) };
-      });
-      const focusRole = await page.evaluate(() => {
-        const probe = document.createElement('span');
-        probe.style.color = 'hsl(var(--focus))';
-        document.body.append(probe);
-        const c = getComputedStyle(probe).color;
-        probe.remove();
-        return c;
-      });
-      assert.equal(linkFocus.stroke, focusRole, 'the focus indicator is not drawn in the --focus role');
-      assert.ok(linkFocus.width >= 2, `the focused wireframe is only ${linkFocus.width}px`);
-      assert.ok(linkFocus.opacity > 0.9, `the focused wireframe is still ${linkFocus.opacity} opaque`);
-
-      // Space stops the light and says so; Escape stops it and keeps it stopped.
-      await page.keyboard.press(' ');
-      await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'false');
-      assert.match(
-        await root.locator('[role="status"]').innerText(),
-        /paused/i,
-        'pausing announced nothing',
-      );
-      const held = await pulseAt();
       await page.waitForTimeout(500);
-      assert.deepEqual(await pulseAt(), held, 'the light kept travelling while paused');
+      assert.notDeepEqual(await pulseAt(), beforeDrag, 'the light stopped while the pointer was held down');
+
+      // The keys do nothing, because nothing in the hero can hold focus.
+      await page.keyboard.press('Tab');
+      assert.equal(
+        await page.evaluate(() => document.querySelector('.kx-hero-polygon')?.contains(document.activeElement) ?? false),
+        false,
+        'focus landed inside the hero artwork',
+      );
+      const beforeKeys = await facetAt();
+      for (const key of ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Home']) {
+        await page.keyboard.press(key);
+      }
+      const afterKeys = await facetAt();
+      assert.ok(
+        Math.hypot(afterKeys.x - beforeKeys.x, afterKeys.y - beforeKeys.y) < 2,
+        'the arrow keys still rotate the network',
+      );
+
+      // Space does not stop the light, and no status region announces a pause.
+      assert.equal(await root.locator('[role="status"]').count(), 0, 'the pause status region returned');
+      const beforeSpace = await pulseAt();
       await page.keyboard.press(' ');
-      await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'true');
+      await page.waitForTimeout(500);
+      assert.equal(await root.getAttribute('data-running'), 'true', 'Space still stops the light');
+      assert.notDeepEqual(await pulseAt(), beforeSpace, 'the light stopped on Space');
       await page.keyboard.press('Escape');
-      await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'false');
-      await page.keyboard.press(' ');
-      await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'true');
+      await page.waitForTimeout(400);
+      assert.equal(await root.getAttribute('data-running'), 'true', 'Escape still stops the light');
       await page.mouse.move(box.x - 60, box.y - 60);
 
       // ── 5. Suspension: offscreen, and on a live preference change ──────────
