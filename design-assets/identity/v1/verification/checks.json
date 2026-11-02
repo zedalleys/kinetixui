@@ -1,5 +1,5 @@
 {
-  "implementationCommit": "157717b48794a44fd46aae12c0f7040300aefe27",
+  "implementationCommit": "7fba3a8af4560b30364efad942cdd8f1f46952ef",
   "productionBuild": {
     "pass": true,
     "staticPages": 154
@@ -41,7 +41,7 @@
   "heroRefinement": {
     "visibleControls": 0,
     "autoplay": "24-second floating loop and 14-second traveling light; fresh each visit",
-    "gradient": "unified translucent violet/indigo/cyan with a soft cyan radial wash",
+    "gradient": "four facet materials: luminous cyan, translucent glass, deeper teal shadows and indigo return edges",
     "checks": [
       "production build",
       "changed-component lint",
@@ -61,5 +61,16 @@
       "maximumChannelDelta": 110
     },
     "textContrastFloor": "unchanged: 4.5:1"
+  },
+  "polygonColorEnhancement": {
+    "materials": [
+      "light",
+      "glass",
+      "shadow",
+      "edge"
+    ],
+    "palette": "cyan and teal with indigo shading",
+    "geometry": "original nine facets and brand-colored wireframe unchanged",
+    "backgroundCircle": "preserved"
   }
 }

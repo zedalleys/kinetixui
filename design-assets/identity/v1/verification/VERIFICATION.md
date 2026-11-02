@@ -1,6 +1,6 @@
 # Kinetic Weave verification — 2 November 2026
 
-Implementation revision: `157717b48794a44fd46aae12c0f7040300aefe27`.
+Implementation revision: `7fba3a8af4560b30364efad942cdd8f1f46952ef`.
 Screenshots and browser results below are from its **actual production Next.js
 render**, not mockups. The later evidence commit changes only this directory.
 No merge, production promotion or package release was performed.
@@ -31,6 +31,17 @@ The circle stays confined to the artwork. The pixel comparison now also rejects
 a spot that is too faint: a 55–110 channel-difference budget replaces the former
 wash-only ceiling. Copy-overlap checks and the 4.5:1 rendered lede contrast floor
 are unchanged. Production desktop/mobile/dark captures below are refreshed.
+
+## Polygon face-color enhancement
+
+The reference's cyan/teal depth is applied to the polygon itself. Four coordinated
+materials replace the uniformly pale gradient: luminous cyan upper planes,
+translucent glass at the center, deeper teal shadow planes and indigo-tinted
+return edges. All nine original facets and the main-brand wireframe retain their
+coordinates. The visible background circle, autoplay, drag rotation and reduced-
+motion behavior stay intact. Production desktop/mobile/dark screenshots below
+are refreshed; the production build, changed-component lint and seven browser
+cases pass. The existing homepage guards cover copy contrast and circle visibility.
 
 ## Hero evidence
 
