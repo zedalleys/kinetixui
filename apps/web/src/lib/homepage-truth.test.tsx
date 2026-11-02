@@ -175,9 +175,9 @@ describe("hero hierarchy: action before architecture", () => {
     const { container } = render(<HomePage />);
     const at = order(container);
 
-    const headline = at("One design language");
-    const supporting = at("Shared tokens. Components built for each platform.");
-    const primary = at("Explore components");
+    const headline = at("Build dynamic");
+    const supporting = at("A modern, flexible component system");
+    const primary = at("Get started free");
     const secondary = at("See what each platform covers");
     const architecture = at("One DTCG token source generates");
 
@@ -194,7 +194,7 @@ describe("hero hierarchy: action before architecture", () => {
     const { container } = render(<HomePage />);
     const nodes = [...container.querySelectorAll("h1, p, a")];
     const h1 = nodes.findIndex((n) => n.tagName === "H1");
-    const cta = nodes.findIndex((n) => (n.textContent ?? "").includes("Explore components"));
+    const cta = nodes.findIndex((n) => (n.textContent ?? "").includes("Get started free"));
     const between = nodes.slice(h1 + 1, cta).filter((n) => n.tagName === "P");
     expect(between.map((n) => n.textContent?.slice(0, 40))).toHaveLength(1);
     // Short enough to read before deciding, long enough to say something.
@@ -209,9 +209,9 @@ describe("hero hierarchy: action before architecture", () => {
     const badge = at("Beta — every package is 0.x");
     expect(badge, "the beta disclosure should still be on the page").toBeGreaterThanOrEqual(0);
     expect(badge, "the badge is above the headline again, pushing it out of the first viewport").toBeGreaterThan(
-      at("One design language"),
+      at("Build dynamic"),
     );
-    expect(badge, "the badge is back in front of the primary CTA").toBeGreaterThan(at("Explore components"));
+    expect(badge, "the badge is back in front of the primary CTA").toBeGreaterThan(at("Get started free"));
   });
 
   it("keeps every relocated claim on the page, generated rather than retyped", () => {
@@ -237,7 +237,7 @@ describe("hero hierarchy: action before architecture", () => {
 describe("homepage platform wording and destinations", () => {
   it("sends the closer's Get started to setup, not to the Introduction", () => {
     const { getByRole } = render(<HomePage />);
-    expect(getByRole("link", { name: /^Get started/ })).toHaveAttribute("href", "/docs/installation");
+    expect(getByRole("link", { name: /^Get started$/ })).toHaveAttribute("href", "/docs/installation");
   });
 
   it("names every platform in static hero text, so phones are told which platforms the headline counts", () => {

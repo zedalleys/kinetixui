@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Boxes, Palette, Smartphone, Zap } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Boxes, Palette, Play, Smartphone, Zap } from "lucide-react";
 import { Button } from "@kinetixui/ui";
-import { PolygonMesh } from "@/components/polygon-mesh";
+import { CrystalBrandHero } from "@/components/crystal-brand-hero";
 import { HeroCommand } from "@/components/hero-command";
 import { PlatformTicker } from "@/components/platform-ticker";
 import { Reveal } from "@/components/reveal";
@@ -174,25 +174,40 @@ export default function HomePage() {
       <section className="kx-polygon-hero border-b border-border" aria-labelledby="home-title">
         <div className={container}>
           <div className="kx-polygon-hero-grid">
-            <div data-hero-copy className="min-w-0">
-              <h1 id="home-title" className="font-display font-bold tracking-[-0.03em]">
-                <span className="block">One design language.</span>
+            <div data-hero-copy className="kx-crystal-hero-copy min-w-0">
+              <p className="kx-crystal-eyebrow"><Zap size={16} aria-hidden="true" /> The modern UI foundation</p>
+              <h1 id="home-title" className="kx-crystal-headline font-display font-bold tracking-[-0.045em]">
+                <span className="block">Build dynamic</span>
+                <span className="block">interfaces with</span>
+                <span className="block kx-crystal-headline-brand">KinetixUI</span>
               </h1>
-              <p className="mt-8 max-w-md text-lg text-muted-foreground">
-                Shared tokens. Components built for each platform.
+              <p className="kx-crystal-lede max-w-xl text-lg">
+                A modern, flexible component system for building high-performance,
+                motion-ready experiences across web and native platforms.
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-8">
-                <Button asChild size="lg" className="max-w-full whitespace-normal px-4">
-                  <Link href="/components" {...ctaAttrs("homepage_hero", "browse_components")}>
-                    <span className="min-w-0 break-words">Explore components</span> <ArrowUpRight className="size-4 rtl:-scale-x-100" aria-hidden />
+              <div className="kx-crystal-actions flex flex-wrap items-center gap-4">
+                <Button asChild size="lg" className="kx-crystal-primary-action max-w-full whitespace-normal px-6">
+                  <Link href="/docs/installation" {...ctaAttrs("homepage_hero", "installation")}>
+                    <span className="min-w-0 break-words">Get started free</span>
+                    <ArrowUpRight className="size-4 rtl:-scale-x-100" aria-hidden />
                   </Link>
                 </Button>
-                <Link href="/create" className="text-sm underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">
-                  Create a theme
-                </Link>
+                <Button asChild variant="Outline" size="lg" className="kx-crystal-secondary-action max-w-full px-5">
+                  <Link href="#platforms-title" {...ctaAttrs("homepage_hero", "platform_coverage")}>
+                    <Play className="size-4 fill-current" aria-hidden /> See it in action
+                  </Link>
+                </Button>
+              </div>
+              <div className="kx-crystal-stack" aria-label="Supported platforms">
+                <p className="kx-crystal-stack-label">WORKS WITH YOUR STACK</p>
+                <ul className="kx-crystal-stack-list">
+                  {["React", "Angular", "SwiftUI", "Jetpack Compose", "Flutter"].map((name) => (
+                    <li key={name} className="kx-crystal-stack-pill">{name}</li>
+                  ))}
+                </ul>
               </div>
             </div>
-            <PolygonMesh animated variant="hero" className="kx-polygon-hero-mesh" />
+            <CrystalBrandHero />
           </div>
         </div>
 

@@ -1,3 +1,9 @@
+# 2026-11-02 — Owner-approved brand reimagination (supersedes grayscale guidance)
+
+The active KinetixUI brand language uses navy, AA-safe teal, cyan, sky-blue and ice from docs/audits/crystal-brand-hero/README.md. The uploaded mesh is geometric inspiration only: the homepage ships a fully drawn, animated SVG crystal. Existing KinetixUI logo markup remains unchanged. The previous grayscale source-mesh color direction documented below is historical and MUST NOT guide new implementation. This first integration applies the brand layer website-wide; published MIT library tokens require a separate cross-platform compatibility/release step.
+
+---
+
 ---
 name: KinetixUI polygon brand surfaces
 description: Connected grayscale facets around a clear component and theme workflow.

@@ -100,7 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
       className={`${sans.variable} ${display.variable} ${mono.variable} ${treeMono.variable}`}
     >
-      <body>
+      <body className="kx-brand-site">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <a
             href="#main-content"

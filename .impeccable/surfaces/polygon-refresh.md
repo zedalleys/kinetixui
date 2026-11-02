@@ -1,3 +1,7 @@
+# Superseded by 2026-11-02 turquoise/navy Crystal Brand
+
+The approved website-wide brand layer and new original SVG hero supersede any grayscale/unchanged-artwork requirements below. See docs/audits/crystal-brand-hero/README.md.
+
 # Polygon refresh
 
 THESIS: Let the connected grayscale facets carry the identity; keep the primary task clear.
