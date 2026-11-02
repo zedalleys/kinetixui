@@ -237,6 +237,18 @@ client-side call to `api.github.com/repos/zedalleys/kinetixui`, which returns
 environment artifact, not a site defect, but the call itself is out of this
 PR's scope and is noted for separate triage.
 
+### Preview deployment
+
+GitHub's commit status on this head reads `Vercel · success · "Deployment has
+completed"` for deployment `3qHYwFigTYAXSEhbUcuRQU8JpXki`, which binds that
+deployment to this exact SHA independently of the Vercel bot's own comment. The
+preview therefore serves this commit.
+
+Its **rendered behaviour on Vercel is not verified.** The preview host fails this
+container's egress proxy with 403 and the Vercel API rejects the `zed-alleys`
+scope pending re-authorisation, so the page was never loaded there. Every
+measurement above is from a local production build of this branch.
+
 ## Merge / release limits
 
 The PR remains draft. GitHub CI on the final branch head and owner visual review
