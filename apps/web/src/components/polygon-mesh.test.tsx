@@ -63,6 +63,22 @@ describe("polygon motion lifecycle", () => {
     expect(screen.getByRole("button")).toHaveAttribute("aria-pressed", "true");
   });
 
+  it("uses a distinct editable SVG composition for the homepage, colored by brand tokens", () => {
+    const { container } = render(<PolygonMesh animated variant="hero" />);
+    const svg = container.querySelector("svg");
+    expect(svg).toHaveAttribute("viewBox", "0 0 960 620");
+    expect(svg).toHaveAttribute("aria-hidden", "true");
+    expect(container.querySelectorAll(".kx-hero-facets polygon")).toHaveLength(17);
+    expect(container.querySelectorAll(".kx-hero-traces path")).toHaveLength(3);
+    expect(container.querySelectorAll(".kx-hero-nodes circle")).toHaveLength(16);
+    expect(container.querySelector(".kx-hero-drift")).not.toBeNull();
+    expect(container.querySelectorAll(".kx-mesh-tone-1")).toHaveLength(0);
+    act(() => intersect([{ isIntersecting: true }]));
+    expect(container.firstElementChild).toHaveAttribute("data-polygon-running", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Pause polygon animation" }));
+    expect(container.firstElementChild).toHaveAttribute("data-polygon-running", "false");
+  });
+
   it("keeps decorative instances static and outside the accessibility tree", () => {
     const { container } = render(<PolygonMesh />);
     expect(container.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
