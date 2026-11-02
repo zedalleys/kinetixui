@@ -39,7 +39,7 @@ object KinetixThemeDark {
   val colorInput = Color(0xff4a5673)
   val colorLink = Color(0xffbbb3ff)
   val colorMuted = Color(0xff283656)
-  val colorMutedForeground = Color(0xffd4daec)
+  val colorMutedForeground = Color(0xffadb8d1)
   val colorOnDestructiveContainer = Color(0xffeeb1b1)
   val colorOnInfoContainer = Color(0xff92b2c8)
   val colorOnSuccessContainer = Color(0xffacb8ab)

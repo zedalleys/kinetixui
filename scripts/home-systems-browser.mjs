@@ -530,10 +530,23 @@ for (const width of [390, 1440]) {
 const AA = 4.5; // WCAG 1.4.3 for text under 18.66px, which the lede is at every width
 const COPY = '[data-hero-copy]'; // the hero's copy column, hooked for this check rather than matched on a utility class
 const LEDE = 'h1.kx-hero-title + p';
-// What the glow may add to the page underneath it, as a per-channel 0–255 delta, measured by hiding it.
-// The owner requested a clearly visible circular light spot confined to the art.
-// Its rendered contribution must be visible yet bounded. The independent copy-
-// overlap and rendered AA checks below continue to protect readable text.
+// What the glow may add to the page underneath it, as a per-channel 0-255 delta, measured by hiding it.
+//
+// The owner asked for a clearly visible circular light spot confined to the art, so this is a band rather
+// than a ceiling: a floor says the light is actually there, a ceiling says it is still light and not a
+// wash. The band was widened from a bare `<= 40` when the hero became the OH38WC1 mesh, whose aura is the
+// atmosphere the facets float in rather than a faint tint behind a solid, and the pair of numbers is what
+// the old single ceiling documented about itself.
+//
+// What each bound excludes, measured on this build: the glow renders at a 75 delta. The floor of 55 fails
+// the aura at `opacity: 0.45`, where the light spot stops reading as a light spot (measured 34). The
+// ceiling of 110 fails it when the radial gradient is replaced by a flat saturated circle (measured 215
+// for `#28c7d9`, 232 for navy) — a disc of colour sitting on the page instead of atmosphere behind the
+// facets. Changing the blur alone does NOT reach the ceiling: `blur(6px)` instead of 22px measures 75,
+// the same as shipped, because the gradient's own centre is already its brightest pixel and sharpening
+// the falloff does not raise the peak. Both bounds are exercised in
+// scripts/home-systems-negative-controls.mjs. The independent copy-overlap and rendered-AA checks above
+// protect readable text whatever this band allows.
 const MIN_TINT = 55;
 const MAX_TINT = 110;
 
@@ -567,8 +580,18 @@ async function worstTextContrast(page, selector) {
   assert.ok(info, `${selector} is not on the page`);
   assert.ok(info.lines.length, `${selector} renders no text`);
 
+  // Wait for the hide to be *painted*, not merely parsed. A fixed 100ms wait here was enough almost always
+  // and not always: at 1440px this check reported the lede's worst point as 1.29:1, which is the signature of
+  // the glyphs still being in the shot — the text's own colour against its antialiased edge. The negative
+  // control in scripts/home-systems-negative-controls.mjs reproduces that number by skipping the hide, so a
+  // reading near 1:1 means the instrument, not the page. Two frames after the computed style has actually
+  // changed is the guarantee the timeout was standing in for.
   await page.addStyleTag({ content: `${selector} { visibility: hidden !important }` });
-  await page.waitForTimeout(100);
+  await page.waitForFunction(
+    (sel) => getComputedStyle(document.querySelector(sel)).visibility === 'hidden',
+    selector,
+  );
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
 
   const scroll = await page.evaluate(() => ({ x: window.scrollX, y: window.scrollY }));
   const [r, g, b] = info.color.match(/[\d.]+/g).map(Number);

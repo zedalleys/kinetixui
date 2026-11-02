@@ -125,6 +125,7 @@ public enum KinetixColor {
     public static let colorMuted = UIColor(red: 0.965, green: 0.965, blue: 0.965, alpha: 1) /** figma: surfaceContainer #f6f6f6 */
     public static let colorMutedForeground = UIColor(red: 0.427, green: 0.427, blue: 0.427, alpha: 1) /** figma: onSurfaceVariant #6d6d6d */
     public static let colorNavy100 = UIColor(red: 0.831, green: 0.855, blue: 0.925, alpha: 1) /** Kinetic Weave v1 additive brand ramp. */
+    public static let colorNavy200 = UIColor(red: 0.678, green: 0.722, blue: 0.820, alpha: 1) /** Kinetic Weave v1 additive brand ramp — the muted-text step. Added because the rebrand left dark `muted-foreground` on navy.100 at 88% lightness, where it measured 13.26:1 against `background` beside a `foreground` of 17.31:1: a secondary text colour all but as strong as the primary one, where light's pair is 5.10:1 beside 15.84:1. This is 9.31:1 on `background`, 7.27:1 on `card` and 6.02:1 on `muted`, and 4.94:1 at the worst composited tint this repository renders (`bg-primary/10` over `muted`). */
     public static let colorNavy300 = UIColor(red: 0.596, green: 0.647, blue: 0.773, alpha: 1) /** Kinetic Weave v1 additive brand ramp. */
     public static let colorNavy50 = UIColor(red: 0.965, green: 0.969, blue: 0.988, alpha: 1) /** Kinetic Weave v1 additive brand ramp. */
     public static let colorNavy500 = UIColor(red: 0.388, green: 0.451, blue: 0.580, alpha: 1) /** Kinetic Weave v1 additive brand ramp. */

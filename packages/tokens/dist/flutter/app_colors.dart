@@ -128,6 +128,7 @@ class KinetixColors {
     static const colorMuted = Color(0xFFF6F6F6); /** figma: surfaceContainer #f6f6f6 */
     static const colorMutedForeground = Color(0xFF6D6D6D); /** figma: onSurfaceVariant #6d6d6d */
     static const colorNavy100 = Color(0xFFD4DAEC); /** Kinetic Weave v1 additive brand ramp. */
+    static const colorNavy200 = Color(0xFFADB8D1); /** Kinetic Weave v1 additive brand ramp — the muted-text step. Added because the rebrand left dark `muted-foreground` on navy.100 at 88% lightness, where it measured 13.26:1 against `background` beside a `foreground` of 17.31:1: a secondary text colour all but as strong as the primary one, where light's pair is 5.10:1 beside 15.84:1. This is 9.31:1 on `background`, 7.27:1 on `card` and 6.02:1 on `muted`, and 4.94:1 at the worst composited tint this repository renders (`bg-primary/10` over `muted`). */
     static const colorNavy300 = Color(0xFF98A5C5); /** Kinetic Weave v1 additive brand ramp. */
     static const colorNavy50 = Color(0xFFF6F7FC); /** Kinetic Weave v1 additive brand ramp. */
     static const colorNavy500 = Color(0xFF637394); /** Kinetic Weave v1 additive brand ramp. */

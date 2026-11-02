@@ -137,6 +137,7 @@
   --cyan-700: 186 89% 29%; /** Kinetic Weave v1 additive brand ramp. */
   --navy-50: 230 50% 98%; /** Kinetic Weave v1 additive brand ramp. */
   --navy-100: 225 39% 88%; /** Kinetic Weave v1 additive brand ramp. */
+  --navy-200: 222 28% 75%; /** Kinetic Weave v1 additive brand ramp — the muted-text step. Added because the rebrand left dark `muted-foreground` on navy.100 at 88% lightness, where it measured 13.26:1 against `background` beside a `foreground` of 17.31:1: a secondary text colour all but as strong as the primary one, where light's pair is 5.10:1 beside 15.84:1. This is 9.31:1 on `background`, 7.27:1 on `card` and 6.02:1 on `muted`, and 4.94:1 at the worst composited tint this repository renders (`bg-primary/10` over `muted`). */
   --navy-300: 223 28% 68%; /** Kinetic Weave v1 additive brand ramp. */
   --navy-500: 220 20% 48%; /** Kinetic Weave v1 additive brand ramp. */
   --navy-600: 222 22% 37%; /** Kinetic Weave v1 additive brand ramp — the boundary step. Chosen to match the weight of the slate-blue `blue.400` it replaces on `border`, `input`, `sidebar-border` and the Switch off-track, not to change it: 2.53:1 against `background` and 1.98:1 against `card` in dark, the same figures `blue.400` measured, so these roles stay as deliberately subtle as ACCESSIBILITY-AUDIT.md §A3 and check-contrast.mjs' KNOWN_SUB3 describe. Hue 222 matches navy.700/800/950 rather than blue's 204. */

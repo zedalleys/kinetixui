@@ -186,6 +186,57 @@ The five affected pages were rerun through the entire 100-view matrix with zero
 axe findings and no overflow; the other 620 initial views had no findings.
 The final all-pages CI run remains a merge gate.
 
+## 2026-11-02 — the large mesh, the hero's share, and the dark hierarchy
+
+Everything in this section was executed on the branch tree described by the PR
+body's final SHA, against a production `next build` served on `127.0.0.1:3000`.
+It is not carried over from an earlier revision.
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Semantic contrast | `check:contrast` | PASS. Text pairs meet AA, non-text cue pairs meet SC 1.4.11; the five `KNOWN_SUB3` entries are unchanged registrations, not new ones. |
+| Token contract | `check:token-contract` | PASS, 26 rows match the tokens. |
+| Composite-field visual contract | `check:composite-visual` | PASS, React and Angular, light and dark, on rendered pixels. The React dark MultiSelect placeholder now measures **9.38:1 against a 9.90:1 selected value** — the relation the gate asserts. It previously read 13.37:1 against 9.90:1 and failed. |
+| Storybook axe | `check:a11y-browser` | PASS. 276 stories × 2 themes, 4 known violations, **none new**. The IoT dark-theme contrast findings from job 125265124733 do not reproduce. |
+| Site sweep | `check:a11y-site` | PASS. 36 pages × 2 themes × 5 widths × 2 text sizes = **720 views**: no axe findings, no horizontal overflow. |
+| Hero structure and interaction | `scripts/rebrand-browser.mjs` | PASS across 7 viewport/theme cases: 44 facets, 44 link outlines, 26 junctions, 3 light routes, rendered unaltered. |
+| Hero light and focus indicator | `check:hero-light` | PASS. A light's measured lap is **8.7s against the 9.4s `hero-mesh.json` declares**. The focus indicator reaches 3:1 against what it borders over **47% of its own area in light and 53% in dark**, measured differentially. |
+| Homepage systems | `check:home-systems` | PASS, including the hero lede's rendered contrast at 768, 1024 and 1440. |
+| Homepage negative controls | `scripts/home-systems-negative-controls.mjs` | Both numeric bounds provably fail: skipping the text hide reads 1.00:1 against the 4.5:1 assertion; the aura at `opacity .45` reads 34 under the 55 floor; a flat saturated disc reads 215 over the 110 ceiling. Recorded near-miss: `blur(6px)` reads 75, the same as shipped, and does **not** exercise the ceiling. |
+| Typecheck / lint | `typecheck`, `lint` | PASS. |
+| Website suite | `--filter @kinetixui/web test` | PASS, 124 files, 2,576 tests. |
+
+### The hero's share of its section
+
+Measured as the mesh's box over the hero section's box, on the running build:
+
+| Width | Share |
+| --- | --- |
+| 1024 | 41.9% |
+| 1280 | 52.2% |
+| 1440 | 62.6% |
+| 1600 | 62.3% |
+| 1920 | 61.4% |
+| 2560 | 60.2% |
+
+The 55–65% target holds from 1440 up. Below it the share falls deliberately, so
+the copy column keeps the room it needs. No facet, link or junction box overlaps
+the headline, lede, platform line, CTAs or install link at any of those widths.
+
+### Captures
+
+`captures/` holds thirteen screenshots of the real running site at this head —
+1920, 1440, 768, 390 and 320, light and dark, 200% text, the reduced-motion rest
+pose, and the hero with keyboard focus actually on it — with `captures.json`
+recording each one's measured mesh share, pulse state and console errors. They
+are screenshots, not generated artwork.
+
+Two observations recorded rather than fixed: the page makes an unauthenticated
+client-side call to `api.github.com/repos/zedalleys/kinetixui`, which returns
+403 (rate limit) from this container's shared egress address. That is an
+environment artifact, not a site defect, but the call itself is out of this
+PR's scope and is noted for separate triage.
+
 ## Merge / release limits
 
 The PR remains draft. GitHub CI on the final branch head and owner visual review

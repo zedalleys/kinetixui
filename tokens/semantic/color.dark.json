@@ -54,9 +54,9 @@
       "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "muted-foreground": {
-      "$value": "{color.navy.100}",
+      "$value": "{color.navy.200}",
       "$type": "color",
-      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
+      "$description": "secondary text. Kinetic Weave v1 moved this off navy.100: at 88% lightness it measured 13.26:1 on --background beside a 17.31:1 --foreground, so dark had almost no secondary/primary hierarchy where light's pair is 5.10:1 against 15.84:1. navy.200 measures 9.31:1 on --background, 7.27:1 on --card, 6.02:1 on --muted and 4.94:1 at the worst composited tint this repository renders (bg-primary/10 over --muted) \u2014 comfortably above AA everywhere while reading as subordinate to --foreground. This is also what lets the MultiSelect placeholder sit below its selected value: check:composite-visual measures the placeholder at 9.38:1 and the value at 9.90:1 on the rendered dark field, where navy.100 put the placeholder at 13.37:1 and inverted the hierarchy. That 0.52 margin is deliberate but narrow \u2014 a future change to --secondary or --secondary-foreground can close it, so the gate, not this description, is the contract."
     },
     "surface-grouped": {
       "$value": "{color.navy.850}",
@@ -235,10 +235,10 @@
         "$description": "text on a tinted info surface (bg-info/10). Dark: same as --info, which already clears AA on the dark tint. Light counterpart is darker \u2014 see color.light.json."
       },
       "muted-on-container": {
-        "$value": "{color.navy.100}",
-        "$type": "color",
-        "$description": "secondary text on a tinted container. Dark: identical to --muted-foreground, which Kinetic Weave moved to navy.100; it clears AA on every dark tint (6.96:1 on bg-primary/10 over --muted, the worst case this repository renders). Darkening is a light-mode problem only, because a 10% tint lightens a dark surface away from the text rather than toward it. Light counterpart is darker \u2014 see color.light.json."
-      }
+      "$value": "{color.navy.100}",
+      "$type": "color",
+      "$description": "secondary text on a tinted container. Dark: deliberately one step lighter than --muted-foreground, which Kinetic Weave moved to navy.200. The two roles diverge because a 10% tint lightens a dark surface toward the text, eroding the ratio: navy.100 holds 7.04:1 on the worst tint this repository renders (bg-primary/10 over --muted) where navy.200 would fall to 4.94:1. Darkening is a light-mode problem only. Light counterpart is darker \u2014 see color.light.json."
+    }
     },
     "brand": {
       "$value": "{color.violet.400}",

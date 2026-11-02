@@ -30,7 +30,7 @@ export const TOKEN_CONTRACT: TokenRow[] = [
   { token: "secondary", light: "#c7cfc7", dark: "#2e362e" },
   { token: "secondary-foreground", light: "#465245", dark: "#e3e7e3" },
   { token: "muted", light: "#f6f6f6", dark: "#283656" },
-  { token: "muted-foreground", light: "#6d6d6d", dark: "#d4daec" },
+  { token: "muted-foreground", light: "#6d6d6d", dark: "#adb8d1" },
   { token: "surface-grouped", light: "#f6f6f6", dark: "#111b35", note: "grouped section under a card" },
   { token: "accent", light: "#f0eeff", dark: "#283656" },
   { token: "accent-foreground", light: "#5143db", dark: "#f6f7fc" },
