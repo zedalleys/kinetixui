@@ -3,47 +3,41 @@
 import { useEffect, useId, useRef, useState, type PointerEvent, type KeyboardEvent } from "react";
 import geometry from "./hero-polygon-geometry.json";
 
-// The source faces share vertices but receive distinct lighting materials.
-// Cyan carries the illustration; indigo appears in the shaded return faces.
-const facetMaterials: Record<string, string> = {
-  "cls-10": "glass", "cls-8": "light", "cls-3": "light",
-  "cls-7": "shadow", "cls-1": "shadow", "cls-2": "edge",
-  "cls-4": "edge", "cls-5": "light", "cls-6": "shadow",
-};
-
-// The central face is the front plane. The surrounding faces taper back
-// to a second ring, with shared vertices so their edges stay joined.
-const faces = geometry.facets.filter(face => face.type === "polygon");
-const vertices = (data: string) => {
-  const values = data.split(/\s+/).map(Number);
-  return values.flatMap((x, i) => i % 2 ? [] : [[x, values[i + 1]]]);
-};
-const front = new Set(vertices(faces[0].data).map(([x, y]) => Math.round(x) + "," + Math.round(y)));
-const mesh = faces.map(face => ({
-  tone: face.tone,
-  points: vertices(face.data).map(([x, y]) => ({
-    x: x - 300, y: y - 285,
-    z: front.has(Math.round(x) + "," + Math.round(y)) ? 64 : -56,
-  })),
-}));
+// Build a closed, bevelled prism from the outline of the supplied central face.
+type Point = [number, number, number];
+const outline = geometry.facets[0].data.split(/\s+/).map(Number).slice(0, -2);
+function ring(scale: number, depth: number): Point[] {
+  return outline.flatMap((x, i) => i % 2 ? [] : [[(x - 300) * scale, (outline[i + 1] - 285) * scale, depth] as Point]);
+}
+const front = ring(.88, 110), rim = ring(1.15, 10), back = ring(.94, -105);
+function sides(a: Point[], b: Point[], material: string) {
+  return a.map((point, i) => {
+    const j = (i + 1) % a.length;
+    return { points: [point, b[i], b[j], a[j]], material };
+  });
+}
+const mesh = [
+  { points: front, material: "glass" }, ...sides(front, rim, "light"),
+  ...sides(rim, back, "shadow"), { points: [...back].reverse(), material: "edge" },
+];
 
 function project(pitch: number, yaw: number) {
   const p = pitch * Math.PI / 180, r = yaw * Math.PI / 180;
-  return mesh.map(face => {
-    let depth = 0;
-    const points = face.points.map(({ x, y, z }) => {
+  return mesh.flatMap((face, index) => {
+    const points = face.points.map(([x, y, z]) => {
       const rz = z * Math.cos(r) - x * Math.sin(r);
-      const dz = rz * Math.cos(p) + y * Math.sin(p);
-      depth += dz;
-      const scale = 960 / (960 - dz);
-      return [300 + (x * Math.cos(r) + z * Math.sin(r)) * scale,
-        285 + (y * Math.cos(p) - rz * Math.sin(p)) * scale].join(",");
+      return [x * Math.cos(r) + z * Math.sin(r), y * Math.cos(p) - rz * Math.sin(p),
+        rz * Math.cos(p) + y * Math.sin(p)];
     });
-    return { tone: face.tone, points: points.join(" "), depth: depth / points.length };
-  }).sort((a, b) => a.depth - b.depth);
+    const [a, b, c] = points;
+    const u = b.map((n,i) => n-a[i]), v = c.map((n,i) => n-a[i]);
+    const nx = u[1]*v[2]-u[2]*v[1], ny = u[2]*v[0]-u[0]*v[2], nz = u[0]*v[1]-u[1]*v[0];
+    if (nz*(960-a[2]) - nx*a[0] - ny*a[1] <= 0) return [];
+    const light = (-.4*nx - .55*ny + .7*nz) / Math.hypot(nx,ny,nz);
+    return [{ index, material: face.material, brightness: .78 + .32 * light,
+      points: points.map(([x,y,z]) => [300+x*960/(960-z),285+y*960/(960-z)].join(",")).join(" ") }];
+  });
 }
-
-const clamp = (value: number) => Math.max(-28, Math.min(28, value));
 
 /** Owner-supplied 189 [Converted].svg; its coordinates and outlined cage stay intact. */
 export function HeroPolygon() {
@@ -73,8 +67,22 @@ export function HeroPolygon() {
   }, []);
 
   const [pose, setPose] = useState(rotation.current);
+  const [spin, setSpin] = useState(0);
+  useEffect(() => {
+    if (!active || paused) return;
+    let frame: number, last = performance.now();
+    function tick(now: number) {
+      if (now - last >= 32) {
+        if (!drag.current) setSpin(angle => (angle + Math.min(now - last, 80) * .012) % 360);
+        last = now;
+      }
+      frame = requestAnimationFrame(tick);
+    }
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [active, paused]);
   const rotate = (pitch: number, yaw: number) => {
-    rotation.current = { pitch: clamp(pitch), yaw: clamp(yaw) };
+    rotation.current = { pitch: pitch % 360, yaw: yaw % 360 };
     setPose(rotation.current);
     shape.current?.style.setProperty("--polygon-pitch", `${rotation.current.pitch}deg`);
     shape.current?.style.setProperty("--polygon-yaw", `${rotation.current.yaw}deg`);
@@ -89,7 +97,7 @@ export function HeroPolygon() {
   const moveDrag = (event: PointerEvent<HTMLDivElement>) => {
     const start = drag.current;
     if (!start || start.pointer !== event.pointerId) return;
-    rotate(start.pitch - (event.clientY - start.y) * .14, start.yaw + (event.clientX - start.x) * .14);
+    rotate(start.pitch - (event.clientY - start.y) * .65, start.yaw + (event.clientX - start.x) * .65);
   };
   const endDrag = (event: PointerEvent<HTMLDivElement>) => {
     if (drag.current?.pointer !== event.pointerId) return;
@@ -104,7 +112,7 @@ export function HeroPolygon() {
       case "ArrowRight": rotate(pitch, yaw + 5); break;
       case "ArrowUp": rotate(pitch - 5, yaw); break;
       case "ArrowDown": rotate(pitch + 5, yaw); break;
-      case "Home": rotate(0, 0); break;
+      case "Home": setSpin(0); rotate(0, 0); break;
       case " ": setPaused(was => !was); break;
       case "Escape": setPaused(true); break;
       default: return;
@@ -144,8 +152,8 @@ export function HeroPolygon() {
               </defs>
               <g>
                 <g className="kx-polygon-facets">
-                  {project(pose.pitch, pose.yaw).map(face => (
-                    <polygon key={face.tone} points={face.points} fill={`url(#${id}-${facetMaterials[face.tone]})`}
+                  {project(pose.pitch - 15, pose.yaw + 24 + spin).map(face => (
+                    <polygon key={face.index} data-face={face.index} style={{ filter: `brightness(${face.brightness})` }} points={face.points} fill={`url(#${id}-${face.material})`}
                       stroke="rgba(235,255,255,.55)" strokeWidth=".75" strokeLinejoin="round" />
                   ))}
                 </g>

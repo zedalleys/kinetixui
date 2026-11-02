@@ -38,7 +38,7 @@ try {
     const handle = root.getByRole('group', { name: 'Rotate hero polygon' });
     assert.equal(await root.getByRole('button').count(), 0, 'visible hero controls returned');
     assert.equal(await root.locator('.kx-polygon-controls').count(), 0, 'control row returned');
-    assert.equal(await root.locator('.kx-polygon-facets polygon').count(), 9, 'supplied facets preserved');
+    assert.ok(await root.locator('.kx-polygon-facets polygon').count() >= 3, 'multiple solid faces visible');
     assert.equal(await root.locator('.kx-polygon-wireframe path').count(), 7, 'supplied cage and nodes preserved');
     assert.equal(await root.locator('.kx-polygon-wireframe').evaluate(el => getComputedStyle(el).fill), await page.locator('html').evaluate(el => {
       const n = document.createElement('span'); n.style.color = 'hsl(var(--brand))'; el.appendChild(n); const c = getComputedStyle(n).color; n.remove(); return c;
@@ -48,20 +48,37 @@ try {
     if (!reduced) {
       await handle.scrollIntoViewIfNeeded();
       await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'true');
-      const idle = root.locator('.kx-polygon-idle');
-      assert.equal(await idle.evaluate(el => getComputedStyle(el).animationIterationCount), 'infinite');
-      const frame = await idle.evaluate(el => getComputedStyle(el).transform);
+      const mesh = root.locator('.kx-polygon-facets');
+      const snapshot = () => mesh.locator('polygon').evaluateAll(faces => JSON.stringify(
+        faces.map(face => [face.dataset.face, face.getAttribute('points')])
+      ));
+      const cage = root.locator('.kx-polygon-wireframe');
+      const transform = () => cage.evaluate(el => { const m = el.getScreenCTM(); return [m.a, m.b, m.c, m.d, m.e, m.f]; });
+      const fixed = await transform();
+      const frame = await snapshot();
       await page.waitForTimeout(250);
-      assert.notEqual(await idle.evaluate(el => getComputedStyle(el).transform), frame, 'autoplay is static');
+      assert.notEqual(await snapshot(), frame);
+      assert.deepEqual(await transform(), fixed, 'autoplay moved the cage');
+      await handle.focus(); await page.keyboard.press('Escape'); await page.keyboard.press('Home');
       const rect = await handle.boundingBox();
-      const glass = root.locator('.kx-polygon-facets polygon[fill$="-glass)"]');
-      const initialPoints = await glass.getAttribute('points');
+      const initialPoints = await snapshot();
+      const node = await cage.locator('path').nth(4).boundingBox();
+      await page.mouse.move(node.x + node.width / 2, node.y + node.height / 2);
+      await page.mouse.down(); await page.mouse.move(node.x + 30, node.y + 20); await page.mouse.up();
+      assert.equal(await snapshot(), initialPoints, 'drag starting on outer stroke rotated the solid');
       await page.mouse.move(rect.x + 4, rect.y + 4);
       await page.mouse.down(); await page.mouse.move(rect.x + 30, rect.y + 20); await page.mouse.up();
-      assert.equal(await glass.getAttribute('points'), initialPoints, 'empty space rotated the mesh');
+      assert.equal(await snapshot(), initialPoints, 'empty space rotated the mesh');
       await page.mouse.move(rect.x + rect.width * .4, rect.y + rect.height * .5);
       await page.mouse.down(); await page.mouse.move(rect.x + rect.width * .6, rect.y + rect.height * .6, { steps: 8 }); await page.mouse.up();
-      assert.notEqual(await glass.getAttribute('points'), initialPoints, 'drag did not rotate vertices');
+      assert.notEqual(await snapshot(), initialPoints, 'drag did not rotate vertices');
+      assert.deepEqual(await transform(), fixed, 'drag moved the cage');
+      await page.keyboard.press('Home');
+      for (let i = 0; i < 36; i++) await page.keyboard.press('ArrowRight');
+      assert.equal(await mesh.locator('[data-face="13"]').count(), 1, 'rear cap must face the viewer');
+      for (let i = 0; i < 36; i++) await page.keyboard.press('ArrowRight');
+      assert.equal(await snapshot(), initialPoints, 'full turn must return to front');
+      await page.keyboard.press('Space');
       await handle.focus(); await page.keyboard.press('Home');
       assert.equal(await root.locator('.kx-polygon-rotation').evaluate(el => el.style.getPropertyValue('--polygon-yaw')), '0deg');
       await handle.focus(); await page.keyboard.press('ArrowRight');
