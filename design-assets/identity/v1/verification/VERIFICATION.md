@@ -1,6 +1,6 @@
 # Kinetic Weave verification — 2 November 2026
 
-Implementation revision: `5bcd567b031991233b8c30965c54cfe51d22cfca`.
+Implementation revision: `157717b48794a44fd46aae12c0f7040300aefe27`.
 Screenshots and browser results below are from its **actual production Next.js
 render**, not mockups. The later evidence commit changes only this directory.
 No merge, production promotion or package release was performed.
@@ -21,6 +21,16 @@ production build. The latest production build, changed-component lint,
 component-use guard and homepage pixel-contrast / aura-strength safeguards pass.
 Platform and token suite counts below are retained from the original rebrand
 validation; this refinement does not alter their source or token values.
+
+## Visible background-circle correction
+
+The cyan light spot now has a broad, visibly colored center behind the polygon,
+a circular silhouette and blurred fading edges. Its size is 82% of the artwork
+column with an 18px blur; dark mode has a separate luminous cyan/indigo treatment.
+The circle stays confined to the artwork. The pixel comparison now also rejects
+a spot that is too faint: a 55–110 channel-difference budget replaces the former
+wash-only ceiling. Copy-overlap checks and the 4.5:1 rendered lede contrast floor
+are unchanged. Production desktop/mobile/dark captures below are refreshed.
 
 ## Hero evidence
 

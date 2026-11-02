@@ -1,5 +1,5 @@
 {
-  "implementationCommit": "5bcd567b031991233b8c30965c54cfe51d22cfca",
+  "implementationCommit": "157717b48794a44fd46aae12c0f7040300aefe27",
   "productionBuild": {
     "pass": true,
     "staticPages": 154
@@ -51,5 +51,15 @@
       "typography guard"
     ],
     "platformTests": "original rebrand validation; platform and token sources unchanged"
+  },
+  "backgroundCircle": {
+    "size": "82% of artwork column",
+    "blur": "18px",
+    "appearance": "broad cyan luminous center with circular fading edges; separate dark-mode treatment",
+    "pixelVisibilityBudget": {
+      "minimumChannelDelta": 55,
+      "maximumChannelDelta": 110
+    },
+    "textContrastFloor": "unchanged: 4.5:1"
   }
 }
