@@ -1111,6 +1111,11 @@
     /* 0.875em, not 0.85em: inside 14px prose 0.85em computed to 11.9px, under the 12px compact-text floor */
     font-size: 0.875em;
   }
+  /* Violet links clear AA on the dark page; the lighter inline-code chip
+     consumed that contrast margin. Keep linked code on its parent's surface. */
+  .dark a > code {
+    background: transparent;
+  }
 }
 
 /*
