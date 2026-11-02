@@ -3,7 +3,7 @@
 .kx-brand-hero-grid { position: relative; }
 .kx-brand-hero-copy { padding-bottom: 1rem; }
 .kx-hero-polygon { position: relative; min-width: 0; align-self: center; --polygon-pitch: 0deg; --polygon-yaw: 0deg; }
-.kx-polygon-aura { position: absolute; width: 85%; aspect-ratio: 1; left: 8%; top: 5%; border-radius: 50%; background: radial-gradient(circle, #28c7d926 0%, #28c7d91c 28%, #a78bfa0e 52%, #6054f400 72%); filter: blur(32px); pointer-events: none; }
+.kx-polygon-aura { position: absolute; width: 82%; aspect-ratio: 1; left: 9%; top: 9%; border-radius: 50%; background: radial-gradient(circle closest-side, #9ae9ee 0%, #b6edf3 64%, #d6dff5b3 83%, #d6dff500 100%); filter: blur(18px); pointer-events: none; }
 .kx-polygon-interaction { position: relative; perspective: 1000px; cursor: grab; touch-action: pan-y; border-radius: 1rem; outline-offset: 3px; user-select: none; -webkit-user-select: none; }
 .kx-polygon-interaction:focus-visible { outline: 2px solid hsl(var(--focus)); }
 .kx-polygon-interaction[data-dragging="true"] { cursor: grabbing; }
@@ -15,7 +15,7 @@
 .kx-polygon-signals { stroke: hsl(var(--brand)); stroke-dasharray: .045 .955; animation: kx-polygon-travel 14s linear infinite; }
 .kx-polygon-signals path:nth-child(2) { opacity: .45; }
 .kx-hero-polygon[data-running="false"] *, .kx-polygon-interaction[data-dragging="true"] * { animation-play-state: paused !important; }
-.dark .kx-polygon-aura { opacity: .85; }
+.dark .kx-polygon-aura { background: radial-gradient(circle closest-side, #28c7d95e 0%, #6054f442 56%, #6054f41c 80%, #6054f400 100%); }
 @keyframes kx-polygon-travel { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 @keyframes kx-polygon-suspend {
   0%, 100% { transform: translate3d(0, 0, 0) rotateX(-2deg) rotateY(-5deg); }

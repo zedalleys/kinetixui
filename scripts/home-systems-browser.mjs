@@ -531,10 +531,11 @@ const AA = 4.5; // WCAG 1.4.3 for text under 18.66px, which the lede is at every
 const COPY = '[data-hero-copy]'; // the hero's copy column, hooked for this check rather than matched on a utility class
 const LEDE = 'h1.kx-hero-title + p';
 // What the glow may add to the page underneath it, as a per-channel 0–255 delta, measured by hiding it.
-// As shipped it is 25. Raising the gradient's alphas to 0.95/0.75/0.5 takes it to 209 and swapping
-// `closest-side` for `farthest-corner` to 199 — neither of which moves the glow's box, so the placement
-// assertions below see nothing. This is the one that does.
-const MAX_TINT = 40;
+// The owner requested a clearly visible circular light spot confined to the art.
+// Its rendered contribution must be visible yet bounded. The independent copy-
+// overlap and rendered AA checks below continue to protect readable text.
+const MIN_TINT = 55;
+const MAX_TINT = 110;
 
 /** WCAG relative luminance of one sRGB triple. */
 const luminance = (r, g, b) => {
@@ -677,7 +678,7 @@ for (const width of [320, 390, 768, 1024, 1440]) {
   });
 }
 
-await check('hero glow: it stays a wash, whatever is behind it', async () => {
+await check('hero glow: the circular light spot is visible and bounded', async () => {
   const { page, context } = await open({ width: 1440 });
   const box = await page.evaluate(() => {
     const glow = document.querySelector('section.kx-chapter .kx-polygon-aura');
@@ -715,6 +716,7 @@ await check('hero glow: it stays a wash, whatever is behind it', async () => {
   for (let i = 0; i < lit.length; i += 4) {
     for (let c = 0; c < 3; c += 1) tint = Math.max(tint, Math.abs(lit[i + c] - unlit[i + c]));
   }
+  assert.ok(tint >= MIN_TINT, `the light spot shifts a channel by only ${tint}, under the visibility floor ${MIN_TINT}`);
   assert.ok(tint <= MAX_TINT, `the glow shifts a channel by ${tint}, over ${MAX_TINT}`);
   await context.close();
 });
