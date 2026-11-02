@@ -67,11 +67,11 @@ describe("polygon motion lifecycle", () => {
   it("uses a distinct editable SVG composition for the homepage, colored by brand tokens", () => {
     const { container } = render(<PolygonMesh animated variant="hero" />);
     const svg = container.querySelector("svg");
-    expect(svg).toHaveAttribute("viewBox", "0 0 960 620");
+    expect(svg).toHaveAttribute("viewBox", "0 0 980 690");
     expect(svg).toHaveAttribute("aria-hidden", "true");
-    expect(container.querySelectorAll(".kx-hero-facets polygon")).toHaveLength(17);
-    expect(container.querySelectorAll(".kx-hero-traces path")).toHaveLength(3);
-    expect(container.querySelectorAll(".kx-hero-nodes circle")).toHaveLength(16);
+    expect(container.querySelectorAll(".kx-hero-facets polygon")).toHaveLength(27);
+    expect(container.querySelectorAll(".kx-hero-trace")).toHaveLength(3);
+    expect(container.querySelectorAll(".kx-hero-nodes circle")).toHaveLength(22);
     expect(container.querySelector(".kx-hero-drift")).not.toBeNull();
     expect(container.querySelectorAll(".kx-mesh-tone-1")).toHaveLength(0);
     act(() => intersect([{ isIntersecting: true }]));
