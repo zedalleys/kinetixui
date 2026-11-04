@@ -39,6 +39,7 @@ on:
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
+      - "scripts/navigation-visual-negative-controls.mjs"
       - "scripts/overlay-visual.mjs"
       - "scripts/menu-visual.mjs"
       - "scripts/layout-visual.mjs"
@@ -78,6 +79,7 @@ on:
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
+      - "scripts/navigation-visual-negative-controls.mjs"
       - "scripts/overlay-visual.mjs"
       - "scripts/menu-visual.mjs"
       - "scripts/layout-visual.mjs"
@@ -232,6 +234,15 @@ jobs:
       # in RTL, and the hover colour transition with and without reduced motion.
       - name: Navigation and disclosure visual contract (Angular, light and dark)
         run: pnpm check:navigation-visual
+
+      # The focus-ring assertion above was measured against the page background until 2026-11-04, which
+      # read whatever sat in the 4px gutter beside the element instead of what the state painted there.
+      # Both readings are differential now, and a measurement correction is only worth trusting if the
+      # corrected assertion still fails on a real defect. These controls reintroduce three — a hover that
+      # paints into the ring's gutter, a missing ring, and a missing ring beside a bright neighbour, which
+      # is the case the old formula accepted at 18.67:1 — and require the real gate to fail each one.
+      - name: Navigation focus-ring negative controls (the corrected assertion still catches its defect)
+        run: pnpm check:navigation-visual-negative-controls
 
       # The overlay surface contract (TOKENS.md, "Overlays") on rendered pixels, Angular only: every surface
       # open — the scrim, the popover fill and full border edge, elevation (a shadow in light, the surface step

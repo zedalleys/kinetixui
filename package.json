@@ -57,6 +57,7 @@
     "check:entry-visual": "node scripts/entry-visual.mjs",
     "check:composite-visual": "node scripts/composite-visual.mjs",
     "check:navigation-visual": "node scripts/navigation-visual.mjs",
+    "check:navigation-visual-negative-controls": "node scripts/navigation-visual-negative-controls.mjs",
     "check:overlay-visual": "node scripts/overlay-visual.mjs",
     "check:menu-visual": "node scripts/menu-visual.mjs",
     "check:layout-visual": "node scripts/layout-visual.mjs",
