@@ -41,6 +41,8 @@ const NEGATIVES = {
   "fixture-version-mismatch": { breaks: "fixture-version-matches-dir", why: "a v2 document in the v1 directory must be caught" },
   "unsupported-keyword": { breaks: "interpreter-strict", why: "a schema keyword the interpreter does not implement must throw, never be ignored" },
   "lenient-migrate": { breaks: "read-only-above-current", why: "a migrate() that accepts a future version must be caught — a rolled-back deployment must not downgrade a project" },
+  "ref-with-sibling": { breaks: "interpreter-strict", why: "a $ref beside a constraint keyword must be refused — merging is not implemented, so the sibling would be silently ignored, and `validate` alone cannot see it because it only visits the subschemas a document reaches" },
+  "unbounded-depth": { breaks: "document-depth-bounded", why: "without the depth bound a deeply nested document leaves the validator through a RangeError instead of a rejection" },
   "lenient-migrate-chain": { breaks: "missing-migration-detected", why: "a migrate() that silently skips an unregistered step must be caught" },
 };
 
@@ -65,11 +67,13 @@ const ok = (check, message) => passed.push(`${check}: ${message}`);
 let schema = JSON.parse(readFileSync(join(ROOT, SCHEMA_PATH), "utf8"));
 if (control === "drop-domain-pattern") delete schema.$defs.domainRef.pattern;
 if (control === "unsupported-keyword") schema.$defs.projectId.formatMinimum = "x";
+if (control === "ref-with-sibling") schema.properties.id = { $ref: "#/$defs/projectId", maxLength: 2 };
 
 let registries = loadRegistries();
 if (control === "empty-block-registry") registries = { ...registries, spaces: { ...registries.spaces, block: { ...registries.spaces.block, ids: new Set() } } };
 
-let validateDoc = (doc) => validateCreateProject(doc, { schema, registries });
+const maxDepth = control === "unbounded-depth" ? 100000 : undefined;
+let validateDoc = (doc) => validateCreateProject(doc, { schema, registries, ...(maxDepth ? { maxDepth } : {}) });
 if (control === "accept-everything") validateDoc = () => ({ ok: true, errors: [] });
 /** An interpreter error is a finding about the schema, not a crash of the gate. */
 const validator = (doc) => {
@@ -202,6 +206,25 @@ for (const file of invalidFiles) {
 }
 if (!failures.some((f) => f.startsWith("invalid-fixtures-rejected")))
   ok("invalid-fixtures-rejected", `${rejected} documents rejected, each for the reason it declares`);
+
+// document-depth-bounded — both the structural interpreter and the semantic walk recurse, so a deeply
+// nested document must come back as a verdict rather than as a RangeError out of the validator.
+{
+  const deepRoot = { id: "node_1", kind: "slot", name: "page" };
+  let cursor = deepRoot;
+  for (let i = 2; i <= 20000; i += 1) {
+    const next = { id: `node_${i}`, kind: "slot", name: "s" };
+    cursor.children = [next];
+    cursor = next;
+  }
+  const deepDoc = { ...JSON.parse(readFileSync(join(ROOT, `${FIXTURES}/v1/minimal.json`), "utf8")) };
+  deepDoc.pages = [{ ...deepDoc.pages[0], root: deepRoot }];
+  const result = validator(deepDoc);
+  if (result.ok) fail("document-depth-bounded", "a 20 000-deep document was accepted");
+  else if (!result.errors.some((e) => e.code === "document-too-deep"))
+    fail("document-depth-bounded", `a 20 000-deep document was rejected, but not with [document-too-deep]: ${result.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
+  else ok("document-depth-bounded", result.errors[0].message);
+}
 
 // read-only-above-current — a document from a newer deployment opens read-only, never downgraded.
 try {

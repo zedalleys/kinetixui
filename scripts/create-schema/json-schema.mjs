@@ -17,6 +17,9 @@
  * quietly ignored. check:create-schema has a negative control for exactly that.
  */
 
+/** Keywords that carry no constraint, so they are harmless beside a $ref. */
+const ANNOTATIONS = new Set(["$schema", "$id", "$defs", "title", "description", "$comment", "default", "examples"]);
+
 const KNOWN = new Set([
   "$ref", "type", "const", "enum", "properties", "required", "additionalProperties",
   "propertyNames", "items", "minItems", "maxItems", "minLength", "maxLength", "pattern",
@@ -53,10 +56,18 @@ export function validate(instance, schema, { root = schema, path = "" } = {}) {
   for (const key of Object.keys(schema)) {
     if (!KNOWN.has(key)) throw new Error(`json-schema: unsupported keyword "${key}" at ${path || "<root>"}`);
   }
-  const errors = [];
   const at = path || "<root>";
+  const errors = [];
 
-  if (schema.$ref) return validate(instance, resolveRef(root, schema.$ref), { root, path });
+  if (schema.$ref) {
+    // Returning early here would discard every sibling keyword silently — the one construct that
+    // could pass quietly in an interpreter whose contract is that it throws instead. 2020-12 does
+    // allow siblings; this interpreter does not implement merging them, so it refuses them.
+    const siblings = Object.keys(schema).filter((k) => k !== "$ref" && !ANNOTATIONS.has(k));
+    if (siblings.length)
+      throw new Error(`json-schema: $ref with sibling keyword(s) ${siblings.join(", ")} at ${at} — merging is not implemented, so the sibling would be ignored`);
+    return validate(instance, resolveRef(root, schema.$ref), { root, path });
+  }
 
   if (schema.type !== undefined) {
     const types = Array.isArray(schema.type) ? schema.type : [schema.type];
@@ -135,6 +146,11 @@ export function assertSupported(schema, path = "<root>") {
   const problems = [];
   for (const key of Object.keys(schema))
     if (!KNOWN.has(key)) problems.push(`json-schema: unsupported keyword "${key}" at ${path}`);
+  if (schema.$ref) {
+    const siblings = Object.keys(schema).filter((k) => k !== "$ref" && !ANNOTATIONS.has(k));
+    if (siblings.length)
+      problems.push(`json-schema: $ref with sibling keyword(s) ${siblings.join(", ")} at ${path} — merging is not implemented, so the sibling would be ignored`);
+  }
   for (const container of ["properties", "$defs"])
     for (const [key, sub] of Object.entries(schema[container] ?? {}))
       problems.push(...assertSupported(sub, `${path}.${container}.${key}`));

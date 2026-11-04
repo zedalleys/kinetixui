@@ -14,7 +14,7 @@ negative controls.
 | `fixtures/v1/` | stored documents at schemaVersion 1, byte-canonical |
 | `fixtures/invalid/` | documents the validator must reject, each declaring the rejection it proves |
 | `../../scripts/create-schema/` | the schema interpreter, the one validator, the migration registry |
-| `../../scripts/check-create-schema.mjs` | `pnpm check:create-schema` — 10 checks, 10 negative controls |
+| `../../scripts/check-create-schema.mjs` | `pnpm check:create-schema` — 11 checks, 12 negative controls |
 | `../../scripts/check-taxonomy-namespaces.mjs` | `pnpm check:taxonomy-namespaces` — 5 checks, 8 negative controls |
 
 ## One schema, one validator
@@ -56,8 +56,17 @@ derivable, and a stored copy is a second source of truth with a staleness proble
 - the migration machinery refuses a version above the current one and refuses a gap in the chain;
 - the block-category → domain map is complete, namespaced on both sides, resolves, and declares no
   relationship the derived index does not demonstrate;
-- **18 negative controls**, 10 on one gate and 8 on the other, each proving the named check goes red.
-  Nothing broken is committed: a control mutates what the checks see, in memory, for one run.
+- **20 negative controls**, 12 on one gate and 8 on the other, each proving the named check goes red.
+  Nothing broken is committed: a control mutates what the checks see, in memory, for one run. (They
+  are 20 controls over 19 distinct mutations: `lenient-migrate` and `lenient-migrate-chain` share one
+  mutation and assert that two different checks went red.)
+- a document nested past `MAX_JSON_DEPTH` comes back as a **rejection, not a RangeError**. Both the
+  structural interpreter and the semantic walk recurse, so without that bound a deep document would
+  leave the validator through a crash where the contract promises a verdict.
+- the interpreter **refuses a `$ref` that carries a constraint keyword beside it**. 2020-12 allows
+  such siblings; this interpreter does not implement merging them, so accepting one would mean
+  silently ignoring it — and `validate` alone cannot see the problem, because it only visits the
+  subschemas a given document reaches. `assertSupported` checks it over the whole schema.
 
 **Not proved, and not claimed:**
 
@@ -70,6 +79,11 @@ derivable, and a stored copy is a second source of truth with a staleness proble
   web test suite and every browser gate were not run. The gates added here are dependency-free and
   were run; the rest is CI's to confirm.
 - **No AI call was made**, so no generation cost is measured.
+- **Rendered output is excluded by convention at the document root, not yet by a contract on props.**
+  `fixtures/invalid/stored-rendered-output.json` proves a top-level `renderedHtml` key is rejected as
+  an unknown property. It does **not** prove rendered output cannot be stored at all: `propValue`
+  accepts any string up to 4000 characters, so a props value can still carry markup or CSS today.
+  Giving that rule teeth needs a per-component prop contract — a later slice, not this one.
 
 ## Registering education and agriculture
 
@@ -107,3 +121,10 @@ label changed, and no route was added — `discovery-routes.json` is unchanged.
    is a packaging decision with release consequences, not a schema decision.
 3. **Whether `provenance` is retained for deleted nodes.** Today a retired node id keeps no record.
    Attribution history may need one; storage and privacy say otherwise.
+4. **Which monotonicity invariant the stored contract carries.** The schema's prose says node ids are
+   generated once and monotonic *within a project* — that is allocation order. The validator enforces
+   *document* order, which is stronger: swapping two sibling nodes, with no id changed, turns an
+   accepted document into a rejected one, and there is no relaxed mode to let it back. Either the
+   comparison goes (ids stay unique and never reused; order becomes free), or a `nextNodeId` integer
+   joins the schema so allocation stays auditable while reordering is unaffected. Nothing is stored
+   yet, so settling it now costs nothing and settling it later costs a migration.

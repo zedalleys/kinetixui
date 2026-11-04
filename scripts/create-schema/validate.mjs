@@ -34,6 +34,28 @@ export const SEMANTIC_CODES = {
   "provenance-unknown-node": "provenance names a node id the document does not contain",
   "figma-unknown-page": "figmaBinding.nodeIds names a page id the document does not contain",
   "ai-node-without-request": "a node attributed to AI carries no requestId or model",
+  "document-too-deep": "the document nests deeper than the validator will walk",
+};
+
+/**
+ * The deepest JSON nesting the validator will walk. Both the structural interpreter and the semantic
+ * walk below are recursive, so without this a deeply nested document leaves `validateCreateProject`
+ * through a RangeError instead of through a rejection — a crash where the contract promises a verdict.
+ * Each node level costs two JSON levels (its object, then its `children` array), so 100 is roughly 45
+ * nested nodes: far past any real page, and far short of the stack.
+ */
+export const MAX_JSON_DEPTH = 100;
+
+/** Iterative on purpose: measuring the depth must not itself be able to overflow the stack. */
+const exceedsDepth = (value, limit) => {
+  const stack = [[value, 1]];
+  while (stack.length) {
+    const [node, depth] = stack.pop();
+    if (node === null || typeof node !== "object") continue;
+    if (depth > limit) return true;
+    for (const child of Array.isArray(node) ? node : Object.values(node)) stack.push([child, depth + 1]);
+  }
+  return false;
 };
 
 const walk = (node, visit, parentPath = "root") => {
@@ -46,9 +68,15 @@ const walk = (node, visit, parentPath = "root") => {
  * @param registries from loadRegistries(); pass one explicitly to validate against a fixed snapshot
  * @returns {{ ok: boolean, errors: {code: string, message: string}[] }}
  */
-export function validateCreateProject(doc, { schema = loadSchema(), registries = loadRegistries() } = {}) {
+export function validateCreateProject(doc, { schema = loadSchema(), registries = loadRegistries(), maxDepth = MAX_JSON_DEPTH } = {}) {
   const errors = [];
   const push = (code, message) => errors.push({ code, message });
+
+  // Before anything recursive touches the document. A document this deep is rejected, not crashed on.
+  if (exceedsDepth(doc, maxDepth)) {
+    push("document-too-deep", `the document nests deeper than ${maxDepth} JSON levels, which is past what the validator walks`);
+    return { ok: false, errors };
+  }
 
   for (const message of structural(doc, schema)) push("structural", message);
   // The semantic layer reads fields by path; running it over a document whose shape is unknown

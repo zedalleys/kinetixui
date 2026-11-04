@@ -61,7 +61,8 @@ export function loadRegistries({ capabilities = read("docs/business-capabilities
   return { spaces, capabilities, blocks, components };
 }
 
-export const PREFIXES = ["domain", "capability", "family", "block-category", "block", "component"];
+/** Derived, never restated: a hand-written copy would drift from `spaces` and surface as wrong prose. */
+export const prefixesOf = ({ spaces }) => Object.keys(spaces);
 
 /**
  * @returns {null|string} null when the reference resolves, otherwise why it does not.
@@ -69,7 +70,8 @@ export const PREFIXES = ["domain", "capability", "family", "block-category", "bl
 export function resolveRef(ref, { spaces }) {
   if (typeof ref !== "string") return `reference ${JSON.stringify(ref)} is not a string`;
   const idx = ref.indexOf(":");
-  if (idx < 0) return `"${ref}" is unprefixed — a reference must name its identifier space (${PREFIXES.map((p) => `${p}:`).join(", ")})`;
+  if (idx < 0)
+    return `"${ref}" is unprefixed — a reference must name its identifier space (${Object.keys(spaces).map((p) => `${p}:`).join(", ")})`;
   const prefix = ref.slice(0, idx);
   const id = ref.slice(idx + 1);
   const space = spaces[prefix];

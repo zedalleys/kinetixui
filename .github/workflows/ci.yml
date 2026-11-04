@@ -190,8 +190,15 @@ jobs:
         run: pnpm check:taxonomy-namespaces
 
       - name: "Identifier namespaces: negative controls"
+        # The list is captured and counted first: a command substitution that fails inside a `for`
+        # word list does NOT trip `bash -e`, so an empty list would make this step pass having proved
+        # nothing at all — the exact way a gate loses its teeth silently.
         run: |
-          for control in $(node scripts/check-taxonomy-namespaces.mjs --list-negatives); do
+          controls=$(node scripts/check-taxonomy-namespaces.mjs --list-negatives)
+          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          echo "running $count negative control(s)"
+          for control in $controls; do
             echo "--- $control"
             node scripts/check-taxonomy-namespaces.mjs --negative="$control"
           done
@@ -205,8 +212,15 @@ jobs:
         run: pnpm check:create-schema
 
       - name: "Create document schema: negative controls"
+        # The list is captured and counted first: a command substitution that fails inside a `for`
+        # word list does NOT trip `bash -e`, so an empty list would make this step pass having proved
+        # nothing at all — the exact way a gate loses its teeth silently.
         run: |
-          for control in $(node scripts/check-create-schema.mjs --list-negatives); do
+          controls=$(node scripts/check-create-schema.mjs --list-negatives)
+          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          echo "running $count negative control(s)"
+          for control in $controls; do
             echo "--- $control"
             node scripts/check-create-schema.mjs --negative="$control"
           done
