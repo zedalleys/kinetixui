@@ -47,6 +47,68 @@ const RUNTIME_PROVIDED = new Set(["react", "react-dom"]);
 /** `import x from "y"`, `import "y"`, `import type { T } from "y"` — anything that makes "y" resolvable. */
 const IMPORT_RE = /(?:^|[\s;}])(?:from|import)\s+["']([^"']+)["']/g;
 
+/**
+ * Comments, blanked out before the import scan.
+ *
+ * The pattern above reads `from "x"` anywhere in the file, and prose is full of it: a doc comment
+ * explaining that an accessible name would change `from "Save"` to something else made `button`
+ * declare a dependency on a package called `Save`. That is not cosmetic —
+ * `packages/cli/src/commands/add.ts` hands every declared dependency to the consumer's package
+ * manager, so `kinetixui add button` would have tried to install it.
+ *
+ * A regex cannot tell code from prose, so the scan gets a source with the comments removed. Blanked
+ * rather than deleted (newlines kept, everything else turned into spaces) so nothing is joined
+ * across a removal and line numbers still match the file. Walked character by character rather than
+ * stripped with another regex, because the cases that break a comment regex are exactly the ones
+ * that occur here: a `//` inside a string (`"https://…"`) is not a comment, a quote inside a
+ * comment opens nothing, and an apostrophe in English prose is not a string.
+ *
+ * String and template bodies are copied through untouched — the specifier the scan needs lives
+ * inside one. They are tracked only so that what is in them is never mistaken for a comment.
+ */
+function stripComments(code) {
+  const out = [];
+  let i = 0;
+  const blank = (ch) => (ch === "\n" ? "\n" : " ");
+
+  while (i < code.length) {
+    const ch = code[i];
+    const next = code[i + 1];
+
+    if (ch === "/" && next === "/") {
+      while (i < code.length && code[i] !== "\n") out.push(blank(code[i++]));
+      continue;
+    }
+    if (ch === "/" && next === "*") {
+      const end = code.indexOf("*/", i + 2);
+      const stop = end === -1 ? code.length : end + 2;
+      while (i < stop) out.push(blank(code[i++]));
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") {
+      const quote = ch;
+      out.push(code[i++]);
+      while (i < code.length) {
+        if (code[i] === "\\") {
+          out.push(code[i], code[i + 1] ?? "");
+          i += 2;
+          continue;
+        }
+        out.push(code[i]);
+        if (code[i] === quote) {
+          i += 1;
+          break;
+        }
+        i += 1;
+      }
+      continue;
+    }
+    out.push(ch);
+    i += 1;
+  }
+  return out.join("");
+}
+
 /** "@scope/name/sub" -> "@scope/name"; "name/sub" -> "name". What you would pass to `npm install`. */
 function packageOf(specifier) {
   const parts = specifier.split("/");
@@ -56,7 +118,7 @@ function packageOf(specifier) {
 /** The npm packages a single source file needs installed. */
 function npmImportsOf(code) {
   const found = new Set();
-  for (const match of code.matchAll(IMPORT_RE)) {
+  for (const match of stripComments(code).matchAll(IMPORT_RE)) {
     const specifier = match[1];
     if (specifier.startsWith(".") || specifier.startsWith("@/") || specifier.startsWith("node:")) continue;
     const pkg = packageOf(specifier);
