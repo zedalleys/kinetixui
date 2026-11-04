@@ -6,5 +6,6 @@
   "designSystem": {
     "preset": "KX1_eyJ2IjoxfQ"
   },
-  "pages": []
+  "pages": [],
+  "nextNodeId": 2
 }

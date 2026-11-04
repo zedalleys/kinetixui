@@ -5,7 +5,7 @@
   "description": "The canonical KinetixUI Create document. One versioned value carries the design-system, page and Figma-synchronisation workflows; the three are views and transforms of it, never separate documents. This file is the ONLY structural source: scripts/create-schema/validate.mjs interprets it rather than re-expressing it, so there is nothing for a second derivation to disagree with. Rules a structural schema cannot express (a reference resolving against a live manifest, node-id retirement, provenance pointing at a node that exists) are the semantic layer of that same validator and are listed in docs/create/README.md.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "id", "name", "domain", "designSystem", "pages"],
+  "required": ["schemaVersion", "id", "name", "domain", "designSystem", "pages", "nextNodeId"],
   "properties": {
     "schemaVersion": {
       "description": "Bumped by a migration, never inferred from the shape of the document. Present from the first commit: retrofitting it after projects exist costs a heuristic that guesses.",
@@ -19,6 +19,12 @@
     },
     "designSystem": { "$ref": "#/$defs/designSystem" },
     "pages": { "type": "array", "minItems": 1, "maxItems": 200, "items": { "$ref": "#/$defs/page" } },
+    "nextNodeId": {
+      "description": "The id the next allocated node will take; incremented on allocation. Persisted, never derived from the document: \"highest live id plus one\" loses the allocation frontier as soon as the highest-numbered node is deleted, and the next allocation would then hand out an id that a Figma frame and a provenance record still name. Every allocated id, live or retired, is strictly below this value, which is what makes reuse checkable from the document alone. Identity is allocation-ordered, so reordering, moving or grouping a node never changes its id, and document order carries no identity. See scripts/create-schema/node-ids.mjs.",
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 10000000000
+    },
     "retiredNodeIds": {
       "description": "Node ids that have been deleted. They are never reused: a reused id makes a re-sync update the wrong Figma frame and makes a provenance record attribute a human's node to a model.",
       "type": "array",
@@ -39,7 +45,7 @@
     "projectId": { "type": "string", "pattern": "^proj_[A-Za-z0-9_-]{8,64}$" },
     "pageId": { "type": "string", "pattern": "^page_[a-z0-9][a-z0-9_-]{0,62}$" },
     "nodeId": {
-      "description": "Generated once and monotonic within a project; the numeric suffix is what makes monotonicity checkable.",
+      "description": "Allocated once from nextNodeId and never changed, reassigned or reused. The numeric suffix is what makes the allocation frontier checkable; it says nothing about where the node sits, because document order is independent of identity.",
       "type": "string",
       "pattern": "^node_[1-9][0-9]{0,9}$"
     },

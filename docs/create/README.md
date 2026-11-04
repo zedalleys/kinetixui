@@ -13,8 +13,8 @@ negative controls.
 | `IDENTIFIER-NAMESPACES.md` | the Commerce-collision decision and what enforces it |
 | `fixtures/v1/` | stored documents at schemaVersion 1, byte-canonical |
 | `fixtures/invalid/` | documents the validator must reject, each declaring the rejection it proves |
-| `../../scripts/create-schema/` | the schema interpreter, the one validator, the migration registry |
-| `../../scripts/check-create-schema.mjs` | `pnpm check:create-schema` — 11 checks, 12 negative controls |
+| `../../scripts/create-schema/` | the schema interpreter, the one validator, the node-identity contract, the migration registry |
+| `../../scripts/check-create-schema.mjs` | `pnpm check:create-schema` — 14 checks, 16 negative controls |
 | `../../scripts/check-taxonomy-namespaces.mjs` | `pnpm check:taxonomy-namespaces` — 5 checks, 8 negative controls |
 
 ## One schema, one validator
@@ -33,8 +33,8 @@ Two layers, named apart:
 
 - **structural** — the schema file, executed.
 - **semantic** — what a structural schema cannot carry: a reference resolving against a live
-  manifest, node-id uniqueness and retirement, provenance naming a node that exists, an AI
-  attribution carrying a request id. Each has a code, so a fixture declares which rejection it
+  manifest, node-id uniqueness and retirement, the allocation frontier, provenance naming a node
+  that exists, an AI attribution carrying a request id. Each has a code, so a fixture declares which rejection it
   proves rather than matching prose.
 
 The preset is reused verbatim: `@kinetixui/create-preset` already encodes brand, neutral, radius,
@@ -48,17 +48,20 @@ derivable, and a stored copy is a second source of truth with a staleness proble
 **Proved, by `pnpm check:create-schema` and `pnpm check:taxonomy-namespaces` on this branch:**
 
 - the canonical schema parses, and every keyword in it is one the interpreter implements;
-- 5 stored documents are accepted, and all 16 of their namespaced references resolve against the
+- 6 stored documents are accepted, and all 20 of their namespaced references resolve against the
   live `blocks.manifest.json`, `components.manifest.json` and `docs/business-capabilities.json`;
-- 18 documents are rejected, **each for the reason it declares** — a document refused for an
+- 20 documents are rejected, **each for the reason it declares** — a document refused for an
   unrelated reason fails the gate, because it would leave the rule it claims to cover untested;
 - every stored fixture is byte-canonical, so a diff on one means a change of content;
 - the migration machinery refuses a version above the current one and refuses a gap in the chain;
 - the block-category → domain map is complete, namespaced on both sides, resolves, and declares no
   relationship the derived index does not demonstrate;
-- **20 negative controls**, 12 on one gate and 8 on the other, each proving the named check goes red.
+- the node-identity contract holds: reversing every child list at every depth leaves the id set and
+  the verdict unchanged, two allocations take `nextNodeId` and not a value derived from the document,
+  and an imported document with a stale or absent counter is raised above every id ever allocated;
+- **24 negative controls**, 16 on one gate and 8 on the other, each proving the named check goes red.
   Nothing broken is committed: a control mutates what the checks see, in memory, for one run. (They
-  are 20 controls over 19 distinct mutations: `lenient-migrate` and `lenient-migrate-chain` share one
+  are 24 controls over 23 distinct mutations: `lenient-migrate` and `lenient-migrate-chain` share one
   mutation and assert that two different checks went red.)
 - a document nested past `MAX_JSON_DEPTH` comes back as a **rejection, not a RangeError**. Both the
   structural interpreter and the semantic walk recurse, so without that bound a deep document would
@@ -108,6 +111,35 @@ catalogue components and 8 blocks now carry an education or agriculture facet, a
 gains two domain cards that list what ships and say they have no use-case page. No reader-visible
 label changed, and no route was added — `discovery-routes.json` is unchanged.
 
+## Node identity
+
+Settled by the owner on 2026-11-04: **allocation-order ids with a persisted `nextNodeId`.** Document
+order is independent of identity. The contract, and what enforces each clause:
+
+| Clause | Enforced by |
+|---|---|
+| a new node takes the current `nextNodeId`, which is then incremented | `allocateNodeId`, check `allocation-uses-next-node-id` |
+| reordering, moving, grouping or restructuring never changes an id | check `reorder-preserves-ids`, control `document-order-identity` |
+| a deleted id is never reused | semantic code `node-id-retired` (a live node on a retired id) and `next-node-id-too-low` (a retired id at or above the counter) |
+| ids are stable across save, load and migration | fixtures are byte-canonical and are re-validated after `migrate()` |
+| an imported or migrated document raises the counter above every id ever allocated | `normalizeImportedNodeIds`, check `import-raises-next-node-id` |
+| duplicate ids are rejected | semantic code `node-id-duplicate` |
+| no state in which the counter could re-allocate a used or lower id | semantic code `next-node-id-too-low`, over live **and** retired ids |
+
+`nextNodeId` is persisted rather than derived, and that is the whole point. "Highest live id plus
+one" loses the allocation frontier the moment the highest-numbered node is deleted: the next
+allocation hands out an id that a Figma frame and a provenance record still name. The control
+`allocator-reuses-ids` is exactly that mistake, and it goes red.
+
+The document-order comparison that v1 carried before this decision is gone, along with its fixture.
+`fixtures/v1/reordered-identity.json` replaces it from the other side: a page whose children are
+`node_9`, `node_2`, `node_6` with `node_3`, `node_10` and `node_11` retired — accepted, because
+where a node sits says nothing about when it was allocated.
+
+Nothing was stored under the old rule, so this needed no migration; `schemaVersion` stays 1. What it
+did need is a required field, and `fixtures/invalid/missing-next-node-id.json` proves the counter is
+required rather than inferred.
+
 ## Open decisions for the owner
 
 1. **`layout` nodes.** v1 has `block`, `component` and `slot`. `layout` is deliberately absent: the
@@ -121,10 +153,5 @@ label changed, and no route was added — `discovery-routes.json` is unchanged.
    is a packaging decision with release consequences, not a schema decision.
 3. **Whether `provenance` is retained for deleted nodes.** Today a retired node id keeps no record.
    Attribution history may need one; storage and privacy say otherwise.
-4. **Which monotonicity invariant the stored contract carries.** The schema's prose says node ids are
-   generated once and monotonic *within a project* — that is allocation order. The validator enforces
-   *document* order, which is stronger: swapping two sibling nodes, with no id changed, turns an
-   accepted document into a rejected one, and there is no relaxed mode to let it back. Either the
-   comparison goes (ids stay unique and never reused; order becomes free), or a `nextNodeId` integer
-   joins the schema so allocation stays auditable while reordering is unaffected. Nothing is stored
-   yet, so settling it now costs nothing and settling it later costs a migration.
+Decision 4 — which invariant node identity carries — was **settled by the owner on 2026-11-04** and
+is implemented here; see *Node identity* above.

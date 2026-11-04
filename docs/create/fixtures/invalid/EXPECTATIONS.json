@@ -35,11 +35,7 @@
     },
     "retired-node-id.json": {
       "expect": "node-id-retired",
-      "proves": "a deleted id is never reused, so a re-sync cannot update the wrong Figma frame"
-    },
-    "non-monotonic-node-id.json": {
-      "expect": "node-id-not-monotonic",
-      "proves": "ids are generated monotonically, which is what makes retirement auditable"
+      "proves": "a deleted id is never reused: a live node carrying an id listed in retiredNodeIds is rejected, which is the first half of \u201cdeletion does not make an id reusable\u201d"
     },
     "duplicate-route.json": {
       "expect": "route-duplicate",
@@ -72,6 +68,18 @@
     "no-pages.json": {
       "expect": "structural",
       "proves": "a project has at least one page"
+    },
+    "stale-next-node-id.json": {
+      "expect": "next-node-id-too-low",
+      "proves": "a stale counter is rejected: node_3 is live while nextNodeId is 3, so the next allocation would hand out an id already in use. This is the check that replaces the document-order comparison \u2014 identity is allocation-ordered, and nothing in the validator looks at where a node sits"
+    },
+    "retired-id-above-next.json": {
+      "expect": "next-node-id-too-low",
+      "proves": "the second half of \u201cdeletion does not make an id reusable\u201d: node_9 is retired while nextNodeId is 3, so the counter would allocate a spent id. A derived \u201chighest live id plus one\u201d would accept this document, which is why the counter is persisted"
+    },
+    "missing-next-node-id.json": {
+      "expect": "structural",
+      "proves": "the counter is required, never inferred: a document without nextNodeId has no allocation frontier, so no allocation from it could be proved safe"
     }
   }
 }

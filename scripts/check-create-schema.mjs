@@ -10,8 +10,10 @@
  * stored fixture is byte-canonical and declares the version of the directory it sits in, that the
  * valid corpus is accepted and the expected-invalid corpus is rejected for the stated reason, that
  * every namespaced reference in a stored document resolves against the live manifests, and that the
- * migration machinery refuses a future version and a missing step. It does NOT prove that a
- * migration works: CURRENT_VERSION is 1, so no migration exists yet to be exercised, and this gate
+ * migration machinery refuses a future version and a missing step. It also proves the node-identity
+ * contract: reordering a page changes no id, an allocation takes nextNodeId rather than a derived
+ * highest-plus-one, and an imported document has its counter raised above every id ever allocated.
+ * It does NOT prove that a migration works: CURRENT_VERSION is 1, so no migration exists yet to be exercised, and this gate
  * reports that in words rather than printing a green migration suite.
  *
  * Every check is named, and the name is what a negative control breaks. Controls mutate what the
@@ -23,6 +25,7 @@ import { validate as structural, assertSupported } from "./create-schema/json-sc
 import { loadRegistries, ROOT } from "./create-schema/registries.mjs";
 import { validateCreateProject, serialize, SCHEMA_PATH, SEMANTIC_CODES } from "./create-schema/validate.mjs";
 import { migrate, CURRENT_VERSION, ReadOnlyDocumentError, MissingMigrationError } from "./create-schema/migrate.mjs";
+import { allocateNodeId, normalizeImportedNodeIds, liveNodeIds, nodeIdNumber, formatNodeId, walkNodes } from "./create-schema/node-ids.mjs";
 
 const FIXTURES = "docs/create/fixtures";
 const INVALID = `${FIXTURES}/invalid`;
@@ -44,6 +47,10 @@ const NEGATIVES = {
   "ref-with-sibling": { breaks: "interpreter-strict", why: "a $ref beside a constraint keyword must be refused — merging is not implemented, so the sibling would be silently ignored, and `validate` alone cannot see it because it only visits the subschemas a document reaches" },
   "unbounded-depth": { breaks: "document-depth-bounded", why: "without the depth bound a deeply nested document leaves the validator through a RangeError instead of a rejection" },
   "lenient-migrate-chain": { breaks: "missing-migration-detected", why: "a migrate() that silently skips an unregistered step must be caught" },
+  "next-node-id-unchecked": { breaks: "invalid-fixtures-rejected", why: "without the allocation-frontier rule a stale nextNodeId, and a retired id above it, are both accepted — and the next allocation then hands out an id a Figma frame and a provenance record still name" },
+  "document-order-identity": { breaks: "reorder-preserves-ids", why: "a validator that compares a node id with its siblings again makes reordering a page a rejection, which is exactly the contract the owner decision removed" },
+  "allocator-reuses-ids": { breaks: "allocation-uses-next-node-id", why: "an allocator deriving the next id from the highest LIVE id hands out a retired id as soon as the highest-numbered node has been deleted" },
+  "import-ignores-retired": { breaks: "import-raises-next-node-id", why: "an import normaliser that counts only live ids leaves the counter below a retired id, so the import itself creates the reuse it was meant to prevent" },
 };
 
 if (process.argv.includes("--list-negatives")) {
@@ -75,6 +82,30 @@ if (control === "empty-block-registry") registries = { ...registries, spaces: { 
 const maxDepth = control === "unbounded-depth" ? 100000 : undefined;
 let validateDoc = (doc) => validateCreateProject(doc, { schema, registries, ...(maxDepth ? { maxDepth } : {}) });
 if (control === "accept-everything") validateDoc = () => ({ ok: true, errors: [] });
+if (control === "next-node-id-unchecked") {
+  const inner = validateDoc;
+  validateDoc = (doc) => {
+    const { errors } = inner(doc);
+    const kept = errors.filter((e) => e.code !== "next-node-id-too-low");
+    return { ok: kept.length === 0, errors: kept };
+  };
+}
+if (control === "document-order-identity") {
+  const inner = validateDoc;
+  validateDoc = (doc) => {
+    const result = inner(doc);
+    const errors = [...result.errors];
+    let highest = 0;
+    const inDocumentOrder = [];
+    for (const page of doc.pages ?? []) walkNodes(page.root, (node) => inDocumentOrder.push(node.id));
+    for (const id of inDocumentOrder) {
+      const n = nodeIdNumber(id);
+      if (n <= highest) errors.push({ code: "node-id-not-monotonic", message: `${id}: not greater than the highest id so far` });
+      highest = Math.max(highest, n);
+    }
+    return { ok: errors.length === 0, errors };
+  };
+}
 /** An interpreter error is a finding about the schema, not a crash of the gate. */
 const validator = (doc) => {
   try {
@@ -83,6 +114,20 @@ const validator = (doc) => {
     return { ok: false, errors: [{ code: "interpreter-strict", message: error.message }] };
   }
 };
+
+/** The node-identity contract, injectable so a control can show the checks below have teeth. */
+let allocate = allocateNodeId;
+if (control === "allocator-reuses-ids")
+  allocate = (doc) => {
+    const highestLive = Math.max(...liveNodeIds(doc).map(nodeIdNumber));
+    return { id: formatNodeId(highestLive + 1), doc: { ...doc, nextNodeId: Math.max(doc.nextNodeId, highestLive + 2) } };
+  };
+let normalizeImport = normalizeImportedNodeIds;
+if (control === "import-ignores-retired")
+  normalizeImport = (doc) => {
+    const numbers = liveNodeIds(doc).map(nodeIdNumber);
+    return { ...doc, nextNodeId: Math.max(doc.nextNodeId ?? 0, (numbers.length ? Math.max(...numbers) : 0) + 1) };
+  };
 
 let migrateImpl = migrate;
 if (control === "lenient-migrate" || control === "lenient-migrate-chain") migrateImpl = (doc) => doc;
@@ -224,6 +269,99 @@ if (!failures.some((f) => f.startsWith("invalid-fixtures-rejected")))
   else if (!result.errors.some((e) => e.code === "document-too-deep"))
     fail("document-depth-bounded", `a 20 000-deep document was rejected, but not with [document-too-deep]: ${result.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
   else ok("document-depth-bounded", result.errors[0].message);
+}
+
+/* ------------------------------------------------- the node-identity contract (owner decision) */
+
+/**
+ * Node ids are allocation-ordered. The three checks below are the executable form of that: identity
+ * survives restructuring, an allocation comes from the persisted counter rather than from the
+ * document, and a document arriving from outside has its counter raised past everything ever
+ * allocated. Each has a negative control, because a contract nothing can break is a comment.
+ */
+const idsOf = (doc) => {
+  const ids = [];
+  for (const page of doc.pages ?? []) walkNodes(page.root, (node) => ids.push(node.id));
+  return ids.sort();
+};
+/** Reverse every child list, at every depth: a restructuring that touches nothing but order. */
+const deepReverse = (node) => ({
+  ...node,
+  ...(node.children ? { children: [...node.children].reverse().map(deepReverse) } : {}),
+});
+
+// reorder-preserves-ids — reordering, moving and grouping must never change an id, and must never
+// turn an accepted document into a rejected one. This is what the removed document-order comparison
+// used to break; the control re-adds it to show the check would catch its return.
+{
+  const subject = `${FIXTURES}/v1/commerce-storefront.json`;
+  const before = readFixture(subject).doc;
+  const after = { ...before, pages: before.pages.map((page) => ({ ...page, root: deepReverse(page.root) })) };
+  const beforeIds = idsOf(before).join(",");
+  const afterIds = idsOf(after).join(",");
+  const result = validator(after);
+  if (beforeIds !== afterIds) fail("reorder-preserves-ids", `reordering ${subject} changed the id set: ${beforeIds} -> ${afterIds}`);
+  else if (!result.ok)
+    fail("reorder-preserves-ids", `${subject} is accepted, but the same document with every child list reversed is rejected: ${result.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
+  else ok("reorder-preserves-ids", `every child list of ${subject} reversed at every depth: the same ${idsOf(after).length} ids, still accepted — document order carries no identity`);
+}
+
+// allocation-uses-next-node-id — an allocation takes the counter's value, never a value derived from
+// the document, and the document it returns still validates. The control derives it from the highest
+// live id, which is the mistake this check exists to catch.
+{
+  const subject = `${FIXTURES}/v1/reordered-identity.json`;
+  const base = readFixture(subject).doc;
+  const retired = new Set(base.retiredNodeIds ?? []);
+  const expected = [base.nextNodeId, base.nextNodeId + 1].map(formatNodeId);
+  const handedOut = [];
+  let doc = base;
+  for (const _ of expected) {
+    const step = allocate(doc);
+    handedOut.push(step.id);
+    // Attach it, so the document that must still validate is one the new id actually lives in.
+    const [page] = step.doc.pages;
+    doc = {
+      ...step.doc,
+      pages: [{ ...page, root: { ...page.root, children: [...(page.root.children ?? []), { id: step.id, kind: "slot", name: "appended" }] } }, ...step.doc.pages.slice(1)],
+    };
+  }
+  const reused = handedOut.filter((id) => retired.has(id) || idsOf(base).includes(id));
+  const result = validator(doc);
+  if (reused.length) fail("allocation-uses-next-node-id", `allocation handed out ${reused.join(", ")}, which ${subject} has already used or retired`);
+  else if (handedOut.join(",") !== expected.join(","))
+    fail("allocation-uses-next-node-id", `two allocations from nextNodeId ${base.nextNodeId} gave ${handedOut.join(", ")}, expected ${expected.join(", ")}`);
+  else if (doc.nextNodeId !== base.nextNodeId + 2)
+    fail("allocation-uses-next-node-id", `the counter moved from ${base.nextNodeId} to ${doc.nextNodeId} across two allocations`);
+  else if (!result.ok)
+    fail("allocation-uses-next-node-id", `the document after two allocations no longer validates: ${result.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
+  else ok("allocation-uses-next-node-id", `two allocations from ${subject} gave ${handedOut.join(", ")} (nextNodeId ${base.nextNodeId} -> ${doc.nextNodeId}); neither id was live or retired, and the result validates`);
+}
+
+// import-raises-next-node-id — a document from an import or a migration has its counter raised above
+// every id ever allocated, live or retired, and is never lowered. The control counts only live ids.
+{
+  const subject = `${FIXTURES}/v1/reordered-identity.json`;
+  const base = readFixture(subject).doc;
+  const highestEver = Math.max(...[...idsOf(base), ...(base.retiredNodeIds ?? [])].map(nodeIdNumber));
+
+  const stale = { ...base, nextNodeId: 2 };
+  const raised = normalizeImport(stale);
+  const noCounter = { ...base };
+  delete noCounter.nextNodeId;
+  const fromNothing = normalizeImport(noCounter);
+  const alreadyHigher = normalizeImport({ ...base, nextNodeId: highestEver + 500 });
+
+  const staleResult = validator(raised);
+  if (raised.nextNodeId <= highestEver)
+    fail("import-raises-next-node-id", `a stale counter was raised only to ${raised.nextNodeId}, which is not above the highest id ever allocated (node_${highestEver})`);
+  else if (!staleResult.ok)
+    fail("import-raises-next-node-id", `the normalised document does not validate: ${staleResult.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
+  else if (fromNothing.nextNodeId !== raised.nextNodeId)
+    fail("import-raises-next-node-id", `a document with no counter normalised to ${fromNothing.nextNodeId}, a stale one to ${raised.nextNodeId}; the floor must not depend on what was there`);
+  else if (alreadyHigher.nextNodeId !== highestEver + 500)
+    fail("import-raises-next-node-id", `normalising lowered a counter that was already higher: ${highestEver + 500} -> ${alreadyHigher.nextNodeId}`);
+  else ok("import-raises-next-node-id", `an imported ${subject} with a stale or absent counter is raised to ${raised.nextNodeId}, above the retired node_${highestEver}, and a higher counter is left alone`);
 }
 
 // read-only-above-current — a document from a newer deployment opens read-only, never downgraded.

@@ -75,6 +75,7 @@
       }
     }
   ],
+  "nextNodeId": 8,
   "retiredNodeIds": [
     "node_7"
   ]

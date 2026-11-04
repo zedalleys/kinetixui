@@ -17,5 +17,6 @@
         "ref": "block:not-a-real-block"
       }
     }
-  ]
+  ],
+  "nextNodeId": 2
 }

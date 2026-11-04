@@ -17,5 +17,6 @@
         "ref": "component:NotAComponent"
       }
     }
-  ]
+  ],
+  "nextNodeId": 2
 }

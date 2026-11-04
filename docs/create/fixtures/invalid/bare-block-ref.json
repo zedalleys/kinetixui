@@ -17,5 +17,6 @@
         "ref": "order-summary"
       }
     }
-  ]
+  ],
+  "nextNodeId": 2
 }

@@ -19,6 +19,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { validate as structural } from "./json-schema.mjs";
 import { loadRegistries, resolveRef, ROOT } from "./registries.mjs";
+import { nodeIdNumber, walkNodes } from "./node-ids.mjs";
 
 export const SCHEMA_PATH = "docs/create/create-project.schema.json";
 export const loadSchema = () => JSON.parse(readFileSync(join(ROOT, SCHEMA_PATH), "utf8"));
@@ -28,7 +29,7 @@ export const SEMANTIC_CODES = {
   "ref-unresolved": "a namespaced reference does not resolve in the file that owns its identifier space",
   "node-id-duplicate": "two nodes share an id",
   "node-id-retired": "a node uses an id listed in retiredNodeIds",
-  "node-id-not-monotonic": "a node id is not greater than every id before it in document order",
+  "next-node-id-too-low": "an allocated node id — live or retired — is not strictly below nextNodeId, so the next allocation would hand out an id that has already been used",
   "page-id-duplicate": "two pages share an id",
   "route-duplicate": "two pages claim the same route",
   "provenance-unknown-node": "provenance names a node id the document does not contain",
@@ -56,11 +57,6 @@ const exceedsDepth = (value, limit) => {
     for (const child of Array.isArray(node) ? node : Object.values(node)) stack.push([child, depth + 1]);
   }
   return false;
-};
-
-const walk = (node, visit, parentPath = "root") => {
-  visit(node, parentPath);
-  (node.children ?? []).forEach((child, i) => walk(child, visit, `${parentPath}.children[${i}]`));
 };
 
 /**
@@ -93,7 +89,6 @@ export function validateCreateProject(doc, { schema = loadSchema(), registries =
   const seenNodes = new Set();
   const pageIds = new Set();
   const routes = new Map();
-  let highest = 0;
 
   for (const [i, page] of doc.pages.entries()) {
     const where = `pages[${i}] (${page.id})`;
@@ -103,17 +98,27 @@ export function validateCreateProject(doc, { schema = loadSchema(), registries =
       push("route-duplicate", `${where}: route ${page.route} is already claimed by ${routes.get(page.route)}`);
     routes.set(page.route, page.id);
 
-    walk(page.root, (node, path) => {
+    walkNodes(page.root, (node, path) => {
       const at = `${where} ${path} (${node.id})`;
       if (seenNodes.has(node.id)) push("node-id-duplicate", `${at}: id already used in this project`);
       if (retired.has(node.id)) push("node-id-retired", `${at}: id is retired and must never be reused`);
       seenNodes.add(node.id);
-      const n = Number(node.id.slice("node_".length));
-      if (n <= highest) push("node-id-not-monotonic", `${at}: not greater than the highest id so far (node_${highest})`);
-      highest = Math.max(highest, n);
+      // Allocation order, not document order: the id is checked against the persisted frontier and
+      // never against its siblings, so reordering a page cannot turn an accepted document into a
+      // rejected one. See scripts/create-schema/node-ids.mjs for the contract this enforces.
+      if (nodeIdNumber(node.id) >= doc.nextNodeId)
+        push("next-node-id-too-low", `${at}: nextNodeId is ${doc.nextNodeId}, so this id is at or above the allocation frontier and could be handed out again`);
       if (node.kind === "block" || node.kind === "component") refProblem(node.ref, at);
     });
   }
+
+  // A retired id at or above the frontier is the deletion-reuse hole: the id is recorded as spent,
+  // yet the counter would hand it out again. Live nodes are covered above, with their path; this
+  // covers the ids that no longer have one. It is also the condition an imported document has to
+  // satisfy once normalizeImportedNodeIds has raised its counter.
+  for (const id of retired)
+    if (nodeIdNumber(id) >= doc.nextNodeId)
+      push("next-node-id-too-low", `retiredNodeIds contains ${id}, which is at or above nextNodeId ${doc.nextNodeId}: deleting a node would make its id allocatable again`);
 
   for (const [nodeId, record] of Object.entries(doc.provenance ?? {})) {
     if (!seenNodes.has(nodeId)) push("provenance-unknown-node", `provenance.${nodeId}: no such node in this document`);

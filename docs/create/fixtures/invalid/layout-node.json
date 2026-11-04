@@ -17,5 +17,6 @@
         "ref": "layout:stack"
       }
     }
-  ]
+  ],
+  "nextNodeId": 2
 }

@@ -18,6 +18,7 @@
       }
     }
   ],
+  "nextNodeId": 2,
   "provenance": {
     "node_1": {
       "by": "ai",
