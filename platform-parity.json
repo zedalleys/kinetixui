@@ -1450,8 +1450,8 @@
     "date-picker": {
       "React": "beta",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
-      "Flutter": "experimental"
+      "Compose": "beta",
+      "Flutter": "beta"
     },
     "date-range-input": {
       "React": "beta"
@@ -1943,12 +1943,12 @@
       "experimental": 90
     },
     "Compose": {
-      "experimental": 84,
-      "beta": 6
+      "experimental": 83,
+      "beta": 7
     },
     "Flutter": {
-      "experimental": 85,
-      "beta": 5
+      "experimental": 84,
+      "beta": 6
     }
   },
   "catalogueVerification": {
@@ -2661,9 +2661,11 @@
         "build"
       ],
       "Compose": [
+        "accessibility",
         "build"
       ],
       "Flutter": [
+        "accessibility",
         "build"
       ]
     },
@@ -4465,7 +4467,7 @@
     "Compose": {
       "build": 90,
       "interaction": 7,
-      "accessibility": 6,
+      "accessibility": 7,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 7,
@@ -4475,7 +4477,7 @@
     "Flutter": {
       "build": 90,
       "interaction": 6,
-      "accessibility": 5,
+      "accessibility": 6,
       "rtl": 58,
       "largeText": 58,
       "reducedMotion": 7,
