@@ -50,6 +50,7 @@ const NEGATIVES = {
   "next-node-id-unchecked": { breaks: "invalid-fixtures-rejected", why: "without the allocation-frontier rule a stale nextNodeId, and a retired id above it, are both accepted — and the next allocation then hands out an id a Figma frame and a provenance record still name" },
   "document-order-identity": { breaks: "reorder-preserves-ids", why: "a validator that compares a node id with its siblings again makes reordering a page a rejection, which is exactly the contract the owner decision removed" },
   "allocator-reuses-ids": { breaks: "allocation-uses-next-node-id", why: "an allocator deriving the next id from the highest LIVE id hands out a retired id as soon as the highest-numbered node has been deleted" },
+  "duplicate-ids-unchecked": { breaks: "invalid-fixtures-rejected", why: "without the uniqueness rule two nodes can share an id, and a provenance record or a Figma binding then names both of them" },
   "import-ignores-retired": { breaks: "import-raises-next-node-id", why: "an import normaliser that counts only live ids leaves the counter below a retired id, so the import itself creates the reuse it was meant to prevent" },
 };
 
@@ -82,6 +83,13 @@ if (control === "empty-block-registry") registries = { ...registries, spaces: { 
 const maxDepth = control === "unbounded-depth" ? 100000 : undefined;
 let validateDoc = (doc) => validateCreateProject(doc, { schema, registries, ...(maxDepth ? { maxDepth } : {}) });
 if (control === "accept-everything") validateDoc = () => ({ ok: true, errors: [] });
+if (control === "duplicate-ids-unchecked") {
+  const inner = validateDoc;
+  validateDoc = (doc) => {
+    const kept = inner(doc).errors.filter((e) => e.code !== "node-id-duplicate");
+    return { ok: kept.length === 0, errors: kept };
+  };
+}
 if (control === "next-node-id-unchecked") {
   const inner = validateDoc;
   validateDoc = (doc) => {
@@ -284,26 +292,46 @@ const idsOf = (doc) => {
   for (const page of doc.pages ?? []) walkNodes(page.root, (node) => ids.push(node.id));
   return ids.sort();
 };
-/** Reverse every child list, at every depth: a restructuring that touches nothing but order. */
-const deepReverse = (node) => ({
+/**
+ * Restructure a page without touching anything but order. Two permutations, because a reversal is a
+ * special case and the contract is about arbitrary order: `reverse`, and `rotate`, which moves the
+ * last child to the front at every depth.
+ */
+const PERMUTATIONS = {
+  reverse: (children) => [...children].reverse(),
+  rotate: (children) => (children.length > 1 ? [children.at(-1), ...children.slice(0, -1)] : [...children]),
+};
+const permuteDeep = (node, permute) => ({
   ...node,
-  ...(node.children ? { children: [...node.children].reverse().map(deepReverse) } : {}),
+  ...(node.children ? { children: permute(node.children).map((child) => permuteDeep(child, permute)) } : {}),
 });
 
 // reorder-preserves-ids — reordering, moving and grouping must never change an id, and must never
 // turn an accepted document into a rejected one. This is what the removed document-order comparison
 // used to break; the control re-adds it to show the check would catch its return.
 {
-  const subject = `${FIXTURES}/v1/commerce-storefront.json`;
-  const before = readFixture(subject).doc;
-  const after = { ...before, pages: before.pages.map((page) => ({ ...page, root: deepReverse(page.root) })) };
-  const beforeIds = idsOf(before).join(",");
-  const afterIds = idsOf(after).join(",");
-  const result = validator(after);
-  if (beforeIds !== afterIds) fail("reorder-preserves-ids", `reordering ${subject} changed the id set: ${beforeIds} -> ${afterIds}`);
-  else if (!result.ok)
-    fail("reorder-preserves-ids", `${subject} is accepted, but the same document with every child list reversed is rejected: ${result.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
-  else ok("reorder-preserves-ids", `every child list of ${subject} reversed at every depth: the same ${idsOf(after).length} ids, still accepted — document order carries no identity`);
+  const subjects = [`${FIXTURES}/v1/commerce-storefront.json`, `${FIXTURES}/v1/reordered-identity.json`];
+  let cases = 0;
+  for (const subject of subjects) {
+    const before = readFixture(subject).doc;
+    const beforeIds = idsOf(before).join(",");
+    for (const [name, permute] of Object.entries(PERMUTATIONS)) {
+      const after = { ...before, pages: before.pages.map((page) => ({ ...page, root: permuteDeep(page.root, permute) })) };
+      const afterIds = idsOf(after).join(",");
+      const result = validator(after);
+      if (beforeIds !== afterIds) {
+        fail("reorder-preserves-ids", `${name} on ${subject} changed the id set: ${beforeIds} -> ${afterIds}`);
+        continue;
+      }
+      if (!result.ok) {
+        fail("reorder-preserves-ids", `${subject} is accepted, but the same document under ${name} is rejected: ${result.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
+        continue;
+      }
+      cases += 1;
+    }
+  }
+  if (!failures.some((f) => f.startsWith("reorder-preserves-ids")))
+    ok("reorder-preserves-ids", `${cases} reorderings (${Object.keys(PERMUTATIONS).join(", ")}, applied at every depth) across ${subjects.length} fixtures: the same ids, still accepted — document order carries no identity`);
 }
 
 // allocation-uses-next-node-id — an allocation takes the counter's value, never a value derived from
@@ -353,7 +381,13 @@ const deepReverse = (node) => ({
   const alreadyHigher = normalizeImport({ ...base, nextNodeId: highestEver + 500 });
 
   const staleResult = validator(raised);
-  if (raised.nextNodeId <= highestEver)
+  const idsBefore = idsOf(base).join(",");
+  const idsAfter = idsOf(raised).join(",");
+  const retiredBefore = [...(base.retiredNodeIds ?? [])].sort().join(",");
+  const retiredAfter = [...(raised.retiredNodeIds ?? [])].sort().join(",");
+  if (idsBefore !== idsAfter || retiredBefore !== retiredAfter)
+    fail("import-raises-next-node-id", `normalising renumbered a node: ids ${idsBefore} -> ${idsAfter}, retired ${retiredBefore} -> ${retiredAfter}. An import raises the counter; it never repairs the document by renaming nodes`);
+  else if (raised.nextNodeId <= highestEver)
     fail("import-raises-next-node-id", `a stale counter was raised only to ${raised.nextNodeId}, which is not above the highest id ever allocated (node_${highestEver})`);
   else if (!staleResult.ok)
     fail("import-raises-next-node-id", `the normalised document does not validate: ${staleResult.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
@@ -361,7 +395,7 @@ const deepReverse = (node) => ({
     fail("import-raises-next-node-id", `a document with no counter normalised to ${fromNothing.nextNodeId}, a stale one to ${raised.nextNodeId}; the floor must not depend on what was there`);
   else if (alreadyHigher.nextNodeId !== highestEver + 500)
     fail("import-raises-next-node-id", `normalising lowered a counter that was already higher: ${highestEver + 500} -> ${alreadyHigher.nextNodeId}`);
-  else ok("import-raises-next-node-id", `an imported ${subject} with a stale or absent counter is raised to ${raised.nextNodeId}, above the retired node_${highestEver}, and a higher counter is left alone`);
+  else ok("import-raises-next-node-id", `an imported ${subject} with a stale or absent counter is raised to ${raised.nextNodeId}, above the retired node_${highestEver}; every existing id is unchanged, and a higher counter is left alone`);
 }
 
 // read-only-above-current — a document from a newer deployment opens read-only, never downgraded.

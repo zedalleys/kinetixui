@@ -14,7 +14,7 @@ negative controls.
 | `fixtures/v1/` | stored documents at schemaVersion 1, byte-canonical |
 | `fixtures/invalid/` | documents the validator must reject, each declaring the rejection it proves |
 | `../../scripts/create-schema/` | the schema interpreter, the one validator, the node-identity contract, the migration registry |
-| `../../scripts/check-create-schema.mjs` | `pnpm check:create-schema` — 14 checks, 16 negative controls |
+| `../../scripts/check-create-schema.mjs` | `pnpm check:create-schema` — 14 checks, 17 negative controls |
 | `../../scripts/check-taxonomy-namespaces.mjs` | `pnpm check:taxonomy-namespaces` — 5 checks, 8 negative controls |
 
 ## One schema, one validator
@@ -56,12 +56,14 @@ derivable, and a stored copy is a second source of truth with a staleness proble
 - the migration machinery refuses a version above the current one and refuses a gap in the chain;
 - the block-category → domain map is complete, namespaced on both sides, resolves, and declares no
   relationship the derived index does not demonstrate;
-- the node-identity contract holds: reversing every child list at every depth leaves the id set and
-  the verdict unchanged, two allocations take `nextNodeId` and not a value derived from the document,
-  and an imported document with a stale or absent counter is raised above every id ever allocated;
-- **24 negative controls**, 16 on one gate and 8 on the other, each proving the named check goes red.
+- the node-identity contract holds: four reorderings (reverse and rotate, applied at every depth,
+  across two fixtures) leave the id set and the verdict unchanged, two allocations take `nextNodeId`
+  and not a value derived from the document, and an imported document with a stale or absent counter
+  has its counter raised above every id ever allocated **with every existing id unchanged** — the
+  import never repairs a document by renaming nodes;
+- **25 negative controls**, 17 on one gate and 8 on the other, each proving the named check goes red.
   Nothing broken is committed: a control mutates what the checks see, in memory, for one run. (They
-  are 24 controls over 23 distinct mutations: `lenient-migrate` and `lenient-migrate-chain` share one
+  are 25 controls over 24 distinct mutations: `lenient-migrate` and `lenient-migrate-chain` share one
   mutation and assert that two different checks went red.)
 - a document nested past `MAX_JSON_DEPTH` comes back as a **rejection, not a RangeError**. Both the
   structural interpreter and the semantic walk recurse, so without that bound a deep document would
@@ -119,12 +121,16 @@ order is independent of identity. The contract, and what enforces each clause:
 | Clause | Enforced by |
 |---|---|
 | a new node takes the current `nextNodeId`, which is then incremented | `allocateNodeId`, check `allocation-uses-next-node-id` |
-| reordering, moving, grouping or restructuring never changes an id | check `reorder-preserves-ids`, control `document-order-identity` |
+| reordering, moving, grouping or restructuring never changes an id | check `reorder-preserves-ids` (reverse and rotate, at every depth), control `document-order-identity` |
 | a deleted id is never reused | semantic code `node-id-retired` (a live node on a retired id) and `next-node-id-too-low` (a retired id at or above the counter) |
 | ids are stable across save, load and migration | fixtures are byte-canonical and are re-validated after `migrate()` |
-| an imported or migrated document raises the counter above every id ever allocated | `normalizeImportedNodeIds`, check `import-raises-next-node-id` |
-| duplicate ids are rejected | semantic code `node-id-duplicate` |
+| an imported or migrated document raises the counter above every id ever allocated, and renames nothing | `normalizeImportedNodeIds`, check `import-raises-next-node-id` |
+| duplicate ids are rejected | semantic code `node-id-duplicate`, control `duplicate-ids-unchecked` |
 | no state in which the counter could re-allocate a used or lower id | semantic code `next-node-id-too-low`, over live **and** retired ids |
+
+There is **no repair pass**. `normalizeImportedNodeIds` raises the counter and touches nothing else;
+a document whose stored state is invalid is rejected with a code, never silently renumbered. A repair
+that renumbers nodes is indistinguishable, after the fact, from the reuse it was meant to prevent.
 
 `nextNodeId` is persisted rather than derived, and that is the whole point. "Highest live id plus
 one" loses the allocation frontier the moment the highest-numbered node is deleted: the next
