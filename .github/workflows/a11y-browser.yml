@@ -235,15 +235,6 @@ jobs:
       - name: Navigation and disclosure visual contract (Angular, light and dark)
         run: pnpm check:navigation-visual
 
-      # The focus-ring assertion above was measured against the page background until 2026-11-04, which
-      # read whatever sat in the 4px gutter beside the element instead of what the state painted there.
-      # Both readings are differential now, and a measurement correction is only worth trusting if the
-      # corrected assertion still fails on a real defect. These controls reintroduce three — a hover that
-      # paints into the ring's gutter, a missing ring, and a missing ring beside a bright neighbour, which
-      # is the case the old formula accepted at 18.67:1 — and require the real gate to fail each one.
-      - name: Navigation focus-ring negative controls (the corrected assertion still catches its defect)
-        run: pnpm check:navigation-visual-negative-controls
-
       # The overlay surface contract (TOKENS.md, "Overlays") on rendered pixels, Angular only: every surface
       # open — the scrim, the popover fill and full border edge, elevation (a shadow in light, the surface step
       # in dark), corner shapes, focus rings that the surface's own clip does not cut, the close button's hover
@@ -317,3 +308,35 @@ jobs:
       # motion, and a 32-cell viewport, theme, direction and text matrix.
       - name: Angular selection motion (Switch 100ms, Checkbox/Radio/Toggle 200ms, forced colours, RTL, reduced motion)
         run: pnpm check:angular-selection-motion
+
+  # The negative controls for the focus-ring assertion in `axe`'s "Navigation and disclosure visual
+  # contract" step. They run the real gate four times — once unmutated, then once per injected defect —
+  # so they cost about as much as four copies of that step, and `axe` is a single 32-step sequence
+  # already inside six minutes of its 45-minute ceiling: added there on 2026-11-04 they pushed the job
+  # over it, and the last two steps were cancelled and skipped rather than run. They do not depend on
+  # anything `axe` computes, so they belong beside it rather than inside it, and they need the tokens,
+  # the package build and Chromium but not the Storybook build.
+  navigation-negative-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build tokens and UI
+        run: pnpm build:tokens && pnpm build:ui
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Navigation focus-ring negative controls (the corrected assertion still catches its defect)
+        run: pnpm check:navigation-visual-negative-controls
