@@ -72,6 +72,12 @@ const NEGATIVES = {
   "compose-maven-local-rehearsal-gated": { file: ".github/workflows/publish-compose.yml", from: "      - name: Dry run — build + publishToMavenLocal (unsigned)\n        env:", to: "      - name: Dry run — build + publishToMavenLocal (unsigned)\n        if: ${{ inputs.dry_run == false }}\n        env:", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
   "flutter-dry-run-rehearsal-removed": { file: ".github/workflows/publish-flutter.yml", from: "      - name: Dry run\n        run: flutter pub publish --dry-run\n", to: "", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
 
+  // Ways to hide a publication from the structural reader itself, rather than from the gate's
+  // contract. Each of these passed the reader as it stood at 42a90808.
+  "flutter-publish-in-a-nine-space-block-scalar": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: |\n         flutter pub publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-sharing-the-rehearsal-line": { file: ".github/workflows/publish-flutter.yml", from: "        run: flutter pub publish --dry-run", to: "        run: flutter pub publish --dry-run; flutter pub publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-second-step-with-the-publish-name": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Publish\n        run: flutter pub publish --force", breaks: "WF-PUBLISH-STEP-CONDITION" },
+
   // Defense in depth is required to be present. It is not what proves the gate.
   "swiftui-defense-in-depth-guard-removed": { file: ".github/workflows/publish-swiftui.yml", from: /^          if \[ "\$\{DRY_RUN:-\}" != "false" \]; then\n            echo "::notice::Not a live publish \(dry_run=\$\{DRY_RUN:-<unset>\}\) — nothing pushed\."\n            exit 0\n          fi\n/m, to: "", breaks: "WF-DRY-RUN-DEFENSE-IN-DEPTH" },
   "swiftui-defense-in-depth-guard-inverted": { file: ".github/workflows/publish-swiftui.yml", from: '          if [ "${DRY_RUN:-}" != "false" ]; then\n            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — nothing pushed."', to: '          if [ "$DRY_RUN" = "true" ]; then\n            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — nothing pushed."', breaks: "WF-DRY-RUN-DEFENSE-IN-DEPTH" },
@@ -549,15 +555,27 @@ const parseSteps = (text) => {
       if (!keys.has(key[1])) keys.set(key[1], key[2].trim());
       if (key[1] === "run") runFrom = k;
     }
-    // A `run:` is either a block scalar — every following line indented past the mapping level —
-    // or a single command on the key's own line. Both are the step's script.
+    // A `run:` is either a block scalar or a single command on the key's own line. Both are the
+    // step's script.
+    //
+    // A block scalar's indentation is whatever its first non-empty line uses, which YAML only
+    // requires to be deeper than the key's own — one space past it is legal and Actions runs it.
+    // Assuming a fixed depth made a script indented nine spaces read as *empty*, which for a check
+    // looking for publish commands is a silent all-clear. So the depth is taken from the content,
+    // and the block ends at the first line that is less indented than that.
     const script = [];
     if (runFrom >= 0) {
       const inline = keys.get("run");
       if (inline && !/^[|>][-+]?\d*$/.test(inline)) script.push(inline);
+      const keyIndent = body[runFrom].match(/^[ ]*(?:- )?/)[0].length;
+      let blockIndent = null;
       for (let k = runFrom + 1; k < body.length; k += 1) {
         if (body[k].trim() === "") { script.push(""); continue; }
-        if (!/^          /.test(body[k])) break;
+        const indent = body[k].match(/^[ ]*/)[0].length;
+        if (blockIndent === null) {
+          if (indent <= keyIndent) break;
+          blockIndent = indent;
+        } else if (indent < blockIndent) break;
         script.push(body[k]);
       }
     }
@@ -570,13 +588,25 @@ const parseSteps = (text) => {
   return steps;
 };
 
-/** Lines of a script that publish for real, by contiguous token, rehearsals excluded. */
+/**
+ * Lines of a script that publish for real.
+ *
+ * A rehearsal is a different contiguous token, not the same token with a flag elsewhere on the
+ * line — so the two are told apart by deleting the rehearsal tokens and asking whether a live token
+ * survives. `flutter pub publish --dry-run` leaves nothing; `flutter pub publish --dry-run;
+ * flutter pub publish --force` leaves a publication, and is reported. Letting a rehearsal token
+ * excuse its whole line excused any publication that shared it.
+ *
+ * Note what this deliberately does not do: it does not decide whether the command runs. That is
+ * the step's condition, and it is read from the YAML. This only decides what a command *is*.
+ */
+const withoutRehearsals = (line) =>
+  REHEARSAL_TOKENS.reduce((rest, token) => rest.split(token).join(" "), line);
 const sideEffectLines = (script) =>
   script
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => SIDE_EFFECT_TOKENS.some((token) => line.includes(token)))
-    .filter((line) => !REHEARSAL_TOKENS.some((token) => line.includes(token)));
+    .filter((line) => SIDE_EFFECT_TOKENS.some((token) => withoutRehearsals(line).includes(token)));
 
 /**
  * The structural contract, per workflow. `publishes` names the one step allowed to carry a live side
@@ -614,27 +644,40 @@ const missingGuard = [];
 for (const workflow of workflows) {
   const contract = PUBLISH_CONTRACT[workflow.path];
   const steps = parseSteps(workflow.text);
-  const named = (name) => steps.find((step) => step.name === name);
+  const named = (name) => steps.filter((step) => step.name === name);
 
-  // 1 and 3. Every live side effect is in the one declared side-effecting step, and no preparation
-  // step carries one. Both directions of the same sentence, so neither can be satisfied alone.
-  for (const step of steps) {
-    const effects = sideEffectLines(step.script);
-    if (effects.length === 0 || step.name === contract.publishes) continue;
-    misplaced.push(`${workflow.path} → "${step.name}" publishes for real (\`${effects[0]}\`) but is not the declared side-effecting step. Only "${contract.publishes}" may carry a live publication, because only that step is gated`);
+  // 2. The declared side-effecting step exists, there is exactly one of it, and it carries the
+  // approved condition.
+  //
+  // Step names are display names and GitHub does not require them to be unique. A second step with
+  // the same name and no condition published during a dry run while the checks below, which looked
+  // the name up and took the first match, were satisfied by the first. So the count is asserted
+  // before anything is concluded from the name, and the condition is required on every match.
+  const live = named(contract.publishes);
+  if (live.length === 0) {
+    ungated.push(`${workflow.path} has no step named "${contract.publishes}". That step is where this workflow's publication is gated; if it was renamed, this contract has to be updated with it rather than around it`);
+  } else if (live.length > 1) {
+    ungated.push(`${workflow.path} has ${live.length} steps named "${contract.publishes}". A display name is how this contract identifies the gated step, so it has to name exactly one — otherwise a second step of the same name is a publication nothing here is checking`);
+  }
+  for (const step of live) {
+    if (step.condition !== APPROVED_STEP_CONDITION) {
+      ungated.push(`${workflow.path} → "${step.name}" must carry \`if: ${APPROVED_STEP_CONDITION}\` as a step key. It has ${step.condition === null ? "no step-level condition at all" : `\`if: ${step.condition}\``}`);
+    }
   }
 
-  // 2. That step exists and carries the approved condition, exactly.
-  const live = named(contract.publishes);
-  if (!live) {
-    ungated.push(`${workflow.path} has no step named "${contract.publishes}". That step is where this workflow's publication is gated; if it was renamed, this contract has to be updated with it rather than around it`);
-  } else if (live.condition !== APPROVED_STEP_CONDITION) {
-    ungated.push(`${workflow.path} → "${live.name}" must carry \`if: ${APPROVED_STEP_CONDITION}\` as a step key. It has ${live.condition === null ? "no step-level condition at all" : `\`if: ${live.condition}\``}`);
+  // 1 and 3. Every live side effect is in that one step, and no preparation step carries one. Both
+  // directions of the same sentence, so neither can be satisfied alone. Exempting by name would
+  // exempt a duplicate too, so the one declared step is exempted by identity.
+  const exempt = live.length === 1 ? live[0] : null;
+  for (const step of steps) {
+    const effects = sideEffectLines(step.script);
+    if (effects.length === 0 || step === exempt) continue;
+    misplaced.push(`${workflow.path} → "${step.name}" publishes for real (\`${effects[0]}\`) but is not the declared side-effecting step. Only "${contract.publishes}" may carry a live publication, because only that step is gated`);
   }
 
   // 4 and 5. Rehearsal work stays executable on a dry run: unconditional, and still present.
   for (const { step: name, token } of contract.rehearses) {
-    const step = named(name);
+    const step = named(name)[0];
     if (!step) {
       gatedRehearsal.push(`${workflow.path} has no step named "${name}", which a dry run needs in order to exercise the release path rather than a shorter one`);
       continue;
@@ -648,7 +691,7 @@ for (const workflow of workflows) {
   }
 
   // 6. Defense in depth, where the contract asks for it. Presence only — see the note above.
-  if (contract.guard && live && !live.script.includes(contract.guard)) {
+  if (contract.guard && exempt && !exempt.script.includes(contract.guard)) {
     missingGuard.push(`${workflow.path} → "${contract.publishes}" must keep \`${contract.guard}\` in its script as a second layer. It is not what proves the publication is gated — the step condition is — but it is what the six-value behavioural control measures, and it is what stops a publish if this step is ever reached with a value other than \`false\``);
   }
 }
