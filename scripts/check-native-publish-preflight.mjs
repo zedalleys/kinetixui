@@ -72,6 +72,13 @@ const NEGATIVES = {
   "compose-maven-local-rehearsal-gated": { file: ".github/workflows/publish-compose.yml", from: "      - name: Dry run — build + publishToMavenLocal (unsigned)\n        env:", to: "      - name: Dry run — build + publishToMavenLocal (unsigned)\n        if: ${{ inputs.dry_run == false }}\n        env:", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
   "flutter-dry-run-rehearsal-removed": { file: ".github/workflows/publish-flutter.yml", from: "      - name: Dry run\n        run: flutter pub publish --dry-run\n", to: "", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
 
+  // YAML spellings the reader does not read. Each of these passed at 8bb19e81 by making a step with
+  // a publication in it look like a step with no script at all.
+  "flutter-publish-in-an-explicit-indicator-block": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: |1\n          # a comment indented deeper than the content\n         flutter pub publish --force", breaks: "WF-READABLE-SYNTAX" },
+  "flutter-publish-in-a-folded-scalar": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: >\n          flutter pub\n          publish --force", breaks: "WF-READABLE-SYNTAX" },
+  "flutter-publish-under-a-quoted-run-key": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: '          flutter pub publish --force\n\n      - name: Extra\n        "run": flutter pub publish --force', breaks: "WF-READABLE-SYNTAX" },
+  "flutter-publish-behind-a-yaml-anchor": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: &publish flutter pub publish --force", breaks: "WF-READABLE-SYNTAX" },
+
   // Ways to hide a publication from the structural reader itself, rather than from the gate's
   // contract. Each of these passed the reader as it stood at 42a90808.
   "flutter-publish-in-a-nine-space-block-scalar": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: |\n         flutter pub publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
@@ -536,6 +543,69 @@ const APPROVED_STEP_CONDITION = "${{ inputs.dry_run == false }}";
  * Deliberately not a general YAML parser (these workflows are fixed block style, and the gate runs
  * from a bare checkout with no dependencies installed) and deliberately not a shell parser.
  */
+/**
+ * The YAML subset this reader supports, asserted rather than assumed.
+ *
+ * The reader above is a *partial* YAML reader, and YAML has more spellings than any partial reader
+ * has branches: a block scalar can carry an explicit indentation indicator (`run: |1`), it can be
+ * folded (`run: >`) so two physical lines are one command, a mapping key can be quoted (`"run":`),
+ * and there are anchors, aliases, merge keys and flow mappings besides. Each of those made the
+ * reader see *no script*, which for a check looking for publications is a silent all-clear — the
+ * same failure shape three different ways.
+ *
+ * Handling each spelling would be the same losing game the shell parser was, so the direction of
+ * the error is inverted instead: these three workflows must be written in the subset this reader
+ * fully understands, and anything outside it is a failure rather than a pass. We own these files,
+ * and the cost of the restriction is having to write a publish workflow plainly.
+ *
+ * Supported: plain unquoted keys, block style throughout, `run:` either inline or as a literal
+ * block scalar introduced by exactly `|`, `|-` or `|+`.
+ */
+const UNSUPPORTED_SYNTAX = [
+  { pattern: /\t/, why: "a tab character, which YAML does not allow for indentation and this reader does not measure" },
+  { pattern: /^\s*-?\s*['"][^'"]*['"]\s*:/, why: "a quoted mapping key, which is equivalent to the plain key but is not what this reader matches" },
+  { pattern: /^\s*<<\s*:/, why: "a merge key, which would bring keys in from somewhere this reader is not looking" },
+  { pattern: /(?:^|\s)[&*][A-Za-z_]/, why: "a YAML anchor or alias, which would put a step's content somewhere other than where it is used" },
+  { pattern: /^\s*-?\s*[A-Za-z_][\w-]*:\s*[[{]/, why: "a flow mapping or sequence, which this reader reads as a scalar" },
+];
+const BLOCK_HEADER = /^(\s*)(?:-\s+)?[A-Za-z_][\w-]*:\s*([|>][-+]?\d*)\s*$/;
+
+/** The lines of a workflow that are structure rather than script, with block scalars removed. */
+const structuralLines = (text) => {
+  const lines = text.split("\n");
+  const kept = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    kept.push({ line: lines[i], number: i + 1 });
+    const header = lines[i].match(BLOCK_HEADER);
+    if (!header) continue;
+    const keyIndent = header[1].length;
+    for (let j = i + 1; j < lines.length; j += 1) {
+      if (lines[j].trim() !== "" && lines[j].match(/^[ ]*/)[0].length <= keyIndent) break;
+      i = j;
+    }
+  }
+  return kept;
+};
+
+const unsupportedSyntax = (text) => {
+  const found = [];
+  for (const { line, number } of structuralLines(text)) {
+    const header = line.match(BLOCK_HEADER);
+    if (header && header[2] !== "|" && header[2] !== "|-" && header[2] !== "|+") {
+      found.push(`line ${number} introduces a block scalar with \`${header[2]}\`, and only \`|\`, \`|-\` and \`|+\` are read here: an explicit indentation indicator or a folded scalar changes where the content starts or joins two lines into one command`);
+      continue;
+    }
+    if (line.trim().startsWith("#")) continue;
+    for (const { pattern, why } of UNSUPPORTED_SYNTAX) {
+      if (pattern.test(line)) {
+        found.push(`line ${number} uses ${why}`);
+        break;
+      }
+    }
+  }
+  return found;
+};
+
 const parseSteps = (text) => {
   const lines = text.split("\n");
   const stepsAt = lines.findIndex((line) => /^    steps:[ \t]*$/.test(line));
@@ -637,12 +707,17 @@ const PUBLISH_CONTRACT = {
   },
 };
 
+const unreadable = [];
 const misplaced = [];
 const ungated = [];
 const gatedRehearsal = [];
 const missingGuard = [];
 for (const workflow of workflows) {
   const contract = PUBLISH_CONTRACT[workflow.path];
+  // Before anything is concluded from the structure, assert the file is written in the subset this
+  // reader understands. A spelling it cannot read makes a step look empty, and an empty step looks
+  // like a step with no publication in it.
+  for (const problem of unsupportedSyntax(workflow.text)) unreadable.push(`${workflow.path}: ${problem}`);
   const steps = parseSteps(workflow.text);
   const named = (name) => steps.filter((step) => step.name === name);
 
@@ -696,6 +771,11 @@ for (const workflow of workflows) {
   }
 }
 
+check(
+  "WF-READABLE-SYNTAX",
+  unreadable.length === 0,
+  `${unreadable.join("; ")}. The publish workflows are read here by a deliberately small structural reader, so they must be written in the subset it fully understands: plain unquoted keys, block style, and \`run:\` either inline or as a literal block scalar introduced by exactly \`|\`, \`|-\` or \`|+\`. Any other spelling is rejected rather than guessed at, because a spelling this reader cannot see makes a step look like it contains no publication.`,
+);
 check(
   "WF-SIDE-EFFECTS-ISOLATED",
   misplaced.length === 0,
