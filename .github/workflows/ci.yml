@@ -187,6 +187,50 @@ jobs:
       - name: Business capability roadmap is truthful and current
         run: pnpm check:capabilities
 
+      # `commerce` is a business domain and `Commerce` is a block category, enforced until now by two
+      # scripts that did not know about each other. This holds the namespaces apart: the block-category
+      # → domain map must be complete, prefixed on both sides, resolve against the canonical files, and
+      # declare no relationship the derived discovery index does not demonstrate. A domain must also
+      # cite at least one capability family — registering an id is the easy half.
+      - name: Identifier namespaces (the two commerces stay apart)
+        run: pnpm check:taxonomy-namespaces
+
+      - name: "Identifier namespaces: negative controls"
+        # The list is captured and counted first: a command substitution that fails inside a `for`
+        # word list does NOT trip `bash -e`, so an empty list would make this step pass having proved
+        # nothing at all — the exact way a gate loses its teeth silently.
+        run: |
+          controls=$(node scripts/check-taxonomy-namespaces.mjs --list-negatives)
+          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          echo "running $count negative control(s)"
+          for control in $controls; do
+            echo "--- $control"
+            node scripts/check-taxonomy-namespaces.mjs --negative="$control"
+          done
+
+      # docs/create/create-project.schema.json is the only structural source for a stored Create
+      # document; scripts/create-schema/json-schema.mjs interprets it rather than re-expressing it.
+      # The expected-invalid corpus is what gives the round-trip property teeth: a validator that
+      # accepted everything would pass a round-trip test. Each of those documents must be rejected for
+      # the reason it declares, not merely rejected.
+      - name: Create document schema (stored documents, references, migration refusals)
+        run: pnpm check:create-schema
+
+      - name: "Create document schema: negative controls"
+        # The list is captured and counted first: a command substitution that fails inside a `for`
+        # word list does NOT trip `bash -e`, so an empty list would make this step pass having proved
+        # nothing at all — the exact way a gate loses its teeth silently.
+        run: |
+          controls=$(node scripts/check-create-schema.mjs --list-negatives)
+          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          echo "running $count negative control(s)"
+          for control in $controls; do
+            echo "--- $control"
+            node scripts/check-create-schema.mjs --negative="$control"
+          done
+
       # Keyboard documentation is derived from the keyboard tests, so a behaviour that stops being tested
       # stops being documented. This fails if the two have drifted apart.
       - name: Keyboard documentation is current with the keyboard tests

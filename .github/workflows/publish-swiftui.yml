@@ -43,7 +43,9 @@ jobs:
       # A typo here becomes a git tag that `from:` resolves against forever,
       # so it is rejected before the toolchain is even warmed up.
       - name: Validate version
-        run: node scripts/check-native-publish-preflight.mjs --version='${{ inputs.version }}'
+        env:
+          VERSION: ${{ inputs.version }}
+        run: node scripts/check-native-publish-preflight.mjs --version="$VERSION"
 
       - name: Preflight
         run: node scripts/check-native-publish-preflight.mjs
