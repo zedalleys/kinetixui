@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "proj_reuseretir",
+  "name": "Retired above the frontier",
+  "domain": "domain:commerce",
+  "designSystem": {
+    "preset": "KX1_eyJ2IjoxfQ"
+  },
+  "pages": [
+    {
+      "id": "page_home",
+      "name": "Home",
+      "route": "/",
+      "root": {
+        "id": "node_1",
+        "kind": "slot",
+        "name": "page",
+        "children": [
+          {
+            "id": "node_2",
+            "kind": "block",
+            "ref": "block:order-summary"
+          }
+        ]
+      }
+    }
+  ],
+  "nextNodeId": 3,
+  "retiredNodeIds": [
+    "node_9"
+  ]
+}
