@@ -21,7 +21,7 @@
  *    reaches Vercel.
  */
 import { cleanPath } from "./analytics-safe";
-import { doNotTrack, isDiagnosticTab, isInternalBrowser } from "./analytics-attribution";
+import { doNotTrack, isDiagnosticTab, isInternalSession } from "./analytics-attribution";
 import { siteConfig } from "./site";
 
 export interface VercelAnalyticsEnv {
@@ -62,7 +62,7 @@ export interface VercelPrivacy {
 }
 
 function browserPrivacy(): VercelPrivacy {
-  return { dnt: doNotTrack(), diagnostic: isDiagnosticTab(), internal: isInternalBrowser() };
+  return { dnt: doNotTrack(), diagnostic: isDiagnosticTab(), internal: isInternalSession() };
 }
 
 /**

@@ -138,10 +138,131 @@ pending changesets. A range that already accepts the planned version is left exa
 that does not fails the release with both numbers named. Offline, so it runs on an ordinary pull
 request — before the Version Packages PR exists. See [Peer ranges across cohorts](#peer-ranges-across-cohorts).
 
+**Release-note links**: every internal link in `release/notes/<version>.json` and in the activated
+`apps/web/src/lib/releases.ts` is resolved against the built site — the path against the prerendered
+pages, the files under `public/` and the configured redirects, and any `#fragment` against the ids in
+that page's HTML. 0.25.0's notes linked `/docs/motion`, a route that does not exist, and nothing
+stopped it: `next build` does not resolve the hrefs it renders, `check:releases` never looked at a
+link, and `check:seo` reads links out of built pages — where a curated note does not appear until the
+Version PR activates it, and with the fragment stripped before resolving. `pnpm check:release-links`
+is that check; it uses the same route inventory as `check:seo`
+([`scripts/site-inventory.mjs`](./scripts/site-inventory.mjs)), so there is no second list of routes
+to keep in step, and its rules and negative controls are in
+[`scripts/release/test/release-links.test.mjs`](./scripts/release/test/release-links.test.mjs). It
+needs a site build, so it runs in CI's `build` job — the required check on every pull request,
+including the Version PR whose merge publishes — rather than in `release.yml`'s preflight, which
+deliberately builds no site. The enforcement point is therefore that required check, not the release
+workflow: `ci.yml` runs again on the push to `main`, but `release.yml` reads no signal from it, so a
+link is caught before the Version PR can merge rather than at publication time.
+
+What the link gate does **not** check, so that nobody reads more into a green run than it means:
+
+- **Link shapes it does not extract.** It reads a value of an `href` field, in either quote, and a
+  CommonMark inline link — including a titled or angle-bracketed destination. A raw `<a href="...">`, a
+  reference-style `[text][id]` with its definition elsewhere, and a destination containing balanced
+  parentheses are not read. There is one raw `<a href>` in the content today — `<Badge asChild><a
+  href="/new">` in a `body` in `releases.ts`, written as a code example — and `/new` is not a route.
+  On the changelog page that body renders as plain text, so no reader can click it there; in the GitHub
+  Release body, which renders inline HTML, the same sentence is a clickable dead link. It is historical
+  content in an already-published release, so this is recorded as the live example of the gap rather
+  than edited away: a raw `<a href>` in a future note would not be caught either.
+- **Links the generator synthesises.** `scripts/release-notes.mjs` builds
+  `/docs/changelog#<version>` and a `/docs/components/<slug>` link for each entry in `newComponents`.
+  Neither comes from an `href` field, so neither is audited. The changelog anchor exists by
+  construction — `changelog-view.tsx` renders `id={release.version}` for every entry — but only once the
+  Version PR has activated the entry, so generating notes for a version that is still only a curated
+  file emits an anchor that does not yet resolve. The component link is emitted when the route's
+  **source directory** exists, which is not the same question as whether the page was built.
+- **A destination in prose that looks like a repo file.** A value of an `href` field is reported
+  whatever it looks like, because that position is unambiguously a link. The exemption applies only to a
+  Markdown candidate, where `](…)` matches sentences as well as links: there a destination with a slash
+  and no file extension is read as a route and reported, and one with a file extension
+  (`packages/ui/CHANGELOG.md`) or no slash at all is left alone as a repo-file link or prose. So a
+  repo-relative Markdown link to an extensionless file is reported, and a full URL is the answer — on
+  `https://github.com/zedalleys/kinetixui/blob/main/...` for a file in this repository, not on the site
+  origin, where `/packages/tokens` is a 404. The error message names both, because following "write it
+  as an absolute URL on the site" for a repo path produces another dead link.
+- **A trailing slash.** `/docs/angular/` is reported as unresolved although Next redirects it. That is
+  `check:seo`'s own path semantics, shared deliberately rather than forked.
+- **A fragment on a target that is not an HTML page.** `/sitemap.xml#urlset` or `/brand/logo.svg#mark`
+  resolves as a path and then fails, because ids are read out of built page HTML and those targets have
+  none. The message says so rather than claiming the id is missing. No release note links that way, so
+  this is left as a false failure the author can see the reason for rather than fixed speculatively.
+- **A relative Markdown destination whose last segment looks like a file.** `[x](docs/changelog/0.25.0)`
+  reads as the extension `.0` and is left alone as a repo-file link. A value of an `href` field is not
+  affected — those are reported whatever they look like — so this is confined to prose, where the
+  alternative is failing a release over a sentence.
+- **A partial loss of coverage, and a field rename.** The per-source coverage floor fails a file that
+  still carries an `href` field but yields **no** destination at all — every value a non-string, every
+  spelling unmatched. It does not fire on a partial loss: three of a note's four hrefs turned into
+  arrays, or 67 of the 68 keys in `releases.ts` renamed, leaves one destination behind and the gate
+  passes, auditing fewer links than the file carries. So the floor is a floor, not the protection. What
+  makes a silent partial loss unlikely is that both readers are structural — a curated note is parsed,
+  and `releases.ts` is scanned with string interiors masked — so there is no quote style or prose shape
+  left to flip. It counts destinations read, not links audited, so a note whose only `href` is external
+  or a bare `#anchor` is not failed for having nothing to resolve. Renaming or removing the field
+  entirely is indistinguishable from a release that links nowhere, so `LINK_KEYS` is pinned by a test.
+- A curated `release/notes/*.json` is read by **parsing** it, not by scanning its text, so no valid JSON
+  spelling of the field — `"\u0068ref"` — can hide a link from the gate while `JSON.parse` activates it
+  into the site. `releases.ts` is TypeScript and keeps the text scan, with string interiors masked and
+  comment text blanked, so that the prose `version-release-meta.mjs` copies verbatim out of a note reads
+  the same in both files: without that, an `href` key quoted inside release prose — `items={[{ label:
+  'Docs', href: '/docs/intro' }]}`, how a component library documents a prop — passed on the authoring
+  pull request and failed on the Version PR whose merge publishes.
+- **A field after an unbalanced quote on the same line is masked**, and this is the one place the scan
+  can lose a real link rather than report a false one. What holds: a masked span always begins at least
+  one character into a line, so a field at the **start** of its line can never be masked — and every
+  `href` the generator writes is at the start of one, because `version-release-meta.mjs` serialises with
+  `JSON.stringify(entry, null, 2)`. What does not hold: a hand-written line that puts a field after other
+  content *and* an unbalanced quote outside both a string and a comment, such as a lone `"` inside a
+  regexp literal, loses that field. A test pins both halves so neither is a surprise.
+- **A link on this site's own host is resolved whatever scheme it is written with.** `http://` and
+  `https://`, and the default port written out, all resolve to the same path and are audited; a
+  different host or a non-default port is an external link and is left alone.
+
 **Registry state**: whether each allowlisted version already exists, read from the packument rather
 than parsed out of CLI output. An unreachable registry, an authentication failure or a malformed
 response is **not** read as "unpublished" — it stops the release, because publishing against
 unknown state is exactly the situation to avoid.
+
+### The release notes must be dated the day the release runs
+
+Before a core version's **first** upload, `scripts/release/dates.mjs` requires the `date` on that
+version's entry in `apps/web/src/lib/releases.ts` to equal the current UTC date. The notes carry a
+publication date, so a date that is not the publication day is simply wrong, and the gate refuses
+the release rather than publish a release note that misdates itself.
+
+That date is generated, and `changeset version` is not what writes it. `pnpm version-packages` is
+`changeset version && node scripts/version-release-meta.mjs`, and it is the second half that reads
+`release/notes/<core-version>.json`, sets `entry.date` to the current UTC day and inserts the entry
+into `releases.ts`. Running the Changesets CLI on its own versions the packages and leaves the date
+alone, so **a Version PR regenerated that way can still be refused after midnight** — use
+`pnpm version-packages`, or correct the one line by hand.
+
+Because the bot rebuilds the Version PR from `main`, where the entry does not exist yet, **every
+rebuild inserts it afresh with the rebuild's day**, and the merge window for that build is bounded
+by that UTC day. Merge after midnight UTC and the release is refused with the two dates named,
+which is what happened to 0.25.0: the Version PR was rebuilt on 2026-10-21 and merged at 00:31 UTC
+on the 22nd, so nothing published until the date was corrected and merged on the day it ran.
+
+Two practical consequences:
+
+- The date cannot be prepared in advance. It goes stale at 00:00 UTC, so correcting it is a
+  same-day action: set it to the day the release will actually run, and merge it that day.
+- `pnpm check:releases` passing says nothing about this, and it is the check most likely to be
+  mistaken for saying it. It does validate dates — that each is `YYYY-MM-DD` and that the list is
+  non-increasing as versions descend — along with the core cohort being on one version, every
+  changelogged version having an entry, `breaking` being present, `newComponents` slugs existing
+  and `githubReleaseUrl` naming its version. None of that is publication-day readiness: a note
+  dated three days ago is well-formed and correctly ordered. Only `release:preflight` compares the
+  date to today, and it runs in the credential-free job — no npm token, no `id-token` permission —
+  so a refusal there publishes nothing and consumes no version number.
+
+Two cases fall outside the gate, both deliberately. It reads the `core` entry of `plan.publish`,
+so a release that publishes no core package — an Angular-only or IoT-only cohort release — is not
+date-checked at all. And it returns early when a core package is already on the registry at this
+version (`plan.alreadyPublished`), so it cannot block a recovery for a cohort that has started to
+upload.
 
 ---
 
@@ -323,14 +444,24 @@ installed the version, and the version number can never be reused.
 
 ## `@kinetixui/angular`
 
-Status: a repository Preview implementation. Versioned here, built and tested in CI, **not on npm**.
+Status: Preview, and published. Versioned here, built and tested in CI, and on npm in its own
+release cohort.
 
-It carries `private: true`, which is the mechanism that keeps it out of the publish set, and it is
-not in the allowlist — two independent reasons it cannot be published by accident.
-`ng-packagr` also copies the flag into `dist/package.json`, so a publish from the build output is
-refused too.
+It is listed in `release/publish-packages.json` in the `angular` cohort, which is what grants it
+publication, and it carries `publishConfig.access` and `provenance`. Because ng-packagr generates
+the Angular Package Format manifest into `dist/`, the allowlist entry names that directory as the
+`artifactDirectory` while `directory` stays the workspace identity the allowlist is matched
+against.
 
-### Publication readiness — validated, still not published
+As a Preview implementation, Angular has not yet met the project's full graduation criteria. Its
+compatibility guarantees should be understood in the context of that status, independently of its
+npm availability. `ANGULAR-GRADUATION.md` is the policy and `pnpm check:angular-graduation` is the
+measurement; as that document puts it, publication is distribution, not maturity.
+
+The cohort is what keeps the two independent: Angular moves on its own version line rather than
+with the `core` three, so an Angular minor never drags the React set with it.
+
+### Publication readiness — how the artifact is validated
 
 `pnpm check:angular-package` proves the artifact behind those locks is genuinely usable, without
 unlocking anything:
@@ -348,8 +479,8 @@ unlocking anything:
 - the emitted CSS is checked for the token contract, the extras sheet and the component classes, so
   a stylesheet that silently failed to resolve cannot pass
 
-Readiness is not availability. `npm install @kinetixui/angular` still does not work, and no public
-documentation says otherwise.
+This gate ran before Angular was ever published and still runs on every pull request, so the
+artifact is validated the same way whether or not a release is in flight.
 
 ### Activation — complete
 

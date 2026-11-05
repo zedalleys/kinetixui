@@ -1,5 +1,0 @@
----
-"@kinetixui/angular": minor
----
-
-Add the scroll area, resizable panels, carousel and comparison slider. `kx-scroll-area` keeps the browser's own scrolling and draws its scrollbars beside the content; it is a named Tab stop only while something overflows, and its thumb follows content and containers that resize. `kx-resizable-panel-group` (with `kx-resizable-panel` and `kx-resizable-handle`) resizes by mouse, pen, touch or keyboard (arrows by 5, Home, End, F6 between handles), holds each panel's limits, follows the reading direction and announces itself as a window splitter. `kx-carousel` (with `kx-carousel-content`, `kx-carousel-item`, `kxCarouselPrevious` and `kxCarouselNext`) moves by buttons, arrow keys that follow the reading direction, and drag or swipe; it keeps focus at its ends, makes off-screen slides inert, announces a move once when it lands, has no autoplay and respects reduced motion. `kx-comparison-slider` is one native range input over two layers, named, held to 0–100, and drawn from the inline start in either direction. Angular stays Preview.

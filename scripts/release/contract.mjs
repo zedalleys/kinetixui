@@ -125,6 +125,24 @@ export function validateAllowlist(raw, rootScriptNames = []) {
       artifactDirectory = value;
     }
 
+    // The oldest version of each workspace peer this package is published as supporting. Validated
+    // here rather than where it is used, because an entry this function does not copy forward is an
+    // entry that silently does nothing — a shape of bug an unvalidated passthrough invites.
+    let peerFloor = null;
+    if (entry.peerFloor !== undefined) {
+      const value = entry.peerFloor;
+      if (value === null || typeof value !== "object" || Array.isArray(value)) {
+        errors.push(`${entry.name} has an unusable "peerFloor": ${JSON.stringify(value)}. It maps a peer name to one version.`);
+        continue;
+      }
+      for (const [dependency, floor] of Object.entries(value)) {
+        if (typeof floor !== "string" || floor.length === 0) {
+          errors.push(`${entry.name}: peerFloor for ${dependency} is ${JSON.stringify(floor)}, which is not a version.`);
+        }
+      }
+      peerFloor = value;
+    }
+
     packages.push({
       name: entry.name,
       releaseGroup: entry.releaseGroup,
@@ -134,6 +152,7 @@ export function validateAllowlist(raw, rootScriptNames = []) {
       packDirectory: artifactDirectory ?? entry.directory,
       build,
       requireFiles,
+      peerFloor,
     });
   }
 
