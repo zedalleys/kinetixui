@@ -185,10 +185,16 @@ export function ComponentPreview({
   return (
     <div data-cp className={cn("my-6 overflow-hidden rounded-xl border border-border", className)}>
       <div dir={dir}>
-        {/* The control used to be a direct child of the panel, so it sat on the panel's own 1px border
-            (CAT-BUG-010). The inset is the one the environment toolbar below already uses — same row
-            rhythm, no new value. */}
-        <div className="px-3 py-2">
+        {/*
+          The mode strip is the first rail of the preview's toolbar, and the environment strip below it
+          (preview-environment.tsx) is the second. They were not written as one: this control sat flush
+          against the card, inset only by the 1px border, while the environment row carries `px-3 py-2`
+          — so two controls that read as one toolbar started 12px apart, and this one had no vertical
+          rail padding at all. The rail here is the same inset and the same padding as that one, which
+          is what makes the two read as a single component rather than two stacked ones. Changing
+          either means changing both.
+        */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2">
           <SegmentedControl
             value={mode}
             dir={dir}
