@@ -250,10 +250,14 @@ the probe checklist are in [`marketing/analytics.md`](../../marketing/analytics.
 
 ### Internal traffic
 
-The team's own browsing is marked once per browser, not per test: open any page with `?kx_traffic=internal`. The
-mark lives in `localStorage` (`kx_analytics_internal_v1`), so it survives new tabs and restarts of that browser, and
-every event carries `kx_traffic_type: "internal"`. A diagnostic mark in the same tab wins; `?kx_traffic=clear`
-removes both. Vercel Web Analytics drops internal page views for the same reason it drops diagnostic ones. Why a mark
+The team's own browsing is marked per session, not per test: open any page with `?kx_traffic=internal`. The mark
+lives in `sessionStorage` (`kx_analytics_internal_v2`), so it survives client-side navigation and a reload in that
+tab and every event in the session carries `kx_traffic_type: "internal"` — but a **new browser session does not
+inherit it** and must be marked again (IA-5.21 §4.1; it was device-scoped under `kx_analytics_internal_v1` before,
+and that key is deleted on next load so no durable marker is left). The stored value is the bare word `internal`:
+no id, no fingerprint, nothing tied to a person, and independent of any sign-in. **The parameter is an exclusion
+hint, not authentication** — anyone can append it and it grants nothing. A diagnostic mark in the same tab wins;
+`?kx_traffic=clear` removes both, so marking is reversible. Vercel Web Analytics drops internal page views for the same reason it drops diagnostic ones. Why a mark
 and not PostHog's "internal users" cohort: with `person_profiles: identified_only` and no sign-in, the site never
 identifies anyone, so a person cohort is always empty (marketing/analytics.md §11 *Traffic cohorts*).
 

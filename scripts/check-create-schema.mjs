@@ -1,0 +1,603 @@
+#!/usr/bin/env node
+/**
+ * check-create-schema.mjs — the CreateProject schema gate.
+ *
+ *   node scripts/check-create-schema.mjs                     run every check
+ *   node scripts/check-create-schema.mjs --negative=<id>     require one check to fail
+ *   node scripts/check-create-schema.mjs --list-negatives
+ *
+ * What it proves, and what it does not. It proves that the canonical schema parses, that every
+ * stored fixture is byte-canonical and declares the version of the directory it sits in, that the
+ * valid corpus is accepted and the expected-invalid corpus is rejected for the stated reason, that
+ * every namespaced reference in a stored document resolves against the live manifests, and that the
+ * migration machinery refuses a future version and a missing step. It also proves the node-identity
+ * contract: reordering a page changes no id, an allocation takes nextNodeId rather than a derived
+ * highest-plus-one, and an imported document has its counter raised above every id ever allocated.
+ * It does NOT prove that a migration works: CURRENT_VERSION is 1, so no migration exists yet to be exercised, and this gate
+ * reports that in words rather than printing a green migration suite.
+ *
+ * Every check is named, and the name is what a negative control breaks. Controls mutate what the
+ * checks see in memory; nothing broken is ever committed.
+ */
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { validate as structural, assertSupported, counters } from "./create-schema/json-schema.mjs";
+import { loadRegistries, ROOT } from "./create-schema/registries.mjs";
+import { validateCreateProject, serialize, SCHEMA_PATH, SEMANTIC_CODES } from "./create-schema/validate.mjs";
+import { migrate, CURRENT_VERSION, ReadOnlyDocumentError, MissingMigrationError } from "./create-schema/migrate.mjs";
+import { allocateNodeId, normalizeImportedNodeIds, liveNodeIds, nodeIdNumber, formatNodeId, walkNodes } from "./create-schema/node-ids.mjs";
+
+const FIXTURES = "docs/create/fixtures";
+const INVALID = `${FIXTURES}/invalid`;
+
+/**
+ * Each control names the check it must break. A control that breaks nothing, or breaks something
+ * else, is itself a failure: it would mean the check is not measuring what it claims.
+ */
+const NEGATIVES = {
+  "accept-everything": { breaks: "invalid-fixtures-rejected", why: "a validator that returns no errors must not pass the expected-invalid corpus" },
+  "drop-domain-pattern": { breaks: "invalid-fixtures-rejected", why: "removing the domain pattern from the schema must let a bare \"commerce\" through, which is what proves the pattern is the thing rejecting it" },
+  "empty-block-registry": { breaks: "valid-fixtures-accepted", why: "references are resolved against blocks.manifest.json, not assumed — an empty registry must reject the valid corpus" },
+  "four-space-fixture": { breaks: "fixture-canonical", why: "a fixture written with another indent must be caught, or the round-trip property is decoration" },
+  "wrong-expected-code": { breaks: "invalid-fixtures-rejected", why: "a fixture rejected for a reason other than the one it claims must fail" },
+  "missing-expectation-entry": { breaks: "expectations-complete", why: "an invalid fixture nobody declared an expectation for must fail" },
+  "fixture-version-mismatch": { breaks: "fixture-version-matches-dir", why: "a v2 document in the v1 directory must be caught" },
+  "unsupported-keyword": { breaks: "interpreter-strict", why: "a schema keyword the interpreter does not implement must throw, never be ignored" },
+  "lenient-migrate": { breaks: "read-only-above-current", why: "a migrate() that accepts a future version must be caught — a rolled-back deployment must not downgrade a project" },
+  "ref-with-sibling": { breaks: "interpreter-strict", why: "a $ref beside a constraint keyword must be refused — merging is not implemented, so the sibling would be silently ignored, and `validate` alone cannot see it because it only visits the subschemas a document reaches" },
+  "unbounded-depth": { breaks: "document-depth-bounded", why: "without the depth bound a deeply nested document leaves the validator through a RangeError instead of a rejection" },
+  "lenient-migrate-chain": { breaks: "missing-migration-detected", why: "a migrate() that silently skips an unregistered step must be caught" },
+  "next-node-id-unchecked": { breaks: "invalid-fixtures-rejected", why: "without the allocation-frontier rule a stale nextNodeId, and a retired id above it, are both accepted — and the next allocation then hands out an id a Figma frame and a provenance record still name" },
+  "document-order-identity": { breaks: "reorder-preserves-ids", why: "a validator that compares a node id with its siblings again makes reordering a page a rejection, which is exactly the contract the owner decision removed" },
+  "allocator-reuses-ids": { breaks: "allocation-uses-next-node-id", why: "an allocator deriving the next id from the highest LIVE id hands out a retired id as soon as the highest-numbered node has been deleted" },
+  "duplicate-ids-unchecked": { breaks: "invalid-fixtures-rejected", why: "without the uniqueness rule two nodes can share an id, and a provenance record or a Figma binding then names both of them" },
+  "import-ignores-retired": { breaks: "import-raises-next-node-id", why: "an import normaliser that counts only live ids leaves the counter below a retired id, so the import itself creates the reuse it was meant to prevent" },
+  "preset-codec-unchecked": { breaks: "invalid-fixtures-rejected", why: "without the codec call a KX1_ envelope carrying an unreadable payload is accepted, and the document then claims a design system no build can load" },
+  "exponential-alternatives": { breaks: "alternatives-short-circuit", why: "an interpreter that keeps evaluating an alternative after it has already failed re-walks the same children once per alternative at every level, so the cost of a legal document grows with its depth rather than with its size" },
+  "inherited-properties-declared": { breaks: "schema-closed-to-inherited-keys", why: "looking a property up with plain indexing finds Object.prototype members, so a document key of \"constructor\" or \"toString\" reads as declared and walks straight past additionalProperties: false" },
+};
+
+if (process.argv.includes("--list-negatives")) {
+  for (const id of Object.keys(NEGATIVES)) console.log(id);
+  process.exit(0);
+}
+const negativeId = process.argv.find((a) => a.startsWith("--negative="))?.slice("--negative=".length);
+if (negativeId && !NEGATIVES[negativeId]) {
+  console.error(`Unknown negative control ${negativeId}. --list-negatives shows them.`);
+  process.exit(2);
+}
+const control = negativeId ?? null;
+
+/**
+ * The two interpreter checks call `validate` directly rather than through `validator()`, so they
+ * need the same convention: an interpreter that throws — which is its contract for a keyword it does
+ * not implement — is a finding about the schema, recorded against interpreter-strict, and never a
+ * crash of the gate. `null` means "the interpreter refused to run", so the caller skips the rest of
+ * its measurement instead of reporting a failure it has no evidence for.
+ */
+const structuralOrNull = (interpreter, doc) => {
+  try {
+    return interpreter(doc, schema);
+  } catch (error) {
+    fail("interpreter-strict", error.message);
+    return null;
+  }
+};
+
+/** True when the interpreter rejects the document AND says so for the expected reason. */
+const structuralRejects = (interpreter, doc, needle) => {
+  const errors = structuralOrNull(interpreter, doc);
+  return errors === null || (errors.length > 0 && errors.some((e) => e.includes(needle)));
+};
+
+const failures = [];
+const passed = [];
+const fail = (check, message) => failures.push(`${check}: ${message}`);
+const ok = (check, message) => passed.push(`${check}: ${message}`);
+
+/* ------------------------------------------------------------------------------- what the checks see */
+
+let schema = JSON.parse(readFileSync(join(ROOT, SCHEMA_PATH), "utf8"));
+if (control === "drop-domain-pattern") delete schema.$defs.domainRef.pattern;
+if (control === "unsupported-keyword") schema.$defs.projectId.formatMinimum = "x";
+if (control === "ref-with-sibling") schema.properties.id = { $ref: "#/$defs/projectId", maxLength: 2 };
+
+let registries = loadRegistries();
+if (control === "empty-block-registry") registries = { ...registries, spaces: { ...registries.spaces, block: { ...registries.spaces.block, ids: new Set() } } };
+
+const maxDepth = control === "unbounded-depth" ? 100000 : undefined;
+let validateDoc = (doc) => validateCreateProject(doc, { schema, registries, ...(maxDepth ? { maxDepth } : {}) });
+if (control === "accept-everything") validateDoc = () => ({ ok: true, errors: [] });
+if (control === "duplicate-ids-unchecked") {
+  const inner = validateDoc;
+  validateDoc = (doc) => {
+    const kept = inner(doc).errors.filter((e) => e.code !== "node-id-duplicate");
+    return { ok: kept.length === 0, errors: kept };
+  };
+}
+if (control === "preset-codec-unchecked") {
+  const inner = validateDoc;
+  validateDoc = (doc) => {
+    const kept = inner(doc).errors.filter((e) => e.code !== "preset-undecodable");
+    return { ok: kept.length === 0, errors: kept };
+  };
+}
+if (control === "next-node-id-unchecked") {
+  const inner = validateDoc;
+  validateDoc = (doc) => {
+    const { errors } = inner(doc);
+    const kept = errors.filter((e) => e.code !== "next-node-id-too-low");
+    return { ok: kept.length === 0, errors: kept };
+  };
+}
+if (control === "document-order-identity") {
+  const inner = validateDoc;
+  validateDoc = (doc) => {
+    const result = inner(doc);
+    const errors = [...result.errors];
+    let highest = 0;
+    const inDocumentOrder = [];
+    for (const page of doc.pages ?? []) walkNodes(page.root, (node) => inDocumentOrder.push(node.id));
+    for (const id of inDocumentOrder) {
+      const n = nodeIdNumber(id);
+      if (n <= highest) errors.push({ code: "node-id-not-monotonic", message: `${id}: not greater than the highest id so far` });
+      highest = Math.max(highest, n);
+    }
+    return { ok: errors.length === 0, errors };
+  };
+}
+/** An interpreter error is a finding about the schema, not a crash of the gate. */
+const validator = (doc) => {
+  try {
+    return validateDoc(doc);
+  } catch (error) {
+    return { ok: false, errors: [{ code: "interpreter-strict", message: error.message }] };
+  }
+};
+
+/** The node-identity contract, injectable so a control can show the checks below have teeth. */
+let allocate = allocateNodeId;
+if (control === "allocator-reuses-ids")
+  allocate = (doc) => {
+    const highestLive = Math.max(...liveNodeIds(doc).map(nodeIdNumber));
+    return { id: formatNodeId(highestLive + 1), doc: { ...doc, nextNodeId: Math.max(doc.nextNodeId, highestLive + 2) } };
+  };
+let normalizeImport = normalizeImportedNodeIds;
+if (control === "import-ignores-retired")
+  normalizeImport = (doc) => {
+    const numbers = liveNodeIds(doc).map(nodeIdNumber);
+    return { ...doc, nextNodeId: Math.max(doc.nextNodeId ?? 0, (numbers.length ? Math.max(...numbers) : 0) + 1) };
+  };
+
+let migrateImpl = migrate;
+if (control === "lenient-migrate" || control === "lenient-migrate-chain") migrateImpl = (doc) => doc;
+
+let expectations = JSON.parse(readFileSync(join(ROOT, INVALID, "EXPECTATIONS.json"), "utf8")).cases;
+if (control === "wrong-expected-code")
+  expectations = { ...expectations, "unknown-block-ref.json": { ...expectations["unknown-block-ref.json"], expect: "route-duplicate" } };
+if (control === "missing-expectation-entry") {
+  expectations = { ...expectations };
+  delete expectations["bare-domain.json"];
+}
+
+const versionDirs = readdirSync(join(ROOT, FIXTURES))
+  .filter((d) => /^v[0-9]+$/.test(d))
+  .sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)));
+
+const readFixture = (rel) => {
+  const raw = readFileSync(join(ROOT, rel), "utf8");
+  if (control === "four-space-fixture" && rel.endsWith("v1/minimal.json"))
+    return { raw: `${JSON.stringify(JSON.parse(raw), null, 4)}\n`, doc: JSON.parse(raw) };
+  const doc = JSON.parse(raw);
+  if (control === "fixture-version-mismatch" && rel.endsWith("v1/minimal.json")) doc.schemaVersion = 2;
+  return { raw, doc };
+};
+
+/* ----------------------------------------------------------------------------------------- checks */
+
+// interpreter-strict — every keyword in the canonical schema is one the interpreter implements. Walked
+// over the whole schema, not over a probe document: `validate` only visits the subschemas a given
+// document reaches, so an unimplemented keyword could otherwise sit unnoticed behind an optional field.
+const unsupported = assertSupported(schema);
+if (unsupported.length) for (const problem of unsupported) fail("interpreter-strict", problem);
+else {
+  try {
+    structural({ schemaVersion: 1 }, schema);
+    ok("interpreter-strict", "every keyword in the canonical schema is one the interpreter implements");
+  } catch (error) {
+    fail("interpreter-strict", error.message);
+  }
+}
+
+// schema-parses — the canonical file is the only structural source, so it has to be loadable and complete.
+if (!existsSync(join(ROOT, SCHEMA_PATH))) fail("schema-parses", `${SCHEMA_PATH} is missing`);
+else if (schema.properties?.schemaVersion?.const !== CURRENT_VERSION)
+  fail("schema-parses", `the schema pins schemaVersion ${JSON.stringify(schema.properties?.schemaVersion?.const)} but migrate.mjs says the current version is ${CURRENT_VERSION}`);
+else ok("schema-parses", `${SCHEMA_PATH} parses and pins schemaVersion ${CURRENT_VERSION}`);
+
+// Every semantic code the validator can emit is documented, so a fixture can name one.
+const undocumented = Object.keys(SEMANTIC_CODES).length === 0;
+if (undocumented) fail("schema-parses", "no semantic codes are documented");
+
+let validCount = 0;
+let refCount = 0;
+for (const dir of versionDirs) {
+  const version = Number(dir.slice(1));
+  for (const file of readdirSync(join(ROOT, FIXTURES, dir)).filter((f) => f.endsWith(".json"))) {
+    const rel = `${FIXTURES}/${dir}/${file}`;
+    const { raw, doc } = readFixture(rel);
+
+    // fixture-canonical — a stored document round-trips byte for byte, which is what makes a diff on
+    // one of these files mean a change of content rather than a change of formatting.
+    if (serialize(doc) !== raw) fail("fixture-canonical", `${rel} is not byte-canonical (two-space JSON, trailing newline)`);
+
+    // fixture-version-matches-dir — a document's version is declared, never inferred from the path.
+    if (doc.schemaVersion !== version)
+      fail("fixture-version-matches-dir", `${rel} declares schemaVersion ${doc.schemaVersion} but sits in ${dir}`);
+
+    // valid-fixtures-accepted, at its own version and again after migration to the current one.
+    const result = validator(doc);
+    if (!result.ok)
+      fail("valid-fixtures-accepted", `${rel} is rejected: ${result.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
+    else validCount += 1;
+
+    // migration-chain — every stored version reaches the current one, and the result still validates.
+    try {
+      const migrated = migrateImpl(doc);
+      const after = validator(migrated);
+      if (!after.ok)
+        fail("migration-chain", `${rel} migrated from v${version} to v${CURRENT_VERSION} no longer validates: ${after.errors.map((e) => e.message).join(" | ")}`);
+    } catch (error) {
+      fail("migration-chain", `${rel}: ${error.message}`);
+    }
+
+    refCount += JSON.stringify(doc).match(/"(domain|block|component):/g)?.length ?? 0;
+  }
+}
+if (!validCount) fail("valid-fixtures-accepted", "no valid fixtures were found at all");
+else ok("valid-fixtures-accepted", `${validCount} stored document(s) accepted across ${versionDirs.join(", ")}; every namespaced reference resolves against the live manifests`);
+if (!failures.some((f) => f.startsWith("fixture-canonical"))) ok("fixture-canonical", "every stored fixture is byte-canonical");
+if (!failures.some((f) => f.startsWith("fixture-version-matches-dir"))) ok("fixture-version-matches-dir", "every fixture declares the version of its directory");
+if (!failures.some((f) => f.startsWith("migration-chain")))
+  ok("migration-chain", CURRENT_VERSION === 1
+    ? "nothing to migrate: CURRENT_VERSION is 1, so no migration has been exercised — the machinery is proved only by its two refusal controls"
+    : `every stored version migrates to v${CURRENT_VERSION} and the result validates`);
+
+// expectations-complete — the expected-invalid corpus and its declarations describe each other exactly.
+const invalidFiles = readdirSync(join(ROOT, INVALID)).filter((f) => f.endsWith(".json") && f !== "EXPECTATIONS.json");
+for (const file of invalidFiles)
+  if (!Object.hasOwn(expectations, file)) fail("expectations-complete", `${INVALID}/${file} has no entry in EXPECTATIONS.json — say which rejection it proves`);
+for (const file of Object.keys(expectations))
+  if (!invalidFiles.includes(file)) fail("expectations-complete", `EXPECTATIONS.json names ${file}, which does not exist`);
+if (!failures.some((f) => f.startsWith("expectations-complete")))
+  ok("expectations-complete", `${invalidFiles.length} expected-invalid fixtures, each with the rejection it proves`);
+
+// invalid-fixtures-rejected — rejected, AND rejected for the declared reason. A document refused for
+// an unrelated reason would leave the rule it claims to cover untested.
+let rejected = 0;
+for (const file of invalidFiles) {
+  const rel = `${INVALID}/${file}`;
+  // Same ownership rule as the interpreter: a file called constructor.json must not find an
+  // inherited member and read as declared. See scripts/create-schema/json-schema.mjs.
+  const expect = Object.hasOwn(expectations, file) ? expectations[file].expect : undefined;
+  const result = validator(JSON.parse(readFileSync(join(ROOT, rel), "utf8")));
+  if (result.ok) {
+    fail("invalid-fixtures-rejected", `${rel} was ACCEPTED; it must be rejected with [${expect}]`);
+    continue;
+  }
+  if (expect && !result.errors.some((e) => e.code === expect)) {
+    fail("invalid-fixtures-rejected", `${rel} was rejected, but not with [${expect}]: ${result.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
+    continue;
+  }
+  rejected += 1;
+}
+if (!failures.some((f) => f.startsWith("invalid-fixtures-rejected")))
+  ok("invalid-fixtures-rejected", `${rejected} documents rejected, each for the reason it declares`);
+
+// document-depth-bounded — both the structural interpreter and the semantic walk recurse, so a deeply
+// nested document must come back as a verdict rather than as a RangeError out of the validator.
+{
+  const deepRoot = { id: "node_1", kind: "slot", name: "page" };
+  let cursor = deepRoot;
+  for (let i = 2; i <= 20000; i += 1) {
+    const next = { id: `node_${i}`, kind: "slot", name: "s" };
+    cursor.children = [next];
+    cursor = next;
+  }
+  const deepDoc = { ...JSON.parse(readFileSync(join(ROOT, `${FIXTURES}/v1/minimal.json`), "utf8")) };
+  deepDoc.pages = [{ ...deepDoc.pages[0], root: deepRoot }];
+  const result = validator(deepDoc);
+  if (result.ok) fail("document-depth-bounded", "a 20 000-deep document was accepted");
+  else if (!result.errors.some((e) => e.code === "document-too-deep"))
+    fail("document-depth-bounded", `a 20 000-deep document was rejected, but not with [document-too-deep]: ${result.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
+  else ok("document-depth-bounded", result.errors[0].message);
+}
+
+/* ------------------------------------------- the interpreter's own two blocking properties */
+
+/**
+ * Both checks below are about the interpreter rather than the document, and neither can be broken by
+ * mutating a schema or wrapping the validator — the defect each one covers lives in the interpreter's
+ * source. So their controls load a variant of that source with the fix textually reverted, executed
+ * from memory as a data: URL. json-schema.mjs imports nothing, which is what makes that possible.
+ * The substitution is asserted to apply exactly once, so a control can never silently become a
+ * second copy of the real interpreter quietly passing the check it is supposed to break.
+ */
+const interpreterSource = readFileSync(join(ROOT, "scripts/create-schema/json-schema.mjs"), "utf8");
+const revertedInterpreter = async (id, from, to) => {
+  const hits = interpreterSource.split(from).length - 1;
+  if (hits !== 1)
+    throw new Error(`negative control ${id} cannot find the line it reverts (${hits} occurrence(s)) — the control is stale, so it would prove nothing`);
+  const patched = interpreterSource.replace(from, to);
+  return await import(`data:text/javascript;base64,${Buffer.from(patched, "utf8").toString("base64")}`);
+};
+
+// alternatives-short-circuit — a legal document's structural cost grows with its SIZE, not with its
+// depth. `oneOf` has to evaluate every alternative, and the node schema's alternatives all begin with
+// a different `kind`, so an interpreter that keeps going after an alternative has already failed
+// re-walks the whole subtree once per alternative at every level. Measured on 738fc4e7, all accepted
+// and all far inside MAX_JSON_DEPTH: a 12-node chain took 2.5 s and a 14-node chain 25.6 s.
+// The evidence is a subschema-evaluation count rather than a duration, so a loaded CI machine cannot
+// flip it either way.
+{
+  const chainDoc = (depth) => {
+    const root = { id: "node_1", kind: "slot", name: "page" };
+    let cursor = root;
+    for (let i = 2; i <= depth; i += 1) {
+      const next = { id: `node_${i}`, kind: "slot", name: "s" };
+      cursor.children = [next];
+      cursor = next;
+    }
+    const base = JSON.parse(readFileSync(join(ROOT, `${FIXTURES}/v1/minimal.json`), "utf8"));
+    return { ...base, nextNodeId: depth + 1, pages: [{ ...base.pages[0], root }] };
+  };
+  const interpreter = control === "exponential-alternatives"
+    ? (await revertedInterpreter(
+        "exponential-alternatives",
+        "const passing = schema.oneOf.filter((sub) => validate(instance, sub, { root, path, failFast: true }).length === 0).length;",
+        "const passing = schema.oneOf.filter((sub) => validate(instance, sub, { root, path, failFast: false }).length === 0).length;",
+      ))
+    : { validate: structural, counters };
+  const cost = (depth) => {
+    interpreter.counters.visits = 0;
+    const errors = structuralOrNull(interpreter.validate, chainDoc(depth));
+    return { visits: interpreter.counters.visits, errors };
+  };
+  const PER_LEVEL_CEILING = 32;
+  const shallow = cost(6);
+  const mid = cost(12);
+  if (shallow.errors === null || mid.errors === null)
+    ok("alternatives-short-circuit", "not measured: the interpreter refused to run this schema at all, which interpreter-strict reports");
+  else if (shallow.errors.length || mid.errors.length)
+    fail("alternatives-short-circuit", `a legal chain of nested slot nodes was rejected: ${[...shallow.errors, ...mid.errors].join(" | ")}`);
+  else {
+    const near = (mid.visits - shallow.visits) / 6;
+    if (near > PER_LEVEL_CEILING)
+      fail("alternatives-short-circuit", `each extra nesting level costs ${near.toFixed(1)} subschema evaluations, over the ceiling of ${PER_LEVEL_CEILING} — the cost is growing with depth, so a failed alternative is still walking its children`);
+    else {
+      // Only once the near pair is linear is it safe to measure a deeper one: under the defect this
+      // second measurement is what would take minutes rather than milliseconds.
+      const deep = cost(24);
+      const far = (deep.visits - mid.visits) / 12;
+      if (deep.errors.length) fail("alternatives-short-circuit", `a legal 24-node chain was rejected: ${deep.errors.join(" | ")}`);
+      else if (far !== near)
+        fail("alternatives-short-circuit", `each level costs ${near} evaluations between depth 6 and 12 but ${far} between 12 and 24 — the per-level cost is not constant`);
+      else ok("alternatives-short-circuit", `a legal document costs a constant ${near} subschema evaluations per nesting level (depth 6 → 24), so a failed oneOf alternative stops before its children`);
+    }
+  }
+}
+
+// schema-closed-to-inherited-keys — `additionalProperties: false` means what it says for EVERY key,
+// including the names of Object.prototype members. A schema is parsed JSON, so a declared property is
+// always an own property; a lookup that also reaches the prototype chain reports "constructor",
+// "toString" and "hasOwnProperty" as declared and validates their values against a function.
+{
+  const interpreter = control === "inherited-properties-declared"
+    ? (await revertedInterpreter(
+        "inherited-properties-declared",
+        "      const sub = own(schema.properties, key);\n      if (sub !== undefined) {",
+        "      const sub = schema.properties?.[key];\n      if (sub) {",
+      )).validate
+    : structural;
+  const minimalRaw = readFileSync(join(ROOT, `${FIXTURES}/v1/minimal.json`), "utf8");
+  /** Parsed out of JSON text, never assigned: `{ __proto__: x }` in source sets the prototype
+   *  instead of creating a key, so an assignment would prove nothing about a stored document. */
+  const withRootKey = (key) => JSON.parse(minimalRaw.replace(/^{/, `{${JSON.stringify(key)}:{"injected":true},`));
+  const inherited = ["constructor", "toString", "hasOwnProperty", "__proto__"];
+  const problems = [];
+
+  for (const key of inherited) {
+    const doc = withRootKey(key);
+    if (!Object.hasOwn(doc, key)) problems.push(`the ${key} case is not even an own property of the parsed document, so it tests nothing`);
+    else if (!structuralRejects(interpreter, doc, `unknown property "${key}"`))
+      problems.push(`a root-level ${JSON.stringify(key)} key was accepted, so additionalProperties: false is bypassed`);
+  }
+
+  // Nested closed objects get the same protection, not just the root.
+  {
+    const doc = JSON.parse(minimalRaw);
+    doc.pages[0].root = JSON.parse(`{"id":"node_1","kind":"slot","name":"page","constructor":{"injected":true}}`);
+    const nested = structuralOrNull(interpreter, doc);
+    if (nested !== null && nested.length === 0)
+      problems.push("a nested node carrying a \"constructor\" key was accepted, so the protection is root-only");
+  }
+
+  // A declared property still validates — the fix must close the prototype chain, not the schema.
+  const declared = structuralOrNull(interpreter, JSON.parse(minimalRaw));
+  if (declared !== null && declared.length !== 0)
+    problems.push("the stored minimal fixture no longer validates, so the ownership rule has closed off legitimately declared properties");
+
+  // The same assumption in the other data-keyed lookup: $ref resolution walks the schema by name.
+  try {
+    interpreter({}, { $ref: "#/$defs/constructor" }, {});
+    problems.push("$ref \"#/$defs/constructor\" resolved instead of throwing, so resolveRef still reads the prototype chain");
+  } catch {
+    /* expected: the ref does not resolve */
+  }
+
+  if (problems.length) for (const problem of problems) fail("schema-closed-to-inherited-keys", problem);
+  else ok("schema-closed-to-inherited-keys", `${inherited.length} Object.prototype key names are rejected as undeclared at the root and inside a nested node, $ref cannot resolve to an inherited member, and the declared corpus still validates`);
+}
+
+/* ------------------------------------------------- the node-identity contract (owner decision) */
+
+/**
+ * Node ids are allocation-ordered. The three checks below are the executable form of that: identity
+ * survives restructuring, an allocation comes from the persisted counter rather than from the
+ * document, and a document arriving from outside has its counter raised past everything ever
+ * allocated. Each has a negative control, because a contract nothing can break is a comment.
+ */
+const idsOf = (doc) => {
+  const ids = [];
+  for (const page of doc.pages ?? []) walkNodes(page.root, (node) => ids.push(node.id));
+  return ids.sort();
+};
+/**
+ * Restructure a page without touching anything but order. Two permutations, because a reversal is a
+ * special case and the contract is about arbitrary order: `reverse`, and `rotate`, which moves the
+ * last child to the front at every depth.
+ */
+const PERMUTATIONS = {
+  reverse: (children) => [...children].reverse(),
+  rotate: (children) => (children.length > 1 ? [children.at(-1), ...children.slice(0, -1)] : [...children]),
+};
+const permuteDeep = (node, permute) => ({
+  ...node,
+  ...(node.children ? { children: permute(node.children).map((child) => permuteDeep(child, permute)) } : {}),
+});
+
+// reorder-preserves-ids — reordering, moving and grouping must never change an id, and must never
+// turn an accepted document into a rejected one. This is what the removed document-order comparison
+// used to break; the control re-adds it to show the check would catch its return.
+{
+  const subjects = [`${FIXTURES}/v1/commerce-storefront.json`, `${FIXTURES}/v1/reordered-identity.json`];
+  let cases = 0;
+  for (const subject of subjects) {
+    const before = readFixture(subject).doc;
+    const beforeIds = idsOf(before).join(",");
+    for (const [name, permute] of Object.entries(PERMUTATIONS)) {
+      const after = { ...before, pages: before.pages.map((page) => ({ ...page, root: permuteDeep(page.root, permute) })) };
+      const afterIds = idsOf(after).join(",");
+      const result = validator(after);
+      if (beforeIds !== afterIds) {
+        fail("reorder-preserves-ids", `${name} on ${subject} changed the id set: ${beforeIds} -> ${afterIds}`);
+        continue;
+      }
+      if (!result.ok) {
+        fail("reorder-preserves-ids", `${subject} is accepted, but the same document under ${name} is rejected: ${result.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
+        continue;
+      }
+      cases += 1;
+    }
+  }
+  if (!failures.some((f) => f.startsWith("reorder-preserves-ids")))
+    ok("reorder-preserves-ids", `${cases} reorderings (${Object.keys(PERMUTATIONS).join(", ")}, applied at every depth) across ${subjects.length} fixtures: the same ids, still accepted — document order carries no identity`);
+}
+
+// allocation-uses-next-node-id — an allocation takes the counter's value, never a value derived from
+// the document, and the document it returns still validates. The control derives it from the highest
+// live id, which is the mistake this check exists to catch.
+{
+  const subject = `${FIXTURES}/v1/reordered-identity.json`;
+  const base = readFixture(subject).doc;
+  const retired = new Set(base.retiredNodeIds ?? []);
+  const expected = [base.nextNodeId, base.nextNodeId + 1].map(formatNodeId);
+  const handedOut = [];
+  let doc = base;
+  for (const _ of expected) {
+    const step = allocate(doc);
+    handedOut.push(step.id);
+    // Attach it, so the document that must still validate is one the new id actually lives in.
+    const [page] = step.doc.pages;
+    doc = {
+      ...step.doc,
+      pages: [{ ...page, root: { ...page.root, children: [...(page.root.children ?? []), { id: step.id, kind: "slot", name: "appended" }] } }, ...step.doc.pages.slice(1)],
+    };
+  }
+  const reused = handedOut.filter((id) => retired.has(id) || idsOf(base).includes(id));
+  const result = validator(doc);
+  if (reused.length) fail("allocation-uses-next-node-id", `allocation handed out ${reused.join(", ")}, which ${subject} has already used or retired`);
+  else if (handedOut.join(",") !== expected.join(","))
+    fail("allocation-uses-next-node-id", `two allocations from nextNodeId ${base.nextNodeId} gave ${handedOut.join(", ")}, expected ${expected.join(", ")}`);
+  else if (doc.nextNodeId !== base.nextNodeId + 2)
+    fail("allocation-uses-next-node-id", `the counter moved from ${base.nextNodeId} to ${doc.nextNodeId} across two allocations`);
+  else if (!result.ok)
+    fail("allocation-uses-next-node-id", `the document after two allocations no longer validates: ${result.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
+  else ok("allocation-uses-next-node-id", `two allocations from ${subject} gave ${handedOut.join(", ")} (nextNodeId ${base.nextNodeId} -> ${doc.nextNodeId}); neither id was live or retired, and the result validates`);
+}
+
+// import-raises-next-node-id — a document from an import or a migration has its counter raised above
+// every id ever allocated, live or retired, and is never lowered. The control counts only live ids.
+{
+  const subject = `${FIXTURES}/v1/reordered-identity.json`;
+  const base = readFixture(subject).doc;
+  const highestEver = Math.max(...[...idsOf(base), ...(base.retiredNodeIds ?? [])].map(nodeIdNumber));
+
+  const stale = { ...base, nextNodeId: 2 };
+  const raised = normalizeImport(stale);
+  const noCounter = { ...base };
+  delete noCounter.nextNodeId;
+  const fromNothing = normalizeImport(noCounter);
+  const alreadyHigher = normalizeImport({ ...base, nextNodeId: highestEver + 500 });
+
+  const staleResult = validator(raised);
+  const idsBefore = idsOf(base).join(",");
+  const idsAfter = idsOf(raised).join(",");
+  const retiredBefore = [...(base.retiredNodeIds ?? [])].sort().join(",");
+  const retiredAfter = [...(raised.retiredNodeIds ?? [])].sort().join(",");
+  if (idsBefore !== idsAfter || retiredBefore !== retiredAfter)
+    fail("import-raises-next-node-id", `normalising renumbered a node: ids ${idsBefore} -> ${idsAfter}, retired ${retiredBefore} -> ${retiredAfter}. An import raises the counter; it never repairs the document by renaming nodes`);
+  else if (raised.nextNodeId <= highestEver)
+    fail("import-raises-next-node-id", `a stale counter was raised only to ${raised.nextNodeId}, which is not above the highest id ever allocated (node_${highestEver})`);
+  else if (!staleResult.ok)
+    fail("import-raises-next-node-id", `the normalised document does not validate: ${staleResult.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
+  else if (fromNothing.nextNodeId !== raised.nextNodeId)
+    fail("import-raises-next-node-id", `a document with no counter normalised to ${fromNothing.nextNodeId}, a stale one to ${raised.nextNodeId}; the floor must not depend on what was there`);
+  else if (alreadyHigher.nextNodeId !== highestEver + 500)
+    fail("import-raises-next-node-id", `normalising lowered a counter that was already higher: ${highestEver + 500} -> ${alreadyHigher.nextNodeId}`);
+  else ok("import-raises-next-node-id", `an imported ${subject} with a stale or absent counter is raised to ${raised.nextNodeId}, above the retired node_${highestEver}; every existing id is unchanged, and a higher counter is left alone`);
+}
+
+// read-only-above-current — a document from a newer deployment opens read-only, never downgraded.
+try {
+  migrateImpl({ ...JSON.parse(readFileSync(join(ROOT, `${FIXTURES}/v1/minimal.json`), "utf8")), schemaVersion: CURRENT_VERSION + 1 });
+  fail("read-only-above-current", `a schemaVersion ${CURRENT_VERSION + 1} document was migrated rather than refused`);
+} catch (error) {
+  if (error instanceof ReadOnlyDocumentError) ok("read-only-above-current", error.message);
+  else fail("read-only-above-current", `refused with the wrong error: ${error.message}`);
+}
+
+// missing-migration-detected — a gap in the chain is an error, not a skipped step.
+try {
+  migrateImpl({ schemaVersion: 1 }, { current: 3, migrations: {} });
+  fail("missing-migration-detected", "a chain with no registered step was walked without complaint");
+} catch (error) {
+  if (error instanceof MissingMigrationError) ok("missing-migration-detected", error.message);
+  else fail("missing-migration-detected", `refused with the wrong error: ${error.message}`);
+}
+
+/* ----------------------------------------------------------------------------------------- report */
+
+if (control) {
+  const expected = NEGATIVES[control].breaks;
+  const broke = failures.some((f) => f.startsWith(`${expected}:`));
+  if (!broke) {
+    console.error(`FAIL: negative control ${control} did not break ${expected}. The gate reported: ${failures.length ? failures.join(" | ") : "no failures at all"}`);
+    process.exit(1);
+  }
+  // One broken property can legitimately surface in more than one check — a document whose version
+  // is wrong is also no longer byte-canonical. The control's contract is that it breaks the check it
+  // names; collateral is printed so it is declared rather than silent.
+  const collateral = failures.filter((f) => !f.startsWith(`${expected}:`));
+  console.log(`PASS: negative control ${control} breaks ${expected} as expected — ${NEGATIVES[control].why}`);
+  if (collateral.length) console.log(`       collateral (expected, one property serves several checks): ${collateral.map((f) => f.split(":")[0]).join(", ")}`);
+  process.exit(0);
+}
+
+if (failures.length) {
+  for (const f of failures) console.error(`  ✗ ${f}`);
+  console.error(`check:create-schema — ${failures.length} failure(s)`);
+  process.exit(1);
+}
+for (const p of passed) console.log(`  ✓ ${p}`);
+console.log(`check:create-schema ok — ${passed.length} checks, ${refCount} namespaced references resolved`);

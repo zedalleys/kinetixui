@@ -159,6 +159,12 @@ export const COMPOSE_COLOR_FIELDS: readonly (readonly [field: string, token: str
   ["popoverForeground", "popover-foreground"],
   ["onInfoContainer", "on-info-container"],
   ["scrim", "scrim"],
+  // After `scrim`, because that is where they are in the Kotlin data class: a new parameter goes in
+  // before `chart` and after everything that already existed, or `componentN()` destructuring and
+  // positional binding shift under consumers. `compose.test.ts` asserts the order against the class.
+  ["onSuccessContainer", "on-success-container"],
+  ["onWarningContainer", "on-warning-container"],
+  ["onDestructiveContainer", "on-destructive-container"],
 ] as const;
 
 /** The chart stops `KinetixColors.chart` carries, in series order. */
