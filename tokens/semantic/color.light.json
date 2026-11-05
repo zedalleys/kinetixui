@@ -274,6 +274,21 @@
       "$type": "color",
       "$description": "text and icons on a tinted info surface (`info` at 10% over the page) — Banner and Inform information, on every platform. `info` itself is 4.19:1 on its own 10% tint; this is 6.47:1. Web exposes it as `text-info-on-container`; SwiftUI, Compose and Flutter as `onInfoContainer`."
     },
+    "on-success-container": {
+      "$value": "{color.green.700}",
+      "$type": "color",
+      "$description": "text and icons on a tinted success surface (`success` at 15% over the page) — Banner, Inform and ResultState success, on every platform. `success` itself is 4.20:1 on its own 15% tint over `muted` (a notice inside a muted panel, the tightest surface it ships on) and fails AA there; this is 6.26:1 at the same worst case. Web exposes it as `text-success-on-container`; SwiftUI, Compose and Flutter as `onSuccessContainer`. The same hex as the Figma `semantic.on-success-container`, but this is the per-mode role — the Figma block is light-only, so it cannot be used directly."
+    },
+    "on-warning-container": {
+      "$value": "{color.amber.800}",
+      "$type": "color",
+      "$description": "text and icons on a tinted warning surface (`warning` at 15%). Light: the same step as `warning`, which already clears AA at its worst case (4.63:1 over `muted`). It exists as its own role so all four statuses are addressed the same way and a theme that moves `warning` cannot silently take the on-container text with it."
+    },
+    "on-destructive-container": {
+      "$value": "{color.red.500}",
+      "$type": "color",
+      "$description": "text and icons on a tinted error surface (`destructive` at 10%). Light: the same step as `destructive`, which clears AA at its worst case (4.71:1 over `muted`). Named for the `destructive` role it sits on, not `error` — the two names are reconciled separately."
+    },
     "brand": {
       "$value": "{color.blue.500}",
       "$type": "color",

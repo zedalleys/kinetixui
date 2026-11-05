@@ -160,11 +160,19 @@ describe("cohort isolation", () => {
     for (const e of seen) expect(e.properties.kx_traffic_type, e.event).toBe("diagnostic");
   });
 
-  it("10. an internal browser stays internal in a new tab with a tagged arrival", async () => {
+  it("10. an internal session stays internal across a tagged arrival within the session", async () => {
     await load("/?kx_traffic=internal");
-    window.sessionStorage.clear(); // a new tab of the same browser
     await load(LI_001);
     expect(tuple(lastPageview())).toEqual({ ...LI_001_EXPECTED, kx_traffic_type: "internal" });
+  });
+
+  it("10a. a NEW session does not inherit the internal mark, so its arrival is measured (IA-5.21 4.1)", async () => {
+    await load("/?kx_traffic=internal");
+    window.sessionStorage.clear(); // a new browser session: session-scoped, so the mark is gone
+    await load(LI_001);
+    // the campaign arrival is still attributed in full — it simply is not excluded any more
+    expect(tuple(lastPageview())).toEqual(LI_001_EXPECTED);
+    expect(lastPageview()!.properties).not.toHaveProperty("kx_traffic_type");
   });
 
   it("10b. genuine audience traffic carries no traffic type", async () => {

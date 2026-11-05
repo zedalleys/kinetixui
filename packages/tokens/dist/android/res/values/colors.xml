@@ -181,6 +181,9 @@
   <color name="color_info_foreground">#fff0f7ff</color>
   <color name="color_scrim">#66000000</color>
   <color name="color_on_info_container">#ff395a70</color>
+  <color name="color_on_success_container">#ff465245</color>
+  <color name="color_on_warning_container">#ff7f5b21</color>
+  <color name="color_on_destructive_container">#ffc60a0a</color>
   <color name="color_brand">#ff1b3c53</color>
   <color name="color_brand_foreground">#fff0f7ff</color>
   <color name="color_action">#ff1d4ed8</color>

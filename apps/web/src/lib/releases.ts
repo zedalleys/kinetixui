@@ -66,6 +66,213 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.27.0",
+    summary: "KinetixUI 0.27.0 turns React's Rating into a real radio group, stops Metric's value and trend from colliding, and adds four rem-based responsive variants to the shared Tailwind preset. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together on the 0.27.0 line. @kinetixui/angular publishes 0.26.2 on its own line, carrying the same Metric fix and a tokens peer range widened to >=0.24.0 <0.28.0; it remains Preview. @kinetixui/iot stays on 0.5.0.",
+    breaking: [],
+    changes: [
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "Rating is a radio group of real radios",
+        body: "Rating declared role=radiogroup but held five independent aria-pressed buttons, so nothing was ever checked, no position was announced and it was five tab stops with no arrow keys. The stars are now native radio inputs in one group per instance, named \"1 star\" to \"5 stars\"; the roving tab stop, arrow movement, RTL mirroring and the \"3 of 5\" announcement come from the browser, and Home and End choose the first and last. readOnly is unchanged in appearance and is exposed as an image named \"Rated 3 out of 5\". No props changed. The markup inside the group changed from a button per star to a label with a visually hidden radio, so a stylesheet or test that targets `.rating button` may need to target the label or the star instead. Keyboard behaviour is verified through user-event's emulation of radio-group navigation, not a real browser.",
+        href: "/docs/components/rating"
+      },
+      {
+        kind: "fixed",
+        area: "components",
+        title: "Metric's value and trend wrap instead of colliding",
+        body: "The value and trend row now wraps rather than compressing: the figure is never broken mid-number, a trend too wide to sit beside the value moves to its own line, and the arrow and figure wrap last. In a browser the pair had overflowed its card by 14.1px at 1280px, and at 320px with 200% text two cards overlapped. After the change the sweep shows no overflow. MetricProps is unchanged; a data-kx-metric-pair marker is added as a measurement handle, not a styling hook.",
+        href: "/docs/components/metric"
+      },
+      {
+        kind: "new",
+        area: [
+          "components",
+          "tokens"
+        ],
+        title: "Four rem-based responsive variants in the Tailwind preset",
+        body: "The preset exported as ./tailwind.config now registers sm-rem (40rem), md-rem (48rem), lg-rem (64rem) and xl-rem (80rem) as variants, so they follow the reader's text size. md-rem is new; the other three previously existed only in the website's own config, so a consumer's sm-rem: utility generated no rule. Nothing is removed or renamed and no existing utility changes the widths it applies at. They are variants rather than theme.screens entries because Tailwind 3.4 silently emits no min-* or max-* rules when screens mix units."
+      },
+      {
+        kind: "fixed",
+        area: "platforms",
+        title: "kx-metric wraps, and the tokens peer range widens",
+        body: "@kinetixui/angular 0.26.2 applies the same wrapping contract to .kx-metric using the existing spacing tokens; no selector or public class name changed. Its @kinetixui/tokens peer range is >=0.24.0 <0.28.0, so it keeps supporting tokens 0.24 to 0.27. The Angular change was verified by the package's stylesheet gates, not by a rendered Angular measurement. Angular remains Preview."
+      },
+      {
+        kind: "fixed",
+        title: "Documentation site layout corrections",
+        body: "The blocks gallery now takes its two-column step at 420px, which previously emitted no rule in the built site, and the homepage spotlight and preview toolbar spacing were corrected. These change the website only and are not published package API."
+      },
+      {
+        kind: "improved",
+        area: "release",
+        title: "Core moves together on the 0.27.0 release line",
+        body: "@kinetixui/ui carries the changes. @kinetixui/tokens and @kinetixui/cli move with it because the three packages are one fixed Changesets cohort. Angular and IoT continue on their independent release lines."
+      }
+    ],
+    limitations: [
+      "Rating's keyboard behaviour is verified through user-event emulation, not a real browser keyboard session.",
+      "Angular remains Preview; this release does not graduate it, and its Metric fix was not measured in a rendered Angular browser.",
+      "SwiftUI, Jetpack Compose and Flutter remain source-checkout distributions rather than packages published to their platform registries.",
+      "IoT remains a React-only module. @kinetixui/iot is not published by this release."
+    ],
+    date: "2026-10-31"
+  },
+  {
+    version: "0.26.1",
+    summary: "KinetixUI 0.26.1 is a single accessibility fix. DatePicker rendered its visible label and helper text as elements nothing referenced, so the field's accessible name was \"Select date\" or the formatted date and never said which field it was, and the hint or error message was sighted-only. The trigger's accessible name is now the label followed by the shown date, and helperText is its accessible description. No API changed: the same props, read correctly. A new check:label-association gate runs in CI so no component may render a <label> that labels nothing, and every component rendering a visible label prop must be proven by a test to put it in its control's accessible name. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together to 0.26.1; @kinetixui/tokens and @kinetixui/cli carry no change of their own. @kinetixui/angular is unchanged on its own line at 0.26.1 and remains Preview, and @kinetixui/iot stays on 0.5.0 while its device-integration work awaits real-device validation.",
+    breaking: [],
+    changes: [
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "A date field's visible label now names the field",
+        body: "DatePicker's label was a bare <label> with no htmlFor, beside a trigger that carried no naming attribute, so the label was associated with nothing: the accessible name was \"Select date\", or the formatted date once one was chosen, and a screen reader never said which field it was. helperText had the same shape — visible, referenced by nothing — so a hint and an error message were sighted-only. The trigger's accessible name is now the label followed by the shown date, helperText is its accessible description, and the open calendar is named by the same label. DateRangeInput and GuestPicker already state this contract; this is their pattern rather than a new one. The label renders as a <span> the trigger references rather than as a <label for>: a <button> is labelable, so a <label> would work, but the name computation prefers a label element over the contents, which would drop the chosen date out of the name, and clicking the label would open the calendar. Nothing is added for a field with no label and no helper text — no attribute, and no reference to an element that does not exist."
+      },
+      {
+        kind: "improved",
+        area: "release",
+        title: "CI gates that a visible label names its field",
+        body: "check:label-association joins the CI run: no component may render a <label> that labels nothing, and every component rendering a visible label prop must be proven by a test to put that label in its control's accessible name. axe cannot see this class of defect, because a trigger carrying the wrong accessible name still has one — the control passes every rule while telling a screen-reader user the wrong thing. The gate is a repository check, not a runtime behaviour change, so it affects no published artifact."
+      }
+    ],
+    limitations: [
+      "The fix is React-only. DatePicker ships on four platforms, not five — @kinetixui/angular has no date picker. The other three were examined from source and recorded rather than fixed: SwiftUI is already correct, because it wraps the system DatePicker(label, selection:) and the platform owns the association; Compose has the same defect React had, KinetixLabel being a sibling Text with no semantic relationship to the anchor button; Flutter is a GestureDetector with no Semantics wrapper at all and no label parameter to associate, so its API has to change before its accessibility can. Each is a change to a shipped native component and is tracked as its own slice. Nothing was run on a device or a simulator, so no native evidence tier moves.",
+      "@kinetixui/tokens and @kinetixui/cli are published at 0.26.1 by the fixed core cohort and carry no change of their own.",
+      "@kinetixui/angular remains Preview. Its graduation criteria are tracked separately and this release does not move them."
+    ],
+    date: "2026-10-28"
+  },
+  {
+    version: "0.26.0",
+    summary: "KinetixUI 0.26.0 is an accessibility release. Status notices no longer fail WCAG AA when they sit on a muted surface, which required three new theme-aware foreground roles in @kinetixui/tokens and moved Banner and Inform onto them on all five platforms, with ResultState on React. @kinetixui/angular publishes 0.26.1 on its own line, where a disabled <a kxButton> is no longer operable from the keyboard or by middle-click, and its @kinetixui/tokens peer range widens to >=0.24.0 <0.27.0 so it accepts these tokens while still supporting the older ones. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together to 0.26.0; @kinetixui/cli carries no change of its own in this release. @kinetixui/angular remains Preview and @kinetixui/iot stays on 0.5.0 while its device-integration work awaits real-device validation.",
+    breaking: [],
+    changes: [
+      {
+        kind: "accessibility",
+        area: [
+          "components",
+          "tokens"
+        ],
+        title: "Status notices clear AA on a muted surface",
+        body: "Banner, Inform and ResultState drew their success, warning and error text in the status colour on that colour's own tint. Measured inside a muted panel, the tightest surface these ship on, success was 4.20:1 in light, success 4.4982:1 in dark and error 4.28:1 in dark — all below AA for body text. The information variant was already correct because it had a dedicated foreground role; the other three had simply never been measured there. They now draw on three new roles and clear AA at 6.26:1, 6.03:1 and 6.38:1 at the same worst case. Tints, borders, icons, layout and API are unchanged, and the information and action variants are byte-identical."
+      },
+      {
+        kind: "new",
+        area: "tokens",
+        title: "Theme-aware foreground roles for success, warning and error containers",
+        body: "--on-success-container, --on-warning-container and --on-destructive-container join the existing --on-info-container, tuned against --muted as the worst case in both light and dark. Web exposes them as text-success-on-container, text-warning-on-container and text-destructive-on-container; SwiftUI, Compose and Flutter as onSuccessContainer, onWarningContainer and onDestructiveContainer. Warning in both modes and error in light keep the value they had, which already cleared AA, but gain a role of their own so a theme that moves --warning cannot silently take the notice text with it. A colour set built before these roles existed falls back to the plain status role on every native platform, which is what those views drew before."
+      },
+      {
+        kind: "accessibility",
+        area: "platforms",
+        title: "A disabled <a kxButton> is inert to the keyboard and to middle-click",
+        body: "aria-disabled on the anchor form was enforced by the stylesheet alone, with pointer-events: none. That suppressed the pointer and nothing else: the anchor stayed in the tab order and Enter still navigated, so the control was inert for a mouse and live for a keyboard. KxButton now guards activation itself — click, auxclick, Enter and Space are cancelled while aria-disabled is true, read at event time, so href can stay and no second input is needed. The control stays focusable on purpose, which is the difference between aria-disabled and disabled: it remains discoverable, so a keyboard user reaches it and hears why it is unavailable instead of finding a gap. pointer-events: none gives way to cursor: not-allowed so a pointer user can hover it and read the cursor. The <button> form is untouched, since the browser disables it and never dispatches these events."
+      },
+      {
+        kind: "improved",
+        area: "platforms",
+        title: "@kinetixui/angular accepts the 0.26 tokens without dropping the 0.24 and 0.25 lines",
+        body: "The @kinetixui/tokens peer range's upper bound moves to <0.27.0 so this package accepts the tokens that define the new container roles. The lower bound stays at >=0.24.0: each of the three reads carries a CSS fallback to the plain status role, so on the older tokens the notices keep the colour they had before this change rather than inheriting an arbitrary ancestor colour. Nothing installed today changes behaviour, and the wider range admits a newer tokens without narrowing what consumers may install."
+      }
+    ],
+    limitations: [
+      "@kinetixui/angular remains Preview. Its graduation criteria are tracked separately and this release does not move them.",
+      "The three native platforms receive the new token roles as source-level wiring with consumption assertions. Nothing in this release was rendered on a device or simulator, so no native evidence tier moves.",
+      "@kinetixui/cli is published at 0.26.0 by the fixed core cohort and carries no change of its own."
+    ],
+    date: "2026-10-25"
+  },
+  {
+    version: "0.25.0",
+    summary: "KinetixUI 0.25.0 expands the React library with transactional and booking foundations, restyles SegmentedControl and Tabs, puts the selection controls on the motion tokens, and fixes range and disabled Sliders along with several accessibility defects. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together on the 0.25.0 line. @kinetixui/angular publishes 0.26.0 on its own line and remains Preview; @kinetixui/iot stays on 0.5.0 while its device-integration work awaits real-device validation.",
+    breaking: [],
+    changes: [
+      {
+        kind: "new",
+        area: "components",
+        title: "Transactional foundations for business workflows",
+        body: "React adds beta ResultState, ReferenceCode, PriceBreakdown and PassCard foundations for outcomes, references, totals and passes/tickets. They compose existing primitives, keep formatted values supplied by the application, and avoid inventing payment, barcode or document-generation behavior. Native platforms currently have composition guidance; Angular is planned."
+      },
+      {
+        kind: "new",
+        area: "components",
+        title: "Money, status and booking fields",
+        body: "React adds beta AmountDisplay, GuestPicker, CountrySelect, PhoneInput, DateRangeInput, TimeSlotPicker and AddressFields. Timeline gains optional per-item statuses, NumberInput gets localisable stepper labels and keeps bound steppers focusable with aria-disabled, and Calendar uses logical classes with mirrored navigation inside KinetixDirectionProvider. Native platforms currently have composition guidance; Angular is planned."
+      },
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "Calendar, DateRangeInput and TreeView say what they show",
+        body: "Calendar day buttons now include the visible day number in their accessible name before the full date, so DateRangeInput inherits WCAG 2.5.3 Label in Name support. TreeItem now owns its child group as a sibling instead of including the whole subtree in its visible text; keyboard behavior is preserved and clicking a nested item no longer also selects its parent."
+      },
+      {
+        kind: "improved",
+        area: "components",
+        title: "Tabs, filters and mode controls are easier to reuse",
+        body: "Tabs use text-first line navigation with a base rail and active underline, SegmentedControl keeps its enclosed mode treatment and can reflow, and Toggle gains a pill variant plus a decorative leadingIcon slot for filter chips. Reduced-motion behavior is preserved."
+      },
+      {
+        kind: "improved",
+        area: "components",
+        title: "SegmentedControl is filled, and the Tabs indicator travels",
+        body: "The segmented track is now a soft grey well with a subtle edge, and the chosen segment is filled with foreground - near-black in light, near-white in dark - with background text. Tabs draw one 2px indicator per list that travels to the chosen tab: its leading edge moves first and the trailing edge follows, so it stretches across and settles. It follows the list direction and orientation, snaps on resize or text-size changes, and jumps straight to the new tab under reduced motion. Under forced colours both controls use the system SelectedItem pair, so the choice stays marked. No API changes.",
+        href: "/docs/components/tabs"
+      },
+      {
+        kind: "fixed",
+        area: "components",
+        title: "Range and disabled Sliders work",
+        body: "Slider draws one thumb per value. A range such as defaultValue={[20, 80]} used to render a single thumb, so every value after the first had no handle to drag, focus or read; with more than one value the root is now a named role=group and each thumb keeps its position name. A disabled Slider is announced and drawn as disabled: the thumb carries aria-disabled, which Radix put only on the role-less root. Single-value Sliders are unchanged.",
+        href: "/docs/components/slider"
+      },
+      {
+        kind: "improved",
+        area: [
+          "components",
+          "tokens"
+        ],
+        title: "One shape for every text-entry field",
+        body: "GuestPicker, CountrySelect, DateRangeInput, NumberInput, PhoneInput and the end slots of InputOTP were rounded at 8px while Input, Textarea and Select were at 4px. They all take --radius-field now, and the other fields read the role token too, so a theme that overrides --radius-field reshapes every field. The picker triggers are 46px like Input. DatePicker trigger is a field rather than an outline button, with a 3:1 edge where the button had 2.2:1, and MarkdownEditor draws a focus ring it previously had none of. Angular follows: kx-input focuses with the action edge and is 46px.",
+        href: "/docs/tokens"
+      },
+      {
+        kind: "improved",
+        area: "components",
+        title: "Selection controls move on the motion tokens",
+        body: "Checkbox, RadioGroup, Toggle, ToggleGroup and Switch now run selection and pointer feedback on the motion tokens rather than untokenised Tailwind timings: selection over --duration-fast (200ms) where it belongs, a hover and press state layer on --duration-instant (100ms), and Switch left on instant. Under forced colours the chosen item uses the system Highlight pair and the Switch thumb draws in CanvasText, where on and off used to look identical. An uncontrolled Checkbox with defaultChecked=\"indeterminate\" now draws the dash instead of a tick. Semantics change at once, reduced motion lands on the same end state without moving, and no API changed. This release covers React only.",
+        href: "/docs/foundations#motion"
+      },
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "Code and diff scroll regions are keyboard reachable",
+        body: "At a phone width a long line made CodeBlock and DiffViewer scrollable regions no keyboard could reach (axe scrollable-region-focusable, WCAG 2.1.1). Each now takes a tab stop only while it can actually scroll, with a visible focus ring, following the contract Table already held. A CodeBlock showing a file is named by that file. No new props or exports."
+      },
+      {
+        kind: "improved",
+        area: "components",
+        title: "Sheet and CommandDialog cover logical navigation and command-palette needs",
+        body: "Sheet adds logical start/end sides, scrolling for tall side panels and closeLabel. CommandDialog adds a required title, optional description, a single-element trigger for focus return, commandProps for the inner Command and stable top anchoring while filtering; CommandProps is exported."
+      },
+      {
+        kind: "improved",
+        area: "release",
+        title: "Core moves together on the 0.25.0 release line",
+        body: "@kinetixui/ui carries the feature and accessibility changes. @kinetixui/tokens and @kinetixui/cli move with it because the three packages are one fixed Changesets cohort. Angular and IoT continue on their independent release lines."
+      }
+    ],
+    limitations: [
+      "Angular remains Preview; this release does not graduate it. It carries 80 of the 109 catalogue entries, and 6 of 13 graduation criteria are still open.",
+      "The selection-control motion work in this release is React only. Angular and the native platforms do not yet carry the same reduced-motion and forced-colours behaviour.",
+      "The new business components are beta on React. Native platforms have composition guidance rather than ports for these additions, and Angular implementation is planned.",
+      "SwiftUI, Jetpack Compose and Flutter remain source-checkout distributions rather than packages published to their platform registries.",
+      "IoT remains a React-only module and is not a sixth core platform. @kinetixui/iot is not published by this release."
+    ],
+    date: "2026-10-23"
+  },
+  {
     version: "0.24.0",
     date: "2026-10-06",
     summary:

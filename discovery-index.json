@@ -2760,6 +2760,196 @@
           "0 shipping catalogue components or blocks, fewer than 5"
         ]
       }
+    },
+    {
+      "id": "education",
+      "title": "Education & learning",
+      "summary": "Courses, lessons, enrolment, progress, assessment and cohorts.",
+      "page": false,
+      "counts": {
+        "existing": 5,
+        "partial": 11,
+        "planned": 11
+      },
+      "components": [
+        "address-fields",
+        "calendar",
+        "country-select",
+        "data-grid",
+        "data-table",
+        "date-range-input",
+        "field",
+        "file-upload",
+        "form",
+        "input-group",
+        "input-otp",
+        "message-bubble",
+        "metric",
+        "multi-select",
+        "number-input",
+        "password-input",
+        "phone-input",
+        "stepper",
+        "tag"
+      ],
+      "blocks": [
+        "account-security",
+        "comment-box",
+        "create-account",
+        "dashboard-tabs",
+        "filter-panel",
+        "sign-in",
+        "stat-cards",
+        "table-toolbar"
+      ],
+      "iot": [],
+      "capabilities": [
+        "data-analytics",
+        "identity-security",
+        "workflow",
+        "documents",
+        "forms",
+        "communication"
+      ],
+      "workflows": [],
+      "rows": [
+        "DataGrid",
+        "DataTable",
+        "QueryBuilder",
+        "FilterBar",
+        "MetricCard",
+        "AuthShell / AuthCard",
+        "OTPInput",
+        "PasswordStrength / PasswordRequirement",
+        "RecoveryCodeList",
+        "MFA setup",
+        "WorkflowStepper",
+        "ApprovalFlow",
+        "TaskQueue",
+        "SLAIndicator",
+        "WorkflowHistory",
+        "FileUploader",
+        "FileManager",
+        "DocumentViewer shell",
+        "VersionHistory",
+        "MessageBubble / Conversation / Thread",
+        "CommentComposer / CommentThread",
+        "MentionInput",
+        "PresenceIndicator / ReactionPicker",
+        "FormSection / FieldArray / RepeatableFieldGroup / ConditionalField / DependentSelect",
+        "AddressForm / PhoneInput / CountrySelect / TimezoneSelect",
+        "DateRangeInput / DateTimeRangeInput",
+        "DurationInput / UnitInput"
+      ],
+      "publication": {
+        "eligible": false,
+        "unmet": [
+          "has no workflow"
+        ]
+      }
+    },
+    {
+      "id": "agriculture",
+      "title": "Agriculture & agritech",
+      "summary": "Fields and zones, crop cycles, soil and weather telemetry, irrigation and yield.",
+      "page": false,
+      "counts": {
+        "existing": 11,
+        "partial": 4,
+        "planned": 11
+      },
+      "components": [
+        "badge",
+        "banner",
+        "data-grid",
+        "data-table",
+        "metric",
+        "multi-select",
+        "tag"
+      ],
+      "blocks": [
+        "dashboard-tabs",
+        "filter-panel",
+        "stat-cards",
+        "table-toolbar"
+      ],
+      "iot": [
+        "ActivityTimeline",
+        "AlertCard",
+        "AlertList",
+        "CameraDeviceCard",
+        "CommandFeedback",
+        "CommandLifecycle",
+        "CommandStatus",
+        "DeviceActivity",
+        "DeviceBattery",
+        "DeviceCard",
+        "DeviceColorControl",
+        "DeviceConnection",
+        "DeviceControlCard",
+        "DeviceGroupCard",
+        "DeviceLevelControl",
+        "DeviceListItem",
+        "DeviceLockControl",
+        "DeviceMediaControl",
+        "DeviceModeControl",
+        "DevicePowerControl",
+        "DeviceSetpointControl",
+        "DeviceStateSummary",
+        "EnergySummary",
+        "FirmwareStatus",
+        "PairingFailure",
+        "PairingMethodPicker",
+        "PairingStepper",
+        "RoutineCard",
+        "SpaceBreadcrumb",
+        "SpaceRollup",
+        "TelemetryCard",
+        "TelemetryGrid",
+        "TelemetryMetric",
+        "TelemetryTrend"
+      ],
+      "capabilities": [
+        "data-analytics",
+        "spatial",
+        "connected-devices",
+        "observability"
+      ],
+      "workflows": [],
+      "rows": [
+        "DataGrid",
+        "DataTable",
+        "QueryBuilder",
+        "FilterBar",
+        "MetricCard",
+        "Map controls",
+        "MapMarker / MapMarkerCard / MapCluster",
+        "RouteSummary",
+        "FleetVehicleCard / VehicleStatus",
+        "ShipmentCard / ShipmentStatus / ShipmentTimeline / TrackingTimeline / DeliveryStatus",
+        "IoT controls",
+        "IoT monitoring",
+        "IoT summaries & cards",
+        "RequestedState / ReportedState / PendingDeviceState / CommandStatus",
+        "DeviceAlert",
+        "ZoneSummary",
+        "DeviceActivityTimeline",
+        "DeviceProvisioningStepper",
+        "DeviceFirmwareStatus",
+        "SpatialDeviceMarker",
+        "DeviceMaintenance",
+        "StatusCard / StatusIndicator",
+        "HealthCheckList",
+        "IncidentBanner",
+        "IncidentTimeline",
+        "AlertRuleBuilder"
+      ],
+      "publication": {
+        "eligible": false,
+        "unmet": [
+          "has no workflow"
+        ]
+      }
     }
   ],
   "workflows": [
@@ -2998,6 +3188,7 @@
         "forms"
       ],
       "domains": [
+        "education",
         "commerce"
       ],
       "workflows": [
@@ -3103,7 +3294,8 @@
         "observability"
       ],
       "domains": [
-        "developer-platforms"
+        "developer-platforms",
+        "agriculture"
       ],
       "workflows": [],
       "buildsToward": [
@@ -3119,7 +3311,8 @@
         "application-foundations"
       ],
       "domains": [
-        "developer-platforms"
+        "developer-platforms",
+        "agriculture"
       ],
       "workflows": [],
       "buildsToward": [
@@ -3165,6 +3358,7 @@
         "forms"
       ],
       "domains": [
+        "education",
         "travel-booking"
       ],
       "workflows": [
@@ -3306,6 +3500,7 @@
         "forms"
       ],
       "domains": [
+        "education",
         "commerce"
       ],
       "workflows": [
@@ -3322,7 +3517,10 @@
       "capabilities": [
         "data-analytics"
       ],
-      "domains": [],
+      "domains": [
+        "education",
+        "agriculture"
+      ],
       "workflows": [],
       "buildsToward": [
         "Scheduler / AvailabilityGrid / TimelinePlanner"
@@ -3335,7 +3533,10 @@
       "capabilities": [
         "data-analytics"
       ],
-      "domains": [],
+      "domains": [
+        "education",
+        "agriculture"
+      ],
       "workflows": [],
       "buildsToward": [
         "InvoiceList / PaymentHistory",
@@ -3362,6 +3563,7 @@
         "forms"
       ],
       "domains": [
+        "education",
         "travel-booking"
       ],
       "workflows": [
@@ -3455,6 +3657,7 @@
         "forms"
       ],
       "domains": [
+        "education",
         "commerce",
         "travel-booking"
       ],
@@ -3474,7 +3677,9 @@
       "capabilities": [
         "documents"
       ],
-      "domains": [],
+      "domains": [
+        "education"
+      ],
       "workflows": [],
       "buildsToward": [
         "ReturnRequest",
@@ -3496,6 +3701,7 @@
         "forms"
       ],
       "domains": [
+        "education",
         "commerce",
         "travel-booking"
       ],
@@ -3571,7 +3777,8 @@
         "forms"
       ],
       "domains": [
-        "finance"
+        "finance",
+        "education"
       ],
       "workflows": [],
       "buildsToward": [
@@ -3584,7 +3791,9 @@
       "capabilities": [
         "identity-security"
       ],
-      "domains": [],
+      "domains": [
+        "education"
+      ],
       "workflows": [],
       "buildsToward": [
         "MFA setup"
@@ -3677,7 +3886,9 @@
         "communication",
         "ai"
       ],
-      "domains": [],
+      "domains": [
+        "education"
+      ],
       "workflows": []
     },
     "metric": {
@@ -3689,6 +3900,8 @@
         "observability"
       ],
       "domains": [
+        "education",
+        "agriculture",
         "saas-admin",
         "developer-platforms"
       ],
@@ -3712,7 +3925,10 @@
       "capabilities": [
         "data-analytics"
       ],
-      "domains": [],
+      "domains": [
+        "education",
+        "agriculture"
+      ],
       "workflows": [],
       "buildsToward": [
         "QueryBuilder"
@@ -3759,7 +3975,8 @@
       "domains": [
         "commerce",
         "travel-booking",
-        "finance"
+        "finance",
+        "education"
       ],
       "workflows": [
         "checkout",
@@ -3816,7 +4033,9 @@
       "capabilities": [
         "identity-security"
       ],
-      "domains": [],
+      "domains": [
+        "education"
+      ],
       "workflows": []
     },
     "phone-input": {
@@ -3827,6 +4046,7 @@
         "forms"
       ],
       "domains": [
+        "education",
         "commerce"
       ],
       "workflows": [
@@ -4087,7 +4307,8 @@
         "workflow"
       ],
       "domains": [
-        "saas-admin"
+        "saas-admin",
+        "education"
       ],
       "workflows": [],
       "buildsToward": [
@@ -4139,7 +4360,10 @@
       "capabilities": [
         "data-analytics"
       ],
-      "domains": [],
+      "domains": [
+        "education",
+        "agriculture"
+      ],
       "workflows": [],
       "buildsToward": [
         "OrderCard",
@@ -4257,7 +4481,8 @@
         "identity-security"
       ],
       "domains": [
-        "saas-admin"
+        "saas-admin",
+        "education"
       ],
       "workflows": []
     },
@@ -4272,14 +4497,18 @@
       "capabilities": [
         "communication"
       ],
-      "domains": [],
+      "domains": [
+        "education"
+      ],
       "workflows": []
     },
     "create-account": {
       "capabilities": [
         "identity-security"
       ],
-      "domains": [],
+      "domains": [
+        "education"
+      ],
       "workflows": []
     },
     "cta-banner": {
@@ -4291,7 +4520,10 @@
       "capabilities": [
         "data-analytics"
       ],
-      "domains": [],
+      "domains": [
+        "education",
+        "agriculture"
+      ],
       "workflows": []
     },
     "editor-toolbar": {
@@ -4308,7 +4540,10 @@
       "capabilities": [
         "data-analytics"
       ],
-      "domains": [],
+      "domains": [
+        "education",
+        "agriculture"
+      ],
       "workflows": []
     },
     "loading-state": {
@@ -4369,21 +4604,29 @@
       "capabilities": [
         "identity-security"
       ],
-      "domains": [],
+      "domains": [
+        "education"
+      ],
       "workflows": []
     },
     "stat-cards": {
       "capabilities": [
         "data-analytics"
       ],
-      "domains": [],
+      "domains": [
+        "education",
+        "agriculture"
+      ],
       "workflows": []
     },
     "table-toolbar": {
       "capabilities": [
         "data-analytics"
       ],
-      "domains": [],
+      "domains": [
+        "education",
+        "agriculture"
+      ],
       "workflows": []
     },
     "team-members": {
