@@ -70,6 +70,11 @@ const NEGATIVES = {
   "flutter-publish-in-a-nested-substitution": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          flutter pub publish --force$/m, to: '$1          echo "--dry-run output: $( (flutter pub publish --force) )"', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
   "swiftui-guard-exit-made-conditional": { file: ".github/workflows/publish-swiftui.yml", from: /^            exit 0$/m, to: '            if false; then exit 0; fi', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
   "swiftui-guard-exit-only-quoted": { file: ".github/workflows/publish-swiftui.yml", from: /^            exit 0$/m, to: '            echo "exit 0"', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "flutter-guard-in-a-subshell": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          mkdir -p "\$HOME\/\.config\/dart"$/m, to: '$1          (\n          if [ "${DRY_RUN:-}" != "false" ]; then exit 0; fi\n          )\n          mkdir -p "$HOME/.config/dart"', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "flutter-guard-in-an-uncalled-function": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          mkdir -p "\$HOME\/\.config\/dart"$/m, to: '$1          stop_unless_live() {\n          if [ "${DRY_RUN:-}" != "false" ]; then exit 0; fi\n          }\n          mkdir -p "$HOME/.config/dart"', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "flutter-guard-exit-inside-a-heredoc": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          mkdir -p "\$HOME\/\.config\/dart"$/m, to: '$1          if [ "${DRY_RUN:-}" != "false" ]; then\n            cat <<\'KX\'\nexit 0\nfi\nKX\n          fi\n          mkdir -p "$HOME/.config/dart"', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "flutter-guard-expansion-unquoted": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          mkdir -p "\$HOME\/\.config\/dart"$/m, to: '$1          if [ ${DRY_RUN:-} != "false" ]; then exit 0; fi\n          mkdir -p "$HOME/.config/dart"', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
+  "flutter-publish-backgrounded-beside-a-label": { file: ".github/workflows/publish-flutter.yml", from: /^        if: \$\{\{ inputs\.dry_run == false \}\}\n((?:.*\n)*?)          flutter pub publish --force$/m, to: '$1          flutter pub publish --force & echo --dry-run\n          wait', breaks: "WF-DRY-RUN-FAILS-CLOSED" },
   "swiftui-publish-always-live": { file: ".github/workflows/publish-swiftui.yml", from: /^      dry_run:\n(?:        .*\n)+/m, to: "", breaks: "WF-DRY-RUN-DEFAULT" },
   "compose-publish-unserialised": { file: ".github/workflows/publish-compose.yml", from: /^concurrency:\n(?:  .*\n)+/m, to: "", breaks: "WF-CONCURRENCY" },
   "flutter-publish-skips-tests": { file: ".github/workflows/publish-flutter.yml", from: "flutter test", to: "flutter --version" , breaks: "WF-TESTS-BEFORE-PUBLISH" },
@@ -542,7 +547,10 @@ const shellCommands = (step) =>
   shellText(step)
     .split("\n")
     .flatMap((line) => liftSubstitutions(line))
-    .flatMap((command) => command.split(/;|&&|\|\||\|/))
+    // `&` separates a command list as surely as `;` does, and the lookarounds keep `&&` intact.
+    // `flutter pub publish --force & echo --dry-run` is a live publish plus an unrelated label; read
+    // as one string, the label excused the publish.
+    .flatMap((command) => command.split(/;|&&|\|\||\||(?<!&)&(?!&)/))
     .map((command) => command.trim())
     .filter(Boolean);
 
@@ -574,6 +582,16 @@ const DRY_RUN_REF = `"?\\$\\{?DRY_RUN(?::[-=][^}]*)?\\}?"?`;
  * `${DRY_RUN:-}`. `${DRY_RUN:-}` is never worse than a defaulted form, so nothing correct is lost.
  */
 const DRY_RUN_REF_UNDEFAULTED = `"?\\$(?:DRY_RUN\\b|\\{DRY_RUN(?::-[ \\t]*)?\\})"?`;
+
+/**
+ * The same expansions, but the quotes are mandatory.
+ *
+ * `[ ${DRY_RUN:-} != "false" ]` is fail-open and does not look it. With the variable unset or empty
+ * the word disappears and `test` is handed `[ != "false" ]`, which is a usage error, not a
+ * comparison: it exits non-zero, the `if` takes the else path, and the publish runs. `bash -e` does
+ * not help, because the failure is in an `if` condition. So a guard must quote the expansion.
+ */
+const DRY_RUN_REF_QUOTED = `"\\$(?:DRY_RUN\\b|\\{DRY_RUN(?::-[ \\t]*)?\\})"`;
 const DRY_RUN_COMPARED_WITH_A_DEFAULT = /"?\$\{DRY_RUN:[-=][ \t]*[^}\s][^}]*\}"?\s*(?:!=|={1,2})/;
 
 const comparesDryRunWithTrue = (code) => new RegExp(`${DRY_RUN_REF}\\s*={1,2}\\s*"?true"?`).test(code);
@@ -603,17 +621,49 @@ const comparesDryRunWithTrue = (code) => new RegExp(`${DRY_RUN_REF}\\s*={1,2}\\s
  * a statement and does not satisfy it. That rejects a nested conditional used for logging, which is
  * deliberate: rewrite it above the guard.
  */
-const GUARD_HEAD = `if\\s*\\[\\[?\\s*${DRY_RUN_REF_UNDEFAULTED}\\s*!=\\s*"?false"?\\s*\\]\\]?\\s*;\\s*then`;
+const GUARD_HEAD = `if\\s*\\[\\[?\\s*${DRY_RUN_REF_QUOTED}\\s*!=\\s*"false"\\s*\\]\\]?\\s*;\\s*then`;
 const GUARD_ONE_LINE = new RegExp(`^[ \\t]*${GUARD_HEAD}\\s+exit\\s+\\d+\\s*;\\s*fi[ \\t]*$`);
 const GUARD_OPENS = new RegExp(`^[ \\t]*${GUARD_HEAD}[ \\t]*$`);
 const BLOCK_OPENS = /^(if|for|while|until|case|select|function)\b|(?:;|&&|\|\|)\s*(?:if|for|while|until|case|select)\b/;
 const EXIT_STATEMENT = /^exit\s+\d+[ \t]*;?$/;
+const HEREDOC = /<<-?\s*['"]?[A-Za-z_]/;
+
+/**
+ * Lines that open a shell scope the guard's `exit` would not leave, and the lines that close them.
+ *
+ * `exit` ends the subshell it runs in, not the step. A canonical one-line guard wrapped in `(` … `)`
+ * is textually perfect and stops nothing, and a guard inside a function that is never called stops
+ * nothing either. Both passed before this, so the guard now has to be at the step's top level.
+ * A `$(` is a substitution rather than a scope the script continues in, and is not counted.
+ */
+const SCOPE_OPENS = [
+  /^\($/,
+  /[^$]\($/,
+  /^\{$/,
+  /\s\{$/,
+  /^(?:function\s+[A-Za-z_]\w*|[A-Za-z_]\w*\s*\(\s*\))\s*\{?$/,
+];
+const SCOPE_CLOSES = /^[)}](?:\s*[;&])?$/;
 
 const terminatingGuardAt = (code) => {
   const lines = code.split("\n");
   let offset = 0;
+  let depth = 0;
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
+    const trimmed = line.trim();
+    if (SCOPE_CLOSES.test(trimmed)) depth = Math.max(0, depth - 1);
+    if (depth > 0) {
+      // Inside a subshell, a brace group or a function body: an `exit` here does not end the step.
+      if (SCOPE_OPENS.some((opens) => opens.test(trimmed))) depth += 1;
+      offset += line.length + 1;
+      continue;
+    }
+    if (SCOPE_OPENS.some((opens) => opens.test(trimmed))) {
+      depth += 1;
+      offset += line.length + 1;
+      continue;
+    }
     if (GUARD_ONE_LINE.test(line)) return offset;
     if (GUARD_OPENS.test(line)) {
       const body = [];
@@ -627,6 +677,9 @@ const terminatingGuardAt = (code) => {
         closed &&
         statements.length > 0 &&
         !statements.some((statement) => BLOCK_OPENS.test(statement)) &&
+        // A heredoc can supply both the closing `fi` and the final `exit 0` as *data*, so the branch
+        // reads as canonical while executing neither.
+        !statements.some((statement) => HEREDOC.test(statement)) &&
         EXIT_STATEMENT.test(statements[statements.length - 1])
       ) {
         return offset;
@@ -641,7 +694,10 @@ const firstPublishAt = (code) => {
   let offset = 0;
   for (const line of code.split("\n")) {
     const commands = liftSubstitutions(line)
-      .flatMap((command) => command.split(/;|&&|\|\||\|/))
+      // `&` separates a command list as surely as `;` does, and the lookarounds keep `&&` intact.
+    // `flutter pub publish --force & echo --dry-run` is a live publish plus an unrelated label; read
+    // as one string, the label excused the publish.
+    .flatMap((command) => command.split(/;|&&|\|\||\||(?<!&)&(?!&)/))
       .map((command) => command.trim())
       .filter(Boolean);
     if (commands.some(isUnguardedPublish)) return offset;
