@@ -172,6 +172,21 @@
       "defaulted": true
     },
     {
+      "name": "onSuccessContainer",
+      "type": "Color",
+      "defaulted": true
+    },
+    {
+      "name": "onWarningContainer",
+      "type": "Color",
+      "defaulted": true
+    },
+    {
+      "name": "onDestructiveContainer",
+      "type": "Color",
+      "defaulted": true
+    },
+    {
       "name": "chart",
       "type": "List<Color>",
       "defaulted": false

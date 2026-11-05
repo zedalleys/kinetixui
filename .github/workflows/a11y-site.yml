@@ -80,7 +80,7 @@ concurrency:
 jobs:
   axe:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -152,7 +152,7 @@ jobs:
       # direction change (vertical on a phone), no text in them is under 12px, the headline never splits a word,
       # and the hero map keeps its generated layer, boundary and dashed written layer on a phone with no trace
       # running through an output it does not belong to.
-      - name: Homepage systems visuals (tabs, type floor, headline, map)
+      - name: Homepage systems visuals (tabs, type floor, headline, map, hero decoration)
         run: pnpm check:home-systems
 
       # The website's own compact text, measured rather than read from source: no readable label under 12px, the
