@@ -42,6 +42,8 @@
     "check:manifest": "node scripts/gen-manifest.mjs --check",
     "gen:capabilities": "node scripts/gen-business-roadmap.mjs",
     "check:capabilities": "node scripts/gen-business-roadmap.mjs --check",
+    "check:taxonomy-namespaces": "node scripts/check-taxonomy-namespaces.mjs",
+    "check:create-schema": "node scripts/check-create-schema.mjs",
     "gen:flagship": "node scripts/gen-flagship-examples.mjs",
     "check:flagship-examples": "node scripts/gen-flagship-examples.mjs --check",
     "check:a11y-browser": "node scripts/a11y-browser.mjs",
