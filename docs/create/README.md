@@ -14,7 +14,7 @@ negative controls.
 | `fixtures/v1/` | stored documents at schemaVersion 1, byte-canonical |
 | `fixtures/invalid/` | documents the validator must reject, each declaring the rejection it proves |
 | `../../scripts/create-schema/` | the schema interpreter, the one validator, the node-identity contract, the migration registry |
-| `../../scripts/check-create-schema.mjs` | `pnpm check:create-schema` — 14 checks, 17 negative controls |
+| `../../scripts/check-create-schema.mjs` | `pnpm check:create-schema` — 16 checks, 20 negative controls |
 | `../../scripts/check-taxonomy-namespaces.mjs` | `pnpm check:taxonomy-namespaces` — 5 checks, 8 negative controls |
 
 ## One schema, one validator
@@ -61,10 +61,27 @@ derivable, and a stored copy is a second source of truth with a staleness proble
   and not a value derived from the document, and an imported document with a stale or absent counter
   has its counter raised above every id ever allocated **with every existing id unchanged** — the
   import never repairs a document by renaming nodes;
-- **25 negative controls**, 17 on one gate and 8 on the other, each proving the named check goes red.
+- `designSystem.preset` is decoded by **the canonical codec** (`decodePreset` from
+  `packages/create-preset`), not by a second set of parsing rules here. The schema can only constrain
+  the `KX1_` envelope, so an envelope-valid payload that no build can read — bad base64url, unreadable
+  JSON, an unsupported preset version — was accepted before. One expected-invalid fixture carries such
+  a payload, the valid corpus carries decodable ones, and a control removing the codec call makes the
+  invalid fixture pass;
+- a legal document's structural cost grows with its **size, not its depth**. `oneOf` must evaluate
+  every alternative, so an interpreter that keeps walking an alternative after it has already failed
+  re-walks the same subtree once per alternative at every level. The gate measures subschema
+  evaluations rather than wall-clock time: a constant 14 per nesting level from depth 6 to 24;
+- `additionalProperties: false` holds for **every** key, including the names of `Object.prototype`
+  members. A declared property is an own property of `properties`, so the lookup is ownership-safe;
+  `constructor`, `toString`, `hasOwnProperty` and a parsed `__proto__` are all rejected as undeclared,
+  at the root and inside a nested node, and `$ref` cannot resolve to an inherited member;
+- **28 negative controls**, 20 on one gate and 8 on the other, each proving the named check goes red.
   Nothing broken is committed: a control mutates what the checks see, in memory, for one run. (They
-  are 25 controls over 24 distinct mutations: `lenient-migrate` and `lenient-migrate-chain` share one
-  mutation and assert that two different checks went red.)
+  are 28 controls over 27 distinct mutations: `lenient-migrate` and `lenient-migrate-chain` share one
+  mutation and assert that two different checks went red. Two controls cannot be expressed as a
+  mutation of what the checks see, because the defect they cover lives in the interpreter's own
+  source: those load a variant of that source with the fix textually reverted, executed from memory,
+  and assert the substitution applied exactly once so a stale control cannot quietly pass.)
 - a document nested past `MAX_JSON_DEPTH` comes back as a **rejection, not a RangeError**. Both the
   structural interpreter and the semantic walk recurse, so without that bound a deep document would
   leave the validator through a crash where the contract promises a verdict.

@@ -21,7 +21,7 @@
  */
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { validate as structural, assertSupported } from "./create-schema/json-schema.mjs";
+import { validate as structural, assertSupported, counters } from "./create-schema/json-schema.mjs";
 import { loadRegistries, ROOT } from "./create-schema/registries.mjs";
 import { validateCreateProject, serialize, SCHEMA_PATH, SEMANTIC_CODES } from "./create-schema/validate.mjs";
 import { migrate, CURRENT_VERSION, ReadOnlyDocumentError, MissingMigrationError } from "./create-schema/migrate.mjs";
@@ -52,6 +52,9 @@ const NEGATIVES = {
   "allocator-reuses-ids": { breaks: "allocation-uses-next-node-id", why: "an allocator deriving the next id from the highest LIVE id hands out a retired id as soon as the highest-numbered node has been deleted" },
   "duplicate-ids-unchecked": { breaks: "invalid-fixtures-rejected", why: "without the uniqueness rule two nodes can share an id, and a provenance record or a Figma binding then names both of them" },
   "import-ignores-retired": { breaks: "import-raises-next-node-id", why: "an import normaliser that counts only live ids leaves the counter below a retired id, so the import itself creates the reuse it was meant to prevent" },
+  "preset-codec-unchecked": { breaks: "invalid-fixtures-rejected", why: "without the codec call a KX1_ envelope carrying an unreadable payload is accepted, and the document then claims a design system no build can load" },
+  "exponential-alternatives": { breaks: "alternatives-short-circuit", why: "an interpreter that keeps evaluating an alternative after it has already failed re-walks the same children once per alternative at every level, so the cost of a legal document grows with its depth rather than with its size" },
+  "inherited-properties-declared": { breaks: "schema-closed-to-inherited-keys", why: "looking a property up with plain indexing finds Object.prototype members, so a document key of \"constructor\" or \"toString\" reads as declared and walks straight past additionalProperties: false" },
 };
 
 if (process.argv.includes("--list-negatives")) {
@@ -64,6 +67,28 @@ if (negativeId && !NEGATIVES[negativeId]) {
   process.exit(2);
 }
 const control = negativeId ?? null;
+
+/**
+ * The two interpreter checks call `validate` directly rather than through `validator()`, so they
+ * need the same convention: an interpreter that throws — which is its contract for a keyword it does
+ * not implement — is a finding about the schema, recorded against interpreter-strict, and never a
+ * crash of the gate. `null` means "the interpreter refused to run", so the caller skips the rest of
+ * its measurement instead of reporting a failure it has no evidence for.
+ */
+const structuralOrNull = (interpreter, doc) => {
+  try {
+    return interpreter(doc, schema);
+  } catch (error) {
+    fail("interpreter-strict", error.message);
+    return null;
+  }
+};
+
+/** True when the interpreter rejects the document AND says so for the expected reason. */
+const structuralRejects = (interpreter, doc, needle) => {
+  const errors = structuralOrNull(interpreter, doc);
+  return errors === null || (errors.length > 0 && errors.some((e) => e.includes(needle)));
+};
 
 const failures = [];
 const passed = [];
@@ -87,6 +112,13 @@ if (control === "duplicate-ids-unchecked") {
   const inner = validateDoc;
   validateDoc = (doc) => {
     const kept = inner(doc).errors.filter((e) => e.code !== "node-id-duplicate");
+    return { ok: kept.length === 0, errors: kept };
+  };
+}
+if (control === "preset-codec-unchecked") {
+  const inner = validateDoc;
+  validateDoc = (doc) => {
+    const kept = inner(doc).errors.filter((e) => e.code !== "preset-undecodable");
     return { ok: kept.length === 0, errors: kept };
   };
 }
@@ -234,7 +266,7 @@ if (!failures.some((f) => f.startsWith("migration-chain")))
 // expectations-complete — the expected-invalid corpus and its declarations describe each other exactly.
 const invalidFiles = readdirSync(join(ROOT, INVALID)).filter((f) => f.endsWith(".json") && f !== "EXPECTATIONS.json");
 for (const file of invalidFiles)
-  if (!expectations[file]) fail("expectations-complete", `${INVALID}/${file} has no entry in EXPECTATIONS.json — say which rejection it proves`);
+  if (!Object.hasOwn(expectations, file)) fail("expectations-complete", `${INVALID}/${file} has no entry in EXPECTATIONS.json — say which rejection it proves`);
 for (const file of Object.keys(expectations))
   if (!invalidFiles.includes(file)) fail("expectations-complete", `EXPECTATIONS.json names ${file}, which does not exist`);
 if (!failures.some((f) => f.startsWith("expectations-complete")))
@@ -245,7 +277,9 @@ if (!failures.some((f) => f.startsWith("expectations-complete")))
 let rejected = 0;
 for (const file of invalidFiles) {
   const rel = `${INVALID}/${file}`;
-  const expect = expectations[file]?.expect;
+  // Same ownership rule as the interpreter: a file called constructor.json must not find an
+  // inherited member and read as declared. See scripts/create-schema/json-schema.mjs.
+  const expect = Object.hasOwn(expectations, file) ? expectations[file].expect : undefined;
   const result = validator(JSON.parse(readFileSync(join(ROOT, rel), "utf8")));
   if (result.ok) {
     fail("invalid-fixtures-rejected", `${rel} was ACCEPTED; it must be rejected with [${expect}]`);
@@ -277,6 +311,132 @@ if (!failures.some((f) => f.startsWith("invalid-fixtures-rejected")))
   else if (!result.errors.some((e) => e.code === "document-too-deep"))
     fail("document-depth-bounded", `a 20 000-deep document was rejected, but not with [document-too-deep]: ${result.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ")}`);
   else ok("document-depth-bounded", result.errors[0].message);
+}
+
+/* ------------------------------------------- the interpreter's own two blocking properties */
+
+/**
+ * Both checks below are about the interpreter rather than the document, and neither can be broken by
+ * mutating a schema or wrapping the validator — the defect each one covers lives in the interpreter's
+ * source. So their controls load a variant of that source with the fix textually reverted, executed
+ * from memory as a data: URL. json-schema.mjs imports nothing, which is what makes that possible.
+ * The substitution is asserted to apply exactly once, so a control can never silently become a
+ * second copy of the real interpreter quietly passing the check it is supposed to break.
+ */
+const interpreterSource = readFileSync(join(ROOT, "scripts/create-schema/json-schema.mjs"), "utf8");
+const revertedInterpreter = async (id, from, to) => {
+  const hits = interpreterSource.split(from).length - 1;
+  if (hits !== 1)
+    throw new Error(`negative control ${id} cannot find the line it reverts (${hits} occurrence(s)) — the control is stale, so it would prove nothing`);
+  const patched = interpreterSource.replace(from, to);
+  return await import(`data:text/javascript;base64,${Buffer.from(patched, "utf8").toString("base64")}`);
+};
+
+// alternatives-short-circuit — a legal document's structural cost grows with its SIZE, not with its
+// depth. `oneOf` has to evaluate every alternative, and the node schema's alternatives all begin with
+// a different `kind`, so an interpreter that keeps going after an alternative has already failed
+// re-walks the whole subtree once per alternative at every level. Measured on 738fc4e7, all accepted
+// and all far inside MAX_JSON_DEPTH: a 12-node chain took 2.5 s and a 14-node chain 25.6 s.
+// The evidence is a subschema-evaluation count rather than a duration, so a loaded CI machine cannot
+// flip it either way.
+{
+  const chainDoc = (depth) => {
+    const root = { id: "node_1", kind: "slot", name: "page" };
+    let cursor = root;
+    for (let i = 2; i <= depth; i += 1) {
+      const next = { id: `node_${i}`, kind: "slot", name: "s" };
+      cursor.children = [next];
+      cursor = next;
+    }
+    const base = JSON.parse(readFileSync(join(ROOT, `${FIXTURES}/v1/minimal.json`), "utf8"));
+    return { ...base, nextNodeId: depth + 1, pages: [{ ...base.pages[0], root }] };
+  };
+  const interpreter = control === "exponential-alternatives"
+    ? (await revertedInterpreter(
+        "exponential-alternatives",
+        "const passing = schema.oneOf.filter((sub) => validate(instance, sub, { root, path, failFast: true }).length === 0).length;",
+        "const passing = schema.oneOf.filter((sub) => validate(instance, sub, { root, path, failFast: false }).length === 0).length;",
+      ))
+    : { validate: structural, counters };
+  const cost = (depth) => {
+    interpreter.counters.visits = 0;
+    const errors = structuralOrNull(interpreter.validate, chainDoc(depth));
+    return { visits: interpreter.counters.visits, errors };
+  };
+  const PER_LEVEL_CEILING = 32;
+  const shallow = cost(6);
+  const mid = cost(12);
+  if (shallow.errors === null || mid.errors === null)
+    ok("alternatives-short-circuit", "not measured: the interpreter refused to run this schema at all, which interpreter-strict reports");
+  else if (shallow.errors.length || mid.errors.length)
+    fail("alternatives-short-circuit", `a legal chain of nested slot nodes was rejected: ${[...shallow.errors, ...mid.errors].join(" | ")}`);
+  else {
+    const near = (mid.visits - shallow.visits) / 6;
+    if (near > PER_LEVEL_CEILING)
+      fail("alternatives-short-circuit", `each extra nesting level costs ${near.toFixed(1)} subschema evaluations, over the ceiling of ${PER_LEVEL_CEILING} — the cost is growing with depth, so a failed alternative is still walking its children`);
+    else {
+      // Only once the near pair is linear is it safe to measure a deeper one: under the defect this
+      // second measurement is what would take minutes rather than milliseconds.
+      const deep = cost(24);
+      const far = (deep.visits - mid.visits) / 12;
+      if (deep.errors.length) fail("alternatives-short-circuit", `a legal 24-node chain was rejected: ${deep.errors.join(" | ")}`);
+      else if (far !== near)
+        fail("alternatives-short-circuit", `each level costs ${near} evaluations between depth 6 and 12 but ${far} between 12 and 24 — the per-level cost is not constant`);
+      else ok("alternatives-short-circuit", `a legal document costs a constant ${near} subschema evaluations per nesting level (depth 6 → 24), so a failed oneOf alternative stops before its children`);
+    }
+  }
+}
+
+// schema-closed-to-inherited-keys — `additionalProperties: false` means what it says for EVERY key,
+// including the names of Object.prototype members. A schema is parsed JSON, so a declared property is
+// always an own property; a lookup that also reaches the prototype chain reports "constructor",
+// "toString" and "hasOwnProperty" as declared and validates their values against a function.
+{
+  const interpreter = control === "inherited-properties-declared"
+    ? (await revertedInterpreter(
+        "inherited-properties-declared",
+        "      const sub = own(schema.properties, key);\n      if (sub !== undefined) {",
+        "      const sub = schema.properties?.[key];\n      if (sub) {",
+      )).validate
+    : structural;
+  const minimalRaw = readFileSync(join(ROOT, `${FIXTURES}/v1/minimal.json`), "utf8");
+  /** Parsed out of JSON text, never assigned: `{ __proto__: x }` in source sets the prototype
+   *  instead of creating a key, so an assignment would prove nothing about a stored document. */
+  const withRootKey = (key) => JSON.parse(minimalRaw.replace(/^{/, `{${JSON.stringify(key)}:{"injected":true},`));
+  const inherited = ["constructor", "toString", "hasOwnProperty", "__proto__"];
+  const problems = [];
+
+  for (const key of inherited) {
+    const doc = withRootKey(key);
+    if (!Object.hasOwn(doc, key)) problems.push(`the ${key} case is not even an own property of the parsed document, so it tests nothing`);
+    else if (!structuralRejects(interpreter, doc, `unknown property "${key}"`))
+      problems.push(`a root-level ${JSON.stringify(key)} key was accepted, so additionalProperties: false is bypassed`);
+  }
+
+  // Nested closed objects get the same protection, not just the root.
+  {
+    const doc = JSON.parse(minimalRaw);
+    doc.pages[0].root = JSON.parse(`{"id":"node_1","kind":"slot","name":"page","constructor":{"injected":true}}`);
+    const nested = structuralOrNull(interpreter, doc);
+    if (nested !== null && nested.length === 0)
+      problems.push("a nested node carrying a \"constructor\" key was accepted, so the protection is root-only");
+  }
+
+  // A declared property still validates — the fix must close the prototype chain, not the schema.
+  const declared = structuralOrNull(interpreter, JSON.parse(minimalRaw));
+  if (declared !== null && declared.length !== 0)
+    problems.push("the stored minimal fixture no longer validates, so the ownership rule has closed off legitimately declared properties");
+
+  // The same assumption in the other data-keyed lookup: $ref resolution walks the schema by name.
+  try {
+    interpreter({}, { $ref: "#/$defs/constructor" }, {});
+    problems.push("$ref \"#/$defs/constructor\" resolved instead of throwing, so resolveRef still reads the prototype chain");
+  } catch {
+    /* expected: the ref does not resolve */
+  }
+
+  if (problems.length) for (const problem of problems) fail("schema-closed-to-inherited-keys", problem);
+  else ok("schema-closed-to-inherited-keys", `${inherited.length} Object.prototype key names are rejected as undeclared at the root and inside a nested node, $ref cannot resolve to an inherited member, and the declared corpus still validates`);
 }
 
 /* ------------------------------------------------- the node-identity contract (owner decision) */

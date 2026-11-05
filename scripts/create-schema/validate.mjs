@@ -20,6 +20,15 @@ import { join } from "node:path";
 import { validate as structural } from "./json-schema.mjs";
 import { loadRegistries, resolveRef, ROOT } from "./registries.mjs";
 import { nodeIdNumber, walkNodes } from "./node-ids.mjs";
+// The canonical preset codec, imported rather than reimplemented. `designSystem.preset` is a
+// `KX1_`-prefixed base64url envelope carrying a JSON payload; the schema can only constrain the
+// envelope, so a well-formed envelope around an unreadable, unsupported-version or non-base64url
+// payload was accepted — the document claimed a design system this build cannot load. Parsing it
+// here with a second set of rules would be the derivation this architecture forbids, so the
+// validator calls the one decoder the runtime will call. The package is deliberately
+// dependency-free (no React, no Next, no `node:` imports, no DOM), and Node 22's type stripping
+// executes the `.ts` source directly, so this costs the gate no dependency.
+import { decodePreset } from "../../packages/create-preset/src/index.ts";
 
 export const SCHEMA_PATH = "docs/create/create-project.schema.json";
 export const loadSchema = () => JSON.parse(readFileSync(join(ROOT, SCHEMA_PATH), "utf8"));
@@ -36,6 +45,7 @@ export const SEMANTIC_CODES = {
   "figma-unknown-page": "figmaBinding.nodeIds names a page id the document does not contain",
   "ai-node-without-request": "a node attributed to AI carries no requestId or model",
   "document-too-deep": "the document nests deeper than the validator will walk",
+  "preset-undecodable": "designSystem.preset is a well-formed KX1_ envelope whose payload the canonical preset codec cannot read",
 };
 
 /**
@@ -84,6 +94,15 @@ export function validateCreateProject(doc, { schema = loadSchema(), registries =
     if (why) push("ref-unresolved", `${where}: ${why}`);
   };
   refProblem(doc.domain, "domain");
+
+  // Structural validation has already proved the envelope (`^KX1_[A-Za-z0-9_-]+$`). Only the codec
+  // can say whether the payload inside it decodes, so the codec's own error code is quoted rather
+  // than paraphrased: whatever the runtime would refuse to load, the validator refuses to store.
+  if (doc.designSystem?.preset !== undefined) {
+    const decoded = decodePreset(doc.designSystem.preset);
+    if (!decoded.ok)
+      push("preset-undecodable", `designSystem.preset: the canonical codec rejects this payload (${decoded.error.code}: ${decoded.error.message})`);
+  }
 
   const retired = new Set(doc.retiredNodeIds ?? []);
   const seenNodes = new Set();

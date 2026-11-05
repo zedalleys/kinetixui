@@ -80,6 +80,10 @@
     "missing-next-node-id.json": {
       "expect": "structural",
       "proves": "the counter is required, never inferred: a document without nextNodeId has no allocation frontier, so no allocation from it could be proved safe"
+    },
+    "undecodable-preset.json": {
+      "expect": "preset-undecodable",
+      "why": "designSystem.preset is a well-formed KX1_ envelope carrying real base64url whose JSON payload declares preset version 999. The schema can only constrain the envelope, so only the canonical codec in packages/create-preset can say the payload is unreadable. Without that call the document would be stored claiming a design system no build can load."
     }
   }
 }
