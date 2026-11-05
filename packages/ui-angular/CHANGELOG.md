@@ -1,5 +1,105 @@
 # @kinetixui/angular
 
+## 0.26.2
+
+### Patch Changes
+
+- a5fab42: `.kx-metric`'s value and trend now wrap instead of colliding.
+  
+  The Angular stylesheet stated the same layout contract as React's `Metric` and carried the same
+  defect: `.kx-metric__body` was a `space-between` flex row of two intrinsically-sized children, so
+  once the value and the trend together exceeded the card's content box the pair was painted outside
+  it, with no way for either child to give ground.
+  
+  `.kx-metric__body` now wraps, with `column-gap: var(--spacing-3)` and `row-gap: var(--spacing-1)`;
+  `.kx-metric__value` takes `min-width: 0` and `overflow-wrap: break-word`; `.kx-metric__trend` keeps
+  `white-space: nowrap` on the figure while allowing the arrow and figure to wrap relative to each
+  other as the last resort. This is the shared contract — semantics, state model, accessibility
+  outcome — expressed in idiomatic CSS rather than a copy of the React class list, and it uses the
+  existing spacing tokens rather than new values.
+  
+  No selector, no public class name and no component API changed; the Angular package remains Preview
+  and this release does not move its graduation criteria.
+  
+  The browser measurement that drove the contract was taken on the React implementation, which is
+  where the defect was reported and reproduced. The Angular change was verified by the package's own
+  stylesheet gates and its negative controls, not by a rendered Angular measurement, so it is stated
+  as a corrected layout contract rather than as rendered Angular evidence.
+
+## 0.26.1
+
+### Patch Changes
+
+- 5cfbb84: A disabled `<a kxButton>` is no longer operable from the keyboard.
+  
+  `aria-disabled` on the anchor form was enforced by the stylesheet alone, with `pointer-events: none`. That
+  suppressed the pointer and nothing else: the anchor stayed in the tab order and <kbd>Enter</kbd> still
+  navigated, so the control was inert for a mouse and live for a keyboard. The source comment asked callers
+  to drop `href` as well, which made the only correct usage a convention rather than part of the API.
+  
+  `KxButton` now guards activation itself — click, <kbd>Enter</kbd> and <kbd>Space</kbd> are cancelled and
+  kept from ancestor handlers while `aria-disabled="true"`, read at event time so `[attr.aria-disabled]`
+  needs no second input. `href` can stay. The control stays focusable on purpose: that is the difference
+  between `aria-disabled` and `disabled` — it remains discoverable, so a keyboard user reaches it and hears
+  why it is unavailable instead of finding a gap. `pointer-events: none` is dropped for the same reason,
+  leaving `cursor: not-allowed`, the shape `.kx-menu__item[aria-disabled]` and `.kx-pagination__link`
+  already use, so a pointer user can hover it and read the cursor.
+  
+  The `<button>` form is untouched; the browser disables it and never dispatches these events.
+  
+  The guards are registered in the directive's constructor rather than declared as `host` listeners, and the
+  difference is load-bearing: Angular creates an element's own template listeners before a directive's host
+  listeners, so a host-bound guard runs second and a `(click)` the caller wrote on the same anchor has
+  already fired — `stopImmediatePropagation` included, since registration order rather than phase decides
+  it. A constructor listener runs first, so the caller's handler is suppressed too and no `disabled` input
+  is needed. Both arrangements were measured; the spec asserts the working one, so moving the listeners back
+  into `host` fails a test instead of quietly reopening the gap.
+  
+  Also, Angular's styles now read `--on-success-container`, `--on-warning-container` and
+  `--on-destructive-container` for `kx-banner` / `kx-inform` success, warning and error text, which are new
+  in the accompanying `@kinetixui/tokens` 0.26.0. Each one carries a CSS fallback to the plain status role,
+  so on the older tokens this package still supports the notices keep their previous colour rather than
+  inheriting an arbitrary ancestor colour, and only the peer range's upper bound moves (to `<0.27.0`). See
+  the README's Environment note.
+
+## 0.26.0
+
+### Minor Changes
+
+- e75b1dc: Add the scroll area, resizable panels, carousel and comparison slider. `kx-scroll-area` keeps the browser's own scrolling and draws its scrollbars beside the content; it is a named Tab stop only while something overflows, and its thumb follows content and containers that resize. `kx-resizable-panel-group` (with `kx-resizable-panel` and `kx-resizable-handle`) resizes by mouse, pen, touch or keyboard (arrows by 5, Home, End, F6 between handles), holds each panel's limits, follows the reading direction and announces itself as a window splitter. `kx-carousel` (with `kx-carousel-content`, `kx-carousel-item`, `kxCarouselPrevious` and `kxCarouselNext`) moves by buttons, arrow keys that follow the reading direction, and drag or swipe; it keeps focus at its ends, makes off-screen slides inert, announces a move once when it lands, has no autoplay and respects reduced motion. `kx-comparison-slider` is one native range input over two layers, named, held to 0–100, and drawn from the inline start in either direction. Angular stays Preview.
+- 822304a: Selection-control motion parity with React (MX1b-2), measured in a real browser.
+  
+  Before: the Angular Switch moved its thumb and track over 300ms, Checkbox and Radio ran every property at
+  100ms so a selection change was as quick as a hover, Toggle answered the pointer with a `--muted` background
+  step and had no press layer, and under forced colours the Switch thumb and the Radio dot were repainted the
+  same white as the surface behind them, leaving a switch with no thumb and a chosen radio that looked
+  unchosen. Activating a mixed Checkbox left it announcing `mixed` for ever.
+  
+  After: the Switch thumb, track and halo run on `instant` (100ms, `standard`), so Angular holds the same
+  `selection-control` contract as React and the recorded deviation is gone. Checkbox and Radio put fill, edge
+  and glyph colour on `fast` (200ms) and keep their halo on `instant`; the Checkbox glyph and the Radio dot
+  fade in on `fast` from elements of their own and leave at once. Toggle and ToggleGroup keep selection on
+  `fast` and gain an inset 8% / 14% press layer on `instant`. The Switch thumb and the Radio dot are drawn in
+  `CanvasText`, or `GrayText` when disabled, so forced colours keep them visible. A mixed Checkbox resolves to
+  checked when it is activated, and returns to mixed if the caller writes `indeterminate` again.
+  
+  Fixed along the way: a disabled Radio's label kept full opacity once the input was wrapped, a disabled
+  single-select ToggleGroup item answered the pointer with the new press layer because the element it paints is
+  a `<label>` and a label never matches `:disabled`, the Radio dot sat outside its control on a right-to-left
+  page, and a mixed Checkbox that was already checked resolved without reporting touched to Angular forms.
+  
+  Public inputs, outputs and ARIA are unchanged. Minor rather than patch because the Toggle's hover fill and
+  the Radio dot's markup are visual defaults an application may have styled around.
+- 00871d0: Add the menus: `kx-dropdown-menu`, `kx-context-menu` and `kx-menubar`, built on one set of shared parts (`kxMenuItem`, `kx-menu-checkbox-item`, `kx-menu-radio-group` / `kx-menu-radio-item`, `kx-menu-label`, `kx-menu-separator`, `kx-menu-shortcut`, `kx-menu-group`, and submenus with `kx-menu-sub`, `kxMenuSubTrigger`, `kx-menu-sub-content`). Roving focus, typeahead, direction-aware arrow keys, submenus with a pointer grace area, and a context menu anchored to the pointer. Angular stays Preview.
+- eb6957f: Add the listboxes: `kx-select` (with `kxSelectTrigger`, `kx-select-value`, `kx-select-content`, `kx-select-item`, `kx-select-group`, `kx-select-label`, `kx-select-separator`), `kx-command` (with `kxCommandInput`, `kx-command-list`, `kx-command-empty`, `kx-command-group`, `kx-command-item`, `kx-command-separator`, `kx-command-shortcut`, and `kx-command-dialog`) and `kx-multi-select`. All three keep focus on the field and move `aria-activedescendant`, never onto a disabled or filtered-out option; select and multi-select are form controls. Command filters locally and sends its query nowhere. Combobox is documented as a recipe (a popover holding a command), not a component. Angular stays Preview.
+- b3b9207: Add the navigation menu, notifications and sidebar. `nav[kxNavigationMenu]` (with `kxNavigationMenuList`, `kxNavigationMenuItem`, `kxNavigationMenuTrigger`, `kx-navigation-menu-content`, `kxNavigationMenuLink` and `kx-navigation-menu-indicator`) is site navigation: disclosure buttons and real links, never menu roles, with arrow keys that follow the reading direction. `kx-toaster` and `KxToasterService` show toasts from one shared queue: a polite live region that never takes focus, pausing on hover and focus with the elapsed time kept, separate toasters by `id`, Alt+T to reach them. `kx-notification-center` (with `kxNotificationCenterTrigger`, `kx-notification-center-content` and `kx-notification-item`) is a popover of notifications whose state stays in the application. `kx-tour` is a modal walkthrough that follows its targets, including ones that move, are removed or never exist. `kx-sidebar-provider` and `kx-sidebar` (with its header, content, group, menu, trigger and inset parts) are a persistent panel on desktop and the sheet on a phone, with one state model. Angular stays Preview.
+
+### Patch Changes
+
+- e77340a: `KxSegmentedControl`: the chosen segment stays marked in forced-colours mode (Windows contrast themes). Its raised surface and shadow were flattened to the same Canvas as the other segments, so chosen and unchosen looked identical (1.00:1). It now keeps the system's `SelectedItem` / `SelectedItemText` pair, 5.37:1 against its neighbours in a light palette and 3.91:1 in a dark one. Nothing changes outside forced colours, and the API, semantics and focus outline are unchanged.
+- 55176e5: Accept `@kinetixui/tokens` 0.25.0: the peer range is now `>=0.24.0 <0.26.0`. The next core release is a minor only because `@kinetixui/ui` adds components, and `@kinetixui/tokens` moves with it in the fixed group; no token is renamed or removed, so the variables Angular reads (including `--surface-grouped` and `--on-info-container`) are unchanged.
+- 010d3bf: Every text-entry field now has one shape. GuestPicker, CountrySelect, DateRangeInput, NumberInput, PhoneInput and InputOTP's end slots were rounded at `--radius-md` (8px) while Input, Textarea and Select were at 4px; they all take `--radius-field` now, and Input, Textarea, Select, NativeSelect, InputGroup and MultiSelect read the role token too, so a theme that overrides `--radius-field` reshapes every field. The picker triggers (GuestPicker, CountrySelect, DateRangeInput) are 46px like Input instead of 44px. DatePicker's trigger is a field rather than an Outline button: a 3:1 `muted-foreground` edge where the button's was 2.2:1, the `action` focus edge, and `aria-invalid` when `error` is set. MarkdownEditor's shell takes the field edge and draws the focus ring while its textarea has focus; before, it had no focus indicator. Angular: `kx-input` focuses with the `action` edge its contract names (it used `ring`), is 46px like the other fields, and `kx-input-otp`'s end slots take `--radius-field`.
+
 ## 0.25.1
 
 ### Patch Changes

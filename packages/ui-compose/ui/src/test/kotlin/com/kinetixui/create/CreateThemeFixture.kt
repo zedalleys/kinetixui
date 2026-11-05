@@ -69,6 +69,9 @@ object CreateThemeFixture {
         popoverForeground = Color(0xff0e0a06),
         onInfoContainer = KinetixTokensLight.colorOnInfoContainer,
         scrim = KinetixTokensLight.colorScrim,
+        onSuccessContainer = KinetixTokensLight.colorOnSuccessContainer,
+        onWarningContainer = KinetixTokensLight.colorOnWarningContainer,
+        onDestructiveContainer = KinetixTokensLight.colorOnDestructiveContainer,
         chart = listOf(
             Color(0xffbd4049),
             Color(0xffe1791b),
@@ -113,6 +116,9 @@ object CreateThemeFixture {
         popoverForeground = Color(0xfffbf4ed),
         onInfoContainer = KinetixTokensDark.colorOnInfoContainer,
         scrim = KinetixTokensDark.colorScrim,
+        onSuccessContainer = KinetixTokensDark.colorOnSuccessContainer,
+        onWarningContainer = KinetixTokensDark.colorOnWarningContainer,
+        onDestructiveContainer = KinetixTokensDark.colorOnDestructiveContainer,
         chart = listOf(
             Color(0xfff17074),
             Color(0xffca6800),
