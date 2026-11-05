@@ -1,0 +1,89 @@
+{
+  "$comment": "Every file in this directory is a document the validator MUST reject, with the rejection each one is here to prove. `expect` is the error code that must appear; a file rejected only for some other reason is a failure, because it would then not be testing what it claims. check:create-schema reads this file: a fixture with no entry, or an entry with no file, fails the gate. A validator that accepts everything passes a round-trip test, so this corpus is what gives the round-trip test teeth.",
+  "cases": {
+    "bare-domain.json": {
+      "expect": "structural",
+      "proves": "the Commerce collision: a bare \"commerce\" cannot be stored, because it does not say whether it means the business domain or the block category"
+    },
+    "block-category-as-domain.json": {
+      "expect": "structural",
+      "proves": "the two commerces stay apart in the other direction too \u2014 block-category:commerce is not an industry"
+    },
+    "unknown-prefix.json": {
+      "expect": "structural",
+      "proves": "an invented identifier space (industry:) is not accepted just because it is prefixed"
+    },
+    "unknown-domain.json": {
+      "expect": "ref-unresolved",
+      "proves": "a well-formed domain reference still has to exist in docs/business-capabilities.json"
+    },
+    "bare-block-ref.json": {
+      "expect": "structural",
+      "proves": "a node reference is namespaced too, not only the project's domain"
+    },
+    "unknown-block-ref.json": {
+      "expect": "ref-unresolved",
+      "proves": "a stored page cannot cite a block blocks.manifest.json does not define \u2014 the gate a rename would otherwise break silently"
+    },
+    "unknown-component-ref.json": {
+      "expect": "ref-unresolved",
+      "proves": "the same for the component catalogue, resolved by the manifest's kebab slug"
+    },
+    "reused-node-id.json": {
+      "expect": "node-id-duplicate",
+      "proves": "ids are unique across the whole project, not per page"
+    },
+    "retired-node-id.json": {
+      "expect": "node-id-retired",
+      "proves": "a deleted id is never reused: a live node carrying an id listed in retiredNodeIds is rejected, which is the first half of \u201cdeletion does not make an id reusable\u201d"
+    },
+    "duplicate-route.json": {
+      "expect": "route-duplicate",
+      "proves": "two pages cannot claim one route"
+    },
+    "unknown-provenance-node.json": {
+      "expect": "provenance-unknown-node",
+      "proves": "provenance cannot attribute work to a node that does not exist"
+    },
+    "ai-node-without-request.json": {
+      "expect": "ai-node-without-request",
+      "proves": "an AI attribution with no request id or model is an unauditable claim"
+    },
+    "figma-unknown-page.json": {
+      "expect": "figma-unknown-page",
+      "proves": "the sync key cannot bind a page the document does not contain"
+    },
+    "layout-node.json": {
+      "expect": "structural",
+      "proves": "v1 has no layout kind: there is no canonical layout registry for a layout: reference to resolve against"
+    },
+    "stored-rendered-output.json": {
+      "expect": "structural",
+      "proves": "no rendered output at the document ROOT: a top-level renderedHtml key is rejected as an unknown property. It does not prove that rendered output cannot be stored at all \u2014 propValue accepts any string up to 4000 characters, so a props value can still carry markup or CSS today. Giving that rule teeth needs a per-component prop contract, which is a later slice; see docs/create/README.md."
+    },
+    "missing-schema-version.json": {
+      "expect": "structural",
+      "proves": "a document's version is never inferred from its shape"
+    },
+    "no-pages.json": {
+      "expect": "structural",
+      "proves": "a project has at least one page"
+    },
+    "stale-next-node-id.json": {
+      "expect": "next-node-id-too-low",
+      "proves": "a stale counter is rejected: node_3 is live while nextNodeId is 3, so the next allocation would hand out an id already in use. This is the check that replaces the document-order comparison \u2014 identity is allocation-ordered, and nothing in the validator looks at where a node sits"
+    },
+    "retired-id-above-next.json": {
+      "expect": "next-node-id-too-low",
+      "proves": "the second half of \u201cdeletion does not make an id reusable\u201d: node_9 is retired while nextNodeId is 3, so the counter would allocate a spent id. A derived \u201chighest live id plus one\u201d would accept this document, which is why the counter is persisted"
+    },
+    "missing-next-node-id.json": {
+      "expect": "structural",
+      "proves": "the counter is required, never inferred: a document without nextNodeId has no allocation frontier, so no allocation from it could be proved safe"
+    },
+    "undecodable-preset.json": {
+      "expect": "preset-undecodable",
+      "why": "designSystem.preset is a well-formed KX1_ envelope carrying real base64url whose JSON payload declares preset version 999. The schema can only constrain the envelope, so only the canonical codec in packages/create-preset can say the payload is unreadable. Without that call the document would be stored claiming a design system no build can load."
+    }
+  }
+}
