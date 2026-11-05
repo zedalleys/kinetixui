@@ -12,10 +12,14 @@ import { docsGuideNav, mainNav, siteConfig } from "@/lib/site";
 // LTR, the right in RTL — and carries its own close button, because the header trigger is outside the modal.
 //
 // Where it shows depends on the page. Everywhere else the primary nav bar takes over at `md`. On /docs/* the docs
-// sidebar only appears at `lg`, so hiding this at `md` left 768–1023px with no way to reach another docs page but
+// sidebar only appears at `lg-rem`, so hiding this at `md` left 768–1023px with no way to reach another docs page but
 // the pager and in-page links. On docs pages it stays until the sidebar takes over.
+//
+// `lg-rem`, not `lg`: the sidebar's own breakpoint. The two have to be the same question asked once, or a reader
+// between them gets both or neither. At 1280px with a 32px default font size `lg` is true and `lg-rem` is not, so
+// a `lg:hidden` trigger beside a `lg-rem:block` sidebar would leave that reader with no docs navigation at all.
 export function menuBreakpointClass(pathname: string): string {
-  return pathname === "/docs" || pathname.startsWith("/docs/") ? "lg:hidden" : "md:hidden";
+  return pathname === "/docs" || pathname.startsWith("/docs/") ? "lg-rem:hidden" : "md:hidden";
 }
 
 export function MobileNav() {

@@ -91,8 +91,13 @@ in your editor if you are unsure: `KxButton` is a directive, `KxCard` is a compo
 ## Environment
 
 - **Angular 21** — `@angular/core` and `@angular/forms` are peers at `^21.0.0`
-- **`@kinetixui/tokens`** is a peer at `>=0.24.0 <0.26.0`; install it alongside this package. It reads
-  `--surface-grouped` and `--on-info-container`, which tokens 0.23.x does not define
+- **`@kinetixui/tokens`** is a peer at `>=0.24.0 <0.27.0`; install it alongside this package. It reads
+  `--surface-grouped` and `--on-info-container`, which tokens 0.23.x does not define, and
+  `--on-success-container`, `--on-warning-container` and `--on-destructive-container` (the text of a
+  `kx-banner` / `kx-inform` success, warning or error), which arrive in tokens 0.26.0. The stylesheet
+  gives each of those three a CSS fallback to the plain status role, so on tokens 0.24.x and 0.25.x the
+  notices keep the colour they had before the contrast fix instead of inheriting an arbitrary ancestor
+  colour; the lower bound therefore stays where it was
 - Standalone APIs only — no NgModules are exported
 - Built with ng-packagr; ships `fesm2022` plus types, and is compiled and strict-template-typechecked in
   CI on every change

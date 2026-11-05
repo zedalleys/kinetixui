@@ -3477,8 +3477,45 @@
           "R"
         ],
         "page": false
+      },
+      {
+        "id": "education",
+        "title": "Education & learning",
+        "summary": "Courses, lessons, enrolment, progress, assessment and cohorts.",
+        "families": [
+          "AC",
+          "N",
+          "M",
+          "P",
+          "W",
+          "A"
+        ],
+        "page": false
+      },
+      {
+        "id": "agriculture",
+        "title": "Agriculture & agritech",
+        "summary": "Fields and zones, crop cycles, soil and weather telemetry, irrigation and yield.",
+        "families": [
+          "S",
+          "A",
+          "R",
+          "Y"
+        ],
+        "page": false
       }
     ],
+    "blockCategoryDomains": {
+      "$comment": "Which business domains a block category MAY serve. Declared, never inferred: `commerce` is both a business domain (an industry a product serves) and `Commerce` a block category (a shelf in the block filter), and equal names do not imply a mapping. An empty list means domain-neutral — the category serves any industry and reaches a specific one only through the capability rows a block is cited by, the same rule a domain-neutral family already follows. It does NOT mean the category serves nothing. Keys and values are namespaced; check:taxonomy-namespaces fails when a category is missing, when a key or value is unprefixed, and when either side names something the manifests do not define.",
+      "block-category:forms": [],
+      "block-category:data": [],
+      "block-category:application": [],
+      "block-category:commerce": [
+        "domain:commerce"
+      ],
+      "block-category:feedback": [],
+      "block-category:marketing": []
+    },
     "workflows": [
       {
         "id": "checkout",

@@ -154,6 +154,9 @@ export const FLUTTER_COLOR_FIELDS: readonly (readonly [field: string, token: str
   ["popover", "popover"],
   ["popoverForeground", "popover-foreground"],
   ["onInfoContainer", "on-info-container"],
+  ["onSuccessContainer", "on-success-container"],
+  ["onWarningContainer", "on-warning-container"],
+  ["onDestructiveContainer", "on-destructive-container"],
   ["scrim", "scrim"],
 ] as const;
 
@@ -233,9 +236,10 @@ function header(symbol: string, theme: ResolvedCreateTheme): string {
     "// They apply on the web. That is the only thing this file does not carry.",
     "//",
     "// A field written as `KinetixColors.light.…` is one this design did not change, and it keeps",
-    "// following the library. Eight of them — tertiary, tertiaryForeground, info, infoForeground,",
-    "// onInfoContainer, scrim, successForeground and warningForeground — are always references, because",
-    "// Create does not model those tokens.",
+    "// following the library. Eleven of them — tertiary, tertiaryForeground, info, infoForeground,",
+    "// onInfoContainer, onSuccessContainer, onWarningContainer, onDestructiveContainer, scrim,",
+    "// successForeground and warningForeground — are ALWAYS written that way, because Create does not",
+    "// model those tokens.",
     "//",
     "// These are `static final` rather than `static const`: Dart's constant expressions do not include",
     "// instance field access, so a `static const` could not reference the shipped palette. The theme is",

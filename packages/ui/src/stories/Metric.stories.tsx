@@ -5,7 +5,11 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Metric } from "@kinetixui/ui";
 
 const Demo = () => (
-    <div className="grid w-full max-w-lg grid-cols-2 gap-4">
+    /* `sm-rem` rather than a hard `grid-cols-2`: two columns at every width put each card in 66px of a
+       320px screen at the reader's doubled text size, which is less than one word of its own content. The
+       column count follows the reader's measured width, the way the dashboard scene and the stat-cards
+       block already do, so the demo also shows the layout someone should copy. */
+    <div className="grid w-full max-w-lg grid-cols-1 gap-4 sm-rem:grid-cols-2">
       <Metric label="Active users" value="2,420" trend="up" change="12%" />
       <Metric label="Churn rate" value="1.2%" trend="down" change="0.3%" />
     </div>
