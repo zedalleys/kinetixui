@@ -214,6 +214,26 @@ All four are path-filtered to the platform's package **plus** `tokens/**`
 and `style-dictionary/**`, so a token change re-checks every native
 library.
 
+### Two rules for gates that read the built site
+
+Both were measured on retired work and both are easy to get wrong:
+
+1. **Assert a style in the built output, not in source.** Tailwind removes a
+   hand-written `@layer components` rule that no file under the content globs
+   names. Of four primitives authored into `globals.css` with only one
+   referenced, the built CSS carried the other three zero times — they would
+   have passed review and reached no visitor. So author a utility **with its
+   first consumer**, and have the gate read
+   `apps/web/.next/static/css` rather than the stylesheet you wrote.
+2. **A rendered gate is not evidence until a control has made it fail.** Unlike
+   a file gate, a gate that stops observing its subject can keep passing,
+   because it compares two renderings and two renderings of the wrong thing
+   still compare. If a row cannot be made to fail in a controlled way, delete
+   the row — do not keep it green.
+
+`NOTES.md` has the longer version, including the served-probe pre-flight a
+harness needs once it mutates built files behind a running server.
+
 ## Cutting a release (the changelog page)
 
 Changesets opens a "version packages" PR that bumps the core npm packages — `@kinetixui/tokens`,
