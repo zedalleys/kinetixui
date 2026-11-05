@@ -162,34 +162,25 @@ const TEXT_SCALE_PENDING = new Map([]);
  * It is NOT a way to carry a real contrast failure. Only a finding whose true ratio has been measured against
  * the background the reader actually sees belongs here, with that number in `why`.
  */
-const AXE_ARTIFACTS = new Map([
-  [
-    "/create",
-    [
-      {
-        view: "dark/laptop/text100%",
-        rule: "color-contrast",
-        node: ".text-destructive",
-        // The `laptop` width found this on its first run. At 1024px the preview frame is 574px wide
-        // (x 417–991) while the dashboard scene inside it paints its Metric trend at x 974–1019: 28px past
-        // the frame's `overflow-hidden` edge, so the reader never sees it and `elementsFromPoint` at its
-        // centre returns `main` and `body`. axe therefore measured #c70a0a on the page's #050b10 and got
-        // 3.27. Against the white card the element is actually inside, the same two colours measure
-        // **6.04**, which passes AA at 12px. There is no contrast defect here.
-        //
-        // The clipping IS a defect, and it is not this gate's: the preview scene's `sm-rem:` classes are
-        // viewport media queries, so a 574px frame at a 1024px viewport is asked to lay out the desktop
-        // arrangement. Nothing currently measures content painted outside its own clip, at any width.
-        why: "node painted 28px outside its clipping frame; true ratio against its white card is 6.04:1",
-        // The ratio above is re-measured on every run against the backdrop the node is really drawn over,
-        // and the entry fails if it moves. Without it the entry excuses the finding on the mechanism alone:
-        // a node still outside its clip, still reported by axe, but now genuinely illegible where it is
-        // painted, would keep the same key and stay silent. Measured by hand once; asserted from here on.
-        trueRatio: 6.04,
-      },
-    ],
-  ],
-]);
+/*
+  Empty, and the machinery below is kept.
+
+  It held one entry: a `color-contrast` finding on `.text-destructive` at `/create`, dark/laptop/text100%.
+  At 1024px the preview frame was 574px wide while the dashboard scene inside it painted its Metric trend
+  at x 974–1019 — 28px past the frame's `overflow-hidden` edge — so `elementsFromPoint` at the node's
+  centre returned `main` and `body`, axe measured #c70a0a on the page's #050b10 and got 3.27, and the true
+  ratio against the white card the node actually belonged to was 6.04. There was never a contrast defect;
+  there was a clipping defect, and the entry said so.
+
+  The clipping defect is fixed. The scene wrapped each Metric — itself a bordered, padded card — in a
+  second `Card` + `CardContent p-4`, which cost the content box 34px; and the Metric's value/trend row
+  could neither wrap nor shrink, so the pair was painted outside it. The scene now renders each Metric as
+  the card it is, and the row wraps. The trend is inside its frame at every width this gate sweeps, the
+  finding no longer occurs, and this gate's own end-of-run check for an unearned entry is what said so.
+  A `spacing` check in scripts/web-quality-browser.mjs measures the pair directly from here on, with a
+  two-sided fixture control that proves it still fails on the old layout.
+*/
+const AXE_ARTIFACTS = new Map([]);
 
 /** Marks an artefact entry as still earned; an unseen entry fails the run at the end. */
 const artifactsSeen = new Set();
