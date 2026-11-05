@@ -176,8 +176,37 @@ export default function HomePage() {
 
       {/* ─── [01] hero ───────────────────────────────────────────────────────── */}
       <section className="kx-chapter overflow-hidden border-b border-border">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 kx-grid-bg opacity-50" />
-        <div aria-hidden="true" className="kx-glow -end-40 -top-32 size-[46rem]" />
+        {/*
+          The hero carries no decorative texture. It used to hold a 44px lattice whose mask was centred at
+          `30% 0%` — the middle of the copy column — so the texture was strongest across the headline and the
+          paragraph and had faded out by the time it reached the system map, the one thing it was meant to
+          sit behind. That position is physical, so under `dir="rtl"` it landed on the map instead. What is
+          left is the structure the whole page already carries: the `.kx-edges` margin rules, the type, and
+          the one glow below.
+
+          The glow is placed rather than centred, so an offset from one corner means different things at
+          different widths. Anchored to the top it sits under the map while the map is beside the copy, but
+          below `lg-rem` the map moves under the copy and the same offset puts the glow over the headline
+          instead — measured, 100% of the headline and 0% of the map at 390px. That is not free: the lede
+          paragraph is `muted-foreground` at 16px, which clears AA by 0.60 in light theme, and the gradient
+          took the most adverse background pixel under its glyphs to 4.28:1 against the 4.5 floor, with 39%
+          of that paragraph's glyph pixels below the floor. The statistic matters: against the mean of the
+          same background it measured 4.59:1 and would have looked compliant. It was worst at 390px but not
+          confined to it — glyph-sampled it fails from 320px to at least 768px, where it reads 4.51:1 by
+          that statistic and 4.47:1 by the whole-line-box one `check:home-systems` uses, and again at 1200px
+          for a reader whose browser font size is 32px, which is what the `-rem` breakpoints exist to track.
+          axe
+          cannot see any of it, because it will not resolve a background behind a gradient and reports
+          "incomplete" rather than a failure.
+
+          So the anchor follows the layout: bottom-anchored while the map is below the copy, top-anchored
+          from `lg-rem` up, where the composition — and the approved appearance — is unchanged. The 3.5rem
+          offset is cosmetic margin, not a guarantee: what keeps the targets ticker's own muted text safe is
+          `closest-side`, which puts the gradient's alpha at zero on the box's own edge. Measured, the ticker
+          text reads 5.10:1 with this offset and 5.06:1 with none, and under `prefers-reduced-motion` the
+          band wraps and grows into the glow's box by 26px with no change to that figure.
+        */}
+        <div aria-hidden="true" className="kx-glow kx-glow-soft -end-40 bottom-14 size-[46rem] lg-rem:bottom-auto lg-rem:-top-32" />
         <div className={container}>
           {/*
             Hero vertical rhythm is a mobile-first decision. At 390×800 the primary CTA and the install command
@@ -186,7 +215,8 @@ export default function HomePage() {
           */}
           <div className="grid grid-cols-1 gap-14 py-12 sm:py-16 md:py-24 lg-rem:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg-rem:items-center lg-rem:gap-12 xl-rem:gap-20">
             {/* a size container: the headline is sized against this column, so its longest word always fits it */}
-            <div className="max-w-3xl [container-type:inline-size]">
+            {/* `data-hero-copy`: what the hero's decoration must stay off below `lg-rem`, which check:home-systems asserts */}
+            <div data-hero-copy className="max-w-3xl [container-type:inline-size]">
               {/*
                 The headline names the architecture rather than counting platforms: one shared language, and an
                 implementation per platform written in that platform's idiom (CLAIMS.md A2, A3). The number is
@@ -235,7 +265,13 @@ export default function HomePage() {
                   <Link
                     href="/docs/installation"
                     {...ctaAttrs("homepage_hero", "installation")}
-                    className="text-primary underline-offset-4 hover:underline"
+                    // Always underlined, for the same reason as the "What ships where" link below: inside
+                    // mixed foreground/muted text, colour alone does not mark a link. It measured 1.31:1
+                    // against the muted prose around it in light and 1.14:1 in dark, against the 3:1 that
+                    // technique G183 asks of a colour-only link under WCAG 1.4.1, which states no ratio of
+                    // its own — and the hero's old backdrop gradient hid that from axe, which could only report
+                    // "contrast could not be determined" while it was there.
+                    className="text-primary underline underline-offset-4"
                   >
                     Installation
                   </Link>{" "}

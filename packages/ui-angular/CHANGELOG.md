@@ -1,5 +1,67 @@
 # @kinetixui/angular
 
+## 0.26.2
+
+### Patch Changes
+
+- a5fab42: `.kx-metric`'s value and trend now wrap instead of colliding.
+  
+  The Angular stylesheet stated the same layout contract as React's `Metric` and carried the same
+  defect: `.kx-metric__body` was a `space-between` flex row of two intrinsically-sized children, so
+  once the value and the trend together exceeded the card's content box the pair was painted outside
+  it, with no way for either child to give ground.
+  
+  `.kx-metric__body` now wraps, with `column-gap: var(--spacing-3)` and `row-gap: var(--spacing-1)`;
+  `.kx-metric__value` takes `min-width: 0` and `overflow-wrap: break-word`; `.kx-metric__trend` keeps
+  `white-space: nowrap` on the figure while allowing the arrow and figure to wrap relative to each
+  other as the last resort. This is the shared contract — semantics, state model, accessibility
+  outcome — expressed in idiomatic CSS rather than a copy of the React class list, and it uses the
+  existing spacing tokens rather than new values.
+  
+  No selector, no public class name and no component API changed; the Angular package remains Preview
+  and this release does not move its graduation criteria.
+  
+  The browser measurement that drove the contract was taken on the React implementation, which is
+  where the defect was reported and reproduced. The Angular change was verified by the package's own
+  stylesheet gates and its negative controls, not by a rendered Angular measurement, so it is stated
+  as a corrected layout contract rather than as rendered Angular evidence.
+
+## 0.26.1
+
+### Patch Changes
+
+- 5cfbb84: A disabled `<a kxButton>` is no longer operable from the keyboard.
+  
+  `aria-disabled` on the anchor form was enforced by the stylesheet alone, with `pointer-events: none`. That
+  suppressed the pointer and nothing else: the anchor stayed in the tab order and <kbd>Enter</kbd> still
+  navigated, so the control was inert for a mouse and live for a keyboard. The source comment asked callers
+  to drop `href` as well, which made the only correct usage a convention rather than part of the API.
+  
+  `KxButton` now guards activation itself — click, <kbd>Enter</kbd> and <kbd>Space</kbd> are cancelled and
+  kept from ancestor handlers while `aria-disabled="true"`, read at event time so `[attr.aria-disabled]`
+  needs no second input. `href` can stay. The control stays focusable on purpose: that is the difference
+  between `aria-disabled` and `disabled` — it remains discoverable, so a keyboard user reaches it and hears
+  why it is unavailable instead of finding a gap. `pointer-events: none` is dropped for the same reason,
+  leaving `cursor: not-allowed`, the shape `.kx-menu__item[aria-disabled]` and `.kx-pagination__link`
+  already use, so a pointer user can hover it and read the cursor.
+  
+  The `<button>` form is untouched; the browser disables it and never dispatches these events.
+  
+  The guards are registered in the directive's constructor rather than declared as `host` listeners, and the
+  difference is load-bearing: Angular creates an element's own template listeners before a directive's host
+  listeners, so a host-bound guard runs second and a `(click)` the caller wrote on the same anchor has
+  already fired — `stopImmediatePropagation` included, since registration order rather than phase decides
+  it. A constructor listener runs first, so the caller's handler is suppressed too and no `disabled` input
+  is needed. Both arrangements were measured; the spec asserts the working one, so moving the listeners back
+  into `host` fails a test instead of quietly reopening the gap.
+  
+  Also, Angular's styles now read `--on-success-container`, `--on-warning-container` and
+  `--on-destructive-container` for `kx-banner` / `kx-inform` success, warning and error text, which are new
+  in the accompanying `@kinetixui/tokens` 0.26.0. Each one carries a CSS fallback to the plain status role,
+  so on the older tokens this package still supports the notices keep their previous colour rather than
+  inheriting an arbitrary ancestor colour, and only the peer range's upper bound moves (to `<0.27.0`). See
+  the README's Environment note.
+
 ## 0.26.0
 
 ### Minor Changes
