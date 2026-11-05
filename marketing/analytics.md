@@ -539,11 +539,19 @@ past events.
 **Policy.** The team's own browsing is real use of the site but not audience growth. It is kept, labelled and
 reported as its own cohort; it is not excluded from the canonical rate (only diagnostic traffic is, rule 7).
 
-**Marking.** Open any page once with `?kx_traffic=internal` in each browser the team uses (for example
-`https://kinetixui.com/?kx_traffic=internal`). The mark is stored per browser (localStorage), so every later visit
-from that browser, in any tab, carries `kx_traffic_type: "internal"`. A diagnostic mark in the same tab wins.
-`?kx_traffic=clear` removes both. Unmarked team visits are indistinguishable from audience visits; the mark is the
-only identification, and nothing is inferred after the fact.
+**Marking.** Open any page once with `?kx_traffic=internal` (for example
+`https://kinetixui.com/?kx_traffic=internal`). The mark is **session-scoped** (sessionStorage, IA-5.21 §4.1): it
+survives client-side navigation and a reload within the tab, and every later event in that session carries
+`kx_traffic_type: "internal"` — but a **new browser session does not inherit it** and must be marked again. A
+diagnostic mark in the same tab wins. `?kx_traffic=clear` removes both, so marking is reversible.
+
+It was device-scoped (localStorage) before IA-5.21; the superseded key is deleted when a browser that still holds
+it next loads the site, so no durable marker is left behind. The stored value is the bare word `internal`: no id,
+no fingerprint, nothing tied to a person, and nothing that depends on a sign-in, of which the site has none.
+
+**The parameter is an exclusion hint, not a security mechanism.** Anyone can append it, and it grants nothing.
+Unmarked team visits are indistinguishable from audience visits; the mark is the only identification, and nothing
+is inferred after the fact.
 
 **Why not PostHog's "internal and test users" cohort.** Project 620385 filters test accounts with cohort 583396
 (`not_in`). That cohort can never contain anyone: the site uses `person_profiles: identified_only` and has no

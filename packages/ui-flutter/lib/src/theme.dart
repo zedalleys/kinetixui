@@ -51,9 +51,15 @@ class KinetixColors {
     required this.popover,
     required this.popoverForeground,
     Color? onInfoContainer,
+    Color? onSuccessContainer,
+    Color? onWarningContainer,
+    Color? onDestructiveContainer,
     Color? scrim,
     required this.chart,
   })  : onInfoContainer = onInfoContainer ?? info,
+        onSuccessContainer = onSuccessContainer ?? success,
+        onWarningContainer = onWarningContainer ?? warning,
+        onDestructiveContainer = onDestructiveContainer ?? destructive,
         scrim = scrim ?? const Color(0x66000000);
 
   final Color primary;
@@ -96,6 +102,17 @@ class KinetixColors {
   /// its own 10% tint in light; this role clears AA. A theme built before the role existed gets `info`, which
   /// is what those widgets drew before.
   final Color onInfoContainer;
+
+  /// Text and icons on a tinted `success` surface — Banner and Inform success. `success` itself
+  /// fails AA on its own 15% tint over `muted`. Falls back to `success`.
+  final Color onSuccessContainer;
+
+  /// Text and icons on a tinted `warning` surface. Falls back to `warning`.
+  final Color onWarningContainer;
+
+  /// Text and icons on a tinted `destructive` surface — Banner and Inform error. Falls back to
+  /// `destructive`.
+  final Color onDestructiveContainer;
 
   /// The dimming layer behind a modal surface: Dialog, Sheet, Sidebar. Carries its own alpha, so draw it as
   /// is. A theme built before the role existed gets black at 40%, which is what those widgets drew before.
@@ -142,6 +159,9 @@ class KinetixColors {
     popover: KinetixColorScheme.popover,
     popoverForeground: KinetixColorScheme.popoverForeground,
     onInfoContainer: KinetixColorScheme.onInfoContainer,
+    onSuccessContainer: KinetixColorScheme.onSuccessContainer,
+    onWarningContainer: KinetixColorScheme.onWarningContainer,
+    onDestructiveContainer: KinetixColorScheme.onDestructiveContainer,
     scrim: KinetixColorScheme.scrim,
     chart: <Color>[
       KinetixColorScheme.chart1,
@@ -191,6 +211,9 @@ class KinetixColors {
     popover: KinetixColorSchemeDark.popover,
     popoverForeground: KinetixColorSchemeDark.popoverForeground,
     onInfoContainer: KinetixColorSchemeDark.onInfoContainer,
+    onSuccessContainer: KinetixColorSchemeDark.onSuccessContainer,
+    onWarningContainer: KinetixColorSchemeDark.onWarningContainer,
+    onDestructiveContainer: KinetixColorSchemeDark.onDestructiveContainer,
     scrim: KinetixColorSchemeDark.scrim,
     chart: <Color>[
       KinetixColorSchemeDark.chart1,

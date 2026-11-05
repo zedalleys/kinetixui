@@ -36,9 +36,10 @@
  *   robots               robots.txt disallows a page route or points at the wrong sitemap
  *   orphan               an indexable page no other page links to (the sitemap alone is not a link graph)
  */
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join, relative, resolve } from "node:path";
+import { join, resolve } from "node:path";
+import { NOT_FOUND, siteInventory, unresolvedPath } from "./site-inventory.mjs";
 
 const require = createRequire(resolve("apps/web/package.json"));
 const { JSDOM } = require("jsdom");
@@ -71,31 +72,13 @@ if (!existsSync(APP_DIR)) {
 
 /* ----------------------------------------------------------------------------------------- inventory */
 
-function walk(dir) {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
-    e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)],
-  );
-}
-
-const htmlFiles = walk(APP_DIR).filter((f) => f.endsWith(".html"));
-const routeOf = (file) => {
-  const r = "/" + relative(APP_DIR, file).replace(/\.html$/, "");
-  return r === "/index" ? "/" : r;
-};
-const pages = new Map(htmlFiles.map((f) => [routeOf(f), f]));
-const NOT_FOUND = "/_not-found";
-
-const publicFiles = new Set(walk(PUBLIC_DIR).map((f) => "/" + relative(PUBLIC_DIR, f)));
-/** Non-HTML routes Next builds itself (metadata files). */
-const builtAssets = new Set(
-  walk(APP_DIR)
-    .filter((f) => f.endsWith(".body"))
-    .map((f) => "/" + relative(APP_DIR, f).replace(/\.body$/, "")),
-);
-
-/** Redirect sources, read from the same export next.config.mjs serves. */
-const { routeRedirects } = await import(resolve("apps/web/next.config.mjs"));
-const redirectSources = new Set(routeRedirects.map((r) => r.source));
+/**
+ * The built pages, the files under public/, the non-HTML routes Next builds itself and the configured
+ * redirects. Shared with `check:release-links`, which asks the same questions about release-note hrefs:
+ * one inventory, so the two gates cannot come to different conclusions about what exists.
+ */
+const inventory = await siteInventory({ nextDir: NEXT_DIR, publicDir: PUBLIC_DIR });
+const { pages, publicFiles, builtAssets } = inventory;
 
 const sitemapXml = readFileSync(join(APP_DIR, "sitemap.xml.body"), "utf8");
 const sitemapUrls = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
@@ -292,12 +275,7 @@ for (const line of robotsTxt.split("\n").filter((l) => /^disallow:/i.test(l))) {
 }
 
 /* Internal links. */
-const linkOk = (href) => {
-  const path = href.replace(/[?#].*$/, "") || "/";
-  if (pages.has(path) && path !== NOT_FOUND) return true;
-  if (publicFiles.has(path) || builtAssets.has(path) || redirectSources.has(path)) return true;
-  return false;
-};
+const linkOk = (href) => unresolvedPath(inventory, href) === null;
 for (const p of extracted) {
   if (p.route === NOT_FOUND) continue;
   for (const href of p.links) {

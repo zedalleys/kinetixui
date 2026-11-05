@@ -3,7 +3,7 @@
  * thumbnails.
  *
  *   pnpm build:web && pnpm --filter @kinetixui/web start &
- *   node scripts/web-quality-browser.mjs [--base http://127.0.0.1:3000] [--only type,contrast,touch,thumbs,layout] [--json]
+ *   node scripts/web-quality-browser.mjs [--base http://127.0.0.1:3000] [--only type,contrast,touch,thumbs,layout,spacing] [--json]
  *
  * `check:typography` reads source; it cannot see a class that resolves to 10px through a stylesheet, a size that is
  * inherited, or a label that is legible only because it happens to sit on a light card. This measures the page:
@@ -22,6 +22,15 @@
  *   thumbs    every gallery thumbnail on /components is `aria-hidden`, contains nothing focusable and no heading, and
  *             its mock stays inside its frame in LTR and RTL.
  *   layout    no sideways page scroll at 320/375/390/768/1280, 100% and 200% text, LTR and RTL.
+ *   spacing   the three compositions whose spacing was only ever judged by eye are measured instead. A Metric's
+ *             value and its trend never paint outside the row that holds them, and keep at least MIN_PAIR_GAP
+ *             between them whenever they share a line (they wrap rather than compress, so the alternative to the
+ *             gap is a second line, never a collision). The component preview's two toolbar rails — mode, and
+ *             direction + motion — start at the same inline inset and stand the same height, so they read as one
+ *             component. Create's preview head and its configuration heads put their index and label on the same
+ *             line, which they did not while the preview head was a hand-rolled copy of SectionHead. Swept over
+ *             width, text scale and direction; the Metric row carries an in-run negative control, so a run whose
+ *             collision detector has stopped working fails instead of passing.
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium (local runs); CI uses `playwright install chromium`.
  */
@@ -29,7 +38,7 @@ import { chromium } from "playwright";
 
 const arg = (name, fallback) => (process.argv.includes(name) ? process.argv[process.argv.indexOf(name) + 1] : fallback);
 const base = arg("--base", "http://127.0.0.1:3000").replace(/\/$/, "");
-const only = new Set(arg("--only", "type,contrast,touch,thumbs,layout").split(","));
+const only = new Set(arg("--only", "type,contrast,touch,thumbs,layout,spacing").split(","));
 const asJson = process.argv.includes("--json");
 /** Browser checks run against the deployed site's analytics code; mark the traffic so it never reads as a visit. */
 const url = (path) => `${base}${path}${path.includes("?") ? "&" : "?"}kx_traffic=diagnostic`;
@@ -41,8 +50,15 @@ const CONTRAST_MIN = 4.5;
 /** The enforced coarse-pointer hit area. WCAG 2.5.8's minimum is 24px; this is the comfortable-touch floor. */
 const TOUCH_MIN = 40;
 
+/**
+ * The floor for the gap between a Metric's value and its trend while the two share a line. Not a threshold a
+ * standard names — it is this system's own tightest "related but distinct" spacing, and the number the row was
+ * pinned at on the day it started painting its trend outside the card.
+ */
+const MIN_PAIR_GAP = 8;
+
 const failures = [];
-const report = { type: [], contrast: [], touch: [], thumbs: [], layout: [] };
+const report = { type: [], contrast: [], touch: [], thumbs: [], layout: [], spacing: [] };
 const fail = (msg) => failures.push(msg);
 
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
@@ -407,6 +423,223 @@ if (only.has("layout")) {
   }
 }
 
+/* ── spacing ──────────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Read every Metric on the page. Returns one row per metric: whether its value/trend row paints outside its
+ * own content box, and the gap between the two when they share a line.
+ *
+ * `scrollWidth > clientWidth` on the row is the whole collision test. It is true exactly when the two children
+ * together need more than the row has, which is also the only way they can touch — neither can be squeezed
+ * (a numeral must not be truncated, and an arrow must not be split from its figure), so the row either wraps
+ * or it overflows.
+ */
+const METRIC_PROBE = () => {
+  const rows = [...document.querySelectorAll("[data-kx-metric-pair]")];
+  return rows.map((row) => {
+    const value = row.children[0];
+    const trend = row.children[1];
+    const rtl = getComputedStyle(row).direction === "rtl";
+    const vb = value.getBoundingClientRect();
+    const tb = trend ? trend.getBoundingClientRect() : null;
+    const stacked = tb ? tb.top >= vb.bottom - 1 : false;
+    return {
+      value: (value.textContent || "").trim(),
+      overflow: row.scrollWidth - row.clientWidth,
+      stacked,
+      gap: tb && !stacked ? +(rtl ? vb.left - tb.right : tb.left - vb.right).toFixed(2) : null,
+      hasTrend: Boolean(trend),
+    };
+  });
+};
+
+const SPACING_WIDTHS = [320, 390, 768, 1024, 1280, 1440];
+const METRIC_PAGES = ["/create", "/docs/components/metric"];
+
+if (only.has("spacing")) {
+  /*
+    The instrument is checked against a fixture pair before it is trusted on the page, the same way the
+    contrast pass checks itself against a pair either side of its threshold. One fixture is the Metric row
+    as it was — one line, `space-between`, an 8px gap, nothing allowed to give — in a box narrower than its
+    two children need. The other is the row as it ships, in the same box. The defective one must be flagged
+    and the shipped one must not; a run where either is wrong fails here rather than reporting a clean
+    sweep over the real pages.
+
+    A fixture rather than the live rows: the live cards are correctly sized now, so "restore the defect"
+    on them depends on out-measuring a layout that is already healthy, which is how a control ends up
+    passing vacuously. The fixture states the two layouts outright.
+  */
+  {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce" });
+    const page = await open(context, "/create");
+    const fixtures = await page.evaluate(() => {
+      const BOX = 96; // narrower than the pair below needs, so the two layouts must diverge
+      const host = document.createElement("div");
+      host.setAttribute("data-spacing-fixture", "");
+      host.style.cssText = "position:fixed;top:0;left:0;visibility:hidden";
+      const build = (broken) => {
+        const box = document.createElement("div");
+        box.style.cssText = `width:${BOX}px`;
+        const row = document.createElement("div");
+        row.setAttribute("data-fixture-pair", broken ? "broken" : "shipped");
+        row.style.cssText = broken
+          ? "display:flex;align-items:flex-end;justify-content:space-between;gap:8px;font:16px/1 sans-serif"
+          : "display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;column-gap:12px;row-gap:4px;font:16px/1 sans-serif";
+        const value = document.createElement("p");
+        value.textContent = "0.42%";
+        value.style.cssText = broken ? "margin:0;font-size:28px" : "margin:0;min-width:0;overflow-wrap:break-word;font-size:28px";
+        const trend = document.createElement("span");
+        trend.textContent = "↓ 0.1%";
+        trend.style.cssText = broken
+          ? "display:inline-flex;align-items:center;white-space:nowrap"
+          : "display:inline-flex;flex-wrap:wrap;min-width:0;align-items:center;white-space:nowrap";
+        if (broken) {
+          value.style.flexShrink = "0";
+          trend.style.flexShrink = "0";
+        }
+        row.append(value, trend);
+        box.append(row);
+        return box;
+      };
+      host.append(build(true), build(false));
+      document.body.append(host);
+      const read = (kind) => {
+        const row = host.querySelector(`[data-fixture-pair="${kind}"]`);
+        return { kind, overflow: row.scrollWidth - row.clientWidth, width: Math.round(row.getBoundingClientRect().width) };
+      };
+      const out = [read("broken"), read("shipped")];
+      host.remove();
+      return { box: BOX, out };
+    });
+    const broken = fixtures.out.find((f) => f.kind === "broken");
+    const shipped = fixtures.out.find((f) => f.kind === "shipped");
+    report.spacing.push({ check: "negative-control", box: fixtures.box, broken, shipped });
+    if (!(broken.overflow > 0))
+      fail(`spacing negative control: the defective row in a ${fixtures.box}px box reported no overflow, so the collision detector cannot fail`);
+    if (shipped.overflow > 0)
+      fail(`spacing negative control: the shipped row in the same ${fixtures.box}px box reported ${shipped.overflow}px of overflow, so the detector flags a correct layout`);
+    const live = await page.evaluate(METRIC_PROBE);
+    if (!live.length) fail("spacing: no Metric found on /create — the probe is measuring nothing");
+    await page.close();
+    await context.close();
+  }
+
+  for (const width of SPACING_WIDTHS) {
+    for (const textScale of [1, 2]) {
+      for (const dir of ["ltr", "rtl"]) {
+        const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
+        const where = `${width}px/${textScale * 100}%/${dir}`;
+
+        for (const path of METRIC_PAGES) {
+          const page = await open(context, path, { dir, textScale });
+          const metrics = await page.evaluate(METRIC_PROBE);
+          const colliding = metrics.filter((m) => m.overflow > 0);
+          const tight = metrics.filter((m) => m.gap !== null && m.gap < MIN_PAIR_GAP);
+          report.spacing.push({
+            check: "metric", where, path, n: metrics.length,
+            stacked: metrics.filter((m) => m.stacked).length,
+            minGap: metrics.reduce((lo, m) => (m.gap === null ? lo : Math.min(lo, m.gap)), Infinity),
+          });
+          if (metrics.length === 0) fail(`spacing metric ${where} ${path}: no Metric rendered — the probe is measuring nothing`);
+          for (const m of colliding) fail(`spacing metric ${where} ${path}: value "${m.value}" and its trend paint ${m.overflow}px outside their row`);
+          for (const m of tight) fail(`spacing metric ${where} ${path}: value "${m.value}" and its trend share a line ${m.gap}px apart, under the ${MIN_PAIR_GAP}px floor`);
+          await page.close();
+        }
+
+        /* the component preview's toolbar: two rails, one component */
+        {
+          const page = await open(context, "/docs/components/button", { dir, textScale });
+          const rails = await page.evaluate(() => {
+            const card = document.querySelector("[data-cp]");
+            if (!card) return null;
+            const cb = card.getBoundingClientRect();
+            const rtl = getComputedStyle(card).direction === "rtl";
+            const startInset = (el) => +(rtl ? cb.right - el.getBoundingClientRect().right : el.getBoundingClientRect().left - cb.left).toFixed(2);
+            const endInset = (el) => +(rtl ? el.getBoundingClientRect().left - cb.left : cb.right - el.getBoundingClientRect().right).toFixed(2);
+            const mode = card.querySelector('[aria-label="View preview or code"]');
+            const direction = card.querySelector('[aria-label="Preview direction"]');
+            const motion = direction?.parentElement?.querySelector("p");
+            if (!mode || !direction || !motion) return null;
+            // The environment rail wraps rather than scrolling sideways, so once the status drops below
+            // the direction control it is a row of its own and no longer reaches the rail's end edge.
+            // Which inset is the meaningful one therefore depends on whether it wrapped.
+            const wrapped = motion.getBoundingClientRect().top >= direction.getBoundingClientRect().bottom - 1;
+            return {
+              wrapped,
+              modeStart: startInset(mode),
+              dirStart: startInset(direction),
+              motionStart: startInset(motion),
+              motionEnd: endInset(motion),
+              modeHeight: +mode.getBoundingClientRect().height.toFixed(2),
+              dirHeight: +direction.getBoundingClientRect().height.toFixed(2),
+              escapes: [mode, direction, motion].filter((el) => {
+                const b = el.getBoundingClientRect();
+                return b.left < cb.left - 0.5 || b.right > cb.right + 0.5;
+              }).length,
+            };
+          });
+          if (!rails) fail(`spacing toolbar ${where}: the component preview's toolbar was not found on /docs/components/button`);
+          else {
+            report.spacing.push({ check: "toolbar", where, ...rails });
+            if (Math.abs(rails.modeStart - rails.dirStart) > 0.5)
+              fail(`spacing toolbar ${where}: the mode rail starts ${rails.modeStart}px in and the direction rail ${rails.dirStart}px — two rails of one toolbar, two insets`);
+            if (rails.wrapped) {
+              if (Math.abs(rails.motionStart - rails.modeStart) > 0.5)
+                fail(`spacing toolbar ${where}: the motion status wrapped onto its own row and starts ${rails.motionStart}px in against the rails' ${rails.modeStart}px inset`);
+            } else if (Math.abs(rails.motionEnd - rails.modeStart) > 0.5) {
+              fail(`spacing toolbar ${where}: the motion status ends ${rails.motionEnd}px from the edge against the rails' ${rails.modeStart}px inset`);
+            }
+            if (Math.abs(rails.modeHeight - rails.dirHeight) > 0.5)
+              fail(`spacing toolbar ${where}: toolbar control heights differ (${rails.modeHeight}px vs ${rails.dirHeight}px)`);
+            if (rails.escapes) fail(`spacing toolbar ${where}: ${rails.escapes} toolbar part(s) paint outside the preview card`);
+          }
+          await page.close();
+        }
+
+        /* Create: the preview head and the configuration heads are the same head */
+        {
+          const page = await open(context, "/create", { dir, textScale });
+          const heads = await page.evaluate(() => {
+            const left = document.querySelector('aside[aria-label="Configuration"] section > div');
+            const right = document.querySelector("[data-section-actions]")?.parentElement;
+            // Below the two-column breakpoint the configuration column is not rendered beside the preview,
+            // so there is no pair to align and nothing to assert.
+            if (!left || !right || !left.offsetParent) return { stacked: true };
+            const line = (head) => {
+              const spans = head.querySelectorAll("span");
+              return { index: +spans[0].getBoundingClientRect().top.toFixed(2), label: +spans[1].getBoundingClientRect().top.toFixed(2) };
+            };
+            const shell = document.querySelector('section[aria-labelledby="create-preview-heading"]');
+            const inner = shell?.querySelector(".overflow-y-auto");
+            return {
+              stacked: false,
+              left: line(left),
+              right: line(right),
+              ruleLeft: +left.getBoundingClientRect().top.toFixed(2),
+              ruleRight: +right.getBoundingClientRect().top.toFixed(2),
+              shellOverflow: inner ? inner.scrollWidth - inner.clientWidth : 0,
+            };
+          });
+          if (!heads.stacked) {
+            report.spacing.push({ check: "create-heads", where, ...heads });
+            if (Math.abs(heads.left.index - heads.right.index) > 1)
+              fail(`spacing create ${where}: the preview head's index sits ${(heads.right.index - heads.left.index).toFixed(2)}px off the configuration head's`);
+            if (Math.abs(heads.left.label - heads.right.label) > 1)
+              fail(`spacing create ${where}: the preview head's label sits ${(heads.right.label - heads.left.label).toFixed(2)}px off the configuration head's`);
+            if (Math.abs(heads.ruleLeft - heads.ruleRight) > 1)
+              fail(`spacing create ${where}: the two columns' rules start ${(heads.ruleRight - heads.ruleLeft).toFixed(2)}px apart`);
+            if (heads.shellOverflow > 0)
+              fail(`spacing create ${where}: the preview shell scrolls sideways by ${heads.shellOverflow}px inside its column`);
+          }
+          await page.close();
+        }
+
+        await context.close();
+      }
+    }
+  }
+}
+
 await browser.close();
 
 if (asJson) console.log(JSON.stringify({ failures, report }, null, 2));
@@ -424,6 +657,17 @@ else {
     );
   if (report.thumbs.length) console.log("thumbnails:", report.thumbs.map((t) => `${t.dir} ${t.total} ${JSON.stringify(t.kinds)} problems=${t.problems}`).join(" · "));
   if (report.layout.length) console.log(`layout: ${report.layout.length} views, ${report.layout.filter((l) => l.overflow > 0).length} overflowing`);
+  if (report.spacing.length) {
+    const metric = report.spacing.filter((s) => s.check === "metric");
+    const toolbar = report.spacing.filter((s) => s.check === "toolbar");
+    const heads = report.spacing.filter((s) => s.check === "create-heads");
+    const nc = report.spacing.find((s) => s.check === "negative-control");
+    console.log(
+      `spacing: ${metric.length} metric views (min value/trend gap ${Math.min(...metric.map((m) => m.minGap)).toFixed(2)}px, ` +
+        `${metric.reduce((n, m) => n + m.stacked, 0)} stacked), ${toolbar.length} toolbar views, ${heads.length} create-head views; ` +
+        `negative control in a ${nc ? nc.box : "?"}px box: defective row overflowed ${nc ? nc.broken.overflow : "?"}px, shipped row ${nc ? nc.shipped.overflow : "?"}px`,
+    );
+  }
 }
 if (failures.length) {
   console.error(`\nweb-quality-browser: ${failures.length} failure(s)\n` + failures.map((f) => `  ✗ ${f}`).join("\n"));
