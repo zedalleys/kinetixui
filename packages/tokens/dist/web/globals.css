@@ -20,6 +20,7 @@
   --azure-1000: 222 47% 11%;
   --blue-0: 207 100% 98%;
   --blue-50: 212 100% 97%;
+  --blue-75: 204 35% 76%; /** Added 2026-11-05 for dark `on-info-container`. The ramp jumps from the near-white `50` straight to `100`, so there was no step a container text could move to: measured on an `info`/10 tint over `muted` — the worst dark surface this repository renders that text on — `100` is 4.4847:1, below AA, and `50` is 9.2570:1, which on a dark tint reads as plain white rather than as a blue status colour. This is 5.6916:1 there. Interpolated 30% of the way from `100` toward `50`, so it stays on the same ramp and introduces no new hue. */
   --blue-100: 204 33% 68%;
   --blue-150: 203 28% 62%;
   --blue-200: 204 25% 56%;

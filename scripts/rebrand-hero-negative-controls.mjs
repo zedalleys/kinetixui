@@ -1,0 +1,104 @@
+/**
+ * rebrand-hero-negative-controls.mjs — proof that the hero's motion lifecycle
+ * assertions can actually fail.
+ *
+ * Codex found, on 2026-11-05 at `0e85529`, that `data-running=false` did not
+ * stop the hero's motion. `running` gated the rAF pulse loop only; the breath
+ * (`kx-mesh-breathe`) and the per-facet shimmer (`kx-mesh-shimmer`) were
+ * unconditional `infinite` CSS animations that no stylesheet gated, so the
+ * artwork kept moving after the component reported it had stopped, and kept
+ * moving offscreen. Measured in Chromium at that head, with the announced pause
+ * engaged: the body transform went 1.00073 -> 1.00474 -> 1.00978 and a facet's
+ * opacity 0.1777 -> 0.2123 -> 0.2277 across ~5s.
+ *
+ * `check:rebrand-hero` was green throughout, because its only suspension
+ * evidence was `pulseAt()` — the pulses do stop, being the JavaScript half. A
+ * gate blind to the defect it is supposed to cover is the thing worth guarding
+ * against here, so the repair is only trustworthy if the new assertions fail
+ * when the defect returns. Each control below reintroduces it and runs the REAL
+ * gate, not a copy of its reasoning.
+ *
+ *   ignores-data-running  nothing gates the CSS layers — the exact pre-repair
+ *                         behaviour, restored in one declaration
+ *   body-escapes          only the breath escapes the lifecycle
+ *   facets-escapes        only the per-facet shimmer escapes it
+ *
+ * The last two are not redundant. The gate compares the body transform and a
+ * facet's opacity as one object, so a single blanket control would pass even if
+ * the gate observed only one of the two layers. Running each layer on its own
+ * proves both are genuinely measured.
+ *
+ * Each control is one style tag in a throwaway browser context, injected
+ * through the seam in `rebrand-browser.mjs`. Nothing is committed, and the
+ * stylesheet in the repository is never modified.
+ *
+ * Requires the production site on REBRAND_BASE (default http://127.0.0.1:3104),
+ * the same server `check:rebrand-hero` itself needs.
+ *
+ * Usage: pnpm check:rebrand-hero-negative-controls
+ */
+import { spawnSync } from "node:child_process";
+
+const GATE = ["scripts/rebrand-browser.mjs"];
+
+const CONTROLS = [
+  [
+    "ignores-data-running",
+    "no stylesheet gates the CSS layers (the pre-repair defect)",
+    /kept animating offscreen|kept animating after the preference changed/,
+  ],
+  ["body-escapes", "only the mesh breath escapes the lifecycle", /kept animating offscreen|kept animating after the preference changed/],
+  [
+    "facets-escapes",
+    "only the per-facet shimmer escapes the lifecycle",
+    /kept animating offscreen|kept animating after the preference changed/,
+  ],
+];
+
+let failures = 0;
+
+// The gate must pass untouched first: a control that fails everything proves nothing.
+process.stdout.write("baseline — the gate as it ships\n");
+const baseline = spawnSync("node", GATE, { encoding: "utf8", env: process.env });
+if (baseline.status === 0) {
+  console.log("  ok    the unmutated gate passes\n");
+} else {
+  console.log("  FAIL  the unmutated gate does not pass — every control below is meaningless");
+  console.log(`        exit ${baseline.status}`);
+  const why = `${baseline.stdout}${baseline.stderr}`
+    .split("\n")
+    .filter((l) => /AssertionError|Error:/.test(l))
+    .map((l) => l.trim())[0];
+  if (why) console.log(`        ${why}`);
+  console.log("");
+  failures++;
+}
+
+console.log("negative controls — each lets a continuous animation ignore data-running");
+for (const [name, what, expected] of CONTROLS) {
+  const run = spawnSync("node", GATE, { encoding: "utf8", env: { ...process.env, KX_HERO_NC: name } });
+  const out = `${run.stdout}${run.stderr}`;
+  const caught = run.status !== 0 && expected.test(out);
+  const line = out
+    .split("\n")
+    .filter((l) => /kept animating|kept travelling/.test(l))
+    .map((l) => l.trim())[0];
+  if (caught) {
+    console.log(`  gate fails, as it must   ${name} — ${what}`);
+    if (line) console.log(`      ${line}`);
+  } else {
+    console.log(`  ** NOT CAUGHT **         ${name} — ${what}`);
+    console.log(`      exit ${run.status}; the gate did not report this as a failure`);
+    failures++;
+  }
+}
+
+if (failures) {
+  console.error(`\n✗ rebrand-hero negative controls: ${failures} control(s) did not behave as required`);
+  process.exit(1);
+}
+console.log(
+  "\nrebrand-hero negative controls ok — the lifecycle assertions fail when the CSS layers are let " +
+    "loose from data-running, whether both escape or only the breath or only the facet shimmer. " +
+    "The pulse-only check the gate used to rely on would have passed all three.",
+);

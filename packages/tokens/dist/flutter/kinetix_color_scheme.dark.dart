@@ -52,7 +52,7 @@ class KinetixColorSchemeDark {
   static const info = Color(0xFF92B2C8);
   static const infoForeground = Color(0xFF050C11);
   static const scrim = Color(0x99000000);
-  static const onInfoContainer = Color(0xFF92B2C8);
+  static const onInfoContainer = Color(0xFFAEC7D8);
   static const onSuccessContainer = Color(0xFFACB8AB);
   static const onWarningContainer = Color(0xFFFFC975);
   static const onDestructiveContainer = Color(0xFFEEB1B1);

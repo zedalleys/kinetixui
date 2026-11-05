@@ -21,6 +21,7 @@ declare const tokens: {
     "blue": {
       "0": "#f6fbff",
       "50": "#f0f7ff",
+      "75": "#aec7d8",
       "100": "#92b2c8",
       "150": "#83a4b9",
       "200": "#7495ab",

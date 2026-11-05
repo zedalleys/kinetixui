@@ -28,14 +28,20 @@ import mesh from "./hero-mesh.json";
  *     through React, so a drag costs no render and cannot desynchronise the
  *     breath underneath it.
  *   - the arrow keys step the same rotation, Home returns it to the artwork's
- *     own pose, Space toggles the motion and Escape stops it. There is no
- *     visible control row: the group carries its name and its instructions, and
- *     a status region announces the pause.
+ *     own pose. There is no visible control row and no pause control: the group
+ *     carries its name and its instructions, and the motion follows the
+ *     lifecycle below rather than anything the reader has to operate.
  *
  * Per frame, at 30fps, while the hero is on screen: 3 pulse positions and 26
- * junction glows, all written imperatively. No SVG filter over a large area, no
- * React state in the loop, and the loop does not run offscreen, in a hidden tab,
- * under `prefers-reduced-motion`, or while the reader has paused it.
+ * junction glows, all written imperatively. No SVG filter over a large area and
+ * no React state in the loop.
+ *
+ * The lifecycle is one switch, `data-running`. It is false offscreen, in a
+ * hidden tab and under reduced motion, and it governs BOTH the rAF loop and the
+ * CSS layers (the breath and the per-facet shimmer), which until 2026-11-05 ran
+ * on regardless — so motion continued where the component reported none.
+ * `check:rebrand-hero` measures the body transform and a facet's opacity, not
+ * only the pulse coordinates, which is why that gate stayed green through it.
  */
 
 const FRAME_MS = 1000 / 30;
@@ -55,8 +61,13 @@ export function HeroPolygon() {
   const angle = useRef(0);
   const drag = useRef<{ pointer: number; x: number; from: number } | null>(null);
   const [onScreen, setOnScreen] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const running = onScreen && !paused;
+  /**
+   * The one motion switch, mirrored to `data-running` so the stylesheet obeys
+   * the same lifecycle the rAF loop does. False offscreen, in a hidden tab and
+   * under reduced motion. There is no reader-facing pause: the artwork simply
+   * does not animate when nobody can see it.
+   */
+  const running = onScreen;
 
   useEffect(() => {
     const preference = matchMedia("(prefers-reduced-motion: reduce)");
@@ -201,12 +212,6 @@ export function HeroPolygon() {
       case "Home":
         turn(0);
         break;
-      case " ":
-        setPaused((was) => !was);
-        break;
-      case "Escape":
-        setPaused(true);
-        break;
       default:
         return;
     }
@@ -344,12 +349,8 @@ export function HeroPolygon() {
           carries meaning, and inert until a mouse is actually over the art. */}
       <div className="kx-polygon-spotlight" aria-hidden="true" />
       <p id={`${id}-instructions`} className="sr-only">
-        Drag a facet or use the arrow keys to rotate the network. Home returns it to its original angle. Space pauses or
-        resumes the moving light; Escape pauses it.
+        Drag a facet or use the arrow keys to rotate the network. Home returns it to its original angle.
       </p>
-      <span className="sr-only" role="status">
-        {paused ? "Hero network motion paused." : ""}
-      </span>
     </div>
   );
 }

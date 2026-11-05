@@ -293,6 +293,42 @@
   filter: drop-shadow(0 0 4px var(--kx-mesh-pulse-ring));
 }
 
+/* ── Motion lifecycle ───────────────────────────────────────────────────── */
+/* `data-running` is the hero's single motion switch, written by the component:
+   false offscreen, in a hidden tab and under reduced motion. Until 2026-11-05
+   it governed only the rAF pulse loop, while the breath and the per-facet
+   shimmer were unconditional `infinite` animations that no stylesheet gated —
+   so the artwork kept moving after the component reported it had stopped, and
+   kept moving offscreen.
+
+   A blanket rule rather than a list of the two known layers, so a continuous
+   animation added later cannot quietly escape the lifecycle. The negative
+   control `ignores-data-running` reintroduces exactly that mistake and requires
+   `check:rebrand-hero` to fail it.
+
+   `paused` rather than `none`, because this suspends motion; it does not
+   redefine what the artwork looks like. Reduced motion is the separate, stronger
+   contract below, and it still wins: it removes the animations outright. */
+.kx-hero-polygon[data-running="false"] *,
+.kx-hero-polygon[data-running="false"] *::before,
+.kx-hero-polygon[data-running="false"] *::after {
+  animation-play-state: paused;
+}
+/* The one-shot entrance is exempt. Suspending it would strand the artwork at
+   its from-state — permanently, in a browser with no IntersectionObserver,
+   where `data-running` never becomes true. Only the infinite layers stop. */
+.kx-hero-polygon[data-running="false"] .kx-mesh-links path,
+.kx-hero-polygon[data-running="false"] .kx-mesh-facets,
+.kx-hero-polygon[data-running="false"] .kx-mesh-nodes,
+.kx-hero-polygon[data-running="false"] .kx-mesh-pulses {
+  animation-play-state: running;
+}
+/* Two animations on one element: the entrance keeps running, the shimmer stops.
+   Ordered as declared above — kx-mesh-facet-in, then kx-mesh-shimmer. */
+.kx-hero-polygon[data-running="false"] .kx-mesh-facets path {
+  animation-play-state: running, paused;
+}
+
 /* ── Layout ─────────────────────────────────────────────────────────────── */
 @media (min-width: 64rem) {
   .kx-brand-hero-grid {

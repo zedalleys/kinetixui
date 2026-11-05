@@ -60,6 +60,7 @@ class KinetixColors {
     static const colorBlue500 = Color(0xFF1B3C53);
     static const colorBlue600 = Color(0xFF163042);
     static const colorBlue700 = Color(0xFF102432);
+    static const colorBlue75 = Color(0xFFAEC7D8); /** Added 2026-11-05 for dark `on-info-container`. The ramp jumps from the near-white `50` straight to `100`, so there was no step a container text could move to: measured on an `info`/10 tint over `muted` — the worst dark surface this repository renders that text on — `100` is 4.4847:1, below AA, and `50` is 9.2570:1, which on a dark tint reads as plain white rather than as a blue status colour. This is 5.6916:1 there. Interpolated 30% of the way from `100` toward `50`, so it stays on the same ramp and introduces no new hue. */
     static const colorBlue800 = Color(0xFF0B1821);
     static const colorBlue850 = Color(0xFF081219);
     static const colorBlue900 = Color(0xFF050C11);

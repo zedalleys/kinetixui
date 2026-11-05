@@ -57,6 +57,7 @@ public enum KinetixColor {
     public static let colorBlue500 = UIColor(red: 0.106, green: 0.235, blue: 0.325, alpha: 1)
     public static let colorBlue600 = UIColor(red: 0.086, green: 0.188, blue: 0.259, alpha: 1)
     public static let colorBlue700 = UIColor(red: 0.063, green: 0.141, blue: 0.196, alpha: 1)
+    public static let colorBlue75 = UIColor(red: 0.682, green: 0.780, blue: 0.847, alpha: 1) /** Added 2026-11-05 for dark `on-info-container`. The ramp jumps from the near-white `50` straight to `100`, so there was no step a container text could move to: measured on an `info`/10 tint over `muted` — the worst dark surface this repository renders that text on — `100` is 4.4847:1, below AA, and `50` is 9.2570:1, which on a dark tint reads as plain white rather than as a blue status colour. This is 5.6916:1 there. Interpolated 30% of the way from `100` toward `50`, so it stays on the same ramp and introduces no new hue. */
     public static let colorBlue800 = UIColor(red: 0.043, green: 0.094, blue: 0.129, alpha: 1)
     public static let colorBlue850 = UIColor(red: 0.031, green: 0.071, blue: 0.098, alpha: 1)
     public static let colorBlue900 = UIColor(red: 0.020, green: 0.047, blue: 0.067, alpha: 1)

@@ -72,6 +72,11 @@
         "$value": "#f0f7ff",
         "$type": "color"
       },
+      "75": {
+        "$value": "#aec7d8",
+        "$type": "color",
+        "$description": "Added 2026-11-05 for dark `on-info-container`. The ramp jumps from the near-white `50` straight to `100`, so there was no step a container text could move to: measured on an `info`/10 tint over `muted` \u2014 the worst dark surface this repository renders that text on \u2014 `100` is 4.4847:1, below AA, and `50` is 9.2570:1, which on a dark tint reads as plain white rather than as a blue status colour. This is 5.6916:1 there. Interpolated 30% of the way from `100` toward `50`, so it stays on the same ramp and introduces no new hue."
+      },
       "100": {
         "$value": "#92b2c8",
         "$type": "color"

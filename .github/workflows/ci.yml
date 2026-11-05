@@ -60,6 +60,12 @@ jobs:
       - name: Contrast audit (WCAG AA text pairs)
         run: pnpm check:contrast
 
+      # The gate above used to round each composited channel to 8-bit before measuring, which printed
+      # AA for a pair at 4.4847:1. These controls restore that defect and the token it hid, and require
+      # the corrected gate to catch it — so a future change cannot quietly round again.
+      - name: Contrast negative controls (the corrected gate still catches the rounding defect)
+        run: pnpm check:contrast-negative-controls
+
       # The browser axe pass is path-filtered; this checks the filter still covers every package
       # that has stories, so a package cannot drift outside the accessibility gate unnoticed.
       - name: Accessibility gate covers every package with stories

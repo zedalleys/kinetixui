@@ -50,7 +50,7 @@ public enum KinetixColorsSwiftUIDark {
     public static let info = Color(red: 0.573, green: 0.698, blue: 0.784)
     public static let infoForeground = Color(red: 0.02, green: 0.047, blue: 0.067)
     public static let scrim = Color(red: 0, green: 0, blue: 0, opacity: 0.6)
-    public static let onInfoContainer = Color(red: 0.573, green: 0.698, blue: 0.784)
+    public static let onInfoContainer = Color(red: 0.682, green: 0.78, blue: 0.847)
     public static let onSuccessContainer = Color(red: 0.675, green: 0.722, blue: 0.671)
     public static let onWarningContainer = Color(red: 1, green: 0.788, blue: 0.459)
     public static let onDestructiveContainer = Color(red: 0.933, green: 0.694, blue: 0.694)

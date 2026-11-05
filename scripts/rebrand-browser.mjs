@@ -30,6 +30,28 @@ import { chromium } from 'playwright';
 
 const require = createRequire(import.meta.url);
 const base = process.env.REBRAND_BASE || 'http://127.0.0.1:3104';
+
+/**
+ * Injected defects, each the mistake the motion lifecycle exists to prevent: a
+ * continuous animation that keeps running although `data-running` is false.
+ *
+ * `scripts/rebrand-hero-negative-controls.mjs` runs this gate once unmutated
+ * and then once per entry, requiring a non-zero exit each time. The three are
+ * deliberately not one: the gate compares the body transform and a facet's
+ * opacity together, so a single blanket control could pass while the gate
+ * observed only one of the two layers. `body-escapes` and `facets-escapes`
+ * prove each layer is genuinely measured.
+ */
+const NEGATIVE_CONTROLS = {
+  // The pre-2026-11-05 behaviour exactly: nothing gates the CSS layers.
+  'ignores-data-running': `.kx-hero-polygon[data-running="false"] *,
+     .kx-hero-polygon[data-running="false"] *::before,
+     .kx-hero-polygon[data-running="false"] *::after { animation-play-state: running !important; }`,
+  // Only the breath escapes the lifecycle.
+  'body-escapes': `.kx-hero-polygon[data-running="false"] .kx-mesh-body { animation-play-state: running !important; }`,
+  // Only the per-facet shimmer escapes it.
+  'facets-escapes': `.kx-hero-polygon[data-running="false"] .kx-mesh-facets path { animation-play-state: running, running !important; }`,
+};
 const output = process.env.REBRAND_OUTPUT || 'design-assets/identity/v1/verification';
 const mesh = JSON.parse(await readFile('apps/web/src/components/hero-mesh.json', 'utf8'));
 await mkdir(output, { recursive: true });
@@ -83,6 +105,13 @@ try {
       await cdp.send('Page.setFontSizes', { fontSizes: { standard: 32, fixed: 26 } });
     }
     await page.goto(base, { waitUntil: 'networkidle' });
+    // Negative-control seam. `scripts/rebrand-hero-negative-controls.mjs` runs
+    // THIS gate with KX_HERO_NC set and requires it to fail, so the lifecycle
+    // assertions below are proven to catch the defect they exist for rather
+    // than merely passing. Nothing is injected on a normal run.
+    if (NEGATIVE_CONTROLS[process.env.KX_HERO_NC ?? '']) {
+      await page.addStyleTag({ content: NEGATIVE_CONTROLS[process.env.KX_HERO_NC] });
+    }
     await page.evaluate(() => document.fonts.ready);
     assert.equal(await page.locator('h1').count(), 1);
 
@@ -184,6 +213,22 @@ try {
         root.locator('.kx-mesh-pulses circle').evaluateAll((n) => n.map((c) => [c.getAttribute('cx'), c.getAttribute('cy')]));
       const glowAt = () =>
         root.locator('.kx-mesh-node-glow').evaluateAll((n) => n.map((c) => Number(c.getAttribute('opacity'))));
+      /**
+       * The CSS motion layers, read off the screen rather than from a class list.
+       *
+       * The pulses are a JS loop and stop with it. The breath and the per-facet
+       * shimmer are CSS `infinite` animations on the compositor, and before
+       * 2026-11-05 nothing gated them on `data-running`: they ran through an
+       * announced stop and offscreen. This gate could not see that, because its
+       * only suspension evidence was `pulseAt()`. So the lifecycle is now
+       * measured where it actually shows: the body's composited transform and a
+       * facet's computed opacity.
+       */
+      const cssMotionAt = () =>
+        page.evaluate(() => ({
+          transform: getComputedStyle(document.querySelector('.kx-mesh-body')).transform,
+          opacity: getComputedStyle(document.querySelector('.kx-mesh-facets path')).opacity,
+        }));
       const pulsesA = await pulseAt();
       const glowsA = await glowAt();
       await page.waitForTimeout(600);
@@ -314,35 +359,56 @@ try {
       assert.ok(linkFocus.width >= 2, `the focused wireframe is only ${linkFocus.width}px`);
       assert.ok(linkFocus.opacity > 0.9, `the focused wireframe is still ${linkFocus.opacity} opaque`);
 
-      // Space stops the light and says so; Escape stops it and keeps it stopped.
+      // There is no reader-facing pause (owner decision, 2026-11-05). Space and
+      // Escape must not stop the motion, nothing may announce a pause, and the
+      // instructions must not offer one — a control removed from the handler but
+      // left in its own description is still a promise to a screen-reader user.
       await page.keyboard.press(' ');
-      await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'false');
-      assert.match(
-        await root.locator('[role="status"]').innerText(),
-        /paused/i,
-        'pausing announced nothing',
-      );
-      const held = await pulseAt();
-      await page.waitForTimeout(500);
-      assert.deepEqual(await pulseAt(), held, 'the light kept travelling while paused');
-      await page.keyboard.press(' ');
-      await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'true');
       await page.keyboard.press('Escape');
-      await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'false');
-      await page.keyboard.press(' ');
-      await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'true');
+      await page.waitForTimeout(250);
+      assert.equal(
+        await root.getAttribute('data-running'),
+        'true',
+        'Space or Escape still stops the hero: the pause control was supposed to be gone',
+      );
+      assert.equal(await root.locator('[role="status"]').count(), 0, 'a pause status region survived');
+      assert.doesNotMatch(
+        await root.locator('p.sr-only').innerText(),
+        /pause|resume/i,
+        'the instructions still offer a pause control',
+      );
       await page.mouse.move(box.x - 60, box.y - 60);
 
       // ── 5. Suspension: offscreen, and on a live preference change ──────────
+      // `data-running === 'false'` is the claim; what follows is whether the
+      // artwork actually stopped. Each state is sampled twice and compared with
+      // itself, so the assertion is about motion rather than about any value.
+      const movingBefore = await cssMotionAt();
+      await page.waitForTimeout(700);
+      const movingAfter = await cssMotionAt();
+      assert.notDeepEqual(movingBefore, movingAfter, 'the CSS layers never moved while the hero was running');
+
       await page.locator('footer').scrollIntoViewIfNeeded();
       await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'false');
+      const offscreenPulses = await pulseAt();
+      const offscreenCss = await cssMotionAt();
+      await page.waitForTimeout(700);
+      assert.deepEqual(await pulseAt(), offscreenPulses, 'the light kept travelling offscreen');
+      assert.deepEqual(
+        await cssMotionAt(),
+        offscreenCss,
+        'the breath or the facet shimmer kept animating offscreen, where the component reports no motion',
+      );
+
       await root.scrollIntoViewIfNeeded();
       await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'true');
       await page.emulateMedia({ reducedMotion: 'reduce' });
       await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'false');
       const stilledPulses = await pulseAt();
+      const stilledCss = await cssMotionAt();
       await page.waitForTimeout(500);
       assert.deepEqual(await pulseAt(), stilledPulses, 'the light kept travelling after the preference changed');
+      assert.deepEqual(await cssMotionAt(), stilledCss, 'a CSS layer kept animating after the preference changed');
       await page.emulateMedia({ reducedMotion: 'no-preference' });
     } else {
       // ── Reduced motion: no loop, no CSS animation, and the rest pose is the
