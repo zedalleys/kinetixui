@@ -2,11 +2,16 @@
 /**
  * The SwiftUI publish route's dry-run guard, measured rather than read.
  *
- * `check-native-publish-preflight.mjs` asserts a property of the source: that the guard asks "was a
- * live publish explicitly requested?" and not "is the safe flag set?". That is a shape check, and a
- * shape check would pass a guard that reads correctly and behaves wrongly. This runs the real step
- * body — extracted from the workflow, never a copy, so the control cannot drift from the thing it
- * measures — against every value `dry_run` can actually arrive as, and counts the pushes.
+ * `check-native-publish-preflight.mjs` proves, structurally, that this step cannot run unless
+ * GitHub Actions evaluates `if: ${{ inputs.dry_run == false }}` to true. That is the gate. What it
+ * cannot prove, because no amount of reading shell text can, is what the step then *does* with the
+ * value it receives — so the in-script guard is defense in depth, and this is the measurement of it.
+ *
+ * It runs the real step body — extracted from the workflow by name, never a copy, so the control
+ * cannot drift from the thing it measures — against every value `dry_run` can actually arrive as,
+ * and counts the pushes. The two pieces of evidence are complementary: the structural check says
+ * nothing can reach this step uninvited, and this says that if something ever did, only the exact
+ * string `false` would publish.
  *
  * What the pre-fix guard did, measured on main at d5390810: `false` → 2 pushes (correct), `true` →
  * 0 (correct), and **empty, unset, `False` and `yes` → 2 pushes each**. Only the exact string
@@ -26,7 +31,7 @@ import { fileURLToPath } from "node:url";
 
 const root = `${dirname(dirname(dirname(fileURLToPath(import.meta.url))))}/`;
 const WORKFLOW = ".github/workflows/publish-swiftui.yml";
-const STEP = "Split & push to mirror";
+const STEP = "Push to mirror";
 
 /** The required behaviour. `false` is the only value that may publish. */
 const REQUIRED = [

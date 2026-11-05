@@ -58,9 +58,12 @@ jobs:
       - name: Test
         run: swift test --package-path packages/ui-swiftui
 
-      - name: Split & push to mirror
+      # Rehearsal. Everything here is safe to run on a dry run and must stay
+      # unconditional, so a dry run exercises the real release path rather than
+      # a shorter one: the split, the manifest probe, and the tag computation.
+      - name: Split the subtree and verify the mirror layout
+        id: split
         env:
-          MIRROR: ${{ secrets.SWIFTUI_MIRROR_REPO }}
           VERSION: ${{ inputs.version }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
@@ -73,12 +76,35 @@ jobs:
             echo "::error::Package.swift is not at the root of the subtree split. A .package(url:) consumer cannot resolve this mirror."
             exit 1
           fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          if [ "${DRY_RUN:-}" != "false" ]; then
+            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — would tag $SHA as $VERSION. Nothing pushed."
+          fi
+
+      # The only side effects in this workflow live here, and GitHub Actions —
+      # not the shell — decides whether this step runs at all. The step-level
+      # condition is evaluated before a shell exists, so nothing inside `run:`
+      # can reach it: that is the whole reason the pushes were moved out of the
+      # rehearsal step above. Compose and Flutter gate their publications the
+      # same way.
+      #
+      # The in-script guard below is defense in depth, not the proof. It is what
+      # the six-value behavioural control measures, and it is what stops a
+      # publish if this step is ever reached with a non-`false` value.
+      - name: Push to mirror
+        if: ${{ inputs.dry_run == false }}
+        env:
+          MIRROR: ${{ secrets.SWIFTUI_MIRROR_REPO }}
+          VERSION: ${{ inputs.version }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          SHA: ${{ steps.split.outputs.sha }}
+        run: |
           # Affirmative polarity, deliberately. Asking "is the safe flag set?" let every value that
           # is not the exact string `true` — empty, unset, `False`, `yes` — fall through to the two
           # pushes below, which are a permanent tag on a public mirror. Asking "was a live publish
           # explicitly requested?" means only `false` can reach them.
           if [ "${DRY_RUN:-}" != "false" ]; then
-            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — would tag $SHA as $VERSION. Nothing pushed."
+            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — nothing pushed."
             exit 0
           fi
           if [ -z "$MIRROR" ]; then
