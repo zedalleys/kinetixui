@@ -1,7 +1,7 @@
 name: kinetix_ui
 description: >-
   Flutter port of KinetixUI — Kinetix* widgets on the shared design-token
-  contract. Standalone package, not published to pub.dev.
+  contract, carrying the same semantics, states and accessibility behaviour.
 version: 0.0.0
 publish_to: none
 repository: https://github.com/zedalleys/kinetixui

@@ -62,11 +62,18 @@
   outline: none;
   box-shadow: var(--shadow-focus);
 }
-/* :disabled covers <button>; [aria-disabled] covers the anchor form, which cannot be disabled */
+/* :disabled covers <button>; [aria-disabled] covers the anchor form, which cannot be disabled.
+   The anchor is NOT `pointer-events: none`. That suppressed the pointer and nothing else — the anchor
+   stayed in the tab order and Enter still navigated — while also making the control unhoverable, so a
+   mouse user could not even read the cursor. KxButton now guards activation for every input device, so
+   this rule only has to say "unavailable": `not-allowed`, the same shape `.kx-menu__item[aria-disabled]`
+   and `.kx-pagination__link` already use. */
 .kx-btn:disabled,
 .kx-btn[aria-disabled='true'] {
-  pointer-events: none;
   opacity: var(--opacity-disabled);
+}
+.kx-btn[aria-disabled='true'] {
+  cursor: not-allowed;
 }
 .kx-btn > svg {
   pointer-events: none;
@@ -623,9 +630,20 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 }
 .kx-metric__head { display: flex; align-items: center; justify-content: space-between; }
 .kx-metric__label { margin: 0; font: var(--text-body-sm); color: hsl(var(--muted-foreground)); }
-.kx-metric__body { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--spacing-2); }
-.kx-metric__value { margin: 0; font: var(--text-headline-sm); font-weight: var(--font-weight-medium); color: hsl(var(--foreground)); }
-.kx-metric__trend { display: inline-flex; align-items: center; gap: var(--spacing-1); font: var(--text-label-md); font-weight: var(--font-weight-medium); }
+/* Wraps rather than compresses, the same contract React's Metric carries: `space-between` between two
+   intrinsically-sized children has no give, so once the value and the trend together need more than the
+   card's content box the pair is painted outside it (measured at 14px past the box on a 149px card).
+   Neither child may absorb the loss — a numeral must not be truncated and an arrow must not be split from
+   its figure — so the row gives way and the trend drops under the value. The column gap is the system's
+   related-but-distinct spacing; `spacing-2` was the floor the compressed row was pinned at. */
+.kx-metric__body { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; column-gap: var(--spacing-3); row-gap: var(--spacing-1); }
+.kx-metric__value { margin: 0; min-width: 0; overflow-wrap: break-word; font: var(--text-headline-sm); font-weight: var(--font-weight-medium); color: hsl(var(--foreground)); }
+/* The same three rules React's trend carries, in the order flex applies them: the figure is never
+   broken mid-number (`white-space: nowrap`); the body's `flex-wrap` places the trend on its own line
+   before shrinking anything, so it arrives there whole; and `min-width: 0` with `flex-wrap` here is
+   the last resort once that line is still narrower than the trend, putting the figure under the
+   arrow. No `flex-shrink: 0` — it would hold the trend at its natural width and restore the overflow. */
+.kx-metric__trend { display: inline-flex; flex-wrap: wrap; min-width: 0; align-items: center; gap: var(--spacing-1); white-space: nowrap; font: var(--text-label-md); font-weight: var(--font-weight-medium); }
 .kx-metric__trend[data-trend='up'] { color: hsl(var(--success)); }
 .kx-metric__trend[data-trend='down'] { color: hsl(var(--destructive)); }
 .kx-metric__trend[data-trend='neutral'] { color: hsl(var(--muted-foreground)); }
@@ -1278,15 +1296,20 @@ label.kx-rating__item { cursor: pointer; }
 .kx-banner--sticky { position: sticky; inset-block-start: 0; z-index: var(--z-index-sticky, 40); }
 .kx-inform { border-radius: var(--radius-md); padding: var(--spacing-3); }
 
+/* The three `on-*-container` roles arrived in @kinetixui/tokens 0.26.0. This package's peer
+   range still accepts older tokens, where those custom properties do not exist, so each one
+   falls back to the plain status role — the colour these notices used before the contrast
+   fix. Without the fallback `hsl(var(--on-success-container))` is an invalid colour and the
+   text inherits whatever an ancestor set. */
 .kx-banner--information { background-color: hsl(var(--info) / 0.1); color: hsl(var(--on-info-container)); border-color: hsl(var(--info) / 0.2); }
-.kx-banner--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--warning)); border-color: hsl(var(--warning) / 0.25); }
-.kx-banner--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--success)); border-color: hsl(var(--success) / 0.25); }
-.kx-banner--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive)); border-color: hsl(var(--destructive) / 0.2); }
+.kx-banner--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--on-warning-container, var(--warning))); border-color: hsl(var(--warning) / 0.25); }
+.kx-banner--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--on-success-container, var(--success))); border-color: hsl(var(--success) / 0.25); }
+.kx-banner--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--on-destructive-container, var(--destructive))); border-color: hsl(var(--destructive) / 0.2); }
 .kx-banner--action      { background-color: hsl(var(--foreground)); color: hsl(var(--background)); }
 .kx-inform--information { background-color: hsl(var(--info) / 0.1); color: hsl(var(--on-info-container)); }
-.kx-inform--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--warning)); }
-.kx-inform--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--success)); }
-.kx-inform--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive)); }
+.kx-inform--warning     { background-color: hsl(var(--warning) / 0.15); color: hsl(var(--on-warning-container, var(--warning))); }
+.kx-inform--success     { background-color: hsl(var(--success) / 0.15); color: hsl(var(--on-success-container, var(--success))); }
+.kx-inform--error       { background-color: hsl(var(--destructive) / 0.1); color: hsl(var(--on-destructive-container, var(--destructive))); }
 .kx-inform--action      { background-color: hsl(var(--foreground)); color: hsl(var(--background)); }
 
 .kx-banner__body {

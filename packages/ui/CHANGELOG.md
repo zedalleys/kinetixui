@@ -1,5 +1,179 @@
 # @kinetixui/ui
 
+## 0.27.0
+
+### Minor Changes
+
+- a5fab42: `Metric`'s value and trend now wrap instead of colliding, and the shared Tailwind preset carries the
+  `-rem` breakpoints.
+  
+  **The defect.** `Metric` laid its value and trend out as `flex items-end justify-between gap-2` with
+  two intrinsically-sized children. `justify-between` with two such children has no give: once the
+  value and the trend together need more than the card's content box, flex has nothing left to take
+  and the pair is painted outside it. Measured in a browser at 1280px, in both directions, on the
+  Error-rate card of the Theme Creator's dashboard preview: `scrollWidth` 129 against `clientWidth`
+  115 — the pair **14.1px past its own box**, with the gap pinned at the 8px floor, which is exactly
+  how close the two read before they met. At 320px with 200% text two cards overlapped and `2,420`
+  over `1.2%` rendered as the single run `2,42102%`.
+  
+  **The fix.** The row wraps rather than compresses, and the trend degrades one step at a time:
+  `whitespace-nowrap` so a figure is never broken mid-number; the row's `flex-wrap`, which places
+  items by their natural size *before* shrinking any, so a trend too wide to sit beside the value
+  reaches its own line whole; and `flex-wrap` on the trend itself as the last resort, for the case
+  where the trend is alone on a line narrower than it still is (a 158px card at 200% text leaves 92px
+  for a 94px trend) — the figure then goes under the arrow. The trend deliberately carries no
+  `shrink-0`: that holds it at its natural width and puts the overflow straight back, which was
+  measured and is the defect this replaces. The gap moves from `gap-2` to `gap-x-3` / `gap-y-1`.
+  
+  After, across a 6-width × 2-direction × 2-text-size sweep: overflow 0 everywhere, the gap 27.89px on
+  the card that used to collide, and the **minimum gap anywhere in the sweep 18.09px**.
+  
+  **No API change.** `MetricProps` is untouched. A `data-kx-metric-pair` attribute is added to the row
+  as the handle the rendered gate measures it by; it is a marker, never a styling hook.
+  
+  **Why this is a minor and not a patch.** `sm-rem` (40rem), `md-rem` (48rem), `lg-rem` (64rem) and
+  `xl-rem` (80rem) now live in `packages/ui/tailwind.config.ts`, which this package publishes and
+  exports as `./tailwind.config`. Four new variant names a consumer can author against is **additive
+  public API on a published artifact**, not an internal correction, so it takes a minor even though
+  nothing existing changes meaning. `md-rem` is new in this change; the other three previously
+  existed only in the website's own config, so any consumer of the preset — the repository's own
+  Storybook included — generated **no rule at all** for a `sm-rem:` utility.
+  
+  Nothing is removed or renamed, and no existing utility changes which widths it applies at: `md-rem`
+  is `48rem`, which is Tailwind's `md` for a reader who has not changed their text size.
+  
+  They are registered as **variants**, not as `theme.screens`, and that distinction is the whole
+  point. Tailwind 3.4 emits no rule for **any** `min-*` or `max-*` variant once the screen map mixes
+  units, silently: no warning, no error, the class is simply absent. Four `rem` entries beside
+  Tailwind's `px` defaults are exactly that mixture. Measured on one stub carrying `max-md:hidden`,
+  `min-[420px]:grid-cols-2`, `md:flex` and `sm-rem:grid-cols-2`:
+  
+  - as `theme.extend.screens` — `max-md:hidden` **0 rules**, `min-[420px]:grid-cols-2` **0 rules**
+    (`md:flex` survives; plain responsive variants are unaffected)
+  - as variants — all four emitted
+  
+  This had already cost something before the preset carried the breakpoints: the website's own config
+  had them, and `min-[420px]:grid-cols-2` on the blocks gallery emitted **no `min-width: 420px` rule
+  in the built site**, so that grid never took its two-column step. It does now. `check:breakpoints`
+  is a new CI gate that compiles both halves against the published preset and carries its own
+  negative control.
+
+### Patch Changes
+
+- f54476f: `Rating` is a radio group of real radios, which is what a rating is.
+  
+  It declared `role="radiogroup"` and rendered five independent `<button aria-pressed>` stars inside
+  it: a group claiming one choice, holding five toggles, with nothing ever checked and no position for
+  a screen reader to announce. It was also five tab stops with no arrow-key movement, where a radio
+  group is one stop the arrows move within.
+  
+  The stars are now `<input type="radio">`s in one group per instance, named "1 star" … "5 stars", so
+  the roving tab stop, arrow movement, RTL mirroring and the "3 of 5" announcement come from the
+  browser rather than from code. Home and End are implemented here, because the browser does not
+  provide them. `readOnly` is unchanged in appearance and honest underneath: no control, the stars
+  hidden behind the group's own "Rated 3 out of 5", no tab stop.
+  
+  This is `kx-rating`'s contract, which Angular already stated, asserted in its unit tests, and
+  recorded this component as disagreeing with. The arrow-key behaviour itself is the browser's; the
+  tests here exercise it through `user-event`'s emulation of radio-group navigation, not a real
+  engine, which is stated in the docs rather than claimed as browser evidence.
+  
+  **No API change** — `value`, `defaultValue`, `max`, `readOnly`, `size`, `onChange` and your own
+  `aria-label` all behave as before, and every star keeps the classes it had, so nothing moves
+  visually. **What a consumer may notice:** the markup inside the group changed from a `<button>` per
+  star to a `<label>` with an `sr-only` radio, so a stylesheet or test that targeted
+  `.rating button` has to target the label or the star instead. That is the reason this could be
+  argued as a minor; it is released as a patch because it is a defect fix with no API change, which is
+  how the equivalent Angular keyboard fix was released.
+- @kinetixui/tokens@0.27.0
+
+## 0.26.1
+
+### Patch Changes
+
+- c5a9554: `DatePicker`'s visible label now names the field.
+  
+  `label` was rendered as a bare `<label>` with no `htmlFor`, beside a trigger that carried no naming
+  attribute, so the label was associated with nothing: the field's accessible name was "Select date",
+  or the formatted date, and a screen reader never said which field it was. `helperText` had the same
+  shape — visible, referenced by nothing — so a hint and an error message were sighted-only.
+  
+  The trigger's accessible name is now the label followed by the shown date, and `helperText` is its
+  accessible description. `DateRangeInput` and `GuestPicker` already state this contract; this is their
+  pattern rather than a new one. The open calendar is named by the same label.
+  
+  The label renders as a `<span>` the trigger references rather than as a `<label for>`: a `<button>`
+  is labelable, so a `<label>` would work, but the name computation prefers a label element over the
+  contents, which would drop the chosen date out of the name, and clicking the label would open the
+  calendar. Nothing is added for a field with no label and no helper text — no attribute, and no
+  reference to an element that does not exist.
+  
+  No API change: the same props, read correctly. `check:label-association` is a new gate — no
+  component may render a `<label>` that labels nothing, and every component rendering a visible
+  `label` prop must be proven by a test to put it in its control's accessible name.
+- @kinetixui/tokens@0.26.1
+
+## 0.26.0
+
+### Minor Changes
+
+- 5cfbb84: Status notices no longer fail AA when they sit on a muted surface.
+  
+  `Banner`, `Inform` and `ResultState` drew their success, warning and error text in the status colour
+  itself, on that colour's own tint (`bg-success/15`, `bg-warning/15`, `bg-destructive/10`). Measured with
+  `check:contrast`'s own arithmetic, a notice inside a muted panel — the tightest surface these ship on —
+  was **4.20:1 for success in light**, **4.4982:1 for success in dark** and **4.28:1 for error in dark**.
+  All three are below WCAG AA for body text. `information` was already correct, because it was given a
+  dedicated `--on-info-container` role for exactly this reason; the other three were simply never measured
+  there, and `check:contrast` gated the info pair on a muted surface while gating none of the other three.
+  
+  **New roles**, theme-aware in light and dark, tuned against `--muted` as the worst case:
+  `--on-success-container`, `--on-warning-container`, `--on-destructive-container`. Web exposes them as
+  `text-success-on-container`, `text-warning-on-container` and `text-destructive-on-container`; SwiftUI,
+  Compose and Flutter as `onSuccessContainer`, `onWarningContainer` and `onDestructiveContainer`. Light
+  success and dark success/error move one step along their ramp (6.26:1, 6.03:1 and 6.38:1 at the same worst
+  case); warning in both modes and error in light keep the value they had, which already cleared AA, and now
+  have a role of their own so a theme that moves `--warning` cannot silently take the notice text with it.
+  
+  Nothing else changes: the tints, borders, icons, layout and API are untouched, and the three components'
+  `information` and `action` variants are byte-identical. A colour set built before these roles existed
+  falls back to the plain status role on every native platform, which is what those views drew before.
+  
+  `check:contrast` now measures all four statuses on both the page and a muted surface, so the asymmetry
+  that hid these cannot return. Because that gate reads token pairs and cannot see which utility a
+  component writes, `semantic-consumption.test.ts` asserts the consumer side per status per platform.
+  
+  The Figma `color.semantic.*-container` tokens were measured as an alternative and rejected: they exist
+  only in `color.light.json`, so in dark mode they land at 1.51–4.13:1.
+
+### Patch Changes
+
+- Updated dependencies [5cfbb84]
+  - @kinetixui/tokens@0.26.0
+
+## 0.25.0
+
+### Minor Changes
+
+- 8d50098: Add seven business components (beta, React): `AmountDisplay` (a formatted amount with a spoken sign, tone independent of sign, tabular figures and its own bidi run), `GuestPicker` (several counts in a popover of NumberInput steppers with per-type and total limits), `CountrySelect` (a searchable country combobox over a list you supply), `PhoneInput` (a calling-code select and a tel field in one left-to-right control, with a raw value and no bundled numbering data or validation), `DateRangeInput` (a start and end calendar date as ISO strings, so no time zone can move them), `TimeSlotPicker` (a radio group of time slots with unavailable and limited states and a stated time zone) and `AddressFields` (the fields of a postal address in the order and wording you supply, with autofill tokens). `Timeline` gains an optional per-item `status` with a distinct marker shape and spoken word for each, `aria-current="step"` and an optional action. `NumberInput` gains localisable stepper labels, keeps focus on a stepper at its bound (`aria-disabled` instead of `disabled`) and announces stepper changes. `Calendar` now mirrors its navigation chevrons inside `KinetixDirectionProvider` and uses logical classes. Native platforms get composition guidance; Angular is planned.
+- 55176e5: Add four transactional foundations (beta, React): `ResultState` (success, error, warning, pending, info and partial outcome screens with a named status mark, reference, details and actions), `ReferenceCode` (a selectable, copyable code that announces whether the copy worked and never reports a copy that did not happen), `PriceBreakdown` (subtotal, taxes, fees, discounts, credits and total as a description list, amounts supplied formatted and mirrored under RTL) and `PassCard` (passes, tickets, permits and vouchers, rendering a supplied barcode or QR code without encoding it). Native platforms get composition guidance; Angular is planned.
+- f586c12: Restyle SegmentedControl and give Tabs a travelling indicator. The segmented track is now a soft grey well with a subtle edge, and the chosen segment is filled with `foreground` (near-black in light, near-white in dark) with `background` text; under forced colours it uses the system `SelectedItem` pair, so it stays marked. Tabs draw one 2px indicator per list that travels to the chosen tab: its leading edge moves first and its trailing edge follows, so it stretches across and settles. It follows the list's direction and orientation, snaps on resize or text-size changes, and jumps straight to the new tab under reduced motion; before hydration and under forced colours each chosen tab draws its own edge as before. No API changes.
+
+### Patch Changes
+
+- 4980c21: `Checkbox` and `RadioGroup`: an uncontrolled `<Checkbox defaultChecked="indeterminate" />` now draws the dash. It used to draw a tick while announcing "mixed", because the glyph was chosen from the `checked` prop, which is undefined when uncontrolled; it now follows Radix's own state. Selection also runs on the motion tokens: checking, unchecking and mixed move the box's fill and border (a radio's border) over `--duration-fast` (200ms), and the tick, dash or dot fades in over the same 200ms. The hover and press halo moves on `--duration-instant` (100ms), where all of it used to run on 100ms. A checkbox's glyph leaves at once, so a box going from mixed to unchecked never shows a tick on the way out; a radio's dot fades out as the next one fades in. Semantics change at once, reduced motion lands on the same end state without moving, and the API is unchanged.
+- b166fd2: Make Tabs text-first line navigation with a base rail, active underline and locally scrolling focus. Keep SegmentedControl's enclosed mode treatment, allow reflow and suppress transitions under reduced motion. Add a pill Toggle variant and decorative leadingIcon slot for filter chips.
+- fe4221d: `CodeBlock` and `DiffViewer` scroll regions are now keyboard reachable while they overflow. At a phone width a long line made each one a scrollable region no keyboard could reach (axe `scrollable-region-focusable`, WCAG 2.1.1). Each now takes a tab stop only while it can actually scroll, with a visible focus ring, following the contract `Table` already holds; a `CodeBlock` showing a file is named by that file. No new props or exports. The README's minimal usage now loads all four token sheets, including `css/extras` (the focus ring) and `css/extras/dark`; the `@kinetixui/tokens` README makes the same correction.
+- 010d3bf: Every text-entry field now has one shape. GuestPicker, CountrySelect, DateRangeInput, NumberInput, PhoneInput and InputOTP's end slots were rounded at `--radius-md` (8px) while Input, Textarea and Select were at 4px; they all take `--radius-field` now, and Input, Textarea, Select, NativeSelect, InputGroup and MultiSelect read the role token too, so a theme that overrides `--radius-field` reshapes every field. The picker triggers (GuestPicker, CountrySelect, DateRangeInput) are 46px like Input instead of 44px. DatePicker's trigger is a field rather than an Outline button: a 3:1 `muted-foreground` edge where the button's was 2.2:1, the `action` focus edge, and `aria-invalid` when `error` is set. MarkdownEditor's shell takes the field edge and draws the focus ring while its textarea has focus; before, it had no focus indicator. Angular: `kx-input` focuses with the `action` edge its contract names (it used `ring`), is 46px like the other fields, and `kx-input-otp`'s end slots take `--radius-field`.
+- acfe95a: Day buttons and tree items now say what they show (WCAG 2.5.3, Label in Name). A `Calendar` day button's accessible name starts with the number on it, then the full date: "1, Sunday, March 1st, 2026" rather than "Sunday, March 1st, 2026", which never contained the visible "1", so a speech-input user could not name it. The number comes from the same `formatDay` that renders the button, so the two agree in every locale and numbering system; "Today" and "selected" are kept, and a `labels.labelDayButton` you pass is used unchanged. `DateRangeInput` inherits this. A `TreeItem`'s element now holds only its own row, and an expanded item owns its children's `role="group"` through `aria-owns` as the next sibling (the APG navigation tree structure), so an expanded item's visible text is its label alone. Keyboard behaviour is unchanged, and clicking a nested item now selects that item rather than also selecting its parent. Your `className` and the disabled styling sit on the item's new `role="none"` wrapper, so a styled or disabled item still lays out and dims its subtree as before; a `ref` still points at the `treeitem`.
+- b2b97ea: Sheet: add `side="start"` and `side="end"`, which follow the reading direction, scroll side panels whose content is taller than the viewport, and add `closeLabel` to name the built-in close button. CommandDialog: add a `title` (the dialog was unnamed), an optional `description`, a `trigger` so focus returns to the opener on close, and `commandProps` for the inner Command; anchor it near the top so filtering no longer moves the search field. Export the `CommandProps` type.
+- 04237e3: Slider draws one thumb per value. A range such as `defaultValue={[20, 80]}` used to render a single thumb, so every value after the first had no handle to drag, focus or read. With more than one value, `aria-label`/`aria-labelledby` now name the root as a `role="group"` and each thumb keeps its position's name ("Minimum"/"Maximum", or "Value 1 of 3"); `aria-valuetext` applies to a single-thumb Slider only. Single-value Sliders are unchanged. An uncontrolled Slider keeps the thumb count of its first `defaultValue`, as Radix does; a controlled one follows `value` as it grows or shrinks.
+- 5391485: Slider: a disabled Slider is now announced and drawn as disabled. The thumb (the element with `role="slider"`) carries `aria-disabled`, which Radix put only on the role-less root, and the disabled look keys on `data-disabled` (dimmed root, not-allowed cursor) instead of `disabled:` utilities that never matched a span. `aria-valuetext` passed to the Slider now reaches the thumb, so a caller can give a value its spoken form.
+- 984792b: Switch: carry its own reduced-motion form (`motion-reduce:transition-none`) so a registry install, which has no preset floor, no longer slides the thumb for a reduced-motion reader; and draw the thumb in `CanvasText` (`GrayText` when disabled) under forced colours, where it used to vanish into its track so on and off looked the same. Timing is unchanged: the thumb, track and halo stay on `instant` (100ms, `selection-control`).
+- dcda82a: `Toggle` and `ToggleGroup`: selection and pointer feedback now run on the motion tokens. Choosing or releasing an item moves its background, text and border colour over `--duration-fast` (200ms), where it used to run on Tailwind's untokenised 150ms. Hover and press are a separate state layer (the same 8% and 14% `foreground` as Checkbox, Radio and Switch) on `--duration-instant` (100ms), so hover no longer changes the background colour. Hover only applies on devices that can hover, so a tap on a touch screen no longer leaves it stuck. Under forced colours (Windows contrast themes) the chosen item now uses the system's `Highlight` / `HighlightText`; before, on and off looked the same in every variant. `ToggleGroup` wraps its items instead of overflowing a narrow screen. Semantics change at once, reduced motion lands on the same colours without moving, and the API is unchanged.
+- Updated dependencies [847d3a5]
+  - @kinetixui/tokens@0.25.0
+
 ## 0.24.0
 
 ### Minor Changes
