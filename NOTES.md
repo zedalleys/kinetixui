@@ -123,6 +123,93 @@ root, or `pnpm --filter @kinetixui/ui test`.
 - Test files are excluded from `packages/ui` `tsc` (they pull `vitest` /
   `@testing-library`, dev-only) — same treatment as `src/stories`.
 
+## Rendered gates and negative controls
+
+Four rules, each measured rather than reasoned. They were learned on the
+website decoration work that PRs #434 and #447 did, and that work's visual
+direction has since been superseded — but none of these four rules was ever
+about the decoration. They apply to any rendered gate, the polygon hero gates
+included, so they are recorded here rather than left to be closed along with
+the PRs that found them.
+
+### A rendered gate can keep passing after it stops observing its subject
+
+A file gate that stops finding its subject usually throws. A **rendered** gate
+that stops finding its subject can keep **passing**, because it measures a
+relation between two renderings, and two renderings of the wrong thing still
+relate to each other.
+
+So a rendered row is not evidence until something has been shown to make it
+fail. AE-2A wrote a row comparing two plates, could not make it fail in a
+controlled way, and **dropped the row** rather than ship it as decoration. That
+is the correct outcome for an uncontrollable row: delete it, do not keep it
+green.
+
+### Authored CSS the content scan never sees disappears from the built stylesheet
+
+Tailwind removes a hand-written `@layer components` rule that no file under the
+content globs names. Measured: of four primitives authored into `globals.css`
+with only one of them referenced, the built CSS under
+`apps/web/.next/static/css` carried the other three **zero** times. They would
+have passed review, sat in source, and reached no visitor.
+
+Two rules follow:
+
+- Author a utility **with its first consumer**, never ahead of it. Safelisting
+  instead pushes CSS nobody uses onto every page.
+- A gate asserting that a treatment exists must assert it **in the built
+  output**, not in source. Source presence is not shipped presence.
+
+### A harness that mutates built files behind a server needs a served-probe pre-flight
+
+Only when both halves are true: the harness mutates a file under
+`apps/web/.next` **and** the gate reads it over HTTP from `next start`. Then the
+mutation can be on disk while the browser is served something else, and **every
+control in the suite "passes" having tested nothing**. The guard is to prove the
+server serves a mutation before trusting any control, and to refuse to run
+otherwise (`sha` is the harness's own SHA-256 helper; `basename` from
+`node:path`):
+
+```js
+// Before the first control: does `next start` actually serve a mutated built file?
+const before = readFileSync(cssFile, "utf8");
+const beforeSha = sha(cssFile);
+writeFileSync(cssFile, before + "\n.probe{color:#123456}\n");
+const served = execFileSync("curl", ["-s", `${BASE}/_next/static/css/${basename(cssFile)}`], { encoding: "utf8" });
+writeFileSync(cssFile, before);
+if (sha(cssFile) !== beforeSha) throw new Error("pre-flight: could not restore byte-for-byte; refusing to run");
+if (!served.includes("probe")) throw new Error("pre-flight: the server did not serve the mutation — every control below would be vacuous");
+```
+
+**No harness in this repository needs it today**, and that is worth knowing
+before anyone adds it. `scripts/seo-negative-controls.mjs` and
+`scripts/editorial-negative-controls.mjs` mutate built files, but `check-seo.mjs`
+reads `apps/web/.next/server/app/**.html` **from disk** — no server, no gap.
+`scripts/docs-column-negative-controls.mjs` runs a server but mutates **source
+and rebuilds**, so its mutation is in the build by construction, and its
+`withServer` already requires `r.ok` on the page under test rather than merely a
+response. A harness that injects a style tag into a live browser context — the
+shape `scripts/home-systems-negative-controls.mjs` uses — has no gap either.
+
+So: adopt the recipe when a harness first takes the mutate-built-files-behind-a-
+server shape. Do not add it to the four above, where it would guard nothing.
+
+### Built-file mutation cannot reach a prerendered route's markup — unexplained
+
+Open item, recorded because the next person will otherwise spend the same day on
+it. For the site footer's route, `index.html`, `index.rsc` and the one server
+chunk that renders the footer were each mutated alone and together, on a
+verified-fresh server, and **the served markup kept the original every time** —
+while a `throw` prepended to that chunk **does** 500 the route, so the chunk is
+loaded. The payload the markup actually comes from was never located.
+
+Consequence, which holds whatever the explanation turns out to be: **an
+assertion about markup cannot be controlled from built output.** Its control has
+to patch the source and rebuild, which is slower and unambiguous. Restore from
+the bytes read before mutating, verify SHA-256, and treat a control that did not
+come back byte-for-byte as failed however its row read — otherwise the next
+control measures a tree nobody authorized.
+
 ## CI
 
 `.github/workflows/ci.yml` — builds tokens → ui → registry → site and runs the

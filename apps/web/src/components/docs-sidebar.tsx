@@ -23,7 +23,7 @@ export function DocsSidebar() {
   const matches = groups.reduce((n, g) => n + g.items.length, 0);
 
   return (
-    <aside className="hidden w-56 shrink-0 lg:block">
+    <aside data-docs-rail="sidebar" className="hidden w-56 shrink-0 lg-rem:block">
       <div className="sticky top-[5.5rem] -ml-2 flex h-[calc(100dvh-5.5rem)] flex-col py-10 pr-4">
         {/* The library InputGroup: one field shell (edge, hover, focus and RTL-aware add-ons) around the input, its
             search icon and the clear button. The clear button gets its own focus ring from InputGroupButton. */}

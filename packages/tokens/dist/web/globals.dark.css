@@ -51,6 +51,9 @@
   --info: 204 33% 68%;
   --info-foreground: 205 55% 4%;
   --on-info-container: 204 33% 68%; /** text and icons on a tinted info surface. Dark: the same step as `info`, which already clears AA on the dark tint (7.70:1 over the page) because a 10% tint lightens a dark surface away from light text. */
+  --on-success-container: 115 8% 70%; /** text and icons on a tinted success surface. Dark: one step lighter than `success`, which measures 4.4982:1 on its own 15% tint over `muted` — at the AA threshold rather than clearly over it. This is 6.03:1 at the same worst case. */
+  --on-warning-container: 37 100% 73%; /** text and icons on a tinted warning surface. Dark: the same step as `warning`, which already clears AA on the dark tint (7.38:1 at its worst case) because a tint lightens a dark surface away from light text. */
+  --on-destructive-container: 0 63% 75%; /** text and icons on a tinted error surface. Dark: one step lighter than `destructive`, which is 4.28:1 on its own 10% tint over `muted` and fails AA. This is 6.38:1 at the same worst case. */
   --semantic-muted-on-container: 204 33% 68%; /** secondary text on a tinted container. Dark: identical to --muted-foreground, which already clears AA on every dark tint (6.92:1 on bg-primary/10 over --card, 7.24:1 on bg-destructive/10). Darkening is a light-mode problem only, because a 10% tint lightens a dark surface away from the text rather than toward it. Light counterpart is darker — see color.light.json. */
   --brand: 204 25% 56%; /** identity colour, lightened so it stays legible on the dark surface (the light navy would vanish). Independent of light, not a flip. */
   --brand-foreground: 205 55% 4%; /** text/icons on `brand` */
