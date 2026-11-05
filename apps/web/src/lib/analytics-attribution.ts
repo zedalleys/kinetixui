@@ -28,11 +28,15 @@
  * then carries `kx_traffic_type: "diagnostic"`; `?kx_traffic=clear` removes the mark. Reporting drops any
  * session holding a marked event (marketing/analytics.md §11 "Diagnostic traffic"); PostHog keeps the raw events.
  *
- * INTERNAL TRAFFIC is the same idea at device scope: `?kx_traffic=internal` marks this BROWSER (localStorage), so
- * the owner's and contributors' own visits carry `kx_traffic_type: "internal"` until `?kx_traffic=clear`. It exists
- * because a person-based "internal users" cohort can never have members on this site: with
- * `person_profiles: "identified_only"` and no login, no visitor ever becomes a person. A diagnostic tab on an
- * internal browser is reported as diagnostic, the narrower fact. Reporting drops both (analytics.md §11).
+ * INTERNAL TRAFFIC is the same idea at SESSION scope: `?kx_traffic=internal` marks THIS SESSION
+ * (`sessionStorage`, key `kx_analytics_internal_v2`), so the owner's and contributors' own visits carry
+ * `kx_traffic_type: "internal"`. Marking is always explicit — nothing is marked without the parameter. The mark
+ * survives client-side navigation and a reload in the same tab; a new independent browser session starts unmarked
+ * and must opt in again, and `?kx_traffic=clear` removes it. It exists because a person-based "internal users"
+ * cohort can never have members on this site: with `person_profiles: "identified_only"` and no login, no visitor
+ * ever becomes a person. A diagnostic tab in an internal session is reported as diagnostic, the narrower fact.
+ * Reporting drops diagnostic sessions; internal ones stay in the canonical QER as their own cohort
+ * (analytics.md §11 "Traffic cohorts").
  *
  * No cookies, no server, no dependency: only URLSearchParams and Web Storage. Storage that is blocked or full
  * degrades to "attribution missing" and never throws.
