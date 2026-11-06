@@ -13,7 +13,7 @@
  */
 import { classify } from "./workspace.mjs";
 import { validateAllowlist, validatePublishMetadata } from "./contract.mjs";
-import { auditPeerCompatibility, plannedVersions } from "./peers.mjs";
+import { auditPeerCompatibility, auditPeerFloors, plannedVersions } from "./peers.mjs";
 
 /**
  * @param {object} input
@@ -53,6 +53,12 @@ export function buildPlan({
   });
   const peers = auditPeerCompatibility({ packages, allowlist: allowlist.packages, planned });
   errors.push(...peers.errors);
+
+  // The other direction, and it is not symmetric with the audit above: a range can accept what ships
+  // and still have stopped accepting what it used to. `changeset version` produces exactly that when
+  // it rewrites a breached range, so the declared floor is checked separately. See peers.mjs.
+  const floors = auditPeerFloors({ packages, allowlist: allowlist.packages });
+  errors.push(...floors.errors);
 
   // Packages belong to release cohorts. A cohort marked `sameVersion` releases in lockstep — that
   // is the rule for `core` (@kinetixui/{tokens,ui,cli}), where a mismatch means a manifest was

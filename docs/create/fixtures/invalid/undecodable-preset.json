@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "proj_undecodablepreset",
+  "name": "Undecodable preset",
+  "domain": "domain:commerce",
+  "designSystem": {
+    "preset": "KX1_eyJ2Ijo5OTksImIiOiIjMWQ0ZWQ4In0"
+  },
+  "pages": [
+    {
+      "id": "page_home",
+      "name": "Home",
+      "route": "/",
+      "root": {
+        "id": "node_1",
+        "kind": "slot",
+        "name": "page"
+      }
+    }
+  ],
+  "nextNodeId": 2
+}

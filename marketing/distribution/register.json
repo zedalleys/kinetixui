@@ -337,7 +337,7 @@
         "utm_content": "x_thread"
       },
       "visual": null,
-      "linkPlacement": "dev.to article URL in post 9; the register's tracked /docs/platforms URL as a reply under post 9",
+      "linkPlacement": "the register's tracked /docs/platforms URL in post 9 itself, in place of the bare URL the draft carries; the dev.to article URL below it in the same post as supporting reading",
       "secondary": null,
       "communityReuse": null,
       "metricToWatch": "kx_p1_a_parity_proof sessions with utm_content=x_thread that reach /docs/platforms. The post body links the dev.to article, which first-party analytics cannot see, so only the tagged link is countable",
