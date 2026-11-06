@@ -90,16 +90,16 @@ Correction text ready to paste: [`../content/drafts/m3/ART-001-CORRECTION.md`](.
 
 | | |
 | --- | --- |
-| Final copy | [`../content/drafts/a01/x-thread.md`](../content/drafts/a01/x-thread.md), the whole file after its front matter: posts 1–9 and standalone posts A–D. Pin if approved: sha256 `38796bd…2642`, no section, so editing any standalone post later needs a fresh approval |
-| Destination | the dev.to article in post 9; the tracked `/docs/platforms` link as the first reply under post 9 |
+| Final copy | [`../content/drafts/a01/x-thread.md`](../content/drafts/a01/x-thread.md), the whole file after its front matter: posts 1–9 and standalone posts A–D. **Pinned** at sha256 `f6455e38…7d6c` (3,141 characters, the fitted copy), no section, so editing any standalone post later needs a fresh approval. The earlier `38796bd…2642` pin was the pre-fitting copy and is superseded |
+| Destination | the dev.to article in post 9; the tracked `/docs/platforms` link **in post 9's own body**, in place of the bare URL the draft carries, per `register.json` → `X-001.linkPlacement` |
 | Tracking URL | `https://kinetixui.com/docs/platforms?utm_source=x&utm_medium=social&utm_campaign=kx_p1_a_parity_proof&utm_content=x_thread` |
 | Target audience | P1 — multi-platform design-system engineers |
 | Positioning pillar | Primary: infrastructure. Pillar **a** |
-| Approval status | **READY FOR OWNER APPROVAL.** Recommended: approve, post only after LI-001 is live |
+| Approval status | **COPY APPROVED 2026-10-26** by its `f6455e38…7d6c` pin, on `main` through #477. Copy only: posting is still the owner's own manual act and is not authorized here |
 | Claims | Every figure historical and pinned to a commit, except "six of a hundred-odd so far": 6 of **113** demo keys today, which `verify-package.mjs` flags against its own `< 110` bound. "A hundred-odd" at 113 is a judgement call, not a wrong number; the alternative is re-pinning the copy for a word |
 
 Same campaign as LI-001 with a different `utm_content`, which is what separates the two posts' arrivals. X can wrap
-or strip the reply link, so no tagged session afterwards means "no tagged arrival observed", never "no clicks".
+or strip the link, so no tagged session afterwards means "no tagged arrival observed", never "no clicks".
 
 ## 3. LI-008 · LinkedIn · Thu 22 Oct, 14:00 UTC / 17:00 Riyadh
 

@@ -1,24 +1,29 @@
 ---
 id: X-001
 type: manual publish packet
-status: READY FOR OWNER APPROVAL. Not approved, not published. Editorial approval is a separate owner decision
+status: COPY APPROVED 2026-10-26 (recorded on `main` by #477). Not published. Publication is a separate owner decision and is not authorized here
 target: the 20 October 2026 slot passed unapproved and unpublished; a new slot is proposed in §7a and needs the owner's word
 ---
 
 # X-001 — manual publish packet
 
-Nothing in this repository posts to X. This packet prepares the thread so that posting it is mechanical; the copy
-still needs the owner's explicit approval before it goes out, and that approval is not recorded here.
+Nothing in this repository posts to X. This packet prepares the thread so that posting it is mechanical. The
+owner approved the copy on 2026-10-26, by its SHA-256; that approval is recorded in
+[`../../register.json`](../../register.json) and reached `main` in #477. It covers the copy only. Posting remains
+the owner's own manual act and is not authorized here.
 
 ## 1. The copy
 
 - File: [`../a01/x-thread.md`](../a01/x-thread.md), the whole file after its front matter: posts **1–9** and the
   standalone posts **A–D**.
-- Length 3,197 characters, sha256 `38796bd1c88e715812769ec50fc1a406efe30e331e6cb2dac9f0fe538d3d2642`, computed
-  2026-10-19 on `main`. If the owner approves, that hash is what goes in `register.json` → `X-001.approval.copy`,
-  and `check:content` then fails on any edit to the file, standalone posts included.
-- The register carries **no `approval` block for X-001** today, so its status stays `ready`. That is deliberate:
-  nothing is approved on the owner's behalf.
+- Length **3,141 characters**, sha256 `f6455e380c72b1cb5c4a4fb474b29327d35da4fcf1ee6bcaa19fcd58fe3a7d6c`,
+  recomputed 2026-11-06 on this tree. This is the **fitted** copy, which brought posts 2, 6, 7 and 9 within X's
+  280-character limit. An earlier revision of this packet pinned `38796bd…2642` (3,197 characters), the pre-fitting
+  copy; that hash is superseded and must not be recorded anywhere.
+- `register.json` → `X-001.approval.copy` already carries the `f6455e38…7d6c` pin, approved by the owner on
+  2026-10-26, so `check:content` now fails on any edit to the file, standalone posts included. The asset's status
+  stays `ready` because approval is not publication: the row moves to `published` only once the thread is posted
+  and its URL is recorded.
 
 ## 2. Posting order
 
@@ -36,7 +41,7 @@ Posts 1 to 9 in order, as one thread, each one a reply to the previous. Post 1 h
 | 7 | Symbol checking misses what only a compiler catches | Contains a Kotlin block; check X renders it as plain text before posting |
 | 8 | The rule: ask what would have caught it | |
 | 9 | Examples migrating into compiled files, "six of a hundred-odd so far", dev.to link | The **article** link lives here, in the post body |
-| reply | The tracked `/docs/platforms` link, as the first reply under post 9 | §3 |
+| 9 | The tracked `/docs/platforms` link goes **in post 9's own body**, in place of the bare URL the draft carries, with the dev.to article URL below it in the same post | §3 |
 
 The standalone posts A–D are **not** part of this thread. They are spaced across the following week and are not
 covered by Tuesday's approval beyond the hash.
@@ -47,8 +52,10 @@ covered by Tuesday's approval beyond the hash.
 https://kinetixui.com/docs/platforms?utm_source=x&utm_medium=social&utm_campaign=kx_p1_a_parity_proof&utm_content=x_thread
 ```
 
-- It goes in **a reply under post 9**, not in the thread body: post 9 already carries the dev.to article, and X
-  demotes posts carrying a second outbound link.
+- It goes **in post 9's own body**, in place of the bare URL the draft carries, with the dev.to article URL below
+  it in the same post. That is what `marketing/distribution/register.json` → `X-001.linkPlacement` requires on
+  `main`. An earlier revision of this packet directed it into a reply under post 9, on the reasoning that X demotes
+  a post with a second outbound link; the owner settled the placement the other way and the register is the record.
 - Copy it character for character. Never shorten it, and never append `kx_traffic=diagnostic`: that mark belongs
   only to the owner's own test visits and would exclude real readers from every count.
 - Same campaign as LI-001 (`kx_p1_a_parity_proof`), different content tag (`x_thread` against LI-001's
@@ -109,8 +116,8 @@ with `kx_content = 'x_thread'`:
 ## 7a. The 20 October slot passed, 2026-10-21
 
 The scheduled slot — Tuesday 20 October, 15:00 UTC — came and went while the copy was still unapproved. Nothing
-here was published: no approval was ever recorded, this thread posts nothing by design, and the registers are
-unchanged (`X-001` is `ready` in the content register, `planned` with a null date in the distribution register).
+here was published: no approval existed on that date — it came later, on 2026-10-26, and covers the copy only —
+this thread posts nothing by design, and the registers are unchanged (`X-001` is `ready` in the content register, `planned` with a null date in the distribution register).
 
 **Whether the thread exists on X is not something this environment can see.** X is unreachable from here, and
 first-party analytics would not settle it either: PostHog holds no session carrying `kx_content=x_thread` at any
@@ -130,10 +137,10 @@ filters on `kx_content`.
 
 ## 8. What the owner has to do
 
-1. Approve or decline the copy as written. If approved, say so explicitly and the approval, its evidence and the
-   `38796bd…2642` pin go into the content register that day.
+1. ~~Approve or decline the copy as written.~~ **Done 2026-10-26**: the copy is approved by its
+   `f6455e38…7d6c` pin and that approval is on `main`. Nothing further is needed here.
 2. Decide the visual: text-only post 6 (recommended) or hold the thread for asset D.
-3. Post the nine posts in order at about 15:00 UTC, then the tracked link as the first reply under post 9.
+3. Post the nine posts in order at about 15:00 UTC, with the tracked link inside post 9's body as §3 describes.
 4. Send the thread's own URL and the posting time, and the row is closed out the same way LI-001's was.
 
-Until step 1 happens, X-001 stays `ready`, not approved. Nothing here advances that on its own.
+X-001 stays `ready` until the thread is actually posted and its URL recorded. Nothing here advances that on its own.
