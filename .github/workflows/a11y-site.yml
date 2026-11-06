@@ -102,8 +102,41 @@ jobs:
       - name: Build site
         run: pnpm build:web
 
+      # The Chromium download is a fetch from Playwright's CDN in every job that needs a browser, and
+      # there are four such jobs across three workflows. Cache it on the Playwright version, because
+      # that is what decides which binary is wanted: a version bump misses and re-downloads, and
+      # nothing else invalidates the entry.
+      #
+      # There are deliberately no `restore-keys`. A near-miss restore would hand the job a browser
+      # directory built for a different Playwright version while reporting a hit, and the install
+      # below would then be skipped — a silently wrong browser is worse than a download. Only an
+      # exact version match counts, so the worst case is the cost paid today.
+      - name: Resolve the Playwright version
+        id: playwright
+        # Read it from the installed package rather than a literal, so the key cannot drift from the
+        # dependency a Dependabot bump changes. `node -p` prints exactly one line; `pnpm exec` does
+        # not guarantee that, because pnpm may write progress of its own to stdout first.
+        run: |
+          version="$(node -p "require('playwright/package.json').version")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}
+
       - name: Install Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install --with-deps chromium
+
+      # A cache holds the browser, not the apt packages `--with-deps` also installs, so a hit still
+      # has to put those in place. That is the whole reason the step above is conditional rather than
+      # simply replaced.
+      - name: Install Chromium's system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
 
       # `next start` serves the production build. The dev server can't be used here: the site's CSP has no
       # unsafe-eval, so client JavaScript would not run under `next dev`.
