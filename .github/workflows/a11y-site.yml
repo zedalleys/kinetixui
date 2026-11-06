@@ -23,6 +23,12 @@ on:
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
+      - "scripts/rebrand-browser.mjs"
+      - "scripts/rebrand-hero-negative-controls.mjs"
+      - "scripts/hero-light-browser.mjs"
+      - "apps/web/src/components/hero-mesh.json"
+      - "apps/web/src/components/hero-mesh-source.json"
+      - "scripts/gen-hero-mesh.mjs"
       - "scripts/web-quality-browser.mjs"
       - "scripts/blocks-discovery-browser.mjs"
       - "scripts/blocks-runtime-browser.mjs"
@@ -55,6 +61,12 @@ on:
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
+      - "scripts/rebrand-browser.mjs"
+      - "scripts/rebrand-hero-negative-controls.mjs"
+      - "scripts/hero-light-browser.mjs"
+      - "apps/web/src/components/hero-mesh.json"
+      - "apps/web/src/components/hero-mesh-source.json"
+      - "scripts/gen-hero-mesh.mjs"
       - "scripts/web-quality-browser.mjs"
       - "scripts/blocks-discovery-browser.mjs"
       - "scripts/blocks-runtime-browser.mjs"
@@ -154,6 +166,35 @@ jobs:
       # running through an output it does not belong to.
       - name: Homepage systems visuals (tabs, type floor, headline, map, hero decoration)
         run: pnpm check:home-systems
+
+      # The rebranded hero, against the running production build: the owner-supplied cage and its six
+      # junction nodes survive, the facets rotate by pointer and keyboard while the cage stays fixed under
+      # them, and no visible control row or rectangular focus frame returned. Run directly: this workflow's
+      # path filters cover the script, not package.json.
+      # The mesh the hero renders is generated from the owner-supplied source; a stale one would make every
+      # assertion below agree with the wrong geometry.
+      - name: Hero mesh is current with its source
+        run: node scripts/gen-hero-mesh.mjs --check
+
+      - name: Rebrand hero (mesh, rotation, light, focus, no control row)
+        run: REBRAND_BASE=http://127.0.0.1:3000 node scripts/rebrand-browser.mjs
+
+      # The step above was green on 2026-11-05 while the hero kept breathing and shimmering after
+      # `data-running` went false, and offscreen: `running` gated the rAF pulse loop, the two CSS
+      # `infinite` animations were gated by nothing, and the gate's only suspension evidence was the
+      # pulse coordinates, which do stop. It now measures the body transform and a facet's opacity as
+      # well, and these controls let a continuous animation ignore `data-running` again — both layers
+      # at once, then each alone — and require the gate to fail every time. A lifecycle assertion that
+      # has never been made to fail is not evidence that the motion stops.
+      - name: Hero motion lifecycle negative controls (a layer that ignores data-running still fails)
+        run: REBRAND_BASE=http://127.0.0.1:3000 node scripts/rebrand-hero-negative-controls.mjs
+
+      # The two hero claims that need a measurement rather than an assertion, and are too slow to repeat per
+      # viewport: the light's lap timed against the duration hero-mesh.json declares, and the focus
+      # indicator's own contrast measured differentially (the pixels that change on focus, each against its
+      # nearest unchanged neighbour) in light and dark.
+      - name: Hero light (timed lap, focus-indicator contrast)
+        run: node scripts/hero-light-browser.mjs --base http://127.0.0.1:3000
 
       # The website's own compact text, measured rather than read from source: no readable label under 12px, the
       # touched labels at 4.5:1 in light and dark, touch-sized hit areas on a coarse pointer with no overlaps, and

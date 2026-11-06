@@ -33,6 +33,16 @@ const packageDir = resolve(
 
 const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(?:[0-9A-Za-z-]+)(?:\.[0-9A-Za-z-]+)*)?$/;
 
+/*
+ * The name this package publishes under, pinned by value. pub.dev takes the name from the staged
+ * pubspec, not from anything the operator types, and a published name is permanent — a package can
+ * be discontinued but never renamed. So the identity is asserted here for the same reason the
+ * version is: this script produces the file that is uploaded, and it is the last place anything
+ * reads it before `pub publish` does. check:native-publish-preflight pins the same value against
+ * the committed pubspec (ID-PUB-NAME) and requires this assertion to exist.
+ */
+const CANONICAL_NAME = "kinetix_ui";
+
 const die = (message) => {
   console.error(`::error::${message}`);
   process.exit(1);
@@ -76,6 +86,9 @@ const staged = readFileSync(pubspecPath, "utf8");
 const lines = staged.split("\n");
 if (!lines.includes(`version: ${version}`)) {
   die(`Staging did not set \`version: ${version}\` in ${pubspecPath}. Found ${JSON.stringify(lines.find((line) => line.startsWith("version:")) ?? "no version line at all")}.`);
+}
+if (!lines.includes(`name: ${CANONICAL_NAME}`)) {
+  die(`${pubspecPath} does not declare \`name: ${CANONICAL_NAME}\`. Found ${JSON.stringify(lines.find((line) => line.startsWith("name:")) ?? "no name line at all")}. pub.dev would publish under that name and the coordinate would be taken permanently; a published package can be discontinued but never renamed.`);
 }
 if (lines.some((line) => /^publish_to:/.test(line))) {
   die(`Staging did not remove \`publish_to:\` from ${pubspecPath}; \`pub publish\` would refuse.`);
