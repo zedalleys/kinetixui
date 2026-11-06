@@ -72,6 +72,11 @@ const NEGATIVES = {
   "swiftui-manifest-probe-removed": { file: ".github/workflows/publish-swiftui.yml", from: /^          if ! git cat-file -e "\$SHA:Package\.swift" 2>\/dev\/null; then\n(?:          .*\n)*?          fi\n/m, to: "", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
   "compose-maven-local-rehearsal-gated": { file: ".github/workflows/publish-compose.yml", from: "      - name: Dry run — build + publishToMavenLocal (unsigned)\n        env:", to: "      - name: Dry run — build + publishToMavenLocal (unsigned)\n        if: ${{ inputs.dry_run == false }}\n        env:", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
   "flutter-dry-run-rehearsal-removed": { file: ".github/workflows/publish-flutter.yml", from: "      - name: Dry run\n        run: flutter pub publish --dry-run\n", to: "", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+  // Round eleven, and a different class: not a misread file, but a condition one level up. A job
+  // `if:` skips every step in the job, rehearsal included, while a check that reads only step
+  // conditions still calls the rehearsal unconditional. Verified as a bypass at `5ecf612a`.
+  "flutter-rehearsal-gated-by-the-job-condition": { file: ".github/workflows/publish-flutter.yml", from: "jobs:\n  publish:\n    runs-on: ubuntu-latest\n", to: "jobs:\n  publish:\n    if: ${{ inputs.dry_run == false }}\n    runs-on: ubuntu-latest\n", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+  "compose-rehearsal-gated-by-the-job-condition": { file: ".github/workflows/publish-compose.yml", from: "jobs:\n  publish:\n    runs-on: ubuntu-latest\n", to: "jobs:\n  publish:\n    if: ${{ github.actor == 'nobody' }}\n    runs-on: ubuntu-latest\n", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
 
   // YAML spellings the reader does not read. Each of these passed at 8bb19e81 by making a step with
   // a publication in it look like a step with no script at all.
@@ -593,11 +598,18 @@ const documentSteps = (doc) => {
   for (const [jobId, job] of Object.entries(jobs)) {
     const list = job && typeof job === "object" ? job.steps : null;
     if (!Array.isArray(list)) continue;
+    // A job carries a condition too, and a step inside a skipped job does not run however
+    // unconditional the step itself is. Reading only the step's own `if:` made the dry-run gate
+    // movable one level up: `if:` on `jobs.publish` skips the whole job on a dry run, rehearsal
+    // included, while a check that looks only at steps still calls the rehearsal unconditional.
+    const jobCondition = job.if === undefined ? null : String(job.if);
     list.forEach((step, index) => {
       const mapping = step && typeof step === "object" ? step : {};
       steps.push({
         path: `jobs.${jobId}.steps[${index}]`,
         name: mapping.name ?? mapping.uses ?? "an unnamed step",
+        job: jobId,
+        jobCondition,
         condition: mapping.if === undefined ? null : String(mapping.if),
         script: typeof mapping.run === "string" ? mapping.run : "",
       });
@@ -745,6 +757,9 @@ for (const workflow of workflows) {
     }
     if (step.condition !== null) {
       gatedRehearsal.push(`${workflow.path} → "${name}" carries \`if: ${step.condition}\`. Rehearsal work must stay unconditional, or a dry run stops being a rehearsal of anything`);
+    }
+    if (step.jobCondition !== null) {
+      gatedRehearsal.push(`${workflow.path} → "${name}" is unconditional itself, but its job \`${step.job}\` carries \`if: ${step.jobCondition}\`, so the step does not run when the job is skipped. A dry-run condition one level up skips the rehearsal along with the publication, which is the same defect as gating the rehearsal directly and is harder to see`);
     }
     if (!step.script.includes(token)) {
       gatedRehearsal.push(`${workflow.path} → "${name}" no longer runs \`${token}\`. A dry run has to do the preparation and the verification for real; the only thing it must not do is the publication`);
