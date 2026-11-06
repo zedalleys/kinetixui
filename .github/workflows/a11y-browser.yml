@@ -30,6 +30,8 @@ on:
       - "scripts/toggle-motion.mjs"
       - "scripts/checkbox-radio-motion.mjs"
       - "scripts/switch-motion.mjs"
+      - "scripts/tabs-indicator.mjs"
+      - "scripts/react-overlays.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
       - "scripts/iot-monitoring.mjs"
@@ -69,6 +71,8 @@ on:
       - "scripts/toggle-motion.mjs"
       - "scripts/checkbox-radio-motion.mjs"
       - "scripts/switch-motion.mjs"
+      - "scripts/tabs-indicator.mjs"
+      - "scripts/react-overlays.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
       - "scripts/iot-monitoring.mjs"
@@ -173,6 +177,17 @@ jobs:
       # forced colours, and the pre-hydration edge it takes over from.
       - name: Tabs indicator geometry (scrolling, dynamic tabs, direction, orientation, text size)
         run: pnpm check:tabs-indicator
+
+      # The overlay family's interaction contract, which `check:a11y-browser` scans for violations but does
+      # not drive: a real press on the trigger, focus entry and the browser's own Tab order inside the
+      # surface, Escape returning focus to the exact trigger element, hit-tested presses outside (and the
+      # AlertDialog that must not be dismissed by one) and inside, the surface painted and hittable outside
+      # an overflow-clipped transformed ancestor, reduced motion still landing on the open state, and the
+      # two collection surfaces opened and moved from the keyboard with Select's choice read back off its
+      # trigger. verification.json publishes these six components' Chromium `interaction` evidence off this
+      # script, so a removed step fails generation rather than quietly dropping the claim.
+      - name: React overlay interaction (focus entry and order, Escape and restore, hit-tested dismissal, clipping, reduced motion)
+        run: pnpm check:react-overlays
 
       # Loops are the case the pass above cannot express: nothing to click, no destination to seek to.
       # This reads whether each loop is really running normally and really stopped under reduced motion
