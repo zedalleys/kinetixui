@@ -126,6 +126,34 @@ jobs:
       - name: Build Storybook
         run: pnpm build-storybook
 
+      # Chromium is re-downloaded on every run and the download time is not stable. Measured on #514's head
+      # 1a362696, same commit, same trigger: `Install Chromium` took 24s in `Accessibility (browser)` and
+      # 9m30s in `Accessibility (site)` — a 24x spread, and on an earlier head it reached 11m10s. In a job
+      # that finishes within minutes of its cap, that tail is the whole risk of a cancellation, and a
+      # cancellation truncates the run rather than failing loudly.
+      #
+      # So cache the browser instead of raising `timeout-minutes`, which would move the cliff and hide how
+      # close the job sits to it. The cap is deliberately unchanged by this.
+      #
+      # The key is the pinned Playwright version and nothing else. Playwright pins its browser revisions per
+      # version — 1.64.0 wants chromium-1248, chromium_headless_shell-1248 and ffmpeg-1013 — so a version
+      # bump is a new key and cannot be served a stale binary. Keying on the lockfile hash instead would
+      # miss on every unrelated dependency bump for no benefit.
+      #
+      # `--with-deps` is kept on a hit: the apt packages it installs live in the system, not in
+      # ~/.cache/ms-playwright, so they are not cacheable and must still be installed. With the browser
+      # already present, `playwright install` verifies the INSTALLATION_COMPLETE markers and downloads
+      # nothing — measured locally as exit 0 with no output.
+      - name: Playwright version, for the cache key
+        id: playwright
+        run: echo "version=$(node -p "require('./package.json').devDependencies.playwright")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ steps.playwright.outputs.version }}
+
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
 
@@ -334,6 +362,17 @@ jobs:
 
       - name: Build tokens and UI
         run: pnpm build:tokens && pnpm build:ui
+
+      # Same browser cache as the job above; see that job's note for the key and the measurement.
+      - name: Playwright version, for the cache key
+        id: playwright
+        run: echo "version=$(node -p "require('./package.json').devDependencies.playwright")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ steps.playwright.outputs.version }}
 
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
