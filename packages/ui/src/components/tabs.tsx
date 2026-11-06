@@ -305,9 +305,14 @@ const TabsTrigger = React.forwardRef<
       // active rule and the tab going inactive takes none — which puts the two in sequence, not together.
       // Only the label's own colour is re-timed. The hover surface is answering a pointer, not narrating a
       // selection, so it stays on `fast`: a 300ms hover would read as lag.
-      "group-data-[kx-tabs-motion=fluid]/tabs:[transition-property:color,background-color,border-color]",
-      "group-data-[kx-tabs-motion=fluid]/tabs:[transition-duration:var(--duration-base),var(--duration-fast),var(--duration-fast)]",
-      "group-data-[kx-tabs-motion=fluid]/tabs:data-[state=active]:[transition-delay:var(--duration-base),0ms,0ms]",
+      // All three are `motion-safe:`, because the blanket reduced-motion rule in tailwind.config.ts caps
+      // transition DURATIONS and leaves delays alone. Unscoped, these rules also out-specify the
+      // `motion-reduce:transition-none` above them, so a reader who asked for no motion would get the
+      // snapped bar and then a label still held a whole `base` tier behind it. Under `reduce` the fluid
+      // re-timing drops out entirely and the trigger falls back to that `transition-none`.
+      "motion-safe:group-data-[kx-tabs-motion=fluid]/tabs:[transition-property:color,background-color,border-color]",
+      "motion-safe:group-data-[kx-tabs-motion=fluid]/tabs:[transition-duration:var(--duration-base),var(--duration-fast),var(--duration-fast)]",
+      "motion-safe:group-data-[kx-tabs-motion=fluid]/tabs:data-[state=active]:[transition-delay:var(--duration-base),0ms,0ms]",
       "[@media(hover:hover)]:enabled:hover:data-[state=inactive]:bg-foreground/[0.08] [@media(hover:hover)]:enabled:hover:data-[state=inactive]:text-foreground",
       "data-[state=active]:border-foreground data-[state=active]:text-foreground",
       // The list's travelling indicator takes over the chosen edge once it has measured; forced colours keep this one.

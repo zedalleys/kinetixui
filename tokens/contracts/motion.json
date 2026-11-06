@@ -364,7 +364,7 @@
         {
           "platform": "react",
           "file": "packages/ui/src/components/tabs.tsx",
-          "uses": "group-data-[kx-tabs-motion=fluid]/tabs:[transition-duration:var(--duration-base),var(--duration-fast),var(--duration-fast)]",
+          "uses": "motion-safe:group-data-[kx-tabs-motion=fluid]/tabs:[transition-duration:var(--duration-base),var(--duration-fast),var(--duration-fast)]",
           "reason": "Under Tabs' `fluid` preset the label's own colour runs at `base` rather than this role's `fast`, because it is choreographed to the indicator rather than answering on its own clock: the label being left fades across the leading edge's travel and the label being chosen brightens across the trailing edge's, which is what makes the two phases read as one movement. Deliberate and scoped: `color` alone is re-timed, the hover surface and the border stay on `fast` in the same declaration, and `classic` and `none` leave the label exactly as it was."
         }
       ]

@@ -858,6 +858,30 @@ const expectAligned = (m, label) =>
     "fluid, reduced motion: no travel",
     `${moving} transition(s)`,
   );
+  // The bar snapping is not the whole of it. `fluid` re-times the chosen label's own colour onto the
+  // trailing edge's phase, which means a `transition-delay` of a whole `base` tier. The blanket
+  // reduced-motion rule caps transition DURATIONS and does not touch delays, so a delay left in place
+  // here would hold the label a third of a second after the bar had already arrived — the snap and the
+  // label would disagree. Read the delay off the chosen tab rather than inferring it from the bar.
+  const delayed = await page.evaluate(() => {
+    const tab = document.querySelector(
+      '[role="tablist"] [role="tab"][data-state="active"]',
+    );
+    const cs = getComputedStyle(tab);
+    return {
+      delay: cs.transitionDelay,
+      property: cs.transitionProperty,
+      worst: cs.transitionDelay
+        .split(",")
+        .map((d) => parseFloat(d) * (d.includes("ms") ? 1 : 1000))
+        .reduce((a, b) => Math.max(a, b), 0),
+    };
+  });
+  check(
+    delayed.worst === 0,
+    "fluid, reduced motion: the chosen label is not held behind a delay",
+    `transition-delay: ${delayed.delay} (property: ${delayed.property})`,
+  );
   await ctx.close();
 }
 {
