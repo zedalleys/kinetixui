@@ -33,6 +33,7 @@
  */
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import yaml from "js-yaml";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const read = (path) => readFileSync(`${root}${path}`, "utf8");
@@ -74,10 +75,23 @@ const NEGATIVES = {
 
   // YAML spellings the reader does not read. Each of these passed at 8bb19e81 by making a step with
   // a publication in it look like a step with no script at all.
-  "flutter-publish-in-an-explicit-indicator-block": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: |1\n          # a comment indented deeper than the content\n         flutter pub publish --force", breaks: "WF-READABLE-SYNTAX" },
-  "flutter-publish-in-a-folded-scalar": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: >\n          flutter pub\n          publish --force", breaks: "WF-READABLE-SYNTAX" },
-  "flutter-publish-under-a-quoted-run-key": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: '          flutter pub publish --force\n\n      - name: Extra\n        "run": flutter pub publish --force', breaks: "WF-READABLE-SYNTAX" },
-  "flutter-publish-behind-a-yaml-anchor": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: &publish flutter pub publish --force", breaks: "WF-READABLE-SYNTAX" },
+  "flutter-publish-in-an-explicit-indicator-block": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: |1\n          # a comment indented deeper than the content\n         flutter pub publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-in-a-folded-scalar": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: >\n          flutter pub\n          publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-under-a-quoted-run-key": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: '          flutter pub publish --force\n\n      - name: Extra\n        "run": flutter pub publish --force', breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-behind-a-yaml-anchor": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: &publish flutter pub publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  // Round ten, same class again, and the reason the reader was replaced by a parser rather than
+  // patched a fourth time. Each of these was a *passing* preflight at `48d405ac`: a header comment
+  // after `>`, a plain scalar continued on the next line, an escape inside a quoted scalar, a job
+  // whose sequence items sit two spaces shallower, and an anchor named with a digit. A parser reads
+  // all five as the command GitHub would run, so all five are caught by the isolation sweep.
+  "flutter-publish-in-a-folded-scalar-with-a-header-comment": { file: ".github/workflows/publish-flutter.yml", from: '          flutter pub publish --force', to: '          flutter pub publish --force' + "\n\n      - name: Extra\n        run: > # folded command\n          flutter pub\n          publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-in-a-plain-scalar-continuation": { file: ".github/workflows/publish-flutter.yml", from: '          flutter pub publish --force', to: '          flutter pub publish --force' + "\n\n      - name: Extra\n        run: flutter pub\n          publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-in-a-quoted-escape": { file: ".github/workflows/publish-flutter.yml", from: '          flutter pub publish --force', to: '          flutter pub publish --force' + "\n\n      - name: Extra\n        run: \"flutter pub \\u0070ublish --force\"", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-in-a-second-job-with-shallower-steps": { file: ".github/workflows/publish-flutter.yml", from: '          flutter pub publish --force', to: '          flutter pub publish --force' + "\n\n  extra:\n    runs-on: ubuntu-latest\n    steps:\n    - name: Extra\n      run: flutter pub publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-behind-a-numeric-alias": { file: ".github/workflows/publish-flutter.yml", from: "        run: |\n          if [ -z \"$PUB_DEV_CREDENTIALS\" ]", to: "        run: &1 |\n          if [ -z \"$PUB_DEV_CREDENTIALS\" ]", also: { file: ".github/workflows/publish-flutter.yml", from: '          flutter pub publish --force', to: '          flutter pub publish --force' + "\n\n      - name: Extra\n        run: *1" }, breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  // And the case the hand-written reader could not report at all: a file it could not read looked
+  // like a file with no publication in it.
+  "flutter-workflow-does-not-parse": { file: ".github/workflows/publish-flutter.yml", from: "jobs:\n", to: "jobs:\n  duplicate: {}\njobs:\n", breaks: "WF-PARSES" },
 
   // Ways to hide a publication from the structural reader itself, rather than from the gate's
   // contract. Each of these passed the reader as it stood at 42a90808.
@@ -531,133 +545,94 @@ const REHEARSAL_TOKENS = ["pub publish --dry-run", "publishReleasePublicationToM
 const APPROVED_STEP_CONDITION = "${{ inputs.dry_run == false }}";
 
 /**
- * A structural reader for a publish workflow's steps.
+ * A real YAML parser, reading the workflows the way GitHub Actions does.
  *
- * It reads block structure and nothing else: a sequence item under `steps:`, the keys of that
- * item's mapping, and — separately — the lines of its `run:` block scalar, which are indented
- * deeper than the key that introduces them and so can never be mistaken for a mapping key. That
- * distinction is the whole point. An `if:` written inside a script is script text; an `if:` at the
- * step's mapping level is a key GitHub Actions reads. Nothing in the first position can become the
- * second, however it is spelled.
+ * This replaced a hand-written partial reader, and the reason is the whole lesson of this file.
+ * The partial reader was itself replaced three times — a nine-space block scalar, an explicit
+ * indentation indicator, a folded scalar, a quoted key, a plain-scalar continuation, a quoted
+ * escape, an anchor with a numeric name, a job whose sequence items sat two spaces shallower.
+ * Every one of them made a step holding an unconditional publication look like a step with no
+ * script at all, which for a check whose job is to find publications is a silent all-clear.
  *
- * Deliberately not a general YAML parser (these workflows are fixed block style, and the gate runs
- * from a bare checkout with no dependencies installed) and deliberately not a shell parser.
+ * Three rounds of "now the subset is closed" were wrong, and that is the evidence that matters: a
+ * hand-written grammar cannot be *shown* to be complete, and asserting a subset only moves the
+ * incompleteness from the reader into the assertion. A parser can be shown to be complete, because
+ * completeness over YAML is what it is for. So the structure comes from `js-yaml` and this file
+ * reads the result.
+ *
+ * What that buys, beyond the eight spellings above: aliases resolve, so an anchored script is seen
+ * at every place it is used; folded and literal scalars arrive as the command GitHub would run;
+ * escapes are decoded before a token is looked for; and every job is walked at whatever depth it is
+ * written, rather than at the one depth a regex was anchored on.
+ *
+ * It is still not, and must never become, a shell parser. The step-level `if:` is what decides
+ * whether a publication executes, and that is a key GitHub evaluates before a shell exists.
  */
+const parsed = new Map();
+const parseWorkflow = (path, text) => {
+  if (!parsed.has(path)) {
+    try {
+      parsed.set(path, { doc: yaml.load(text, { filename: path }) });
+    } catch (error) {
+      parsed.set(path, { error: error.message.split("\n")[0] });
+    }
+  }
+  return parsed.get(path);
+};
+
 /**
- * The YAML subset this reader supports, asserted rather than assumed.
+ * Every step of every job, in document order, each carrying the path it was read from.
  *
- * The reader above is a *partial* YAML reader, and YAML has more spellings than any partial reader
- * has branches: a block scalar can carry an explicit indentation indicator (`run: |1`), it can be
- * folded (`run: >`) so two physical lines are one command, a mapping key can be quoted (`"run":`),
- * and there are anchors, aliases, merge keys and flow mappings besides. Each of those made the
- * reader see *no script*, which for a check looking for publications is a silent all-clear — the
- * same failure shape three different ways.
- *
- * Handling each spelling would be the same losing game the shell parser was, so the direction of
- * the error is inverted instead: these three workflows must be written in the subset this reader
- * fully understands, and anything outside it is a failure rather than a pass. We own these files,
- * and the cost of the restriction is having to write a publish workflow plainly.
- *
- * Supported: plain unquoted keys, block style throughout, `run:` either inline or as a literal
- * block scalar introduced by exactly `|`, `|-` or `|+`.
+ * The path is how a step is identified rather than by name: a display name is not unique in
+ * GitHub Actions, and two steps that share one are two steps.
  */
-const UNSUPPORTED_SYNTAX = [
-  { pattern: /\t/, why: "a tab character, which YAML does not allow for indentation and this reader does not measure" },
-  { pattern: /^\s*-?\s*['"][^'"]*['"]\s*:/, why: "a quoted mapping key, which is equivalent to the plain key but is not what this reader matches" },
-  { pattern: /^\s*<<\s*:/, why: "a merge key, which would bring keys in from somewhere this reader is not looking" },
-  { pattern: /(?:^|\s)[&*][A-Za-z_]/, why: "a YAML anchor or alias, which would put a step's content somewhere other than where it is used" },
-  { pattern: /^\s*-?\s*[A-Za-z_][\w-]*:\s*[[{]/, why: "a flow mapping or sequence, which this reader reads as a scalar" },
-];
-const BLOCK_HEADER = /^(\s*)(?:-\s+)?[A-Za-z_][\w-]*:\s*([|>][-+]?\d*)\s*$/;
-
-/** The lines of a workflow that are structure rather than script, with block scalars removed. */
-const structuralLines = (text) => {
-  const lines = text.split("\n");
-  const kept = [];
-  for (let i = 0; i < lines.length; i += 1) {
-    kept.push({ line: lines[i], number: i + 1 });
-    const header = lines[i].match(BLOCK_HEADER);
-    if (!header) continue;
-    const keyIndent = header[1].length;
-    for (let j = i + 1; j < lines.length; j += 1) {
-      if (lines[j].trim() !== "" && lines[j].match(/^[ ]*/)[0].length <= keyIndent) break;
-      i = j;
-    }
-  }
-  return kept;
-};
-
-const unsupportedSyntax = (text) => {
-  const found = [];
-  for (const { line, number } of structuralLines(text)) {
-    const header = line.match(BLOCK_HEADER);
-    if (header && header[2] !== "|" && header[2] !== "|-" && header[2] !== "|+") {
-      found.push(`line ${number} introduces a block scalar with \`${header[2]}\`, and only \`|\`, \`|-\` and \`|+\` are read here: an explicit indentation indicator or a folded scalar changes where the content starts or joins two lines into one command`);
-      continue;
-    }
-    if (line.trim().startsWith("#")) continue;
-    for (const { pattern, why } of UNSUPPORTED_SYNTAX) {
-      if (pattern.test(line)) {
-        found.push(`line ${number} uses ${why}`);
-        break;
-      }
-    }
-  }
-  return found;
-};
-
-const parseSteps = (text) => {
-  const lines = text.split("\n");
-  const stepsAt = lines.findIndex((line) => /^    steps:[ \t]*$/.test(line));
-  if (stepsAt < 0) return [];
+const documentSteps = (doc) => {
   const steps = [];
-  for (let i = stepsAt + 1; i < lines.length; i += 1) {
-    const line = lines[i];
-    if (!/^      - /.test(line)) continue;
-    const body = [line];
-    for (let j = i + 1; j < lines.length && !/^      - /.test(lines[j]); j += 1) body.push(lines[j]);
-    // Mapping keys sit at exactly eight spaces; the first item's key rides the `- `.
-    const keys = new Map();
-    let runFrom = -1;
-    for (let k = 0; k < body.length; k += 1) {
-      const key = body[k].match(/^(?:      - |        )([A-Za-z_][\w-]*):[ \t]*(.*)$/);
-      if (!key) continue;
-      if (!keys.has(key[1])) keys.set(key[1], key[2].trim());
-      if (key[1] === "run") runFrom = k;
-    }
-    // A `run:` is either a block scalar or a single command on the key's own line. Both are the
-    // step's script.
-    //
-    // A block scalar's indentation is whatever its first non-empty line uses, which YAML only
-    // requires to be deeper than the key's own — one space past it is legal and Actions runs it.
-    // Assuming a fixed depth made a script indented nine spaces read as *empty*, which for a check
-    // looking for publish commands is a silent all-clear. So the depth is taken from the content,
-    // and the block ends at the first line that is less indented than that.
-    const script = [];
-    if (runFrom >= 0) {
-      const inline = keys.get("run");
-      if (inline && !/^[|>][-+]?\d*$/.test(inline)) script.push(inline);
-      const keyIndent = body[runFrom].match(/^[ ]*(?:- )?/)[0].length;
-      let blockIndent = null;
-      for (let k = runFrom + 1; k < body.length; k += 1) {
-        if (body[k].trim() === "") { script.push(""); continue; }
-        const indent = body[k].match(/^[ ]*/)[0].length;
-        if (blockIndent === null) {
-          if (indent <= keyIndent) break;
-          blockIndent = indent;
-        } else if (indent < blockIndent) break;
-        script.push(body[k]);
-      }
-    }
-    steps.push({
-      name: keys.get("name") ?? keys.get("uses") ?? "an unnamed step",
-      condition: keys.get("if") ?? null,
-      script: script.join("\n"),
+  const jobs = doc && typeof doc === "object" ? doc.jobs : null;
+  if (!jobs || typeof jobs !== "object") return steps;
+  for (const [jobId, job] of Object.entries(jobs)) {
+    const list = job && typeof job === "object" ? job.steps : null;
+    if (!Array.isArray(list)) continue;
+    list.forEach((step, index) => {
+      const mapping = step && typeof step === "object" ? step : {};
+      steps.push({
+        path: `jobs.${jobId}.steps[${index}]`,
+        name: mapping.name ?? mapping.uses ?? "an unnamed step",
+        condition: mapping.if === undefined ? null : String(mapping.if),
+        script: typeof mapping.run === "string" ? mapping.run : "",
+      });
     });
   }
   return steps;
 };
 
+/**
+ * Every string anywhere in the document, with the path it sits at.
+ *
+ * The isolation check sweeps the whole document rather than only the steps it recognises, because
+ * the failure that keeps recurring is a publication somewhere the walk was not looking — another
+ * job, a deeper key, the far end of an alias. A sweep that covers the document cannot be dodged by
+ * moving the command; it can only be dodged by not writing the command, which is the point.
+ *
+ * Cycles are possible through aliases, so visited containers are tracked.
+ */
+const documentStrings = (node, path = "", seen = new Set(), out = []) => {
+  if (typeof node === "string") {
+    out.push({ path, value: node });
+    return out;
+  }
+  if (!node || typeof node !== "object") return out;
+  if (seen.has(node)) return out;
+  seen.add(node);
+  if (Array.isArray(node)) {
+    node.forEach((item, index) => documentStrings(item, `${path}[${index}]`, seen, out));
+    return out;
+  }
+  for (const [key, value] of Object.entries(node)) {
+    documentStrings(value, path ? `${path}.${key}` : key, seen, out);
+  }
+  return out;
+};
 /**
  * Lines of a script that publish for real.
  *
@@ -707,18 +682,22 @@ const PUBLISH_CONTRACT = {
   },
 };
 
-const unreadable = [];
+const unparseable = [];
 const misplaced = [];
 const ungated = [];
 const gatedRehearsal = [];
 const missingGuard = [];
 for (const workflow of workflows) {
   const contract = PUBLISH_CONTRACT[workflow.path];
-  // Before anything is concluded from the structure, assert the file is written in the subset this
-  // reader understands. A spelling it cannot read makes a step look empty, and an empty step looks
-  // like a step with no publication in it.
-  for (const problem of unsupportedSyntax(workflow.text)) unreadable.push(`${workflow.path}: ${problem}`);
-  const steps = parseSteps(workflow.text);
+  const { doc, error } = parseWorkflow(workflow.path, workflow.text);
+  // Nothing is concluded from a file that did not parse. This is the one case the hand-written
+  // reader could never report: a file it could not read looked exactly like a file with no
+  // publication in it.
+  if (error) {
+    unparseable.push(`${workflow.path} is not valid YAML (${error})`);
+    continue;
+  }
+  const steps = documentSteps(doc);
   const named = (name) => steps.filter((step) => step.name === name);
 
   // 2. The declared side-effecting step exists, there is exactly one of it, and it carries the
@@ -740,14 +719,21 @@ for (const workflow of workflows) {
     }
   }
 
-  // 1 and 3. Every live side effect is in that one step, and no preparation step carries one. Both
-  // directions of the same sentence, so neither can be satisfied alone. Exempting by name would
-  // exempt a duplicate too, so the one declared step is exempted by identity.
-  const exempt = live.length === 1 ? live[0] : null;
-  for (const step of steps) {
-    const effects = sideEffectLines(step.script);
-    if (effects.length === 0 || step === exempt) continue;
-    misplaced.push(`${workflow.path} → "${step.name}" publishes for real (\`${effects[0]}\`) but is not the declared side-effecting step. Only "${contract.publishes}" may carry a live publication, because only that step is gated`);
+  // 1 and 3. Every live side effect is that one step's script, and nothing else in the document is
+  // one. Both directions of the same sentence, so neither can be satisfied alone.
+  //
+  // This sweeps the parsed document rather than the steps the reader recognised, because the
+  // failure that kept recurring was a publication somewhere the walk was not looking: another job,
+  // a different depth, the far end of an alias. One exact position is exempt — the gated step's own
+  // `run` — and it is exempt by position, so a second step with the same name is not.
+  const allowed = live.length === 1 ? `${live[0].path}.run` : null;
+  const byPath = new Map(steps.map((step) => [step.path, step]));
+  for (const { path, value } of documentStrings(doc)) {
+    const effects = sideEffectLines(value);
+    if (effects.length === 0 || path === allowed) continue;
+    const owner = byPath.get(path.replace(/\.run$/, ""));
+    const where = owner ? `"${owner.name}"` : `\`${path}\``;
+    misplaced.push(`${workflow.path} → ${where} publishes for real (\`${effects[0]}\`) but is not the declared side-effecting step. Only "${contract.publishes}" may carry a live publication, because only that step is gated`);
   }
 
   // 4 and 5. Rehearsal work stays executable on a dry run: unconditional, and still present.
@@ -766,15 +752,16 @@ for (const workflow of workflows) {
   }
 
   // 6. Defense in depth, where the contract asks for it. Presence only — see the note above.
+  const exempt = live.length === 1 ? live[0] : null;
   if (contract.guard && exempt && !exempt.script.includes(contract.guard)) {
     missingGuard.push(`${workflow.path} → "${contract.publishes}" must keep \`${contract.guard}\` in its script as a second layer. It is not what proves the publication is gated — the step condition is — but it is what the six-value behavioural control measures, and it is what stops a publish if this step is ever reached with a value other than \`false\``);
   }
 }
 
 check(
-  "WF-READABLE-SYNTAX",
-  unreadable.length === 0,
-  `${unreadable.join("; ")}. The publish workflows are read here by a deliberately small structural reader, so they must be written in the subset it fully understands: plain unquoted keys, block style, and \`run:\` either inline or as a literal block scalar introduced by exactly \`|\`, \`|-\` or \`|+\`. Any other spelling is rejected rather than guessed at, because a spelling this reader cannot see makes a step look like it contains no publication.`,
+  "WF-PARSES",
+  unparseable.length === 0,
+  `${unparseable.join("; ")}. The publish workflows are read here through a YAML parser, so a file that does not parse is a failure rather than a file with nothing in it. Three rounds of review found a spelling the previous hand-written reader could not see; each time, the unread file passed.`,
 );
 check(
   "WF-SIDE-EFFECTS-ISOLATED",
