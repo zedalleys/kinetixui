@@ -33,11 +33,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The preflight now reads these workflows through a YAML parser rather than a
+      # hand-written one, because three rounds of review found a spelling the
+      # hand-written reader could not see and each time the unread file passed. That
+      # costs this workflow its bare-checkout independence: the gate needs its one
+      # dependency installed before it can run. It is rehearsal-safe, it runs before
+      # anything is validated, and if it fails the job fails and nothing is published.
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install (the preflight's parser)
+        working-directory: .
+        run: pnpm install --frozen-lockfile
+
       # A Central coordinate is immutable, so the version is rejected before
       # the toolchain is warmed up rather than after the upload.
       - name: Validate version
         working-directory: .
-        run: node scripts/check-native-publish-preflight.mjs --version='${{ inputs.version }}'
+        env:
+          VERSION: ${{ inputs.version }}
+        run: node scripts/check-native-publish-preflight.mjs --version="$VERSION"
 
       - name: Preflight
         working-directory: .

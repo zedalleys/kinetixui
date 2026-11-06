@@ -66,6 +66,85 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "0.27.0",
+    summary: "KinetixUI 0.27.0 turns React's Rating into a real radio group, stops Metric's value and trend from colliding, and adds four rem-based responsive variants to the shared Tailwind preset. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together on the 0.27.0 line. @kinetixui/angular publishes 0.26.2 on its own line, carrying the same Metric fix and a tokens peer range widened to >=0.24.0 <0.28.0; it remains Preview. @kinetixui/iot stays on 0.5.0.",
+    breaking: [],
+    changes: [
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "Rating is a radio group of real radios",
+        body: "Rating declared role=radiogroup but held five independent aria-pressed buttons, so nothing was ever checked, no position was announced and it was five tab stops with no arrow keys. The stars are now native radio inputs in one group per instance, named \"1 star\" to \"5 stars\"; the roving tab stop, arrow movement, RTL mirroring and the \"3 of 5\" announcement come from the browser, and Home and End choose the first and last. readOnly is unchanged in appearance and is exposed as an image named \"Rated 3 out of 5\". No props changed. The markup inside the group changed from a button per star to a label with a visually hidden radio, so a stylesheet or test that targets `.rating button` may need to target the label or the star instead. Keyboard behaviour is verified through user-event's emulation of radio-group navigation, not a real browser.",
+        href: "/docs/components/rating"
+      },
+      {
+        kind: "fixed",
+        area: "components",
+        title: "Metric's value and trend wrap instead of colliding",
+        body: "The value and trend row now wraps rather than compressing: the figure is never broken mid-number, a trend too wide to sit beside the value moves to its own line, and the arrow and figure wrap last. In a browser the pair had overflowed its card by 14.1px at 1280px, and at 320px with 200% text two cards overlapped. After the change the sweep shows no overflow. MetricProps is unchanged; a data-kx-metric-pair marker is added as a measurement handle, not a styling hook.",
+        href: "/docs/components/metric"
+      },
+      {
+        kind: "new",
+        area: [
+          "components",
+          "tokens"
+        ],
+        title: "Four rem-based responsive variants in the Tailwind preset",
+        body: "The preset exported as ./tailwind.config now registers sm-rem (40rem), md-rem (48rem), lg-rem (64rem) and xl-rem (80rem) as variants, so they follow the reader's text size. md-rem is new; the other three previously existed only in the website's own config, so a consumer's sm-rem: utility generated no rule. Nothing is removed or renamed and no existing utility changes the widths it applies at. They are variants rather than theme.screens entries because Tailwind 3.4 silently emits no min-* or max-* rules when screens mix units."
+      },
+      {
+        kind: "fixed",
+        area: "platforms",
+        title: "kx-metric wraps, and the tokens peer range widens",
+        body: "@kinetixui/angular 0.26.2 applies the same wrapping contract to .kx-metric using the existing spacing tokens; no selector or public class name changed. Its @kinetixui/tokens peer range is >=0.24.0 <0.28.0, so it keeps supporting tokens 0.24 to 0.27. The Angular change was verified by the package's stylesheet gates, not by a rendered Angular measurement. Angular remains Preview."
+      },
+      {
+        kind: "fixed",
+        title: "Documentation site layout corrections",
+        body: "The blocks gallery now takes its two-column step at 420px, which previously emitted no rule in the built site, and the homepage spotlight and preview toolbar spacing were corrected. These change the website only and are not published package API."
+      },
+      {
+        kind: "improved",
+        area: "release",
+        title: "Core moves together on the 0.27.0 release line",
+        body: "@kinetixui/ui carries the changes. @kinetixui/tokens and @kinetixui/cli move with it because the three packages are one fixed Changesets cohort. Angular and IoT continue on their independent release lines."
+      }
+    ],
+    limitations: [
+      "Rating's keyboard behaviour is verified through user-event emulation, not a real browser keyboard session.",
+      "Angular remains Preview; this release does not graduate it, and its Metric fix was not measured in a rendered Angular browser.",
+      "SwiftUI, Jetpack Compose and Flutter remain source-checkout distributions rather than packages published to their platform registries.",
+      "IoT remains a React-only module. @kinetixui/iot is not published by this release."
+    ],
+    date: "2026-10-31"
+  },
+  {
+    version: "0.26.1",
+    summary: "KinetixUI 0.26.1 is a single accessibility fix. DatePicker rendered its visible label and helper text as elements nothing referenced, so the field's accessible name was \"Select date\" or the formatted date and never said which field it was, and the hint or error message was sighted-only. The trigger's accessible name is now the label followed by the shown date, and helperText is its accessible description. No API changed: the same props, read correctly. A new check:label-association gate runs in CI so no component may render a <label> that labels nothing, and every component rendering a visible label prop must be proven by a test to put it in its control's accessible name. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together to 0.26.1; @kinetixui/tokens and @kinetixui/cli carry no change of their own. @kinetixui/angular is unchanged on its own line at 0.26.1 and remains Preview, and @kinetixui/iot stays on 0.5.0 while its device-integration work awaits real-device validation.",
+    breaking: [],
+    changes: [
+      {
+        kind: "accessibility",
+        area: "components",
+        title: "A date field's visible label now names the field",
+        body: "DatePicker's label was a bare <label> with no htmlFor, beside a trigger that carried no naming attribute, so the label was associated with nothing: the accessible name was \"Select date\", or the formatted date once one was chosen, and a screen reader never said which field it was. helperText had the same shape — visible, referenced by nothing — so a hint and an error message were sighted-only. The trigger's accessible name is now the label followed by the shown date, helperText is its accessible description, and the open calendar is named by the same label. DateRangeInput and GuestPicker already state this contract; this is their pattern rather than a new one. The label renders as a <span> the trigger references rather than as a <label for>: a <button> is labelable, so a <label> would work, but the name computation prefers a label element over the contents, which would drop the chosen date out of the name, and clicking the label would open the calendar. Nothing is added for a field with no label and no helper text — no attribute, and no reference to an element that does not exist."
+      },
+      {
+        kind: "improved",
+        area: "release",
+        title: "CI gates that a visible label names its field",
+        body: "check:label-association joins the CI run: no component may render a <label> that labels nothing, and every component rendering a visible label prop must be proven by a test to put that label in its control's accessible name. axe cannot see this class of defect, because a trigger carrying the wrong accessible name still has one — the control passes every rule while telling a screen-reader user the wrong thing. The gate is a repository check, not a runtime behaviour change, so it affects no published artifact."
+      }
+    ],
+    limitations: [
+      "The fix is React-only. DatePicker ships on four platforms, not five — @kinetixui/angular has no date picker. The other three were examined from source and recorded rather than fixed: SwiftUI is already correct, because it wraps the system DatePicker(label, selection:) and the platform owns the association; Compose has the same defect React had, KinetixLabel being a sibling Text with no semantic relationship to the anchor button; Flutter is a GestureDetector with no Semantics wrapper at all and no label parameter to associate, so its API has to change before its accessibility can. Each is a change to a shipped native component and is tracked as its own slice. Nothing was run on a device or a simulator, so no native evidence tier moves.",
+      "@kinetixui/tokens and @kinetixui/cli are published at 0.26.1 by the fixed core cohort and carry no change of their own.",
+      "@kinetixui/angular remains Preview. Its graduation criteria are tracked separately and this release does not move them."
+    ],
+    date: "2026-10-28"
+  },
+  {
     version: "0.26.0",
     summary: "KinetixUI 0.26.0 is an accessibility release. Status notices no longer fail WCAG AA when they sit on a muted surface, which required three new theme-aware foreground roles in @kinetixui/tokens and moved Banner and Inform onto them on all five platforms, with ResultState on React. @kinetixui/angular publishes 0.26.1 on its own line, where a disabled <a kxButton> is no longer operable from the keyboard or by middle-click, and its @kinetixui/tokens peer range widens to >=0.24.0 <0.27.0 so it accepts these tokens while still supporting the older ones. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together to 0.26.0; @kinetixui/cli carries no change of its own in this release. @kinetixui/angular remains Preview and @kinetixui/iot stays on 0.5.0 while its device-integration work awaits real-device validation.",
     breaking: [],
