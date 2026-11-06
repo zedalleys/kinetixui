@@ -77,6 +77,12 @@ const NEGATIVES = {
   // conditions still calls the rehearsal unconditional. Verified as a bypass at `5ecf612a`.
   "flutter-rehearsal-gated-by-the-job-condition": { file: ".github/workflows/publish-flutter.yml", from: "jobs:\n  publish:\n    runs-on: ubuntu-latest\n", to: "jobs:\n  publish:\n    if: ${{ inputs.dry_run == false }}\n    runs-on: ubuntu-latest\n", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
   "compose-rehearsal-gated-by-the-job-condition": { file: ".github/workflows/publish-compose.yml", from: "jobs:\n  publish:\n    runs-on: ubuntu-latest\n", to: "jobs:\n  publish:\n    if: ${{ github.actor == 'nobody' }}\n    runs-on: ubuntu-latest\n", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+  // Round twelve: the same scheduling class one level further out. A job is skipped by its own
+  // `if:` and also by any job it `needs:` being skipped, so the rehearsal's job has to be shown
+  // unconditional along its whole dependency closure. All three verified as bypasses at `39907a2c`.
+  "flutter-rehearsal-gated-through-needs": { file: ".github/workflows/publish-flutter.yml", from: "jobs:\n  publish:\n    runs-on: ubuntu-latest\n", to: "jobs:\n  live_only:\n    if: ${{ inputs.dry_run == false }}\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo live\n  publish:\n    needs: live_only\n    runs-on: ubuntu-latest\n", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+  "flutter-rehearsal-gated-two-jobs-out": { file: ".github/workflows/publish-flutter.yml", from: "jobs:\n  publish:\n    runs-on: ubuntu-latest\n", to: "jobs:\n  gate:\n    if: ${{ inputs.dry_run == false }}\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo gate\n  middle:\n    needs: gate\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo middle\n  publish:\n    needs: [middle]\n    runs-on: ubuntu-latest\n", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+  "flutter-rehearsal-needs-a-job-that-does-not-exist": { file: ".github/workflows/publish-flutter.yml", from: "jobs:\n  publish:\n    runs-on: ubuntu-latest\n", to: "jobs:\n  publish:\n    needs: nowhere\n    runs-on: ubuntu-latest\n", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
 
   // YAML spellings the reader does not read. Each of these passed at 8bb19e81 by making a step with
   // a publication in it look like a step with no script at all.
@@ -586,6 +592,36 @@ const parseWorkflow = (path, text) => {
 };
 
 /**
+ * Why a job might not run, or null if nothing in the document can stop it.
+ *
+ * A step inside a skipped job does not run however unconditional the step itself is, and a job is
+ * skipped both by its own `if:` and by any job it `needs:` being skipped. Reading only the step's
+ * own condition made the dry-run gate movable one level up; reading only the job's own condition
+ * made it movable one level out, to a gated job the publish job depends on. So this walks the
+ * transitive `needs:` closure and reports the first condition it finds, naming the job it is on.
+ *
+ * A job that needs a job the document does not define is reported too: it cannot be shown to run,
+ * and a check about whether a rehearsal happens has to fail closed on that rather than assume it.
+ */
+const jobGate = (jobs, startId) => {
+  const seen = new Set();
+  const queue = [startId];
+  while (queue.length) {
+    const id = queue.shift();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const job = jobs[id];
+    if (!job || typeof job !== "object") {
+      return { job: id, condition: `a job this one needs, \`${id}\`, is not defined in this workflow` };
+    }
+    if (job.if !== undefined) return { job: id, condition: String(job.if) };
+    const needs = job.needs === undefined ? [] : Array.isArray(job.needs) ? job.needs : [job.needs];
+    for (const need of needs) queue.push(String(need));
+  }
+  return null;
+};
+
+/**
  * Every step of every job, in document order, each carrying the path it was read from.
  *
  * The path is how a step is identified rather than by name: a display name is not unique in
@@ -598,11 +634,7 @@ const documentSteps = (doc) => {
   for (const [jobId, job] of Object.entries(jobs)) {
     const list = job && typeof job === "object" ? job.steps : null;
     if (!Array.isArray(list)) continue;
-    // A job carries a condition too, and a step inside a skipped job does not run however
-    // unconditional the step itself is. Reading only the step's own `if:` made the dry-run gate
-    // movable one level up: `if:` on `jobs.publish` skips the whole job on a dry run, rehearsal
-    // included, while a check that looks only at steps still calls the rehearsal unconditional.
-    const jobCondition = job.if === undefined ? null : String(job.if);
+    const jobCondition = jobGate(jobs, jobId);
     list.forEach((step, index) => {
       const mapping = step && typeof step === "object" ? step : {};
       steps.push({
@@ -759,7 +791,8 @@ for (const workflow of workflows) {
       gatedRehearsal.push(`${workflow.path} → "${name}" carries \`if: ${step.condition}\`. Rehearsal work must stay unconditional, or a dry run stops being a rehearsal of anything`);
     }
     if (step.jobCondition !== null) {
-      gatedRehearsal.push(`${workflow.path} → "${name}" is unconditional itself, but its job \`${step.job}\` carries \`if: ${step.jobCondition}\`, so the step does not run when the job is skipped. A dry-run condition one level up skips the rehearsal along with the publication, which is the same defect as gating the rehearsal directly and is harder to see`);
+      const where = step.jobCondition.job === step.job ? `its job \`${step.job}\`` : `\`${step.jobCondition.job}\`, which its job \`${step.job}\` needs,`;
+      gatedRehearsal.push(`${workflow.path} → "${name}" is unconditional itself, but ${where} carries \`if: ${step.jobCondition.condition}\`, so the step does not run when that job is skipped. A dry-run condition a level up, or a level out along \`needs:\`, skips the rehearsal along with the publication — the same defect as gating the rehearsal directly, and harder to see`);
     }
     if (!step.script.includes(token)) {
       gatedRehearsal.push(`${workflow.path} → "${name}" no longer runs \`${token}\`. A dry run has to do the preparation and the verification for real; the only thing it must not do is the publication`);
