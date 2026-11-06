@@ -19,7 +19,14 @@
     },
     {
       "name": "TabsList",
-      "props": []
+      "props": [
+        {
+          "name": "motion",
+          "type": "TabsMotion",
+          "required": false,
+          "description": "The indicator's selection effect. Defaults to `classic`, which is the behaviour before this prop existed."
+        }
+      ]
     },
     {
       "name": "TabsTrigger",

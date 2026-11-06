@@ -69,8 +69,8 @@
     },
     "Compose": {
       "build": 90,
-      "interaction": 7,
-      "accessibility": 6,
+      "interaction": 9,
+      "accessibility": 9,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 7,
@@ -79,11 +79,11 @@
     },
     "Flutter": {
       "build": 90,
-      "interaction": 6,
-      "accessibility": 5,
+      "interaction": 7,
+      "accessibility": 6,
       "rtl": 58,
       "largeText": 58,
-      "reducedMotion": 7,
+      "reducedMotion": 8,
       "visual": 0,
       "published": 0
     }
@@ -113,15 +113,15 @@
     "Compose": {
       "not-implemented": 19,
       "source": 0,
-      "build": 86,
-      "headless": 4,
+      "build": 83,
+      "headless": 7,
       "runtime": 0
     },
     "Flutter": {
       "not-implemented": 19,
       "source": 0,
-      "build": 85,
-      "headless": 5,
+      "build": 84,
+      "headless": 6,
       "runtime": 0
     }
   },
@@ -1029,6 +1029,21 @@
         ]
       },
       {
+        "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt",
+        "environment": "robolectric",
+        "kinds": [
+          "accessibility",
+          "interaction"
+        ],
+        "components": [
+          "checkbox",
+          "radio-group",
+          "switch",
+          "toggle",
+          "toggle-group"
+        ]
+      },
+      {
         "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt",
         "environment": "robolectric",
         "kinds": [
@@ -1161,6 +1176,20 @@
           "message-bubble",
           "skeleton",
           "spinner"
+        ]
+      },
+      {
+        "file": "packages/ui-flutter/test/selection_motion_test.dart",
+        "environment": "flutter_test",
+        "kinds": [
+          "accessibility",
+          "interaction",
+          "reducedMotion"
+        ],
+        "components": [
+          "checkbox",
+          "radio-group",
+          "toggle"
         ]
       },
       {
@@ -2163,9 +2192,11 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ],
         "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284",
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-150"
         ]
       },
@@ -2174,9 +2205,12 @@
           "packages/ui-flutter (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-flutter/test/interaction_test.dart:18-111"
+          "packages/ui-flutter/test/interaction_test.dart:18-111",
+          "packages/ui-flutter/test/selection_motion_test.dart:156-274",
+          "packages/ui-flutter/test/selection_motion_test.dart:275-305"
         ],
         "accessibility": [
+          "packages/ui-flutter/test/selection_motion_test.dart:306-394",
           "packages/ui-flutter/test/semantics_test.dart:30-116"
         ],
         "rtl": [
@@ -2184,6 +2218,9 @@
         ],
         "largeText": [
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/selection_motion_test.dart:275-305"
         ]
       }
     },
@@ -4988,11 +5025,23 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ]
       },
       "Flutter": {
         "build": [
           "packages/ui-flutter (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-flutter/test/selection_motion_test.dart:156-274"
+        ],
+        "accessibility": [
+          "packages/ui-flutter/test/selection_motion_test.dart:306-394"
         ],
         "rtl": [
           "packages/ui-flutter/test/adaptivity_test.dart:32-68"
@@ -5894,13 +5943,15 @@
         ],
         "interaction": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:53-203"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:67-343"
         ],
         "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284",
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-150"
         ],
         "reducedMotion": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:53-203"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:67-343"
         ]
       },
       "Flutter": {
@@ -6411,7 +6462,11 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ]
       },
       "Flutter": {
@@ -6419,7 +6474,8 @@
           "packages/ui-flutter (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-flutter/test/interaction_test.dart:18-111"
+          "packages/ui-flutter/test/interaction_test.dart:18-111",
+          "packages/ui-flutter/test/selection_motion_test.dart:156-274"
         ],
         "accessibility": [
           "packages/ui-flutter/test/semantics_test.dart:30-116"
@@ -6490,6 +6546,12 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ]
       },
       "Flutter": {
@@ -8868,10 +8930,22 @@
         "level": "build"
       },
       "Compose": {
-        "level": "build"
+        "level": "headless",
+        "interaction": [
+          "robolectric"
+        ],
+        "accessibility": [
+          "robolectric"
+        ]
       },
       "Flutter": {
-        "level": "build"
+        "level": "headless",
+        "interaction": [
+          "flutter_test"
+        ],
+        "accessibility": [
+          "flutter_test"
+        ]
       }
     },
     "rating": {
@@ -9601,8 +9675,11 @@
         "level": "build"
       },
       "Compose": {
-        "level": "build",
+        "level": "headless",
         "interaction": [
+          "robolectric"
+        ],
+        "accessibility": [
           "robolectric"
         ]
       },
@@ -9642,7 +9719,13 @@
         "level": "build"
       },
       "Compose": {
-        "level": "build"
+        "level": "headless",
+        "interaction": [
+          "robolectric"
+        ],
+        "accessibility": [
+          "robolectric"
+        ]
       },
       "Flutter": {
         "level": "build"
