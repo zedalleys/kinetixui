@@ -248,3 +248,29 @@ because a background is repainted as `Canvas` there and both used to disappear i
 
 Reduced motion: the per-component block in `packages/ui-angular/src/styles.css` covers each new element, so
 every control lands on its end state with nothing running.
+
+### Selection controls (SwiftUI, MX1d)
+
+SwiftUI's Toggle, Checkbox and RadioButton did not animate at all before MX1d: the fill, border and glyph
+swapped in one frame. They now route through `KinetixSelectionMotion`, which is a separate helper from
+`KinetixSwitchMotion` for the reason above — the two roles' durations are not to be normalised.
+
+| | Selection | Press |
+| --- | --- | --- |
+| Trigger | `isOn` (Toggle), the resolved tri-state (Checkbox), `isSelected` (RadioButton) changes | — |
+| Property | `fill`, `strokeBorder` and `foregroundStyle` colours, through SwiftUI's implicit animation | no press layer is ported |
+| Tier · easing | `fast` 200ms · `standard` (role `selection-state`), via `Animation.timingCurve` | — |
+| Reduced form | `nil` animation under `@Environment(\.accessibilityReduceMotion)`: the same end state, not interpolated | — |
+| Interruption | SwiftUI retargets from the current colour | — |
+| Final state | the state's colour; the accessibility value is set from the same state and takes no motion parameter | — |
+| Focus / SR | Checkbox announces `accessibilityValue` Unchecked / Mixed / Checked and carries `.isSelected` only when fully checked; Switch adds `.isToggle` on iOS 17 / macOS 14 (the Checkbox does not: button + toggle is Apple's switch button, so it would be announced as a switch); RadioGroup is an `.accessibilityElement(children: .contain)` with an optional label | — |
+| RTL | colour is direction-free | — |
+
+Evidence, stated exactly: **Build verified**. `swift build` and `swift test` compile and run on the macOS
+runner, and `SelectionMotionTests` / `SelectionSemanticsTests` hold the resolvers. Nothing in that package
+renders, so no test there observes a colour settling or what VoiceOver reads — the strings and the tri-state
+logic are asserted, the announcement is not. There is no iOS Simulator job, so Runtime stays open.
+
+Known gap: the announcement strings ("Unchecked", "Mixed", "Checked", "On", "Off") are English literals. The
+package ships no string catalogue, and adding one for an accessibility fix would be a localisation decision
+taken in the wrong slice.

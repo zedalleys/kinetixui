@@ -54,16 +54,32 @@ The milestones are those in MX1B-1-PLAN §6:
 
 | Component | React | Angular (Preview) | SwiftUI | Compose | Flutter |
 | --- | --- | --- | --- | --- | --- |
-| Toggle | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| ToggleGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| Checkbox | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
-| RadioGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ○ ○ ○ | ○ ○ ○ | ○ ○ ○ |
+| Toggle | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓[1] ○ | ○ ○ ○ | ○ ○ ○ |
+| ToggleGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓[2] ✓[1] ○ | ○ ○ ○ | ○ ○ ○ |
+| Checkbox | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓[1] ○ | ○ ○ ○ | ○ ○ ○ |
+| RadioGroup | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓[1] ○ | ○ ○ ○ | ○ ○ ○ |
 | Switch | ✓ ✓ ✓ | ✓ ✓ ✓ | ✓ ✓ ○ | ○ (thumb only) ✓ ○ | ✓ ✓ ○ |
 
 Angular's five cells moved in MX1b-2 (PR for this slice): each component now uses its role's pairing and is
 a contract consumer (Impl), `scripts/angular-selection-motion.mjs` fails on nine negative controls (Auto),
 and that gate drives the package as a live Angular application in Chromium rather than in jsdom (Runtime).
 Angular stays Preview: these are motion and accessibility cells, not a graduation.
+
+MX1d moved the four SwiftUI selection-state cells (2026-10-18). Footnote numbers are scoped by platform —
+SwiftUI owns [1] and [2], Compose [3] and [4], Flutter [5] and [6] — so the three columns can land in either
+order without two notes claiming the same marker. What each tick means here:
+
+- **Impl ✓** — the control reads `KinetixSelectionMotion` (`fast` · `standard`), which is a
+  `selection-state` consumer in `tokens/contracts/motion.json`.
+- **Auto ✓[1]** — `check:motion-tokens` and `check:native-motion` both fail on a negative control that was
+  watched to fire (retime the helper to `instant`; delete the family's test; name one direction only;
+  unroute Checkbox from the helper). The marker is the honest part: the XCTest suites are run by
+  `native-swiftui.yml`, but **their** negative controls were not demonstrated — there is no Swift toolchain
+  on the dev box, so "removing the mixed announcement makes a test fail" is reasoning, not an observation.
+- **[2]** — ToggleGroup is a pass-through to Toggle and animates nothing itself, which is also why it is not
+  a declared member of the motion family.
+- **Runtime ○** — no iOS Simulator or device job exists. `swift build` and `swift test` on the macOS runner
+  are Build verified; neither renders.
 
 Compose's Switch is not ticked for Impl: `selection-control` covers the thumb and the track colour, and
 `Switch.kt` animates only `thumbOffset` while the track colour is applied directly. Its Auto tick is for the
@@ -250,9 +266,29 @@ rather than published through the generator; registering it there is a separate 
 Semantics come first on every native platform. Each one has an accessibility gap that matters more than
 motion.
 
-### SwiftUI
+### SwiftUI — DONE in MX1d (2026-10-18)
+
+What was confirmed and fixed, in the order the handoff asked for:
+
+1. **Checkbox mixed was never announced (confirmed).** `Checkbox.swift` carried
+   `.accessibilityAddTraits(isOn ? [.isSelected] : [])` and no `accessibilityValue` at all, so a
+   dash-filled box was announced exactly as an unchecked one. The three states are now resolved once
+   (`KinetixTriState`, internal) and announced as Unchecked / Mixed / Checked, with `.isSelected` kept for
+   the fully-checked state only.
+2. **Switch had no toggle trait (confirmed).** It is a `Button` with a value, so VoiceOver read "button,
+   On". `.isToggle` is added behind `#available(iOS 17, macOS 14)` — the package floor is iOS 16, and
+   raising it for one trait would be a larger decision than the defect.
+3. **RadioGroup had no grouping (confirmed).** It is now `.accessibilityElement(children: .contain)` with an
+   optional `accessibilityLabel` (defaulted, so every call site still compiles). `.contain` rather than
+   `.combine` on purpose: combining would name the group and make the choices unreachable.
+4. **Selection motion did not exist (confirmed).** Toggle, Checkbox and RadioButton did not animate; they
+   now take `KinetixSelectionMotion` (`fast` · `standard`, `nil` under Reduce Motion).
+
+Not done, and deliberately: no press layer (the package ports no hover/press states for any control — a
+pre-existing, documented gap), no localisation of the announcement strings, and no Runtime evidence.
+
 - **Source:** `Toggle.swift`, `ToggleGroup.swift`, `Checkbox.swift`, `RadioGroup.swift`, `Switch.swift`,
-  `KinetixSwitchMotion.swift`.
+  `KinetixSwitchMotion.swift`, `KinetixSelectionMotion.swift`, `KinetixSelectionSemantics.swift`.
 - **APIs:**
   - `.animation(_:value:)` with `Animation.timingCurve(…standard…, duration: KinetixDuration.fast)` for
     selection-state.
