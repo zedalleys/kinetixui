@@ -215,6 +215,20 @@
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
     },
     {
+      "file": "apps/web/src/components/systems/evidence-columns.tsx",
+      "pattern": "details",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "Native disclosure for the five platform cards in the homepage verification chapter: it opens without JavaScript on a server-rendered page, keeps all six evidence rows in the document for in-page search and assistive technology, and needs no client component to do it. Same exception family as the other native disclosures."
+    },
+    {
+      "file": "apps/web/src/components/systems/evidence-columns.tsx",
+      "pattern": "summary",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "Native disclosure for the five platform cards in the homepage verification chapter: it opens without JavaScript on a server-rendered page, keeps all six evidence rows in the document for in-page search and assistive technology, and needs no client component to do it. Same exception family as the other native disclosures."
+    },
+    {
       "file": "apps/web/src/components/systems/hero-system-map.tsx",
       "pattern": "button[type=button]",
       "maxCount": 1,
