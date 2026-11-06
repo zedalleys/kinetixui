@@ -1105,7 +1105,8 @@ export function ChartsContent() {
     <ChartTooltip content={<ChartTooltipContent />} />
     <Line dataKey="v" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} isAnimationActive={false} />
     <Brush dataKey="d" height={22} travellerWidth={8} stroke="hsl(var(--chart-1))"
-      fill="hsl(var(--muted))" startIndex={8} endIndex={28} />
+      fill="hsl(var(--muted))" startIndex={8} endIndex={28}
+      ariaLabel="Zoom range for request volume; use the left and right arrow keys to move this handle" />
   </LineChart>
 </ChartContainer>`}
       >
@@ -1129,6 +1130,18 @@ export function ChartsContent() {
               fill="hsl(var(--muted))"
               startIndex={8}
               endIndex={28}
+              /*
+               * Recharts names each `role="slider"` traveller itself, from `data[startIndex].name` and
+               * `data[endIndex].name` (`getAriaLabel` in recharts/cartesian/Brush). This series is keyed `d`/`v`
+               * and carries no `name`, so the two handles were announced as the literal string
+               * "Min value: undefined, Max value: undefined". `ariaLabel` is the library's own override for that
+               * default and is the whole fix. It names the control and the key that moves it.
+               *
+               * Known limit, not worked around here: Recharts gives BOTH travellers this one string, and its
+               * `aria-valuenow` is a pixel coordinate rather than a data value. Distinguishing the two handles,
+               * or correcting the value, needs a change inside the library.
+               */
+              ariaLabel="Zoom range for request volume; use the left and right arrow keys to move this handle"
             />
           </LineChart>
         </ChartContainer>

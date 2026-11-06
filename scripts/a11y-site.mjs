@@ -9,8 +9,9 @@
  * for every page, in light AND dark, at small-phone / phone / tablet / desktop width, AND at the reader's default
  * text size and twice it, it
  *
- *   - runs axe-core with every rule on (except `region`, which is a page-structure heuristic), and
- *   - fails on horizontal page overflow (`scrollWidth > clientWidth`).
+ *   - runs axe-core with every rule on (except `region`, which is a page-structure heuristic),
+ *   - fails on horizontal page overflow (`scrollWidth > clientWidth`), and
+ *   - fails when a name says nothing: see BROKEN_NAME_ATTRS.
  *
  * THE TEXT-SIZE AXIS, AND WHY IT IS SEPARATE FROM WIDTH. Page zoom shrinks the CSS viewport, so zoom is already
  * covered by the width list — 1280 at 200% zoom *is* a 640px viewport, and 1280 at 400% is the 320px entry, which is
@@ -46,6 +47,22 @@ const ONLY_PAGES =
         ...process.argv.flatMap((arg, i) => (process.argv[i - 1] === "--page" ? [arg] : [])),
       ]
     : null;
+
+/**
+ * Attributes that become an element's accessible name, checked for a JavaScript non-value printed into them.
+ *
+ * `/charts` shipped two focusable `role="slider"` handles announced as the literal string
+ * "Min value: undefined, Max value: undefined" — Recharts builds a Brush traveller's name from `data[i].name`,
+ * and a series keyed on anything else leaves `String(undefined)` in the template. **axe reported zero
+ * violations on that page and structurally cannot report one**: a name is present, it is merely false, and
+ * nothing in WCAG says a name must be true. So no rule-based scanner closes this; a string check does.
+ *
+ * Measured before it was wired, across all pages below at 1280/light: 2 hits, both that defect, no others. The
+ * word boundary matters — it keeps prose that legitimately discusses `undefined` or `null` (the docs pages do)
+ * from matching inside a longer word, and the zero-false-positive measurement is what earns a hard failure
+ * rather than a ratchet.
+ */
+const BROKEN_NAME_ATTRS = ["aria-label", "aria-valuetext", "alt", "title", "aria-placeholder", "aria-roledescription"];
 
 /** One representative page per kind of layout, plus the pages with the densest custom UI. */
 const PAGES = [
@@ -468,7 +485,7 @@ for (const scheme of SCHEMES) {
             continue;
           }
           await page.addScriptTag({ content: axeSource });
-          const result = await page.evaluate(async ({ docs, ...contract }) => {
+          const result = await page.evaluate(async ({ docs, nameAttrs, ...contract }) => {
             const r = await window.axe.run(document, { rules: { region: { enabled: false } } });
             return {
               violations: r.violations.map((v) => ({
@@ -478,6 +495,22 @@ for (const scheme of SCHEMES) {
                 count: v.nodes.length,
               })),
               overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+              // Names that exist but say nothing: see BROKEN_NAME_ATTRS above.
+              brokenNames: (() => {
+                const ATTRS = nameAttrs;
+                const bad = /\b(undefined|NaN|null)\b/;
+                const out = [];
+                for (const el of document.querySelectorAll("*")) {
+                  for (const attr of ATTRS) {
+                    const value = el.getAttribute(attr);
+                    if (value && bad.test(value)) {
+                      const role = el.getAttribute("role");
+                      out.push(`<${el.tagName.toLowerCase()}${role ? ` role="${role}"` : ""}> ${attr}="${value.slice(0, 90)}"`);
+                    }
+                  }
+                }
+                return out;
+              })(),
               layout: contract.selector
                 ? (() => {
                     const nodes = [...document.querySelectorAll(contract.selector)];
@@ -507,7 +540,7 @@ for (const scheme of SCHEMES) {
                   })()
                 : null,
             };
-          }, { ...(LAYOUT_CONTRACTS.get(path) ?? { selector: null }), docs: isDocsPage(path) });
+          }, { ...(LAYOUT_CONTRACTS.get(path) ?? { selector: null }), docs: isDocsPage(path), nameAttrs: BROKEN_NAME_ATTRS });
           views++;
           const reach = await page.evaluate(() => {
             const shown = (el) => {
@@ -630,6 +663,9 @@ for (const scheme of SCHEMES) {
             if (overflowPending) pendingSeen.add(path);
             else failures.push(`${tag}: page scrolls sideways by ${result.overflow}px`);
           }
+          for (const hit of result.brokenNames) {
+            failures.push(`${tag}: a name rendered a JavaScript non-value — ${hit}`);
+          }
         } catch (err) {
           failures.push(`${tag}: ${String(err.message).split("\n")[0]}`);
         } finally {
@@ -691,7 +727,8 @@ if (failures.length) {
 }
 console.log(
   `a11y-site ok — ${(ONLY_PAGES ?? PAGES).length} pages × ${SCHEMES.length} themes × ${WIDTHS.length} widths × ${TEXT_SCALES.length} text sizes ` +
-    `(${views} views): no axe findings, no horizontal overflow, ${LAYOUT_CONTRACTS.size} layout contract(s) held, ` +
+    `(${views} views): no axe findings, no horizontal overflow, no name rendering a JavaScript non-value ` +
+    `(${BROKEN_NAME_ATTRS.length} attributes checked), ${LAYOUT_CONTRACTS.size} layout contract(s) held, ` +
     `site search and docs navigation reachable at every width, and the docs reading column never narrower ` +
     `than the navigation rails beside it, measured both at the swept widths and at ${DOCS_RAIL_WIDTH}px × the text ` +
     `scale, where this reader is shown those rails.` +
