@@ -14,6 +14,15 @@ import {
 } from "./analytics-surfaces";
 import { PLATFORMS } from "./platform-parity";
 import { PACKAGES } from "./packages";
+import {
+  OPERATIONS,
+  OPERATION_IDS,
+  PACKAGE_MANAGERS,
+  renderCommand,
+  type Operation,
+  type OperationId,
+  type RenderParams,
+} from "./pm-commands";
 import { componentDocs, siteConfig } from "./site";
 
 const track = vi.spyOn(analytics, "track").mockImplementation(() => {});
@@ -367,3 +376,68 @@ describe("blocks gallery (Phase 3)", () => {
     expect(analyticsPlatformFor("wearos")).toBeNull();
   });
 });
+
+describe("the classifier recognises what the command contract actually renders", () => {
+  // Two systems that must agree and are connected by nothing: `pm-commands.ts` decides how a command is
+  // spelled per manager, `classifyCommand` decides what a copied command was. Before the command contract
+  // the site only ever rendered npm, so only npm's spelling had to be recognised. Now a reader on pnpm,
+  // Yarn or Bun copies a different string for the same action, and if the classifier knows only some of
+  // those prefixes the funnel goes quiet for those readers — silently, because an unrecognised command is
+  // indistinguishable from no copy at all. These assert agreement rather than any one spelling.
+
+  /** What the operation IS, independent of how any manager spells it. */
+  function expectedEvent(id: OperationId): string | null {
+    const op = OPERATIONS[id] as Operation;
+    if (op.kind === "execute") return "cli_command_copied";
+    if (op.kind === "run") return null; // a package.json script is not an install or a CLI invocation
+    const packages = op.packages ?? [];
+    return packages.some((p) => p.startsWith("@kinetixui/")) ? "install_command_copied" : null;
+  }
+
+  it("classifies every operation the same way under all four managers", () => {
+    for (const id of OPERATION_IDS) {
+      const expected = expectedEvent(id);
+      for (const pm of PACKAGE_MANAGERS) {
+        const { command } = renderCommand(id, pm, paramsFor(id));
+        const result = classifyCommand(command, "bash");
+        expect(result?.event ?? null, `${id} / ${pm}: ${command}`).toBe(expected);
+      }
+    }
+  });
+
+  it("names the same package whichever manager spelled the install", () => {
+    for (const id of OPERATION_IDS) {
+      if (expectedEvent(id) !== "install_command_copied") continue;
+      const packages = PACKAGE_MANAGERS.map(
+        (pm) => classifyCommand(renderCommand(id, pm, paramsFor(id)).command, "bash")?.package,
+      );
+      expect(new Set(packages).size, `${id} classified as ${packages.join(" / ")}`).toBe(1);
+      expect(packages[0]).toBeDefined();
+    }
+  });
+
+  it("would notice a manager the classifier does not know — so the two above are not vacuous", () => {
+    // The failure mode being guarded: a prefix added to the contract and not to the classifier. `pnpm dlx`
+    // is recognised; the same command under a prefix that is not is not, and that is the silence.
+    expect(classifyCommand("pnpm dlx @kinetixui/cli add button", "bash")?.event).toBe("cli_command_copied");
+    expect(classifyCommand("deno run -A npm:@kinetixui/cli add button", "bash")).toBeNull();
+  });
+});
+
+/** Exactly the parameters one operation accepts, mirroring the helper in `pm-commands.test.ts`. */
+function paramsFor(id: OperationId): RenderParams {
+  const op: Operation = OPERATIONS[id];
+  const sample: Record<string, unknown> = {
+    components: ["button"],
+    component: "button",
+    theme: "acme",
+    preset: "KX1_ok",
+    path: "src",
+    symbol: "AcmeTheme",
+    output: "theme.css",
+  };
+  const out: Record<string, unknown> = {};
+  if (op.parameter) out[op.parameter] = sample[op.parameter];
+  for (const flag of op.flags ?? []) out[flag] = sample[flag];
+  return out as RenderParams;
+}
