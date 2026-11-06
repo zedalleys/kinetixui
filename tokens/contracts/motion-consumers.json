@@ -18,6 +18,7 @@
     "selection-control|react|packages/ui/src/components/switch.tsx",
     "selection-control|swiftui|packages/ui-swiftui/Sources/KinetixUI/KinetixSwitchMotion.swift",
     "selection-state|angular|packages/ui-angular/src/styles.css",
+    "selection-state|compose|packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixSelectionMotion.kt",
     "selection-state|react|packages/ui/src/components/checkbox.tsx",
     "selection-state|react|packages/ui/src/components/radio-group.tsx",
     "selection-state|react|packages/ui/src/components/toggle.tsx",
