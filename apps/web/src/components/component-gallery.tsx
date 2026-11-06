@@ -221,6 +221,9 @@ function Card({ item }: { item: Item }) {
 
 type BusinessKey = "capability" | "domain" | "layer";
 
+/** Only `get` is read, so the fallback can pass an empty set without a router. Matches `next/navigation`. */
+type ParamsLike = { get(key: string): string | null };
+
 /**
  * The /components catalogue.
  *
@@ -233,12 +236,22 @@ type BusinessKey = "capability" | "domain" | "layer";
  * query parameter on /components, whose canonical stays `/components` (check:seo `canonical-query`), so no filtered
  * view becomes a page of its own.
  */
-export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-
-  const [query, setQuery] = React.useState(params.get("q") ?? "");
+function ComponentGalleryView({
+  facets,
+  params,
+  setParam,
+  clearAll,
+  query,
+  setQuery,
+}: {
+  facets: CatalogueFacets;
+  /** Where the filter state is read from: the live URL, or an empty set for the fallback. */
+  params: ParamsLike;
+  setParam: (key: string, value: string | null) => void;
+  clearAll: () => void;
+  query: string;
+  setQuery: (value: string) => void;
+}) {
   const BUSINESS_COUNT = React.useMemo(() => {
     const count = (pick: (b: CatalogueFacets["bySlug"][string]) => string[]) =>
       ITEMS.reduce(
@@ -269,49 +282,12 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
     if (businessActive) setBusinessOpen(true);
   }, [businessActive]);
 
-  // debounce the search term into the URL so a filtered view is shareable and
-  // Back/Forward restore it, without a history entry per keystroke.
   const searchRef = React.useRef<HTMLInputElement>(null);
 
-  // debounce the typed term into the URL (shareable, Back/Forward-restorable)
-  React.useEffect(() => {
-    const id = setTimeout(() => {
-      const next = new URLSearchParams(Array.from(params.entries()));
-      if (query.trim()) next.set("q", query.trim());
-      else next.delete("q");
-      const qs = next.toString();
-      const target = qs ? `${pathname}?${qs}` : pathname;
-      if (target !== `${pathname}${window.location.search}`) {
-        router.replace(target, { scroll: false });
-      }
-    }, 140);
-    return () => clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
-
-  // keep the input in sync when the URL changes from outside (Back/Forward,
-  // a shared link, "Clear filters") — otherwise the field goes stale.
-  const urlQuery = params.get("q") ?? "";
-  React.useEffect(() => {
-    setQuery((cur) => (cur.trim() === urlQuery.trim() ? cur : urlQuery));
-  }, [urlQuery]);
-
-  const setParam = (key: string, value: string | null) => {
-    const next = new URLSearchParams(Array.from(params.entries()));
-    if (value) next.set(key, value);
-    else next.delete(key);
-    const qs = next.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  };
   const setCat = (cat: string | null) => setParam("cat", cat);
   const setPlatform = (p: string | null) => setParam("platform", p);
   const setStatus = (s: "beta" | null) => setParam("status", s);
   const setBusiness = (key: BusinessKey, value: string | null) => setParam(key, value);
-
-  const clearAll = () => {
-    setQuery("");
-    router.replace(pathname, { scroll: false });
-  };
 
   const q = query.trim().toLowerCase();
   const filtered = ITEMS.filter((it) => {
@@ -645,5 +621,92 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
         </div>
       )}
     </>
+  );
+}
+
+const NO_PARAMS: ParamsLike = { get: () => null };
+const noop = () => {};
+
+/**
+ * The catalogue with no filters applied: the Suspense fallback, and therefore what the static HTML carries.
+ *
+ * `ComponentGallery` reads the filters from the URL, which a statically rendered page cannot do on the server, so
+ * Next renders the fallback into the HTML and swaps the real gallery in after hydration. The fallback used to be a
+ * one-line `<p>Loading…</p>`, which meant the served HTML carried **no cards at all** and the footer sat ~300px
+ * down the page until 109 of them appeared underneath it. That single reflow measured CLS 0.67 at 1440px and 0.72
+ * at 375px, against the 0.1 "good" threshold — the worst metric on the site.
+ *
+ * Rendering the same gallery, unfiltered, is the fix `/blocks` already uses (`BlocksGalleryFallback`): the HTML and
+ * the hydrated page lay out identically, so there is nothing to shift. Nothing here is interactive — every handler
+ * is a no-op until the real gallery arrives — but it is the same markup at the same size, which is the part that
+ * CLS measures.
+ */
+export function ComponentGalleryFallback({ facets }: { facets: CatalogueFacets }) {
+  return (
+    <ComponentGalleryView
+      facets={facets}
+      params={NO_PARAMS}
+      setParam={noop}
+      clearAll={noop}
+      query=""
+      setQuery={noop}
+    />
+  );
+}
+
+/** The catalogue wired to the URL: every filter is a query parameter, so a filtered view is shareable. */
+export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const [query, setQuery] = React.useState(params.get("q") ?? "");
+
+  const setParam = React.useCallback(
+    (key: string, value: string | null) => {
+      const next = new URLSearchParams(Array.from(params.entries()));
+      if (value) next.set(key, value);
+      else next.delete(key);
+      const qs = next.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [params, pathname, router],
+  );
+
+  const clearAll = React.useCallback(() => {
+    setQuery("");
+    router.replace(pathname, { scroll: false });
+  }, [pathname, router]);
+
+  // debounce the typed term into the URL (shareable, Back/Forward-restorable) without a history entry per keystroke
+  React.useEffect(() => {
+    const id = setTimeout(() => {
+      const next = new URLSearchParams(Array.from(params.entries()));
+      if (query.trim()) next.set("q", query.trim());
+      else next.delete("q");
+      const qs = next.toString();
+      const target = qs ? `${pathname}?${qs}` : pathname;
+      if (target !== `${pathname}${window.location.search}`) {
+        router.replace(target, { scroll: false });
+      }
+    }, 140);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
+  // keep the input in sync when the URL changes from outside (Back/Forward, a shared link, "Clear filters")
+  const urlQuery = params.get("q") ?? "";
+  React.useEffect(() => {
+    setQuery((cur) => (cur.trim() === urlQuery.trim() ? cur : urlQuery));
+  }, [urlQuery]);
+
+  return (
+    <ComponentGalleryView
+      facets={facets}
+      params={params}
+      setParam={setParam}
+      clearAll={clearAll}
+      query={query}
+      setQuery={setQuery}
+    />
   );
 }
