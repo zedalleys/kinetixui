@@ -594,10 +594,10 @@
    * through subgrid, so the drawing can join each output to exactly the platforms that read it:
    *
    *   rows (a phone):      [outputs] ┆ [platforms]   one row per platform; the CSS output spans the two web rows
-   *   columns (≥ 34rem):   outputs above, the boundary, platforms below; the CSS output spans the two web columns
+   *   columns (≥ 34rem):   outputs above, the boundary, platforms below; the outputs share equal tracks
    *
-   * `--kx-impl` is the platform count and `--span` the number of platforms an output feeds, both set from the
-   * manifest-derived props, so nothing here knows there are five.
+   * `--kx-impl` is the platform count, `--kx-outputs` the output count and `--span` the number of platforms an
+   * output feeds, all set from the manifest-derived props, so nothing here knows there are five.
    */
   .kx-map-grid {
     display: grid;
@@ -650,16 +650,23 @@
       row-gap: 0;
       padding-inline-start: 0;
     }
+    /*
+     * Columns: the outputs are their own equal-track row, not a subgrid of the platform tracks. An output used
+     * to take one track per platform it feeds, which made the CSS card — the only one feeding two — twice the
+     * width of Swift, Kotlin and Dart and read as a difference in importance rather than in fan-out. The fan-out
+     * is still drawn, by the traces, which are measured from the real boxes and so follow this layout.
+     */
     .kx-map-outputs {
       grid-column: 1 / -1;
       grid-row: 1;
       grid-template-rows: none;
-      grid-template-columns: subgrid;
+      grid-template-columns: repeat(var(--kx-outputs, 4), minmax(0, 1fr));
+      column-gap: 0.5rem;
     }
     .kx-map-chip {
       grid-row: auto;
-      grid-column: span var(--span, 1);
-      /* columns: every output as tall as the tallest, so CSS matches Swift, Kotlin and Dart */
+      grid-column: auto;
+      /* columns: every output as wide and as tall as the others, so CSS matches Swift, Kotlin and Dart */
       align-self: stretch;
     }
     /* the traces cross the boundary between the two layers, under its label */

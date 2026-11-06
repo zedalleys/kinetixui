@@ -13,7 +13,8 @@
  *   - headline: the hero headline never splits a word across lines, at phone to wide widths and at 200% text
  *   - map, phone: the generated-output layer, the token boundary and the written layer are all on screen; the
  *     written branches are dashed and the generated ones solid
- *   - map, desktop: four outputs over five platforms, and no trace runs through an output it does not belong to
+ *   - map, desktop: four outputs over five platforms, every output card the same width, and no trace runs
+ *     through an output it does not belong to
  *   - no horizontal overflow at any of those widths, in either direction
  *   - height: the page settles at a bounded height and stays there, with the stylesheet and without it — the
  *     trace overlays must never write a measured size into a layout property inside the subtree they observe
@@ -266,6 +267,7 @@ const mapFacts = (page) =>
       rem: parseFloat(getComputedStyle(document.documentElement).fontSize),
       chipsVisible: chips.filter(visible).length,
       chips: chips.length,
+      chipWidths: chips.map((c) => Math.round(c.getBoundingClientRect().width)),
       tabsVisible: tabs.filter(visible).length,
       boundaryVisible: visible(boundary),
       generated: traces.filter((p) => p.dataset.kind === 'generated').map(dashed),
@@ -276,7 +278,7 @@ const mapFacts = (page) =>
   });
 
 for (const [width, dir] of [[320, 'ltr'], [390, 'ltr'], [390, 'rtl'], [768, 'ltr'], [1024, 'ltr'], [1280, 'ltr'], [1440, 'ltr'], [1440, 'rtl'], [1920, 'ltr']]) {
-  await check(`map at ${width}px ${dir.toUpperCase()}: generated layer, boundary, dashed written layer, no trace through another output`, async () => {
+  await check(`map at ${width}px ${dir.toUpperCase()}: generated layer, boundary, equal-width outputs, dashed written layer, no trace through another output`, async () => {
     const { page, context } = await open({ width, height: width < 600 ? 844 : 900 });
     await setDir(page, dir);
     await page.waitForTimeout(200);
@@ -292,6 +294,12 @@ for (const [width, dir] of [[320, 'ltr'], [390, 'ltr'], [390, 'rtl'], [768, 'ltr
     assert.ok(f.generated.every((d) => !d), 'generated traces are solid');
     assert.ok(f.written.every((d) => d), 'written traces are dashed');
     assert.deepEqual(f.through, [], 'a trace runs through an output it does not belong to');
+    // every generated output is one card of the same size: fan-out is shown by the traces, not by a wider card
+    assert.equal(
+      Math.max(...f.chipWidths) - Math.min(...f.chipWidths) <= 1,
+      true,
+      `the outputs are not equal width: ${f.chipWidths.join(', ')}`,
+    );
     assert.ok(f.overflow <= 0, `horizontal overflow ${f.overflow}px`);
     await context.close();
   });
