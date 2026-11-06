@@ -14,6 +14,30 @@ export function CodePre({ className, children, ...props }: React.ComponentPropsW
   const pathname = usePathname();
   const [copied, setCopied] = React.useState(false);
 
+  /**
+   * The handle for the timer that withdraws the "Copied" confirmation.
+   *
+   * It used to be discarded, which cost two things. A reader who copied a snippet and navigated away
+   * left a pending timer holding this component's `setCopied` closure, to fire into an unmounted tree.
+   * And a second copy inside the two-second window inherited the FIRST copy's deadline, so the
+   * confirmation vanished while the reader's most recent copy was still fresh — the visible half of the
+   * defect, and the reason this clears the previous timer rather than only clearing on unmount.
+   */
+  const clearTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** The clipboard write resolves asynchronously, so the component can be gone before it does. */
+  const mounted = React.useRef(true);
+
+  React.useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      if (clearTimer.current !== null) {
+        clearTimeout(clearTimer.current);
+        clearTimer.current = null;
+      }
+    };
+  }, []);
+
   const copy = () => {
     const el = ref.current;
     if (!el) return;
@@ -25,10 +49,15 @@ export function CodePre({ className, children, ...props }: React.ComponentPropsW
       : (el.textContent ?? "");
     navigator.clipboard.writeText(text.replace(/\n$/, "")).then(
       () => {
+        if (!mounted.current) return;
         // rehype-pretty-code sets data-language on the <pre>; the copied text is inspected, never sent
         trackFenceCopy(text, (props as { "data-language"?: string })["data-language"], pathname);
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        if (clearTimer.current !== null) clearTimeout(clearTimer.current);
+        clearTimer.current = setTimeout(() => {
+          clearTimer.current = null;
+          setCopied(false);
+        }, 2000);
       },
       () => {},
     );
