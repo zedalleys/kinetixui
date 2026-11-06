@@ -1736,7 +1736,7 @@
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "beta"
     },
     "rating": {
@@ -1898,14 +1898,14 @@
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "beta"
     },
     "toggle-group": {
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "experimental"
     },
     "tooltip": {
@@ -1943,8 +1943,8 @@
       "experimental": 90
     },
     "Compose": {
-      "experimental": 84,
-      "beta": 6
+      "experimental": 81,
+      "beta": 9
     },
     "Flutter": {
       "experimental": 84,
@@ -3684,7 +3684,9 @@
         "build"
       ],
       "Compose": [
-        "build"
+        "accessibility",
+        "build",
+        "interaction"
       ],
       "Flutter": [
         "accessibility",
@@ -4313,6 +4315,7 @@
         "build"
       ],
       "Compose": [
+        "accessibility",
         "build",
         "interaction"
       ],
@@ -4346,7 +4349,9 @@
         "build"
       ],
       "Compose": [
-        "build"
+        "accessibility",
+        "build",
+        "interaction"
       ],
       "Flutter": [
         "build",
@@ -4467,8 +4472,8 @@
     },
     "Compose": {
       "build": 90,
-      "interaction": 7,
-      "accessibility": 6,
+      "interaction": 9,
+      "accessibility": 9,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 7,

@@ -32,6 +32,15 @@ export const PLATFORMS = {
         members: ["Switch.swift"],
         test: "packages/ui-swiftui/Tests/KinetixUITests/SwitchMotionTests.swift",
       },
+      // The second selection role, kept separate from `selection` above because the two durations are
+      // separate by owner decision: a thumb lands on `instant`, a colour settles on `fast`.
+      // ToggleGroup.swift is deliberately not a member — it is a pass-through to Toggle and animates
+      // nothing of its own, and a member that never animates makes the family's wiring check vacuous.
+      selectionState: {
+        helper: "KinetixSelectionMotion.swift",
+        members: ["Toggle.swift", "Checkbox.swift", "RadioGroup.swift"],
+        test: "packages/ui-swiftui/Tests/KinetixUITests/SelectionMotionTests.swift",
+      },
       slide: {
         // A panel that slides across the screen is positional movement, which is what Reduce Motion
         // exists to remove. The reduced form is a cross-fade. See the helper's header.
@@ -72,6 +81,15 @@ export const PLATFORMS = {
         helper: "KinetixSwitchMotion.kt",
         members: ["Switch.kt"],
         test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt",
+      },
+      // The second selection role, kept separate from `selection` above because the two durations are
+      // separate by owner decision: a thumb lands on `instant`, a colour settles on `fast`.
+      // ToggleGroup.kt is deliberately not a member — it is a pass-through to Toggle and animates
+      // nothing of its own, and a member that never animates makes the family's wiring check vacuous.
+      selectionState: {
+        helper: "KinetixSelectionMotion.kt",
+        members: ["Toggle.kt", "Checkbox.kt", "RadioGroup.kt"],
+        test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt",
       },
       loop: {
         // A loop has no destination to keep, so its reduced form is not a shorter duration but no loop
