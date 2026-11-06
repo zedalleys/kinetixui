@@ -130,6 +130,12 @@ jobs:
             node scripts/check-native-publish-preflight.mjs --negative="$control"
           done
 
+      # The preflight above asserts the shape of the dry-run guard; this runs the real step body and
+      # counts the pushes, because a shape check would pass a guard that reads right and behaves
+      # wrong. Stubbed `git`, nothing pushed, no remote contacted.
+      - name: SwiftUI publish fails closed on every non-false dry_run
+        run: node scripts/publish/swiftui-dry-run-polarity.mjs
+
       # packages/ui-swiftui reaches a consumer as a `git subtree split` pushed to a mirror and
       # resolved by `.package(url:, from:)`, which scripts/adoption/swiftui-consumer.mjs cannot
       # cover because it resolves the vendored path. The layout layer needs no Swift; native-swiftui.yml
