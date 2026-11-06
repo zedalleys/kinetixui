@@ -3,7 +3,8 @@ import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ChartsContent } from "@/app/charts/charts-content";
-import { ColorsContent } from "@/app/docs/colors/colors-content";
+import { ColorsContent, RAMPS } from "@/app/docs/colors/colors-content";
+import tokens from "@kinetixui/tokens";
 import { demoRegistry } from "@/registry/demos";
 import { BuildingOpsDemo } from "./building-ops/building-ops-demo";
 import { CreateWorkspace } from "./create/create-workspace";
@@ -46,6 +47,26 @@ describe("colors: value format, copy ramp and swatch cards", { timeout: 20_000 }
   /** A swatch button, found by the visible text its name is built from ("Copy azure 50 AA …"). */
   const swatch = (ramp: string, step: string) =>
     screen.getAllByRole("button").find((b) => new RegExp(`^Copy ${ramp} ${step}(?!\\d)`).test(b.textContent ?? ""))!;
+  /**
+   * Every step the primitives define has to be reachable here, or the page quietly
+   * documents a palette the product does not have. `blue.75` was invisible exactly
+   * this way: it was added to the primitives for dark `--on-info-container`, and
+   * `STEPS` in colors-content.tsx did not list it, so no swatch rendered. Driving
+   * this from the tokens rather than from a second hand-kept list is what makes it
+   * fail when the next step is added — deleting "75" from STEPS fails this test.
+   */
+  it("shows every step every documented ramp defines, not a hand-kept subset", () => {
+    render(<ColorsContent />);
+    const color = tokens.color as unknown as Record<string, Record<string, string>>;
+    const missing: string[] = [];
+    for (const ramp of RAMPS) {
+      for (const step of Object.keys(color[ramp] ?? {})) {
+        if (!swatch(ramp, step)) missing.push(`${ramp}.${step}`);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
   it("format is a single-choice radiogroup that rewrites every swatch value", async () => {
     const user = userEvent.setup();
     render(<ColorsContent />);

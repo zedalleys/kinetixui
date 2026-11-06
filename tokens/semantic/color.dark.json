@@ -197,11 +197,13 @@
     },
     "info": {
       "$value": "{color.blue.100}",
-      "$type": "color"
+      "$type": "color",
+      "$description": "the informational status hue. Kinetic Weave deliberately left the status families on the inherited slate-blue rather than moving them onto the identity ramp: an informational state has to stay distinguishable from `primary`, and indigo is now primary. As text on the dark surfaces it measures 8.3095:1 on `background`, 6.4885:1 on `card` and 5.3784:1 on `muted`. Text *on* an `info` fill is `on-info-container`, not `info-foreground` \u2014 see that token."
     },
     "info-foreground": {
       "$value": "{color.blue.900}",
-      "$type": "color"
+      "$type": "color",
+      "$description": "the near-black that pairs with a solid `info` fill, 8.8315:1 on it. No component in the library draws this pair today \u2014 Banner, Inform and ResultState all use `bg-info/10` with `on-info-container` \u2014 so it is a contract kept for consumers rather than a rendered combination, and check-contrast.mjs measures the tinted pair that is rendered."
     },
     "scrim": {
       "$value": "#00000099",

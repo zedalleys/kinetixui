@@ -9,8 +9,14 @@ import { useDocumentDirection } from "@/lib/use-document-direction";
 import { tokenNameForHex, hexToRgb, rgbToHsl, contrastRatio } from "@kinetixui/create-theme";
 import { SectionHead } from "@/components/section-head";
 
-const RAMPS = ["indigo", "violet", "cyan", "navy", "blue", "green", "amber", "red", "taupe", "cream", "neutral", "azure"] as const;
-const STEPS = ["0", "50", "100", "150", "200", "300", "400", "500", "600", "700", "800", "850", "900", "950", "1000"];
+export const RAMPS = ["indigo", "violet", "cyan", "navy", "blue", "green", "amber", "red", "taupe", "cream", "neutral", "azure"] as const;
+/**
+ * The ramp steps this page can show. A step a ramp defines but this list omits is
+ * silently invisible here — `blue.75` was, from the day it was added until
+ * 2026-11-05 — so `website-wave2c.test.tsx` asserts this covers every step the
+ * primitives actually define, rather than trusting it to be kept up by hand.
+ */
+const STEPS = ["0", "50", "75", "100", "150", "200", "300", "400", "500", "600", "700", "800", "850", "900", "950", "1000"];
 const FORMATS = ["hex", "hsl", "rgb"] as const;
 type Format = (typeof FORMATS)[number];
 
@@ -21,7 +27,7 @@ const RAMP_NOTE: Record<(typeof RAMPS)[number], string> = {
     "Soft Violet — the dark identity. Backs --brand in dark (violet.400 #A78BFA) and --chart-1 in dark. It is not the dark action colour: that is indigo.300, because Soft Violet measures 3.72:1 on the Kinetic Weave dark surfaces.",
   cyan: "Electric Cyan — the hero's atmosphere and glass shading, plus --chart-6. No surface or text role resolves to it.",
   navy: "Midnight Navy — the Kinetic Weave neutral. Backs the whole dark scale (--background navy.950, --card navy.800, --muted / --accent navy.700), --foreground in both themes, and the boundary step navy.600 on --border / --input / --sidebar-border / --tertiary in dark.",
-  blue: "The inherited slate-blue. Now backs only the info family (--info, --info-foreground, --on-info-container, --tertiary-foreground) and --border / --input on light, where the values come from the Figma source.",
+  blue: "The inherited slate-blue. Now backs only the info family (--info, --info-foreground, --on-info-container, --tertiary-foreground) and --border / --input on light, where the values come from the Figma source. Step 75 was added for dark --on-info-container: blue.100, the step --info itself uses, measures 4.4847:1 on an info/10 tint over --muted, which is below AA, and the next step up was a near-white 50.",
   green: "Secondary + success — backs --secondary, --secondary-foreground, --success and the data-viz greens (--chart-2, --chart-8).",
   amber: "Backs --warning / --on-warning-container and the data-viz palette (--chart-3).",
   red: "Backs --destructive (light red.500, dark red.200) and the data-viz reds (--chart-4, --chart-7).",

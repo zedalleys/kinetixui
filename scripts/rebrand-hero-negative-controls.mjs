@@ -53,6 +53,17 @@ const CONTROLS = [
     "only the per-facet shimmer escapes the lifecycle",
     /kept animating offscreen|kept animating after the preference changed/,
   ],
+  // Reduced motion. Each of these keeps one layer animating for a reader who asked for none.
+  // These two run only the `narrow` case (320px, reduced motion). Across the whole
+  // matrix they are caught earlier, by the live preference-change assertion in the
+  // `desktop` case — a real catch, but of a different assertion. Narrowing the run is
+  // what puts the plant in front of the reduced-motion assertions themselves.
+  ["reduced-body-animates", "the mesh breath survives prefers-reduced-motion", /the breath survived reduced motion/, { KX_HERO_CASES: "narrow" }],
+  ["reduced-facets-animate", "the facet shimmer survives prefers-reduced-motion", /a facet animation survived reduced motion/, { KX_HERO_CASES: "narrow" }],
+  ["reduced-links-animate", "the wireframe draw-on survives prefers-reduced-motion", /the intro draw-on survived reduced motion/],
+  // Keyboard. ArrowLeft bound the same way as ArrowRight: the angle still changes on
+  // every press, so the old "did it change" assertion passed this.
+  ["arrow-left-same-direction", "ArrowLeft turns the network the way ArrowRight does", /it does not reverse it/],
 ];
 
 let failures = 0;
@@ -75,13 +86,13 @@ if (baseline.status === 0) {
 }
 
 console.log("negative controls — each lets a continuous animation ignore data-running");
-for (const [name, what, expected] of CONTROLS) {
-  const run = spawnSync("node", GATE, { encoding: "utf8", env: { ...process.env, KX_HERO_NC: name } });
+for (const [name, what, expected, extraEnv = {}] of CONTROLS) {
+  const run = spawnSync("node", GATE, { encoding: "utf8", env: { ...process.env, KX_HERO_NC: name, ...extraEnv } });
   const out = `${run.stdout}${run.stderr}`;
   const caught = run.status !== 0 && expected.test(out);
   const line = out
     .split("\n")
-    .filter((l) => /kept animating|kept travelling/.test(l))
+    .filter((l) => /kept animating|kept travelling|survived reduced motion|does not reverse it/.test(l))
     .map((l) => l.trim())[0];
   if (caught) {
     console.log(`  gate fails, as it must   ${name} — ${what}`);

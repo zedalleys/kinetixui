@@ -51,6 +51,43 @@ const NEGATIVE_CONTROLS = {
   'body-escapes': `.kx-hero-polygon[data-running="false"] .kx-mesh-body { animation-play-state: running !important; }`,
   // Only the per-facet shimmer escapes it.
   'facets-escapes': `.kx-hero-polygon[data-running="false"] .kx-mesh-facets path { animation-play-state: running, running !important; }`,
+  // Reduced-motion controls. The reduced-motion rule is `.kx-hero-polygon * { animation: none !important }`
+  // at specificity (0,1,0); each of these is (0,2,0) and also `!important`, so it wins and the layer
+  // keeps animating for a reader who asked for no motion. The gate must notice. These exist because an
+  // assertion that reads `animationName` is only worth anything if its subject animates when motion is
+  // allowed — measured at this head, it does: facets run kx-mesh-facet-in + kx-mesh-shimmer, the body
+  // kx-mesh-breathe, the links kx-mesh-draw.
+  // Each is confined to `@media (prefers-reduced-motion: reduce)` on purpose. Planted
+  // unconditionally, a surviving breath also defeats the `data-running` suspension and the
+  // offscreen assertion fires first, so the run proves the lifecycle check rather than the
+  // reduced-motion one. Confined, only the reduced cases see it.
+  'reduced-body-animates': `@media (prefers-reduced-motion: reduce) { .kx-hero-polygon .kx-mesh-body { animation: kx-mesh-breathe 19s ease-in-out infinite !important; } }`,
+  'reduced-facets-animate': `@media (prefers-reduced-motion: reduce) { .kx-hero-polygon .kx-mesh-facets path { animation: kx-mesh-shimmer 16s ease-in-out infinite !important; } }`,
+  'reduced-links-animate': `@media (prefers-reduced-motion: reduce) { .kx-hero-polygon .kx-mesh-links path { animation: kx-mesh-draw 2s ease-out infinite !important; } }`,
+};
+
+/**
+ * Negative controls that no stylesheet can express, injected into the page instead.
+ *
+ * `arrow-left-same-direction` binds ArrowLeft the way ArrowRight is bound, by
+ * rewriting the key in the capture phase before React's delegated listener sees
+ * it. The keyboard assertion claims ArrowLeft reverses ArrowRight; until
+ * 2026-11-05 it only asserted the angle had changed, which this control passes.
+ */
+const NEGATIVE_CONTROL_SCRIPTS = {
+  'arrow-left-same-direction': () => {
+    document.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key !== 'ArrowLeft') return;
+        event.stopImmediatePropagation();
+        event.target.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }),
+        );
+      },
+      true,
+    );
+  },
 };
 const output = process.env.REBRAND_OUTPUT || 'design-assets/identity/v1/verification';
 const mesh = JSON.parse(await readFile('apps/web/src/components/hero-mesh.json', 'utf8'));
@@ -77,6 +114,18 @@ const bodyMatrix = (root) =>
 const facetPaths = (root) =>
   root.locator('.kx-mesh-facets path').evaluateAll((nodes) => nodes.map((n) => n.getAttribute('d')));
 
+/**
+ * Which cases to run. Empty (the normal run, and CI) means all of them.
+ *
+ * `scripts/rebrand-hero-negative-controls.mjs` narrows it for the reduced-motion
+ * controls. The gate stops at the first failing case, and a planted animation that
+ * survives `prefers-reduced-motion` is caught first by the live preference-change
+ * assertion in the `desktop` case — a true catch, but by a different assertion than
+ * the one the control exists to prove. Restricting the run to a reduced case puts the
+ * plant in front of the assertion under test.
+ */
+const ONLY_CASES = (process.env.KX_HERO_CASES ?? '').split(',').filter(Boolean);
+
 try {
   for (const [name, width, dark, rtl, reduced, zoom] of [
     ['desktop', 1440, false, false, false, false],
@@ -87,6 +136,7 @@ try {
     ['tablet', 768, false, false, true, false],
     ['narrow-text-200', 320, false, false, true, true],
   ]) {
+    if (ONLY_CASES.length && !ONLY_CASES.includes(name)) continue;
     const context = await browser.newContext({
       viewport: { width, height: 960 },
       colorScheme: dark ? 'dark' : 'light',
@@ -111,6 +161,9 @@ try {
     // than merely passing. Nothing is injected on a normal run.
     if (NEGATIVE_CONTROLS[process.env.KX_HERO_NC ?? '']) {
       await page.addStyleTag({ content: NEGATIVE_CONTROLS[process.env.KX_HERO_NC] });
+    }
+    if (NEGATIVE_CONTROL_SCRIPTS[process.env.KX_HERO_NC ?? '']) {
+      await page.evaluate(NEGATIVE_CONTROL_SCRIPTS[process.env.KX_HERO_NC]);
     }
     await page.evaluate(() => document.fonts.ready);
     assert.equal(await page.locator('h1').count(), 1);
@@ -326,9 +379,16 @@ try {
       const afterRight = await spinAngle();
       assert.ok(afterRight !== beforeKeys, 'the arrow keys did not rotate the network');
       await page.keyboard.press('ArrowLeft');
+      const afterLeft = await spinAngle();
+      // ArrowLeft has to *reverse* ArrowRight, so the two steps are compared by sign.
+      // Asserting only that the angle changed — which is what this did until
+      // 2026-11-05 — passes just as well for an ArrowLeft bound the same way as
+      // ArrowRight, which is the defect the message claims to rule out.
+      const rightStep = afterRight - beforeKeys;
+      const leftStep = afterLeft - afterRight;
       assert.ok(
-        Math.abs(afterRight - (await spinAngle())) > 0,
-        'ArrowLeft and ArrowRight move it the same way',
+        leftStep !== 0 && Math.sign(leftStep) === -Math.sign(rightStep),
+        `ArrowLeft turned the network ${leftStep}° where ArrowRight turned it ${rightStep}° — it does not reverse it`,
       );
       await page.keyboard.press('Home');
       assert.equal(await spinAngle(), 0, 'Home did not return the network to its own angle');

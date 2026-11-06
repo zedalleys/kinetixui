@@ -75,6 +75,7 @@
     "check:home-systems": "node scripts/home-systems-browser.mjs --base http://127.0.0.1:3000",
     "check:rebrand-hero": "node scripts/rebrand-browser.mjs",
     "check:rebrand-hero-negative-controls": "node scripts/rebrand-hero-negative-controls.mjs",
+    "measure:hero-commits": "node scripts/measure-hero-commits.mjs",
     "check:hero-light": "node scripts/hero-light-browser.mjs --base http://127.0.0.1:3000",
     "check:platform-ticker": "node scripts/platform-ticker.mjs --base http://127.0.0.1:3000",
     "check:type-scale": "node scripts/check-type-scale.mjs",

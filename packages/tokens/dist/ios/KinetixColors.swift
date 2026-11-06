@@ -119,8 +119,8 @@ public enum KinetixColor {
     public static let colorIndigo600 = UIColor(red: 0.318, green: 0.263, blue: 0.859, alpha: 1) /** Kinetic Weave v1 additive brand ramp. */
     public static let colorIndigo700 = UIColor(red: 0.259, green: 0.204, blue: 0.741, alpha: 1) /** Kinetic Weave v1 additive brand ramp. */
     public static let colorIndigo900 = UIColor(red: 0.149, green: 0.125, blue: 0.361, alpha: 1) /** Kinetic Weave v1 additive brand ramp. */
-    public static let colorInfo = UIColor(red: 0.341, green: 0.467, blue: 0.553, alpha: 1) /** synth: steel blue, distinct from navy primary */
-    public static let colorInfoForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1)
+    public static let colorInfo = UIColor(red: 0.341, green: 0.467, blue: 0.553, alpha: 1) /** the informational status hue, 4.7419:1 on `background`. Synthesized (Figma exposes no info token). Its old description read "distinct from navy primary", which described the pre-Kinetic-Weave palette: primary is now `indigo.600`. The reason the status families stayed on the inherited slate-blue is the same one — an informational state must not read as the interactive colour — so the value is unchanged and only the wording was wrong. */
+    public static let colorInfoForeground = UIColor(red: 0.941, green: 0.969, blue: 1.000, alpha: 1) /** the near-white that pairs with a solid `info` fill, 4.3927:1 on it — below AA, and left as it is because no component draws this pair: Banner, Inform and ResultState use `bg-info/10` with `on-info-container`, which is what check-contrast.mjs measures. A consumer that wants solid-filled info text should pick its own foreground. */
     public static let colorInput = UIColor(red: 0.573, green: 0.698, blue: 0.784, alpha: 1) /** figma: outline #92b2c8 (same as border) */
     public static let colorLink = UIColor(red: 0.318, green: 0.263, blue: 0.859, alpha: 1) /** inline link / Link-button text colour. Defaults to `primary`. */
     public static let colorMuted = UIColor(red: 0.965, green: 0.965, blue: 0.965, alpha: 1) /** figma: surfaceContainer #f6f6f6 */

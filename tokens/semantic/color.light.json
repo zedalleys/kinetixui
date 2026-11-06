@@ -263,11 +263,12 @@
     "info": {
       "$value": "{color.blue.300}",
       "$type": "color",
-      "$description": "synth: steel blue, distinct from navy primary"
+      "$description": "the informational status hue, 4.7419:1 on `background`. Synthesized (Figma exposes no info token). Its old description read \"distinct from navy primary\", which described the pre-Kinetic-Weave palette: primary is now `indigo.600`. The reason the status families stayed on the inherited slate-blue is the same one \u2014 an informational state must not read as the interactive colour \u2014 so the value is unchanged and only the wording was wrong."
     },
     "info-foreground": {
       "$value": "{color.blue.50}",
-      "$type": "color"
+      "$type": "color",
+      "$description": "the near-white that pairs with a solid `info` fill, 4.3927:1 on it \u2014 below AA, and left as it is because no component draws this pair: Banner, Inform and ResultState use `bg-info/10` with `on-info-container`, which is what check-contrast.mjs measures. A consumer that wants solid-filled info text should pick its own foreground."
     },
     "scrim": {
       "$value": "#00000066",

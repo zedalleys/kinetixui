@@ -122,8 +122,8 @@ class KinetixColors {
     static const colorIndigo600 = Color(0xFF5143DB); /** Kinetic Weave v1 additive brand ramp. */
     static const colorIndigo700 = Color(0xFF4234BD); /** Kinetic Weave v1 additive brand ramp. */
     static const colorIndigo900 = Color(0xFF26205C); /** Kinetic Weave v1 additive brand ramp. */
-    static const colorInfo = Color(0xFF57778D); /** synth: steel blue, distinct from navy primary */
-    static const colorInfoForeground = Color(0xFFF0F7FF);
+    static const colorInfo = Color(0xFF57778D); /** the informational status hue, 4.7419:1 on `background`. Synthesized (Figma exposes no info token). Its old description read "distinct from navy primary", which described the pre-Kinetic-Weave palette: primary is now `indigo.600`. The reason the status families stayed on the inherited slate-blue is the same one — an informational state must not read as the interactive colour — so the value is unchanged and only the wording was wrong. */
+    static const colorInfoForeground = Color(0xFFF0F7FF); /** the near-white that pairs with a solid `info` fill, 4.3927:1 on it — below AA, and left as it is because no component draws this pair: Banner, Inform and ResultState use `bg-info/10` with `on-info-container`, which is what check-contrast.mjs measures. A consumer that wants solid-filled info text should pick its own foreground. */
     static const colorInput = Color(0xFF92B2C8); /** figma: outline #92b2c8 (same as border) */
     static const colorLink = Color(0xFF5143DB); /** inline link / Link-button text colour. Defaults to `primary`. */
     static const colorMuted = Color(0xFFF6F6F6); /** figma: surfaceContainer #f6f6f6 */
