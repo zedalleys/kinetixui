@@ -26,10 +26,13 @@
  *     `muted-foreground` role at its smallest, with the least headroom over WCAG AA — keeps 4.5:1 against the
  *     most adverse background pixel under its own glyphs; and the gradient itself stays a wash, measured as
  *     what it adds to the pixels underneath rather than read from the stylesheet
- *   - structure (a performance guard, not a timing threshold): the HTML carries only the open explorer panel and
- *     the payload no second copy of it; the hero map's client props stay under a byte budget; the hero map, its
- *     outputs and its tabs exist once at phone and desktop widths (no duplicate mobile tree); every excerpt, on
- *     every tab, stays inside the 7-line window
+ *   - structure (a performance guard, not a timing threshold): the HTML carries the open explorer panel and the
+ *     height reserve and nothing else, and the payload no second copy of the open one; the hero map's client
+ *     props stay under a byte budget; the hero map, its outputs and its tabs exist once at phone and desktop
+ *     widths (no duplicate mobile tree); every excerpt, on every tab, stays inside the 7-line window
+ *   - explorer height: the card is exactly the same height on all five tabs, at every width `check:a11y-site`
+ *     sweeps and at 200% text, with a negative control that takes the reserve out and proves the measurement
+ *     sees the difference it is there to catch
  */
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
@@ -446,14 +449,37 @@ function objectAt(text, start) {
 const EXCERPT_LINES = 7; // lib/systems-in-motion.ts cuts every excerpt to a 7-line window
 const HERO_PROPS_BUDGET = 4096; // the hero map's serialized props: token, outputs, platforms, theme facts
 
-await check('structure: the explorer sends one panel as HTML, the other four as data only', async () => {
+/*
+ * The open panel and ONE more: the height reserve.
+ *
+ * The explorer's panels are not the same height, and only one is mounted, so the card used to resize under the
+ * reader on every tab change. The tallest panel is therefore also rendered, inert and invisible, in the same
+ * grid cell as the open one, which holds the card at that height whatever is open (`explorer-tabs.tsx`). That
+ * is a deliberate loosening of this guard from one panel to two, and no further: the three panels that are
+ * neither open nor the reserve must still reach the page as data only.
+ */
+const EXPLORER_PANELS_IN_HTML = 2;
+
+await check('structure: the explorer sends the open panel and the reserve as HTML, the rest as data only', async () => {
   const { html, flight } = await rawPage();
+  const panels = (html.match(/class="kx-code-facts"/g) ?? []).length; // one facts list per rendered panel
+  assert.equal(panels, EXPLORER_PANELS_IN_HTML, `${panels} explorer panels in the HTML; the open one and the reserve belong there`);
+  // the copy control and the keyboard-reachable scroller belong to the OPEN panel; the reserve renders neither
+  const at = html.indexOf('data-explorer-reserve=""');
+  assert.ok(at > -1, 'no height reserve in the explorer markup');
+  const opening = html.slice(at, html.indexOf('>', at));
+  assert.ok(opening.includes('aria-hidden="true"'), 'the reserve is in the accessibility tree');
+  assert.ok(opening.includes('inert'), 'the reserve is not inert');
+  const end = html.indexOf('kx-code-facts', at);
+  const inside = html.slice(at, end > -1 ? end : html.length);
+  assert.ok(opening.includes('invisible'), 'the reserve is not hidden from paint');
+  assert.ok(!inside.includes('Copy the '), 'the reserve renders a copy control');
+  assert.ok(!inside.includes('role="region"'), 'the reserve renders a focusable code region');
+  // the open panel's code blocks ride once in the payload for hydration; the reserve's ride once beside them,
+  // and nothing else does — the count is per FILE, since the reserve is the panel that shows two
   const pres = (html.match(/<pre\b[^>]*class="kx-code /g) ?? []).length;
-  assert.equal(pres, 1, `${pres} explorer code blocks in the HTML; only the open panel belongs there`);
-  // the open panel's element tree rides once in the payload for hydration; a second copy means a hidden panel
-  // was rendered as elements again
   const trees = flight.split('kx-code font-mono').length - 1;
-  assert.ok(trees <= 1, `${trees} explorer code trees in the React payload`);
+  assert.ok(trees <= pres, `${trees} explorer code trees in the React payload for ${pres} in the HTML`);
 });
 
 await check(`structure: hero map props stay under ${HERO_PROPS_BUDGET} bytes (static evidence stays on the server)`, async () => {
@@ -465,7 +491,7 @@ await check(`structure: hero map props stay under ${HERO_PROPS_BUDGET} bytes (st
 });
 
 for (const width of [390, 1440]) {
-  await check(`structure at ${width}px: one hero map, one explorer, one panel of at most ${EXCERPT_LINES} lines per file`, async () => {
+  await check(`structure at ${width}px: one hero map, one explorer, open panel + reserve, at most ${EXCERPT_LINES} lines per file`, async () => {
     const { page, context } = await open({ width });
     const f = await page.evaluate(() => {
       const count = (sel) => document.querySelectorAll(sel).length;
@@ -477,6 +503,8 @@ for (const width of [390, 1440]) {
         explorers: count('[data-implementation-explorer]'),
         explorerTabs: count('[data-implementation-explorer] [role="tab"]'),
         pres: count('[data-implementation-explorer] pre.kx-code'),
+        // the reserve is one panel's worth of markup, and it is the only hidden one
+        reserves: count('[data-explorer-reserve]'),
         lines: [...document.querySelectorAll('[data-implementation-explorer] pre.kx-code')].map(
           (p) => p.querySelectorAll('.kx-ln').length,
         ),
@@ -489,7 +517,7 @@ for (const width of [390, 1440]) {
     assert.equal(f.tablists, 1, `${f.tablists} hero tab lists`);
     assert.equal(f.explorers, 1, `${f.explorers} explorers`);
     assert.equal(f.explorerTabs, 5, `${f.explorerTabs} explorer tabs`);
-    assert.equal(f.pres, 1, `${f.pres} explorer code blocks mounted; only the open panel should be`);
+    assert.ok(f.reserves <= 1, `${f.reserves} inert reserves; the card reserves one panel's height, not more`);
     assert.ok(f.lines.every((n) => n >= 1 && n <= EXCERPT_LINES), `excerpt line counts ${f.lines}`);
     // switching tabs mounts that panel and only that one, still inside the line window
     const platforms = await page.locator(`${EXPLORER} [role="tab"]`).evaluateAll((t) => t.map((n) => n.dataset.platform));
@@ -499,8 +527,95 @@ for (const width of [390, 1440]) {
       assert.ok(g.length >= 1 && g.every((n) => n >= 1 && n <= EXCERPT_LINES), `${platform}: excerpt line counts ${g}`);
       const shown = await page.locator('[data-implementation-explorer] [role="tabpanel"]:not([hidden])').count();
       assert.equal(shown, 1, `${platform}: ${shown} panels mounted`);
+      const hidden = await page.evaluate(() => document.querySelectorAll('[data-explorer-reserve]').length);
+      assert.ok(hidden <= 1, `${platform}: ${hidden} inert reserves`);
     }
     await context.close();
+  });
+}
+
+/*
+ * The explorer's height, on every tab.
+ *
+ * The defect: the explorer mounts one panel at a time and the panels are not the same height — Angular's shows
+ * two files where the others show one, and the file paths and the evidence line wrap to different numbers of
+ * lines at different widths and text sizes. Changing tabs therefore changed the height of the card and moved
+ * everything below it. Measured on the commit before the fix: 217px of movement at 1280px and 714px at 320px /
+ * 200% text, in every one of the ten views below.
+ *
+ * The contract: the card is EXACTLY the same height on all five tabs, in every view. Exactly, not within a
+ * tolerance — the reserve is the tallest panel itself laid out under the open one, so an equal height is what
+ * the layout produces rather than what a number approximates. A tolerance here would hide the first few pixels
+ * of any future drift, which is the whole quantity worth watching.
+ *
+ * The negative control: the same measurement is taken again with the reserve removed from the document. That is
+ * the broken layout this gate exists to catch, and the run fails if the measurement does NOT see it move. A
+ * height check that cannot tell a reserved card from an unreserved one measures nothing.
+ */
+const EXPLORER_CARD = '[data-implementation-explorer]';
+
+/** The card's height on each tab, in order, at the current viewport. */
+async function cardHeights(page) {
+  const platforms = await page.locator(`${EXPLORER} [role="tab"]`).evaluateAll((t) => t.map((n) => n.dataset.platform));
+  const out = [];
+  for (const platform of platforms) {
+    await page.locator(`${EXPLORER} [role="tab"][data-platform="${platform}"]`).click();
+    await page.waitForTimeout(100); // the panel swap is synchronous; this settles the layout around it
+    const h = await page.evaluate((sel) => document.querySelector(sel).getBoundingClientRect().height, EXPLORER_CARD);
+    out.push([platform, Math.round(h)]);
+  }
+  return out;
+}
+
+const shown = (rows) => rows.map(([p, h]) => `${p} ${h}px`).join(', ');
+
+/*
+ * Three widths rather than five, at both text sizes: a phone at the narrowest width the site supports, a
+ * tablet, and a desktop. Each view is a page load and ten tab changes, and the defect is a property of the
+ * layout rather than of a breakpoint — it was the same 217px at 768, 1024 and 1280 before the fix. 320 and
+ * 200% text are in because that is where it was largest (714px) and where a reserved height most easily runs
+ * short.
+ */
+for (const [name, width, scale] of [
+  ['small-phone', 320, 1],
+  ['tablet', 768, 1],
+  ['desktop', 1280, 1],
+  ['small-phone', 320, 2],
+  ['tablet', 768, 2],
+  ['desktop', 1280, 2],
+]) {
+  await check(`explorer height at ${name}/${width}px/text${scale * 100}%: the same on every tab, and the control proves it`, async () => {
+    const { page, context } = await open({ width, scale });
+    try {
+      await page.locator(EXPLORER).scrollIntoViewIfNeeded();
+      const held = await cardHeights(page);
+      const heights = held.map(([, h]) => h);
+      const spread = Math.max(...heights) - Math.min(...heights);
+      assert.equal(spread, 0, `the card changes height between tabs: ${shown(held)}`);
+
+      // Negative control: with the reserve out of the layout the card is content-sized again, and these numbers
+      // must move. `display:none` rather than removing the node — the reserve is React's to own, and tearing it
+      // out of the DOM makes the next tab change fail to reconcile and takes the whole explorer with it, which
+      // would read as a spectacular pass.
+      const hid = await page.evaluate(() => {
+        const el = document.querySelector('[data-explorer-reserve]');
+        if (!el) return false;
+        el.style.display = 'none';
+        return true;
+      });
+      assert.ok(hid, 'control: no reserve to take out of the layout');
+      const unheld = await cardHeights(page);
+      const bare = unheld.map(([, h]) => h);
+      const bareSpread = Math.max(...bare) - Math.min(...bare);
+      assert.ok(
+        bareSpread > 0,
+        `control: the card did not change height with the reserve removed (${shown(unheld)}) — ` +
+          'this measurement cannot see the defect it is here to catch',
+      );
+      console.log(`     ${name}/${width}px/text${scale * 100}%: held ${heights[0]}px on every tab; control spread ${bareSpread}px`);
+    } finally {
+      await context.close();
+    }
   });
 }
 
