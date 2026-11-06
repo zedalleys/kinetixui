@@ -35,6 +35,19 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # Runs BEFORE every generator in this job, and that ordering is the whole point. `Generated files in
+      # sync` below regenerates and then diffs, which catches a mirror whose CONTENT drifted but is blind to
+      # one that is missing from the commit: `git diff` says nothing about untracked files, so a mirror that
+      # was generated locally and never `git add`ed is recreated by CI, ignored by the diff, and shipped as a
+      # `registry.json` entry pointing at a path the repository does not carry. This gate writes nothing and
+      # compares the output it WOULD produce against what the checkout actually holds, so it sees the
+      # omission. Moving it after any generator would silently defeat it.
+      - name: Registry is its source's fixed point
+        run: pnpm check:registry-fixed-point
+
+      - name: Registry fixed-point negative controls
+        run: pnpm check:registry-fixed-point-controls
+
       - name: Build tokens
         run: pnpm build:tokens
 
@@ -398,7 +411,20 @@ jobs:
           node scripts/vendor-compose-tokens.mjs
           node scripts/vendor-swiftui-tokens.mjs
           node scripts/vendor-flutter-tokens.mjs
-          git add -N packages/ui-compose packages/ui-swiftui packages/ui-flutter
+          # `git diff` compares the worktree against the index and is silent about untracked files, so a
+          # generated file that was never `git add`ed is regenerated here and then ignored. `-N` was applied
+          # to the three native directories only; every other path below had the same blindness. Applying it
+          # to all of them makes a generated file that is missing from the commit show up as an addition.
+          git add -N \
+            packages/tokens/dist \
+            packages/ui-compose \
+            packages/ui-swiftui \
+            packages/ui-flutter \
+            apps/web/public/r \
+            apps/web/public/specs \
+            registry/kinetixui \
+            specs/components \
+            packages/ui/src/stories
           if ! git diff --exit-code -- \
             packages/tokens/dist \
             packages/ui-compose \
