@@ -8,15 +8,15 @@
  *
  * What it proves, in a real browser, at seven viewport/theme/motion cases:
  *   - the mesh renders, in full, with its facets, edge chains, junctions and
- *     light pulses; the drawing is hidden from AT and the one focus stop is the
- *     named rotation group, with no visible control row
+ *     light pulses; the drawing is hidden from AT and the hero holds no focus
+ *     stop, no named group and no control row
  *   - the illustration moves — geometry, not just a class name — and the light
  *     pulses travel, and the junctions respond to them
- *   - the pointer response is local: a facet under the cursor lifts, one across
- *     the mesh does not
- *   - the reader can turn the network: a drag and the arrow keys both rotate it,
- *     Home returns it, Space and Escape stop the light, and keyboard focus is
- *     drawn on the artwork with no rectangle around it
+ *   - the hero is decoration and nothing else (owner decision, 2026-11-06): it
+ *     holds no tab stop, Tab never lands in it, a drag on a facet moves nothing,
+ *     the arrow keys and Home move nothing, Space and Escape do not stop the
+ *     light, and the element-bound pointer spotlight is gone — the pointer glow
+ *     is now the site-wide layer that `check:cursor-glow` owns
  *   - under reduced motion nothing runs and the mesh sits at its generated rest
  *     pose, which is a complete composition rather than a stripped one
  *   - motion suspends offscreen and when the preference changes live
@@ -69,24 +69,64 @@ const NEGATIVE_CONTROLS = {
 /**
  * Negative controls that no stylesheet can express, injected into the page instead.
  *
- * `arrow-left-same-direction` binds ArrowLeft the way ArrowRight is bound, by
- * rewriting the key in the capture phase before React's delegated listener sees
- * it. The keyboard assertion claims ArrowLeft reverses ArrowRight; until
- * 2026-11-05 it only asserted the angle had changed, which this control passes.
+ * The hero became decoration on 2026-11-06, and an assertion of ABSENCE is the
+ * easiest kind to get wrong: it passes when the feature is gone, and it also
+ * passes when the assertion is looking in the wrong place. Each of these puts
+ * one removed control back — a tab stop, a drag rotation, the arrow keys — and
+ * requires the gate to notice. None of them can be expressed in CSS, because
+ * each is a listener or an attribute rather than a style.
  */
 const NEGATIVE_CONTROL_SCRIPTS = {
-  'arrow-left-same-direction': () => {
-    document.addEventListener(
-      'keydown',
-      (event) => {
-        if (event.key !== 'ArrowLeft') return;
-        event.stopImmediatePropagation();
-        event.target.dispatchEvent(
-          new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }),
-        );
-      },
-      true,
-    );
+  // The hero takes focus again, and nothing else changes: the control adds the
+  // tab stop and leaves `aria-hidden` alone, so the assertion under test is the
+  // one that counts focus stops rather than the one before it.
+  'tab-stop-returns': () => {
+    document.querySelector('.kx-hero-mesh').setAttribute('tabindex', '0');
+  },
+  // A drag on a facet turns the network again, written the way it used to be:
+  // a transform on a group inside the SVG, composed over the breath.
+  //
+  // The rotation goes on `.kx-mesh-facets`, not on `.kx-mesh-body`. The body
+  // carries `kx-mesh-breathe`, and a CSS animation on `transform` beats an
+  // inline one whether it is running or paused — written there, the control
+  // would do nothing at all and would "prove" the gate catches a defect that
+  // never happened.
+  'drag-returns': () => {
+    const root = document.querySelector('.kx-hero-polygon');
+    const body = root.querySelector('.kx-mesh-facets');
+    let from = null;
+    let angle = 0;
+    // Any press inside the hero starts it. The facets no longer opt in to
+    // pointer events, so a press over the artwork is delivered to the root div;
+    // requiring an SVG path here would make the control a no-op.
+    root.addEventListener('pointerdown', (event) => {
+      from = { x: event.clientX, angle };
+    });
+    root.addEventListener('pointermove', (event) => {
+      if (!from) return;
+      angle = from.angle + (event.clientX - from.x) * 0.28;
+      body.style.transformBox = 'view-box';
+      body.style.transformOrigin = '62% 46%';
+      body.style.transform = `rotate(${angle}deg)`;
+    });
+    root.addEventListener('pointerup', () => {
+      from = null;
+    });
+  },
+  // The arrow keys turn it again. Bound on the document, because with the tab
+  // stop gone there is nothing in the hero for a key to be delivered to.
+  'keys-return': () => {
+    const body = document.querySelector('.kx-mesh-facets');
+    let angle = 0;
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight') angle += 4;
+      else if (event.key === 'ArrowLeft') angle -= 4;
+      else if (event.key === 'Home') angle = 0;
+      else return;
+      body.style.transformBox = 'view-box';
+      body.style.transformOrigin = '62% 46%';
+      body.style.transform = `rotate(${angle}deg)`;
+    });
   },
 };
 const output = process.env.REBRAND_OUTPUT || 'design-assets/identity/v1/verification';
@@ -180,24 +220,29 @@ try {
     // The supplied coordinates are rendered, not a redrawing of them.
     assert.deepEqual(await facetPaths(root), mesh.facets.map((f) => f.d), 'a facet path was altered');
 
-    // ── One focus stop, named, and no control row ────────────────────────────
-    //    The drawing itself says nothing a screen reader needs, so the SVG stays
-    //    hidden; the single focusable group carries the name and the keys.
+    // ── No focus stop, no name, no control row ──────────────────────────────
+    //    The hero is decoration. The drawing says nothing a screen reader needs,
+    //    so the SVG stays hidden, and since 2026-11-06 there is nothing to
+    //    operate either: no tab stop, and so nothing that should carry a name or
+    //    point at instructions. A decorative illustration that still advertises
+    //    keys it no longer handles is worse than a silent one, so the absence of
+    //    the instructions is asserted as firmly as the absence of the handler.
     assert.equal(await svg.getAttribute('aria-hidden'), 'true', 'the illustration is hidden from AT');
     assert.equal(
       await root.locator('[tabindex], a, button, input, select, textarea').count(),
-      1,
-      'the hero has exactly one focus stop: the rotation group',
+      0,
+      'the hero holds a focus stop — it is decoration and takes no input',
     );
-    const group = root.locator('.kx-polygon-interaction');
-    assert.equal(await group.getAttribute('role'), 'group');
-    assert.ok((await group.getAttribute('aria-label'))?.trim(), 'the rotation group has no accessible name');
-    const described = await group.getAttribute('aria-describedby');
-    assert.ok(
-      (await page.locator(`#${described}`).innerText()).includes('arrow keys'),
-      'the group does not point at instructions that name the keys',
-    );
+    assert.equal(await root.locator('.kx-polygon-interaction').count(), 0, 'the rotation group returned');
+    assert.equal(await root.locator('[role="group"]').count(), 0, 'a named interactive group returned');
+    assert.equal(await root.locator('[aria-describedby]').count(), 0, 'the hero still points at instructions');
+    assert.equal(await root.locator('p.sr-only').count(), 0, 'the hero still describes controls it does not have');
     assert.equal(await root.getByRole('button').count(), 0, 'visible hero controls returned');
+    // The element-bound pointer spotlight is gone with them: it could not leave
+    // the hero's own box, which is the defect this release fixed. The pointer
+    // glow is the site-wide layer, and `check:cursor-glow` owns it.
+    assert.equal(await root.locator('.kx-polygon-spotlight').count(), 0, 'the hero-bound pointer spotlight returned');
+    assert.equal(await page.locator('.kx-cursor-glow').count(), 1, 'the site-wide pointer glow is missing');
 
     // ── Nothing overflows ────────────────────────────────────────────────────
     const overflow = await page.evaluate(() =>
@@ -320,109 +365,104 @@ try {
         'every junction is equally lit — the glow is on a timer, not following the light',
       );
 
-      // ── 4. Pointer response is local, and is a brightening, not a distortion
+      // ── 4. The hero answers the reader with nothing ──────────────────────
+      //    Decoration, as of the owner's decision of 2026-11-06. A pointer over
+      //    it, a drag across a facet, Tab, the arrow keys and Home must each
+      //    leave the drawing exactly where it was.
+      //
+      //    "Exactly where it was" needs the breath held, or the artwork moves
+      //    between the two samples on its own and every comparison below is
+      //    noise. So the motion is paused with a style tag for the duration of
+      //    this section and released afterwards — the gate's own suspension
+      //    assertions, further down, are what prove the motion was running.
       const box = await svg.boundingBox();
-      await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.4);
-      await page.waitForTimeout(600);
-      assert.equal(await root.getAttribute('data-pointer'), 'true', 'the pointer was not picked up');
-      const spotlight = root.locator('.kx-polygon-spotlight');
-      assert.ok(
-        Number(await spotlight.evaluate((el) => getComputedStyle(el).opacity)) > 0.5,
-        'the pointer brightening never came up',
-      );
-      assert.deepEqual(await facetPaths(root), mesh.facets.map((f) => f.d), 'the pointer displaced the artwork');
-      await page.mouse.move(box.x - 40, box.y - 40);
-      await page.waitForTimeout(600);
-      assert.equal(await root.getAttribute('data-pointer'), 'false', 'the brightening stayed after the pointer left');
-
-      // ── 4b. The reader turns the network ───────────────────────────────────
-      //    The rotation is a transform on `.kx-mesh-spin`, so every assertion
-      //    here reads the matrix the browser computed, not the custom property
-      //    the component wrote. The facet `d`s are re-checked after each one:
-      //    rotating the composition must never rewrite the supplied artwork.
-      const spinAngle = () =>
-        root.locator('.kx-mesh-spin').evaluate((el) => {
-          const m = new DOMMatrixReadOnly(getComputedStyle(el).transform);
-          return Math.round((Math.atan2(m.b, m.a) * 180) / Math.PI);
+      const holdMotion = () =>
+        page.evaluate(() => {
+          const tag = document.createElement('style');
+          tag.id = 'kx-hold-motion';
+          tag.textContent = '.kx-hero-polygon *{animation-play-state:paused!important}';
+          document.head.append(tag);
         });
-      const facetBox = () => root.locator('.kx-mesh-facets path').first().boundingBox();
+      const releaseMotion = () => page.evaluate(() => document.getElementById('kx-hold-motion')?.remove());
+      // Measured RELATIVE to the illustration's own box, not to the viewport:
+      // ArrowDown scrolls the page, and an absolute rect would read that scroll
+      // as the artwork having moved. The `<svg>` box is fixed on the page, so
+      // the offset between the two changes only if the drawing itself turns.
+      const facetBox = async () => {
+        const facet = await root.locator('.kx-mesh-facets path[data-material="3"]').first().boundingBox();
+        const frame = await svg.boundingBox();
+        return { x: facet.x - frame.x, y: facet.y - frame.y, width: facet.width, height: facet.height };
+      };
+      const samePlace = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < 1 && Math.abs(a.width - b.width) < 1;
 
-      assert.equal(await spinAngle(), 0, 'the network does not start at the artwork\'s own angle');
-      const restBox = await facetBox();
+      await holdMotion();
+      await page.waitForTimeout(120);
+      const atRest = await facetBox();
 
-      // Drag: on a facet, and it must move the drawing on screen.
+      // A pointer over the artwork: no local spotlight, no displacement, and no
+      // state written on the root for one.
+      await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.4);
+      await page.waitForTimeout(400);
+      assert.equal(await root.getAttribute('data-pointer'), null, 'the hero still tracks the pointer');
+      assert.ok(samePlace(await facetBox(), atRest), 'the pointer moved the artwork');
+      assert.deepEqual(await facetPaths(root), mesh.facets.map((f) => f.d), 'the pointer rewrote the artwork');
+
+      // A drag across a facet, the gesture that used to turn the network.
       const grab = await root.locator('.kx-mesh-facets path[data-material="3"]').first().boundingBox();
       await page.mouse.move(grab.x + grab.width / 2, grab.y + grab.height / 2);
       await page.mouse.down();
-      const duringDrag = await pulseAt();
       await page.mouse.move(grab.x + grab.width / 2 + 180, grab.y + grab.height / 2, { steps: 12 });
-      const dragged = await spinAngle();
-      assert.ok(Math.abs(dragged) > 10, `a 180px drag turned the network by ${dragged}°`);
-      assert.equal(await group.getAttribute('data-dragging'), 'true', 'the drag never registered');
-      // The light does not stop because a reader is holding the artwork.
-      await page.waitForTimeout(500);
-      assert.notDeepEqual(await pulseAt(), duringDrag, 'the light stopped while the reader was dragging');
+      const dragged = await facetBox();
       await page.mouse.up();
-      assert.equal(await group.getAttribute('data-dragging'), 'false', 'the drag never ended');
-      const draggedBox = await facetBox();
       assert.ok(
-        Math.hypot(draggedBox.x - restBox.x, draggedBox.y - restBox.y) > 4,
-        'the angle changed but nothing moved on screen',
+        samePlace(dragged, atRest),
+        `a 180px drag moved the artwork from ${JSON.stringify(atRest)} to ${JSON.stringify(dragged)}`,
       );
+      assert.equal(await root.locator('[data-dragging]').count(), 0, 'the drag state returned');
       assert.deepEqual(await facetPaths(root), mesh.facets.map((f) => f.d), 'the drag rewrote the artwork');
+      // The group the rotation lived on, and the property it wrote, are gone.
+      assert.equal(await root.locator('.kx-mesh-spin').count(), 0, 'the rotation group returned');
 
-      // Keyboard: the same rotation, and Home brings it back.
-      await group.focus();
-      const beforeKeys = await spinAngle();
-      await page.keyboard.press('ArrowRight');
-      await page.keyboard.press('ArrowRight');
-      const afterRight = await spinAngle();
-      assert.ok(afterRight !== beforeKeys, 'the arrow keys did not rotate the network');
-      await page.keyboard.press('ArrowLeft');
-      const afterLeft = await spinAngle();
-      // ArrowLeft has to *reverse* ArrowRight, so the two steps are compared by sign.
-      // Asserting only that the angle changed — which is what this did until
-      // 2026-11-05 — passes just as well for an ArrowLeft bound the same way as
-      // ArrowRight, which is the defect the message claims to rule out.
-      const rightStep = afterRight - beforeKeys;
-      const leftStep = afterLeft - afterRight;
+      // Tab never lands in the illustration, from anywhere on the page.
+      await page.evaluate(() => document.activeElement?.blur());
+      let landedInHero = false;
+      for (let i = 0; i < 40 && !landedInHero; i++) {
+        await page.keyboard.press('Tab');
+        landedInHero = await page.evaluate(() => !!document.activeElement?.closest('.kx-hero-polygon'));
+      }
+      assert.equal(landedInHero, false, 'Tab reached the hero — it is decoration and should not take focus');
+
+      // …and the keys that used to turn it do nothing, wherever focus is.
+      //
+      // The arrows are measured BEFORE Home is pressed. Home used to return the
+      // network to its own angle, so a sequence that ends with it leaves the
+      // artwork back where it started whether the keys still work or not — which
+      // is exactly what the `keys-return` negative control exploited when this
+      // measured only the end state.
+      await page.evaluate(() => document.activeElement?.blur());
+      for (const key of ['ArrowRight', 'ArrowRight', 'ArrowDown']) {
+        await page.keyboard.press(key);
+      }
+      await page.waitForTimeout(200);
+      const afterArrows = await facetBox();
       assert.ok(
-        leftStep !== 0 && Math.sign(leftStep) === -Math.sign(rightStep),
-        `ArrowLeft turned the network ${leftStep}° where ArrowRight turned it ${rightStep}° — it does not reverse it`,
+        samePlace(afterArrows, atRest),
+        `the arrow keys moved the artwork from ${JSON.stringify(atRest)} to ${JSON.stringify(afterArrows)}`,
       );
       await page.keyboard.press('Home');
-      assert.equal(await spinAngle(), 0, 'Home did not return the network to its own angle');
-
-      // Keyboard focus is on the artwork, with no rectangle around it.
-      const focusRing = await group.evaluate((el) => {
-        const s = getComputedStyle(el);
-        return { outline: s.outlineStyle, width: parseFloat(s.outlineWidth) || 0, shadow: s.boxShadow };
-      });
+      await page.waitForTimeout(150);
       assert.ok(
-        focusRing.outline === 'none' || focusRing.width === 0,
-        `a rectangular focus outline returned: ${JSON.stringify(focusRing)}`,
+        samePlace(await facetBox(), atRest),
+        'Home moved the artwork — the reset the rotation used to need is still bound',
       );
-      assert.equal(focusRing.shadow, 'none', 'a focus box-shadow returned');
-      const linkFocus = await root.locator('.kx-mesh-links').evaluate((el) => {
-        const s = getComputedStyle(el);
-        return { stroke: s.stroke, width: parseFloat(s.strokeWidth), opacity: Number(s.strokeOpacity) };
-      });
-      const focusRole = await page.evaluate(() => {
-        const probe = document.createElement('span');
-        probe.style.color = 'hsl(var(--focus))';
-        document.body.append(probe);
-        const c = getComputedStyle(probe).color;
-        probe.remove();
-        return c;
-      });
-      assert.equal(linkFocus.stroke, focusRole, 'the focus indicator is not drawn in the --focus role');
-      assert.ok(linkFocus.width >= 2, `the focused wireframe is only ${linkFocus.width}px`);
-      assert.ok(linkFocus.opacity > 0.9, `the focused wireframe is still ${linkFocus.opacity} opaque`);
+      assert.deepEqual(await facetPaths(root), mesh.facets.map((f) => f.d), 'a key rewrote the artwork');
+      await releaseMotion();
 
-      // There is no reader-facing pause (owner decision, 2026-11-05). Space and
-      // Escape must not stop the motion, nothing may announce a pause, and the
-      // instructions must not offer one — a control removed from the handler but
-      // left in its own description is still a promise to a screen-reader user.
+      // There is no reader-facing pause (owner decision, 2026-11-05, and the
+      // hero has had no controls at all since 2026-11-06). Space and Escape
+      // must not stop the motion, and nothing may announce a pause: a control
+      // removed from the handler but left in a description is still a promise
+      // to a screen-reader user. The description itself is asserted gone above.
       await page.keyboard.press(' ');
       await page.keyboard.press('Escape');
       await page.waitForTimeout(250);
@@ -432,10 +472,10 @@ try {
         'Space or Escape still stops the hero: the pause control was supposed to be gone',
       );
       assert.equal(await root.locator('[role="status"]').count(), 0, 'a pause status region survived');
-      assert.doesNotMatch(
-        await root.locator('p.sr-only').innerText(),
-        /pause|resume/i,
-        'the instructions still offer a pause control',
+      assert.equal(
+        await root.locator('text=/pause|resume/i').count(),
+        0,
+        'the hero still offers a pause control somewhere in its text',
       );
       await page.mouse.move(box.x - 60, box.y - 60);
 

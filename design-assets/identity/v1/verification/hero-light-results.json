@@ -1,22 +1,20 @@
 {
   "base": "http://127.0.0.1:3000",
-  "measuredAt": "2026-11-02T16:24:53.333Z",
+  "measuredAt": "2026-11-06T22:43:40.727Z",
   "routes": 3,
   "junctions": 26,
   "lap": {
     "measuredSeconds": 8.7,
     "declaredSeconds": 9.4
   },
-  "focusContrast_light": {
-    "changedPixels": 44607,
-    "best": 6.59,
-    "topDecile": 4.28,
-    "shareAt3to1": 47
+  "heroFocus_light": {
+    "focusableElements": 0,
+    "tabReachedHero": false,
+    "wireframeStrokeWidth": "1px"
   },
-  "focusContrast_dark": {
-    "changedPixels": 44583,
-    "best": 9.82,
-    "topDecile": 6.02,
-    "shareAt3to1": 53
+  "heroFocus_dark": {
+    "focusableElements": 0,
+    "tabReachedHero": false,
+    "wireframeStrokeWidth": "1px"
   }
 }
