@@ -95,15 +95,15 @@ A ramp of primitives is not a design system. It is a palette with build tooling.
 The layer that makes tokens survive a redesign is the **semantic** one:
 
 ```
-primitive:  color.azure.700  = #1d4ed8
-semantic:   color.primary    = {color.azure.700}
-            color.ring       = {color.azure.700}
-            color.brand      = {color.blue.500}
+primitive:  color.indigo.600 = #5143DB
+semantic:   color.primary    = {color.indigo.600}
+            color.ring       = {color.indigo.600}
+            color.brand      = {color.indigo.500}
 ```
 
 Now `color.primary` and `color.ring` (the focus ring) happen to be the same value, and the day they need to
 stop being the same value, that is a one-line change rather than an archaeology project. It has already
-happened once: `primary` used to be the navy that `color.brand` still is, and moving it to a brighter blue for
+happened once: `primary` used to be the original navy, and moving it first to blue and now to indigo for
 contrast changed an alias, not the components. Components refer only to semantics. Primitives are an
 implementation detail of the semantic layer.
 

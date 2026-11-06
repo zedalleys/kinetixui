@@ -103,6 +103,13 @@
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
     },
     {
+      "file": "apps/web/src/components/hero-polygon.tsx",
+      "pattern": "div[role=group]",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "Owner-requested spatial SVG rotation surface (#514), not a replacement for a library button or field. Pointer capture rotates the supplied artwork on two axes; Arrow keys and Home provide the equivalent keyboard operation. KinetixUI has no spatial rotation primitive. Home restores orientation, Space toggles autoplay and Escape pauses without visible controls; retain the specialized hit surface and its labelled group locally."
+    },
+    {
       "file": "apps/web/src/components/infographic/world-map.tsx",
       "pattern": "g[role=button]",
       "maxCount": 1,
@@ -208,20 +215,6 @@
       "reason": "Native disclosure intentionally preserves browser semantics, mounted content and no-JS opening. Keep local, compose library typography/badges where useful; do not replace with a JS-only accordion without progressive-enhancement proof."
     },
     {
-      "file": "apps/web/src/components/workflow-readiness.tsx",
-      "pattern": "details",
-      "maxCount": 1,
-      "classification": "D",
-      "reason": "Native disclosure for the per-part evidence table on /use-cases pages: server-rendered, keyboard operable and openable without JavaScript, matching platform-verification.tsx. Do not replace with a JS-only accordion without progressive-enhancement proof."
-    },
-    {
-      "file": "apps/web/src/components/workflow-readiness.tsx",
-      "pattern": "summary",
-      "maxCount": 1,
-      "classification": "D",
-      "reason": "Native disclosure for the per-part evidence table on /use-cases pages: server-rendered, keyboard operable and openable without JavaScript, matching platform-verification.tsx. Do not replace with a JS-only accordion without progressive-enhancement proof."
-    },
-    {
       "file": "apps/web/src/components/systems/hero-system-map.tsx",
       "pattern": "button[type=button]",
       "maxCount": 1,
@@ -255,6 +248,20 @@
       "maxCount": 1,
       "classification": "D",
       "reason": "Spatial diagram composition (Wave 2b review): the platform tabs are nodes of the measured trace drawing, placed by the map's CSS subgrid and styled as dashed cards that the traces connect. Semantics are already correct (real tabs with real panels, automatic activation, dir from the page, the tour's pause control). Library TabsList/TabsTrigger would need their list display, gap, border, scroll, underline indicator, centring, nowrap, hover fill, inset focus ring and vertical borders overridden locally to keep the drawing, which is the local restyling #380 rules out; matching them instead redesigns the homepage hero. Same family as the world map, floor plan and space canvas."
+    },
+    {
+      "file": "apps/web/src/components/workflow-readiness.tsx",
+      "pattern": "details",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "Native disclosure for the per-part evidence table on /use-cases pages: server-rendered, keyboard operable and openable without JavaScript, matching platform-verification.tsx. Do not replace with a JS-only accordion without progressive-enhancement proof."
+    },
+    {
+      "file": "apps/web/src/components/workflow-readiness.tsx",
+      "pattern": "summary",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "Native disclosure for the per-part evidence table on /use-cases pages: server-rendered, keyboard operable and openable without JavaScript, matching platform-verification.tsx. Do not replace with a JS-only accordion without progressive-enhancement proof."
     },
     {
       "file": "apps/web/src/examples/fab-speed-dial.tsx",

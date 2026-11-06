@@ -75,7 +75,7 @@ export function TraceLayer({ pairs }: { pairs: TracePair[] }) {
        * resolves against the viewport and it covers the page: with `pointer-events` left to the stylesheet it
        * then swallows every click on the page behind it.
        */
-      style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
       viewBox={`0 0 ${state?.w ?? 0} ${state?.h ?? 0}`}
     >
       {state?.paths.map((p) => <path key={p.key} d={p.d} className="kx-trace" data-kind={p.kind} />)}
