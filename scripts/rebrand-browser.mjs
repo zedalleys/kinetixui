@@ -388,11 +388,23 @@ try {
       // ArrowDown scrolls the page, and an absolute rect would read that scroll
       // as the artwork having moved. The `<svg>` box is fixed on the page, so
       // the offset between the two changes only if the drawing itself turns.
-      const facetBox = async () => {
-        const facet = await root.locator('.kx-mesh-facets path[data-material="3"]').first().boundingBox();
-        const frame = await svg.boundingBox();
-        return { x: facet.x - frame.x, y: facet.y - frame.y, width: facet.width, height: facet.height };
-      };
+      //
+      // Both rects are read in ONE evaluation, from `getBoundingClientRect`.
+      // Two `boundingBox()` calls do not work here: each scrolls its own target
+      // into view first, so the facet and the frame can be measured in
+      // different scroll positions and the subtraction stops cancelling. That
+      // is what reported the artwork as having moved exactly 222px down the
+      // page — the scroll between the two reads, with x untouched (CI and local,
+      // 2026-11-06).
+      const facetBox = () =>
+        page.evaluate(() => {
+          const facet = document
+            .querySelector('.kx-hero-polygon')
+            .querySelector('.kx-mesh-facets path[data-material="3"]')
+            .getBoundingClientRect();
+          const frame = document.querySelector('svg.kx-hero-mesh').getBoundingClientRect();
+          return { x: facet.x - frame.x, y: facet.y - frame.y, width: facet.width, height: facet.height };
+        });
       const samePlace = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < 1 && Math.abs(a.width - b.width) < 1;
 
       await holdMotion();
