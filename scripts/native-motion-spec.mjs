@@ -32,6 +32,15 @@ export const PLATFORMS = {
         members: ["Switch.swift"],
         test: "packages/ui-swiftui/Tests/KinetixUITests/SwitchMotionTests.swift",
       },
+      // The second selection role, kept separate from `selection` above because the two durations are
+      // separate by owner decision: a thumb lands on `instant`, a colour settles on `fast`.
+      // ToggleGroup.swift is deliberately not a member — it is a pass-through to Toggle and animates
+      // nothing of its own, and a member that never animates makes the family's wiring check vacuous.
+      selectionState: {
+        helper: "KinetixSelectionMotion.swift",
+        members: ["Toggle.swift", "Checkbox.swift", "RadioGroup.swift"],
+        test: "packages/ui-swiftui/Tests/KinetixUITests/SelectionMotionTests.swift",
+      },
       slide: {
         // A panel that slides across the screen is positional movement, which is what Reduce Motion
         // exists to remove. The reduced form is a cross-fade. See the helper's header.
