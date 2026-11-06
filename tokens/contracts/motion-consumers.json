@@ -1,0 +1,26 @@
+{
+  "$description": "Every (role, platform, file) consumer identity the motion contract carries, one per line, sorted. check:motion-tokens holds tokens/contracts/motion.json to this list in both directions: a consumer that disappears from the contract fails here, and so does one that appears without being registered. The contract alone cannot catch a disappearance - it validates the consumers it finds, never the ones that should be there - so a merge resolution that drops a platform, or retypes its platform or file, passes every other gate with nothing red. Edit this file by hand, never from a generator: the point is that adding or removing a consumer is a deliberate second edit and a reviewable diff, which regenerating from the contract would hide. The failure message prints the exact line to add or delete.",
+  "identities": [
+    "disclosure|angular|packages/ui-angular/src/styles.css",
+    "disclosure|compose|packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixDisclosureMotion.kt",
+    "disclosure|flutter|packages/ui-flutter/lib/src/kinetix_disclosure_motion.dart",
+    "disclosure|react|packages/ui/tailwind.config.ts",
+    "disclosure|swiftui|packages/ui-swiftui/Sources/KinetixUI/KinetixDisclosureMotion.swift",
+    "overlay|angular|packages/ui-angular/src/styles.css",
+    "overlay|react|packages/ui/src/components/dialog.tsx",
+    "press-feedback|angular|packages/ui-angular/src/styles.css",
+    "press-feedback|react|packages/ui/src/components/checkbox.tsx",
+    "press-feedback|react|packages/ui/src/components/radio-group.tsx",
+    "press-feedback|react|packages/ui/src/components/toggle.tsx",
+    "selection-control|angular|packages/ui-angular/src/styles.css",
+    "selection-control|compose|packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixSwitchMotion.kt",
+    "selection-control|flutter|packages/ui-flutter/lib/src/kinetix_switch_motion.dart",
+    "selection-control|react|packages/ui/src/components/switch.tsx",
+    "selection-control|swiftui|packages/ui-swiftui/Sources/KinetixUI/KinetixSwitchMotion.swift",
+    "selection-state|angular|packages/ui-angular/src/styles.css",
+    "selection-state|react|packages/ui/src/components/checkbox.tsx",
+    "selection-state|react|packages/ui/src/components/radio-group.tsx",
+    "selection-state|react|packages/ui/src/components/toggle.tsx",
+    "spatial|react|packages/ui/src/components/sheet.tsx"
+  ]
+}
