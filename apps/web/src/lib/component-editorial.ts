@@ -359,6 +359,170 @@ export const COMPONENT_EDITORIAL: Record<string, ComponentEditorial> = {
     accessibility:
       "Form tests check that each control is described by its description and error message and that a failed submit moves focus to the first invalid control. A validation library such as Zod plugs in through React Hook Form; Form itself does not require one.",
   },
+  /* ----------------------------------------------------------------------------- selection controls
+   *
+   * Batch 2 (editorial coverage 20 -> 30, approved 2026-10-24). The five selection controls below are the
+   * set readers most often substitute for one another, and the four behind them have keyboard tests to
+   * cite. The five feedback components after them have no dedicated tests, so they carry no
+   * `accessibility` line rather than an unsourced one.
+   */
+  // components-keyboard.test.tsx: "Checkbox toggles with Space, not Enter". The glyph-as-well-as-fill claim
+  // is the component's own contract (checkbox.tsx: "`--action` fill AND a glyph — shape, not only colour").
+  checkbox: {
+    summary:
+      "Checkbox sets one independent option on or off, and can also show a mixed state for a parent whose children are only partly selected.",
+    useWhen: [
+      "One setting that stands on its own, such as agreeing to terms or turning a single notification on.",
+      "A list where any number of the options may be chosen at once, including none of them.",
+      "A parent row summarising child rows, where mixed is the only honest answer.",
+    ],
+    instead: [
+      { slug: "switch", when: "when the change takes effect the moment it is made, rather than when a form is submitted." },
+      { slug: "radio-group", when: "when exactly one option out of several has to be chosen." },
+      { slug: "toggle", when: "when the control is a button that stays pressed, such as bold in a toolbar." },
+    ],
+    accessibility:
+      "A keyboard test checks that it toggles with Space and not with Enter. Checked is carried by a glyph as well as a fill, so the state does not rest on colour alone.",
+  },
+  // components-keyboard.test.tsx: "is one tab stop; arrows move and select; Tab leaves the group".
+  "radio-group": {
+    summary:
+      "Radio Group offers a set of options of which exactly one can be chosen. On React and Angular it behaves as a single stop in the tab order rather than one stop per option; the SwiftUI and Flutter groups stack their buttons and leave focus to the platform.",
+    useWhen: [
+      "Two to about five options a reader should be able to compare side by side before choosing.",
+      "A choice that must be made, where leaving every option unchosen is not a valid answer.",
+    ],
+    instead: [
+      { slug: "select", when: "when the list is long enough that showing every option would crowd the form." },
+      { slug: "checkbox", when: "when more than one option may be chosen, or none at all." },
+      { slug: "segmented-control", when: "when the options switch a local mode rather than record an answer in a form." },
+    ],
+    accessibility:
+      "A keyboard test checks that the group is one tab stop, that the arrow keys both move and select, and that Tab leaves the group instead of walking through it.",
+  },
+  // components-keyboard.test.tsx: "Switch toggles with Space and exposes role=switch", "a disabled Switch is
+  // skipped by Tab".
+  switch: {
+    summary:
+      "Switch turns a setting on or off and applies the change at once, with the thumb position carrying the state as well as the track colour.",
+    useWhen: [
+      "A preference that takes effect immediately, such as dark mode or a notification channel.",
+      "A setting with no save step, where the reader should see the result straight away.",
+    ],
+    instead: [
+      { slug: "checkbox", when: "when the value belongs to a form and is submitted with it later." },
+      { slug: "toggle", when: "when the control belongs in a toolbar as a button that stays pressed." },
+    ],
+    accessibility:
+      "Keyboard tests check that it toggles with Space and reports the switch role, and that a disabled switch is skipped by Tab.",
+  },
+  // components-keyboard.test.tsx: "toggles with Space and with Enter, and reports state through aria-pressed",
+  // "a disabled Toggle is skipped by Tab and does not respond to keys".
+  toggle: {
+    summary:
+      "Toggle is a button that stays pressed, reporting what it is doing through its pressed state rather than through a form value.",
+    useWhen: [
+      "A formatting control in a toolbar, such as bold or italic, where the pressed state shows what is active.",
+      "A single on or off action whose effect is visible in the content beside it.",
+    ],
+    instead: [
+      { slug: "switch", when: "when the control is a setting in a panel rather than an action in a toolbar." },
+      { slug: "checkbox", when: "when the value belongs to a form and is submitted with it." },
+      { slug: "toggle-group", when: "when several of these belong together and share one selection." },
+    ],
+    accessibility:
+      "Keyboard tests check that it toggles with both Space and Enter and reports its state to assistive technology, and that a disabled toggle is skipped by Tab and ignores keys.",
+  },
+  // components-keyboard.test.tsx: "is one tab stop, and the arrow keys move between items". The wrapping claim
+  // is asserted by check:toggle-motion ("matrix"), which fails a row that scrolls the page sideways at 320px
+  // with 200% text.
+  "toggle-group": {
+    summary:
+      "Toggle Group puts several toggles together as one control, in single or multiple selection. On React one variant and size are shared across its items; Angular fixes the medium size; the SwiftUI, Compose and Flutter groups share styling but coordinate selection per item.",
+    useWhen: [
+      "A row of formatting buttons where one or several can be active at the same time.",
+      "A small set of view options, such as alignment, that belong together as one control.",
+    ],
+    instead: [
+      { slug: "tabs", when: "when the choice swaps whole panels of content rather than setting a value." },
+      { slug: "segmented-control", when: "when exactly one option is always chosen and the control reads as a single field." },
+      { slug: "radio-group", when: "when the options are an answer in a form rather than a toolbar action." },
+    ],
+    accessibility:
+      "A React keyboard test checks that the group is one tab stop, that arrows move between items, and that items wrap onto a second line rather than scrolling a narrow screen sideways. Angular gives every item its own tab stop when several can be active, which is what a formatting toolbar wants; the native groups use one row and leave wrapping to the caller.",
+  },
+
+  /* ------------------------------------------------------------------------------------ waiting states
+   *
+   * No dedicated tests exist for these five, so none of them carries an `accessibility` line. What the
+   * source does guarantee (a clamped value, a default label, a pulse that stops under reduced motion) is
+   * stated in the summary, where it is a description rather than a claim about verification.
+   */
+  progress: {
+    summary:
+      "Progress shows how far along a task is as a horizontal bar, filled from a value you set between 0 and 100.",
+    useWhen: [
+      "A task whose length is known, such as an upload or a form with counted steps.",
+      "Any wait long enough that a reader would otherwise wonder whether it had stopped.",
+    ],
+    instead: [
+      { slug: "spinner", when: "when the length of the wait is unknown and no percentage would be honest." },
+      { slug: "circular-progress", when: "when the indicator has to fit a compact or square space, or show its value in the centre." },
+      { slug: "skeleton", when: "when a region is waiting for content and can show its shape instead of a number." },
+    ],
+  },
+  "circular-progress": {
+    summary:
+      "Circular Progress shows the same completion value as a ring, clamped to between 0 and 100, with the number optionally drawn in the centre.",
+    useWhen: [
+      "A compact or square space where a full-width bar would not fit, such as a card corner or a table cell.",
+      "A tile where the number itself is worth reading, rather than only the proportion.",
+    ],
+    instead: [
+      { slug: "progress", when: "when there is room for a bar and the rest of the page already uses bars." },
+      { slug: "spinner", when: "when there is no measurable value to show." },
+      { slug: "skeleton", when: "when what is loading is content whose shape can be drawn instead." },
+    ],
+  },
+  spinner: {
+    summary:
+      "Spinner marks a wait of unknown length with a rotating ring, and names itself to assistive technology with a label that defaults to Loading.",
+    useWhen: [
+      "A request whose duration cannot be predicted, such as a search or a save.",
+      "A button or a small region that is busy, where there is no room for anything larger.",
+    ],
+    instead: [
+      { slug: "progress", when: "when the share of the work already done is known and worth showing." },
+      { slug: "skeleton", when: "when a whole region is loading and its layout can be drawn ahead of the content." },
+      { slug: "circular-progress", when: "when there is a measurable value and a ring suits the space." },
+    ],
+  },
+  skeleton: {
+    summary:
+      "Skeleton draws the shape of content that has not arrived yet, as a pulsing block you size to match whatever will replace it. The pulse stops for a reader who asks for reduced motion.",
+    useWhen: [
+      "A list, a card or a table whose layout is known before its data is.",
+      "A first load where showing the structure early keeps the page from jumping when content lands.",
+    ],
+    instead: [
+      { slug: "spinner", when: "when the region is too small to suggest a shape, or only one thing is loading." },
+      { slug: "progress", when: "when the wait has a measurable length worth reporting." },
+      { slug: "empty", when: "when the request has finished and there is genuinely nothing to show." },
+    ],
+  },
+  empty: {
+    summary:
+      "Empty is the placeholder for a state with nothing in it, composed from a media slot, a title, a description and a content area for the action that would fill it.",
+    useWhen: [
+      "A table, list or search that returned no rows, where the reader needs to know why and what to do next.",
+      "A workspace or a feature a reader has reached before creating anything in it.",
+    ],
+    instead: [
+      { slug: "skeleton", when: "when the data has not arrived yet, rather than turned out to be absent." },
+      { slug: "alert", when: "when something went wrong and the reader needs to know what failed." },
+      { slug: "card", when: "when there is content to show and it only needs a container." },
+    ],
+  },
 };
 
 /** Words across every field of an entry, alternatives' sentences included. */
