@@ -56,6 +56,7 @@ struct TeamMembersBlock: View {
 
 final class TeamMembersBlockTests: XCTestCase {
     func testTeamMembersBlockCompiles() {
-        XCTAssertNotNil(TeamMembersBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: TeamMembersBlock = TeamMembersBlock()
     }
 }

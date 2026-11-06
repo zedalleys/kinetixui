@@ -48,6 +48,7 @@ struct SettingsListBlock: View {
 
 final class SettingsListBlockTests: XCTestCase {
     func testSettingsListBlockCompiles() {
-        XCTAssertNotNil(SettingsListBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: SettingsListBlock = SettingsListBlock()
     }
 }

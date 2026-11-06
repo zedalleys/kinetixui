@@ -89,6 +89,7 @@ struct DashboardTabsBlock: View {
 
 final class DashboardTabsBlockTests: XCTestCase {
     func testDashboardTabsBlockCompiles() {
-        XCTAssertNotNil(DashboardTabsBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: DashboardTabsBlock = DashboardTabsBlock()
     }
 }
