@@ -40,10 +40,27 @@ jobs:
         with:
           fetch-depth: 0
 
+      # The preflight now reads these workflows through a YAML parser rather than a
+      # hand-written one, because three rounds of review found a spelling the
+      # hand-written reader could not see and each time the unread file passed. That
+      # costs this workflow its bare-checkout independence: the gate needs its one
+      # dependency installed before it can run. It is rehearsal-safe, it runs before
+      # anything is validated, and if it fails the job fails and nothing is published.
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install (the preflight's parser)
+        working-directory: .
+        run: pnpm install --frozen-lockfile
+
       # A typo here becomes a git tag that `from:` resolves against forever,
       # so it is rejected before the toolchain is even warmed up.
       - name: Validate version
-        run: node scripts/check-native-publish-preflight.mjs --version='${{ inputs.version }}'
+        env:
+          VERSION: ${{ inputs.version }}
+        run: node scripts/check-native-publish-preflight.mjs --version="$VERSION"
 
       - name: Preflight
         run: node scripts/check-native-publish-preflight.mjs
@@ -56,9 +73,12 @@ jobs:
       - name: Test
         run: swift test --package-path packages/ui-swiftui
 
-      - name: Split & push to mirror
+      # Rehearsal. Everything here is safe to run on a dry run and must stay
+      # unconditional, so a dry run exercises the real release path rather than
+      # a shorter one: the split, the manifest probe, and the tag computation.
+      - name: Split the subtree and verify the mirror layout
+        id: split
         env:
-          MIRROR: ${{ secrets.SWIFTUI_MIRROR_REPO }}
           VERSION: ${{ inputs.version }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
@@ -71,8 +91,35 @@ jobs:
             echo "::error::Package.swift is not at the root of the subtree split. A .package(url:) consumer cannot resolve this mirror."
             exit 1
           fi
-          if [ "$DRY_RUN" = "true" ]; then
-            echo "::notice::Dry run — would tag $SHA as $VERSION. Nothing pushed."
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          if [ "${DRY_RUN:-}" != "false" ]; then
+            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — would tag $SHA as $VERSION. Nothing pushed."
+          fi
+
+      # The only side effects in this workflow live here, and GitHub Actions —
+      # not the shell — decides whether this step runs at all. The step-level
+      # condition is evaluated before a shell exists, so nothing inside `run:`
+      # can reach it: that is the whole reason the pushes were moved out of the
+      # rehearsal step above. Compose and Flutter gate their publications the
+      # same way.
+      #
+      # The in-script guard below is defense in depth, not the proof. It is what
+      # the six-value behavioural control measures, and it is what stops a
+      # publish if this step is ever reached with a non-`false` value.
+      - name: Push to mirror
+        if: ${{ inputs.dry_run == false }}
+        env:
+          MIRROR: ${{ secrets.SWIFTUI_MIRROR_REPO }}
+          VERSION: ${{ inputs.version }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          SHA: ${{ steps.split.outputs.sha }}
+        run: |
+          # Affirmative polarity, deliberately. Asking "is the safe flag set?" let every value that
+          # is not the exact string `true` — empty, unset, `False`, `yes` — fall through to the two
+          # pushes below, which are a permanent tag on a public mirror. Asking "was a live publish
+          # explicitly requested?" means only `false` can reach them.
+          if [ "${DRY_RUN:-}" != "false" ]; then
+            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — nothing pushed."
             exit 0
           fi
           if [ -z "$MIRROR" ]; then
