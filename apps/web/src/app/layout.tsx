@@ -9,6 +9,7 @@ import { PlatformLocationSync } from "@/components/platform-location-sync";
 import { VercelAnalytics } from "@/components/vercel-analytics";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
+import "./brand-hero.css";
 
 /**
  * Fonts are served from this repository, not fetched from Google at build time.

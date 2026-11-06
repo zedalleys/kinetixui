@@ -1,0 +1,37 @@
+[
+  {
+    "name": "desktop",
+    "violations": [],
+    "errors": []
+  },
+  {
+    "name": "mobile",
+    "violations": [],
+    "errors": []
+  },
+  {
+    "name": "desktop-dark",
+    "violations": [],
+    "errors": []
+  },
+  {
+    "name": "mobile-dark-rtl",
+    "violations": [],
+    "errors": []
+  },
+  {
+    "name": "narrow",
+    "violations": [],
+    "errors": []
+  },
+  {
+    "name": "tablet",
+    "violations": [],
+    "errors": []
+  },
+  {
+    "name": "narrow-text-200",
+    "violations": [],
+    "errors": []
+  }
+]

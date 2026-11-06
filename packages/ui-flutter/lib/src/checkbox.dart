@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'kinetix_selection_motion.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/checkbox.tsx`. 18pt box, radius/sm,
@@ -43,7 +44,13 @@ class KinetixCheckbox extends StatelessWidget {
       opacity: enabled ? 1 : 0.5,
       child: GestureDetector(
         onTap: enabled ? () => onChanged!(!value) : null,
-        child: Container(
+        // `selection-state` (fast, standard): the fill and the edge settle rather than
+        // cutting, and collapse when the reader has asked the platform for no animation.
+        // The glyph still swaps in one frame — a stated difference from the React port,
+        // which fades the tick in and removes it at once; the fill carries the change.
+        child: AnimatedContainer(
+          duration: KinetixSelectionMotion.durationOf(context),
+          curve: KinetixSelectionMotion.curve,
           width: 18,
           height: 18,
           alignment: Alignment.center,

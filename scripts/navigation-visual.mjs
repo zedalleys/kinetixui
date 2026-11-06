@@ -12,8 +12,9 @@
  *   rest        destination text is readable (4.5:1) and quieter than the current destination's
  *   hover       a pointer that can hover changes the destination (a state layer, or text + underline)
  *   pressed     where there is a layer, pressing deepens it beyond hover
- *   focus       a keyboard ring outside the box that clears 3:1 against the page — drawn by nothing else,
- *               so it out-draws hover in the same strip
+ *   focus       a keyboard ring outside the box that clears 3:1 against the same pixels unfocused — drawn
+ *               by nothing else, so hover draws nothing in that strip. Both readings are differential:
+ *               what the state paints, not what happens to sit in the gutter behind it.
  *   current     a SHAPE cue as well as the text: a bar, an outline, a pill or weight — measured as
  *               pixels (or, for weight, computed style), and kept inside the destination's own box
  *   disabled    hovering changes no pixel, and the text is weaker than an enabled destination's
@@ -123,6 +124,23 @@ const dir = buildAngularSubject("navigation", { name: "navigation-visual", layou
 const server = await serveStatic(dir);
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
 
+/**
+ * Defects this gate must catch, injected as one style tag into one throwaway
+ * context by `scripts/navigation-visual-negative-controls.mjs`. Never set in a
+ * normal run; nothing here is committed to the fixture.
+ */
+const NEGATIVE_CONTROLS = {
+  // hover paints into the very gutter the focus ring uses — what the assertion exists to forbid
+  "hover-outside": `.kx-app-bar__link:hover { box-shadow: -4px 0 0 0 #8aa4ff !important; }`,
+  // the app bar's focus ring is gone
+  "no-ring": `.kx-app-bar__link:focus, .kx-app-bar__link:focus-visible { outline: none !important; box-shadow: none !important; }`,
+  // the ring is gone AND a bright neighbour sits in the gutter. The reading the old
+  // page-referenced formula accepted as a ring; the differential one does not.
+  "no-ring-bright-neighbour": `.kx-app-bar__link:focus, .kx-app-bar__link:focus-visible { outline: none !important; box-shadow: none !important; }
+    .kx-app-bar__link[data-kx-case=rest] { position: relative !important; }
+    .kx-app-bar__link[data-kx-case=rest]::before { content: ""; position: absolute; left: -4px; top: 0; bottom: 0; width: 4px; background: #ffffff; z-index: 5; }`,
+};
+
 async function open(theme, { rtl = false, reduced = false, dpr = DPR, fixture = null } = {}) {
   const context = await browser.newContext({
     viewport: { width: 1300, height: 1000 },
@@ -134,6 +152,11 @@ async function open(theme, { rtl = false, reduced = false, dpr = DPR, fixture = 
   const q = new URLSearchParams({ ...(rtl ? { dir: "rtl" } : {}), ...(fixture ? { fixture } : {}) });
   await page.goto(`${server.base}/${theme}.html${q.size ? `?${q}` : ""}`, { waitUntil: "load" });
   await waitForAngular(page);
+  if (process.env.KX_NC) {
+    const css = NEGATIVE_CONTROLS[process.env.KX_NC];
+    if (!css) throw new Error(`unknown negative control: ${process.env.KX_NC}`);
+    await page.addStyleTag({ content: css });
+  }
   await page.mouse.move(0, 0);
   await page.waitForTimeout(SETTLE);
   return { page, close: () => context.close() };
@@ -167,8 +190,35 @@ function textContrast({ color, bg, opacity }) {
   const [c, b] = [rgb(color), rgb(bg)];
   return contrast(c.map((v, i) => v * opacity + b[i] * (1 - opacity)), b);
 }
-/** The strip just outside a box at mid-height on the inline-start side — where the focus ring lives. */
-const outside = (f, r, page) => maxContrast(f.row(r.y + r.height / 2, r.x - 4, r.x - 0.5), page);
+/** The ring's strip: the 4px gutter immediately before the element, at its middle row. */
+const strip = (f, r) => f.row(r.y + r.height / 2, r.x - 4, r.x - 0.5);
+/**
+ * What a state DRAWS into that strip, measured against the same pixels at rest.
+ *
+ * This used to compare the strip against the page background, which measures
+ * whatever happens to sit in the gutter rather than what the state painted. In
+ * the app bar the gutter catches one pixel of the neighbouring link, so the
+ * reading was 1.13:1 in light and 1.56:1 in dark while hover drew nothing at
+ * all — rest and hover were pixel-identical — and the dark figure failed a
+ * 1.5 bar it was never measuring. Every other destination sits directly on the
+ * page, which is why only the app bar ever showed it.
+ *
+ * Against rest, a state that paints nothing reads 1.00:1 wherever the element
+ * sits. The same correction matters more for the ring than for hover: measured
+ * against the page, a bright static neighbour could satisfy `ring >= 3` on the
+ * indicator's behalf, so the assertion could pass with no ring drawn at all.
+ * Measured against rest it cannot — see the negative controls in
+ * `scripts/navigation-visual-negative-controls.mjs`.
+ *
+ * This is the differential technique `check:hero-light` already uses for the
+ * hero's focus indicator: render the state, render it unset, and read only the
+ * difference.
+ */
+const drawn = (f, rest, r) => {
+  const now = strip(f, r);
+  const was = strip(rest, r);
+  return Math.max(...now.map((c, i) => contrast(c, was[i])));
+};
 /** Which way a chevron points: the row with the widest ink is its open end; the tip is opposite it. */
 function chevron(f, r, bg) {
   const rows = [];
@@ -222,7 +272,7 @@ async function destination(theme, D) {
   await hover(page, rr);
   const hovered = await frame(page, rr);
   const changed = hovered.changed(rest);
-  const hoverOutside = outside(hovered, rr, pageBg);
+  const hoverOutside = drawn(hovered, rest, rr);
   if (D.layer) {
     const lr = await box(page, target(D.rest));
     const at = D.fill(lr);
@@ -250,8 +300,12 @@ async function destination(theme, D) {
 
   // focus: a ring outside the box, 3:1, which hover does not draw
   const focused = await keyboardFocus(page, D.rest);
-  const ring = outside(await frame(page, rr), rr, pageBg);
-  check(focused && ring >= 3 && hoverOutside < 1.5, `${name} focus ring clears 3:1 and out-draws hover`, `${focused ? "" : "NOT FOCUSED, "}ring ${r2(ring)}:1, hover alone ${r2(hoverOutside)}:1 in the same strip`);
+  const focusedFrame = await frame(page, rr);
+  const ring = drawn(focusedFrame, rest, rr);
+  if (process.env.KX_NC && D.slug === "app-bar") {
+    console.log(`    [nc] ${name}: differential ring ${r2(ring)}:1 — the old page-referenced formula read ${r2(maxContrast(strip(focusedFrame, rr), pageBg))}:1`);
+  }
+  check(focused && ring >= 3 && hoverOutside < 1.5, `${name} focus ring clears 3:1 and out-draws hover`, `${focused ? "" : "NOT FOCUSED, "}ring ${r2(ring)}:1, hover draws ${r2(hoverOutside)}:1 in the same strip`);
   await page.evaluate(() => document.activeElement?.blur());
 
   // current: a shape cue, inside its own box
@@ -419,8 +473,10 @@ async function navigationMenu(theme) {
     const r = await box(page, sel);
     const [hs, ps] = await layer(page, r, [r.x + 4, r.y + 4]);
     check(hs >= 1.05 && ps > hs, `${name} ${what} hover draws a layer, press deepens it`, `hover ${r2(hs)}:1, pressed ${r2(ps)}:1 against rest`);
+    // `layer` leaves the pointer at 0,0 and settles, so this is a clean rest frame.
+    const unfocused = await frame(page, r);
     const focused = await keyboardFocus(page, sel);
-    const ring = outside(await frame(page, r), r, pageBg);
+    const ring = drawn(await frame(page, r), unfocused, r);
     check(focused && ring >= 3, `${name} ${what} focus ring clears 3:1`, `${focused ? "" : "NOT FOCUSED, "}ring ${r2(ring)}:1`);
     await page.evaluate(() => document.activeElement?.blur());
   }

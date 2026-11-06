@@ -1,5 +1,6 @@
 package com.kinetixui.ui
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -33,7 +34,7 @@ fun KinetixSwitch(
     enabled: Boolean = true,
 ) {
     val colors = KinetixColorScheme.current
-    val trackColor = if (checked) colors.action else colors.tertiary
+    val targetTrack = if (checked) colors.action else colors.tertiary
     // The preference comes from the one shared reader; the timing comes from the tokens. This was on
     // Compose's default spring, which is neither.
     val reduceMotion = KinetixDisclosureMotion.rememberReduceMotion()
@@ -41,6 +42,16 @@ fun KinetixSwitch(
         targetValue = KinetixSwitchMotion.thumbOffset(checked),
         animationSpec = KinetixSwitchMotion.spec(reduceMotion),
         label = "KinetixSwitchThumb",
+    )
+    // `selection-control` covers the thumb's travel AND the track's colour, and before MX1d only the
+    // thumb was animated: the track was handed straight to `.background`, so it cut between tertiary
+    // and action in one frame while the thumb slid for 100ms. Same spec as the thumb, so the two
+    // halves of one gesture land together. The disabled alpha is folded into the target rather than
+    // applied after it, so enabling or disabling a switch settles too instead of stepping.
+    val trackColor by animateColorAsState(
+        targetValue = if (enabled) targetTrack else targetTrack.copy(alpha = 0.5f),
+        animationSpec = KinetixSwitchMotion.spec(reduceMotion),
+        label = "KinetixSwitchTrack",
     )
 
     Box(
@@ -53,7 +64,7 @@ fun KinetixSwitch(
                 role = Role.Switch,
                 onValueChange = { onCheckedChange?.invoke(it) },
             )
-            .background(if (enabled) trackColor else trackColor.copy(alpha = 0.5f))
+            .background(trackColor)
             .padding(2.dp),
         contentAlignment = Alignment.CenterStart,
     ) {

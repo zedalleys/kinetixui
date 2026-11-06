@@ -45,5 +45,10 @@ public struct KinetixSwitch: View {
         .buttonStyle(.plain)
         .opacity(isEnabled ? 1 : 0.5)
         .accessibilityValue(isOn ? "On" : "Off")
+        // A `Button` with a value reads as "button, On", which is not what a switch is. The toggle
+        // trait is what makes VoiceOver announce it as a switch and offer the toggle gesture; it is
+        // iOS 17 / macOS 14, so it is applied behind an availability check rather than by raising
+        // this package's deployment floor.
+        .kinetixToggleTrait()
     }
 }

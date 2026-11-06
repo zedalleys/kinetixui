@@ -99,7 +99,9 @@ function suite(platform: string, familyName: string, only?: "forward" | "reverse
   const pair =
     familyName === "selection"
       ? { forward: "offToOnIsSuppressed", reverse: "onToOffIsSuppressed" }
-      : familyName === "loop" || familyName === "slide"
+      : familyName === "selectionState"
+        ? { forward: "uncheckedToCheckedIsSuppressed", reverse: "checkedToUncheckedIsSuppressed" }
+        : familyName === "loop" || familyName === "slide"
         ? { forward: "runsWithNormalMotion", reverse: "stopsWithReducedMotion" }
         : { forward: "expandsTheContent", reverse: "collapsesTheContent" };
   const names = only ? [pair[only]] : [pair.forward, pair.reverse];

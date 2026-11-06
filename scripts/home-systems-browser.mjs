@@ -280,6 +280,7 @@ for (const [width, dir] of [[320, 'ltr'], [390, 'ltr'], [390, 'rtl'], [768, 'ltr
     const { page, context } = await open({ width, height: width < 600 ? 844 : 900 });
     await setDir(page, dir);
     await page.waitForTimeout(200);
+    await page.locator('[data-hero-system-map]').scrollIntoViewIfNeeded();
     const f = await mapFacts(page);
     // the map switches from rows to columns at a container width of 34rem
     assert.equal(f.layout, f.mapWidth >= 34 * f.rem ? 'columns' : 'rows', `layout at a ${f.mapWidth}px map`);
@@ -368,7 +369,9 @@ const heroSelected = (page) => page.locator(`${HERO} [role="tab"][aria-selected=
 
 await check('hero tour: advances on its own, holds under the pointer, pauses from its button, stops on a choice', async () => {
   const { page, context } = await open({ width: 1440, reducedMotion: 'no-preference' });
+  await page.locator('[data-hero-system-map]').scrollIntoViewIfNeeded();
   await page.mouse.move(0, 890); // keep the pointer off the map
+  await page.locator('[data-hero-system-map]').scrollIntoViewIfNeeded();
   const first = await heroSelected(page);
   await page.waitForTimeout(5500);
   const second = await heroSelected(page);
@@ -406,6 +409,7 @@ await check('hero tour: advances on its own, holds under the pointer, pauses fro
 await check('hero tour: none under reduced motion, and no pause button', async () => {
   const { page, context } = await open({ width: 1440 });
   await page.mouse.move(0, 890);
+  await page.locator('[data-hero-system-map]').scrollIntoViewIfNeeded();
   const first = await heroSelected(page);
   await page.waitForTimeout(5500);
   assert.equal(await heroSelected(page), first, 'the tour ran under reduced motion');
@@ -526,11 +530,25 @@ for (const width of [390, 1440]) {
 const AA = 4.5; // WCAG 1.4.3 for text under 18.66px, which the lede is at every width
 const COPY = '[data-hero-copy]'; // the hero's copy column, hooked for this check rather than matched on a utility class
 const LEDE = 'h1.kx-hero-title + p';
-// What the glow may add to the page underneath it, as a per-channel 0–255 delta, measured by hiding it.
-// As shipped it is 25. Raising the gradient's alphas to 0.95/0.75/0.5 takes it to 209 and swapping
-// `closest-side` for `farthest-corner` to 199 — neither of which moves the glow's box, so the placement
-// assertions below see nothing. This is the one that does.
-const MAX_TINT = 40;
+// What the glow may add to the page underneath it, as a per-channel 0-255 delta, measured by hiding it.
+//
+// The owner asked for a clearly visible circular light spot confined to the art, so this is a band rather
+// than a ceiling: a floor says the light is actually there, a ceiling says it is still light and not a
+// wash. The band was widened from a bare `<= 40` when the hero became the OH38WC1 mesh, whose aura is the
+// atmosphere the facets float in rather than a faint tint behind a solid, and the pair of numbers is what
+// the old single ceiling documented about itself.
+//
+// What each bound excludes, measured on this build: the glow renders at a 75 delta. The floor of 55 fails
+// the aura at `opacity: 0.45`, where the light spot stops reading as a light spot (measured 34). The
+// ceiling of 110 fails it when the radial gradient is replaced by a flat saturated circle (measured 215
+// for `#28c7d9`, 232 for navy) — a disc of colour sitting on the page instead of atmosphere behind the
+// facets. Changing the blur alone does NOT reach the ceiling: `blur(6px)` instead of 22px measures 75,
+// the same as shipped, because the gradient's own centre is already its brightest pixel and sharpening
+// the falloff does not raise the peak. Both bounds are exercised in
+// scripts/home-systems-negative-controls.mjs. The independent copy-overlap and rendered-AA checks above
+// protect readable text whatever this band allows.
+const MIN_TINT = 55;
+const MAX_TINT = 110;
 
 /** WCAG relative luminance of one sRGB triple. */
 const luminance = (r, g, b) => {
@@ -562,8 +580,18 @@ async function worstTextContrast(page, selector) {
   assert.ok(info, `${selector} is not on the page`);
   assert.ok(info.lines.length, `${selector} renders no text`);
 
+  // Wait for the hide to be *painted*, not merely parsed. A fixed 100ms wait here was enough almost always
+  // and not always: at 1440px this check reported the lede's worst point as 1.29:1, which is the signature of
+  // the glyphs still being in the shot — the text's own colour against its antialiased edge. The negative
+  // control in scripts/home-systems-negative-controls.mjs reproduces that number by skipping the hide, so a
+  // reading near 1:1 means the instrument, not the page. Two frames after the computed style has actually
+  // changed is the guarantee the timeout was standing in for.
   await page.addStyleTag({ content: `${selector} { visibility: hidden !important }` });
-  await page.waitForTimeout(100);
+  await page.waitForFunction(
+    (sel) => getComputedStyle(document.querySelector(sel)).visibility === 'hidden',
+    selector,
+  );
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
 
   const scroll = await page.evaluate(() => ({ x: window.scrollX, y: window.scrollY }));
   const [r, g, b] = info.color.match(/[\d.]+/g).map(Number);
@@ -608,14 +636,14 @@ async function worstTextContrast(page, selector) {
 }
 
 for (const width of [320, 390, 768, 1024, 1440]) {
-  await check(`hero glow at ${width}px: off the copy, on the map`, async () => {
+  await check(`hero glow at ${width}px: off the copy, behind the polygon`, async () => {
     const { page, context } = await open({ width });
     const f = await page.evaluate(
       ({ copySel }) => {
         const hero = document.querySelector('section.kx-chapter');
-        const glow = hero?.querySelector('.kx-glow');
+        const glow = hero?.querySelector('.kx-polygon-aura');
         const copy = document.querySelector(copySel);
-        const map = document.querySelector('[data-hero-system-map]');
+        const map = hero?.querySelector('.kx-hero-polygon');
         if (!hero || !glow || !copy || !map) return null;
         const box = (el) => el.getBoundingClientRect();
         const share = (a, b) => {
@@ -634,6 +662,7 @@ for (const width of [320, 390, 768, 1024, 1440]) {
           onCopy: share(g, box(copy)),
           onMap: share(g, box(map)),
           mapTop: box(map).top,
+          mapHeight: box(map).height,
           copyBottom: box(copy).bottom,
           glowTop: g.top,
         };
@@ -657,7 +686,7 @@ for (const width of [320, 390, 768, 1024, 1440]) {
       // and it comes down from above the map, as the top anchor puts it. Without this a glow still anchored
       // to the bottom here — the one-column treatment left on past the grid's switch — reads as 80% of the
       // map and passes, which is the composition the owner approved in reverse.
-      assert.ok(f.glowTop <= f.mapTop, `the glow starts ${Math.round(f.glowTop - f.mapTop)}px below the map's top`);
+      assert.ok(f.glowTop - f.mapTop <= f.mapHeight * .15, 'the glow belongs behind the upper polygon');
     }
     await context.close();
   });
@@ -672,10 +701,10 @@ for (const width of [320, 390, 768, 1024, 1440]) {
   });
 }
 
-await check('hero glow: it stays a wash, whatever is behind it', async () => {
+await check('hero glow: the circular light spot is visible and bounded', async () => {
   const { page, context } = await open({ width: 1440 });
   const box = await page.evaluate(() => {
-    const glow = document.querySelector('section.kx-chapter .kx-glow');
+    const glow = document.querySelector('section.kx-chapter .kx-polygon-aura');
     if (!glow) return null;
     const r = glow.getBoundingClientRect();
     return {
@@ -703,13 +732,14 @@ await check('hero glow: it stays a wash, whatever is behind it', async () => {
     }, shot);
   };
   const lit = await pixels();
-  await page.addStyleTag({ content: '.kx-glow { display: none !important }' });
+  await page.addStyleTag({ content: '.kx-polygon-aura { display: none !important }' });
   await page.waitForTimeout(100);
   const unlit = await pixels();
   let tint = 0;
   for (let i = 0; i < lit.length; i += 4) {
     for (let c = 0; c < 3; c += 1) tint = Math.max(tint, Math.abs(lit[i + c] - unlit[i + c]));
   }
+  assert.ok(tint >= MIN_TINT, `the light spot shifts a channel by only ${tint}, under the visibility floor ${MIN_TINT}`);
   assert.ok(tint <= MAX_TINT, `the glow shifts a channel by ${tint}, over ${MAX_TINT}`);
   await context.close();
 });

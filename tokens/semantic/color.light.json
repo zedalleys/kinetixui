@@ -6,9 +6,9 @@
       "$description": "figma: surfaceContainerLowest #ffffff"
     },
     "foreground": {
-      "$value": "{color.blue.900}",
+      "$value": "{color.navy.900}",
       "$type": "color",
-      "$description": "figma: onSurface #050c11"
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "card": {
       "$value": "{color.neutral.0}",
@@ -16,9 +16,9 @@
       "$description": "synth: no Figma card token; = background"
     },
     "card-foreground": {
-      "$value": "{color.blue.900}",
+      "$value": "{color.navy.900}",
       "$type": "color",
-      "$description": "synth: = foreground"
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "popover": {
       "$value": "{color.neutral.0}",
@@ -26,24 +26,24 @@
       "$description": "synth: no Figma popover token; = background"
     },
     "popover-foreground": {
-      "$value": "{color.blue.900}",
+      "$value": "{color.navy.900}",
       "$type": "color",
-      "$description": "synth: = foreground"
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "primary": {
-      "$value": "{color.azure.700}",
+      "$value": "{color.indigo.600}",
       "$type": "color",
-      "$description": "was Figma 'Primay' navy (blue.500 -> blue.700). Swapped for a bright action blue #1d4ed8 (6.55:1 on bg) so primary buttons/links pop rather than reading as near-black. Dark uses a lighter step (#60a5fa) — navy/this hue would fail on the dark surface."
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "primary-foreground": {
-      "$value": "{color.blue.50}",
+      "$value": "{color.navy.50}",
       "$type": "color",
-      "$description": "figma: 'On Primary' #f0f7ff -> renamed primary-foreground (on #1d4ed8 primary ~6:1)"
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "secondary": {
       "$value": "{color.green.200}",
       "$type": "color",
-      "$description": "figma secondaryContainer was green.50 #f1f3f1 (invisible on bg); deepened to green.200 #c7cfc7 so a secondary button/chip clearly stands off the white page — same sage hue"
+      "$description": "figma secondaryContainer was green.50 #f1f3f1 (invisible on bg); deepened to green.200 #c7cfc7 so a secondary button/chip clearly stands off the white page \u2014 same sage hue"
     },
     "secondary-foreground": {
       "$value": "{color.green.700}",
@@ -66,19 +66,19 @@
       "$description": "A grouped section that raised content (Card) sits on. Light: the grey of `muted`. Its own role because dark `muted` is lighter than `card`, which made a card on a group read as recessed. Surface model: TOKENS.md."
     },
     "accent": {
-      "$value": "{color.blue.50}",
+      "$value": "{color.indigo.50}",
       "$type": "color",
-      "$description": "figma: 'LightBlue' #f0f7ff (the hover fill used by Outline/Ghost buttons)"
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "accent-foreground": {
-      "$value": "{color.azure.700}",
+      "$value": "{color.indigo.600}",
       "$type": "color",
-      "$description": "synth: = primary for readable text on accent (#1d4ed8 on accent #f0f7ff ~5.7:1)"
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "destructive": {
       "$value": "{color.red.500}",
       "$type": "color",
-      "$description": "a11y: figma error #ec5047 is 3.33:1 under on-error / 3.62:1 as text on the page — fails WCAG AA. red.500 #c60a0a clears 5.6:1 / 6.1:1. See ACCESSIBILITY-AUDIT.md."
+      "$description": "a11y: figma error #ec5047 is 3.33:1 under on-error / 3.62:1 as text on the page \u2014 fails WCAG AA. red.500 #c60a0a clears 5.6:1 / 6.1:1. See ACCESSIBILITY-AUDIT.md."
     },
     "destructive-foreground": {
       "$value": "{color.semantic.on-error}",
@@ -98,7 +98,7 @@
     "warning": {
       "$value": "{color.amber.800}",
       "$type": "color",
-      "$description": "a11y: Figma onWarningContainer #f97907 is 2.7:1 as text on the page / 2.6:1 in the Tag warning variant — fails WCAG AA. amber.800 #7f5b21 clears 6.1:1 / 5.8:1. Dark --warning stays bright (amber.400). See ACCESSIBILITY-AUDIT.md."
+      "$description": "a11y: Figma onWarningContainer #f97907 is 2.7:1 as text on the page / 2.6:1 in the Tag warning variant \u2014 fails WCAG AA. amber.800 #7f5b21 clears 6.1:1 / 5.8:1. Dark --warning stays bright (amber.400). See ACCESSIBILITY-AUDIT.md."
     },
     "warning-foreground": {
       "$value": "{color.semantic.warning-container}",
@@ -116,15 +116,15 @@
       "$description": "figma: outline #92b2c8 (same as border)"
     },
     "ring": {
-      "$value": "{color.azure.700}",
+      "$value": "{color.indigo.600}",
       "$type": "color",
-      "$description": "focus ring — tracks --primary (#1d4ed8, 6.55:1 on bg)"
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "semantic": {
       "error": {
         "$value": "#ec5047",
         "$type": "color",
-        "$description": "figma: error (NOT red.500 #c60a0a — Figma keeps error as its own value)"
+        "$description": "figma: error (NOT red.500 #c60a0a \u2014 Figma keeps error as its own value)"
       },
       "on-error": {
         "$value": "#fef3f2",
@@ -170,18 +170,18 @@
       "on-info-container": {
         "$value": "{color.on-info-container}",
         "$type": "color",
-        "$description": "text on a tinted info surface (bg-info/10) — Banner/Inform information. --info itself is only 4.15:1 on its own 10% tint; this clears AA. Exposed as text-info-on-container."
+        "$description": "text on a tinted info surface (bg-info/10) \u2014 Banner/Inform information. --info itself is only 4.15:1 on its own 10% tint; this clears AA. Exposed as text-info-on-container."
       },
       "muted-on-container": {
         "$value": "#616161",
         "$type": "color",
-        "$description": "secondary text on a tinted container (bg-primary/10, bg-destructive/10 and their /5 variants) — IoT device, group and activity cards. --muted-foreground (neutral.600 #6d6d6d) is tuned against --background and --muted and clears AA there at 5.17:1, but a 10% tint eats the margin: 4.43:1 on bg-primary/10 and 4.33:1 on bg-destructive/10. This is one step darker and clears AA on every tint those surfaces use, worst case 4.79:1 on bg-destructive/10 over --muted, while staying visibly lighter than --foreground. Exposed as text-muted-on-container."
+        "$description": "secondary text on a tinted container (bg-primary/10, bg-destructive/10 and their /5 variants) \u2014 IoT device, group and activity cards. --muted-foreground (neutral.600 #6d6d6d) is tuned against --background and --muted and clears AA there at 5.17:1, but a 10% tint eats the margin: 4.43:1 on bg-primary/10 and 4.33:1 on bg-destructive/10. This is one step darker and clears AA on every tint those surfaces use, worst case 4.79:1 on bg-destructive/10 over --muted, while staying visibly lighter than --foreground. Exposed as text-muted-on-container."
       }
     },
     "chart-1": {
-      "$value": "{color.blue.500}",
+      "$value": "{color.indigo.500}",
       "$type": "color",
-      "$description": "synth: brand ramps for data viz"
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "chart-2": {
       "$value": "{color.green.500}",
@@ -200,56 +200,61 @@
       "$type": "color"
     },
     "chart-6": {
-      "$value": "{color.blue.300}",
+      "$value": "{color.cyan.700}",
       "$type": "color",
-      "$description": "synth: 6th data-viz hue — steel blue, distinct from the navy chart-1"
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "chart-7": {
       "$value": "{color.red.600}",
       "$type": "color",
-      "$description": "synth: 7th data-viz hue — deep red, distinct from chart-4"
+      "$description": "synth: 7th data-viz hue \u2014 deep red, distinct from chart-4"
     },
     "chart-8": {
       "$value": "{color.green.700}",
       "$type": "color",
-      "$description": "synth: 8th data-viz hue — deep green, distinct from chart-2"
+      "$description": "synth: 8th data-viz hue \u2014 deep green, distinct from chart-2"
     },
     "sidebar": {
       "$value": "{color.neutral.50}",
       "$type": "color"
     },
     "sidebar-foreground": {
-      "$value": "{color.blue.900}",
-      "$type": "color"
+      "$value": "{color.navy.900}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "sidebar-primary": {
-      "$value": "{color.azure.700}",
-      "$type": "color"
+      "$value": "{color.indigo.600}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "sidebar-primary-foreground": {
-      "$value": "{color.blue.50}",
-      "$type": "color"
+      "$value": "{color.navy.50}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "sidebar-accent": {
-      "$value": "{color.blue.50}",
-      "$type": "color"
+      "$value": "{color.indigo.50}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "sidebar-accent-foreground": {
-      "$value": "{color.azure.700}",
-      "$type": "color"
+      "$value": "{color.indigo.600}",
+      "$type": "color",
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "sidebar-border": {
       "$value": "{color.neutral.300}",
       "$type": "color"
     },
     "sidebar-ring": {
-      "$value": "{color.azure.700}",
+      "$value": "{color.indigo.600}",
       "$type": "color"
     },
     "tertiary": {
       "$value": "#b0b0b0",
       "$type": "color",
-      "$description": "figma: tertiary — switch off-track"
+      "$description": "figma: tertiary \u2014 switch off-track"
     },
     "tertiary-foreground": {
       "$value": "{color.blue.50}",
@@ -258,26 +263,27 @@
     "info": {
       "$value": "{color.blue.300}",
       "$type": "color",
-      "$description": "synth: steel blue, distinct from navy primary"
+      "$description": "the informational status hue, 4.7419:1 on `background`. Synthesized (Figma exposes no info token). Its old description read \"distinct from navy primary\", which described the pre-Kinetic-Weave palette: primary is now `indigo.600`. The reason the status families stayed on the inherited slate-blue is the same one \u2014 an informational state must not read as the interactive colour \u2014 so the value is unchanged and only the wording was wrong."
     },
     "info-foreground": {
       "$value": "{color.blue.50}",
-      "$type": "color"
+      "$type": "color",
+      "$description": "the near-white that pairs with a solid `info` fill, 4.3927:1 on it \u2014 below AA, and left as it is because no component draws this pair: Banner, Inform and ResultState use `bg-info/10` with `on-info-container`, which is what check-contrast.mjs measures. A consumer that wants solid-filled info text should pick its own foreground."
     },
     "scrim": {
       "$value": "#00000066",
       "$type": "color",
-      "$description": "the dimming layer behind a modal surface (Dialog, AlertDialog, Sheet, Drawer, Modal, Command, Tour, mobile Sidebar) on every platform: black at 40%. Black, not `foreground` — in dark `foreground` is near-white and would lift the page toward the dialog's own surface. The alpha is part of the role, so draw it as is (web `bg-scrim`, native `colors.scrim`) rather than adding opacity."
+      "$description": "the dimming layer behind a modal surface (Dialog, AlertDialog, Sheet, Drawer, Modal, Command, Tour, mobile Sidebar) on every platform: black at 40%. Black, not `foreground` \u2014 in dark `foreground` is near-white and would lift the page toward the dialog's own surface. The alpha is part of the role, so draw it as is (web `bg-scrim`, native `colors.scrim`) rather than adding opacity."
     },
     "on-info-container": {
       "$value": "{color.blue.400}",
       "$type": "color",
-      "$description": "text and icons on a tinted info surface (`info` at 10% over the page) — Banner and Inform information, on every platform. `info` itself is 4.19:1 on its own 10% tint; this is 6.47:1. Web exposes it as `text-info-on-container`; SwiftUI, Compose and Flutter as `onInfoContainer`."
+      "$description": "text and icons on a tinted info surface (`info` at 10% over the page) \u2014 Banner and Inform information, on every platform. `info` itself is 4.19:1 on its own 10% tint; this is 6.47:1. Web exposes it as `text-info-on-container`; SwiftUI, Compose and Flutter as `onInfoContainer`."
     },
     "on-success-container": {
       "$value": "{color.green.700}",
       "$type": "color",
-      "$description": "text and icons on a tinted success surface (`success` at 15% over the page) — Banner, Inform and ResultState success, on every platform. `success` itself is 4.20:1 on its own 15% tint over `muted` (a notice inside a muted panel, the tightest surface it ships on) and fails AA there; this is 6.26:1 at the same worst case. Web exposes it as `text-success-on-container`; SwiftUI, Compose and Flutter as `onSuccessContainer`. The same hex as the Figma `semantic.on-success-container`, but this is the per-mode role — the Figma block is light-only, so it cannot be used directly."
+      "$description": "text and icons on a tinted success surface (`success` at 15% over the page) \u2014 Banner, Inform and ResultState success, on every platform. `success` itself is 4.20:1 on its own 15% tint over `muted` (a notice inside a muted panel, the tightest surface it ships on) and fails AA there; this is 6.26:1 at the same worst case. Web exposes it as `text-success-on-container`; SwiftUI, Compose and Flutter as `onSuccessContainer`. The same hex as the Figma `semantic.on-success-container`, but this is the per-mode role \u2014 the Figma block is light-only, so it cannot be used directly."
     },
     "on-warning-container": {
       "$value": "{color.amber.800}",
@@ -287,17 +293,17 @@
     "on-destructive-container": {
       "$value": "{color.red.500}",
       "$type": "color",
-      "$description": "text and icons on a tinted error surface (`destructive` at 10%). Light: the same step as `destructive`, which clears AA at its worst case (4.71:1 over `muted`). Named for the `destructive` role it sits on, not `error` — the two names are reconciled separately."
+      "$description": "text and icons on a tinted error surface (`destructive` at 10%). Light: the same step as `destructive`, which clears AA at its worst case (4.71:1 over `muted`). Named for the `destructive` role it sits on, not `error` \u2014 the two names are reconciled separately."
     },
     "brand": {
-      "$value": "{color.blue.500}",
+      "$value": "{color.indigo.500}",
       "$type": "color",
-      "$description": "identity colour — the original Figma navy that `primary` was swapped away from for interactive use. Use it for logos, headers and brand surfaces, not for controls."
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "brand-foreground": {
-      "$value": "{color.blue.50}",
+      "$value": "{color.navy.50}",
       "$type": "color",
-      "$description": "text/icons on `brand`"
+      "$description": "Kinetic Weave v1 semantic role; existing token name preserved."
     },
     "action": {
       "$value": "{color.primary}",
@@ -310,14 +316,14 @@
       "$description": "text/icons on `action`"
     },
     "action-hover": {
-      "$value": "#3460dc",
+      "$value": "#6256df",
       "$type": "color",
-      "$description": "explicit hover fill for native ports: `action` at 90% over `background` (#1d4ed8 over #ffffff). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree."
+      "$description": "Kinetic Weave action at 90% over background; mirrors web alpha state."
     },
     "action-pressed": {
-      "$value": "#3f69de",
+      "$value": "#6b5fe0",
       "$type": "color",
-      "$description": "explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA."
+      "$description": "Kinetic Weave action at 85% over background; mirrors web alpha state."
     },
     "focus": {
       "$value": "{color.ring}",
