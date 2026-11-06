@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { approvalProblems, copyHash, fileCopyText, m1Status, postKey, publicationEvidenceProblems, sectionText } from "./marketing-publication-rules.mjs";
+import { approvalProblems, copyHash, fileCopyText, m1Status, postKey, publicationEvidenceProblems, publicationSlotProblems, sectionText, visualIdProblems } from "./marketing-publication-rules.mjs";
 
 /** A row that passes every rule. Each negative control below breaks exactly one thing. */
 const good = () => ({
@@ -231,4 +231,70 @@ test("m1Status derives from both registers and never invents SCHEDULED or APPROV
   assert.equal(m1Status({ id: "A", status: "drafted" }, []), "DRAFTED");
   assert.equal(m1Status({ id: "A", status: "brief" }, []), "PLANNED");
   assert.equal(m1Status({ id: "A", status: "ready" }, [{ asset: "A", status: "skipped" }]), "CANCELLED");
+});
+
+/* ---------------------------------------------- publicationSlotProblems */
+
+const readyAsset = (over = {}) => ({ id: "LI-006", channel: "linkedin", status: "ready", ...over });
+const slot = (over = {}) => ({ asset: "LI-006", channel: "linkedin", status: "planned", ...over });
+
+test("a ready asset with a planned row on its own channel passes", () => {
+  assert.deepEqual(publicationSlotProblems([readyAsset()], [slot()]), []);
+});
+
+test("both registers in the repository pass the slot rule", () => {
+  const content = JSON.parse(readFileSync("marketing/content/register.json", "utf8"));
+  const register = JSON.parse(readFileSync("marketing/distribution/register.json", "utf8"));
+  assert.deepEqual(publicationSlotProblems(content.assets, register.rows), []);
+});
+
+test("negative control: a ready asset with no row at all fails — the gap that actually existed", () => {
+  assert.match(publicationSlotProblems([readyAsset()], []).join("\n"), /has no row for it/);
+});
+
+test("negative control: a published asset with no row fails too", () => {
+  assert.match(publicationSlotProblems([readyAsset({ status: "published" })], []).join("\n"), /has no row for it/);
+});
+
+test("negative control: a row on another channel is not this channel's slot", () => {
+  const problems = publicationSlotProblems([readyAsset()], [slot({ channel: "x" })]);
+  assert.match(problems.join("\n"), /every distribution row for it is on another channel/);
+});
+
+test("a drafted asset needs no row — drafted copy has no publication plan yet", () => {
+  assert.deepEqual(publicationSlotProblems([readyAsset({ status: "drafted" })], []), []);
+  assert.deepEqual(publicationSlotProblems([readyAsset({ status: "brief" })], []), []);
+});
+
+test("devto and hashnode are one channel for the slot rule, as they are in the row loop", () => {
+  const article = readyAsset({ id: "ART-001", channel: "devto" });
+  assert.deepEqual(publicationSlotProblems([article], [slot({ asset: "ART-001", channel: "hashnode" })]), []);
+  // Not the other way round: an asset that publishes on hashnode is not covered by a devto row.
+  const other = readyAsset({ id: "ART-009", channel: "hashnode" });
+  assert.match(
+    publicationSlotProblems([other], [slot({ asset: "ART-009", channel: "devto" })]).join("\n"),
+    /another channel/,
+  );
+});
+
+/* ---------------------------------------------- visualIdProblems */
+
+test("the visuals list holds both kinds: a deferred brief and a produced asset with no brief", () => {
+  // VIS-004 is briefed and deliberately unproduced; SOCIAL-PREVIEW is produced with no brief. Both pass.
+  assert.deepEqual(visualIdProblems(["VIS-004", "SOCIAL-PREVIEW"], ["VIS-004"], ["SOCIAL-PREVIEW"]), []);
+});
+
+test("the repository's own visuals list passes against its briefs and its manifest", () => {
+  const register = JSON.parse(readFileSync("marketing/content/register.json", "utf8"));
+  const briefs = [...readFileSync("marketing/content/visual-briefs.md", "utf8").matchAll(/^## ([A-Z][A-Z0-9-]*)\b/gm)].map((m) => m[1]);
+  const produced = JSON.parse(readFileSync("marketing/content/visuals/manifest.json", "utf8")).assets.map((a) => a.id);
+  assert.deepEqual(visualIdProblems(register.visuals, briefs, produced), []);
+});
+
+test("negative control: an id that is neither briefed nor produced fails — VIS-999 used to pass", () => {
+  assert.match(visualIdProblems(["VIS-999"], ["VIS-004"], ["SOCIAL-PREVIEW"]).join("\n"), /neither a brief .* nor a produced asset/);
+});
+
+test("negative control: the rule is not vacuous — it does not pass an empty known set", () => {
+  assert.match(visualIdProblems(["VIS-004"], [], []).join("\n"), /VIS-004/);
 });
