@@ -782,3 +782,61 @@ point instead. If it cannot, set `KINETIXUI_PNPM` to a pnpm executable or its `.
 ```bash
 KINETIXUI_PNPM=/path/to/pnpm/bin/pnpm.mjs pnpm release:preflight
 ```
+
+---
+
+## Native release lines (Compose, Flutter, SwiftUI)
+
+Everything above is about npm. The three native packages do not go through Changesets and are not
+in `release/publish-packages.json`; their versions are declared in
+**`release/native-release-lines.json`**, and that file is the only thing that authorizes a native
+publish.
+
+Each line declares its `coordinate`, its `channel`, its `cohort` (`own` = its own version line,
+`core` = lockstep with the `@kinetixui/{tokens,ui,cli}` cohort), the versions it has `published`,
+and the single `authorizedNext` version the next real publish may carry.
+
+`.github/workflows/publish-{compose,flutter,swiftui}.yml` each run
+
+```bash
+node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=<line>
+```
+
+in a step carrying `if: ${{ inputs.dry_run == false }}`. So the dispatch `version` input is a
+**confirmation** of what the file declares, never the source of it, and the number that reaches an
+irreversible registry has been through a reviewed diff. There is no fallback version and nothing is
+inferred from another package's number: an unknown line, an undeclared cohort, a null
+`authorizedNext`, a mismatch, an already-published version and an unreadable file are all refusals.
+
+**No native publish is authorized today.** `cohort` and `authorizedNext` are `null` on all three
+lines, because no native package has ever been published and neither the cohort policy nor a first
+version has been decided. A real native publish therefore fails closed at the authorization step.
+Making one possible means committing those values, which is a release decision and a reviewable
+diff — see the file's own `$comment` for the sequence, including moving the number into `published`
+afterwards.
+
+**A dry run is deliberately not gated on this file.** Rehearsing the full release path under any
+shape-valid version is how a defect in that path is found before it is irreversible, so the
+authorization step carries the publication's own condition and nothing else depends on the
+declaration.
+
+Two gates stand behind this. `VI-VERSION-AUTHORIZED` requires each publish workflow to run the
+authorization, for its own line, with that exact condition, **and to authorize the version the
+publication will actually carry** — `--authorize-version="$VERSION"` with `VERSION` bound to
+`${{ inputs.version }}`. That last part was added after review: without it, a literal in either the
+`env` or the command line authorized one version while the publish steps, which read the dispatch
+input independently, uploaded another — and both spellings left the whole preflight green. `VI-COMPOSE-VERSION-BOUND-TO-INPUT`
+requires every Gradle publish step to bind `VERSION_NAME: ${{ inputs.version }}` exactly — measured
+before it existed, a hard-coded `9.9.9` in the real publish step left the entire preflight green
+while the dry run rehearsed the dispatched number, so the upload and its rehearsal were asking for
+different versions. `ci.yml` additionally runs the authorization against the fixtures in
+`scripts/publish/fixtures/native-release-lines/`: one that authorizes and five that must refuse,
+because a gate that refuses everything proves nothing.
+
+That fixture seam is `--lines-file=`, and **a publish workflow may not pass it** — also part of
+`VI-VERSION-AUTHORIZED`, and also added after review. Pointed at the accepting fixture, a publish
+step authorized `0.1.0` while the canonical declaration authorized nothing, and every other check
+in the block still passed. A publish reads `release/native-release-lines.json` and has no say in
+the matter; as a second layer, a run that uses the override labels its own output as a fixture run
+that authorizes no publication, so such a log can never be mistaken later for a real
+authorization.

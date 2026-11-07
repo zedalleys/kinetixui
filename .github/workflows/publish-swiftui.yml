@@ -65,6 +65,21 @@ jobs:
       - name: Preflight
         run: node scripts/check-native-publish-preflight.mjs
 
+      # Shape is not authorization. The step above proves the dispatch input *could* be a version;
+      # this proves it is the one release/native-release-lines.json declares for this line, so the
+      # number that reaches an irreversible registry has been through review rather than typed into
+      # a dispatch box. `authorizedNext: null` there means no publish is authorized, and that is the
+      # current declared state.
+      #
+      # Gated by the publication's own condition, deliberately: a dry run must keep rehearsing the
+      # whole release path under any shape-valid version, which is how a defect in that path is
+      # found without publishing anything.
+      - name: Authorize the version
+        if: ${{ inputs.dry_run == false }}
+        env:
+          VERSION: ${{ inputs.version }}
+        run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-swiftui
+
       - name: Build sanity
         run: swift build --package-path packages/ui-swiftui
 
