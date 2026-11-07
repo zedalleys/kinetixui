@@ -251,6 +251,22 @@ describe("ComponentGallery thumbnails", () => {
     expect(none.querySelectorAll("[data-gallery-card]").length).toBe(0);
   });
 
+  /**
+   * A `?cat=` value naming an inherited member reaches the empty state like any other unknown value.
+   *
+   * The resolver read the alias table with a bracket lookup, so `?cat=__proto__` resolved to
+   * `Object.prototype` and `?cat=toString` to a function. The resolved value becomes the active chip's
+   * label, and React throws on a non-string child, so a crafted URL rendered nothing at all. Reported by
+   * Codex on `bc03c450`.
+   */
+  it.each(["__proto__", "toString", "constructor"])("shows the empty state for ?cat=%s", (value) => {
+    nav.search = `cat=${encodeURIComponent(value)}`;
+    const { container } = render(<ComponentGallery facets={FACETS} />);
+    expect(container.querySelectorAll("[data-gallery-card]").length).toBe(0);
+    // the label a reader is handed is the string they asked for, not an inherited object or function
+    expect(screen.getByLabelText(`Remove filter Category: ${value}`)).toBeInTheDocument();
+  });
+
   /** The technology did not disappear with the pill: it is still how a reader can search for a component. */
   it("still finds a component by the technology behind it", async () => {
     const user = userEvent.setup();

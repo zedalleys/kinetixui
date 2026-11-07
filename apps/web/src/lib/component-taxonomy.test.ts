@@ -156,3 +156,29 @@ describe("kind and facets", () => {
     }
   });
 });
+
+describe("a `?cat=` value that names an inherited property", () => {
+  /**
+   * The alias table is a plain object read with a bracket lookup, so a `?cat=` value that names something
+   * every object inherits used to come back as that inherited value rather than as the string the reader
+   * typed: `__proto__` resolved to `Object.prototype` and `toString` to a function. The gallery renders the
+   * resolved value as the active chip's label, and React throws on an object child — so a crafted URL took
+   * the page down where an unknown value is supposed to reach the empty state.
+   */
+  it.each(["__proto__", "constructor", "toString", "hasOwnProperty", "valueOf"])(
+    "returns %s unchanged instead of the inherited member",
+    (value) => {
+      const resolved = resolveCategoryParam(value);
+      expect(typeof resolved).toBe("string");
+      expect(resolved).toBe(value);
+    },
+  );
+
+  // negative control: the real aliases still resolve, so the fix is about own properties and not about
+  // disabling the lookup
+  it("still resolves the three renamed labels", () => {
+    expect(resolveCategoryParam("Form Inputs")).toBe("Forms & Inputs");
+    expect(resolveCategoryParam("Feedback")).toBe("Feedback & Status");
+    expect(resolveCategoryParam("Controls & Actions")).toBe("Actions & Controls");
+  });
+});

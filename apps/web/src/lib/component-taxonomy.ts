@@ -36,6 +36,19 @@ export type TaxonomyEntry = {
 
 const ENTRIES = taxonomyData.components as Record<string, TaxonomyEntry>;
 
+/**
+ * The former labels, as a `Map` rather than an object literal.
+ *
+ * `?cat=` carries whatever a reader's URL says, and a bracket lookup on an object answers for the whole
+ * prototype chain: `categoryAliases["__proto__"]` returned `Object.prototype` and `["toString"]` a function,
+ * neither of them `undefined`, so the `?? value` fallback never fired and a non-string reached the gallery,
+ * which renders the resolved value as the active chip's label. A `Map` has no inherited keys, so the only
+ * answers it can give are the ones the manifest declares.
+ */
+const CATEGORY_ALIASES = new Map<string, string>(
+  Object.entries(taxonomyData.categoryAliases as Record<string, string>),
+);
+
 /** The declared order. Every surface that lists categories — sidebar, filter chips, grouped results — uses it. */
 export const CATEGORY_ORDER = taxonomyData.categoryOrder as readonly ComponentCategory[];
 
@@ -71,12 +84,13 @@ export function categoryOf(slug: string): ComponentCategory {
  * `/components?cat=Form%20Inputs` must still land on the filtered view, not on an empty one. `formerly` in the
  * manifest is where the old names live, so a future rename is one field rather than another lookup table here.
  * A value that is neither a current nor a former label (a retired category such as `Foundations`, or a typo) is
- * returned unchanged, and the gallery's own empty state, with its "Clear filters" button, handles it.
+ * returned unchanged, and the gallery's own empty state, with its "Clear filters" button, handles it. That
+ * includes a value naming an inherited member such as `__proto__` — see `CATEGORY_ALIASES`.
  */
 export function resolveCategoryParam(value: string | null): string | null {
   if (!value) return null;
   if ((CATEGORY_ORDER as readonly string[]).includes(value)) return value;
-  return (taxonomyData.categoryAliases as Record<string, string>)[value] ?? value;
+  return CATEGORY_ALIASES.get(value) ?? value;
 }
 
 export function kindOf(slug: string): ComponentKind {
