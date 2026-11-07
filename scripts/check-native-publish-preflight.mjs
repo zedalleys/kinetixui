@@ -57,9 +57,9 @@ const NEGATIVES = {
   "swiftui-publish-if-negated": { file: ".github/workflows/publish-swiftui.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          MIRROR:", to: "        if: ${{ inputs.dry_run != true }}\n        env:\n          MIRROR:", breaks: "WF-PUBLISH-STEP-CONDITION" },
   "swiftui-condition-moved-into-the-run-block": { file: ".github/workflows/publish-swiftui.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          MIRROR:", to: "        env:\n          MIRROR:", also: { file: ".github/workflows/publish-swiftui.yml", from: '          if [ "${DRY_RUN:-}" != "false" ]; then\n            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — nothing pushed."', to: '          # if: ${{ inputs.dry_run == false }}\n          if [ "${DRY_RUN:-}" != "false" ]; then\n            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — nothing pushed."' }, breaks: "WF-PUBLISH-STEP-CONDITION" },
   "compose-publish-if-removed": { file: ".github/workflows/publish-compose.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION_NAME:", to: "        env:\n          VERSION_NAME:", breaks: "WF-PUBLISH-STEP-CONDITION" },
-  "compose-publish-if-negated": { file: ".github/workflows/publish-compose.yml", from: "if: ${{ inputs.dry_run == false }}", to: "if: ${{ inputs.dry_run != true }}", breaks: "WF-PUBLISH-STEP-CONDITION" },
+  "compose-publish-if-negated": { file: ".github/workflows/publish-compose.yml", from: "if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION_NAME:", to: "if: ${{ inputs.dry_run != true }}\n        env:\n          VERSION_NAME:", breaks: "WF-PUBLISH-STEP-CONDITION" },
   "flutter-publish-if-removed": { file: ".github/workflows/publish-flutter.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          PUB_DEV_CREDENTIALS:", to: "        env:\n          PUB_DEV_CREDENTIALS:", breaks: "WF-PUBLISH-STEP-CONDITION" },
-  "flutter-publish-if-negated": { file: ".github/workflows/publish-flutter.yml", from: "if: ${{ inputs.dry_run == false }}", to: "if: ${{ inputs.dry_run != true }}", breaks: "WF-PUBLISH-STEP-CONDITION" },
+  "flutter-publish-if-negated": { file: ".github/workflows/publish-flutter.yml", from: "if: ${{ inputs.dry_run == false }}\n        env:\n          PUB_DEV_CREDENTIALS:", to: "if: ${{ inputs.dry_run != true }}\n        env:\n          PUB_DEV_CREDENTIALS:", breaks: "WF-PUBLISH-STEP-CONDITION" },
   "swiftui-publish-step-renamed": { file: ".github/workflows/publish-swiftui.yml", from: "      - name: Push to mirror", to: "      - name: Push to the mirror", breaks: "WF-PUBLISH-STEP-CONDITION" },
 
   // A side effect that moves out of the one gated step is a publication nothing decides.
@@ -117,6 +117,15 @@ const NEGATIVES = {
   "swiftui-publish-always-live": { file: ".github/workflows/publish-swiftui.yml", from: /^      dry_run:\n(?:        .*\n)+/m, to: "", breaks: "WF-DRY-RUN-DEFAULT" },
   "compose-publish-unserialised": { file: ".github/workflows/publish-compose.yml", from: /^concurrency:\n(?:  .*\n)+/m, to: "", breaks: "WF-CONCURRENCY" },
   "flutter-publish-skips-tests": { file: ".github/workflows/publish-flutter.yml", from: "flutter test", to: "flutter --version" , breaks: "WF-TESTS-BEFORE-PUBLISH" },
+  // Version authorization and the version binding. The first of these is the measured defect:
+  // with a literal here the whole preflight stayed green while the dry run rehearsed one number
+  // and the upload would have carried another, permanently.
+  "compose-publish-step-version-is-a-literal": { file: ".github/workflows/publish-compose.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION_NAME: ${{ inputs.version }}", to: "        if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION_NAME: 9.9.9", breaks: "VI-COMPOSE-VERSION-BOUND-TO-INPUT" },
+  "compose-rehearsal-version-is-a-literal": { file: ".github/workflows/publish-compose.yml", from: "      - name: Dry run — build + publishToMavenLocal (unsigned)\n        env:\n          VERSION_NAME: ${{ inputs.version }}", to: "      - name: Dry run — build + publishToMavenLocal (unsigned)\n        env:\n          VERSION_NAME: 9.9.9", breaks: "VI-COMPOSE-VERSION-BOUND-TO-INPUT" },
+  "compose-authorization-removed": { file: ".github/workflows/publish-compose.yml", from: /^      - name: Authorize the version\n(?:        .*\n)+/m, to: "", breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-ungated": { file: ".github/workflows/publish-flutter.yml", from: "      - name: Authorize the version\n        if: ${{ inputs.dry_run == false }}\n", to: "      - name: Authorize the version\n", breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-gated-another-way": { file: ".github/workflows/publish-flutter.yml", from: "        if: ${{ inputs.dry_run == false }}\n        working-directory: .\n        env:\n          VERSION: ${{ inputs.version }}", to: "        if: ${{ inputs.dry_run != true }}\n        working-directory: .\n        env:\n          VERSION: ${{ inputs.version }}", breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-authorization-reads-another-line": { file: ".github/workflows/publish-swiftui.yml", from: "--line=ui-swiftui", to: "--line=ui-compose", breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-publish-unvalidated-version": { file: ".github/workflows/publish-swiftui.yml", from: "--version=", to: "--ignored-version=", breaks: "WF-VERSION-VALIDATED" },
   // A vendored copy drifting from its canonical source, which is what a publish from an
   // arbitrary ref can ship and ci.yml's pull-request-only drift step would never see.
@@ -173,6 +182,64 @@ if (versionArg !== undefined) {
     process.exit(1);
   }
   console.log(`PASS: "${versionArg}" is a publishable version.`);
+  process.exit(0);
+}
+
+/**
+ * --authorize-version=<v> --line=<key> [--lines-file=<path>]
+ *
+ * The shape check above asks whether a string *could* be a version. This asks the question that
+ * actually decides a publication: whether this particular version is the one the repository
+ * authorizes for this particular release line. Until this existed, the answer came from a
+ * `workflow_dispatch` text box — the only release decision in the project that no reviewed file
+ * recorded, on the three packages whose versions are the three that cannot be corrected.
+ *
+ * It fails closed in every direction. An unknown line, an undeclared cohort, `authorizedNext: null`,
+ * a version that is not the authorized one, and a version already in `published` are all refusals.
+ * There is no fallback and nothing is inferred from another package's number.
+ *
+ * Exits before any check below runs, like `--version=`, because it answers about one dispatch
+ * rather than about the tree. `--lines-file=` exists so CI can run this mode against fixture
+ * declarations and prove each refusal really fires — see ci.yml's "Native version authorization:
+ * negative controls". The publish workflows never pass it.
+ */
+const authorizeArg = process.argv.find((arg) => arg.startsWith("--authorize-version="))?.slice("--authorize-version=".length);
+if (authorizeArg !== undefined) {
+  const lineKey = process.argv.find((arg) => arg.startsWith("--line="))?.slice("--line=".length);
+  const linesFile = process.argv.find((arg) => arg.startsWith("--lines-file="))?.slice("--lines-file=".length) ?? "release/native-release-lines.json";
+  const refuse = (message) => {
+    console.error(`::error::${message}`);
+    process.exit(1);
+  };
+
+  if (!lineKey) refuse("--authorize-version= requires --line=<key>, naming the release line in release/native-release-lines.json this publish is for. Without it nothing says which package's authorization is being read.");
+  if (!SEMVER.test(authorizeArg)) refuse(`"${authorizeArg}" is not a publishable version. Expected MAJOR.MINOR.PATCH with an optional -prerelease, no leading "v" and no +build metadata (e.g. 0.1.0, 0.1.0-preview.1).`);
+
+  let declaration;
+  try {
+    declaration = JSON.parse(linesFile.startsWith("/") ? readFileSync(linesFile, "utf8") : read(linesFile));
+  } catch (error) {
+    refuse(`${linesFile} could not be read as JSON (${error.message}). That file is the only thing that authorizes a native publish, so an unreadable one authorizes nothing.`);
+  }
+
+  const line = declaration?.lines?.[lineKey];
+  if (!line) {
+    refuse(`${linesFile} declares no release line "${lineKey}". Known lines: ${Object.keys(declaration?.lines ?? {}).join(", ") || "none at all"}. A publish is authorized by a line that exists, never by the absence of one.`);
+  }
+  if (line.cohort !== "own" && line.cohort !== "core") {
+    refuse(`${linesFile} → ${lineKey}.cohort is ${JSON.stringify(line.cohort)}. It must be declared as "own" (its own version line) or "core" (lockstep with the @kinetixui/{tokens,ui,cli} cohort) before ${line.coordinate ?? lineKey} publishes anything. The cohort is what a version number *means*, and npm 0.27.0 and a native 0.27.0 are the same string and two unrelated promises — so it is declared, never inferred.`);
+  }
+  if (Array.isArray(line.published) && line.published.includes(authorizeArg)) {
+    refuse(`${linesFile} records ${authorizeArg} as already published on ${line.coordinate ?? lineKey}. A ${line.channel ?? "registry"} version cannot be republished or corrected; publish a superseding version instead.`);
+  }
+  if (line.authorizedNext === null || line.authorizedNext === undefined) {
+    refuse(`${linesFile} → ${lineKey}.authorizedNext is null, so no version of ${line.coordinate ?? lineKey} is authorized to publish. This is the declared state, not an oversight: the version a native package first publishes under is a release decision, and it is made by committing the number to that file in a reviewed pull request — not by typing it into a dispatch box.`);
+  }
+  if (line.authorizedNext !== authorizeArg) {
+    refuse(`This dispatch asked to publish ${line.coordinate ?? lineKey} as ${authorizeArg}, but ${linesFile} authorizes ${JSON.stringify(line.authorizedNext)}. The dispatch input confirms what the repository declares; it does not override it. If ${authorizeArg} is the intended version, change it there first.`);
+  }
+
+  console.log(`PASS: ${line.coordinate} ${authorizeArg} is the version ${linesFile} authorizes for the "${lineKey}" line (cohort: ${line.cohort}).`);
   process.exit(0);
 }
 
@@ -771,6 +838,16 @@ const documentSteps = (doc) => {
         jobCondition,
         condition: mapping.if === undefined ? null : String(mapping.if),
         script: typeof mapping.run === "string" ? mapping.run : "",
+        /*
+         * The environment the step's script actually sees, step keys winning over the job's.
+         * Resolved rather than read off the step alone: a value moved to job level is inherited by
+         * the step, so reading only `step.env` would report a binding that is really there as
+         * missing. VI-COMPOSE-VERSION-BOUND-TO-INPUT asks about the effective value.
+         */
+        env: {
+          ...(job && typeof job === "object" && job.env && typeof job.env === "object" ? job.env : {}),
+          ...(mapping.env && typeof mapping.env === "object" ? mapping.env : {}),
+        },
       });
     });
   }
@@ -957,6 +1034,83 @@ check(
   "WF-DRY-RUN-DEFENSE-IN-DEPTH",
   missingGuard.length === 0,
   `${missingGuard.join("; ")}. Measured, before this guard existed: the SwiftUI step reached both mirror pushes for empty, unset, \`False\` and \`yes\` — every value that was not the exact string \`true\`.`,
+);
+
+// ---------------------------------------------------------------------------
+// Version authorization, and the one binding that decides which number is built.
+//
+// Everything in the version-integrity block above asks whether the number that reaches the
+// registry can differ from the number that was *asked for*. These two ask the question behind it:
+// where the number asked for comes from, and whether the rehearsal and the publication are even
+// asking for the same one.
+//
+// Measured on this file before VI-COMPOSE-VERSION-BOUND-TO-INPUT existed: replacing the real
+// publish step's `VERSION_NAME: ${{ inputs.version }}` with `VERSION_NAME: 9.9.9` left the whole
+// preflight green. VI-COMPOSE-VERSION-FORWARDED requires each publish step to carry VERSION_NAME
+// and is satisfied by any value, so the dry run rehearsed the dispatched version and the upload
+// would have carried a hard-coded one — a permanent Central coordinate under a number nobody
+// dispatched, with a passing gate and a matching-looking dry run in front of it.
+// ---------------------------------------------------------------------------
+const AUTHORIZED_LINES = {
+  ".github/workflows/publish-compose.yml": "ui-compose",
+  ".github/workflows/publish-flutter.yml": "ui-flutter",
+  ".github/workflows/publish-swiftui.yml": "ui-swiftui",
+};
+
+const unauthorized = [];
+const looseVersionBinding = [];
+for (const workflow of workflows) {
+  const { doc, error } = parseWorkflow(workflow.path, workflow.text);
+  if (error) continue; // WF-PARSES owns that failure; concluding anything here would be the defect it exists for.
+  const steps = documentSteps(doc);
+
+  /*
+   * The authorization step. Gated by the publication's own condition on purpose — a dry run has to
+   * stay rehearsable under an arbitrary shape-valid version, or the release path stops being
+   * exercisable before it is irreversible. So what is required here is a gated step that runs the
+   * authorization for *this* workflow's line, and exactly one spelling of the condition, for the
+   * same reason WF-PUBLISH-STEP-CONDITION requires one.
+   */
+  const line = AUTHORIZED_LINES[workflow.path];
+  const authorizing = steps.filter((step) => /--authorize-version=/.test(step.script));
+  if (authorizing.length === 0) {
+    unauthorized.push(`${workflow.path} has no step running \`check-native-publish-preflight.mjs --authorize-version=\`. Semver shape is not authorization: without this step the version a permanent coordinate carries comes from a dispatch text box and no reviewed file records it`);
+  }
+  for (const step of authorizing) {
+    if (step.condition !== APPROVED_STEP_CONDITION) {
+      unauthorized.push(`${workflow.path} → "${step.name}" runs the version authorization with ${step.condition === null ? "no step-level condition" : `\`if: ${step.condition}\``}. It must carry \`if: ${APPROVED_STEP_CONDITION}\`, the same spelling as the publication: gating it any other way either blocks the dry run from rehearsing or lets a real publish past`);
+    }
+    if (!new RegExp(`--line=${line}(?![\\w-])`).test(step.script)) {
+      unauthorized.push(`${workflow.path} → "${step.name}" must authorize against \`--line=${line}\`. Another line's authorization is another package's release decision, and reading the wrong one is how ${line} publishes on a number that was never declared for it`);
+    }
+  }
+
+  /*
+   * And the binding itself. A step that runs a Gradle publish task must bind VERSION_NAME to the
+   * dispatch input and nothing else — not a literal, not a different expression, not a value
+   * computed at run time. This is what makes the dry run evidence about the publication: both read
+   * the same single source.
+   */
+  if (workflow.path !== ".github/workflows/publish-compose.yml") continue;
+  for (const step of steps) {
+    if (!/gradle :ui:publish/.test(step.script)) continue;
+    const bound = step.env?.VERSION_NAME;
+    if (bound !== "${{ inputs.version }}") {
+      looseVersionBinding.push(`${workflow.path} → "${step.name}" binds \`VERSION_NAME: ${bound === undefined ? "(nothing)" : bound}\``);
+    }
+  }
+}
+
+check(
+  "VI-VERSION-AUTHORIZED",
+  unauthorized.length === 0,
+  `${unauthorized.join("; ")}. release/native-release-lines.json is the only thing that authorizes a native publish, and the step that reads it is the only thing that makes that true.`,
+);
+
+check(
+  "VI-COMPOSE-VERSION-BOUND-TO-INPUT",
+  looseVersionBinding.length === 0,
+  `${looseVersionBinding.join("; ")}. Every Gradle publish step must bind \`VERSION_NAME: \${{ inputs.version }}\` exactly. Any other value makes the rehearsal and the upload ask for different numbers, and the dry run then proves nothing about the version that is actually published — measured: a literal here left this entire preflight green.`,
 );
 
 // ---------------------------------------------------------------------------
