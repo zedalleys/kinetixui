@@ -83,6 +83,15 @@ export function ConnectedSpaceExample() {
   const [pending, setPending] = React.useState<Pending | null>(null);
   const [routines, setRoutines] = React.useState(ROUTINES);
   const [openId, setOpenId] = React.useState<string | null>("bench");
+  const routineTimers = React.useRef(new Map<string, ReturnType<typeof setTimeout>>());
+
+  React.useEffect(
+    () => () => {
+      for (const timer of routineTimers.current.values()) clearTimeout(timer);
+      routineTimers.current.clear();
+    },
+    [],
+  );
 
   React.useEffect(() => {
     if (!pending) return;
@@ -191,14 +200,17 @@ export function ConnectedSpaceExample() {
               }
               onRun={() => {
                 // A run that finishes on its own, so "running" is a state you can actually watch.
+                // Keep one timer per routine: rerunning replaces that routine's deadline, and unmount clears all of them.
                 setRoutines((rs) => rs.map((r) => (r.id === automation.id ? { ...r, status: "running" } : r)));
-                setTimeout(
-                  () =>
-                    setRoutines((rs) =>
-                      rs.map((r) => (r.id === automation.id ? { ...r, status: "idle", lastRunAt: NOW } : r)),
-                    ),
-                  1800,
-                );
+                const existing = routineTimers.current.get(automation.id);
+                if (existing !== undefined) clearTimeout(existing);
+                const timer = setTimeout(() => {
+                  routineTimers.current.delete(automation.id);
+                  setRoutines((rs) =>
+                    rs.map((r) => (r.id === automation.id ? { ...r, status: "idle", lastRunAt: NOW } : r)),
+                  );
+                }, 1800);
+                routineTimers.current.set(automation.id, timer);
               }}
             />
           ))}
