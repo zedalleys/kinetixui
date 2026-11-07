@@ -821,7 +821,11 @@ authorization step carries the publication's own condition and nothing else depe
 declaration.
 
 Two gates stand behind this. `VI-VERSION-AUTHORIZED` requires each publish workflow to run the
-authorization, for its own line, with that exact condition. `VI-COMPOSE-VERSION-BOUND-TO-INPUT`
+authorization, for its own line, with that exact condition, **and to authorize the version the
+publication will actually carry** — `--authorize-version="$VERSION"` with `VERSION` bound to
+`${{ inputs.version }}`. That last part was added after review: without it, a literal in either the
+`env` or the command line authorized one version while the publish steps, which read the dispatch
+input independently, uploaded another — and both spellings left the whole preflight green. `VI-COMPOSE-VERSION-BOUND-TO-INPUT`
 requires every Gradle publish step to bind `VERSION_NAME: ${{ inputs.version }}` exactly — measured
 before it existed, a hard-coded `9.9.9` in the real publish step left the entire preflight green
 while the dry run rehearsed the dispatched number, so the upload and its rehearsal were asking for

@@ -125,6 +125,10 @@ const NEGATIVES = {
   "compose-authorization-removed": { file: ".github/workflows/publish-compose.yml", from: /^      - name: Authorize the version\n(?:        .*\n)+/m, to: "", breaks: "VI-VERSION-AUTHORIZED" },
   "flutter-authorization-ungated": { file: ".github/workflows/publish-flutter.yml", from: "      - name: Authorize the version\n        if: ${{ inputs.dry_run == false }}\n", to: "      - name: Authorize the version\n", breaks: "VI-VERSION-AUTHORIZED" },
   "flutter-authorization-gated-another-way": { file: ".github/workflows/publish-flutter.yml", from: "        if: ${{ inputs.dry_run == false }}\n        working-directory: .\n        env:\n          VERSION: ${{ inputs.version }}", to: "        if: ${{ inputs.dry_run != true }}\n        working-directory: .\n        env:\n          VERSION: ${{ inputs.version }}", breaks: "VI-VERSION-AUTHORIZED" },
+  // The two spellings review found on the commit that added this gate. Either one authorizes a
+  // version the publication does not carry, and both left the whole preflight green.
+  "compose-authorization-version-is-a-literal-env": { file: ".github/workflows/publish-compose.yml", from: "        env:\n          VERSION: ${{ inputs.version }}\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version=\"$VERSION\" --line=ui-compose", to: "        env:\n          VERSION: 0.1.0\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version=\"$VERSION\" --line=ui-compose", breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-version-is-a-literal-argument": { file: ".github/workflows/publish-flutter.yml", from: '--authorize-version="$VERSION" --line=ui-flutter', to: "--authorize-version=0.1.0 --line=ui-flutter", breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-authorization-reads-another-line": { file: ".github/workflows/publish-swiftui.yml", from: "--line=ui-swiftui", to: "--line=ui-compose", breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-publish-unvalidated-version": { file: ".github/workflows/publish-swiftui.yml", from: "--version=", to: "--ignored-version=", breaks: "WF-VERSION-VALIDATED" },
   // A vendored copy drifting from its canonical source, which is what a publish from an
@@ -1082,6 +1086,29 @@ for (const workflow of workflows) {
     }
     if (!new RegExp(`--line=${line}(?![\\w-])`).test(step.script)) {
       unauthorized.push(`${workflow.path} → "${step.name}" must authorize against \`--line=${line}\`. Another line's authorization is another package's release decision, and reading the wrong one is how ${line} publishes on a number that was never declared for it`);
+    }
+
+    /*
+     * And the version this step authorizes has to be the one the publication will carry.
+     *
+     * Found by review on the commit that added this gate, and it is the same defect this whole
+     * block exists for, one level further in: the check asked for the condition and the line and
+     * never for the *value*. Two spellings got past it, both measured —
+     *
+     *   env:  VERSION: 0.1.0                      → preflight green
+     *   run:  --authorize-version=0.1.0 …         → preflight green
+     *
+     * — and either one authorizes `0.1.0` while the publish steps read `${{ inputs.version }}`
+     * independently and upload `9.9.9`. An authorization that can approve a different version from
+     * the one being published is not an authorization at all, so both halves are required: the
+     * argument comes from "$VERSION", and that variable is bound to the dispatch input.
+     */
+    if (!/--authorize-version="\$VERSION"/.test(step.script)) {
+      unauthorized.push(`${workflow.path} → "${step.name}" must pass \`--authorize-version="$VERSION"\`, reading the value from the step's own \`env\`. A literal on the command line authorizes a version the publication never carries, and a quoted "$VERSION" is also what keeps the input from being interpolated into the script text (WF-VERSION-NOT-INTERPOLATED)`);
+    }
+    const authorizedValue = step.env?.VERSION;
+    if (authorizedValue !== "${{ inputs.version }}") {
+      unauthorized.push(`${workflow.path} → "${step.name}" binds \`VERSION: ${authorizedValue === undefined ? "(nothing)" : authorizedValue}\`; it must be exactly \`\${{ inputs.version }}\`. The publish steps read the dispatch input independently, so any other value here authorizes one version and publishes another — measured: a literal left this entire preflight green`);
     }
   }
 
