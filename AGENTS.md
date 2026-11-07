@@ -9,41 +9,48 @@ Read `docs/README.md` inside that installed package first, then read the relevan
 This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": false` in the root `turbo.json` or `turbo.jsonc` to opt out; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
 <!-- END:turborepo-agent-rules -->
 
-# Requesting a Codex review
+# Codex reviews: what counts, and what the replies mean
 
 Codex's code review fires on **PR opened**, **ready for review**, and an
-**`@codex review` comment** — never on a push. So a PR pushed to since its last
-receipt has no current review until you ask again.
+**`@codex review` comment** — never on a push. A PR pushed to since its last
+receipt has no current review until someone asks again.
 
-Write the mention as bare text at the start of the comment:
+Only two things count as a review:
 
-```
-@codex review
-```
+- a `codex-review-receipt:v1` comment carrying **Reviewed commit:** `<sha>`, and
+  only when `<sha>` is the PR's current head;
+- a `codex-review-state:v1` block whose `commit_sha` is the current head and
+  whose `status` is `completed`.
 
-**Do not wrap it in backticks.** A comment whose first line is
-`` `@codex review` `` renders as a code span, so GitHub emits no mention and the
-connector never matches the review command. It falls back to the generic Codex
-task path, which needs a Codex Cloud environment, and answers:
+Three other replies are each **not** a review — neither a pass nor a fail — and
+none of them may be reported as one:
 
-> To use Codex here, create an environment for this repo.
+**1. "To use Codex here, create an environment for this repo."** No Codex Cloud
+environment is bound to this repository in the owning ChatGPT account. The
+GitHub connector itself is fine — it still reaches the repo and still posts —
+so there is nothing to fix here: no file in this repository configures that
+environment, and no amount of re-requesting will change the answer. Only the
+account owner can fix it, at
+<https://chatgpt.com/codex/cloud/settings/environments>. It posts no review
+object and comes back in seconds.
 
-That reply is **not** a review, **not** a negative verdict, and **not** an
-environment fault — it is a malformed request. It posts no
-`codex-review-state:v1` object and no `codex-review-receipt:v1`, and it comes
-back in seconds rather than the ~1–2 minutes a real review takes. Re-send the
-request with the mention unquoted; do not go changing environment settings.
+Measured 2026-11-07: the last receipt repo-wide was #443 at 02:14:41Z; every
+interaction after it answered this way — #531 at 02:21:39Z and 02:54:40Z (both
+from comments) and #533 at 12:33:23Z (from *PR opened*, no comment involved at
+all). So it does not depend on how the review was requested. **Do not diagnose
+it as a malformed request**: a backtick-wrapped `` `@codex review` `` does
+render as a code span and does not create a GitHub mention, which makes it a
+plausible-looking culprit, but the auto-triggered failure on #533 rules it out.
+Write the mention bare anyway — it is the form that works when the environment
+is present.
 
-Measured on PR #531, 2026-11-07: a bare mention at 02:09:05 produced a receipt
-for `08463ab` at 02:10:27 (82s). Backtick-wrapped mentions at 02:21:30 and
-02:54:28 produced the environment message at 02:21:39 and 02:54:40 (9s and 12s),
-with no review object either time.
+**2. "You have reached your Codex usage limits for code reviews."** An
+account-level quota. It has recovered on its own within hours each time it has
+appeared, so retry later rather than treating it as permanent. The summary
+comment alongside it can read `status: "failed"` while still carrying
+`has_any_findings` from the *previous* review — that is stale data about an
+older head, not findings on this one.
 
-Two other replies are distinct from both, and neither is a verdict:
-
-- *"You have reached your Codex usage limits for code reviews"* — an
-  account-level quota. It has recovered on its own within hours each time;
-  retry later rather than treating it as permanent.
-- a `codex-review-state:v1` block reading `"status": "running"` — a status
-  display, not evidence. Only a receipt whose **Reviewed commit** equals the
-  PR's current head counts as a review.
+**3. A `codex-review-state:v1` block reading `"status": "running"`.** A status
+display, not evidence. It can sit at `running` indefinitely without ever
+producing a receipt.
