@@ -183,7 +183,10 @@ export default function HomePage() {
             have to land in the first viewport, so the copy column comes first in the DOM and the system map
             follows it — beside it once there is room, below it on a phone.
           */}
-          <div className="kx-brand-hero-grid grid grid-cols-1 gap-6 pt-12 sm:pt-16 lg-rem:py-24">
+          {/* Above `lg-rem` the vertical rhythm is viewport-derived and owned by brand-hero.css, which is
+              why there is no `lg-rem:py-*` here: a fixed desktop padding cannot give room back on a
+              short laptop, which is where the install command was falling below the fold. */}
+          <div className="kx-brand-hero-grid grid grid-cols-1 gap-6 pt-12 sm:pt-16">
             {/* a size container: the headline is sized against this column, so its longest word always fits it */}
             {/* `data-hero-copy`: what the hero's decoration must stay off below `lg-rem`, which check:home-systems asserts */}
             <div data-hero-copy className="kx-brand-hero-copy relative z-10 max-w-3xl [container-type:inline-size]">
