@@ -1,6 +1,11 @@
 /*
  * Hero polygon network — the owner's OH38WC1 mesh in Kinetic Weave.
  *
+ * Decoration only, as of the owner's decision of 2026-11-06: there is no drag
+ * rotation, no arrow keys, no tab stop and so no focus indicator, and the
+ * pointer brightening that used to be bound to this element is now the
+ * site-wide `.kx-cursor-glow` in globals.css.
+ *
  * Geometry: apps/web/src/components/hero-mesh-source.json, provenance in
  * design-assets/polygon/REFERENCE.md. This file owns colour, depth, layout and
  * the motion that belongs to the compositor — the intro, the breath and the
@@ -23,8 +28,6 @@
   position: relative;
   min-width: 0;
   align-self: center;
-  --kx-px: 50%;
-  --kx-py: 50%;
 
   /* Facet materials, deepest return face to highlight. Light theme. */
   --kx-mesh-0a: #4a63c8;
@@ -44,7 +47,6 @@
   --kx-mesh-node-glow: #4fddf2;
   --kx-mesh-pulse: #ffffff;
   --kx-mesh-pulse-ring: #28c7d9;
-  --kx-mesh-spotlight: #7fe6f6;
 }
 
 /* The atmosphere: a blurred radial wash behind the upper mesh, which is what
@@ -68,7 +70,7 @@
   width: 100%;
   height: auto;
   overflow: visible;
-  pointer-events: none; /* the wrapper reads the pointer; the facets opt back in */
+  pointer-events: none; /* decoration: it takes no pointer event, so a drag or a touch here scrolls the page */
 
   /* The supplied artwork's dense head sits upper-left of its own box with a
      long thin spur running right. Mirrored, that spur sweeps down and to the
@@ -95,46 +97,6 @@
    out of the hero rather than across it. */
 [dir="rtl"] .kx-hero-mesh {
   transform: rotate(-4deg);
-}
-
-/* ── The reader's layer ─────────────────────────────────────────────────── */
-/* The group that takes focus and the pointer. It draws no box of its own: the
-   focus indicator is the artwork's own wireframe, below. */
-.kx-polygon-interaction {
-  position: relative;
-  border-radius: 1rem;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.kx-polygon-interaction:focus,
-.kx-polygon-interaction:focus-visible {
-  outline: none;
-  box-shadow: none;
-}
-/* Keyboard focus, measured rather than asserted. A 2px stroke over the facets
-   reached 3:1 against what it borders over only 34% of its area in light and 14%
-   in dark, because `--focus` is close in luminance to the indigo shadow faces.
-   The wireframe is the part of the artwork that sits on the PAGE — `--focus`
-   measures 6.18:1 there in light and 9.70:1 in dark — so the indicator is the
-   links brightening and thickening, which does not depend on which facet it
-   crosses. `data-pointer-focus` keeps a click from drawing it. */
-.kx-polygon-interaction:focus-visible:not([data-pointer-focus]) .kx-mesh-links {
-  stroke: hsl(var(--focus));
-  stroke-width: 2;
-  stroke-opacity: 1;
-}
-.kx-polygon-interaction:focus-visible:not([data-pointer-focus]) .kx-mesh-links path[data-tone="2"] {
-  stroke-opacity: 0.75;
-}
-/* Only a facet is draggable, so a touch anywhere else still scrolls the page. */
-.kx-mesh-facets path {
-  pointer-events: visiblePainted;
-  cursor: grab;
-  touch-action: pan-y;
-}
-.kx-polygon-interaction[data-dragging="true"],
-.kx-polygon-interaction[data-dragging="true"] .kx-mesh-facets path {
-  cursor: grabbing;
 }
 
 .kx-mesh-facets path {
@@ -190,26 +152,6 @@
 .kx-mesh-stop-node-b { stop-color: var(--kx-mesh-node-glow); stop-opacity: 0.4; }
 .kx-mesh-stop-node-c { stop-color: var(--kx-mesh-node-glow); stop-opacity: 0; }
 
-/* The pointer's local brightening. Inert until a mouse is over the art, and a
-   brightening only — it never displaces a coordinate. */
-.kx-polygon-spotlight {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 420ms ease-out;
-  mix-blend-mode: screen;
-  background: radial-gradient(
-    circle 160px at var(--kx-px) var(--kx-py),
-    color-mix(in srgb, var(--kx-mesh-spotlight) 42%, transparent) 0%,
-    color-mix(in srgb, var(--kx-mesh-spotlight) 14%, transparent) 45%,
-    transparent 72%
-  );
-}
-.kx-hero-polygon[data-pointer="true"] .kx-polygon-spotlight {
-  opacity: 1;
-}
-
 /* ── Dark theme ─────────────────────────────────────────────────────────── */
 .dark .kx-hero-polygon {
   --kx-mesh-0a: #3b369c;
@@ -227,7 +169,6 @@
   --kx-mesh-node-ink: #9ff0ff;
   --kx-mesh-node-fill: #eafcff;
   --kx-mesh-node-glow: #40d4ed;
-  --kx-mesh-spotlight: #2fb6d4;
 }
 .dark .kx-polygon-aura {
   background: radial-gradient(circle closest-side, #28c7d96b 0%, #6054f44f 54%, #6054f422 80%, #6054f400 100%);
@@ -259,15 +200,6 @@
   50%      { opacity: calc(var(--kx-o) * 1.34); }
 }
 
-/* The reader's rotation. Its own group, outside the breath, because both want
-   `transform` and the inner one is an infinite animation: nesting composes them,
-   where sharing a property would mean one silently winning. Written by the
-   component with setProperty, so a drag costs no React render. */
-.kx-mesh-spin {
-  transform-box: view-box;
-  transform-origin: 62% 46%;
-  transform: rotate(var(--kx-spin, 0deg));
-}
 .kx-mesh-body {
   transform-box: view-box;
   transform-origin: 62% 46%;
@@ -404,28 +336,12 @@
   .kx-mesh-pulses {
     display: none;
   }
-  .kx-polygon-spotlight {
-    display: none;
-  }
-}
-
-/* ── Forced colours ─────────────────────────────────────────────────────── */
-/* The focus indicator cannot be a colour here, so it becomes a frame on the
-   group — the one place a rectangle is the correct answer, because the artwork's
-   own strokes are repainted to a single system colour and can no longer carry
-   it. */
-@media (forced-colors: active) {
-  .kx-polygon-interaction:focus-visible {
-    outline: 3px solid Highlight;
-    outline-offset: 2px;
-  }
 }
 
 @media (forced-colors: active) {
   /* Decoration carries no meaning here, and a forced palette cannot render
      translucent depth. The wireframe alone keeps the composition legible. */
   .kx-polygon-aura,
-  .kx-polygon-spotlight,
   .kx-mesh-facets,
   .kx-mesh-pulses {
     display: none;
