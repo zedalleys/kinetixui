@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import mesh from "./hero-mesh.json";
 
 /**
- * The homepage hero's polygon network.
+ * The homepage hero's polygon network — decoration.
  *
  * The geometry is the owner's supplied `OH38WC1.svg` — provenance and source
  * hash in `design-assets/polygon/REFERENCE.md`. Every coordinate is rendered
  * from that file, unmodified; `scripts/gen-hero-mesh.mjs` only classifies the
  * shapes and measures the junction centres so the light can be coupled to them.
- * This file is the presentation and interaction layer.
+ * This file is the presentation layer.
  *
  * What moves, and how:
  *   - the mesh breathes as one body (a CSS transform on `.kx-mesh-body`, so the
@@ -19,18 +19,20 @@ import mesh from "./hero-mesh.json";
  *   - three light pulses travel the supplied graph's own edges (one rAF loop)
  *   - a junction brightens because a pulse is near it, not on a timer: the loop
  *     measures the distance and writes the glow
- *   - the pointer adds a local brightening, through a CSS gradient above the
- *     facets. It never displaces geometry.
  *
- * What the reader controls:
- *   - dragging a facet rotates the whole network in its plane. The rotation is
- *     a transform on `.kx-mesh-spin`, written with `setProperty` rather than
- *     through React, so a drag costs no render and cannot desynchronise the
- *     breath underneath it.
- *   - the arrow keys step the same rotation, Home returns it to the artwork's
- *     own pose. There is no visible control row and no pause control: the group
- *     carries its name and its instructions, and the motion follows the
- *     lifecycle below rather than anything the reader has to operate.
+ * What the reader controls: nothing. The owner's decision of 2026-11-06 is that
+ * the hero is pure decoration, so the drag rotation, the arrow keys, Home and
+ * the illustration's tab stop are all gone, and with them the focus indicator
+ * that existed only to serve that tab stop. There is no control row and no
+ * pause: the motion follows the lifecycle below rather than anything a reader
+ * has to operate. The pointer brightening that used to live here is now the
+ * site-wide `components/cursor-glow.tsx`, because bound to this element it
+ * could not leave the illustration and ended in a straight cut at its edge.
+ *
+ * Nothing in here takes focus or is announced: the `<svg>` is `aria-hidden`, and
+ * there is no longer a named group pointing at keyboard instructions, because
+ * there are no keys to describe. A decorative illustration that advertises
+ * controls it does not have is worse than a silent one.
  *
  * Per frame, at 30fps, while the hero is on screen: 3 pulse positions and 26
  * junction glows, all written imperatively. No SVG filter over a large area and
@@ -47,19 +49,12 @@ import mesh from "./hero-mesh.json";
 const FRAME_MS = 1000 / 30;
 /** Falloff of a junction's response to a passing pulse, in squared user units. */
 const REACH = 7000;
-/** One arrow press, in degrees. Small enough to aim, large enough to see. */
-const KEY_STEP = 4;
-/** Pointer travel to degrees. A drag across the artwork is about half a turn. */
-const DRAG_GAIN = 0.28;
 
 export function HeroPolygon() {
   const id = useId().replace(/:/g, "");
   const root = useRef<HTMLDivElement>(null);
-  const spin = useRef<SVGGElement>(null);
   const pulseRefs = useRef<(SVGCircleElement | null)[]>([]);
   const glowRefs = useRef<(SVGCircleElement | null)[]>([]);
-  const angle = useRef(0);
-  const drag = useRef<{ pointer: number; x: number; from: number } | null>(null);
   const [onScreen, setOnScreen] = useState(false);
   /**
    * The one motion switch, mirrored to `data-running` so the stylesheet obeys
@@ -143,214 +138,105 @@ export function HeroPolygon() {
     return () => cancelAnimationFrame(frame);
   }, [running]);
 
-  /**
-   * The pointer's local brightening. A mouse affordance only — touch is left
-   * alone, so the hero scrolls the way the rest of the page does.
-   */
-  const trackPointer = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType !== "mouse" || !root.current) return;
-    const box = root.current.getBoundingClientRect();
-    root.current.style.setProperty("--kx-px", `${(((event.clientX - box.left) / box.width) * 100).toFixed(1)}%`);
-    root.current.style.setProperty("--kx-py", `${(((event.clientY - box.top) / box.height) * 100).toFixed(1)}%`);
-    root.current.dataset.pointer = "true";
-  };
-  const dropPointer = () => {
-    if (root.current) root.current.dataset.pointer = "false";
-  };
-
-  /**
-   * The one place the rotation is written. Never through React.
-   *
-   * `angle` is what the reader sees: degrees clockwise on screen. The artwork
-   * itself is mirrored in LTR (`.kx-hero-mesh` carries `scaleX(-1)`, so the
-   * supplied spur sweeps across the hero instead of out of it) and is not
-   * mirrored in RTL, and a mirror reverses the sense of a rotation. So the sign
-   * is chosen from the live direction at write time: without it, ArrowRight
-   * would turn the network clockwise on one page and anticlockwise on the other.
-   */
-  const turn = (degrees: number) => {
-    angle.current = ((degrees % 360) + 360) % 360;
-    const mirrored = document.documentElement.getAttribute("dir") !== "rtl";
-    spin.current?.style.setProperty("--kx-spin", `${(mirrored ? -angle.current : angle.current).toFixed(2)}deg`);
-  };
-
-  const startDrag = (event: PointerEvent<HTMLDivElement>) => {
-    // Only a facet starts a drag. The links, the junctions and the space around
-    // the artwork stay inert, so a touch there scrolls the page.
-    if (!event.isPrimary || event.button !== 0) return;
-    if (!(event.target instanceof SVGPathElement) || event.target.dataset.facet === undefined) return;
-    drag.current = { pointer: event.pointerId, x: event.clientX, from: angle.current };
-    event.currentTarget.dataset.pointerFocus = "true";
-    event.currentTarget.focus({ preventScroll: true });
-    event.currentTarget.setPointerCapture(event.pointerId);
-    event.currentTarget.dataset.dragging = "true";
-  };
-  const moveDrag = (event: PointerEvent<HTMLDivElement>) => {
-    const start = drag.current;
-    if (!start || start.pointer !== event.pointerId) return;
-    turn(start.from + (event.clientX - start.x) * DRAG_GAIN);
-  };
-  const endDrag = (event: PointerEvent<HTMLDivElement>) => {
-    if (drag.current?.pointer !== event.pointerId) return;
-    drag.current = null;
-    event.currentTarget.dataset.dragging = "false";
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-  };
-
-  const keyboardRotate = (event: KeyboardEvent<HTMLDivElement>) => {
-    // A key means this focus is a keyboard focus, whatever brought it here.
-    delete event.currentTarget.dataset.pointerFocus;
-    switch (event.key) {
-      case "ArrowLeft":
-      case "ArrowUp":
-        turn(angle.current - KEY_STEP);
-        break;
-      case "ArrowRight":
-      case "ArrowDown":
-        turn(angle.current + KEY_STEP);
-        break;
-      case "Home":
-        turn(0);
-        break;
-      default:
-        return;
-    }
-    event.preventDefault();
-  };
-
   return (
-    <div
-      ref={root}
-      className="kx-hero-polygon"
-      data-running={running}
-      data-pointer="false"
-      onPointerMove={trackPointer}
-      onPointerLeave={dropPointer}
-    >
+    <div ref={root} className="kx-hero-polygon" data-running={running}>
       <div className="kx-polygon-aura" aria-hidden="true" />
-      <div
-        className="kx-polygon-interaction"
-        tabIndex={0}
-        role="group"
-        aria-label="Rotate hero polygon network"
-        aria-describedby={`${id}-instructions`}
-        data-dragging="false"
-        onPointerDown={startDrag}
-        onPointerMove={moveDrag}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onLostPointerCapture={endDrag}
-        onKeyDown={keyboardRotate}
-        onBlur={(event) => {
-          delete event.currentTarget.dataset.pointerFocus;
-        }}
-      >
-        <svg className="kx-hero-mesh" viewBox={mesh.viewBox} aria-hidden="true" focusable="false" role="presentation">
-          <defs>
-            {/* Four facet materials, from the deepest return face to the
-                highlight. Stop colours come from CSS so the dark theme re-tints
-                one mesh rather than shipping a second one. */}
-            {[0, 1, 2, 3].map((m) => (
-              <linearGradient
-                key={m}
-                id={`${id}-m${m}`}
-                x1={m % 2 ? "1" : "0"}
-                y1={m > 1 ? "1" : "0"}
-                x2={m % 2 ? "0" : "1"}
-                y2={m > 1 ? "0" : "1"}
-              >
-                <stop className={`kx-mesh-stop-${m}a`} />
-                <stop offset="1" className={`kx-mesh-stop-${m}b`} />
-              </linearGradient>
+      <svg className="kx-hero-mesh" viewBox={mesh.viewBox} aria-hidden="true" focusable="false" role="presentation">
+        <defs>
+          {/* Four facet materials, from the deepest return face to the
+              highlight. Stop colours come from CSS so the dark theme re-tints
+              one mesh rather than shipping a second one. */}
+          {[0, 1, 2, 3].map((m) => (
+            <linearGradient
+              key={m}
+              id={`${id}-m${m}`}
+              x1={m % 2 ? "1" : "0"}
+              y1={m > 1 ? "1" : "0"}
+              x2={m % 2 ? "0" : "1"}
+              y2={m > 1 ? "0" : "1"}
+            >
+              <stop className={`kx-mesh-stop-${m}a`} />
+              <stop offset="1" className={`kx-mesh-stop-${m}b`} />
+            </linearGradient>
+          ))}
+          <radialGradient id={`${id}-node`}>
+            <stop className="kx-mesh-stop-node-a" />
+            <stop offset="0.4" className="kx-mesh-stop-node-b" />
+            <stop offset="1" className="kx-mesh-stop-node-c" />
+          </radialGradient>
+        </defs>
+
+        {/* One group carries the breath, so the facets and the wireframe that
+            outlines them move as one body. The reader's rotation used to live on
+            a second group outside it; with the rotation gone, so is the group. */}
+        <g className="kx-mesh-body">
+          <g className="kx-mesh-facets">
+            {mesh.facets.map((facet) => (
+              <path
+                key={facet.i}
+                data-facet={facet.i}
+                data-material={facet.m}
+                d={facet.d}
+                fill={`url(#${id}-m${facet.m})`}
+                style={
+                  {
+                    "--kx-in": `${(0.012 * Number(facet.i)).toFixed(3)}s`,
+                    "--kx-shimmer": `${(13 + Number(facet.p) * 11).toFixed(2)}s`,
+                    "--kx-shimmer-delay": `${(Number(facet.p) * -22).toFixed(2)}s`,
+                  } as React.CSSProperties
+                }
+              />
             ))}
-            <radialGradient id={`${id}-node`}>
-              <stop className="kx-mesh-stop-node-a" />
-              <stop offset="0.4" className="kx-mesh-stop-node-b" />
-              <stop offset="1" className="kx-mesh-stop-node-c" />
-            </radialGradient>
-          </defs>
-
-          {/* Two nested groups, and the nesting is the point: the reader's
-              rotation lives on the outer one and the breath on the inner one, so
-              a drag composes with the idle motion instead of fighting it for the
-              same `transform`. */}
-          <g ref={spin} className="kx-mesh-spin">
-            <g className="kx-mesh-body">
-              <g className="kx-mesh-facets">
-                {mesh.facets.map((facet) => (
-                  <path
-                    key={facet.i}
-                    data-facet={facet.i}
-                    data-material={facet.m}
-                    d={facet.d}
-                    fill={`url(#${id}-m${facet.m})`}
-                    style={
-                      {
-                        "--kx-in": `${(0.012 * Number(facet.i)).toFixed(3)}s`,
-                        "--kx-shimmer": `${(13 + Number(facet.p) * 11).toFixed(2)}s`,
-                        "--kx-shimmer-delay": `${(Number(facet.p) * -22).toFixed(2)}s`,
-                      } as React.CSSProperties
-                    }
-                  />
-                ))}
-              </g>
-
-              <g className="kx-mesh-links">
-                {mesh.links.map((link) => (
-                  <path
-                    key={link.i}
-                    data-link={link.i}
-                    data-tone={link.tone}
-                    pathLength={1}
-                    d={link.d}
-                    style={{ "--kx-in": `${(0.016 * Number(link.i)).toFixed(3)}s` } as React.CSSProperties}
-                  />
-                ))}
-              </g>
-
-              <g className="kx-mesh-nodes">
-                {mesh.nodes.map((node, n) => (
-                  <g key={node.i} data-junction={n}>
-                    <circle
-                      ref={(el) => {
-                        glowRefs.current[n] = el;
-                      }}
-                      className="kx-mesh-node-glow"
-                      cx={node.cx}
-                      cy={node.cy}
-                      r={node.r * 2.1}
-                      opacity={0.15}
-                      fill={`url(#${id}-node)`}
-                    />
-                    <circle className="kx-mesh-node-core" cx={node.cx} cy={node.cy} r={node.r} />
-                  </g>
-                ))}
-              </g>
-
-              <g className="kx-mesh-pulses">
-                {mesh.routes.map((route, r) => (
-                  <circle
-                    key={r}
-                    ref={(el) => {
-                      pulseRefs.current[r] = el;
-                    }}
-                    className="kx-mesh-pulse"
-                    cx={route.v[0][0]}
-                    cy={route.v[0][1]}
-                    r={3.4}
-                  />
-                ))}
-              </g>
-            </g>
           </g>
-        </svg>
-      </div>
-      {/* The pointer's local brightening. Above the facets, below nothing that
-          carries meaning, and inert until a mouse is actually over the art. */}
-      <div className="kx-polygon-spotlight" aria-hidden="true" />
-      <p id={`${id}-instructions`} className="sr-only">
-        Drag a facet or use the arrow keys to rotate the network. Home returns it to its original angle.
-      </p>
+
+          <g className="kx-mesh-links">
+            {mesh.links.map((link) => (
+              <path
+                key={link.i}
+                data-link={link.i}
+                data-tone={link.tone}
+                pathLength={1}
+                d={link.d}
+                style={{ "--kx-in": `${(0.016 * Number(link.i)).toFixed(3)}s` } as React.CSSProperties}
+              />
+            ))}
+          </g>
+
+          <g className="kx-mesh-nodes">
+            {mesh.nodes.map((node, n) => (
+              <g key={node.i} data-junction={n}>
+                <circle
+                  ref={(el) => {
+                    glowRefs.current[n] = el;
+                  }}
+                  className="kx-mesh-node-glow"
+                  cx={node.cx}
+                  cy={node.cy}
+                  r={node.r * 2.1}
+                  opacity={0.15}
+                  fill={`url(#${id}-node)`}
+                />
+                <circle className="kx-mesh-node-core" cx={node.cx} cy={node.cy} r={node.r} />
+              </g>
+            ))}
+          </g>
+
+          <g className="kx-mesh-pulses">
+            {mesh.routes.map((route, r) => (
+              <circle
+                key={r}
+                ref={(el) => {
+                  pulseRefs.current[r] = el;
+                }}
+                className="kx-mesh-pulse"
+                cx={route.v[0][0]}
+                cy={route.v[0][1]}
+                r={3.4}
+              />
+            ))}
+          </g>
+        </g>
+      </svg>
     </div>
   );
 }

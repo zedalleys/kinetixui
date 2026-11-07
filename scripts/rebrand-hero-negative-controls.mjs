@@ -23,14 +23,25 @@
  *   body-escapes          only the breath escapes the lifecycle
  *   facets-escapes        only the per-facet shimmer escapes it
  *
- * The last two are not redundant. The gate compares the body transform and a
- * facet's opacity as one object, so a single blanket control would pass even if
+ * The hero became decoration on 2026-11-06 (owner decision): the drag rotation,
+ * the arrow keys, Home and the tab stop are gone, and the gate now asserts they
+ * are. An absence is the easiest claim in the world to assert wrongly, because
+ * a check pointed at the wrong element passes exactly as a correct one does, so
+ * three more controls put each removed control back:
+ *
+ *   tab-stop-returns      the illustration takes focus again
+ *   drag-returns          a drag on a facet turns the network again
+ *   keys-return           the arrow keys turn it again
+ *
+ * `body-escapes` and `facets-escapes` are not redundant. The gate compares the
+ * body transform and a facet's opacity as one object, so a single blanket control would pass even if
  * the gate observed only one of the two layers. Running each layer on its own
  * proves both are genuinely measured.
  *
- * Each control is one style tag in a throwaway browser context, injected
- * through the seam in `rebrand-browser.mjs`. Nothing is committed, and the
- * stylesheet in the repository is never modified.
+ * Each control is one style tag — or, for the three that put a listener or an
+ * attribute back, one injected script — in a throwaway browser context, through
+ * the seam in `rebrand-browser.mjs`. Nothing is committed, and neither the
+ * stylesheet nor the component in the repository is ever modified.
  *
  * Requires the production site on REBRAND_BASE (default http://127.0.0.1:3104),
  * the same server `check:rebrand-hero` itself needs.
@@ -61,9 +72,13 @@ const CONTROLS = [
   ["reduced-body-animates", "the mesh breath survives prefers-reduced-motion", /the breath survived reduced motion/, { KX_HERO_CASES: "narrow" }],
   ["reduced-facets-animate", "the facet shimmer survives prefers-reduced-motion", /a facet animation survived reduced motion/, { KX_HERO_CASES: "narrow" }],
   ["reduced-links-animate", "the wireframe draw-on survives prefers-reduced-motion", /the intro draw-on survived reduced motion/],
-  // Keyboard. ArrowLeft bound the same way as ArrowRight: the angle still changes on
-  // every press, so the old "did it change" assertion passed this.
-  ["arrow-left-same-direction", "ArrowLeft turns the network the way ArrowRight does", /it does not reverse it/],
+  // The hero became decoration on 2026-11-06. What the gate asserts now is
+  // ABSENCE — no tab stop, no drag, no keys — and an absence assertion passes
+  // just as happily when it is looking in the wrong place as when the feature
+  // is really gone. Each of these puts one removed control back.
+  ["tab-stop-returns", "the illustration takes focus again", /Tab reached the hero|holds a focus stop/],
+  ["drag-returns", "a drag on a facet turns the network again", /a 180px drag moved the artwork/],
+  ["keys-return", "the arrow keys turn the network again", /the arrow keys moved the artwork/],
 ];
 
 let failures = 0;
@@ -85,14 +100,14 @@ if (baseline.status === 0) {
   failures++;
 }
 
-console.log("negative controls — each lets a continuous animation ignore data-running");
+console.log("negative controls — the motion lifecycle, then each removed control put back");
 for (const [name, what, expected, extraEnv = {}] of CONTROLS) {
   const run = spawnSync("node", GATE, { encoding: "utf8", env: { ...process.env, KX_HERO_NC: name, ...extraEnv } });
   const out = `${run.stdout}${run.stderr}`;
   const caught = run.status !== 0 && expected.test(out);
   const line = out
     .split("\n")
-    .filter((l) => /kept animating|kept travelling|survived reduced motion|does not reverse it/.test(l))
+    .filter((l) => /kept animating|kept travelling|survived reduced motion|moved the artwork|Tab reached the hero|holds a focus stop/.test(l))
     .map((l) => l.trim())[0];
   if (caught) {
     console.log(`  gate fails, as it must   ${name} — ${what}`);
@@ -110,6 +125,7 @@ if (failures) {
 }
 console.log(
   "\nrebrand-hero negative controls ok — the lifecycle assertions fail when the CSS layers are let " +
-    "loose from data-running, whether both escape or only the breath or only the facet shimmer. " +
-    "The pulse-only check the gate used to rely on would have passed all three.",
+    "loose from data-running, whether both escape or only the breath or only the facet shimmer " +
+    "(the pulse-only check the gate used to rely on would have passed all three), and the " +
+    "decoration assertions fail when the tab stop, the drag rotation or the arrow keys come back.",
 );

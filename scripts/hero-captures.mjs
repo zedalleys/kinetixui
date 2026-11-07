@@ -3,9 +3,11 @@
  * site rather than from a design tool.
  *
  * `scripts/rebrand-browser.mjs` captures the seven cases it asserts on. This
- * adds the ones the owner asked for that no gate needs: the wide desktop, the
- * reduced-motion rest pose, and the hero with keyboard focus actually on it.
- * Nothing here asserts anything; it exists so a human can look.
+ * adds the ones the owner asked for that no gate needs: the wide desktop and
+ * the reduced-motion rest pose. The two keyboard-focus captures went with the
+ * hero's controls on 2026-11-06 — it is decoration now and takes no focus, so
+ * there is no focused state left to photograph. Nothing here asserts anything;
+ * it exists so a human can look.
  *
  * Usage: node scripts/hero-captures.mjs --base http://127.0.0.1:3000 --out <dir>
  */
@@ -29,8 +31,6 @@ const CASES = [
   { name: "text-200-1280-light", width: 1280, height: 1000, theme: "light", text: 2 },
   { name: "reduced-motion-1440-light", width: 1440, height: 1030, theme: "light", reduced: true },
   { name: "reduced-motion-1440-dark", width: 1440, height: 1030, theme: "dark", reduced: true },
-  { name: "keyboard-focus-1440-light", width: 1440, height: 1030, theme: "light", focus: true },
-  { name: "keyboard-focus-1440-dark", width: 1440, height: 1030, theme: "dark", focus: true },
 ];
 
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
@@ -68,13 +68,6 @@ for (const c of CASES) {
   await page.goto(base, { waitUntil: "networkidle" });
   // Let the intro settle so a capture is the composition, not a frame of it.
   await page.waitForTimeout(c.reduced ? 500 : 3000);
-  if (c.focus) {
-    for (let i = 0; i < 25; i++) {
-      await page.keyboard.press("Tab");
-      if (await page.evaluate(() => document.activeElement?.classList.contains("kx-polygon-interaction"))) break;
-    }
-    await page.waitForTimeout(400);
-  }
   const hero = page.locator("section.kx-brand-hero");
   await hero.screenshot({ path: `${out}/${c.name}.png` });
   const measured = await page.evaluate(() => {
@@ -83,7 +76,6 @@ for (const c of CASES) {
     return {
       heroArea: Math.round(h.width * h.height),
       meshShare: Number(((s.width * s.height) / (h.width * h.height)).toFixed(4)),
-      focused: document.activeElement?.className?.toString?.().includes("kx-polygon-interaction") ?? false,
       // Reduced motion hides the pulse layer with display:none, so count what is
       // actually painted rather than what is in the DOM.
       pulses: (() => {
@@ -97,7 +89,6 @@ for (const c of CASES) {
   record.cases.push({ ...c, ...measured, consoleErrors: errors });
   console.log(
     `${c.name.padEnd(28)} mesh ${(measured.meshShare * 100).toFixed(1)}% of hero` +
-      `${measured.focused ? ", hero focused" : ""}` +
       `${measured.pulses ? `, ${measured.pulses} pulse(s)` : ", no pulses (static)"}` +
       `${measured.horizontalOverflow ? "  HORIZONTAL OVERFLOW" : ""}` +
       `${errors.length ? `  ${errors.length} console error(s)` : ""}`,
