@@ -43,6 +43,12 @@ jobs:
       - name: Test (release tooling)
         run: pnpm test:release
 
+      # release:check reads this repository's peer ranges, not the published ones, so widening a
+      # range is enough to make it pass even when the package declaring it is not in the release
+      # and the new claim never reaches npm. This fails the pull request that does that.
+      - name: A changed peer claim will actually be published
+        run: pnpm check:peer-claim
+
       # Every workspace package is either allowlisted for npm in release/publish-packages.json or
       # carries `private: true`, and every allowlisted package has publication-ready metadata.
       # A package that is neither fails here, on the pull request that introduced it, rather than
