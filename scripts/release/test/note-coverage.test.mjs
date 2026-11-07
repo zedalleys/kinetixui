@@ -370,6 +370,60 @@ describe("attributing a finding to the base branch", () => {
     assert.equal(introduced.length, 1, "b is this head's and must fail");
   });
 
+  /**
+   * The property, not the call sites. Codex P2 on head `07874ee5`: a finding that stops the
+   * comparison used to carry `ids: []`, which is vacuously a subset of anything the base produced,
+   * so a base note with (say) `"coverage": "core"` excused the whole finding — and a changeset added
+   * afterwards went unenforced while the projected version stayed put. `coverage-absent` had been
+   * given its ids; its three siblings had not.
+   *
+   * Reproduced below against each short-circuit before the fix, and asserted as a general rule so a
+   * fifth short-circuit added later fails here rather than shipping the same hole.
+   */
+  it("no short-circuit finding can excuse a changeset the head newly consumes", () => {
+    const base = plan([changeset("rating-radio", [{ name: "@kinetixui/ui", type: "minor" }])]);
+    // A patch on top of a minor keeps the projected version at 0.28.0, so the versions match and
+    // only the per-id rule stands between the new changeset and a silent pass.
+    const head = plan([
+      changeset("rating-radio", [{ name: "@kinetixui/ui", type: "minor" }]),
+      changeset("metric-wrap", [{ name: "@kinetixui/ui", type: "patch" }]),
+    ]);
+    assert.equal(base.cohorts[0].version, "0.28.0");
+    assert.equal(head.cohorts[0].version, "0.28.0", "the projected version must NOT move, or the test proves nothing");
+
+    const notes = {
+      "coverage is not an array": { version: "0.28.0", coverage: "core" },
+      "the note is not an object": [],
+      "the declared version is another cohort's": {
+        version: "0.28.0",
+        coverage: [{ cohort: "core", version: "0.27.9", changesets: ["rating-radio"] }],
+      },
+      "coverage is absent": { version: "0.28.0" },
+      "an entry is malformed": { version: "0.28.0", coverage: [{ cohort: "core", version: "0.28.0", changesets: [42] }] },
+      "an exclusion has no reason": {
+        version: "0.28.0",
+        coverage: [{ cohort: "core", version: "0.28.0", changesets: [], exclusions: [{ changeset: "rating-radio" }] }],
+      },
+    };
+
+    for (const [label, note] of Object.entries(notes)) {
+      const onBase = validateCoverage({ note, cohorts: base.cohorts, pendingIds: ["rating-radio"] });
+      const onHead = validateCoverage({ note, cohorts: head.cohorts, pendingIds: ["metric-wrap", "rating-radio"] });
+      assert.equal(onBase.ok, false, `${label}: the base must already be failing, or this case is not the one described`);
+      assert.equal(onHead.ok, false, `${label}: the head must fail too`);
+
+      const { introduced } = attributeToBase(onHead.findings, onBase.findings);
+      assert.ok(
+        introduced.length > 0,
+        `${label}: every finding was attributed to the base, so "metric-wrap" would publish uncovered`,
+      );
+      assert.ok(
+        introduced.some((f) => f.ids.includes("metric-wrap")),
+        `${label}: something must name "metric-wrap" specifically, not merely fail for another reason`,
+      );
+    }
+  });
+
   it("does not cross cohorts or kinds", () => {
     assert.equal(attributeToBase([f("angular", "changesets-missing", [])], [f("core", "changesets-missing", [])]).introduced.length, 1);
     assert.equal(attributeToBase([f("core", "changesets-extraneous", [])], [f("core", "changesets-missing", [])]).introduced.length, 1);

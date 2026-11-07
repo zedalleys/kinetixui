@@ -198,22 +198,33 @@ export function validateCoverage({ note, cohorts, pendingIds = [], notePath = "t
   const declaredCohorts = [];
   const findings = [];
   const add = (cohort, kind, ids, message) => findings.push({ cohort, kind, ids: [...ids].sort(), message });
+
+  // THE INVARIANT THAT MAKES BASE ATTRIBUTION SAFE. `attributeToBase` excuses a finding the base
+  // already produced, per id. A finding that *stops* the comparison — a malformed note, malformed
+  // `coverage`, a cohort whose declared version does not match the release — must therefore name the
+  // changesets whose coverage it has just stopped checking. Otherwise its `ids: []` is vacuously a
+  // subset of the base's, the whole finding is excused, and a pre-existing metadata error silently
+  // disables enforcement for every changeset added afterwards. Codex found exactly that on this
+  // branch: `coverage-absent` had been given its ids and its three siblings had not.
+  //
+  // A finding that leaves the cohort undeclared does not need them, because `cohort-uncovered` then
+  // reports that cohort with its full consumed set. `note-coverage.test.mjs` asserts the property
+  // itself — that no short-circuit can excuse a newly consumed changeset — rather than these four
+  // call sites, so a fifth short-circuit added later is caught by the same test.
+  const stoppedChecking = cohorts.flatMap((entry) => entry.changesets);
   const done = () => ({ ok: findings.length === 0, errors: findings.map((finding) => finding.message), findings, declaredCohorts });
 
   if (note === null || typeof note !== "object" || Array.isArray(note)) {
-    add(null, "note-not-an-object", [], `${notePath} is not a JSON object.`);
+    add(null, "note-not-an-object", stoppedChecking, `${notePath} is not a JSON object.`);
     return done();
   }
 
   const coverage = note[COVERAGE_KEY];
   if (coverage === undefined) {
-    // The ids matter: `coverage-absent` is a finding *about* the changesets nothing describes, so a
-    // changeset added at this head cannot be excused by a base branch that was missing the key for
-    // a smaller set. See `attributeToBase`.
     add(
       null,
       "coverage-absent",
-      cohorts.flatMap((entry) => entry.changesets),
+      stoppedChecking,
       `${notePath} has no \`${COVERAGE_KEY}\` array, so nothing says which changesets it describes.\n` +
         `A note that exists is not a note that covers the release — that is what \`check:release-note\` already proves.\n` +
         `Add, for each cohort this release publishes:\n` +
@@ -232,7 +243,12 @@ export function validateCoverage({ note, cohorts, pendingIds = [], notePath = "t
     return done();
   }
   if (!Array.isArray(coverage)) {
-    add(null, "coverage-not-an-array", [], `${notePath} \`${COVERAGE_KEY}\` must be an array of cohort entries, not ${typeOf(coverage)}.`);
+    add(
+      null,
+      "coverage-not-an-array",
+      stoppedChecking,
+      `${notePath} \`${COVERAGE_KEY}\` must be an array of cohort entries, not ${typeOf(coverage)}.`,
+    );
     return done();
   }
 
@@ -331,7 +347,9 @@ export function validateCoverage({ note, cohorts, pendingIds = [], notePath = "t
       add(
         cohort,
         "cohort-version-mismatch",
-        [],
+        // This cohort IS in `byCohort`, so no `cohort-uncovered` will report it; its consumed set
+        // has to travel with this finding or nothing does.
+        plan.changesets,
         `${declared.at} covers cohort "${cohort}" at ${declared.version}, but "${cohort}" publishes ${plan.version} ` +
           `(${plan.packages.join(", ")}).\n` +
           `Cohorts share version numbers — matching on the number alone is how a note for one release line ends up on another.`,
