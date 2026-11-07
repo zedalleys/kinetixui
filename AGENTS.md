@@ -23,34 +23,42 @@ Only two things count as a review:
   whose `status` is `completed`.
 
 Three other replies are each **not** a review — neither a pass nor a fail — and
-none of them may be reported as one:
+none of them may be reported as one.
 
-**1. "To use Codex here, create an environment for this repo."** No Codex Cloud
-environment is bound to this repository in the owning ChatGPT account. The
-GitHub connector itself is fine — it still reaches the repo and still posts —
-so there is nothing to fix here: no file in this repository configures that
-environment, and no amount of re-requesting will change the answer. Only the
-account owner can fix it, at
-<https://chatgpt.com/codex/cloud/settings/environments>. It posts no review
-object and comes back in seconds.
+## 1. "To use Codex here, create an environment for this repo."
 
-Measured 2026-11-07: the last receipt repo-wide was #443 at 02:14:41Z; every
-interaction after it answered this way — #531 at 02:21:39Z and 02:54:40Z (both
-from comments) and #533 at 12:33:23Z (from *PR opened*, no comment involved at
-all). So it does not depend on how the review was requested. **Do not diagnose
-it as a malformed request**: a backtick-wrapped `` `@codex review` `` does
-render as a code span and does not create a GitHub mention, which makes it a
-plausible-looking culprit, but the auto-triggered failure on #533 rules it out.
-Write the mention bare anyway — it is the form that works when the environment
-is present.
+**Intermittent. Re-request it.** Despite naming an environment setting, this is
+not a standing configuration fault and not something to fix in this
+repository — nothing here configures that binding, and a review requested
+minutes later can succeed untouched. It posts no review object and comes back in
+seconds rather than the ~1–2 minutes a real review takes, so the head it was
+asked about has **no review** until a receipt arrives.
 
-**2. "You have reached your Codex usage limits for code reviews."** An
-account-level quota. It has recovered on its own within hours each time it has
-appeared, so retry later rather than treating it as permanent. The summary
-comment alongside it can read `status: "failed"` while still carrying
-`has_any_findings` from the *previous* review — that is stale data about an
-older head, not findings on this one.
+Two readings of it have been measured and **both are wrong**:
 
-**3. A `codex-review-state:v1` block reading `"status": "running"`.** A status
-display, not evidence. It can sit at `running` indefinitely without ever
-producing a receipt.
+- *Not a malformed request.* A backtick-wrapped `` `@codex review` `` does
+  render as a code span and does emit no GitHub mention, which makes it a
+  plausible-looking culprit — the two failures on #531 (02:21:39Z, 02:54:40Z)
+  were both backticked while the request that worked at 02:09:05Z was bare.
+  Ruled out by #533, whose failure at 12:33:23Z came from *PR opened* with no
+  comment at all. Write mentions bare anyway; it is the form that works.
+- *Not a lost environment binding.* Ruled out by #532, reviewed normally at head
+  `75e44bf0` with a receipt at 12:36:03Z — three minutes after #533's failure,
+  with no setting changed in between.
+
+So: wait, re-request with a bare mention, and report the head as unreviewed
+until a receipt names it. Do not open a configuration change for it, and do not
+report it as clean.
+
+## 2. "You have reached your Codex usage limits for code reviews."
+
+An account-level quota, not specific to any PR. It has recovered on its own
+within hours each time it has appeared, so retry later rather than treating it
+as permanent. The summary comment alongside it can read `status: "failed"` while
+still carrying `has_any_findings` from the *previous* review — that is stale
+data about an older head, not findings on this one.
+
+## 3. A `codex-review-state:v1` block reading `"status": "running"`
+
+A status display, not evidence. It can sit at `running` indefinitely without
+ever producing a receipt.
