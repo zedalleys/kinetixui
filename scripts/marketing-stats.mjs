@@ -88,7 +88,7 @@ const exceptions = componentTotal - fullCoverage;
  * component overstates the catalogue by one, on a project whose pitch is that it does not overstate.
  * Derived from the note rather than named here, so a second recipe is handled without an edit.
  */
-const recipes = Object.entries(manifest.components).filter(([, c]) => /not a component/i.test(c.platformNote ?? "")).map(([slug]) => slug);
+const recipes = Object.entries(manifest.components).filter(([, c]) => c.kind === "recipe").map(([slug]) => slug);
 
 /** Component LIFECYCLE — is each component's API settled? Not verification, and not package maturity. */
 const status = read("component-status.json").status;

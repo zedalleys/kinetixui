@@ -12,7 +12,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Form Inputs/Switch",
+  title: "Forms & Inputs/Switch",
   component: Switch,
   args: { disabled: false, defaultChecked: false },
   argTypes: { disabled: { control: "boolean" }, defaultChecked: { control: "boolean" } },
