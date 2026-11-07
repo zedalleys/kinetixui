@@ -424,6 +424,44 @@ describe("attributing a finding to the base branch", () => {
     }
   });
 
+  /**
+   * Codex P2 on head `6ce2b46d`, reproduced on an IDENTICAL tree before fixing. One cohort and kind
+   * can be emitted more than once — two reason-less exclusions in a cohort give one
+   * `exclusion-reason-missing` each — and taking the first base match by `.find()` compared the
+   * head's finding for `b` against the base's for `a`. So an unchanged tree was blamed for a gap it
+   * had inherited: the false positive this function exists to prevent, pointing the wrong way.
+   */
+  it("unions the ids of every matching base finding, so an unchanged tree is never blamed", () => {
+    const base = [f("core", "exclusion-reason-missing", ["a"]), f("core", "exclusion-reason-missing", ["b"])];
+    const head = [f("core", "exclusion-reason-missing", ["a"]), f("core", "exclusion-reason-missing", ["b"])];
+    assert.deepEqual(attributeToBase(head, base).introduced, [], "an identical tree introduces nothing");
+
+    // Still strict: a third reason-less exclusion at this head is this head's.
+    const withOneMore = [...head, f("core", "exclusion-reason-missing", ["c"])];
+    const { introduced } = attributeToBase(withOneMore, base);
+    assert.equal(introduced.length, 1);
+    assert.deepEqual(introduced[0].ids, ["c"]);
+  });
+
+  it("reproduces the duplicate-kind case through the real validator, not only the matcher", () => {
+    const release = plan([
+      changeset("a", [{ name: "@kinetixui/ui", type: "patch" }]),
+      changeset("b", [{ name: "@kinetixui/ui", type: "patch" }]),
+    ]);
+    const note = {
+      version: release.cohorts[0].version,
+      coverage: [{ cohort: "core", version: release.cohorts[0].version, changesets: [], exclusions: [{ changeset: "a" }, { changeset: "b" }] }],
+    };
+    const verdict = (ids) => validateCoverage({ note, cohorts: release.cohorts, pendingIds: ids });
+    const onBase = verdict(["a", "b"]);
+    assert.deepEqual(
+      onBase.findings.filter((entry) => entry.kind === "exclusion-reason-missing").map((entry) => entry.ids),
+      [["a"], ["b"]],
+      "the validator must really emit one finding per reason-less exclusion, or this case is hypothetical",
+    );
+    assert.deepEqual(attributeToBase(verdict(["a", "b"]).findings, onBase.findings).introduced, []);
+  });
+
   it("does not cross cohorts or kinds", () => {
     assert.equal(attributeToBase([f("angular", "changesets-missing", [])], [f("core", "changesets-missing", [])]).introduced.length, 1);
     assert.equal(attributeToBase([f("core", "changesets-extraneous", [])], [f("core", "changesets-missing", [])]).introduced.length, 1);

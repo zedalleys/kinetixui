@@ -416,10 +416,18 @@ export function validateCoverage({ note, cohorts, pendingIds = [], notePath = "t
 /**
  * Which of this tree's findings the base branch already produces.
  *
- * Matched on cohort and kind, and then **per changeset id**: a base finding excuses a head finding
- * only for the ids it already named. `missing: [a]` on the base and `missing: [a, b]` at this head
- * leaves `b` strict, which is the case that matters — otherwise one pre-existing gap would make a
- * cohort permanently unguarded.
+ * Matched on cohort and kind, and then **per changeset id**: the base excuses a head finding only
+ * for the ids it already named. `missing: [a]` on the base and `missing: [a, b]` at this head leaves
+ * `b` strict, which is the case that matters — otherwise one pre-existing gap would make a cohort
+ * permanently unguarded.
+ *
+ * ONE COHORT AND KIND CAN APPEAR MORE THAN ONCE, so the ids of *every* matching base finding are
+ * unioned rather than the first one taken. Two reason-less exclusions in one cohort emit one
+ * `exclusion-reason-missing` each; picking the first by `.find()` matched the head's finding for `b`
+ * against the base's for `a`, so an **unchanged** tree was blamed for a gap it had inherited — the
+ * false positive this whole function exists to prevent, pointing the wrong way. Codex found it at
+ * head `6ce2b46d`; the union is also what keeps a kind that starts being emitted per item later from
+ * reintroducing it.
  *
  * @param {{cohort: string|null, kind: string, ids: string[], message: string}[]} findings this tree
  * @param {{cohort: string|null, kind: string, ids: string[]}[]} baseFindings the base tree
@@ -429,8 +437,9 @@ export function attributeToBase(findings, baseFindings) {
   const attributed = [];
   const introduced = [];
   for (const finding of findings) {
-    const match = baseFindings.find((other) => other.cohort === finding.cohort && other.kind === finding.kind);
-    const excused = match !== undefined && finding.ids.every((id) => match.ids.includes(id));
+    const matches = baseFindings.filter((other) => other.cohort === finding.cohort && other.kind === finding.kind);
+    const known = new Set(matches.flatMap((other) => other.ids));
+    const excused = matches.length > 0 && finding.ids.every((id) => known.has(id));
     (excused ? attributed : introduced).push(finding);
   }
   return { attributed, introduced };
