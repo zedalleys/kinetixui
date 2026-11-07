@@ -1,0 +1,982 @@
+{
+  "base": "http://127.0.0.1:3000",
+  "measuredAt": "2026-11-06T22:32:07.688Z",
+  "pages": [
+    {
+      "path": "/",
+      "theme": "light",
+      "pairs": 9,
+      "worst": {
+        "text": "Ctrl",
+        "without": 4.68,
+        "with": 4.68,
+        "required": 4.5
+      },
+      "measured": [
+        {
+          "text": "Kinetix",
+          "required": 4.5,
+          "without": 15.84,
+          "with": 15.59
+        },
+        {
+          "text": "0.27.0",
+          "required": 4.5,
+          "without": 5.1,
+          "with": 5.02
+        },
+        {
+          "text": "Ctrl",
+          "required": 4.5,
+          "without": 4.68,
+          "with": 4.68
+        },
+        {
+          "text": "One design language.",
+          "required": 3,
+          "without": 15.84,
+          "with": 14.98
+        },
+        {
+          "text": "Explore components",
+          "required": 4.5,
+          "without": 6.21,
+          "with": 6.21
+        },
+        {
+          "text": "bash",
+          "required": 4.5,
+          "without": 4.93,
+          "with": 4.74
+        },
+        {
+          "text": "[00]",
+          "required": 4.5,
+          "without": 6.59,
+          "with": 6.25
+        },
+        {
+          "text": "React",
+          "required": 4.5,
+          "without": 13.57,
+          "with": 12.82
+        },
+        {
+          "text": "109",
+          "required": 4.5,
+          "without": 4.37,
+          "with": 4.13
+        }
+      ],
+      "alreadyUnderAAWithoutTheGlow": [
+        {
+          "text": "109",
+          "ratio": 4.37,
+          "required": 4.5
+        }
+      ],
+      "occlusion": {
+        "point": {
+          "x": 137,
+          "y": 599,
+          "where": "A.inline-flex items-center justify-center gap-1 shrink-0 font-"
+        },
+        "before": [
+          82,
+          67,
+          219
+        ],
+        "after": [
+          82,
+          67,
+          219
+        ]
+      }
+    },
+    {
+      "path": "/",
+      "theme": "dark",
+      "pairs": 15,
+      "worst": {
+        "text": "Ctrl",
+        "without": 6.01,
+        "with": 6.01,
+        "required": 4.5
+      },
+      "measured": [
+        {
+          "text": "Kinetix",
+          "required": 4.5,
+          "without": 17.59,
+          "with": 16.91
+        },
+        {
+          "text": "0.27.0",
+          "required": 4.5,
+          "without": 9.38,
+          "with": 9.02
+        },
+        {
+          "text": "Ctrl",
+          "required": 4.5,
+          "without": 6.01,
+          "with": 6.01
+        },
+        {
+          "text": "One design language.",
+          "required": 3,
+          "without": 17.59,
+          "with": 15.06
+        },
+        {
+          "text": "Explore components",
+          "required": 4.5,
+          "without": 9.76,
+          "with": 9.76
+        },
+        {
+          "text": "bash",
+          "required": 4.5,
+          "without": 8.09,
+          "with": 7.21
+        },
+        {
+          "text": "[00]",
+          "required": 4.5,
+          "without": 9.76,
+          "with": 8.29
+        },
+        {
+          "text": "tokens/",
+          "required": 4.5,
+          "without": 7.81,
+          "with": 7.47
+        },
+        {
+          "text": "color.action",
+          "required": 4.5,
+          "without": 14.65,
+          "with": 14.01
+        },
+        {
+          "text": "React",
+          "required": 4.5,
+          "without": 14.83,
+          "with": 12.25
+        },
+        {
+          "text": "109",
+          "required": 4.5,
+          "without": 7.91,
+          "with": 6.54
+        },
+        {
+          "text": "Kinetix",
+          "required": 4.5,
+          "without": 16.85,
+          "with": 16.67
+        },
+        {
+          "text": "0.27.0",
+          "required": 4.5,
+          "without": 8.99,
+          "with": 8.89
+        },
+        {
+          "text": "React",
+          "required": 4.5,
+          "without": 9.35,
+          "with": 9.25
+        },
+        {
+          "text": "Pause the platform tour",
+          "required": 4.5,
+          "without": 9.45,
+          "with": 8.14
+        }
+      ],
+      "alreadyUnderAAWithoutTheGlow": [],
+      "occlusion": {
+        "point": {
+          "x": 137,
+          "y": 599,
+          "where": "A.inline-flex items-center justify-center gap-1 shrink-0 font-"
+        },
+        "before": [
+          186,
+          179,
+          255
+        ],
+        "after": [
+          186,
+          179,
+          255
+        ]
+      }
+    },
+    {
+      "path": "/blocks",
+      "theme": "light",
+      "pairs": 19,
+      "worst": {
+        "text": "Ctrl",
+        "without": 4.68,
+        "with": 4.68,
+        "required": 4.5
+      },
+      "measured": [
+        {
+          "text": "Kinetix",
+          "required": 4.5,
+          "without": 15.84,
+          "with": 15.59
+        },
+        {
+          "text": "0.27.0",
+          "required": 4.5,
+          "without": 5.1,
+          "with": 5.02
+        },
+        {
+          "text": "Ctrl",
+          "required": 4.5,
+          "without": 4.68,
+          "with": 4.68
+        },
+        {
+          "text": "Blocks",
+          "required": 3,
+          "without": 15.84,
+          "with": 14.98
+        },
+        {
+          "text": "Installing a block on",
+          "required": 4.5,
+          "without": 15.57,
+          "with": 14.87
+        },
+        {
+          "text": "Copy a block's code, then add the compon",
+          "required": 4.5,
+          "without": 5.01,
+          "with": 4.79
+        },
+        {
+          "text": "npx @kinetixui/cli add button card check",
+          "required": 4.5,
+          "without": 14.53,
+          "with": 14.53
+        },
+        {
+          "text": "0.27.0",
+          "required": 4.5,
+          "without": 3.07,
+          "with": 2.7
+        },
+        {
+          "text": "— beta",
+          "required": 4.5,
+          "without": 4.97,
+          "with": 4.97
+        },
+        {
+          "text": "06",
+          "required": 4.5,
+          "without": 5.09,
+          "with": 5.1
+        },
+        {
+          "text": "preview",
+          "required": 4.5,
+          "without": 1.75,
+          "with": 1.89
+        },
+        {
+          "text": "Forgot?",
+          "required": 4.5,
+          "without": 6.59,
+          "with": 6.59
+        },
+        {
+          "text": "Sign in",
+          "required": 4.5,
+          "without": 6.21,
+          "with": 6.21
+        },
+        {
+          "text": "preview",
+          "required": 4.5,
+          "without": 15.84,
+          "with": 15.84
+        },
+        {
+          "text": "12.5%",
+          "required": 4.5,
+          "without": 5.65,
+          "with": 5.65
+        },
+        {
+          "text": "0.3%",
+          "required": 4.5,
+          "without": 6.04,
+          "with": 6.04
+        },
+        {
+          "text": "02",
+          "required": 4.5,
+          "without": 5.06,
+          "with": 4.92
+        },
+        {
+          "text": "Infographic",
+          "required": 4.5,
+          "without": 5.05,
+          "with": 4.92
+        },
+        {
+          "text": "Most popular",
+          "required": 4.5,
+          "without": 5.86,
+          "with": 5.86
+        }
+      ],
+      "alreadyUnderAAWithoutTheGlow": [
+        {
+          "text": "0.27.0",
+          "ratio": 3.07,
+          "required": 4.5
+        },
+        {
+          "text": "preview",
+          "ratio": 1.75,
+          "required": 4.5
+        }
+      ],
+      "occlusion": {
+        "point": {
+          "x": 229,
+          "y": 646,
+          "where": "SELECT.flex w-full appearance-none border border-muted-foreground/8"
+        },
+        "before": [
+          255,
+          255,
+          255
+        ],
+        "after": [
+          255,
+          255,
+          255
+        ]
+      }
+    },
+    {
+      "path": "/blocks",
+      "theme": "dark",
+      "pairs": 22,
+      "worst": {
+        "text": "Ctrl",
+        "without": 6.01,
+        "with": 6.01,
+        "required": 4.5
+      },
+      "measured": [
+        {
+          "text": "Kinetix",
+          "required": 4.5,
+          "without": 17.59,
+          "with": 16.91
+        },
+        {
+          "text": "0.27.0",
+          "required": 4.5,
+          "without": 9.38,
+          "with": 9.02
+        },
+        {
+          "text": "Ctrl",
+          "required": 4.5,
+          "without": 6.01,
+          "with": 6.01
+        },
+        {
+          "text": "Blocks",
+          "required": 3,
+          "without": 17.59,
+          "with": 15.06
+        },
+        {
+          "text": "Installing a block on",
+          "required": 4.5,
+          "without": 16.53,
+          "with": 14.29
+        },
+        {
+          "text": "Copy a block's code, then add the compon",
+          "required": 4.5,
+          "without": 8.82,
+          "with": 7.62
+        },
+        {
+          "text": "npx @kinetixui/cli add button card check",
+          "required": 4.5,
+          "without": 11.27,
+          "with": 11.27
+        },
+        {
+          "text": "0.27.0",
+          "required": 4.5,
+          "without": 4.49,
+          "with": 3.66
+        },
+        {
+          "text": "— beta",
+          "required": 4.5,
+          "without": 9.15,
+          "with": 9.15
+        },
+        {
+          "text": "Infographic",
+          "required": 4.5,
+          "without": 9.31,
+          "with": 9.38
+        },
+        {
+          "text": "06",
+          "required": 4.5,
+          "without": 9.16,
+          "with": 9.38
+        },
+        {
+          "text": "Themes",
+          "required": 4.5,
+          "without": 9.22,
+          "with": 9.38
+        },
+        {
+          "text": "preview",
+          "required": 4.5,
+          "without": 2.3,
+          "with": 2.56
+        },
+        {
+          "text": "Sign in",
+          "required": 4.5,
+          "without": 13.62,
+          "with": 13.62
+        },
+        {
+          "text": "Enter your email to sign in to your acco",
+          "required": 4.5,
+          "without": 7.27,
+          "with": 7.27
+        },
+        {
+          "text": "Forgot?",
+          "required": 4.5,
+          "without": 7.56,
+          "with": 7.56
+        },
+        {
+          "text": "Sign in",
+          "required": 4.5,
+          "without": 9.76,
+          "with": 9.76
+        },
+        {
+          "text": "preview",
+          "required": 4.5,
+          "without": 17.59,
+          "with": 17.59
+        },
+        {
+          "text": "code",
+          "required": 4.5,
+          "without": 8.49,
+          "with": 8.49
+        },
+        {
+          "text": "12.5%",
+          "required": 4.5,
+          "without": 6.68,
+          "with": 6.68
+        },
+        {
+          "text": "0.3%",
+          "required": 4.5,
+          "without": 8.24,
+          "with": 8.24
+        },
+        {
+          "text": "$29",
+          "required": 3,
+          "without": 13.62,
+          "with": 13.62
+        }
+      ],
+      "alreadyUnderAAWithoutTheGlow": [
+        {
+          "text": "0.27.0",
+          "ratio": 4.49,
+          "required": 4.5
+        },
+        {
+          "text": "preview",
+          "ratio": 2.3,
+          "required": 4.5
+        }
+      ],
+      "occlusion": {
+        "point": {
+          "x": 229,
+          "y": 646,
+          "where": "SELECT.flex w-full appearance-none border border-muted-foreground/8"
+        },
+        "before": [
+          11,
+          17,
+          40
+        ],
+        "after": [
+          11,
+          17,
+          40
+        ]
+      }
+    },
+    {
+      "path": "/docs/accessibility",
+      "theme": "light",
+      "pairs": 5,
+      "worst": {
+        "text": "Ctrl",
+        "without": 4.68,
+        "with": 4.68,
+        "required": 4.5
+      },
+      "measured": [
+        {
+          "text": "Kinetix",
+          "required": 4.5,
+          "without": 15.84,
+          "with": 15.59
+        },
+        {
+          "text": "0.27.0",
+          "required": 4.5,
+          "without": 5.1,
+          "with": 5.02
+        },
+        {
+          "text": "Ctrl",
+          "required": 4.5,
+          "without": 4.68,
+          "with": 4.68
+        },
+        {
+          "text": "Accessibility",
+          "required": 3,
+          "without": 15.84,
+          "with": 14.89
+        },
+        {
+          "text": "Blocks",
+          "required": 4.5,
+          "without": 5.09,
+          "with": 5.02
+        }
+      ],
+      "alreadyUnderAAWithoutTheGlow": [],
+      "occlusion": null
+    },
+    {
+      "path": "/docs/accessibility",
+      "theme": "dark",
+      "pairs": 4,
+      "worst": {
+        "text": "Ctrl",
+        "without": 6.01,
+        "with": 6.01,
+        "required": 4.5
+      },
+      "measured": [
+        {
+          "text": "Kinetix",
+          "required": 4.5,
+          "without": 17.59,
+          "with": 16.91
+        },
+        {
+          "text": "0.27.0",
+          "required": 4.5,
+          "without": 9.38,
+          "with": 9.02
+        },
+        {
+          "text": "Ctrl",
+          "required": 4.5,
+          "without": 6.01,
+          "with": 6.01
+        },
+        {
+          "text": "Accessibility",
+          "required": 3,
+          "without": 17.59,
+          "with": 15.09
+        }
+      ],
+      "alreadyUnderAAWithoutTheGlow": [],
+      "occlusion": null
+    },
+    {
+      "path": "/themes",
+      "theme": "light",
+      "pairs": 23,
+      "worst": {
+        "text": "Ctrl",
+        "without": 4.68,
+        "with": 4.68,
+        "required": 4.5
+      },
+      "measured": [
+        {
+          "text": "Kinetix",
+          "required": 4.5,
+          "without": 15.84,
+          "with": 15.59
+        },
+        {
+          "text": "0.27.0",
+          "required": 4.5,
+          "without": 5.1,
+          "with": 5.02
+        },
+        {
+          "text": "Ctrl",
+          "required": 4.5,
+          "without": 4.68,
+          "with": 4.68
+        },
+        {
+          "text": "Themes",
+          "required": 3,
+          "without": 15.84,
+          "with": 14.98
+        },
+        {
+          "text": "Primary",
+          "required": 4.5,
+          "without": 6.21,
+          "with": 6.21
+        },
+        {
+          "text": "Secondary",
+          "required": 4.5,
+          "without": 5.13,
+          "with": 5.13
+        },
+        {
+          "text": "Delete",
+          "required": 4.5,
+          "without": 5.52,
+          "with": 5.52
+        },
+        {
+          "text": "dark",
+          "required": 4.5,
+          "without": 9.38,
+          "with": 9.38
+        },
+        {
+          "text": "Primary",
+          "required": 4.5,
+          "without": 9.76,
+          "with": 9.76
+        },
+        {
+          "text": "Secondary",
+          "required": 4.5,
+          "without": 9.9,
+          "with": 9.9
+        },
+        {
+          "text": "Outline",
+          "required": 4.5,
+          "without": 17.59,
+          "with": 17.59
+        },
+        {
+          "text": "Delete",
+          "required": 4.5,
+          "without": 8.46,
+          "with": 8.46
+        },
+        {
+          "text": "Card surface with",
+          "required": 4.5,
+          "without": 13.62,
+          "with": 13.62
+        },
+        {
+          "text": "Customize in Create →",
+          "required": 4.5,
+          "without": 6.48,
+          "with": 6.19
+        },
+        {
+          "text": "Token",
+          "required": 4.5,
+          "without": 4.97,
+          "with": 4.75
+        },
+        {
+          "text": "Components",
+          "required": 4.5,
+          "without": 5.01,
+          "with": 4.97
+        },
+        {
+          "text": "— beta",
+          "required": 4.5,
+          "without": 5,
+          "with": 4.97
+        },
+        {
+          "text": "Kinetix",
+          "required": 4.5,
+          "without": 14.06,
+          "with": 14.06
+        },
+        {
+          "text": "One design language. 5 platforms. Claims",
+          "required": 4.5,
+          "without": 13.95,
+          "with": 13.95
+        },
+        {
+          "text": "This site is built with it.",
+          "required": 4.5,
+          "without": 14.06,
+          "with": 14.06
+        },
+        {
+          "text": "© 2026 KinetixUI — beta",
+          "required": 4.5,
+          "without": 14.01,
+          "with": 14.01
+        },
+        {
+          "text": "Created by",
+          "required": 4.5,
+          "without": 14.27,
+          "with": 14.27
+        },
+        {
+          "text": "tokens · DTCG → Style Dictionary",
+          "required": 4.5,
+          "without": 14.36,
+          "with": 14.36
+        }
+      ],
+      "alreadyUnderAAWithoutTheGlow": [],
+      "occlusion": {
+        "point": {
+          "x": 412,
+          "y": 483,
+          "where": "DIV.rounded-xl border border-border bg-background p-6 text-foreg"
+        },
+        "before": [
+          255,
+          255,
+          255
+        ],
+        "after": [
+          255,
+          255,
+          255
+        ]
+      }
+    },
+    {
+      "path": "/themes",
+      "theme": "dark",
+      "pairs": 25,
+      "worst": {
+        "text": "light",
+        "without": 5.1,
+        "with": 5.1,
+        "required": 4.5
+      },
+      "measured": [
+        {
+          "text": "Kinetix",
+          "required": 4.5,
+          "without": 17.59,
+          "with": 16.91
+        },
+        {
+          "text": "0.27.0",
+          "required": 4.5,
+          "without": 9.38,
+          "with": 9.02
+        },
+        {
+          "text": "Ctrl",
+          "required": 4.5,
+          "without": 6.01,
+          "with": 6.01
+        },
+        {
+          "text": "Themes",
+          "required": 3,
+          "without": 17.59,
+          "with": 14.94
+        },
+        {
+          "text": "light",
+          "required": 4.5,
+          "without": 5.1,
+          "with": 5.1
+        },
+        {
+          "text": "Primary",
+          "required": 4.5,
+          "without": 6.21,
+          "with": 6.21
+        },
+        {
+          "text": "Secondary",
+          "required": 4.5,
+          "without": 5.13,
+          "with": 5.13
+        },
+        {
+          "text": "Outline",
+          "required": 4.5,
+          "without": 15.84,
+          "with": 15.84
+        },
+        {
+          "text": "Delete",
+          "required": 4.5,
+          "without": 5.52,
+          "with": 5.52
+        },
+        {
+          "text": "Primary",
+          "required": 4.5,
+          "without": 9.76,
+          "with": 9.76
+        },
+        {
+          "text": "Secondary",
+          "required": 4.5,
+          "without": 9.9,
+          "with": 9.9
+        },
+        {
+          "text": "Delete",
+          "required": 4.5,
+          "without": 8.46,
+          "with": 8.46
+        },
+        {
+          "text": "Card surface with",
+          "required": 4.5,
+          "without": 13.62,
+          "with": 13.62
+        },
+        {
+          "text": "Customize in Create →",
+          "required": 4.5,
+          "without": 9.17,
+          "with": 7.93
+        },
+        {
+          "text": "Token",
+          "required": 4.5,
+          "without": 8.54,
+          "with": 7.53
+        },
+        {
+          "text": "Components",
+          "required": 4.5,
+          "without": 8.73,
+          "with": 8.45
+        },
+        {
+          "text": "03",
+          "required": 4.5,
+          "without": 9.29,
+          "with": 9.02
+        },
+        {
+          "text": "— beta",
+          "required": 4.5,
+          "without": 8.64,
+          "with": 8.45
+        },
+        {
+          "text": "Kinetix",
+          "required": 4.5,
+          "without": 10.97,
+          "with": 10.97
+        },
+        {
+          "text": "One design language. 5 platforms. Claims",
+          "required": 4.5,
+          "without": 11.29,
+          "with": 11.29
+        },
+        {
+          "text": "This site is built with it.",
+          "required": 4.5,
+          "without": 10.6,
+          "with": 10.6
+        },
+        {
+          "text": "Docs",
+          "required": 4.5,
+          "without": 11.09,
+          "with": 11.09
+        },
+        {
+          "text": "Explore",
+          "required": 4.5,
+          "without": 10.78,
+          "with": 10.78
+        },
+        {
+          "text": "© 2026 KinetixUI — beta",
+          "required": 4.5,
+          "without": 13.52,
+          "with": 13.52
+        },
+        {
+          "text": "tokens · DTCG → Style Dictionary",
+          "required": 4.5,
+          "without": 13.57,
+          "with": 13.57
+        }
+      ],
+      "alreadyUnderAAWithoutTheGlow": [],
+      "occlusion": {
+        "point": {
+          "x": 412,
+          "y": 483,
+          "where": "DIV.rounded-xl border border-border bg-background p-6 text-foreg"
+        },
+        "before": [
+          255,
+          255,
+          255
+        ],
+        "after": [
+          255,
+          255,
+          255
+        ]
+      }
+    }
+  ]
+}

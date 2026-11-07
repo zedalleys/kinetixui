@@ -14,7 +14,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Feedback/Alert",
+  title: "Feedback & Status/Alert",
   component: Alert,
   args: { variant: "default" },
   argTypes: {

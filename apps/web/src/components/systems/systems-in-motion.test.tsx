@@ -305,8 +305,8 @@ describe("systems in motion: weight and restraint", () => {
     expect(client).toEqual(["explorer-tabs.tsx", "hero-system-map.tsx", "mount-near.tsx", "trace-layer.tsx"]);
   });
 
-  it("sends the explorer's first panel as markup and the other four as data, never as five rendered panels", () => {
-    const explorer = story.platforms.map((p) => ({
+  const explorerProps = () =>
+    story.platforms.map((p) => ({
       platform: p.platform,
       label: p.label,
       maturity: p.maturity,
@@ -315,12 +315,46 @@ describe("systems in motion: weight and restraint", () => {
       verification: p.component.verification,
       evidence: p.component.evidence,
     }));
-    const html = renderToStaticMarkup(<ImplementationExplorer component="Switch" componentHref="/docs/components/switch" platforms={explorer} />);
-    expect(html.match(/<pre\b/g)).toHaveLength(story.platforms[0]!.component.files.length);
+
+  /** The panel the reserve is taken from: most files, then most lines — the same rule the explorer applies. */
+  const tallestPlatform = () =>
+    story.platforms.reduce((a, b) => {
+      const files = (p: (typeof story.platforms)[number]) => p.component.files.length;
+      const lines = (p: (typeof story.platforms)[number]) => p.component.files.reduce((n, f) => n + f.lines.length, 0);
+      if (files(b) !== files(a)) return files(b) > files(a) ? b : a;
+      return lines(b) > lines(a) ? b : a;
+    });
+
+  it("sends the explorer's open panel and the height reserve as markup, and the rest as data only", () => {
+    const html = renderToStaticMarkup(<ImplementationExplorer component="Switch" componentHref="/docs/components/switch" platforms={explorerProps()} />);
+    const first = story.platforms[0]!;
+    const tallest = tallestPlatform();
+    // the open panel, plus the tallest panel laid out under it to hold the card's height — and nothing else
+    expect(html.match(/<pre\b/g)).toHaveLength(first.component.files.length + tallest.component.files.length);
     expect(html.match(/role="tab"/g)).toHaveLength(story.platforms.length);
     for (const p of story.platforms.slice(1)) {
+      if (p.platform === tallest.platform) continue;
       for (const f of p.component.files) expect(html, `${p.label} excerpt rendered before its tab is chosen`).not.toContain(f.file);
     }
+  });
+
+  it("gives the explorer a reserve that is read by nothing: hidden, inert, no control and no focusable region", () => {
+    const html = renderToStaticMarkup(<ImplementationExplorer component="Switch" componentHref="/docs/components/switch" platforms={explorerProps()} />);
+    const tallest = tallestPlatform();
+    const at = html.indexOf('aria-hidden="true" inert=""');
+    expect(at, "no inert reserve in the explorer's markup").toBeGreaterThan(-1);
+    const reserve = html.slice(at, html.indexOf("kx-code-facts", at));
+    expect(reserve).toContain("invisible");
+    expect(reserve).toContain(tallest.component.files[0]!.file);
+    // the real panel's control and its keyboard-reachable scroller exist once, on the open panel, not twice
+    expect(html.match(/Copy the /g)).toHaveLength(1);
+    expect(html.match(/role="region"/g)).toHaveLength(story.platforms[0]!.component.files.length);
+  });
+
+  it("takes the explorer's reserve from the tallest panel, which is the one with the most files", () => {
+    const tallest = tallestPlatform();
+    const files = story.platforms.map((p) => p.component.files.length);
+    expect(tallest.component.files.length).toBe(Math.max(...files));
   });
 
   it("renders an excerpt with one element per line, real line numbers and the token line marked", () => {
