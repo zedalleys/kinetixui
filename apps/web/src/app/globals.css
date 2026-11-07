@@ -523,30 +523,78 @@
   .kx-strip > li[data-implemented] > span:last-child {
     @apply text-primary;
   }
-  /* "Claims you can check." (`evidence-columns.tsx`): one card per platform, its facts, then its meters. */
+  /* "Claims you can check." (`evidence-columns.tsx`): one card per platform — its mark and name, three facts,
+     the shape of its evidence in words, and the six dimensions inside a disclosure. */
   .kx-evidence > li {
     @apply flex flex-col rounded-xl border border-border bg-card p-4;
   }
-  .kx-evidence > li > p {
-    @apply font-display text-base font-semibold text-foreground;
+  /* the mark sits on the text baseline beside the name, never above it, so the row reads as one line */
+  .kx-evidence > li > p:first-child {
+    @apply flex flex-wrap items-center gap-x-2 font-display text-base font-semibold text-foreground;
   }
-  .kx-evidence > li > p > span {
-    @apply ms-2 font-mono text-label-md font-normal text-primary;
+  .kx-evidence > li > p:first-child > svg {
+    @apply text-muted-foreground;
   }
-  .kx-evidence dl:first-of-type {
+  .kx-evidence > li > p:first-child > span {
+    @apply font-mono text-label-md font-normal text-primary;
+  }
+  /* The three facts. Label above value: at five columns a card is ~250px, and a label-and-value row there
+     wraps "@kinetixui/ui" and "experimental" mid-word, which costs more lines than it saves. */
+  .kx-evidence > li > dl {
     @apply mt-3 text-sm;
   }
-  .kx-evidence dl:first-of-type dt {
+  .kx-evidence > li > dl > dt {
     @apply font-mono text-label-md text-muted-foreground;
   }
-  .kx-evidence dl:first-of-type dd {
+  .kx-evidence > li > dl > dd {
     @apply text-foreground;
   }
-  .kx-evidence dl:first-of-type dd:not(:last-child) {
+  .kx-evidence > li > dl > dd:not(:last-child) {
     @apply mb-2;
   }
-  .kx-evidence dl:last-of-type {
-    @apply mt-4 grid grid-cols-1 gap-2 border-t border-border pt-3;
+  /* The tally: one chip per state present, strongest first. Words and a count of dimensions, never a score,
+     so no meter and no red: "not yet verified" is a gap in the evidence, not a failure of the platform. */
+  .kx-evidence-tally {
+    @apply mt-3 flex flex-wrap gap-1.5 border-t border-border pt-3;
+  }
+  .kx-evidence-tally > span {
+    @apply rounded-md border border-border px-1.5 py-0.5 font-mono text-label-md text-muted-foreground;
+  }
+  .kx-evidence-tally > span[data-tally-state="verified"] {
+    @apply border-primary/40 bg-primary/10 text-foreground;
+  }
+  .kx-evidence-tally > span[data-tally-state="partial"] {
+    @apply border-primary/25 text-foreground;
+  }
+  /* The disclosure. A native <details>: keyboard operable, announced as a disclosure, searchable in-page, and
+     open-able with no JavaScript, so the dimensions are reduced at rest without being put out of reach.
+     `mt-auto` sits it on the card's bottom edge, so the five "All 6 dimensions" rows line up across the grid
+     however many state chips a card's tally wraps onto. */
+  .kx-evidence-more {
+    @apply mt-auto border-t border-border pt-3;
+  }
+  .kx-evidence-more > summary {
+    @apply -m-1 cursor-pointer list-none rounded-md p-1 font-mono text-label-md text-muted-foreground marker:content-none hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  }
+  .kx-evidence-more > summary::-webkit-details-marker {
+    display: none;
+  }
+  /* The chevron turns with the disclosure. No transition: this is a state marker, not an animation, so it is
+     identical under `prefers-reduced-motion` and needs no exception. */
+  .kx-evidence-more > summary > span:first-child {
+    @apply me-1.5 inline-block;
+  }
+  .kx-evidence-more[open] > summary > span:first-child {
+    transform: rotate(90deg);
+  }
+  [dir="rtl"] .kx-evidence-more > summary > span:first-child {
+    transform: scaleX(-1);
+  }
+  [dir="rtl"] .kx-evidence-more[open] > summary > span:first-child {
+    transform: scaleX(-1) rotate(90deg);
+  }
+  .kx-evidence-more > dl {
+    @apply mt-3 grid grid-cols-1 gap-2;
   }
   /* One evidence row: the label, then the state with its count, then the sentence (where shown). */
   .kx-evidence .kx-meter,
