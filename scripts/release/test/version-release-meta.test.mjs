@@ -33,3 +33,33 @@ it("activates curated notes after versioning, regenerates metadata, and is idemp
     assert.equal(readFileSync(file, "utf8"), updated);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+// An integration control for the activation step, not for the note gate: accepted note text must reach
+// `releases.ts` unchanged. `String.prototype.replace` interprets `$$`, `$&`, `$1` and `` $` `` in a
+// STRING replacement, and the replacement here is the serialized note, so the note's own prose was
+// being rewritten. Measured on the pre-fix script: `$$` became `$` (silent corruption of published
+// text) and `$&` spliced the RELEASES marker into the string literal (`error TS1002: Unterminated
+// string literal`) — while `check:releases` reported `ok — 44 entries` for both. Hence a control here
+// rather than a restriction in `check-release-note.mjs`: the prose is legitimate; the writer was not.
+it("writes note text through to releases.ts unchanged, including replacement-pattern characters", () => {
+  const root = mkdtempSync(path.join(tmpdir(), "kinetix-version-meta-dollar-"));
+  try {
+    for (const dir of ["scripts", "packages/ui", "apps/web/src/lib", "release/notes"]) mkdirSync(path.join(root, dir), { recursive: true });
+    copyFileSync(new URL("../../version-release-meta.mjs", import.meta.url), path.join(root, "scripts/version-release-meta.mjs"));
+    for (const script of ["gen-release-meta", "check-releases"]) writeFileSync(path.join(root, `scripts/${script}.mjs`), "");
+    const file = path.join(root, "apps/web/src/lib/releases.ts");
+    writeFileSync(file, 'export const RELEASES: Release[] = [\n  {\n    version: "0.24.0",\n    date: "2026-10-06",\n  },\n];\n');
+    writeFileSync(path.join(root, "packages/ui/package.json"), JSON.stringify({ version: "0.24.1" }));
+
+    // Every replacement pattern `replace` recognises, in text an author could plausibly write about a
+    // CLI flag, a price, a regex or a shell variable.
+    const summary = "Costs $$5, matches $& and $1, quotes $` and $', and $$$& together.";
+    writeFileSync(path.join(root, "release/notes/0.24.1.json"), JSON.stringify({ version: "0.24.1", summary, breaking: [], changes: [] }));
+
+    assert.equal(spawnSync(process.execPath, ["scripts/version-release-meta.mjs"], { cwd: root, encoding: "utf8" }).status, 0);
+    const updated = readFileSync(file, "utf8");
+    assert.ok(updated.includes(`summary: ${JSON.stringify(summary)}`), `note text was rewritten during activation:\n${updated}`);
+    // And the file is still one well-formed entry list: the marker appears once, where it started.
+    assert.equal(updated.split("export const RELEASES: Release[] = [").length - 1, 1);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
