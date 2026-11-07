@@ -34,6 +34,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { serveStatic } from "./visual-harness.mjs";
+import { storyId } from "./story-id.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -50,7 +51,7 @@ const INSTANT_MS = ms("instant");
 const STANDARD = `cubic-bezier(${motion.easing.standard.$value.join(", ")})`;
 const SETTLE = FAST_MS + 150;
 
-const STORY = { toggle: "controls-actions-toggle--states", group: "controls-actions-togglegroup--states" };
+const STORY = { toggle: storyId("toggle", "States"), group: storyId("toggle-group", "States") };
 const VARIANTS = ["default", "outline", "pill"];
 const HOVER = /rgba\([^)]*,\s*0\.08\)/;
 const PRESS = /rgba\([^)]*,\s*0\.14\)/;

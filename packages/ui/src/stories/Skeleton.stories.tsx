@@ -15,7 +15,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Foundations/Skeleton",
+  title: "Feedback & Status/Skeleton",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<Skeleton className=\"size-12 rounded-full\" />\\n<Skeleton className=\"h-4 w-[200px]\" />", language: "tsx" } },

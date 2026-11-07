@@ -52,15 +52,24 @@ const TOKEN_CLASS: Record<Exclude<TokenKind, "plain">, string> = {
 
 const textOf = (line: Run[]) => line.map((r) => (typeof r === "string" ? r : r[1])).join("");
 
-export function ExplorerPanel({ component, data }: { component: string; data: PanelData }) {
+/**
+ * `reserve` draws the panel for its size alone — the height the tab strip holds open for every platform
+ * (`explorer-tabs.tsx`). It is the same markup, so it occupies exactly what the real panel occupies at any
+ * width, text size or direction, with nothing to keep in step by hand. What it must not do is exist twice
+ * over for a reader: the copy button is a control and the scroller is a focusable region, so a reserve
+ * renders neither, and the wrapper hides it from the page outright.
+ */
+export function ExplorerPanel({ component, data, reserve = false }: { component: string; data: PanelData; reserve?: boolean }) {
   return (
     <>
       <div className="relative">
-        <CopyButton
-          value={data.files.map((f) => f.lines.map(textOf).join("\n")).join("\n\n")}
-          label={`Copy the ${data.label} ${component} excerpt`}
-          className="absolute end-3 top-2.5 z-10"
-        />
+        {reserve ? null : (
+          <CopyButton
+            value={data.files.map((f) => f.lines.map(textOf).join("\n")).join("\n\n")}
+            label={`Copy the ${data.label} ${component} excerpt`}
+            className="absolute end-3 top-2.5 z-10"
+          />
+        )}
         {data.files.map((f) => (
           <div key={f.file}>
             <p className="kx-code-file">
@@ -73,9 +82,13 @@ export function ExplorerPanel({ component, data }: { component: string; data: Pa
             </p>
             <div
               // long lines scroll sideways, so the keyboard has to be able to reach the region
-              tabIndex={0}
-              role="region"
-              aria-label={`${data.label} ${component} source, ${f.file} lines ${f.firstLine} to ${f.lastLine}`}
+              {...(reserve
+                ? {}
+                : {
+                    tabIndex: 0,
+                    role: "region",
+                    "aria-label": `${data.label} ${component} source, ${f.file} lines ${f.firstLine} to ${f.lastLine}`,
+                  })}
               className="kx-code-scroll"
             >
               <pre dir="ltr" className="kx-code font-mono text-body-sm leading-relaxed" style={{ counterReset: `kx-line ${f.firstLine - 1}` }}>
