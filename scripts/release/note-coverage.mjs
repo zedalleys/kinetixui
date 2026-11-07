@@ -200,31 +200,48 @@ export function validateCoverage({ note, cohorts, pendingIds = [], notePath = "t
   const add = (cohort, kind, ids, message) => findings.push({ cohort, kind, ids: [...ids].sort(), message });
 
   // THE INVARIANT THAT MAKES BASE ATTRIBUTION SAFE. `attributeToBase` excuses a finding the base
-  // already produced, per id. A finding that *stops* the comparison — a malformed note, malformed
-  // `coverage`, a cohort whose declared version does not match the release — must therefore name the
-  // changesets whose coverage it has just stopped checking. Otherwise its `ids: []` is vacuously a
-  // subset of the base's, the whole finding is excused, and a pre-existing metadata error silently
-  // disables enforcement for every changeset added afterwards. Codex found exactly that on this
-  // branch: `coverage-absent` had been given its ids and its three siblings had not.
+  // already produced, matching on `(cohort, kind)` and comparing ids. So a finding must satisfy two
+  // things, and three review rounds on this branch each found one of them broken:
   //
-  // A finding that leaves the cohort undeclared does not need them, because `cohort-uncovered` then
-  // reports that cohort with its full consumed set. `note-coverage.test.mjs` asserts the property
-  // itself — that no short-circuit can excuse a newly consumed changeset — rather than these four
-  // call sites, so a fifth short-circuit added later is caught by the same test.
-  const stoppedChecking = cohorts.flatMap((entry) => entry.changesets);
-  const done = () => ({ ok: findings.length === 0, errors: findings.map((finding) => finding.message), findings, declaredCohorts });
+  //   1. It must NAME the changesets whose coverage it has just stopped checking. Otherwise `ids:
+  //      []` is vacuously a subset of the base's, the whole finding is excused, and a pre-existing
+  //      metadata error silently disables enforcement for every changeset added afterwards.
+  //   2. Its `(cohort, kind)` key must SCOPE its ids. A note-wide failure stops the comparison for
+  //      every cohort at once, so emitting it as one finding with `cohort: null` and every cohort's
+  //      ids flattened together loses the dimension the payload spans: a base that already fails for
+  //      `shared-fix` in `core` then excuses a head where that same `shared-fix` newly releases
+  //      `angular` too, with `angular` entirely uncovered. No new id appears, so (1) does not catch
+  //      it. `stopChecking` therefore emits ONE FINDING PER COHORT, each carrying only that cohort's
+  //      consumed set, and a cohort absent from the base has no match at all.
+  //
+  // A finding that leaves the cohort undeclared needs neither, because `cohort-uncovered` then
+  // reports that cohort with its full consumed set. `note-coverage.test.mjs` asserts both properties
+  // themselves — over new ids AND over new cohorts — rather than these call sites, so a fourth
+  // short-circuit added later is caught by the same tests.
+  const stopChecking = (kind, message) => {
+    if (cohorts.length === 0) {
+      add(null, kind, [], message);
+      return;
+    }
+    for (const entry of cohorts) add(entry.cohort, kind, entry.changesets, message);
+  };
+  // One note-wide failure is one thing to tell the reader, however many cohorts it stopped checking.
+  const done = () => ({
+    ok: findings.length === 0,
+    errors: [...new Set(findings.map((finding) => finding.message))],
+    findings,
+    declaredCohorts,
+  });
 
   if (note === null || typeof note !== "object" || Array.isArray(note)) {
-    add(null, "note-not-an-object", stoppedChecking, `${notePath} is not a JSON object.`);
+    stopChecking("note-not-an-object", `${notePath} is not a JSON object.`);
     return done();
   }
 
   const coverage = note[COVERAGE_KEY];
   if (coverage === undefined) {
-    add(
-      null,
+    stopChecking(
       "coverage-absent",
-      stoppedChecking,
       `${notePath} has no \`${COVERAGE_KEY}\` array, so nothing says which changesets it describes.\n` +
         `A note that exists is not a note that covers the release — that is what \`check:release-note\` already proves.\n` +
         `Add, for each cohort this release publishes:\n` +
@@ -243,10 +260,8 @@ export function validateCoverage({ note, cohorts, pendingIds = [], notePath = "t
     return done();
   }
   if (!Array.isArray(coverage)) {
-    add(
-      null,
+    stopChecking(
       "coverage-not-an-array",
-      stoppedChecking,
       `${notePath} \`${COVERAGE_KEY}\` must be an array of cohort entries, not ${typeOf(coverage)}.`,
     );
     return done();

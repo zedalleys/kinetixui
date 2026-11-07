@@ -209,7 +209,11 @@ describe("curated release-note coverage", () => {
     assert.ok(coverage, "the control must start from a note that did have coverage");
     const result = check(note);
     assert.equal(result.ok, false);
-    assert.deepEqual(kinds(result), ["coverage-absent"]);
+    // One finding per cohort it stopped checking, so base attribution can tell the two apart (see
+    // "no short-circuit finding can excuse a cohort the head newly releases"), but one message.
+    assert.deepEqual(kinds(result), ["coverage-absent", "coverage-absent"]);
+    assert.deepEqual(result.findings.map((entry) => entry.cohort).sort(), ["angular", "core"]);
+    assert.equal(result.errors.length, 1);
     // The diagnostic has to be actionable: it prints the block the author needs, per cohort.
     assert.match(result.errors[0], /"cohort": "core", "version": "0\.28\.0", "changesets": \["metric-wrap", "rating-radio", "tokens-preset"\]/);
     assert.match(result.errors[0], /"cohort": "angular", "version": "0\.26\.3", "changesets": \["metric-wrap"\]/);
@@ -304,7 +308,8 @@ describe("curated release-note coverage", () => {
     // findings are wanted: one says the metadata is malformed, the other says the release line is
     // consequently undescribed. Neither is a throw — `changesets: [42]` used to be able to crash a
     // gate of this shape, so the element types are asserted rather than assumed.
-    assert.deepEqual(shape("core"), ["coverage-not-an-array"]);
+    // Note-wide: one finding per cohort in the release, which here is core and angular.
+    assert.deepEqual(shape("core"), ["coverage-not-an-array", "coverage-not-an-array"]);
     assert.deepEqual(shape([42]), ["cohort-uncovered", "cohort-uncovered", "entry-not-an-object"]);
     assert.deepEqual(shape([null]), ["cohort-uncovered", "cohort-uncovered", "entry-not-an-object"]);
     assert.deepEqual(shape([{ version: "0.28.0" }]), ["cohort-uncovered", "cohort-uncovered", "entry-cohort-missing"]);
@@ -422,6 +427,74 @@ describe("attributing a finding to the base branch", () => {
         `${label}: something must name "metric-wrap" specifically, not merely fail for another reason`,
       );
     }
+  });
+
+  /**
+   * The same property over the other dimension. Codex P2 on head `b7ced237`: a note-wide failure
+   * stops the comparison for EVERY cohort, and it used to be emitted as one finding with
+   * `cohort: null` and every cohort's ids flattened together. So the key no longer scoped its
+   * payload, and a base already failing for `shared-fix` in `core` excused a head where that same
+   * `shared-fix` newly releases `angular` too — `angular` wholly uncovered, and no new id anywhere
+   * for the per-id rule above to catch. Reproduced before the fix: `attributed: 1 introduced: none`.
+   *
+   * The release cannot be held still here the way the test above holds the version still, because
+   * adding a cohort IS the mutation. What is held still is the changeset id.
+   */
+  it("no short-circuit finding can excuse a cohort the head newly releases", () => {
+    const base = plan([changeset("shared-fix", [{ name: "@kinetixui/ui", type: "minor" }])]);
+    // The SAME id, now moving angular as well. One changeset, two cohorts, both owed a description.
+    const head = plan([
+      changeset("shared-fix", [
+        { name: "@kinetixui/ui", type: "minor" },
+        { name: "@kinetixui/angular", type: "minor" },
+      ]),
+    ]);
+    assert.deepEqual(
+      base.cohorts.map((entry) => entry.cohort),
+      ["core"],
+    );
+    assert.deepEqual(
+      head.cohorts.map((entry) => entry.cohort).sort(),
+      ["angular", "core"],
+      "the head must really release a second cohort, or this case is hypothetical",
+    );
+
+    const notes = {
+      "coverage is absent": { version: base.cohorts[0].version },
+      "coverage is not an array": { version: base.cohorts[0].version, coverage: "core" },
+      "the note is not an object": [],
+    };
+
+    for (const [label, note] of Object.entries(notes)) {
+      const onBase = validateCoverage({ note, cohorts: base.cohorts, pendingIds: ["shared-fix"] });
+      const onHead = validateCoverage({ note, cohorts: head.cohorts, pendingIds: ["shared-fix"] });
+      assert.equal(onBase.ok, false, `${label}: the base must already be failing, or this is not the case described`);
+      assert.equal(onHead.ok, false, `${label}: the head must fail too`);
+
+      const { introduced } = attributeToBase(onHead.findings, onBase.findings);
+      assert.ok(
+        introduced.some((entry) => entry.cohort === "angular"),
+        `${label}: nothing named the newly released "angular" cohort, so it would publish uncovered`,
+      );
+      // And still not strict in the wrong direction: the core gap is the base's, not this head's.
+      assert.equal(
+        introduced.some((entry) => entry.cohort === "core"),
+        false,
+        `${label}: the pre-existing core gap must stay attributed to the base`,
+      );
+    }
+  });
+
+  it("reports a note-wide failure once, however many cohorts it stopped checking", () => {
+    const release = plan([
+      changeset("shared-fix", [
+        { name: "@kinetixui/ui", type: "minor" },
+        { name: "@kinetixui/angular", type: "minor" },
+      ]),
+    ]);
+    const result = validateCoverage({ note: { version: release.cohorts[0].version }, cohorts: release.cohorts, pendingIds: ["shared-fix"] });
+    assert.equal(result.findings.length, 2, "one finding per cohort, so attribution can tell them apart");
+    assert.equal(result.errors.length, 1, "but one message, because it is one thing to tell the reader");
   });
 
   /**
