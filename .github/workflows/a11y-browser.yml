@@ -362,3 +362,11 @@ jobs:
 
       - name: Navigation focus-ring negative controls (the corrected assertion still catches its defect)
         run: pnpm check:navigation-visual-negative-controls
+
+      # Hosted here rather than in `axe` deliberately: this needs Chromium, and the axe job already runs
+      # within about six minutes of its 45-minute cap. This job has a 25-minute cap and ~15 seconds of work,
+      # so the gate costs a Tailwind compile and two browser contexts in a job with room for them.
+      # One step, not two: the script measures the floor AND runs its four negative controls in the same
+      # browser launch, so splitting it would pay for the launch twice to assert the same thing.
+      - name: Reduced motion caps delays as well as durations (with negative controls)
+        run: pnpm check:reduced-motion-delay
