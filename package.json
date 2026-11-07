@@ -29,6 +29,7 @@
     "check:motion-identity-controls": "node scripts/motion-identity-negative-controls.mjs",
     "gen:release-meta": "node scripts/gen-release-meta.mjs",
     "check:releases": "node scripts/check-releases.mjs",
+    "check:release-note-coverage": "node scripts/check-release-note-coverage.mjs",
     "check:release-links": "node scripts/check-release-links.mjs",
     "release:notes": "node scripts/release-notes.mjs",
     "check:rtl": "node scripts/check-rtl.mjs",
