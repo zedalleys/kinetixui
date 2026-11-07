@@ -11,6 +11,7 @@
   "files": [
     "src/examples/blocks/account-security.ts",
     "src/examples/blocks/alert-stack.ts",
+    "src/examples/blocks/boarding-pass.ts",
     "src/examples/blocks/comment-box.ts",
     "src/examples/blocks/create-account.ts",
     "src/examples/blocks/cta-banner.ts",
