@@ -73,6 +73,14 @@ const NEGATIVES = {
   // The same class one step along: the approval assertion deliberately runs *before* the install,
   // so it is held to the same rule even though its job installs dependencies later.
   "approval-assertion-swapped-for-a-script-that-needs-dependencies": { from: "        run: node scripts/release/approval.mjs --environment=publish-npm\n", to: "        run: node scripts/release-plan.mjs --environment=publish-npm\n", breaks: "REL-SCRIPTS-RESOLVE-WITHOUT-INSTALL" },
+  // Review round 2. A workflow-level group is held by a run whose publish job is merely *waiting*
+  // for approval, so later runs queue behind it and one unapproved publication stops `plan` and
+  // `version` for every subsequent push — the Version PR path gated after all, by the back door.
+  "serialization-returns-to-the-whole-workflow": { from: "jobs:\n", to: "concurrency: release-${{ github.ref }}\njobs:\n", breaks: "REL-SERIALIZATION-SCOPED" },
+  "publish-stops-serializing-against-other-publications": { from: "    concurrency: release-publish-${{ github.ref }}\n", to: "", breaks: "REL-SERIALIZATION-SCOPED" },
+  "the-two-paths-share-one-concurrency-group": { from: "    concurrency: release-version-${{ github.ref }}\n", to: "    concurrency: release-publish-${{ github.ref }}\n", breaks: "REL-SERIALIZATION-SCOPED" },
+  "an-in-flight-publication-becomes-cancellable": { from: "    concurrency: release-publish-${{ github.ref }}\n", to: "    concurrency:\n      group: release-publish-${{ github.ref }}\n      cancel-in-progress: true\n", breaks: "REL-SERIALIZATION-SCOPED" },
+  "serialization-stops-being-per-branch": { from: "    concurrency: release-publish-${{ github.ref }}\n", to: "    concurrency: release-publish\n", breaks: "REL-SERIALIZATION-SCOPED" },
   "workflow-does-not-parse": { from: "jobs:\n", to: "jobs:\n  duplicate: {}\njobs:\n", breaks: "REL-PARSES" },
 };
 
@@ -285,6 +293,33 @@ if (parseError === null && doc?.jobs) {
     "REL-SCRIPTS-RESOLVE-WITHOUT-INSTALL",
     unresolvable.length === 0,
     `${unresolvable.join("; ")}. A job that has not installed dependencies has none: the import fails with ERR_MODULE_NOT_FOUND at startup, and because \`plan\` decides which release path runs, a \`plan\` that dies skips both of them — every release run doing nothing. Each runner is its own machine, so installing in another job does not help. Keep these scripts to \`node:\` builtins and relative imports, or install dependencies in the job before running them.`,
+  );
+
+  // Scoped serialization, which the gate made load-bearing. A run is "in progress" while its
+  // publish job waits for approval, so whatever group that run holds is held for as long as nobody
+  // approves — up to the 30-day auto-fail. Held at workflow level, that blocks `plan` and `version`
+  // for every later push, so one unapproved publication stops the next changeset from even opening
+  // its Version PR. Each mutating job therefore carries its own group, keyed per branch, and the
+  // publication's is never cancellable: interrupting a run partway through leaves the registry
+  // holding some packages and not others.
+  const group = (job) => (typeof job?.concurrency === "string" ? job.concurrency : job?.concurrency?.group);
+  const cancels = (job) => typeof job?.concurrency === "object" && job?.concurrency?.["cancel-in-progress"] === true;
+  const serialization = [];
+  if (doc.concurrency !== undefined) serialization.push(`${WORKFLOW} declares a workflow-level \`concurrency\` (\`${group(doc) ?? JSON.stringify(doc.concurrency)}\`)`);
+  for (const [label, entry] of [["Version PR", versionJobs.length === 1 ? versionJobs[0] : null], ["publishing", publishJob]]) {
+    if (!entry) continue;
+    const name = group(entry.job);
+    if (name === undefined) serialization.push(`the ${label} job \`${entry.name}\` declares no \`concurrency\` group, so two of them can run at once`);
+    else if (!name.includes("github.ref")) serialization.push(`the ${label} job \`${entry.name}\` is serialized as \`${name}\`, which is not keyed on \`github.ref\``);
+  }
+  const versionGroup = versionJobs.length === 1 ? group(versionJobs[0].job) : undefined;
+  const publishGroup = publishJob ? group(publishJob.job) : undefined;
+  if (versionGroup !== undefined && versionGroup === publishGroup) serialization.push(`the Version PR job and the publishing job share the group \`${publishGroup}\`, so a publication awaiting approval queues the next Version PR behind it`);
+  if (publishJob && cancels(publishJob.job)) serialization.push(`the publishing job sets \`cancel-in-progress: true\``);
+  check(
+    "REL-SERIALIZATION-SCOPED",
+    serialization.length === 0,
+    `${serialization.join("; ")}. A run is in progress while its publish job waits for approval, and an unset \`cancel-in-progress\` makes later runs queue rather than replace it — so a group held across that wait is held for as long as nobody approves. At workflow level that stops \`plan\` and \`version\` too, which gates the Version PR path indirectly: exactly what the split exists to prevent. Serialize each mutating job in a group of its own, keyed per branch, and never let a publication be cancelled partway through.`,
   );
 
   check(

@@ -314,6 +314,16 @@ any workflow, so a copy left at that scope hands the credential to a job nobody 
 the gate decorative. `RELEASE_PAT` stays at repository scope deliberately — its job is to open the
 Version PR.
 
+**Serialization is per job, not per workflow.** A run is "in progress" while its publish job waits
+for approval, and with `cancel-in-progress` unset later runs queue rather than replace it — so a
+workflow-level `concurrency` group would be held for as long as nobody approves, up to the 30-day
+auto-fail. That would stop `plan` and `version` for every subsequent push: one unapproved
+publication, and the next changeset could not even open its Version PR. So `version` and `publish`
+each carry their own group, keyed per branch, and `publish`'s is never cancellable — interrupting a
+run partway through leaves the registry holding some packages and not others. `preflight` and `plan`
+are unserialized on purpose: they are read-only, so two overlapping cost CI minutes and nothing
+else. Held by `REL-SERIALIZATION-SCOPED`.
+
 **The hole underneath it, and what closes it.** An `environment:` naming an environment that does
 not exist does not fail. GitHub creates it, unprotected, and the job runs immediately — and the same
 is true of an environment whose required reviewers were later removed. Either way the workflow still
@@ -330,7 +340,7 @@ be the first thing reached for during a stalled release.
 
 Two checks keep the arrangement in place. `pnpm check:release-approval-gate` asserts the structure:
 one gated publishing job, one publication step inside it, the approval asserted before that step,
-and the preflight, `plan` and `version` paths ungated and credential-free. It carries 15 registered
+and the preflight, `plan` and `version` paths ungated and credential-free. It carries 22 registered
 negative controls, each removing one property and required to fail. What it cannot see is whether
 `publish-npm` has required reviewers on GitHub — that is the half `approval.mjs` covers at run time.
 Neither half is sufficient alone.

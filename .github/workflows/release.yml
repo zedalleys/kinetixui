@@ -4,7 +4,19 @@ on:
   push:
     branches: [main]
 
-concurrency: release-${{ github.ref }}
+# NOT a workflow-level `concurrency` group, which is what this was until review round 2 found the
+# consequence. A run whose publish job is awaiting approval is still in progress, so it holds the
+# group — and with `cancel-in-progress` unset, later runs queue behind it rather than replacing it.
+# One unapproved publication would therefore have stopped `plan` and `version` for every subsequent
+# push, so the next changeset could not even open its Version PR until someone approved or cancelled
+# a publication nobody was asking about. That is the failure this whole design exists to avoid,
+# arriving by the back door, and it only became possible when the gate made a run able to wait.
+#
+# So serialization is scoped to the two jobs that mutate something, in groups of their own. Each
+# still serializes against its own kind; neither can hold up the other, and neither holds anything
+# while `preflight` or `plan` runs. `preflight` and `plan` are deliberately unserialized: they are
+# read-only, so two of them overlapping costs CI minutes and nothing else — which is the right
+# trade against a release that cannot start.
 
 # Least privilege at the top level: read-only. Each job raises only what it needs, so the
 # preflight job — the one that runs before any decision to publish — has no write access and no
@@ -121,6 +133,9 @@ jobs:
   version:
     needs: [preflight, plan]
     if: needs.plan.outputs.changesets_pending == 'true'
+    # Serialized against other Version PR runs only. Two of these at once would race on pushing the
+    # version branch.
+    concurrency: release-version-${{ github.ref }}
     runs-on: ubuntu-latest
     permissions:
       contents: write # changesets pushes the version branch
@@ -173,6 +188,10 @@ jobs:
     needs: [preflight, plan]
     if: needs.plan.outputs.changesets_pending == 'false'
     environment: publish-npm
+    # Serialized against other publications only, and never cancelled: `cancel-in-progress` stays
+    # unset, because interrupting a run partway through publishing leaves the registry holding some
+    # packages and not others, with the tags owed for them unwritten.
+    concurrency: release-publish-${{ github.ref }}
     runs-on: ubuntu-latest
     permissions:
       contents: write # the release pushes its tags
