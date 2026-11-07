@@ -25,7 +25,7 @@ afterEach(() => {
 const BUTTON = "packages/ui/src/components/button.tsx";
 const CLEAN: Record<string, string> = {
   [BUTTON]: `
-    // bg-blue-500 and #1d4ed8 in a comment are prose, not a colour
+    // bg-blue-500 and #5143db in a comment are prose, not a colour
     export const x = "bg-primary text-primary-foreground hover:bg-action-hover border-border ring-ring bg-scrim";
     export const y = "bg-transparent text-current shadow-[0_0_0_2px_hsl(var(--ring))]";
     export const z = "[forced-colors:active]:border-[ButtonText] [forced-colors:active]:bg-[Canvas]";
@@ -85,7 +85,7 @@ describe("check:component-colors", () => {
     });
 
     it("a hex that equals a shipped role is reported as that role", () => {
-      const r = break1(BUTTON, `export const x = { background: "#1d4ed8" };`);
+      const r = break1(BUTTON, `export const x = { background: "#5143db" };`);
       expect(r.status).toBe(1);
       expect(r.out).toMatch(/equals the shipped `primary`/);
     });
@@ -125,7 +125,7 @@ describe("check:component-colors", () => {
     });
 
     it("a literal colour in a Flutter widget, and a duplicated role is named", () => {
-      const r = break1("packages/ui-flutter/lib/src/button.dart", "final a = Colors.white; final b = Color(0xFF050C11);");
+      const r = break1("packages/ui-flutter/lib/src/button.dart", "final a = Colors.white; final b = Color(0xFF17233D);");
       expect(r.status).toBe(1);
       expect(r.out).toMatch(/button\.dart:1\s+raw-colour\s+`Colors\.white`/);
       expect(r.out).toMatch(/equals the shipped `foreground`/);

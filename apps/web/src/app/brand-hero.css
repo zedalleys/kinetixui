@@ -1,0 +1,444 @@
+/*
+ * Hero polygon network — the owner's OH38WC1 mesh in Kinetic Weave.
+ *
+ * Geometry: apps/web/src/components/hero-mesh-source.json, provenance in
+ * design-assets/polygon/REFERENCE.md. This file owns colour, depth, layout and
+ * the motion that belongs to the compositor — the intro, the breath and the
+ * per-facet shimmer. The light pulses and the junction response they cause are
+ * in the component's single rAF loop.
+ */
+
+.kx-brand-hero {
+  position: relative;
+  isolation: isolate;
+}
+.kx-brand-hero-grid {
+  position: relative;
+}
+.kx-brand-hero-copy {
+  padding-bottom: 1rem;
+}
+
+.kx-hero-polygon {
+  position: relative;
+  min-width: 0;
+  align-self: center;
+  --kx-px: 50%;
+  --kx-py: 50%;
+
+  /* Facet materials, deepest return face to highlight. Light theme. */
+  --kx-mesh-0a: #4a63c8;
+  --kx-mesh-0b: #3350b6;
+  --kx-mesh-1a: #3f9fc9;
+  --kx-mesh-1b: #2c7fb4;
+  --kx-mesh-2a: #74d8ef;
+  --kx-mesh-2b: #43bbe2;
+  --kx-mesh-3a: #e2fcff;
+  --kx-mesh-3b: #a2eefa;
+
+  --kx-mesh-facet-opacity: 0.3;
+  --kx-mesh-link: #2ba2cd;
+  --kx-mesh-link-opacity: 0.4;
+  --kx-mesh-node-ink: #0e86a2;
+  --kx-mesh-node-fill: #ffffff;
+  --kx-mesh-node-glow: #4fddf2;
+  --kx-mesh-pulse: #ffffff;
+  --kx-mesh-pulse-ring: #28c7d9;
+  --kx-mesh-spotlight: #7fe6f6;
+}
+
+/* The atmosphere: a blurred radial wash behind the upper mesh, which is what
+   the facets float in. A background gradient on a small box, deliberately, and
+   not an SVG filter over the whole illustration. */
+.kx-polygon-aura {
+  position: absolute;
+  width: 76%;
+  aspect-ratio: 1;
+  inset-inline-start: 16%;
+  top: 5%;
+  border-radius: 50%;
+  background: radial-gradient(circle closest-side, #a6ecf5 0%, #bdeff7 52%, #d9e5f8b8 78%, #d9e5f800 100%);
+  filter: blur(22px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.kx-hero-mesh {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  pointer-events: none; /* the wrapper reads the pointer; the facets opt back in */
+
+  /* The supplied artwork's dense head sits upper-left of its own box with a
+     long thin spur running right. Mirrored, that spur sweeps down and to the
+     left across the hero — the composition the brief asks for — and the dense
+     end anchors the right edge. A mirror is a presentation transform: not one
+     supplied coordinate changes, and the gate asserts every `d` is untouched. */
+  transform: scaleX(-1) rotate(-4deg);
+  transform-origin: center;
+
+  /* The dissolve. Without it the illustration ends wherever the column ends,
+     in a straight cut, and reads as a picture pasted into a box. This fades
+     the facets out toward the frame so the mesh keeps its own organic edge. */
+  -webkit-mask-image: radial-gradient(
+    ellipse 78% 72% at 46% 48%,
+    #000 0%,
+    #000 52%,
+    #0009 74%,
+    #0000 97%
+  );
+  mask-image: radial-gradient(ellipse 78% 72% at 46% 48%, #000 0%, #000 52%, #0009 74%, #0000 97%);
+}
+/* RTL keeps the artwork's own handedness: the mirror above is about where the
+   spur points in the composition, and flipping it again would send the spur
+   out of the hero rather than across it. */
+[dir="rtl"] .kx-hero-mesh {
+  transform: rotate(-4deg);
+}
+
+/* ── The reader's layer ─────────────────────────────────────────────────── */
+/* The group that takes focus and the pointer. It draws no box of its own: the
+   focus indicator is the artwork's own wireframe, below. */
+.kx-polygon-interaction {
+  position: relative;
+  border-radius: 1rem;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.kx-polygon-interaction:focus,
+.kx-polygon-interaction:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+/* Keyboard focus, measured rather than asserted. A 2px stroke over the facets
+   reached 3:1 against what it borders over only 34% of its area in light and 14%
+   in dark, because `--focus` is close in luminance to the indigo shadow faces.
+   The wireframe is the part of the artwork that sits on the PAGE — `--focus`
+   measures 6.18:1 there in light and 9.70:1 in dark — so the indicator is the
+   links brightening and thickening, which does not depend on which facet it
+   crosses. `data-pointer-focus` keeps a click from drawing it. */
+.kx-polygon-interaction:focus-visible:not([data-pointer-focus]) .kx-mesh-links {
+  stroke: hsl(var(--focus));
+  stroke-width: 2;
+  stroke-opacity: 1;
+}
+.kx-polygon-interaction:focus-visible:not([data-pointer-focus]) .kx-mesh-links path[data-tone="2"] {
+  stroke-opacity: 0.75;
+}
+/* Only a facet is draggable, so a touch anywhere else still scrolls the page. */
+.kx-mesh-facets path {
+  pointer-events: visiblePainted;
+  cursor: grab;
+  touch-action: pan-y;
+}
+.kx-polygon-interaction[data-dragging="true"],
+.kx-polygon-interaction[data-dragging="true"] .kx-mesh-facets path {
+  cursor: grabbing;
+}
+
+.kx-mesh-facets path {
+  /* `--kx-o` is the facet's resting opacity. The shimmer keyframes read it, so
+     a facet drifts around its own depth rather than around a shared constant. */
+  --kx-o: var(--kx-mesh-facet-opacity);
+  opacity: var(--kx-o);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+/* The deepest material sits back; the highlight carries the light. Depth is
+   carried by opacity as well as hue, so it survives in a single flat render. */
+.kx-mesh-facets path[data-material="0"] { --kx-o: 0.17; }
+.kx-mesh-facets path[data-material="2"] { --kx-o: 0.38; }
+.kx-mesh-facets path[data-material="3"] { --kx-o: 0.5; }
+
+.kx-mesh-links {
+  fill: none;
+  stroke: var(--kx-mesh-link);
+  stroke-width: 1;
+  stroke-opacity: var(--kx-mesh-link-opacity);
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+/* Tone 2 is the lighter of the supplied link classes; it stays the quieter one. */
+.kx-mesh-links path[data-tone="2"] { stroke-opacity: calc(var(--kx-mesh-link-opacity) * 0.5); }
+
+.kx-mesh-node-core {
+  fill: var(--kx-mesh-node-fill);
+  stroke: var(--kx-mesh-node-ink);
+  stroke-width: 1.1;
+  vector-effect: non-scaling-stroke;
+}
+
+.kx-mesh-pulse {
+  fill: var(--kx-mesh-pulse);
+  stroke: var(--kx-mesh-pulse-ring);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Gradient stops, driven from the custom properties so the dark theme re-tints
+   one mesh rather than shipping a second one. */
+.kx-mesh-stop-0a { stop-color: var(--kx-mesh-0a); }
+.kx-mesh-stop-0b { stop-color: var(--kx-mesh-0b); }
+.kx-mesh-stop-1a { stop-color: var(--kx-mesh-1a); }
+.kx-mesh-stop-1b { stop-color: var(--kx-mesh-1b); }
+.kx-mesh-stop-2a { stop-color: var(--kx-mesh-2a); }
+.kx-mesh-stop-2b { stop-color: var(--kx-mesh-2b); }
+.kx-mesh-stop-3a { stop-color: var(--kx-mesh-3a); }
+.kx-mesh-stop-3b { stop-color: var(--kx-mesh-3b); }
+.kx-mesh-stop-node-a { stop-color: var(--kx-mesh-node-glow); stop-opacity: 0.95; }
+.kx-mesh-stop-node-b { stop-color: var(--kx-mesh-node-glow); stop-opacity: 0.4; }
+.kx-mesh-stop-node-c { stop-color: var(--kx-mesh-node-glow); stop-opacity: 0; }
+
+/* The pointer's local brightening. Inert until a mouse is over the art, and a
+   brightening only — it never displaces a coordinate. */
+.kx-polygon-spotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 420ms ease-out;
+  mix-blend-mode: screen;
+  background: radial-gradient(
+    circle 160px at var(--kx-px) var(--kx-py),
+    color-mix(in srgb, var(--kx-mesh-spotlight) 42%, transparent) 0%,
+    color-mix(in srgb, var(--kx-mesh-spotlight) 14%, transparent) 45%,
+    transparent 72%
+  );
+}
+.kx-hero-polygon[data-pointer="true"] .kx-polygon-spotlight {
+  opacity: 1;
+}
+
+/* ── Dark theme ─────────────────────────────────────────────────────────── */
+.dark .kx-hero-polygon {
+  --kx-mesh-0a: #3b369c;
+  --kx-mesh-0b: #221f68;
+  --kx-mesh-1a: #1d6b94;
+  --kx-mesh-1b: #134c6b;
+  --kx-mesh-2a: #2bb2d1;
+  --kx-mesh-2b: #198aa9;
+  --kx-mesh-3a: #9cf0ff;
+  --kx-mesh-3b: #49d1ec;
+
+  --kx-mesh-facet-opacity: 0.34;
+  --kx-mesh-link: #5fd8ed;
+  --kx-mesh-link-opacity: 0.42;
+  --kx-mesh-node-ink: #9ff0ff;
+  --kx-mesh-node-fill: #eafcff;
+  --kx-mesh-node-glow: #40d4ed;
+  --kx-mesh-spotlight: #2fb6d4;
+}
+.dark .kx-polygon-aura {
+  background: radial-gradient(circle closest-side, #28c7d96b 0%, #6054f44f 54%, #6054f422 80%, #6054f400 100%);
+}
+
+/* ── Motion ─────────────────────────────────────────────────────────────── */
+/* The breath: one transform on the whole body, so the facets and the wireframe
+   that outlines them cannot slip apart. Small, slow, and never a rotation. */
+@keyframes kx-mesh-breathe {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(0.35%, -0.5%, 0) scale(1.012); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes kx-mesh-draw {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+/* Transform only: the facets' opacity belongs to the shimmer below, and two
+   animations fighting over one property is how an intro ends up invisible. */
+@keyframes kx-mesh-facet-in {
+  from { transform: scale(0.9); }
+}
+@keyframes kx-mesh-wake {
+  from { opacity: 0; }
+}
+/* Each facet's own slow opacity cycle: layered depth, not a facet blinking. */
+@keyframes kx-mesh-shimmer {
+  0%, 100% { opacity: var(--kx-o); }
+  50%      { opacity: calc(var(--kx-o) * 1.34); }
+}
+
+/* The reader's rotation. Its own group, outside the breath, because both want
+   `transform` and the inner one is an infinite animation: nesting composes them,
+   where sharing a property would mean one silently winning. Written by the
+   component with setProperty, so a drag costs no React render. */
+.kx-mesh-spin {
+  transform-box: view-box;
+  transform-origin: 62% 46%;
+  transform: rotate(var(--kx-spin, 0deg));
+}
+.kx-mesh-body {
+  transform-box: view-box;
+  transform-origin: 62% 46%;
+  animation: kx-mesh-breathe 19s ease-in-out infinite;
+}
+.kx-mesh-links path {
+  stroke-dasharray: 1;
+  animation: kx-mesh-draw 1.4s cubic-bezier(0.33, 0.9, 0.35, 1) both var(--kx-in, 0s);
+}
+.kx-mesh-facets {
+  animation: kx-mesh-wake 0.9s ease-out both;
+}
+.kx-mesh-facets path {
+  animation:
+    kx-mesh-facet-in 1s cubic-bezier(0.22, 0.7, 0.3, 1) both var(--kx-in, 0s),
+    kx-mesh-shimmer var(--kx-shimmer, 16s) ease-in-out infinite var(--kx-shimmer-delay, 0s);
+}
+.kx-mesh-nodes,
+.kx-mesh-pulses {
+  animation: kx-mesh-wake 1.1s ease-out both 1.3s;
+}
+.kx-mesh-pulses {
+  filter: drop-shadow(0 0 4px var(--kx-mesh-pulse-ring));
+}
+
+/* ── Motion lifecycle ───────────────────────────────────────────────────── */
+/* `data-running` is the hero's single motion switch, written by the component:
+   false offscreen, in a hidden tab and under reduced motion. Until 2026-11-05
+   it governed only the rAF pulse loop, while the breath and the per-facet
+   shimmer were unconditional `infinite` animations that no stylesheet gated —
+   so the artwork kept moving after the component reported it had stopped, and
+   kept moving offscreen.
+
+   A blanket rule rather than a list of the two known layers, so a continuous
+   animation added later cannot quietly escape the lifecycle. The negative
+   control `ignores-data-running` reintroduces exactly that mistake and requires
+   `check:rebrand-hero` to fail it.
+
+   `paused` rather than `none`, because this suspends motion; it does not
+   redefine what the artwork looks like. Reduced motion is the separate, stronger
+   contract below, and it still wins: it removes the animations outright. */
+.kx-hero-polygon[data-running="false"] *,
+.kx-hero-polygon[data-running="false"] *::before,
+.kx-hero-polygon[data-running="false"] *::after {
+  animation-play-state: paused;
+}
+/* The one-shot entrance is exempt. Suspending it would strand the artwork at
+   its from-state — permanently, in a browser with no IntersectionObserver,
+   where `data-running` never becomes true. Only the infinite layers stop. */
+.kx-hero-polygon[data-running="false"] .kx-mesh-links path,
+.kx-hero-polygon[data-running="false"] .kx-mesh-facets,
+.kx-hero-polygon[data-running="false"] .kx-mesh-nodes,
+.kx-hero-polygon[data-running="false"] .kx-mesh-pulses {
+  animation-play-state: running;
+}
+/* Two animations on one element: the entrance keeps running, the shimmer stops.
+   Ordered as declared above — kx-mesh-facet-in, then kx-mesh-shimmer. */
+.kx-hero-polygon[data-running="false"] .kx-mesh-facets path {
+  animation-play-state: running, paused;
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+@media (min-width: 64rem) {
+  .kx-brand-hero-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.16fr);
+    gap: 1.9rem;
+    align-items: center;
+  }
+  /* The mesh breaks its column so it reads as part of the page rather than a
+     picture in a box: out past the right edge, and down past the copy's lower
+     margin, which the supplied silhouette already thins out to meet.
+
+     The end margin eats the container's own right gutter and then 4rem more,
+     which is why it is a calc rather than a clamp: `50vw - min(50vw, 48rem)` IS
+     that gutter, so the bleed grows with the viewport instead of stopping where
+     the container stops. Without it the mesh shrank as a share of the hero on
+     every width past the container cap — the section spans the viewport while
+     the artwork was still confined to the centred column. Measured share of the
+     hero's area, mesh box over section box, on this build: 62.6% at 1440,
+     62.3% at 1600, 61.4% at 1920, 60.2% at 2560 — the 55-65% the owner asked
+     for, held across the desktop range rather than at one width. Below 1440 it
+     falls to 52% at 1280 and 42% at 1024, deliberately: that is where the copy
+     column needs the room back, and the headline wins it.
+
+     No facet, link or junction box overlaps the headline, lede, platform line,
+     CTAs or install link at any of those widths; scripts/.probe4 measured 0%
+     everywhere from 1024 to 2560 except a 1% graze one step wider than this,
+     which is why this stops at 1.16fr. check:home-systems independently holds
+     the lede's rendered contrast against whatever the aura puts behind it. */
+  .kx-hero-polygon {
+    margin-inline-end: calc(-1 * (50vw - min(50vw, 48rem)) - 4rem);
+    margin-block: -4rem;
+  }
+}
+@media (min-width: 90rem) {
+  .kx-hero-polygon {
+    margin-inline-start: -4.5rem;
+  }
+}
+@media (max-width: 63.999rem) {
+  /* Below the two-column switch the headline and CTAs come first and the mesh
+     sits under them, at a size that keeps its facets readable. */
+  .kx-hero-polygon {
+    width: min(100%, 30rem);
+    margin-inline: auto;
+    margin-bottom: 1.5rem;
+  }
+}
+@media (max-width: 29.999rem) {
+  .kx-hero-polygon {
+    width: min(100%, 22rem);
+    margin-bottom: 0.5rem;
+  }
+  .kx-polygon-aura {
+    filter: blur(16px);
+  }
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  /* No loop runs (the component does not start one), no intro, no breath, no
+     shimmer. The mesh renders at the supplied artwork's own rest pose, which is
+     a complete illustration rather than a stripped one. */
+  .kx-hero-polygon *,
+  .kx-hero-polygon *::before,
+  .kx-hero-polygon *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .kx-mesh-links path {
+    stroke-dasharray: none;
+  }
+  /* The pulses are the one element with nothing to say when still. */
+  .kx-mesh-pulses {
+    display: none;
+  }
+  .kx-polygon-spotlight {
+    display: none;
+  }
+}
+
+/* ── Forced colours ─────────────────────────────────────────────────────── */
+/* The focus indicator cannot be a colour here, so it becomes a frame on the
+   group — the one place a rectangle is the correct answer, because the artwork's
+   own strokes are repainted to a single system colour and can no longer carry
+   it. */
+@media (forced-colors: active) {
+  .kx-polygon-interaction:focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
+@media (forced-colors: active) {
+  /* Decoration carries no meaning here, and a forced palette cannot render
+     translucent depth. The wireframe alone keeps the composition legible. */
+  .kx-polygon-aura,
+  .kx-polygon-spotlight,
+  .kx-mesh-facets,
+  .kx-mesh-pulses {
+    display: none;
+  }
+  .kx-mesh-links {
+    stroke: CanvasText;
+    stroke-opacity: 0.45;
+  }
+  .kx-mesh-node-core {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+  .kx-mesh-node-glow {
+    display: none;
+  }
+}

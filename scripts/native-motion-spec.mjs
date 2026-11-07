@@ -32,6 +32,15 @@ export const PLATFORMS = {
         members: ["Switch.swift"],
         test: "packages/ui-swiftui/Tests/KinetixUITests/SwitchMotionTests.swift",
       },
+      // The second selection role, kept separate from `selection` above because the two durations are
+      // separate by owner decision: a thumb lands on `instant`, a colour settles on `fast`.
+      // ToggleGroup.swift is deliberately not a member — it is a pass-through to Toggle and animates
+      // nothing of its own, and a member that never animates makes the family's wiring check vacuous.
+      selectionState: {
+        helper: "KinetixSelectionMotion.swift",
+        members: ["Toggle.swift", "Checkbox.swift", "RadioGroup.swift"],
+        test: "packages/ui-swiftui/Tests/KinetixUITests/SelectionMotionTests.swift",
+      },
       slide: {
         // A panel that slides across the screen is positional movement, which is what Reduce Motion
         // exists to remove. The reduced form is a cross-fade. See the helper's header.
@@ -73,6 +82,15 @@ export const PLATFORMS = {
         members: ["Switch.kt"],
         test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt",
       },
+      // The second selection role, kept separate from `selection` above because the two durations are
+      // separate by owner decision: a thumb lands on `instant`, a colour settles on `fast`.
+      // ToggleGroup.kt is deliberately not a member — it is a pass-through to Toggle and animates
+      // nothing of its own, and a member that never animates makes the family's wiring check vacuous.
+      selectionState: {
+        helper: "KinetixSelectionMotion.kt",
+        members: ["Toggle.kt", "Checkbox.kt", "RadioGroup.kt"],
+        test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt",
+      },
       loop: {
         // A loop has no destination to keep, so its reduced form is not a shorter duration but no loop
         // at all plus a static state that says the same thing. See the helper's header.
@@ -98,6 +116,15 @@ export const PLATFORMS = {
         helper: "kinetix_switch_motion.dart",
         members: ["switch.dart"],
         test: "packages/ui-flutter/test/switch_motion_test.dart",
+      },
+      // The second selection role, kept separate from `selection` above because the two durations are
+      // separate by owner decision: a thumb lands on `instant`, a colour settles on `fast`.
+      // toggle_group.dart is deliberately not a member — it is a pass-through to toggle.dart and
+      // animates nothing of its own, and a member that never animates makes the wiring check vacuous.
+      selectionState: {
+        helper: "kinetix_selection_motion.dart",
+        members: ["toggle.dart", "checkbox.dart", "radio_group.dart"],
+        test: "packages/ui-flutter/test/selection_motion_test.dart",
       },
       loop: {
         // A loop has no destination to keep, so its reduced form is not a shorter duration but no loop
@@ -160,6 +187,13 @@ export const DIRECTION_TERMS = {
   selection: {
     forward: /off\s*(?:→|->|to)\s*on/i,
     reverse: /on\s*(?:→|->|to)\s*off/i,
+  },
+  // Selection has two directions as well, named for what the reader sees change: unchecked or
+  // unselected becoming checked or selected, and back. A bare on/off pair would have collided with the
+  // switch family's vocabulary, and with test names like "…with animations off".
+  selectionState: {
+    forward: /(?:unchecked|unselected)\s*(?:\u2192|->|to)\s*(?:checked|selected)/i,
+    reverse: /\b(?:checked|selected)\s*(?:\u2192|->|to)\s*(?:unchecked|unselected)/i,
   },
   // A loop has no two directions; it has two MODES, and both must be named. "normal" is the loop
   // running, "reduced" is it stopped with its information intact. Anchored on the mode words so a test

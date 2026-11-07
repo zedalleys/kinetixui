@@ -39,6 +39,7 @@ on:
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
+      - "scripts/navigation-visual-negative-controls.mjs"
       - "scripts/overlay-visual.mjs"
       - "scripts/menu-visual.mjs"
       - "scripts/layout-visual.mjs"
@@ -78,6 +79,7 @@ on:
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
+      - "scripts/navigation-visual-negative-controls.mjs"
       - "scripts/overlay-visual.mjs"
       - "scripts/menu-visual.mjs"
       - "scripts/layout-visual.mjs"
@@ -306,3 +308,35 @@ jobs:
       # motion, and a 32-cell viewport, theme, direction and text matrix.
       - name: Angular selection motion (Switch 100ms, Checkbox/Radio/Toggle 200ms, forced colours, RTL, reduced motion)
         run: pnpm check:angular-selection-motion
+
+  # The negative controls for the focus-ring assertion in `axe`'s "Navigation and disclosure visual
+  # contract" step. They run the real gate four times — once unmutated, then once per injected defect —
+  # so they cost about as much as four copies of that step, and `axe` is a single 32-step sequence
+  # already inside six minutes of its 45-minute ceiling: added there on 2026-11-04 they pushed the job
+  # over it, and the last two steps were cancelled and skipped rather than run. They do not depend on
+  # anything `axe` computes, so they belong beside it rather than inside it, and they need the tokens,
+  # the package build and Chromium but not the Storybook build.
+  navigation-negative-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build tokens and UI
+        run: pnpm build:tokens && pnpm build:ui
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Navigation focus-ring negative controls (the corrected assertion still catches its defect)
+        run: pnpm check:navigation-visual-negative-controls
