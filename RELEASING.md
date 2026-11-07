@@ -270,15 +270,88 @@ upload.
 
 1. A change lands on `main` with a changeset.
 2. The Release workflow's `preflight` job runs with no credentials: release tooling tests,
-   `release:check`, the release-critical subset of CI, then `release:preflight`.
-3. Changesets opens or updates the **Version Packages** PR.
-4. Merging that PR pushes to `main`, and the `release` job runs `pnpm release`.
-5. The lifecycle is **preflight → publish whatever is missing → reconcile tags → push the tags this
-   run owes**. Packages are published one at a time; then the tag state is brought in line with the
-   registry state.
+   `release:check`, the release-critical subset of CI, then `release:preflight`. Alongside it the
+   `plan` job reads one fact, also with no credentials: whether a changeset is pending.
+3. A changeset is pending, so the `version` job opens or updates the **Version Packages** PR. That
+   job is ungated and automatic, and holds no npm token.
+4. Merging that PR pushes to `main`. Now nothing is pending, so the `publish` job is selected — and
+   it **waits for a person**. See "Publication needs a person" below.
+5. On approval the lifecycle is **preflight → publish whatever is missing → reconcile tags → push
+   the tags this run owes**. Packages are published one at a time; then the tag state is brought in
+   line with the registry state.
 
 Between releases every allowlisted version is already on the registry and every tag is on the
 remote, so both halves are no-ops. That is not a failure.
+
+### Publication needs a person
+
+Until 2026-11-07 a single `release` job did both of step 3 and step 5 through one
+`changesets/action` call: with changesets pending it opened the Version PR, with none pending it
+published. One job, one npm token, no approval anywhere in the file. So **merging the Version PR was
+itself the publication**, because the merge is the push that finds nothing pending. There was no
+moment at which anyone could have merged and then decided separately whether to publish.
+
+`release.yml` is now three jobs instead of one, and the two paths are mutually exclusive on one
+credential-free fact — whether `.changeset/` holds a changeset — computed by the `plan` job:
+
+| job | gated | holds | runs when |
+| --- | --- | --- | --- |
+| `preflight` | no | nothing | every push to `main` |
+| `plan` | no | nothing | every push to `main` |
+| `version` | **no** | `RELEASE_PAT` (opens a PR) | a changeset is pending |
+| `publish` | **`publish-npm`** | `NPM_TOKEN`, `id-token: write` | none is pending |
+
+Only `publish` is gated. Opening a pull request is not a publication and must never wait for
+anyone: an approval on the frequent path is how a gate ends up switched off. Both conditions are
+positive comparisons (`== 'true'`, `== 'false'`), so a `plan` that fails or emits nothing skips both
+jobs. A stall is the correct direction for an error in a publication gate to fall.
+
+`environment: publish-npm` is the control that does not depend on this file being right: GitHub
+withholds the environment's secrets until a required reviewer approves, so a job awaiting approval
+cannot reach the registry whatever else is wrong. **`NPM_TOKEN` must therefore be an environment
+secret of `publish-npm`, not a repository secret.** A repository secret is readable by any job in
+any workflow, so a copy left at that scope hands the credential to a job nobody approved and leaves
+the gate decorative. `RELEASE_PAT` stays at repository scope deliberately — its job is to open the
+Version PR.
+
+**The hole underneath it, and what closes it.** An `environment:` naming an environment that does
+not exist does not fail. GitHub creates it, unprotected, and the job runs immediately — and the same
+is true of an environment whose required reviewers were later removed. Either way the workflow still
+says `environment: publish-npm` and the publication proceeds with nobody having said yes. That
+fall-through is invisible to every check in this repository, because the configuration it depends on
+lives in GitHub settings rather than in the tree.
+
+So the approval is also asserted from inside the run, by `scripts/release/approval.mjs`, as the
+first step of the `publish` job — before the toolchain is installed and before anything
+irreversible. It reads this run's own review history and refuses unless a named user approved
+`publish-npm` for it. No network, a non-zero `gh`, unparseable JSON, an empty history and an
+approval of a different environment are all refusals; there is no override flag, because one would
+be the first thing reached for during a stalled release.
+
+Two checks keep the arrangement in place. `pnpm check:release-approval-gate` asserts the structure:
+one gated publishing job, one publication step inside it, the approval asserted before that step,
+and the preflight, `plan` and `version` paths ungated and credential-free. It carries 15 registered
+negative controls, each removing one property and required to fail. What it cannot see is whether
+`publish-npm` has required reviewers on GitHub — that is the half `approval.mjs` covers at run time.
+Neither half is sufficient alone.
+
+**What this buys, and what it does not.** It converts an automatic consequence into a deliberate,
+logged act. For a solo maintainer the approver and the requester are the same person, so it is not a
+second pair of eyes and it does not stop a wrong-but-deliberate publication: approving a bad version
+publishes a bad version. It is also not a substitute for the gates — `publish` keeps
+`needs: preflight` — but a backstop for the case where one of them is wrong. And it adds a failure
+mode: an unapproved run blocks and looks like a hang, and auto-fails after 30 days.
+
+**Owner steps (GitHub Settings → Environments), required once.** Until these are done every publish
+run fails at the approval assertion rather than publishing unapproved:
+
+1. Create an environment named exactly `publish-npm`.
+2. Add **Required reviewers**: `zedalleys`. Leave **Prevent self-review** OFF — it is opt-in, and
+   turning it on locks a solo maintainer out of every release.
+3. Restrict deployment branches to `main`.
+4. Add `NPM_TOKEN` as an **environment secret** of `publish-npm`, then **delete the repository-scoped
+   `NPM_TOKEN`**. Moving it, not copying it, is the point.
+5. Leave `RELEASE_PAT` and `GITHUB_TOKEN` alone.
 
 ### Tags are a separate convergence problem
 
