@@ -77,6 +77,27 @@ const NEGATIVE_CONTROLS = {
  * each is a listener or an attribute rather than a style.
  */
 const NEGATIVE_CONTROL_SCRIPTS = {
+  // A reader-facing pause comes back, bound to Space and Escape, holding its own
+  // state the way such a control would have to. This is the control the pause
+  // assertion never had: without it, that assertion passed just as happily when
+  // it was reading the visibility switch after a page-scroll as when the keys
+  // were genuinely unbound.
+  'pause-returns': () => {
+    const root = document.querySelector('.kx-hero-polygon');
+    let paused = false;
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== ' ' && e.key !== 'Escape') return;
+      paused = true;
+      root.setAttribute('data-running', 'false');
+    });
+    // and it keeps its own state against the component's own writes, as a real
+    // control would: a pause a scroll could clear is not a pause.
+    new MutationObserver(() => {
+      if (paused && root.getAttribute('data-running') !== 'false') {
+        root.setAttribute('data-running', 'false');
+      }
+    }).observe(root, { attributes: true, attributeFilter: ['data-running'] });
+  },
   // The hero takes focus again, and nothing else changes: the control adds the
   // tab stop and leaves `aria-hidden` alone, so the assertion under test is the
   // one that counts focus stops rather than the one before it.
@@ -477,6 +498,18 @@ try {
       // to a screen-reader user. The description itself is asserted gone above.
       await page.keyboard.press(' ');
       await page.keyboard.press('Escape');
+      // Space page-scrolls. `data-running` is the VISIBILITY switch as well as the motion one —
+      // it is false whenever the artwork is offscreen, which is the lifecycle #529 asks for — so
+      // reading it where that scroll left us measures two things at once and reports the wrong
+      // one. Measured after the first-view fix made the polygon 544px rather than 1279px tall:
+      // Space lands the page at scrollY 749-789 with the polygon's bottom edge 3px inside the
+      // viewport at 1440px, so whether this assertion saw `true` or `false` came down to whether
+      // the IntersectionObserver callback had run yet. It failed about one run in two.
+      //
+      // Return to the top and let the observer settle, so the assertion is about the keys alone.
+      // A real pause control would hold its own state and would still read false here; scrolling
+      // back cannot revive it, because `running` is derived from nothing else.
+      await page.evaluate(() => window.scrollTo(0, 0));
       await page.waitForTimeout(250);
       assert.equal(
         await root.getAttribute('data-running'),

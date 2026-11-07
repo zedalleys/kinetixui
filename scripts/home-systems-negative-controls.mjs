@@ -170,5 +170,87 @@ for (const [label, css] of [
   await context.close();
 }
 
+// 3. The first view: the artwork's edges, and the install command against the fold.
+const EDGE_INK = 12;
+const firstView = async (width, height, css) => {
+  const context = await browser.newContext({ viewport: { width, height }, reducedMotion: "reduce" });
+  await context.addInitScript(() => {
+    try {
+      localStorage.setItem("kx-consent", "denied");
+    } catch {}
+  });
+  const page = await context.newPage();
+  await page.goto(`${base}/`, { waitUntil: "networkidle" });
+  if (css) await page.addStyleTag({ content: css });
+  await page.waitForTimeout(350);
+  const below = await page.evaluate(() => {
+    const copy = document.querySelector("[data-hero-copy]");
+    const beta = [...copy.querySelectorAll("a")].pop();
+    return Math.round(beta.getBoundingClientRect().bottom) - window.innerHeight;
+  });
+  const lit = (await page.screenshot()).toString("base64");
+  await page.addStyleTag({ content: ".kx-hero-polygon { visibility: hidden !important }" });
+  await page.waitForTimeout(150);
+  const unlit = (await page.screenshot()).toString("base64");
+  const edges = await page.evaluate(
+    async ([a, b, W, H, T]) => {
+      const load = (d) =>
+        new Promise((r) => {
+          const i = new Image();
+          i.onload = () => r(i);
+          i.src = `data:image/png;base64,${d}`;
+        });
+      const [ia, ib] = await Promise.all([load(a), load(b)]);
+      const px = (img) => {
+        const c = document.createElement("canvas");
+        c.width = W;
+        c.height = H;
+        const x = c.getContext("2d");
+        x.drawImage(img, 0, 0);
+        return x.getImageData(0, 0, W, H).data;
+      };
+      const A = px(ia);
+      const B = px(ib);
+      const ink = (x, y) => {
+        const i = (y * W + x) * 4;
+        return Math.abs(A[i] - B[i]) + Math.abs(A[i + 1] - B[i + 1]) + Math.abs(A[i + 2] - B[i + 2]);
+      };
+      let end = 0;
+      let fold = 0;
+      for (let y = 0; y < H; y += 1) if (ink(W - 1, y) > T) end += 1;
+      for (let x = 0; x < W; x += 1) if (ink(x, H - 1) > T) fold += 1;
+      return { end, fold };
+    },
+    [lit, unlit, width, height, EDGE_INK],
+  );
+  await context.close();
+  return { ...edges, below };
+};
+
+const PORTRAIT_HEIGHT = "@media (min-width: 64rem) { .kx-hero-polygon { block-size: auto !important } .kx-hero-mesh { block-size: auto !important } }";
+const EXTRA_BLEED =
+  "@media (min-width: 64rem) { .kx-hero-polygon { margin-inline-end: calc(-1 * (50vw - min(50vw, 48rem)) - 4rem) !important } }";
+const OLD_MASK =
+  "@media (min-width: 64rem) { .kx-hero-mesh { -webkit-mask-image: radial-gradient(ellipse 78% 72% at 46% 48%, #000 0%, #000 52%, #0009 74%, #0000 97%) !important; mask-image: radial-gradient(ellipse 78% 72% at 46% 48%, #000 0%, #000 52%, #0009 74%, #0000 97%) !important } }";
+
+for (const [label, css] of [
+  ["baseline — the first view as shipped", null],
+  ["the polygon takes its height from the portrait artwork again", PORTRAIT_HEIGHT],
+  ["the trailing bleed takes 4rem past the viewport again", EXTRA_BLEED],
+  ["the old mask, whose radii reach their transparent stop outside the box", OLD_MASK],
+  ["all three together — the hero as it was before the fix", `${PORTRAIT_HEIGHT} ${EXTRA_BLEED} ${OLD_MASK}`],
+]) {
+  const r = await firstView(1920, 1030, css);
+  const broken = [];
+  if (r.end > 0) broken.push(`${r.end}px of mesh ink on the trailing edge`);
+  if (r.fold > 0) broken.push(`${r.fold}px cut by the fold`);
+  if (r.below > 0) broken.push(`the beta line ${r.below}px below the fold`);
+  rows.push({
+    control: label,
+    measured: `trailing ${r.end}, fold ${r.fold}, beta line ${r.below <= 0 ? `${-r.below}px above` : `${r.below}px below`} the fold`,
+    verdict: broken.length ? `FAILS the first-view assertions — ${broken.join("; ")}` : "passes the first-view assertions",
+  });
+}
+
 await browser.close();
 console.table(rows);

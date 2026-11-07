@@ -267,31 +267,121 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.16fr);
     gap: 1.9rem;
     align-items: center;
+
+    /* The hero's vertical rhythm is a function of the first view, not a constant. At a desktop
+       height it is the generous 6rem the composition wants; on a short laptop it gives those
+       rem back so the install command and the beta line still land above the fold. One
+       expression rather than a height breakpoint, so there is no step to land on the wrong
+       side of. The copy column's own height is what it cannot buy back: below roughly 800px of
+       viewport height the column alone is taller than the first view, which is a copy-length
+       fact, not a layout one. */
+    padding-block: clamp(1.5rem, 100svh - 47rem, 6rem);
   }
-  /* The mesh breaks its column so it reads as part of the page rather than a
-     picture in a box: out past the right edge, and down past the copy's lower
-     margin, which the supplied silhouette already thins out to meet.
 
-     The end margin eats the container's own right gutter and then 4rem more,
-     which is why it is a calc rather than a clamp: `50vw - min(50vw, 48rem)` IS
-     that gutter, so the bleed grows with the viewport instead of stopping where
-     the container stops. Without it the mesh shrank as a share of the hero on
-     every width past the container cap — the section spans the viewport while
-     the artwork was still confined to the centred column. Measured share of the
-     hero's area, mesh box over section box, on this build: 62.6% at 1440,
-     62.3% at 1600, 61.4% at 1920, 60.2% at 2560 — the 55-65% the owner asked
-     for, held across the desktop range rather than at one width. Below 1440 it
-     falls to 52% at 1280 and 42% at 1024, deliberately: that is where the copy
-     column needs the room back, and the headline wins it.
+  /* The mesh breaks its column so it reads as part of the page rather than a picture in a box:
+     out past the container's right gutter, and up and down past the copy's margins.
 
-     No facet, link or junction box overlaps the headline, lede, platform line,
-     CTAs or install link at any of those widths; scripts/.probe4 measured 0%
-     everywhere from 1024 to 2560 except a 1% graze one step wider than this,
-     which is why this stops at 1.16fr. check:home-systems independently holds
-     the lede's rendered contrast against whatever the aura puts behind it. */
+     `block-size` is the load-bearing line. The supplied artwork is portrait — its viewBox is
+     741.71 × 860.74, 1.16 times taller than wide — and it used to be laid out `width: 100%;
+     height: auto` inside the wider of the two columns. Its height was therefore its width times
+     1.16, and since the grid row takes the taller of its two items, a portrait illustration set
+     the height of a landscape first view. Measured on the pre-fix build at 1920×1030: the
+     polygon column was 1279px against a copy column of 670px, so the hero section stood 1365px
+     tall in a 1030px viewport — the ticker band that closes it fell 423px below the fold, the
+     install command fell below it at several widths, and `align-items: center` turned half of
+     the 609px mismatch into 304px of dead space above the headline (the headline began 394px
+     down the viewport; with the mismatch gone it begins at 153px).
+
+     So the artwork takes a budget from the first view instead of setting it. The box stays
+     landscape, the copy column is what the row measures, and the mesh fills the box by its own
+     proportions (`preserveAspectRatio="xMidYMid slice"` on the svg) rather than being scaled
+     down to fit inside it.
+
+     The end margin eats the container's own right gutter — `50vw - min(50vw, 48rem)` IS that
+     gutter — so the bleed grows with the viewport instead of stopping where the container stops.
+     It no longer takes a further 4rem past that: the box's right edge now lands on the viewport's
+     right edge, which is what lets the mask's own fade be the end of the picture. With the extra
+     4rem the box ended 75px outside the viewport, where the mask is still opaque, and the
+     viewport sliced the mesh off flat — 841 of 1030 right-edge pixels carried mesh ink at
+     1920×1030, 732 of 900 at 1440×900, 609 of 768 at 1366×768. It is 0 at every width now.
+
+     The 4rem block margins stay: they let the artwork run past the copy's margins without adding
+     to the row.
+
+     WHAT THIS COSTS, stated rather than buried. Share of the hero's area, mesh box over section
+     box: 32.8% at 1440, 32.6% at 1600, 32.1% at 1920, 31.5% at 2560, 24.5% at 1280, 23.4% at
+     1024. The comment this replaces recorded 62.6%, 62.3%, 61.4% and 60.2% at the first four,
+     against a 55-65% the owner asked for. That target and a first view that fits are mutually
+     exclusive at these proportions, and the arithmetic says so rather than the taste: at
+     1920x1030 the hero section is 1920 x 916, so a 60% share needs a box of 1.05M px², and at
+     the 1038px width the columns give it that box would have to stand 1017px tall — taller than
+     the section that contains it, which is the condition that put the hero over the fold in the
+     first place. Getting the larger artwork back means the first view gives up either its
+     closing ticker band or some of the copy column; that is an owner's call, not this slice's.
+
+     `check:home-systems` holds what actually matters about the overlap — the lede paragraph's
+     rendered contrast against whatever the decoration puts behind it, at five widths — and the
+     glow's own placement against the copy column. */
   .kx-hero-polygon {
-    margin-inline-end: calc(-1 * (50vw - min(50vw, 48rem)) - 4rem);
+    block-size: clamp(20rem, 100svh - 22rem, 34rem);
+    margin-inline-end: calc(-1 * (50vw - min(50vw, 48rem)));
     margin-block: -4rem;
+  }
+  .kx-hero-mesh {
+    block-size: 100%;
+    inline-size: 100%;
+    /* slice only crops if the svg clips. Below this breakpoint the box still takes the artwork's
+       own aspect ratio, so nothing is outside the viewport to clip and `overflow: visible` stays. */
+    overflow: hidden;
+
+    /* The dissolve, re-struck for a landscape box — and for the first time actually reaching zero
+       inside it. A radial-gradient's `78% 72%` are RADII, not the span of the box, so the old
+       ellipse's horizontal radius was 78% of the width measured out from 46%: it reached its
+       transparent stop at 46 + 0.97 x 78 = 122% of the box, well outside it. The mask therefore
+       faded nothing, and what ended the picture was the box's own edge. Measured on the right-hand
+       ink profile at 1920x1030: 364, 346, 332, 314, 274 in the last 80px and then 14 one step
+       past the edge — a cut, not a dissolve, which is what the hero read as.
+
+       These radii put the transparent stop at 47 + 0.97 x 54 = 99% of the width and 50 + 0.97 x 58
+       = 106% of the height, so the fade completes on the inline edges, where the artwork meets the
+       page, and stays full-bleed on the block edges, where it meets the hero's own bounds. Same
+       profile after: 185, 162, 131, 116, 80, 59, 0. */
+    -webkit-mask-image: radial-gradient(ellipse 54% 58% at 47% 50%, #000 0%, #000 40%, #0009 70%, #0000 97%);
+    mask-image: radial-gradient(ellipse 54% 58% at 47% 50%, #000 0%, #000 40%, #0009 70%, #0000 97%);
+  }
+  /* The aura is a wash behind the mesh, so it belongs to the box, not to the box's width. While
+     it was a square struck off `inline-size`, a landscape box made it taller than the box it sits
+     in, and its blurred lower edge ran past the fold — 341 of 1536 bottom-edge pixels at
+     1536×864.
+
+     Sized in both axes, and held by three measurements at once rather than by taste. The wash has
+     to stay visible (`check:home-systems` wants a peak channel shift of at least 55 and at most
+     110), stay off the copy column (under 10% of it), and stay inside the first view at every
+     width the gate below covers.
+
+     A landscape box is smaller than the square this used to strike off `inline-size`, so the same
+     gradient in it measured only 51 — under the floor. Area could not buy that back: 92% x 135%
+     reached 64 but put its blurred lower edge through the fold at 1280x720 (164 pixels, caught by
+     the gate below), and 110% x 118% reached 66 but washed 16.2% of the copy column. Blur is not
+     the lever either — 22px, 16px, 12px, 8px and 5px all measure 56 on this geometry, because the
+     gradient's centre is already its brightest pixel.
+
+     So the geometry is the conservative one that satisfies the other two constraints — 4% to 100%
+     of the box inline, barely past it in block, measuring 1.3% of the copy column and zero ink on
+     the fold and on both inline edges at 1280x720, 1024x768, 1366x768 and 1920x1030 — and the core
+     is a little more saturated to put the wash back where it was. Measured: 71 light, 67 dark,
+     against the 75 this decoration shipped at before the first view was fixed. The band is
+     untouched; this restores a value inside it rather than moving it. */
+  .kx-polygon-aura {
+    aspect-ratio: auto;
+    inline-size: 96%;
+    block-size: 105%;
+    inset-inline-start: 4%;
+    top: -2%;
+    background: radial-gradient(circle closest-side, #8ce4f2 0%, #a9ebf6 52%, #d2e3f8c4 78%, #d9e5f800 100%);
+  }
+  .dark .kx-polygon-aura {
+    background: radial-gradient(circle closest-side, #28c7d994 0%, #6054f46e 54%, #6054f42f 80%, #6054f400 100%);
   }
 }
 @media (min-width: 90rem) {
