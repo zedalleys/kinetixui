@@ -61,7 +61,7 @@ const parity = JSON.parse(readFileSync(`${ROOT}/platform-parity.json`, "utf8"));
 const blocks = JSON.parse(readFileSync(`${ROOT}/block-parity.json`, "utf8"));
 
 const entries = Object.entries(manifest.components);
-const recipes = entries.filter(([, v]) => /not a component/i.test(v.platformNote ?? "")).map(([k]) => k);
+const recipes = entries.filter(([, v]) => v.kind === "recipe").map(([k]) => k);
 const componentCount = entries.length - recipes.length;
 const defs = manifest.platformDefinitions;
 const platformRows = Object.entries(defs).map(([name, d]) => ({

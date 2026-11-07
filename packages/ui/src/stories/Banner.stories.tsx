@@ -16,7 +16,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Feedback/Banner",
+  title: "Feedback & Status/Banner",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<Banner variant=\"information\" onDismiss={close} action={{ label: \"Learn more\" }}>\\n  A new version of KinetixUI is available.\\n</Banner>", language: "tsx" } },

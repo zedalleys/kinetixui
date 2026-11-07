@@ -20,7 +20,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Form Inputs/DateRangeInput",
+  title: "Forms & Inputs/DateRangeInput",
   parameters: {
     layout: "padded",
     docs: { source: { code: "// Calendar dates as \"YYYY-MM-DD\" — never a Date, so no time zone can move a check-in.\n<DateRangeInput\n  label=\"Stay\"\n  value={{ start: \"2026-03-14\", end: \"2026-03-16\" }}\n  onValueChange={setStay}\n  min=\"2026-03-01\"\n  isDateDisabled={(iso) => soldOut.has(iso)}\n/>", language: "tsx" } },
