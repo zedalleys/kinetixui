@@ -129,6 +129,11 @@ const NEGATIVES = {
   // version the publication does not carry, and both left the whole preflight green.
   "compose-authorization-version-is-a-literal-env": { file: ".github/workflows/publish-compose.yml", from: "        env:\n          VERSION: ${{ inputs.version }}\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version=\"$VERSION\" --line=ui-compose", to: "        env:\n          VERSION: 0.1.0\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version=\"$VERSION\" --line=ui-compose", breaks: "VI-VERSION-AUTHORIZED" },
   "flutter-authorization-version-is-a-literal-argument": { file: ".github/workflows/publish-flutter.yml", from: '--authorize-version="$VERSION" --line=ui-flutter', to: "--authorize-version=0.1.0 --line=ui-flutter", breaks: "VI-VERSION-AUTHORIZED" },
+  // The test seam reachable from the publish path. Measured: with this in place the step authorized
+  // 0.1.0 out of a committed fixture while the canonical declaration authorized nothing, and every
+  // other check in the block still passed.
+  "compose-authorization-reads-a-fixture": { file: ".github/workflows/publish-compose.yml", from: '--authorize-version="$VERSION" --line=ui-compose', to: '--authorize-version="$VERSION" --line=ui-compose --lines-file=scripts/publish/fixtures/native-release-lines/authorized.json', breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-authorization-reads-a-fixture": { file: ".github/workflows/publish-swiftui.yml", from: '--authorize-version="$VERSION" --line=ui-swiftui', to: '--authorize-version="$VERSION" --line=ui-swiftui --lines-file=/tmp/anything.json', breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-authorization-reads-another-line": { file: ".github/workflows/publish-swiftui.yml", from: "--line=ui-swiftui", to: "--line=ui-compose", breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-publish-unvalidated-version": { file: ".github/workflows/publish-swiftui.yml", from: "--version=", to: "--ignored-version=", breaks: "WF-VERSION-VALIDATED" },
   // A vendored copy drifting from its canonical source, which is what a publish from an
@@ -243,7 +248,17 @@ if (authorizeArg !== undefined) {
     refuse(`This dispatch asked to publish ${line.coordinate ?? lineKey} as ${authorizeArg}, but ${linesFile} authorizes ${JSON.stringify(line.authorizedNext)}. The dispatch input confirms what the repository declares; it does not override it. If ${authorizeArg} is the intended version, change it there first.`);
   }
 
-  console.log(`PASS: ${line.coordinate} ${authorizeArg} is the version ${linesFile} authorizes for the "${lineKey}" line (cohort: ${line.cohort}).`);
+  /*
+   * Defense in depth, not the proof. VI-VERSION-AUTHORIZED is what keeps `--lines-file=` out of a
+   * publish workflow; this is so that a log of a fixture run can never be read, later and out of
+   * context, as evidence that a real publication was authorized.
+   */
+  const isOverride = linesFile !== "release/native-release-lines.json";
+  console.log(
+    isOverride
+      ? `PASS (FIXTURE RUN — authorizes no publication): ${line.coordinate} ${authorizeArg} is the version ${linesFile} authorizes for the "${lineKey}" line (cohort: ${line.cohort}). This is not the canonical release/native-release-lines.json.`
+      : `PASS: ${line.coordinate} ${authorizeArg} is the version ${linesFile} authorizes for the "${lineKey}" line (cohort: ${line.cohort}).`,
+  );
   process.exit(0);
 }
 
@@ -1106,6 +1121,22 @@ for (const workflow of workflows) {
     if (!/--authorize-version="\$VERSION"/.test(step.script)) {
       unauthorized.push(`${workflow.path} → "${step.name}" must pass \`--authorize-version="$VERSION"\`, reading the value from the step's own \`env\`. A literal on the command line authorizes a version the publication never carries, and a quoted "$VERSION" is also what keeps the input from being interpolated into the script text (WF-VERSION-NOT-INTERPOLATED)`);
     }
+    /*
+     * And it has to be the *canonical* declaration that is read.
+     *
+     * `--lines-file=` exists so ci.yml can prove the authorization accepts one version and refuses
+     * five others; a gate that only ever refuses is indistinguishable from one that is broken. But
+     * a test seam left reachable from the publish path is a bypass, and review found this one:
+     * with `--lines-file=…/fixtures/native-release-lines/authorized.json` on the Compose
+     * authorization, every check in this block still passed — condition, line, argument and env
+     * binding all unchanged — while the step authorized `0.1.0` out of a committed fixture and the
+     * canonical file authorized nothing at all. So the seam is prohibited here by position: a
+     * publish workflow reads `release/native-release-lines.json` and has no say in the matter.
+     */
+    if (/--lines-file=/.test(step.script)) {
+      unauthorized.push(`${workflow.path} → "${step.name}" passes \`--lines-file=\`. That option exists only so ci.yml can prove the authorization accepts and refuses correctly against fixtures; a publish must read the canonical release/native-release-lines.json. Measured: pointed at the accepting fixture, this step authorized 0.1.0 while the canonical file authorized nothing, and every other check here still passed`);
+    }
+
     const authorizedValue = step.env?.VERSION;
     if (authorizedValue !== "${{ inputs.version }}") {
       unauthorized.push(`${workflow.path} → "${step.name}" binds \`VERSION: ${authorizedValue === undefined ? "(nothing)" : authorizedValue}\`; it must be exactly \`\${{ inputs.version }}\`. The publish steps read the dispatch input independently, so any other value here authorizes one version and publishes another — measured: a literal left this entire preflight green`);

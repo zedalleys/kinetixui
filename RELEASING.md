@@ -832,3 +832,11 @@ while the dry run rehearsed the dispatched number, so the upload and its rehears
 different versions. `ci.yml` additionally runs the authorization against the fixtures in
 `scripts/publish/fixtures/native-release-lines/`: one that authorizes and five that must refuse,
 because a gate that refuses everything proves nothing.
+
+That fixture seam is `--lines-file=`, and **a publish workflow may not pass it** — also part of
+`VI-VERSION-AUTHORIZED`, and also added after review. Pointed at the accepting fixture, a publish
+step authorized `0.1.0` while the canonical declaration authorized nothing, and every other check
+in the block still passed. A publish reads `release/native-release-lines.json` and has no say in
+the matter; as a second layer, a run that uses the override labels its own output as a fixture run
+that authorizes no publication, so such a log can never be mistaken later for a real
+authorization.
