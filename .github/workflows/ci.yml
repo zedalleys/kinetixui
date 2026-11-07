@@ -60,6 +60,12 @@ jobs:
       - name: Contrast audit (WCAG AA text pairs)
         run: pnpm check:contrast
 
+      # The gate above used to round each composited channel to 8-bit before measuring, which printed
+      # AA for a pair at 4.4847:1. These controls restore that defect and the token it hid, and require
+      # the corrected gate to catch it — so a future change cannot quietly round again.
+      - name: Contrast negative controls (the corrected gate still catches the rounding defect)
+        run: pnpm check:contrast-negative-controls
+
       # The browser axe pass is path-filtered; this checks the filter still covers every package
       # that has stories, so a package cannot drift outside the accessibility gate unnoticed.
       - name: Accessibility gate covers every package with stories
@@ -71,6 +77,12 @@ jobs:
       - name: A visible label names its field
         run: pnpm check:label-association
 
+      # A group that claims one choice has to hold choices: a radiogroup needs real radios and
+      # cannot describe them with aria-pressed. axe is green on that contradiction, because no
+      # single element is wrong -- only the pair.
+      - name: A radiogroup holds radios
+        run: pnpm check:role-coherence
+
       - name: Token table matches the tokens
         run: pnpm check:token-contract
 
@@ -78,6 +90,13 @@ jobs:
       # is referenced that does not exist; tokens/contracts/motion.json still matches the components it names.
       - name: Motion tokens and contract agree
         run: pnpm check:motion-tokens
+
+      # The step above validates the consumers the contract HAS, so it cannot see one that has gone
+      # missing — deleting SwiftUI's selection-control entry left it and check:native-motion both green.
+      # tokens/contracts/motion-consumers.json closes that, and this proves the closure still works:
+      # a dropped, retyped or unregistered consumer must each fail, in memory, with no build.
+      - name: Motion consumer-identity controls (a dropped platform really fails)
+        run: pnpm check:motion-identity-controls
 
       - name: Changelog page is current with the packages
         run: pnpm check:releases
@@ -107,6 +126,43 @@ jobs:
       - name: Compose colour API snapshot is current
         run: pnpm check:compose-api
 
+      # The three native packages publish through workflow_dispatch workflows that have never run
+      # for real, and each ends at a door that only opens outwards: an immutable Central coordinate,
+      # a permanent pub.dev version, a git tag `from:` resolves against forever. This checks the
+      # part that cannot be checked afterwards — the mirror layout, the POM fields Central requires,
+      # pub.dev's metadata, the publish workflows' own safety, and vendored token currency. Source
+      # and workflow properties only, so it runs here rather than needing three toolchains.
+      - name: Native publish preflight
+        run: pnpm check:native-publish-preflight
+
+      # Proves the preflight can fail: each control breaks one property it asserts.
+      - name: "Native publish preflight: negative controls"
+        run: |
+          for control in $(node scripts/check-native-publish-preflight.mjs --list-negatives); do
+            echo "--- $control"
+            node scripts/check-native-publish-preflight.mjs --negative="$control"
+          done
+
+      # The preflight above asserts the shape of the dry-run guard; this runs the real step body and
+      # counts the pushes, because a shape check would pass a guard that reads right and behaves
+      # wrong. Stubbed `git`, nothing pushed, no remote contacted.
+      - name: SwiftUI publish fails closed on every non-false dry_run
+        run: node scripts/publish/swiftui-dry-run-polarity.mjs
+
+      # packages/ui-swiftui reaches a consumer as a `git subtree split` pushed to a mirror and
+      # resolved by `.package(url:, from:)`, which scripts/adoption/swiftui-consumer.mjs cannot
+      # cover because it resolves the vendored path. The layout layer needs no Swift; native-swiftui.yml
+      # runs the resolve/build layer on macOS. Local throwaway mirror, no remote is contacted.
+      - name: SwiftUI mirror publish route (layout)
+        run: node scripts/adoption/swiftui-mirror-consumer.mjs --layout-only
+
+      - name: "SwiftUI mirror publish route: negative controls"
+        run: |
+          for control in $(node scripts/adoption/swiftui-mirror-consumer.mjs --list-negatives); do
+            echo "--- $control"
+            node scripts/adoption/swiftui-mirror-consumer.mjs --negative="$control"
+          done
+
       - name: Typography alias guardrail
         run: pnpm check:typography
 
@@ -115,6 +171,12 @@ jobs:
 
       - name: Spatial grid guardrail (8-unit grid, 4-unit half-step)
         run: pnpm check:grid
+
+      # The published preset must not cost a consumer their `max-*` and `min-[…]` variants. Tailwind
+      # drops those wholesale, and silently, once `theme.screens` mixes units — which is why the
+      # `-rem` breakpoints are registered as variants. Runs its own negative control.
+      - name: Breakpoint variants survive the shared preset
+        run: pnpm check:breakpoints
 
       # What each platform implementation has actually been verified to do, derived from the test files
       # themselves. check:manifest below refuses a declared platform maturity this evidence does not support,
@@ -130,13 +192,63 @@ jobs:
       - name: Verification evidence is current with the tests
         run: pnpm check:verification
 
-      - name: Component manifest check (status, platforms, guidance, maturity)
+      - name: Component manifest check (taxonomy, status, platforms, guidance, maturity)
         run: pnpm check:manifest
+
+      # The gate above prints "ok" whether it is validating or quietly doing nothing, and most of what it
+      # validates is invisible while the tree is correct. This corrupts the manifest one rule at a time and
+      # asserts check:manifest fails with the right message each time, then restores it.
+      - name: Manifest gate negative controls (each rule really fails)
+        run: pnpm check:manifest-controls
 
       # The business capability roadmap may only call something existing if the manifest, the IoT package,
       # the blocks manifest or a file says so; its tables are generated from docs/business-capabilities.json.
       - name: Business capability roadmap is truthful and current
         run: pnpm check:capabilities
+
+      # `commerce` is a business domain and `Commerce` is a block category, enforced until now by two
+      # scripts that did not know about each other. This holds the namespaces apart: the block-category
+      # → domain map must be complete, prefixed on both sides, resolve against the canonical files, and
+      # declare no relationship the derived discovery index does not demonstrate. A domain must also
+      # cite at least one capability family — registering an id is the easy half.
+      - name: Identifier namespaces (the two commerces stay apart)
+        run: pnpm check:taxonomy-namespaces
+
+      - name: "Identifier namespaces: negative controls"
+        # The list is captured and counted first: a command substitution that fails inside a `for`
+        # word list does NOT trip `bash -e`, so an empty list would make this step pass having proved
+        # nothing at all — the exact way a gate loses its teeth silently.
+        run: |
+          controls=$(node scripts/check-taxonomy-namespaces.mjs --list-negatives)
+          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          echo "running $count negative control(s)"
+          for control in $controls; do
+            echo "--- $control"
+            node scripts/check-taxonomy-namespaces.mjs --negative="$control"
+          done
+
+      # docs/create/create-project.schema.json is the only structural source for a stored Create
+      # document; scripts/create-schema/json-schema.mjs interprets it rather than re-expressing it.
+      # The expected-invalid corpus is what gives the round-trip property teeth: a validator that
+      # accepted everything would pass a round-trip test. Each of those documents must be rejected for
+      # the reason it declares, not merely rejected.
+      - name: Create document schema (stored documents, references, migration refusals)
+        run: pnpm check:create-schema
+
+      - name: "Create document schema: negative controls"
+        # The list is captured and counted first: a command substitution that fails inside a `for`
+        # word list does NOT trip `bash -e`, so an empty list would make this step pass having proved
+        # nothing at all — the exact way a gate loses its teeth silently.
+        run: |
+          controls=$(node scripts/check-create-schema.mjs --list-negatives)
+          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          echo "running $count negative control(s)"
+          for control in $controls; do
+            echo "--- $control"
+            node scripts/check-create-schema.mjs --negative="$control"
+          done
 
       # Keyboard documentation is derived from the keyboard tests, so a behaviour that stops being tested
       # stops being documented. This fails if the two have drifted apart.

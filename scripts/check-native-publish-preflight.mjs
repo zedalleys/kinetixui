@@ -1,0 +1,978 @@
+/**
+ * check:native-publish-preflight — the three native packages can survive their own publish.
+ *
+ *   node scripts/check-native-publish-preflight.mjs
+ *   node scripts/check-native-publish-preflight.mjs --version=0.1.0   validate one dispatch version
+ *   node scripts/check-native-publish-preflight.mjs --negative=<id>   require one check to fail
+ *   node scripts/check-native-publish-preflight.mjs --list-negatives
+ *
+ * SwiftUI, Compose and Flutter publish through three `workflow_dispatch` workflows that have never
+ * run for real. Every one of them ends at a door that only opens outwards: a Maven Central
+ * coordinate is immutable, a pub.dev package name is permanent, and a pushed git tag is what
+ * `from:` resolves against forever. The npm side of the house has `release:check` and a curated
+ * note standing in front of that door. The native side had nothing, so the first real publish
+ * would also have been the first time the publish path was exercised.
+ *
+ * This runs on Linux with the rest of the guardrails and needs no Swift, Gradle, Android SDK or
+ * Flutter toolchain: everything here is a property of the committed manifests and the publish
+ * workflows, which is exactly the part that cannot be checked after the fact. The toolchain halves
+ * — `swift build`, `gradle :ui:publishReleasePublicationToMavenLocal`, `flutter pub publish
+ * --dry-run` — run in native-*.yml and in the publish workflows themselves, and this check does
+ * not duplicate them.
+ *
+ * Two things this deliberately does NOT check, because something else already does:
+ *
+ *   vendored token drift   ci.yml re-runs the three vendor generators and diffs (see its
+ *                          "Generated output is stale" step). What this adds is VENDOR-CURRENT,
+ *                          because a `workflow_dispatch` publish from an arbitrary ref never
+ *                          passes through that step.
+ *   the Compose API        check:compose-api owns the snapshot.
+ *
+ * Every check is named, and the name is what the negative control uses. A check that stops being
+ * true is either a defect to fix or a decision to record — not a line to delete here.
+ */
+import { readFileSync, existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import yaml from "js-yaml";
+
+const root = fileURLToPath(new URL("..", import.meta.url));
+const read = (path) => readFileSync(`${root}${path}`, "utf8");
+
+/** Mutations applied to the in-memory copies below, each naming the check it must break. */
+const NEGATIVES = {
+  "manifest-no-library": { file: "packages/ui-swiftui/Package.swift", from: '.library(name: "KinetixUI", targets: ["KinetixUI"])', to: '.executable(name: "KinetixUI", targets: ["KinetixUI"])', breaks: "SW-MANIFEST-AT-ROOT" },
+  "manifest-escapes-package": { file: "packages/ui-swiftui/Package.swift", from: '.target(name: "KinetixUI"),', to: '.target(name: "KinetixUI", path: "../ui-shared"),', breaks: "SW-SELF-CONTAINED" },
+  "pom-drops-scm": { file: "packages/ui-compose/ui/build.gradle.kts", from: "                scm {", to: "                ignoredScm {", breaks: "MVN-POM-COMPLETE" },
+  "pom-drops-javadoc": { file: "packages/ui-compose/ui/build.gradle.kts", from: "withJavadocJar()", to: "// withJavadocJar()", breaks: "MVN-SOURCES-JAVADOC" },
+  "pom-drops-signing": { file: "packages/ui-compose/ui/build.gradle.kts", from: "sign(publishing.publications)", to: "// sign(publishing.publications)", breaks: "MVN-SIGNING" },
+  "pubspec-version-reformatted": { file: "packages/ui-flutter/pubspec.yaml", from: "version: 0.0.0", to: "version:0.0.0", breaks: "PUB-STAGING-PATTERNS" },
+  "pubspec-publish-to-removed": { file: "packages/ui-flutter/pubspec.yaml", from: "publish_to: none", to: "# publish_to: none", breaks: "PUB-UNPUBLISHABLE-AS-COMMITTED" },
+  "pubspec-claims-status": { file: "packages/ui-flutter/pubspec.yaml", from: "carrying the same semantics", to: "not published to pub.dev, carrying the same semantics", breaks: "PUB-DESCRIPTION-IS-STATUS-FREE" },
+  "pubspec-description-too-short": { file: "packages/ui-flutter/pubspec.yaml", from: /^description: >-\n(?:  .*\n)+/m, to: "description: A Flutter port.\n", breaks: "PUB-DESCRIPTION-LENGTH" },
+  // The publication contract. Each of these is a way to move the publication decision somewhere
+  // GitHub Actions does not evaluate, or to stop a dry run from rehearsing. The shell-parser
+  // controls these replace are gone with the parser: they exercised bypasses of a proof this check
+  // no longer attempts.
+  "swiftui-publish-if-removed": { file: ".github/workflows/publish-swiftui.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          MIRROR:", to: "        env:\n          MIRROR:", breaks: "WF-PUBLISH-STEP-CONDITION" },
+  "swiftui-publish-if-negated": { file: ".github/workflows/publish-swiftui.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          MIRROR:", to: "        if: ${{ inputs.dry_run != true }}\n        env:\n          MIRROR:", breaks: "WF-PUBLISH-STEP-CONDITION" },
+  "swiftui-condition-moved-into-the-run-block": { file: ".github/workflows/publish-swiftui.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          MIRROR:", to: "        env:\n          MIRROR:", also: { file: ".github/workflows/publish-swiftui.yml", from: '          if [ "${DRY_RUN:-}" != "false" ]; then\n            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — nothing pushed."', to: '          # if: ${{ inputs.dry_run == false }}\n          if [ "${DRY_RUN:-}" != "false" ]; then\n            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — nothing pushed."' }, breaks: "WF-PUBLISH-STEP-CONDITION" },
+  "compose-publish-if-removed": { file: ".github/workflows/publish-compose.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION_NAME:", to: "        env:\n          VERSION_NAME:", breaks: "WF-PUBLISH-STEP-CONDITION" },
+  "compose-publish-if-negated": { file: ".github/workflows/publish-compose.yml", from: "if: ${{ inputs.dry_run == false }}", to: "if: ${{ inputs.dry_run != true }}", breaks: "WF-PUBLISH-STEP-CONDITION" },
+  "flutter-publish-if-removed": { file: ".github/workflows/publish-flutter.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          PUB_DEV_CREDENTIALS:", to: "        env:\n          PUB_DEV_CREDENTIALS:", breaks: "WF-PUBLISH-STEP-CONDITION" },
+  "flutter-publish-if-negated": { file: ".github/workflows/publish-flutter.yml", from: "if: ${{ inputs.dry_run == false }}", to: "if: ${{ inputs.dry_run != true }}", breaks: "WF-PUBLISH-STEP-CONDITION" },
+  "swiftui-publish-step-renamed": { file: ".github/workflows/publish-swiftui.yml", from: "      - name: Push to mirror", to: "      - name: Push to the mirror", breaks: "WF-PUBLISH-STEP-CONDITION" },
+
+  // A side effect that moves out of the one gated step is a publication nothing decides.
+  "swiftui-push-moved-into-the-rehearsal-step": { file: ".github/workflows/publish-swiftui.yml", from: '          echo "sha=$SHA" >> "$GITHUB_OUTPUT"', to: '          echo "sha=$SHA" >> "$GITHUB_OUTPUT"\n          git push --force "$MIRROR" swiftui-dist:main', breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-added-to-the-rehearsal-step": { file: ".github/workflows/publish-flutter.yml", from: "        run: flutter pub publish --dry-run", to: "        run: |\n          flutter pub publish --dry-run\n          flutter pub publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "compose-portal-publish-in-the-rehearsal-step": { file: ".github/workflows/publish-compose.yml", from: "        run: gradle :ui:publishReleasePublicationToMavenLocal", to: "        run: |\n          gradle :ui:publishReleasePublicationToMavenLocal\n          gradle :ui:publishReleasePublicationToCentralPortalRepository", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+
+  // A dry run that stops rehearsing stops being evidence about the release path.
+  "swiftui-rehearsal-gated-by-dry-run": { file: ".github/workflows/publish-swiftui.yml", from: "      - name: Split the subtree and verify the mirror layout\n        id: split", to: "      - name: Split the subtree and verify the mirror layout\n        if: ${{ inputs.dry_run == false }}\n        id: split", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+  "swiftui-manifest-probe-removed": { file: ".github/workflows/publish-swiftui.yml", from: /^          if ! git cat-file -e "\$SHA:Package\.swift" 2>\/dev\/null; then\n(?:          .*\n)*?          fi\n/m, to: "", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+  "compose-maven-local-rehearsal-gated": { file: ".github/workflows/publish-compose.yml", from: "      - name: Dry run — build + publishToMavenLocal (unsigned)\n        env:", to: "      - name: Dry run — build + publishToMavenLocal (unsigned)\n        if: ${{ inputs.dry_run == false }}\n        env:", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+  "flutter-dry-run-rehearsal-removed": { file: ".github/workflows/publish-flutter.yml", from: "      - name: Dry run\n        run: flutter pub publish --dry-run\n", to: "", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+  // Round eleven, and a different class: not a misread file, but a condition one level up. A job
+  // `if:` skips every step in the job, rehearsal included, while a check that reads only step
+  // conditions still calls the rehearsal unconditional. Verified as a bypass at `5ecf612a`.
+  "flutter-rehearsal-gated-by-the-job-condition": { file: ".github/workflows/publish-flutter.yml", from: "jobs:\n  publish:\n    runs-on: ubuntu-latest\n", to: "jobs:\n  publish:\n    if: ${{ inputs.dry_run == false }}\n    runs-on: ubuntu-latest\n", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+  "compose-rehearsal-gated-by-the-job-condition": { file: ".github/workflows/publish-compose.yml", from: "jobs:\n  publish:\n    runs-on: ubuntu-latest\n", to: "jobs:\n  publish:\n    if: ${{ github.actor == 'nobody' }}\n    runs-on: ubuntu-latest\n", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+  // Round twelve: the same scheduling class one level further out. A job is skipped by its own
+  // `if:` and also by any job it `needs:` being skipped, so the rehearsal's job has to be shown
+  // unconditional along its whole dependency closure. All three verified as bypasses at `39907a2c`.
+  "flutter-rehearsal-gated-through-needs": { file: ".github/workflows/publish-flutter.yml", from: "jobs:\n  publish:\n    runs-on: ubuntu-latest\n", to: "jobs:\n  live_only:\n    if: ${{ inputs.dry_run == false }}\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo live\n  publish:\n    needs: live_only\n    runs-on: ubuntu-latest\n", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+  "flutter-rehearsal-gated-two-jobs-out": { file: ".github/workflows/publish-flutter.yml", from: "jobs:\n  publish:\n    runs-on: ubuntu-latest\n", to: "jobs:\n  gate:\n    if: ${{ inputs.dry_run == false }}\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo gate\n  middle:\n    needs: gate\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo middle\n  publish:\n    needs: [middle]\n    runs-on: ubuntu-latest\n", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+  "flutter-rehearsal-needs-a-job-that-does-not-exist": { file: ".github/workflows/publish-flutter.yml", from: "jobs:\n  publish:\n    runs-on: ubuntu-latest\n", to: "jobs:\n  publish:\n    needs: nowhere\n    runs-on: ubuntu-latest\n", breaks: "WF-REHEARSAL-UNCONDITIONAL" },
+
+  // YAML spellings the reader does not read. Each of these passed at 8bb19e81 by making a step with
+  // a publication in it look like a step with no script at all.
+  "flutter-publish-in-an-explicit-indicator-block": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: |1\n          # a comment indented deeper than the content\n         flutter pub publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-in-a-folded-scalar": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: >\n          flutter pub\n          publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-under-a-quoted-run-key": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: '          flutter pub publish --force\n\n      - name: Extra\n        "run": flutter pub publish --force', breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-behind-a-yaml-anchor": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: &publish flutter pub publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  // Round ten, same class again, and the reason the reader was replaced by a parser rather than
+  // patched a fourth time. Each of these was a *passing* preflight at `48d405ac`: a header comment
+  // after `>`, a plain scalar continued on the next line, an escape inside a quoted scalar, a job
+  // whose sequence items sit two spaces shallower, and an anchor named with a digit. A parser reads
+  // all five as the command GitHub would run, so all five are caught by the isolation sweep.
+  "flutter-publish-in-a-folded-scalar-with-a-header-comment": { file: ".github/workflows/publish-flutter.yml", from: '          flutter pub publish --force', to: '          flutter pub publish --force' + "\n\n      - name: Extra\n        run: > # folded command\n          flutter pub\n          publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-in-a-plain-scalar-continuation": { file: ".github/workflows/publish-flutter.yml", from: '          flutter pub publish --force', to: '          flutter pub publish --force' + "\n\n      - name: Extra\n        run: flutter pub\n          publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-in-a-quoted-escape": { file: ".github/workflows/publish-flutter.yml", from: '          flutter pub publish --force', to: '          flutter pub publish --force' + "\n\n      - name: Extra\n        run: \"flutter pub \\u0070ublish --force\"", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-in-a-second-job-with-shallower-steps": { file: ".github/workflows/publish-flutter.yml", from: '          flutter pub publish --force', to: '          flutter pub publish --force' + "\n\n  extra:\n    runs-on: ubuntu-latest\n    steps:\n    - name: Extra\n      run: flutter pub publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-behind-a-numeric-alias": { file: ".github/workflows/publish-flutter.yml", from: "        run: |\n          if [ -z \"$PUB_DEV_CREDENTIALS\" ]", to: "        run: &1 |\n          if [ -z \"$PUB_DEV_CREDENTIALS\" ]", also: { file: ".github/workflows/publish-flutter.yml", from: '          flutter pub publish --force', to: '          flutter pub publish --force' + "\n\n      - name: Extra\n        run: *1" }, breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  // And the case the hand-written reader could not report at all: a file it could not read looked
+  // like a file with no publication in it.
+  "flutter-workflow-does-not-parse": { file: ".github/workflows/publish-flutter.yml", from: "jobs:\n", to: "jobs:\n  duplicate: {}\njobs:\n", breaks: "WF-PARSES" },
+
+  // Ways to hide a publication from the structural reader itself, rather than from the gate's
+  // contract. Each of these passed the reader as it stood at 42a90808.
+  "flutter-publish-in-a-nine-space-block-scalar": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Extra\n        run: |\n         flutter pub publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-publish-sharing-the-rehearsal-line": { file: ".github/workflows/publish-flutter.yml", from: "        run: flutter pub publish --dry-run", to: "        run: flutter pub publish --dry-run; flutter pub publish --force", breaks: "WF-SIDE-EFFECTS-ISOLATED" },
+  "flutter-second-step-with-the-publish-name": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          flutter pub publish --force\n\n      - name: Publish\n        run: flutter pub publish --force", breaks: "WF-PUBLISH-STEP-CONDITION" },
+
+  // Defense in depth is required to be present. It is not what proves the gate.
+  "swiftui-defense-in-depth-guard-removed": { file: ".github/workflows/publish-swiftui.yml", from: /^          if \[ "\$\{DRY_RUN:-\}" != "false" \]; then\n            echo "::notice::Not a live publish \(dry_run=\$\{DRY_RUN:-<unset>\}\) — nothing pushed\."\n            exit 0\n          fi\n/m, to: "", breaks: "WF-DRY-RUN-DEFENSE-IN-DEPTH" },
+  "swiftui-defense-in-depth-guard-inverted": { file: ".github/workflows/publish-swiftui.yml", from: '          if [ "${DRY_RUN:-}" != "false" ]; then\n            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — nothing pushed."', to: '          if [ "$DRY_RUN" = "true" ]; then\n            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — nothing pushed."', breaks: "WF-DRY-RUN-DEFENSE-IN-DEPTH" },
+
+  "swiftui-publish-always-live": { file: ".github/workflows/publish-swiftui.yml", from: /^      dry_run:\n(?:        .*\n)+/m, to: "", breaks: "WF-DRY-RUN-DEFAULT" },
+  "compose-publish-unserialised": { file: ".github/workflows/publish-compose.yml", from: /^concurrency:\n(?:  .*\n)+/m, to: "", breaks: "WF-CONCURRENCY" },
+  "flutter-publish-skips-tests": { file: ".github/workflows/publish-flutter.yml", from: "flutter test", to: "flutter --version" , breaks: "WF-TESTS-BEFORE-PUBLISH" },
+  "swiftui-publish-unvalidated-version": { file: ".github/workflows/publish-swiftui.yml", from: "--version=", to: "--ignored-version=", breaks: "WF-VERSION-VALIDATED" },
+  // A vendored copy drifting from its canonical source, which is what a publish from an
+  // arbitrary ref can ship and ci.yml's pull-request-only drift step would never see.
+  "vendored-token-drift": { file: "packages/ui-flutter/lib/src/kinetix_motion.dart", from: /^/, to: "// drifted\n", breaks: "VENDOR-CURRENT" },
+  // Published identity: every one of these is a way the artifact could reach a registry under a
+  // name nobody asked for. Each was demonstrated to pass the pre-NPG-2 gate.
+  "pub-name-wrong": { file: "packages/ui-flutter/pubspec.yaml", from: /^name: kinetix_ui$/m, to: "name: kinetix_ui_typo", breaks: "ID-PUB-NAME" },
+  // The same mutation, asserted against the other check it has to break: a drifted name also makes
+  // the documented `package:<name>/<name>.dart` import unresolvable. Registered separately because
+  // a control proves one named check, and these two fail for different reasons.
+  "pub-name-points-at-missing-library": { file: "packages/ui-flutter/pubspec.yaml", from: /^name: kinetix_ui$/m, to: "name: kinetix_ui_typo", breaks: "ID-PUB-LIBRARY-ENTRY" },
+  "flutter-staging-name-unasserted": { file: "scripts/publish/stage-flutter-package.mjs", from: "lines.includes(`name: ${CANONICAL_NAME}`)", to: "false", breaks: "ID-PUB-NAME-ASSERTED-AT-STAGING" },
+  // Two independent ways to lose the Maven coordinate, because groupId and artifactId are separate
+  // declarations and MVN-POM-COMPLETE is satisfied by any values at all.
+  "mvn-group-wrong": { file: "packages/ui-compose/ui/build.gradle.kts", from: 'groupId = "com.kinetixui"', to: 'groupId = "com.notkinetixui"', breaks: "ID-MVN-COORDINATES" },
+  "mvn-artifact-wrong": { file: "packages/ui-compose/ui/build.gradle.kts", from: 'artifactId = "ui-compose"', to: 'artifactId = "ui-komposs"', breaks: "ID-MVN-COORDINATES" },
+  "mvn-namespace-escapes-group": { file: "packages/ui-compose/ui/build.gradle.kts", from: 'namespace = "com.kinetixui.ui"', to: 'namespace = "com.example.ui"', breaks: "ID-MVN-NAMESPACE-UNDER-GROUP" },
+  "swift-package-renamed": { file: "packages/ui-swiftui/Package.swift", from: /Package\(\n    name: "KinetixUI"/, to: 'Package(\n    name: "Kinetix"', breaks: "ID-SWIFT-PACKAGE-AND-LIBRARY" },
+  "swift-library-renamed": { file: "packages/ui-swiftui/Package.swift", from: '.library(name: "KinetixUI", targets: ["KinetixUI"])', to: '.library(name: "KinetixKit", targets: ["KinetixUI"])', breaks: "ID-SWIFT-PACKAGE-AND-LIBRARY" },
+  // SwiftUI has no manifest coordinate: the split prefix is the identity, so this is the only
+  // wrong-identity publication no manifest field would reveal.
+  "swiftui-subtree-prefix-wrong": { file: ".github/workflows/publish-swiftui.yml", from: "--prefix=packages/ui-swiftui", to: "--prefix=packages/iot", breaks: "ID-SWIFTUI-SUBTREE-PREFIX" },
+  // Version integrity: each of these is a way the number reaching a registry could differ from the
+  // number that was asked for.
+  "compose-version-defaults-silently": { file: "packages/ui-compose/ui/build.gradle.kts", from: 'version = requestedVersion.getOrElse(unversionedPlaceholder)', to: 'version = requestedVersion.getOrElse("0.1.0")', breaks: "VI-COMPOSE-NO-SILENT-DEFAULT" },
+  // Two distinct ways to lose the Compose guard: reintroduce a default, or delete the refusal.
+  "compose-refusal-removed": { file: "packages/ui-compose/ui/build.gradle.kts", from: '"VERSION_NAME is not set, so this publication would carry the " +', to: '"" +', breaks: "VI-COMPOSE-NO-SILENT-DEFAULT" },
+  "compose-publish-step-drops-version": { file: ".github/workflows/publish-compose.yml", from: "          VERSION_NAME: ${{ inputs.version }}\n          MAVEN_CENTRAL_USERNAME:", to: "          MAVEN_CENTRAL_USERNAME:", breaks: "VI-COMPOSE-VERSION-FORWARDED" },
+  "compose-integrity-gate-removed": { file: ".github/workflows/native-compose.yml", from: "VERSION_NAME is not set", to: "the build failed", breaks: "VI-COMPOSE-INTEGRITY-GATE" },
+  "swiftui-tag-not-from-input": { file: ".github/workflows/publish-swiftui.yml", from: 'git push "$MIRROR" "$SHA:refs/tags/$VERSION"', to: 'git push "$MIRROR" "$SHA:refs/tags/$(date +%Y.%m.%d)"', breaks: "VI-SWIFTUI-TAG-FROM-VALIDATED-INPUT" },
+  "flutter-version-not-asserted": { file: "scripts/publish/stage-flutter-package.mjs", from: "if (!lines.includes(`version: ${version}`)) {", to: "if (false) {", breaks: "VI-FLUTTER-VERSION-ASSERTED" },
+  "flutter-changelog-ungated": { file: "scripts/publish/stage-flutter-package.mjs", from: "does not mention ${version}", to: "has no entry", breaks: "VI-FLUTTER-CHANGELOG-GATES-VERSION" },
+  "swiftui-version-interpolated": { file: ".github/workflows/publish-swiftui.yml", from: '--version="$VERSION"', to: "--version='${{ inputs.version }}'", breaks: "WF-VERSION-NOT-INTERPOLATED" },
+  "swiftui-version-interpolated-in-block": { file: ".github/workflows/publish-swiftui.yml", from: "          SHA=$(git rev-parse swiftui-dist)", to: "          SHA=$(git rev-parse swiftui-dist) # ${{ inputs.version }}", breaks: "WF-VERSION-NOT-INTERPOLATED" },
+};
+
+if (process.argv.includes("--list-negatives")) {
+  console.log(Object.keys(NEGATIVES).join("\n"));
+  process.exit(0);
+}
+
+/**
+ * Semantic versions a native registry will accept, and that the three workflows take as a dispatch
+ * input. Deliberately stricter than semver.org: no build metadata, and a leading `v` is rejected
+ * rather than stripped, because the SwiftUI mirror turns this string straight into a git tag and
+ * `from: "v0.1.0"` is not the same requirement as `from: "0.1.0"`.
+ */
+const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(?:[0-9A-Za-z-]+)(?:\.[0-9A-Za-z-]+)*)?$/;
+
+const versionArg = process.argv.find((arg) => arg.startsWith("--version="))?.slice("--version=".length);
+if (versionArg !== undefined) {
+  if (!SEMVER.test(versionArg)) {
+    console.error(`::error::"${versionArg}" is not a publishable version. Expected MAJOR.MINOR.PATCH with an optional -prerelease, no leading "v" and no +build metadata (e.g. 0.1.0, 0.1.0-preview.1).`);
+    process.exit(1);
+  }
+  console.log(`PASS: "${versionArg}" is a publishable version.`);
+  process.exit(0);
+}
+
+const negativeId = process.argv.find((arg) => arg.startsWith("--negative="))?.slice("--negative=".length);
+const negative = negativeId ? NEGATIVES[negativeId] : undefined;
+if (negativeId && !negative) {
+  console.error(`Unknown negative control ${negativeId}. --list-negatives shows them.`);
+  process.exit(1);
+}
+
+/**
+ * Files are read through here so a negative control mutates what the checks see without touching
+ * the working tree. A control whose `from` does not match exactly once is a broken control, not a
+ * passing gate — that is how a mutation silently becoming a no-op is caught.
+ */
+const sources = new Map();
+/** One `{ file, from, to }` edit, applied only where it matches exactly once. */
+const mutate = (text, path, edit) => {
+  if (edit.file !== path) return text;
+  const { from, to } = edit;
+  const occurrences = typeof from === "string" ? text.split(from).length - 1 : (text.match(new RegExp(from.source, `${from.flags.replace("g", "")}g`)) ?? []).length;
+  if (occurrences !== 1) {
+    console.error(`Negative control ${negativeId}: ${from} matches ${occurrences} times in ${path}, expected exactly 1.`);
+    process.exit(1);
+  }
+  return text.replace(from, to);
+};
+const source = (path) => {
+  if (!sources.has(path)) {
+    let text = read(path);
+    // Some mutations are two edits in different places — moving a step condition into the script,
+    // say. `also` carries the second, held to the same exactly-once rule as the first.
+    if (negative) for (const edit of [negative, negative.also].filter(Boolean)) text = mutate(text, path, edit);
+    sources.set(path, text);
+  }
+  return sources.get(path);
+};
+
+const failures = [];
+/** `detail` is what someone fixing this needs to read; it is printed only when the check fails. */
+const check = (name, ok, detail) => {
+  if (!ok) failures.push(`${name}: ${detail}`);
+};
+
+// ---------------------------------------------------------------------------
+// SwiftUI — distributed as a `git subtree split` of packages/ui-swiftui pushed to a mirror repo,
+// so the manifest has to work when it is the root of its own repository and nothing above it
+// exists any more.
+// ---------------------------------------------------------------------------
+const packageSwift = source("packages/ui-swiftui/Package.swift");
+
+check(
+  "SW-MANIFEST-AT-ROOT",
+  existsSync(`${root}packages/ui-swiftui/Package.swift`) && /\.library\(\s*name:\s*"KinetixUI"/.test(packageSwift),
+  'packages/ui-swiftui/Package.swift must sit at the package root and expose `.library(name: "KinetixUI", …)`. The subtree split makes this file the mirror root, and `.package(url:)` consumers can only depend on a library product.',
+);
+
+check(
+  "SW-SELF-CONTAINED",
+  !/\.package\(\s*path:/.test(packageSwift) && !/path:\s*"(?:\.\.|\/)/.test(packageSwift),
+  "packages/ui-swiftui/Package.swift must not reference a path outside its own directory. The subtree split discards everything above packages/ui-swiftui, so such a path resolves in this repo and breaks in the mirror — after the tag is pushed.",
+);
+
+// ---------------------------------------------------------------------------
+// Compose — com.kinetixui:ui-compose to Maven Central. Central validates the POM on upload and
+// rejects a deployment outright when any of these is missing, which is a wasted staging round
+// trip rather than a bad publish; the sources/javadoc jars and the signature are the same story.
+// ---------------------------------------------------------------------------
+/**
+ * Whole-line comments are stripped before the Kotlin DSL is inspected: commenting a call out is
+ * how this config actually gets disabled, and `includes("withJavadocJar()")` happily matched the
+ * commented-out line until a negative control proved it. Only whole-line comments go, so the
+ * `https://` in the staging repository URL survives.
+ */
+const stripLineComments = (text) => text.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").filter((line) => !/^\s*\/\//.test(line)).join("\n");
+const composeGradle = stripLineComments(source("packages/ui-compose/ui/build.gradle.kts"));
+
+const POM_REQUIRED = ["groupId", "artifactId", "name.set(", "description.set(", "url.set(", "licenses {", "developers {", "scm {"];
+const missingPom = POM_REQUIRED.filter((field) => !composeGradle.includes(field));
+check(
+  "MVN-POM-COMPLETE",
+  missingPom.length === 0,
+  `packages/ui-compose/ui/build.gradle.kts is missing POM fields Maven Central requires: ${missingPom.join(", ")}. Central rejects the deployment rather than publishing an incomplete POM.`,
+);
+
+check(
+  "MVN-SOURCES-JAVADOC",
+  composeGradle.includes("withSourcesJar()") && composeGradle.includes("withJavadocJar()"),
+  "packages/ui-compose/ui/build.gradle.kts must configure withSourcesJar() and withJavadocJar(). Maven Central requires a sources jar and a javadoc jar alongside the AAR.",
+);
+
+check(
+  "MVN-SIGNING",
+  /signing\s*\{[\s\S]*sign\(publishing\.publications\)/.test(composeGradle),
+  "packages/ui-compose/ui/build.gradle.kts must still sign its publications when a key is present. Maven Central requires a detached GPG signature for every artifact.",
+);
+
+// ---------------------------------------------------------------------------
+// Flutter — kinetix_ui to pub.dev. The committed pubspec is deliberately unpublishable
+// (`version: 0.0.0`, `publish_to: none`) and it is rewritten in place at publish time by
+// scripts/publish/stage-flutter-package.mjs, so what reaches pub.dev is not what is committed.
+// That makes the staging transformation the thing to check: it rewrites two specific lines, and
+// if either is reformatted there is nothing for it to rewrite.
+// ---------------------------------------------------------------------------
+const pubspec = source("packages/ui-flutter/pubspec.yaml");
+const flutterWorkflow = source(".github/workflows/publish-flutter.yml");
+
+/**
+ * The lines the staging script rewrites, each paired with the anchored pattern it uses. The script
+ * refuses outright when one of them does not match, so a mismatch here is a publish that cannot
+ * run — and finding that out on a pull request beats finding it out mid-dispatch.
+ */
+const STAGING = [
+  { matches: /^publish_to:\s*none\s*$/m, what: "the `publish_to: none` line it removes" },
+  { matches: /^version: .*$/m, what: "the `version:` line it rewrites" },
+];
+const brokenStaging = STAGING.filter(({ matches }) => (pubspec.match(new RegExp(matches.source, "gm")) ?? []).length !== 1);
+check(
+  "PUB-STAGING-PATTERNS",
+  brokenStaging.length === 0,
+  `scripts/publish/stage-flutter-package.mjs rewrites pubspec.yaml at publish time, and ${brokenStaging.map((s) => s.what).join(" and ")} no longer matches exactly one line. Keep those lines in the plain \`key: value\` form, or update the script alongside them.`,
+);
+
+check(
+  "PUB-UNPUBLISHABLE-AS-COMMITTED",
+  /^publish_to:\s*none$/m.test(pubspec) && /^version:\s*0\.0\.0$/m.test(pubspec),
+  "packages/ui-flutter/pubspec.yaml must stay `version: 0.0.0` and `publish_to: none` while the package is unpublished. Both are what make a stray local `flutter pub publish` refuse, and the staging step in publish-flutter.yml is written to remove them.",
+);
+
+/**
+ * pub.dev shows the description on the package page and scores it between 60 and 180 characters.
+ * It is also immutable per version, so a description that states publication status is wrong the
+ * moment it is published — status belongs in the docs, which can be corrected.
+ */
+const description = pubspec.match(/^description: >-\n((?:  .*\n)+)/m)?.[1]?.split("\n").map((line) => line.trim()).filter(Boolean).join(" ") ?? "";
+check(
+  "PUB-DESCRIPTION-LENGTH",
+  description.length >= 60 && description.length <= 180,
+  `packages/ui-flutter/pubspec.yaml description is ${description.length} characters; pub.dev scores 60–180.`,
+);
+check(
+  "PUB-DESCRIPTION-IS-STATUS-FREE",
+  !/\b(not published|unpublished|not on pub\.dev|coming soon|pre-release|not yet)\b/i.test(description),
+  `packages/ui-flutter/pubspec.yaml description states a publication status (${JSON.stringify(description)}). pub.dev renders it verbatim and a published version's description cannot be edited, so it would contradict itself on the package page. Describe the package; leave status to the docs.`,
+);
+
+check(
+  "PUB-CHANGELOG",
+  existsSync(`${root}packages/ui-flutter/CHANGELOG.md`),
+  "packages/ui-flutter/CHANGELOG.md must exist. pub.dev looks for it next to the pubspec and deducts from the package score when it is missing; it is not reconstructable after the fact.",
+);
+
+check(
+  "PUB-LICENSE-SOURCE",
+  existsSync(`${root}LICENSE`),
+  "The repository root LICENSE must exist: publish-flutter.yml copies it into the package directory at publish time, because pub.dev scores a package without a recognised licence file.",
+);
+
+// ---------------------------------------------------------------------------
+// The three publish workflows — a one-way door should be hard to open by accident, should refuse a
+// version it cannot undo, and should not publish code whose own tests were never run.
+// ---------------------------------------------------------------------------
+const PUBLISH_WORKFLOWS = [
+  { path: ".github/workflows/publish-swiftui.yml", test: "swift test" },
+  { path: ".github/workflows/publish-compose.yml", test: ":ui:testDebugUnitTest" },
+  { path: ".github/workflows/publish-flutter.yml", test: "flutter test" },
+];
+const workflows = PUBLISH_WORKFLOWS.map((w) => ({ ...w, text: source(w.path) }));
+
+const liveByDefault = workflows.filter((w) => !/^      dry_run:\n(?:        .*\n)+/m.test(w.text) || !/default:\s*true/.test(w.text));
+check(
+  "WF-DRY-RUN-DEFAULT",
+  liveByDefault.length === 0,
+  `${liveByDefault.map((w) => w.path).join(", ")} must offer a \`dry_run\` input defaulting to true, so the default dispatch rehearses rather than publishes.`,
+);
+
+const unserialised = workflows.filter((w) => !/^concurrency:\n(?:  .*\n)+/m.test(w.text));
+check(
+  "WF-CONCURRENCY",
+  unserialised.length === 0,
+  `${unserialised.map((w) => w.path).join(", ")} must declare a concurrency group. Two dispatches of a publish must not run at once: for Compose and Flutter they would race for the same registry coordinate, and for SwiftUI they would force-push the same mirror branch.`,
+);
+
+const untested = workflows.filter((w) => !w.text.includes(w.test));
+check(
+  "WF-TESTS-BEFORE-PUBLISH",
+  untested.length === 0,
+  `${untested.map((w) => `${w.path} (expected \`${w.test}\`)`).join(", ")} must run the package's own test suite before publishing. Building proves it compiles; only the suite proves the artifact is the one the native workflows went green on.`,
+);
+
+const unvalidated = workflows.filter((w) => !w.text.includes("check-native-publish-preflight.mjs --version="));
+check(
+  "WF-VERSION-VALIDATED",
+  unvalidated.length === 0,
+  `${unvalidated.map((w) => w.path).join(", ")} must validate its \`version\` input with \`node scripts/check-native-publish-preflight.mjs --version=…\` before anything is uploaded. A typo becomes a permanent tag, an immutable Central coordinate or a burnt pub.dev version.`,
+);
+
+const flutterStaging = source("scripts/publish/stage-flutter-package.mjs");
+const swiftuiWorkflow = source(".github/workflows/publish-swiftui.yml");
+
+// ---------------------------------------------------------------------------
+// Published identity. Version integrity below asks whether the artifact can carry a different
+// *number* than the one requested. This asks the other half: whether it can carry a different
+// *name*. A wrong number is at least visible on the package page it lands on; a wrong name lands
+// on a different package page altogether, and on Maven Central and pub.dev that coordinate is then
+// taken forever by something nobody meant to publish. Neither is correctable.
+//
+// Every check here compares a value, not the presence of a field. MVN-POM-COMPLETE above looks for
+// the *strings* `groupId` and `artifactId` in the Kotlin DSL and is satisfied by any values at all,
+// which is how `com.notkinetixui:ui-komposs` passed the whole gate; nothing read the pubspec's
+// `name:` at any point. The pins live in one object so that the published identity of this project
+// is a thing you can read, and so that changing one is a visible diff rather than a typo.
+// ---------------------------------------------------------------------------
+/**
+ * The identities KinetixUI publishes under, by value.
+ *
+ * These are not style preferences. A Maven coordinate and a pub.dev package name are permanent: a
+ * published package can be deprecated or discontinued but never renamed, so the first publish
+ * decides them for good. `kinetix_ui` is settled in master report §27.B (R-8); `com.kinetixui`
+ * additionally requires namespace verification with Central before anything can be uploaded under
+ * it, so a drifted groupId is also a deployment that cannot authenticate.
+ *
+ * Changing a value here is a deliberate decision about what this project publishes, and it should
+ * fail every check below until the manifests are moved to match.
+ */
+const IDENTITY = {
+  pubName: "kinetix_ui",
+  mavenGroupId: "com.kinetixui",
+  mavenArtifactId: "ui-compose",
+  swiftPackage: "KinetixUI",
+  swiftLibrary: "KinetixUI",
+  swiftuiSubtreePrefix: "packages/ui-swiftui",
+};
+
+const pubspecName = pubspec.match(/^name:\s*(\S+)\s*$/m)?.[1];
+check(
+  "ID-PUB-NAME",
+  pubspecName === IDENTITY.pubName,
+  `packages/ui-flutter/pubspec.yaml declares \`name: ${pubspecName ?? "(no top-level name: line)"}\`; pub.dev would publish under that, and the expected package is ${IDENTITY.pubName}. The name is the package's permanent identity — a published package cannot be renamed, only discontinued — and nothing else in this gate reads it.`,
+);
+
+/*
+ * pub.dev resolves `package:<name>/<name>.dart` as the conventional entry point, and every import
+ * in this repo's tests and docs is written against it. Derived from the name the pubspec *declares*
+ * rather than from the pin above, deliberately: the question this answers is whether the package as
+ * it would be published is importable, which a drifted `name:` breaks even though the file is right
+ * where it always was.
+ */
+const declaredEntry = `packages/ui-flutter/lib/${pubspecName ?? IDENTITY.pubName}.dart`;
+check(
+  "ID-PUB-LIBRARY-ENTRY",
+  existsSync(`${root}${declaredEntry}`),
+  `${declaredEntry} must exist: with \`name: ${pubspecName ?? IDENTITY.pubName}\` in the pubspec, that is the file \`package:${pubspecName ?? IDENTITY.pubName}/${pubspecName ?? IDENTITY.pubName}.dart\` resolves to, and that import is what the docs, the tests and the consumer rehearsal are written against.`,
+);
+
+/*
+ * The gate above reads the committed pubspec. The file that actually reaches pub.dev is the one
+ * staging rewrites, so the name has to be asserted there too, off disk, in the same place the
+ * version already is. Otherwise a staging step that rewrote the name — or a package directory
+ * pointed somewhere else by `--package-dir=` — would publish under a name this check never saw.
+ */
+check(
+  "ID-PUB-NAME-ASSERTED-AT-STAGING",
+  new RegExp(`CANONICAL_NAME\\s*=\\s*"${IDENTITY.pubName}"`).test(flutterStaging) &&
+    /lines\.includes\(`name: \$\{CANONICAL_NAME\}`\)/.test(flutterStaging),
+  `scripts/publish/stage-flutter-package.mjs must pin CANONICAL_NAME = "${IDENTITY.pubName}" and assert \`name: <that>\` against the staged pubspec read back off disk. The committed pubspec being right says nothing about the file that is uploaded, which is the one staging produces.`,
+);
+
+const mavenGroupId = composeGradle.match(/groupId\s*=\s*"([^"]*)"/)?.[1];
+const mavenArtifactId = composeGradle.match(/artifactId\s*=\s*"([^"]*)"/)?.[1];
+check(
+  "ID-MVN-COORDINATES",
+  mavenGroupId === IDENTITY.mavenGroupId && mavenArtifactId === IDENTITY.mavenArtifactId,
+  `packages/ui-compose/ui/build.gradle.kts publishes as ${mavenGroupId ?? "(no groupId)"}:${mavenArtifactId ?? "(no artifactId)"}; the expected coordinate is ${IDENTITY.mavenGroupId}:${IDENTITY.mavenArtifactId}. A Central coordinate is immutable and the groupId additionally has to be a namespace this account has verified, so a drifted value is either a permanent wrong publication or an upload that cannot authenticate.`,
+);
+
+/*
+ * The Android namespace is the AAR's own package and the import path consumers write. It is a
+ * separate declaration from the Maven coordinate and can drift from it independently — which would
+ * ship `com.kinetixui:ui-compose` whose classes live under somebody else's package name.
+ */
+const composeNamespace = composeGradle.match(/namespace\s*=\s*"([^"]*)"/)?.[1];
+check(
+  "ID-MVN-NAMESPACE-UNDER-GROUP",
+  typeof composeNamespace === "string" && composeNamespace.startsWith(`${IDENTITY.mavenGroupId}.`),
+  `packages/ui-compose/ui/build.gradle.kts declares \`namespace = "${composeNamespace ?? "(none)"}"\`, which is not under ${IDENTITY.mavenGroupId}. The namespace is the published AAR's package and the import path a consumer writes; it must sit inside the group the artifact is published under.`,
+);
+
+check(
+  "ID-SWIFT-PACKAGE-AND-LIBRARY",
+  new RegExp(`Package\\(\\s*\\n?\\s*name:\\s*"${IDENTITY.swiftPackage}"`).test(packageSwift) &&
+    new RegExp(`\\.library\\(\\s*name:\\s*"${IDENTITY.swiftLibrary}"`).test(packageSwift),
+  `packages/ui-swiftui/Package.swift must declare \`Package(name: "${IDENTITY.swiftPackage}")\` and \`.library(name: "${IDENTITY.swiftLibrary}", …)\`. The library product name is what a consumer writes in \`.product(name:, package:)\`, and renaming it breaks every consumer of an already-published tag — which, unlike the mirror branch, cannot be moved.`,
+);
+
+/*
+ * SwiftUI has no manifest coordinate at all: the published package *is* whatever the subtree split
+ * extracts, pushed to the mirror and tagged. So the prefix is the identity. A wrong prefix publishes
+ * a different package's source under the KinetixUI tag, and the tag is then permanent — the one
+ * failure here that no manifest field would reveal.
+ */
+const splitPrefixes = [...swiftuiWorkflow.matchAll(/--prefix=["']?([^\s"']+)/g)].map((m) => m[1]);
+check(
+  "ID-SWIFTUI-SUBTREE-PREFIX",
+  splitPrefixes.length > 0 && splitPrefixes.every((prefix) => prefix === IDENTITY.swiftuiSubtreePrefix),
+  `.github/workflows/publish-swiftui.yml must split exactly \`--prefix=${IDENTITY.swiftuiSubtreePrefix}\`; it splits ${splitPrefixes.length ? splitPrefixes.join(", ") : "nothing — there is no --prefix= at all"}. The split result is the published package — there is no name field to disagree with it — so any other prefix pushes a different package's source to the mirror and tags it as KinetixUI.`,
+);
+
+/**
+ * Every `run:` script body in a workflow, with the line its `run:` key sits on. A body is either
+ * the rest of that line or, for a block scalar, the lines indented further than the key. Only
+ * `run:` bodies are of interest here: `env:`, `if:` and `with:` are the *correct* homes for a
+ * `${{ … }}` expression and must keep working.
+ */
+const runBodies = (text) => {
+  const lines = text.split("\n");
+  const bodies = [];
+  for (let i = 0; i < lines.length; i += 1) {
+    const match = lines[i].match(/^(\s*)(?:- )?run:(.*)$/);
+    if (!match) continue;
+    const keyIndent = match[1].length + (/^\s*- /.test(lines[i]) ? 2 : 0);
+    const rest = match[2].trim();
+    if (/^[|>][-+\d]*$/.test(rest)) {
+      const block = [];
+      for (let j = i + 1; j < lines.length; j += 1) {
+        if (lines[j].trim() === "") { block.push(lines[j]); continue; }
+        if (lines[j].match(/^\s*/)[0].length <= keyIndent) break;
+        block.push(lines[j]);
+      }
+      bodies.push({ line: i + 1, text: block.join("\n") });
+    } else {
+      bodies.push({ line: i + 1, text: rest });
+    }
+  }
+  return bodies;
+};
+
+/*
+ * A `${{ inputs.… }}` expression inside a `run:` body is substituted into the script *text* before
+ * the shell parses it, so a quote in the dispatched value is a breakout rather than a character.
+ * That defeated the validation above in the most direct way available: three of the four sites this
+ * check was written for *were* the validation step, and a payload that re-invoked the validator
+ * afterwards left the step green while the version stayed an arbitrary string. The input has to
+ * cross an `env:` boundary and be read as a quoted "$VERSION".
+ *
+ * This is checked here rather than left to actionlint on purpose. actionlint treats
+ * `workflow_dispatch` inputs as trusted — dispatch needs write access — so the pinned v1.7.12 in
+ * workflow-lint.yml reports nothing on these files, while flagging the identical shape written with
+ * `github.event.*`. The lint job is not the instrument for this.
+ *
+ * The check is deliberately about the *class*, not the four call sites: a fifth one added later
+ * fails it.
+ */
+const interpolated = workflows.flatMap((w) =>
+  runBodies(w.text).filter((b) => /\$\{\{\s*inputs\./.test(b.text)).map((b) => `${w.path}:${b.line}`),
+);
+check(
+  "WF-VERSION-NOT-INTERPOLATED",
+  interpolated.length === 0,
+  `These \`run:\` bodies interpolate a dispatch input into the script text: ${interpolated.join(", ")}. GitHub substitutes the expression before the shell parses the line, so the value runs as script — ahead of any validation, and the step can still exit 0. Bind it to the step's \`env:\` and read it as a quoted "$VERSION" instead.`,
+);
+
+// ---------------------------------------------------------------------------
+// Version integrity. A published version is the one decision that cannot be corrected later: a
+// Central coordinate and a pub.dev version are immutable, and a git tag is what `from:` resolves
+// against forever. These checks do not ask whether the version is valid — `--version=` does that —
+// but whether the number that reaches the registry can differ from the number that was asked for
+// without anyone noticing.
+// ---------------------------------------------------------------------------
+check(
+  "VI-COMPOSE-NO-SILENT-DEFAULT",
+  !/version\s*=[^\n]*getOrElse\(\s*"\d/.test(composeGradle) &&
+    /tasks\.matching[\s\S]{0,400}VERSION_NAME is not set/.test(composeGradle),
+  "packages/ui-compose/ui/build.gradle.kts must not resolve the publication version through a literal fallback, and every publish task must refuse when VERSION_NAME is absent. A silent default is the one defect that publishes a wrong and permanent version in total silence: the build succeeds, the upload succeeds, and the number simply is not the one anybody asked for.",
+);
+
+/*
+ * Each step that runs a Gradle `publish*` task has to carry VERSION_NAME itself, because GitHub
+ * step `env` blocks do not inherit from one another. A publish step added without it would hit the
+ * refusal above rather than publish a wrong number — but only while that refusal is there, which is
+ * why this is a separate check.
+ */
+const composeWorkflow = source(".github/workflows/publish-compose.yml");
+const publishStepsWithoutVersion = composeWorkflow
+  .split(/\n      - (?=name:|uses:)/)
+  .filter((step) => /gradle :ui:publish/.test(step) && !/VERSION_NAME:/.test(step))
+  .map((step) => step.match(/name: (.*)/)?.[1] ?? "an unnamed step");
+check(
+  "VI-COMPOSE-VERSION-FORWARDED",
+  publishStepsWithoutVersion.length === 0,
+  `In .github/workflows/publish-compose.yml these steps run a Gradle publish task without VERSION_NAME in their own \`env\`: ${publishStepsWithoutVersion.join(", ")}. Step env blocks are not inherited, so the version never reaches the build.`,
+);
+
+/*
+ * A refusal only means something if something exercises it. native-compose.yml holds the pair that
+ * does, on a runner that has the Android toolchain: publish to the local repository and read the
+ * version back out of the POM, then withhold VERSION_NAME and require the task to fail. Both are
+ * easy to delete while editing an unrelated job, so their absence is a gate failure.
+ */
+const composeCi = source(".github/workflows/native-compose.yml");
+check(
+  "VI-COMPOSE-INTEGRITY-GATE",
+  /publishReleasePublicationToMavenLocal/.test(composeCi) &&
+    /VERSION_NAME is not set/.test(composeCi) &&
+    /<version>\$VERSION_NAME<\/version>/.test(composeCi),
+  ".github/workflows/native-compose.yml must keep the version-integrity pair: a publishToMavenLocal whose version is read back out of the POM, and a run with no VERSION_NAME that is required to fail with the refusal. Without them the refusal in build.gradle.kts is never exercised and can rot unnoticed.",
+);
+
+/*
+ * SwiftPM has no version field — the tag is the version — so the only thing making the published
+ * version match the requested one is that the tag is built from the validated input and nothing
+ * derived at run time.
+ */
+check(
+  "VI-SWIFTUI-TAG-FROM-VALIDATED-INPUT",
+  /VERSION:\s*\$\{\{\s*inputs\.version\s*\}\}/.test(swiftuiWorkflow) &&
+    /refs\/tags\/\$VERSION/.test(swiftuiWorkflow),
+  ".github/workflows/publish-swiftui.yml must push the tag as refs/tags/$VERSION with VERSION bound to inputs.version. SwiftPM resolves `from:` against the tag alone, so the tag *is* the published version and must be the validated input.",
+);
+
+/*
+ * Flutter is the one platform whose version is rewritten in place at publish time, by a `sed` that
+ * exits 0 when it matches nothing. The assertion after the rewrite is what separates "published
+ * 0.1.0" from "published the committed placeholder because the line had been reformatted".
+ */
+check(
+  "VI-FLUTTER-VERSION-ASSERTED",
+  /node scripts\/publish\/stage-flutter-package\.mjs/.test(flutterWorkflow) &&
+    /lines\.includes\(`version: \$\{version\}`\)/.test(flutterStaging),
+  "publish-flutter.yml must stage through scripts/publish/stage-flutter-package.mjs, and that script must read pubspec.yaml back off disk and assert it carries exactly `version: <the requested version>`. Without the read-back, a rewrite that quietly did nothing publishes the committed placeholder under the requested version — permanently, because a pub.dev version cannot be reused.",
+);
+
+check(
+  "VI-FLUTTER-CHANGELOG-GATES-VERSION",
+  /does not mention \$\{version\}/.test(flutterStaging),
+  "scripts/publish/stage-flutter-package.mjs must refuse a version packages/ui-flutter/CHANGELOG.md does not mention. `pub publish` only warns, and a warning is enough to abort the publish mid-run; worse, a published version whose changelog never mentions it cannot be corrected, because the version is immutable.",
+);
+
+// ---------------------------------------------------------------------------
+// The natives vendor copies of packages/tokens/dist. ci.yml catches drift on pull requests, but a
+// publish is a workflow_dispatch against whatever ref it was given and never passes through that
+// step, so a publish could ship token values that are no longer the canonical ones.
+// ---------------------------------------------------------------------------
+/**
+ * The three generators are plain file copies out of packages/tokens/dist, so currency is a
+ * byte comparison between each canonical file and its vendored copy. Compared directly rather
+ * than by re-running the generators and diffing the tree: that would also report any unrelated
+ * uncommitted edit in a native package as token drift, which is a different thing entirely.
+ * These lists mirror the generators' own; a file added there and not here is vendored but
+ * unchecked, which is what NEGATIVES does not and cannot catch.
+ */
+const VENDORED = [
+  ...["KinetixColorsSwiftUI.swift", "KinetixColorsSwiftUI.dark.swift", "KinetixType.swift", "KinetixMotion.swift"]
+    .map((file) => [`packages/tokens/dist/ios/${file}`, `packages/ui-swiftui/Sources/KinetixUI/${file}`]),
+  ...["kinetix_color_scheme.dart", "kinetix_color_scheme.dark.dart", "app_text.dart", "kinetix_motion.dart", "kinetix_shadow.dart", "kinetix_shadow.dark.dart"]
+    .map((file) => [`packages/tokens/dist/flutter/${file}`, `packages/ui-flutter/lib/src/${file}`]),
+  ...["Color.kt", "Theme.kt", "Theme.dark.kt", "KinetixType.kt", "KinetixMotion.kt"]
+    .map((file) => [`packages/tokens/dist/android/${file}`, `packages/ui-compose/ui/src/main/kotlin/com/kinetixui/tokens/${file}`]),
+  ...["colors.xml", "dimens.xml"]
+    .map((file) => [`packages/tokens/dist/android/res/values/${file}`, `packages/ui-compose/ui/src/main/res/values/${file}`]),
+];
+
+const stale = VENDORED.filter(([canonical, vendored]) => {
+  if (!existsSync(`${root}${canonical}`)) return false; // tokens/dist is a build output; absent means nothing to compare.
+  return !existsSync(`${root}${vendored}`) || source(canonical) !== source(vendored);
+});
+check(
+  "VENDOR-CURRENT",
+  stale.length === 0,
+  `the native packages carry vendored token copies that differ from packages/tokens/dist: ${stale.map(([, vendored]) => vendored).join(", ")}. Run \`pnpm build:tokens && pnpm vendor:swiftui && pnpm vendor:compose && pnpm vendor:flutter\` and commit the result. ci.yml catches this on pull requests, but a publish is a workflow_dispatch against an arbitrary ref and never passes through that step.`,
+);
+
+// ---------------------------------------------------------------------------
+// Where the publication decision lives. `dry_run` is the only thing standing between a dispatch and
+// an irreversible public coordinate, so the thing that decides must be something stronger than text
+// in a shell script.
+//
+// This check used to try to prove, by reading the script, that a shell guard stopped the publish.
+// Seven rounds of adversarial review produced sixteen findings and every one was the same class: a
+// nested `if false`, a quoted `exit`, a heredoc supplying `exit 0` and `fi` as data, a subshell, an
+// uncalled function body, an unquoted `[ ${DRY_RUN:-} != "false" ]` that makes `test` a usage error,
+// a publish backgrounded with `&` beside an unrelated `--dry-run` label, an enclosing conditional, a
+// `false &&` continuation. Closing them all means writing a shell parser inside a lint check, and
+// the round after that would find the construct the parser missed. The contract was wrong, not the
+// implementation: **a text check cannot establish that a shell statement executes.**
+//
+// So the decision moved to where something other than this script evaluates it. A step-level
+// `if: ${{ inputs.dry_run == false }}` is evaluated by GitHub Actions before a shell exists, so no
+// construct inside `run:` can reach it — and what this check then has to establish is a property of
+// the workflow's YAML structure, which *is* decidable from text. Compose and Flutter were already
+// built this way; SwiftUI's two mirror pushes were split into their own step to match.
+//
+// The in-script guard remains, in the live step, as defense in depth — and this check asserts it is
+// present. It does not assert that it executes, because that is the claim it is no longer making.
+// What measures the guard's behaviour is scripts/publish/swiftui-dry-run-polarity.mjs, which runs
+// the real step body against six values with `git` stubbed. Structural proof and behavioural
+// evidence, each doing the thing the other cannot.
+//
+// A live side effect is identified by a contiguous command token. The rehearsal forms are different
+// tokens, not the same token with a flag elsewhere on the line, which is why they can be told apart
+// without parsing anything: `flutter pub publish --dry-run` and
+// `publishReleasePublicationToMavenLocal` are rehearsals and must keep running on a dry run.
+// ---------------------------------------------------------------------------
+const SIDE_EFFECT_TOKENS = ["git push", "pub publish", "publishReleasePublicationToCentralPortalRepository"];
+const REHEARSAL_TOKENS = ["pub publish --dry-run", "publishReleasePublicationToMavenLocal"];
+
+/** The exact step condition. One spelling, so there is nothing to interpret. */
+const APPROVED_STEP_CONDITION = "${{ inputs.dry_run == false }}";
+
+/**
+ * A real YAML parser, reading the workflows the way GitHub Actions does.
+ *
+ * This replaced a hand-written partial reader, and the reason is the whole lesson of this file.
+ * The partial reader was itself replaced three times — a nine-space block scalar, an explicit
+ * indentation indicator, a folded scalar, a quoted key, a plain-scalar continuation, a quoted
+ * escape, an anchor with a numeric name, a job whose sequence items sat two spaces shallower.
+ * Every one of them made a step holding an unconditional publication look like a step with no
+ * script at all, which for a check whose job is to find publications is a silent all-clear.
+ *
+ * Three rounds of "now the subset is closed" were wrong, and that is the evidence that matters: a
+ * hand-written grammar cannot be *shown* to be complete, and asserting a subset only moves the
+ * incompleteness from the reader into the assertion. A parser can be shown to be complete, because
+ * completeness over YAML is what it is for. So the structure comes from `js-yaml` and this file
+ * reads the result.
+ *
+ * What that buys, beyond the eight spellings above: aliases resolve, so an anchored script is seen
+ * at every place it is used; folded and literal scalars arrive as the command GitHub would run;
+ * escapes are decoded before a token is looked for; and every job is walked at whatever depth it is
+ * written, rather than at the one depth a regex was anchored on.
+ *
+ * It is still not, and must never become, a shell parser. The step-level `if:` is what decides
+ * whether a publication executes, and that is a key GitHub evaluates before a shell exists.
+ */
+const parsed = new Map();
+const parseWorkflow = (path, text) => {
+  if (!parsed.has(path)) {
+    try {
+      parsed.set(path, { doc: yaml.load(text, { filename: path }) });
+    } catch (error) {
+      parsed.set(path, { error: error.message.split("\n")[0] });
+    }
+  }
+  return parsed.get(path);
+};
+
+/**
+ * Why a job might not run, or null if nothing in the document can stop it.
+ *
+ * A step inside a skipped job does not run however unconditional the step itself is, and a job is
+ * skipped both by its own `if:` and by any job it `needs:` being skipped. Reading only the step's
+ * own condition made the dry-run gate movable one level up; reading only the job's own condition
+ * made it movable one level out, to a gated job the publish job depends on. So this walks the
+ * transitive `needs:` closure and reports the first condition it finds, naming the job it is on.
+ *
+ * A job that needs a job the document does not define is reported too: it cannot be shown to run,
+ * and a check about whether a rehearsal happens has to fail closed on that rather than assume it.
+ */
+const jobGate = (jobs, startId) => {
+  const seen = new Set();
+  const queue = [startId];
+  while (queue.length) {
+    const id = queue.shift();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const job = jobs[id];
+    if (!job || typeof job !== "object") {
+      return { job: id, condition: `a job this one needs, \`${id}\`, is not defined in this workflow` };
+    }
+    if (job.if !== undefined) return { job: id, condition: String(job.if) };
+    const needs = job.needs === undefined ? [] : Array.isArray(job.needs) ? job.needs : [job.needs];
+    for (const need of needs) queue.push(String(need));
+  }
+  return null;
+};
+
+/**
+ * Every step of every job, in document order, each carrying the path it was read from.
+ *
+ * The path is how a step is identified rather than by name: a display name is not unique in
+ * GitHub Actions, and two steps that share one are two steps.
+ */
+const documentSteps = (doc) => {
+  const steps = [];
+  const jobs = doc && typeof doc === "object" ? doc.jobs : null;
+  if (!jobs || typeof jobs !== "object") return steps;
+  for (const [jobId, job] of Object.entries(jobs)) {
+    const list = job && typeof job === "object" ? job.steps : null;
+    if (!Array.isArray(list)) continue;
+    const jobCondition = jobGate(jobs, jobId);
+    list.forEach((step, index) => {
+      const mapping = step && typeof step === "object" ? step : {};
+      steps.push({
+        path: `jobs.${jobId}.steps[${index}]`,
+        name: mapping.name ?? mapping.uses ?? "an unnamed step",
+        job: jobId,
+        jobCondition,
+        condition: mapping.if === undefined ? null : String(mapping.if),
+        script: typeof mapping.run === "string" ? mapping.run : "",
+      });
+    });
+  }
+  return steps;
+};
+
+/**
+ * Every string anywhere in the document, with the path it sits at.
+ *
+ * The isolation check sweeps the whole document rather than only the steps it recognises, because
+ * the failure that keeps recurring is a publication somewhere the walk was not looking — another
+ * job, a deeper key, the far end of an alias. A sweep that covers the document cannot be dodged by
+ * moving the command; it can only be dodged by not writing the command, which is the point.
+ *
+ * Cycles are possible through aliases, so visited containers are tracked.
+ */
+const documentStrings = (node, path = "", seen = new Set(), out = []) => {
+  if (typeof node === "string") {
+    out.push({ path, value: node });
+    return out;
+  }
+  if (!node || typeof node !== "object") return out;
+  if (seen.has(node)) return out;
+  seen.add(node);
+  if (Array.isArray(node)) {
+    node.forEach((item, index) => documentStrings(item, `${path}[${index}]`, seen, out));
+    return out;
+  }
+  for (const [key, value] of Object.entries(node)) {
+    documentStrings(value, path ? `${path}.${key}` : key, seen, out);
+  }
+  return out;
+};
+/**
+ * Lines of a script that publish for real.
+ *
+ * A rehearsal is a different contiguous token, not the same token with a flag elsewhere on the
+ * line — so the two are told apart by deleting the rehearsal tokens and asking whether a live token
+ * survives. `flutter pub publish --dry-run` leaves nothing; `flutter pub publish --dry-run;
+ * flutter pub publish --force` leaves a publication, and is reported. Letting a rehearsal token
+ * excuse its whole line excused any publication that shared it.
+ *
+ * Note what this deliberately does not do: it does not decide whether the command runs. That is
+ * the step's condition, and it is read from the YAML. This only decides what a command *is*.
+ */
+const withoutRehearsals = (line) =>
+  REHEARSAL_TOKENS.reduce((rest, token) => rest.split(token).join(" "), line);
+const sideEffectLines = (script) =>
+  script
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => SIDE_EFFECT_TOKENS.some((token) => withoutRehearsals(line).includes(token)));
+
+/**
+ * The structural contract, per workflow. `publishes` names the one step allowed to carry a live side
+ * effect; `rehearses` names the work that must stay runnable on a dry run, each entry a step and a
+ * token that must appear in it. `guard` is the defense-in-depth line required inside the live step.
+ */
+const DRY_RUN_GUARD = 'if [ "${DRY_RUN:-}" != "false" ]; then';
+const PUBLISH_CONTRACT = {
+  ".github/workflows/publish-swiftui.yml": {
+    publishes: "Push to mirror",
+    rehearses: [
+      { step: "Split the subtree and verify the mirror layout", token: "git subtree split --prefix=packages/ui-swiftui" },
+      { step: "Split the subtree and verify the mirror layout", token: 'git cat-file -e "$SHA:Package.swift"' },
+    ],
+    guard: DRY_RUN_GUARD,
+  },
+  ".github/workflows/publish-compose.yml": {
+    publishes: "Publish to Maven Central (Portal staging)",
+    rehearses: [
+      { step: "Dry run — build + publishToMavenLocal (unsigned)", token: "gradle :ui:publishReleasePublicationToMavenLocal" },
+    ],
+    guard: null,
+  },
+  ".github/workflows/publish-flutter.yml": {
+    publishes: "Publish",
+    rehearses: [{ step: "Dry run", token: "flutter pub publish --dry-run" }],
+    guard: null,
+  },
+};
+
+const unparseable = [];
+const misplaced = [];
+const ungated = [];
+const gatedRehearsal = [];
+const missingGuard = [];
+for (const workflow of workflows) {
+  const contract = PUBLISH_CONTRACT[workflow.path];
+  const { doc, error } = parseWorkflow(workflow.path, workflow.text);
+  // Nothing is concluded from a file that did not parse. This is the one case the hand-written
+  // reader could never report: a file it could not read looked exactly like a file with no
+  // publication in it.
+  if (error) {
+    unparseable.push(`${workflow.path} is not valid YAML (${error})`);
+    continue;
+  }
+  const steps = documentSteps(doc);
+  const named = (name) => steps.filter((step) => step.name === name);
+
+  // 2. The declared side-effecting step exists, there is exactly one of it, and it carries the
+  // approved condition.
+  //
+  // Step names are display names and GitHub does not require them to be unique. A second step with
+  // the same name and no condition published during a dry run while the checks below, which looked
+  // the name up and took the first match, were satisfied by the first. So the count is asserted
+  // before anything is concluded from the name, and the condition is required on every match.
+  const live = named(contract.publishes);
+  if (live.length === 0) {
+    ungated.push(`${workflow.path} has no step named "${contract.publishes}". That step is where this workflow's publication is gated; if it was renamed, this contract has to be updated with it rather than around it`);
+  } else if (live.length > 1) {
+    ungated.push(`${workflow.path} has ${live.length} steps named "${contract.publishes}". A display name is how this contract identifies the gated step, so it has to name exactly one — otherwise a second step of the same name is a publication nothing here is checking`);
+  }
+  for (const step of live) {
+    if (step.condition !== APPROVED_STEP_CONDITION) {
+      ungated.push(`${workflow.path} → "${step.name}" must carry \`if: ${APPROVED_STEP_CONDITION}\` as a step key. It has ${step.condition === null ? "no step-level condition at all" : `\`if: ${step.condition}\``}`);
+    }
+  }
+
+  // 1 and 3. Every live side effect is that one step's script, and nothing else in the document is
+  // one. Both directions of the same sentence, so neither can be satisfied alone.
+  //
+  // This sweeps the parsed document rather than the steps the reader recognised, because the
+  // failure that kept recurring was a publication somewhere the walk was not looking: another job,
+  // a different depth, the far end of an alias. One exact position is exempt — the gated step's own
+  // `run` — and it is exempt by position, so a second step with the same name is not.
+  const allowed = live.length === 1 ? `${live[0].path}.run` : null;
+  const byPath = new Map(steps.map((step) => [step.path, step]));
+  for (const { path, value } of documentStrings(doc)) {
+    const effects = sideEffectLines(value);
+    if (effects.length === 0 || path === allowed) continue;
+    const owner = byPath.get(path.replace(/\.run$/, ""));
+    const where = owner ? `"${owner.name}"` : `\`${path}\``;
+    misplaced.push(`${workflow.path} → ${where} publishes for real (\`${effects[0]}\`) but is not the declared side-effecting step. Only "${contract.publishes}" may carry a live publication, because only that step is gated`);
+  }
+
+  // 4 and 5. Rehearsal work stays executable on a dry run: unconditional, and still present.
+  for (const { step: name, token } of contract.rehearses) {
+    const step = named(name)[0];
+    if (!step) {
+      gatedRehearsal.push(`${workflow.path} has no step named "${name}", which a dry run needs in order to exercise the release path rather than a shorter one`);
+      continue;
+    }
+    if (step.condition !== null) {
+      gatedRehearsal.push(`${workflow.path} → "${name}" carries \`if: ${step.condition}\`. Rehearsal work must stay unconditional, or a dry run stops being a rehearsal of anything`);
+    }
+    if (step.jobCondition !== null) {
+      const where = step.jobCondition.job === step.job ? `its job \`${step.job}\`` : `\`${step.jobCondition.job}\`, which its job \`${step.job}\` needs,`;
+      gatedRehearsal.push(`${workflow.path} → "${name}" is unconditional itself, but ${where} carries \`if: ${step.jobCondition.condition}\`, so the step does not run when that job is skipped. A dry-run condition a level up, or a level out along \`needs:\`, skips the rehearsal along with the publication — the same defect as gating the rehearsal directly, and harder to see`);
+    }
+    if (!step.script.includes(token)) {
+      gatedRehearsal.push(`${workflow.path} → "${name}" no longer runs \`${token}\`. A dry run has to do the preparation and the verification for real; the only thing it must not do is the publication`);
+    }
+  }
+
+  // 6. Defense in depth, where the contract asks for it. Presence only — see the note above.
+  const exempt = live.length === 1 ? live[0] : null;
+  if (contract.guard && exempt && !exempt.script.includes(contract.guard)) {
+    missingGuard.push(`${workflow.path} → "${contract.publishes}" must keep \`${contract.guard}\` in its script as a second layer. It is not what proves the publication is gated — the step condition is — but it is what the six-value behavioural control measures, and it is what stops a publish if this step is ever reached with a value other than \`false\``);
+  }
+}
+
+check(
+  "WF-PARSES",
+  unparseable.length === 0,
+  `${unparseable.join("; ")}. The publish workflows are read here through a YAML parser, so a file that does not parse is a failure rather than a file with nothing in it. Three rounds of review found a spelling the previous hand-written reader could not see; each time, the unread file passed.`,
+);
+check(
+  "WF-SIDE-EFFECTS-ISOLATED",
+  misplaced.length === 0,
+  `${misplaced.join("; ")}. A live publication belongs in a step of its own so that one step-level condition decides it. Preparation, splitting, staging, manifest probes and rehearsals stay unconditional beside it.`,
+);
+check(
+  "WF-PUBLISH-STEP-CONDITION",
+  ungated.length === 0,
+  `${ungated.join("; ")}. GitHub Actions evaluates a step-level \`if:\` before a shell exists, which is why the decision lives there: nothing inside \`run:\` can reach it. One exact spelling is required — \`${APPROVED_STEP_CONDITION}\` — because \`!= true\`, \`!dry_run\` and the rest publish on values nobody chose, and because a condition with one spelling is a condition that can be read at a glance before a publication.`,
+);
+check(
+  "WF-REHEARSAL-UNCONDITIONAL",
+  gatedRehearsal.length === 0,
+  `${gatedRehearsal.join("; ")}. The point of a dry run is that everything except the publication really happens, so a defect in the release path is found by rehearsing it rather than by publishing.`,
+);
+check(
+  "WF-DRY-RUN-DEFENSE-IN-DEPTH",
+  missingGuard.length === 0,
+  `${missingGuard.join("; ")}. Measured, before this guard existed: the SwiftUI step reached both mirror pushes for empty, unset, \`False\` and \`yes\` — every value that was not the exact string \`true\`.`,
+);
+
+// ---------------------------------------------------------------------------
+if (negative) {
+  const broke = failures.some((failure) => failure.startsWith(`${negative.breaks}:`));
+  if (!broke) {
+    console.error(`FAIL: negative control ${negativeId} did not break ${negative.breaks}. The gate reported: ${failures.length ? failures.join(" | ") : "no failures at all"}`);
+    process.exit(1);
+  }
+  console.log(`PASS: negative control ${negativeId} breaks ${negative.breaks} as expected.`);
+  process.exit(0);
+}
+
+if (failures.length) {
+  for (const failure of failures) console.error(`::error::${failure}`);
+  console.error(`\n${failures.length} native publish preflight check(s) failed.`);
+  process.exit(1);
+}
+console.log("PASS: native publish preflight — SwiftUI mirror layout, Maven Central POM requirements, pub.dev metadata, publish-workflow safety, published identity, version integrity and vendored token currency. Source and workflow properties only; no toolchain ran and nothing was published.");

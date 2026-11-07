@@ -36,6 +36,23 @@ describe("release:notes and the release cohorts", () => {
 
   it("produces notes for the core line", () => {
     const core = JSON.parse(readFileSync(path.join(root, "packages/ui/package.json"), "utf8")).version;
+    // The core line can legitimately land on a number an independent cohort already holds — core
+    // reached 0.26.1 while Angular was already at 0.26.1. The bare form is then *correctly* refused
+    // as ambiguous, so asserting it exits 0 would be asserting the guard is broken. Both worlds are
+    // covered here rather than one, so this cannot quietly pass if the tool stops answering at all.
+    const colliding = independent.find((pkg) => pkg.current === core);
+
+    if (colliding) {
+      const refused = run(core);
+      assert.equal(refused.status, 1, `${core} collides with ${colliding.name}, so the bare form must refuse it`);
+      assert.match(refused.stderr, new RegExp(escapeRegExp(colliding.name)), "the refusal must name the collision");
+
+      const result = run(core, "--ui");
+      assert.equal(result.status, 0, `expected notes for the core version ${core} with --ui, got: ${result.stderr}`);
+      assert.match(result.stdout, new RegExp(`^## KinetixUI ${escapeRegExp(core)}`), "notes should head with the version");
+      return;
+    }
+
     const result = run(core);
     assert.equal(result.status, 0, `expected notes for the core version ${core}, got: ${result.stderr}`);
     assert.match(result.stdout, new RegExp(`^## KinetixUI ${escapeRegExp(core)}`), "notes should head with the version");

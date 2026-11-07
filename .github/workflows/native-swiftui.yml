@@ -11,6 +11,7 @@ on:
       - "style-dictionary/**"
       - "apps/web/src/app/docs/swiftui/**"
       - "scripts/adoption/swiftui-consumer.mjs"
+      - "scripts/adoption/swiftui-mirror-consumer.mjs"
   pull_request:
     paths:
       - "packages/ui-swiftui/**"
@@ -18,6 +19,7 @@ on:
       - "style-dictionary/**"
       - "apps/web/src/app/docs/swiftui/**"
       - "scripts/adoption/swiftui-consumer.mjs"
+      - "scripts/adoption/swiftui-mirror-consumer.mjs"
 
 permissions:
   contents: read
@@ -53,6 +55,14 @@ jobs:
       - name: Documented SwiftUI setup in a clean consumer
         working-directory: .
         run: node scripts/adoption/swiftui-consumer.mjs
+
+      # The other install route: the subtree-split mirror, consumed by URL and a version
+      # requirement rather than by path. ci.yml proves the layout layer without a toolchain; this is
+      # where `swift package resolve` proves a `from:` requirement actually resolves against the tag.
+      # The mirror is a local throwaway directory — nothing is pushed to any remote.
+      - name: SwiftUI mirror publish route (resolve + build)
+        working-directory: .
+        run: node scripts/adoption/swiftui-mirror-consumer.mjs
 
   # Proves the consumer gate above can fail: each control breaks one documented step (an import, a
   # constructor, an argument label, the package name or path, the platform floor, or a fence) and must

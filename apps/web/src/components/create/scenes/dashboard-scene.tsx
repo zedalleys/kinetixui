@@ -122,22 +122,17 @@ export function DashboardScene() {
           </div>
 
           {/* stats */}
+          {/*
+            Metric is itself a card — `border`, `rounded-md` and `p-4` are its own. Wrapping each one
+            in `Card` + `CardContent className="p-4"` drew a second border a hairline outside the
+            first and paid for the padding twice, which cost the content box 34px of a 183px card and
+            was half of why the value and the trend collided at 1280px. The `card` surface the wrapper
+            contributed is kept on the Metric itself, so the same tokens are still exercised here.
+          */}
           <div className="grid gap-3 sm-rem:grid-cols-3">
-            <Card>
-              <CardContent className="p-4">
-                <Metric label="Active users" value="8,420" trend="up" change="12%" />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <Metric label="Sessions" value="31,904" trend="up" change="4%" />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <Metric label="Error rate" value="0.42%" trend="down" change="0.1%" />
-              </CardContent>
-            </Card>
+            <Metric className="bg-card" label="Active users" value="8,420" trend="up" change="12%" />
+            <Metric className="bg-card" label="Sessions" value="31,904" trend="up" change="4%" />
+            <Metric className="bg-card" label="Error rate" value="0.42%" trend="down" change="0.1%" />
           </div>
 
           <Alert variant="warning">

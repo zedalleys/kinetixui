@@ -19,19 +19,19 @@
  */
 .theme-light {
   --background: var(--neutral-0);
-  --foreground: var(--blue-900);
+  --foreground: var(--navy-900);
   --card: var(--neutral-0);
-  --card-foreground: var(--blue-900);
+  --card-foreground: var(--navy-900);
   --popover: var(--neutral-0);
-  --popover-foreground: var(--blue-900);
-  --primary: 224 76% 48%; /* #1d4ed8 — action blue, not on the navy ramp */
-  --primary-foreground: var(--blue-50);
+  --popover-foreground: var(--navy-900);
+  --primary: var(--indigo-600); /* Accessible indigo action, one step deeper than the logo. */
+  --primary-foreground: var(--navy-50);
   --secondary: var(--green-200);
   --secondary-foreground: var(--green-700);
   --muted: var(--neutral-100);
   --muted-foreground: var(--neutral-600);
-  --accent: var(--blue-50);
-  --accent-foreground: 224 76% 48%;
+  --accent: var(--indigo-50);
+  --accent-foreground: var(--indigo-600);
   --destructive: var(--red-500);
   --destructive-foreground: var(--semantic-on-error);
   --success: var(--green-600);
@@ -44,23 +44,23 @@
   --info-foreground: var(--blue-50);
   --border: var(--blue-100);
   --input: var(--blue-100);
-  --ring: 224 76% 48%;
-  --chart-1: var(--blue-500);
+  --ring: var(--indigo-600);
+  --chart-1: var(--indigo-500);
   --chart-2: var(--green-500);
   --chart-3: var(--amber-500);
   --chart-4: var(--red-400);
   --chart-5: var(--taupe-600);
-  --chart-6: var(--blue-300);
+  --chart-6: var(--cyan-700);
   --chart-7: var(--red-600);
   --chart-8: var(--green-700);
   --sidebar: var(--neutral-50);
-  --sidebar-foreground: var(--blue-900);
-  --sidebar-primary: 224 76% 48%;
-  --sidebar-primary-foreground: var(--blue-50);
-  --sidebar-accent: var(--blue-50);
-  --sidebar-accent-foreground: 224 76% 48%;
+  --sidebar-foreground: var(--navy-900);
+  --sidebar-primary: var(--indigo-600);
+  --sidebar-primary-foreground: var(--navy-50);
+  --sidebar-accent: var(--indigo-50);
+  --sidebar-accent-foreground: var(--indigo-600);
   --sidebar-border: var(--neutral-300);
-  --sidebar-ring: 224 76% 48%;
+  --sidebar-ring: var(--indigo-600);
   /*
     Every token `.dark` redefines needs its light value here, or a light preview on a dark page shows the
     dark one. These were missing, and it was visible: on a dark page the Theming page's light preview drew
@@ -68,18 +68,18 @@
     `theme-light-parity.test.ts` now fails if a `.dark` token is missing here or disagrees with `:root`.
   */
   --surface-grouped: var(--neutral-100);
-  --on-info-container: 204 33% 33%;
+  --on-info-container: var(--blue-400);
   --on-success-container: var(--green-700);
   --on-warning-container: var(--amber-800);
   --on-destructive-container: var(--red-500);
   --semantic-on-info-container: var(--on-info-container);
   --semantic-muted-on-container: 0 0% 38%;
-  --brand: var(--blue-500);
-  --brand-foreground: var(--blue-50);
+  --brand: var(--indigo-500);
+  --brand-foreground: var(--navy-50);
   --action: var(--primary);
   --action-foreground: var(--primary-foreground);
-  --action-hover: 224 71% 53%;
-  --action-pressed: 224 71% 56%;
+  --action-hover: 245 68% 61%;
+  --action-pressed: 246 68% 63%;
   --focus: var(--ring);
   --link: var(--primary);
   --shadow-focus: 0 0 0 1px hsl(var(--focus)), 0 0 0 4px hsl(var(--focus) / 0.2);
@@ -262,6 +262,75 @@
   }
   .kx-hero-enter > *:nth-child(5) {
     animation-delay: 0.35s;
+  }
+
+  /*
+   * ── The site-wide pointer glow ─────────────────────────────────────────────────────────────────────
+   *
+   * One fixed layer over the viewport, positioned in viewport pixels by
+   * `components/cursor-glow.tsx`. It replaces the hero-bound `.kx-polygon-spotlight`, whose centre was a
+   * percentage of `.kx-hero-polygon`'s own box, so it stopped at the illustration's edge in a straight cut.
+   *
+   * `z-index: 0` with no `isolation` here is the whole layering contract. The layer is rendered immediately
+   * before the content wrapper in `layout.tsx`; both are positioned at stacking level 0, so the wrapper and
+   * everything in it paints OVER this. The glow therefore tints the page background and whatever is
+   * translucent above it, and an opaque surface occludes it. That is deliberate: a brightening painted over
+   * body copy would change the rendered background of every foreground pair on the site, and no contrast gate
+   * in CI moves a mouse, so none of them would see it.
+   *
+   * The tint is held low for the same reason, because a transparent wrapper lets this reach the background of
+   * real text, and it is held to a DIFFERENT level per theme because the two have nothing like the same
+   * headroom. `scripts/cursor-glow-browser.mjs` puts the glow at full strength directly behind each distinct
+   * text/background pair four pages actually render, and requires that no pair which met AA without it falls
+   * under AA with it. Measured on the homepage at 1440px:
+   *
+   *   light   the binding case. The hero's quiet labels start at 4.84:1 on the page's own white, so there is
+   *           almost nothing to spend. 0.085 took "Beta — every package is 0.x, MIT" to 4.30:1 and
+   *           "Example — adds one component." to 4.44:1, both under AA. 0.045 holds them at 4.58 and 4.71.
+   *   dark    the tint lightens a near-black background rather than darkening a white one, and the real pairs
+   *           sit far higher: at 0.12 the worst measured pair moves 6.74 → 6.48:1, and even 0.16 stays at
+   *           6.40:1. So dark carries a glow that can actually be seen, and light does not pretend to.
+   *
+   * A radius is free here: the gate centres the glow ON each pair, so the peak alpha is what every number
+   * above is measured at, whatever the falloff does further out.
+   */
+  .kx-cursor-glow {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 320ms ease-out;
+    background: radial-gradient(
+      circle var(--kx-cursor-radius, 520px) at var(--kx-cursor-x, 50%) var(--kx-cursor-y, 50%),
+      hsl(var(--brand) / 0.045) 0%,
+      hsl(var(--brand) / 0.016) 46%,
+      transparent 72%
+    );
+  }
+  .dark .kx-cursor-glow {
+    background: radial-gradient(
+      circle var(--kx-cursor-radius, 520px) at var(--kx-cursor-x, 50%) var(--kx-cursor-y, 50%),
+      hsl(var(--brand) / 0.12) 0%,
+      hsl(var(--brand) / 0.045) 46%,
+      transparent 72%
+    );
+  }
+  .kx-cursor-glow[data-active="true"] {
+    opacity: 1;
+  }
+  /* A pointer affordance, and motion: a reader who asked for no motion gets no travelling light. The
+     component attaches no listener in that case either, so nothing is tracked and nothing is written. */
+  @media (prefers-reduced-motion: reduce) {
+    .kx-cursor-glow {
+      display: none;
+    }
+  }
+  /* A forced palette cannot render a translucent wash, and this one carries no meaning. */
+  @media (forced-colors: active) {
+    .kx-cursor-glow {
+      display: none;
+    }
   }
 
   /*
@@ -594,10 +663,10 @@
    * through subgrid, so the drawing can join each output to exactly the platforms that read it:
    *
    *   rows (a phone):      [outputs] ┆ [platforms]   one row per platform; the CSS output spans the two web rows
-   *   columns (≥ 34rem):   outputs above, the boundary, platforms below; the CSS output spans the two web columns
+   *   columns (≥ 34rem):   outputs above, the boundary, platforms below; the outputs share equal tracks
    *
-   * `--kx-impl` is the platform count and `--span` the number of platforms an output feeds, both set from the
-   * manifest-derived props, so nothing here knows there are five.
+   * `--kx-impl` is the platform count, `--kx-outputs` the output count and `--span` the number of platforms an
+   * output feeds, all set from the manifest-derived props, so nothing here knows there are five.
    */
   .kx-map-grid {
     display: grid;
@@ -635,6 +704,9 @@
     display: grid;
     grid-template-rows: subgrid;
   }
+  .kx-map-tab { flex-wrap: wrap; }
+  .kx-map-tab-text { flex-basis: 5rem; overflow-wrap: anywhere; }
+  .kx-map-tab-text > span { max-width: 100%; }
   .kx-map-panel {
     grid-column: 1 / -1;
     margin-block-start: 0.75rem;
@@ -647,16 +719,23 @@
       row-gap: 0;
       padding-inline-start: 0;
     }
+    /*
+     * Columns: the outputs are their own equal-track row, not a subgrid of the platform tracks. An output used
+     * to take one track per platform it feeds, which made the CSS card — the only one feeding two — twice the
+     * width of Swift, Kotlin and Dart and read as a difference in importance rather than in fan-out. The fan-out
+     * is still drawn, by the traces, which are measured from the real boxes and so follow this layout.
+     */
     .kx-map-outputs {
       grid-column: 1 / -1;
       grid-row: 1;
       grid-template-rows: none;
-      grid-template-columns: subgrid;
+      grid-template-columns: repeat(var(--kx-outputs, 4), minmax(0, 1fr));
+      column-gap: 0.5rem;
     }
     .kx-map-chip {
       grid-row: auto;
-      grid-column: span var(--span, 1);
-      /* columns: every output as tall as the tallest, so CSS matches Swift, Kotlin and Dart */
+      grid-column: auto;
+      /* columns: every output as wide and as tall as the others, so CSS matches Swift, Kotlin and Dart */
       align-self: stretch;
     }
     /* the traces cross the boundary between the two layers, under its label */
@@ -681,6 +760,7 @@
       text-align: center;
     }
     .kx-map-tab-text {
+      flex-basis: auto;
       flex-direction: column;
       align-items: center;
     }
@@ -1106,6 +1186,11 @@
     font-family: var(--font-mono);
     /* 0.875em, not 0.85em: inside 14px prose 0.85em computed to 11.9px, under the 12px compact-text floor */
     font-size: 0.875em;
+  }
+  /* Violet links clear AA on the dark page; the lighter inline-code chip
+     consumed that contrast margin. Keep linked code on its parent's surface. */
+  .dark a > code {
+    background: transparent;
   }
 }
 

@@ -248,3 +248,132 @@ because a background is repainted as `Canvas` there and both used to disappear i
 
 Reduced motion: the per-component block in `packages/ui-angular/src/styles.css` covers each new element, so
 every control lands on its end state with nothing running.
+
+### Selection controls (SwiftUI, MX1d)
+
+SwiftUI's Toggle, Checkbox and RadioButton did not animate at all before MX1d: the fill, border and glyph
+swapped in one frame. They now route through `KinetixSelectionMotion`, which is a separate helper from
+`KinetixSwitchMotion` for the reason above — the two roles' durations are not to be normalised.
+
+| | Selection | Press |
+| --- | --- | --- |
+| Trigger | `isOn` (Toggle), the resolved tri-state (Checkbox), `isSelected` (RadioButton) changes | — |
+| Property | `fill`, `strokeBorder` and `foregroundStyle` colours, through SwiftUI's implicit animation | no press layer is ported |
+| Tier · easing | `fast` 200ms · `standard` (role `selection-state`), via `Animation.timingCurve` | — |
+| Reduced form | `nil` animation under `@Environment(\.accessibilityReduceMotion)`: the same end state, not interpolated | — |
+| Interruption | SwiftUI retargets from the current colour | — |
+| Final state | the state's colour; the accessibility value is set from the same state and takes no motion parameter | — |
+| Focus / SR | Checkbox announces `accessibilityValue` Unchecked / Mixed / Checked and carries `.isSelected` only when fully checked; Switch adds `.isToggle` on iOS 17 / macOS 14 (the Checkbox does not: button + toggle is Apple's switch button, so it would be announced as a switch); RadioGroup is an `.accessibilityElement(children: .contain)` with an optional label | — |
+| RTL | colour is direction-free | — |
+
+Evidence, stated exactly: **Build verified**. `swift build` and `swift test` compile and run on the macOS
+runner, and `SelectionMotionTests` / `SelectionSemanticsTests` hold the resolvers. Nothing in that package
+renders, so no test there observes a colour settling or what VoiceOver reads — the strings and the tri-state
+logic are asserted, the announcement is not. There is no iOS Simulator job, so Runtime stays open.
+
+Known gap: the announcement strings ("Unchecked", "Mixed", "Checked", "On", "Off") are English literals. The
+package ships no string catalogue, and adding one for an accessibility fix would be a localisation decision
+taken in the wrong slice.
+
+### Selection controls (Compose, MX1d)
+
+Two things were wrong on Compose, and only one of them was reported. `Switch.kt` animated `thumbOffset`
+and handed `trackColor` straight to `.background`, so the track cut between `tertiary` and `action` in one
+frame while the thumb slid for 100ms — `selection-control` covers both, which is why Compose's Switch was
+not ticked for Impl. And Toggle, Checkbox and RadioButton did not animate at all.
+
+| | Switch track | Toggle / Checkbox / Radio |
+| --- | --- | --- |
+| Trigger | `checked`, and `enabled` (the disabled alpha is part of the animated target) | `pressed`, the `ToggleableState`, `selected` |
+| Property | `background-color` via `animateColorAsState` | container, text, border and fill colour via `animateColorAsState`; the radio dot's `alpha` via `animateFloatAsState` |
+| Tier · easing | `instant` 100ms · `standard` (`selection-control`), the same spec as the thumb | `fast` 200ms · `standard` (`selection-state`) |
+| Reduced form | `tween(0)` at `ANIMATOR_DURATION_SCALE` 0, through the one shared reader | the same |
+| Interruption | Compose retargets from the current colour | the same |
+| Final state | the state's colour; the semantics (`Role.Switch`, `triStateToggleable`, `selectable`) never wait for paint | the same |
+| Focus / SR | unchanged. ToggleGroup gains an optional `accessibleLabel`: a named traversal group, not a merged element, so each item still reports its own on/off | — |
+| RTL | the thumb's `Modifier.offset` resolves against layout direction, so travel mirrors; colour is direction-free | colour is direction-free |
+
+The Checkbox glyph still swaps in one frame while the fill settles — a stated difference from React, which
+fades the tick in on `fast` and removes it at once. Doing that properly here means composing both glyphs and
+animating their alpha so a box leaving mixed never shows a tick on the way out (the defect #400 fixed on the
+web); the fill already carries the state change, so it is recorded rather than half-built.
+
+Evidence, stated exactly: **Headless verified** for interaction and accessibility —
+`SelectionMotionTest.kt` composes each control through Robolectric and reads the semantics tree, and
+`./gradlew :ui:testDebugUnitTest` runs it in `native-compose.yml`. No emulator job exists, so Runtime stays
+open. Robolectric is a JVM host; it renders nothing a person could see.
+
+**The switch's track is measured.** `SwitchMotionTest` stops the test clock, advances it half a duration
+into the gesture, and reads the colour the switch actually rasterised, in both directions. The colour is
+taken as the most common fully opaque pixel rather than from a fixed
+coordinate, because the thumb is moving and any coordinate that is track at one point in the gesture is
+thumb at another; the track is the larger opaque area by roughly 840 pixels to 310, so the mode is the
+track whatever the thumb is doing. It runs under Robolectric's NATIVE graphics mode, since LEGACY draws
+nothing and would compare two blank bitmaps and pass.
+
+Reading suppression off the pixels, rather than off the spec, was tried and dropped; the measurement is
+kept in a comment in that file. With the animator scale at 0 the track is exactly at its destination from
+the third frame on, so it does not travel — but the first two frames after a click paint each end
+multiplied by about 0.916, so something composites over the track briefly and then stops. Telling that
+apart from a real traversal needs a tolerance, and a traversal's own first frames also sit near the
+starting end, so the threshold would have been tuned against a module that cannot be run outside CI.
+Compose's `reducedMotion` evidence is the spec tests, which read the duration the control is handed.
+
+That closes a gap this slice first recorded rather than fixed, and it is worth saying why the obvious
+routes did not: `animateColorAsState` does not expose which spec it was handed, so no assertion can read
+the track's *spec*; `check:native-motion` stays green if the track reverts, because `Switch.kt` still names
+`KinetixSwitchMotion` for the thumb; and the contract cannot pin it, because `check:motion-tokens` requires
+a consumer's `expects` to name the role's own duration and easing, which `Switch.kt` deliberately does not —
+it delegates both to the helper. **On every native platform the contract can pin the helper that holds the
+timing and never the component that consumes it**, where React and Angular pin the component directly
+because their timing is written in the component's own classes and stylesheet. The painted test goes around
+that limit for one control rather than removing it: the same idiom is not yet extended to the checkbox's
+fill, the radio's dot or the toggle's surface, each of which needs its own answer to which pixel is the
+subject while a glyph moves over it. Watching the thumb's position and the track's colour at one instant,
+rather than each on its own, still wants an on-device capture.
+
+### Selection controls (Flutter, MX1d)
+
+Flutter's gap was accessibility, not motion: `KinetixRadioButton` declared **no `Semantics` at all**, so a
+selected radio was indistinguishable from an unselected one to a screen reader and neither was announced as
+a radio. Switch, Checkbox and Toggle already declared theirs. Motion was missing too — Checkbox, Radio and
+Toggle were plain `Container`s.
+
+| | Selection | Dot / glyph |
+| --- | --- | --- |
+| Trigger | `value`, `selected`, `pressed` | `selected` |
+| Property | fill, border **colour** and content colour through `AnimatedContainer` and one `ColorTween` | the radio dot's `opacity` through `AnimatedOpacity` |
+| Tier · easing | `fast` 200ms · `standard` (`selection-state`) | the same |
+| Reduced form | `KinetixDisclosureMotion.suppressed` through `MediaQuery.disableAnimationsOf` — one shared reader, one shared suppressed value | the same |
+| Interruption | the implicit widgets retarget from the current value | the same |
+| Final state | the state's colour; `Semantics` is set from the state and never waits for the paint | dot shown on the chosen radio |
+| Focus / SR | Radio announces `checked`, `inMutuallyExclusiveGroup`, `enabled` and an optional `label`; RadioGroup takes an optional `label` and keeps `explicitChildNodes` so the options stay choosable | the dot is decorative |
+| RTL | colour is direction-free | — |
+
+Evidence, stated exactly: **Headless verified**, and the strongest this family has on any native platform.
+`test/selection_motion_test.dart` stops the clock 100ms into a 200ms settle and reads the **interpolated**
+fill off the rendered tree — `AnimatedContainer` builds a `Container` whose decoration is the evaluated
+tween, so that is a measurement of what is painted, not of a duration variable. The same test asserts that
+a radio's announced state flips in the frame of the tap, while the edge colour is still interpolating.
+`flutter_test` has no device or screen, so none of it is Runtime evidence. The `reducedMotion`
+kind is claimed for the **checkbox only**: this repository defines it as suppression measured with both
+directions exercised, and the radio's reduced-motion test is an RTL end-state check that the full settle
+would also satisfy, while the toggle has no reduced-motion test at all. The marked passage was narrowed to
+match, so the ledger credits what the tests hold and nothing more.
+
+Nothing about the geometry is animated, and that took two passes. `size` decided the Toggle's height,
+minimum width and horizontal padding from inside the `AnimatedContainer`, so a caller moving `size` at a
+breakpoint interpolated all three; those now sit in a `SizedBox` / `ConstrainedBox` / `Padding` outside it.
+Then the same mistake a second time, in the decoration itself: the border appeared on press and disappeared
+on release, and `AnimatedContainer` interpolates a border's **width**, which a `BoxDecoration` border
+charges to its child as an inset — so pressing a standard toggle slid its label a pixel inward over `fast`.
+The border is now always one pixel and transparent when there is no edge to show, which is also what React
+does: it transitions `border-color` against a border box that never changes. `selection-state` is a colour
+and surface role; it sanctions no layout movement, and positional movement is the one thing Reduce Motion
+exists to remove. Both are guarded by tests that read the rendered box.
+
+Two stated gaps. The Checkbox glyph swaps in one frame while the fill settles (as on Compose). And an icon
+inside a Toggle shares the text's `ColorTween`, so it settles — but **none of these controls is focusable or
+keyboard-operable**: they are bare `GestureDetector`s, as every other control in the package is. That is a
+package-wide gap, not a selection-control one, and it is left to its own slice rather than fixed for four
+widgets out of ninety.
