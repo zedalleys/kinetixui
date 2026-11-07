@@ -90,16 +90,16 @@ Correction text ready to paste: [`../content/drafts/m3/ART-001-CORRECTION.md`](.
 
 | | |
 | --- | --- |
-| Final copy | [`../content/drafts/a01/x-thread.md`](../content/drafts/a01/x-thread.md), the whole file after its front matter: posts 1–9 and standalone posts A–D. Pin if approved: sha256 `38796bd…2642`, no section, so editing any standalone post later needs a fresh approval |
-| Destination | the dev.to article in post 9; the tracked `/docs/platforms` link as the first reply under post 9 |
+| Final copy | [`../content/drafts/a01/x-thread.md`](../content/drafts/a01/x-thread.md), the whole file after its front matter: posts 1–9 and standalone posts A–D. **Pinned** at sha256 `f6455e38…7d6c` (3,141 characters, the fitted copy), no section, so editing any standalone post later needs a fresh approval. The earlier `38796bd…2642` pin was the pre-fitting copy and is superseded |
+| Destination | the dev.to article in post 9; the tracked `/docs/platforms` link **in post 9's own body**, in place of the bare URL the draft carries, per `register.json` → `X-001.linkPlacement` |
 | Tracking URL | `https://kinetixui.com/docs/platforms?utm_source=x&utm_medium=social&utm_campaign=kx_p1_a_parity_proof&utm_content=x_thread` |
 | Target audience | P1 — multi-platform design-system engineers |
 | Positioning pillar | Primary: infrastructure. Pillar **a** |
-| Approval status | **READY FOR OWNER APPROVAL.** Recommended: approve, post only after LI-001 is live |
+| Approval status | **COPY APPROVED 2026-10-26** by its `f6455e38…7d6c` pin, on `main` through #477. Copy only: posting is still the owner's own manual act and is not authorized here |
 | Claims | Every figure historical and pinned to a commit, except "six of a hundred-odd so far": 6 of **113** demo keys today, which `verify-package.mjs` flags against its own `< 110` bound. "A hundred-odd" at 113 is a judgement call, not a wrong number; the alternative is re-pinning the copy for a word |
 
 Same campaign as LI-001 with a different `utm_content`, which is what separates the two posts' arrivals. X can wrap
-or strip the reply link, so no tagged session afterwards means "no tagged arrival observed", never "no clicks".
+or strip the link, so no tagged session afterwards means "no tagged arrival observed", never "no clicks".
 
 ## 3. LI-008 · LinkedIn · Thu 22 Oct, 14:00 UTC / 17:00 Riyadh
 
@@ -208,3 +208,76 @@ depends on whether production is serving them yet. #409 is unmerged; nothing ref
 | COM-001 … COM-004 | blocked | n/a | Opportunistic only, and each needs a live re-read of that community's rules. Not scheduled |
 
 Nothing above was marked published, unmarked, or given a URL by this pass. No post was published.
+
+---
+
+## Status reconciled 2026-10-21 23:45 UTC, and the schedule that follows from it
+
+This section is added after the fact, from the live state of the two registers and a fresh PostHog read. It changes
+no approval and publishes nothing. The window above was prepared on 18 October; three of its four slots have now
+passed, and only one post went out.
+
+| Asset | Planned slot | What actually happened | Approval |
+| --- | --- | --- | --- |
+| **LI-001** | Mon 19 Oct 14:00 UTC | **Published**, on its planned day, on the owner's own account. Live URL recorded in `register.json`; both registers say `published`; the approved copy and its `09a3994…3cfb` pin are unchanged | Approved 2026-10-18 |
+| **X-001** | Tue 20 Oct 15:00 UTC | **Slot passed with no record either way.** Nothing was published from this environment and X cannot be read from it, so publication is *unknown*, not *declined*. No `x_thread` arrival has ever been observed, which is consistent with both outcomes | **None.** The content register has no `approval` block for X-001 |
+| **LI-008** | Thu 22 Oct 14:00 UTC | Not yet due. Copy and pin ready | **None** |
+| **X-008** | Fri 23 Oct 15:00 UTC | Not yet due. Copy and pin ready | **None** |
+
+### The one thing in the way
+
+Three of the four assets are waiting on the same thing: **one approval reply from the owner.** X-001's slot was
+missed for want of it, and LI-008's and X-008's will be missed the same way if it does not arrive before Thursday.
+Approving editorial direction and choosing to publish are separate decisions, and approval does not schedule
+anything; nothing in this repository can post.
+
+### Proposed schedule, nothing backdated
+
+| Asset | Proposed slot | Why this one | Notes |
+| --- | --- | --- | --- |
+| **X-001** | **Thu 22 Oct, 15:00 UTC / 18:00 Riyadh** (recommended), else Mon 26 Oct 15:00 UTC | The thread's argument is not time-bound and LI-001 is live, which was its only ordering dependency. It does not get backdated to the 20th under any circumstances | Thursday 14:00 already holds LI-008. Posting both that afternoon is possible; the cleaner split is LI-008 → Fri 23 Oct 14:00, keeping X-008 at 15:00 the same day on a different channel |
+| **LI-008** | Thu 22 Oct 14:00 UTC as planned, or Fri 23 Oct 14:00 if X-001 takes Thursday | Unchanged argument, visual already regenerated | First post on `kx_p1_d_partial_evidence`; no earlier arrival to compare against |
+| **X-008** | Fri 23 Oct 15:00 UTC as planned | Unchanged | Shares `kx_p2_f_two_trades` with LI-007, so `x_thread` is the only separator |
+| **LI-006, X-007** | Week 2 slots as calendared (26, 27 Oct) | Untouched by this reconciliation | |
+
+If X-001 was in fact posted by hand on the 20th, the close-out needs only its live URL and the real posting time;
+the row is then filled from those, exactly as LI-001's was, and not from the calendar.
+
+### Measurement schedule that follows
+
+| When | What | Where it is written |
+| --- | --- | --- |
+| **done** | LI-001 T+1h, T+24h and an extended T+53h read, all zero tagged arrivals on a live pipeline | [`../measurement/M4-POST-PUBLICATION-CHECKLIST.md`](../measurement/M4-POST-PUBLICATION-CHECKLIST.md) |
+| **Mon 26 Oct** | LI-001 T+7d, the cumulative weekly read | same file, T+7d section, with the two commands to run |
+| **T+1h, T+24h, T+7d after each** | X-001, LI-008 and X-008 once any of them is actually published, on the same three-checkpoint pattern | same file; the `utm_content` tag is what keeps the posts apart |
+
+### The finding that outranks the schedule
+
+Four posts have now been live with a tracked link — LI-007, ART-001, LI-001, and a pillar edit whose state is
+unconfirmed — and **not one has produced a single tagged audience arrival.** Three separate readings, on a pipeline
+proven live each time by the owner's own diagnostic visits, is no longer a run of bad luck; it points at link
+placement and channel rather than at copy. Two structural facts are worth weighing before the next four posts go
+out on the same pattern:
+
+- **LI-001's body link goes to dev.to**, which first-party analytics cannot follow. Only its first comment carried
+  the tracked link, and a first comment is read by a fraction of a post's audience.
+- **X and LinkedIn both rewrite or strip outbound links**, so a tag can be lost in transit without anything in this
+  repository being wrong.
+
+Neither is a defect to fix in code, and neither is a reason to stop posting. The decision they raise is the
+owner's: whether the tracked link belongs in the post body rather than a comment for the next posts, which is a
+reach-versus-attribution trade, not a measurement question.
+
+---
+
+## Hold recorded, 2026-10-22 00:32 UTC
+
+**X-001, LI-008 and X-008 are held by the owner's decision** until the attribution experiment reaches one of its
+three finish conditions ([`../measurement/M4-READER-PATH-TEST.md`](../measurement/M4-READER-PATH-TEST.md), "What
+closes this experiment"). All three planned the same tracked-link pattern that has produced four zeros and one
+inconclusive test, and the reason for the hold is that posting into an unmeasured path spends the post without
+learning anything.
+
+Nothing about the assets themselves changed: the copy, the pins, the tracked URLs and the proposed slots stand as
+written above, and X-001's copy still has no approval block. The hold is on publication, not on readiness, and it
+lifts the moment the experiment closes — the schedule above is then re-dated forward, never backwards.
