@@ -20,7 +20,7 @@ import {
 } from "@kinetixui/ui";
 import { cn } from "@/lib/utils";
 import { componentDocs } from "@/lib/site";
-import { CATEGORY_ORDER, PRIMITIVE, categoryOf } from "@/lib/component-registry";
+import { CATEGORY_ORDER, PRIMITIVE, categoryOf, resolveCategoryParam } from "@/lib/component-registry";
 import {
   NATIVE_PLATFORMS,
   PLATFORMS,
@@ -260,7 +260,9 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
       layer: count((b) => [b.layer]),
     };
   }, [facets]);
-  const activeCat = params.get("cat");
+  // CAT-2 renamed three categories, and links to the old names are already out there; `formerly` in the
+  // manifest is what turns `?cat=Form%20Inputs` back into a filter instead of an empty grid.
+  const activeCat = resolveCategoryParam(params.get("cat"));
   const activePlatform = resolvePlatformParam(params.get("platform"));
   const activePlatformLabel = activePlatform ? PLATFORM_DEFINITIONS[activePlatform].label : null;
   const activeStatus = params.get("status") === "beta" ? "beta" : null;

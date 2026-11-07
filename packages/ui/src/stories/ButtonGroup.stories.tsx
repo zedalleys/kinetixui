@@ -20,7 +20,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Controls & Actions/ButtonGroup",
+  title: "Actions & Controls/ButtonGroup",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<ButtonGroup>\\n  <Button variant=\"Outline\" size=\"icon\"><Bold /></Button>\\n  <Button variant=\"Outline\" size=\"icon\"><Italic /></Button>\\n  <Button variant=\"Outline\" size=\"icon\"><Underline /></Button>\\n</ButtonGroup>", language: "tsx" } },
