@@ -280,7 +280,7 @@
     "boarding-pass": {
       "title": "Boarding pass",
       "description": "PassCard fields, a tear line and a supplied code with its confirmation reference.",
-      "category": "Commerce",
+      "category": "Application",
       "status": "beta",
       "sources": {
         "React": "apps/web/src/examples/blocks/boarding-pass.tsx",
