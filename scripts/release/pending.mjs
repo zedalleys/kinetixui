@@ -14,12 +14,18 @@
  * already use. A second rule for "what counts as a changeset" could disagree with the first, and a
  * disagreement here either stalls a release or lets both paths run.
  *
+ * It is imported from changesets.mjs rather than peers.mjs, which re-exports it: peers.mjs imports
+ * `semver`, and the `plan` job runs this on a checkout with no dependencies installed, so going
+ * through it died with ERR_MODULE_NOT_FOUND and skipped both release paths. Nothing here, or in
+ * anything it imports, may reach outside `node:` —
+ * check:release-approval-gate → REL-SCRIPTS-RESOLVE-WITHOUT-INSTALL holds that.
+ *
  * Note what this does NOT decide: it does not decide whether to publish. The publish job is gated
  * by a protected environment and asserts its own approval (scripts/release/approval.mjs). This only
  * decides which of the two jobs is the relevant one for this push.
  */
 import { fileURLToPath } from "node:url";
-import { readPendingChangesets } from "./peers.mjs";
+import { readPendingChangesets } from "./changesets.mjs";
 
 export const main = (root) => {
   let pending;

@@ -25,6 +25,11 @@
  * release window was already lost once to an unapproved run sitting for thirteen hours. A gate that
  * stalls the ordinary path gets switched off, and then nothing is gated.
  *
+ * It also asserts a property the split created: a job that holds nothing installs nothing, so every
+ * script it runs before a `pnpm install` must resolve on a bare checkout. The first version of this
+ * PR failed that — `pending.mjs` reached `semver` two files away, through `peers.mjs` — and a `plan`
+ * that dies skips both release paths, so every release run would have done nothing.
+ *
  * What this check cannot see, stated plainly: whether `publish-npm` exists on GitHub with required
  * reviewers configured. That is settings, not source. An `environment:` naming an environment that
  * does not exist does not fail — GitHub creates it unprotected and the job runs. That gap is closed
@@ -32,7 +37,8 @@
  * the presence of that step is check REL-PUBLISH-ASSERTS-APPROVAL below. Neither half is sufficient
  * alone and this file requires both.
  */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
 
@@ -58,6 +64,15 @@ const NEGATIVES = {
   "publish-runs-when-pending-is-unset": { from: "    if: needs.plan.outputs.changesets_pending == 'false'\n", to: "    if: needs.plan.outputs.changesets_pending != 'true'\n", breaks: "REL-PATHS-MUTUALLY-EXCLUSIVE" },
   "publish-no-longer-needs-preflight": { from: "  publish:\n    needs: [preflight, plan]\n", to: "  publish:\n    needs: [plan]\n", breaks: "REL-PUBLISH-NEEDS-PREFLIGHT" },
   "the-pending-read-gains-a-credential": { from: "      - name: Are there changesets pending?\n        id: pending\n", to: "      - name: Are there changesets pending?\n        id: pending\n        env:\n          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}\n", breaks: "REL-UNGATED-JOBS-HOLD-NO-CREDENTIAL" },
+  // The defect this check was added for, reproduced as a control. `plan` runs its reader on a
+  // checkout with no dependencies installed; routing that reader back through peers.mjs makes it
+  // import `semver` transitively, and a `plan` that dies skips BOTH release paths — so every
+  // release run would have done nothing. Found by review on PR #536 and reproduced in a fresh
+  // clone before the fix.
+  "pending-reader-imports-a-dependency-again": { from: "        run: node scripts/release/pending.mjs >> \"$GITHUB_OUTPUT\"\n", to: "        run: node scripts/release/peers.mjs >> \"$GITHUB_OUTPUT\"\n", breaks: "REL-SCRIPTS-RESOLVE-WITHOUT-INSTALL" },
+  // The same class one step along: the approval assertion deliberately runs *before* the install,
+  // so it is held to the same rule even though its job installs dependencies later.
+  "approval-assertion-swapped-for-a-script-that-needs-dependencies": { from: "        run: node scripts/release/approval.mjs --environment=publish-npm\n", to: "        run: node scripts/release-plan.mjs --environment=publish-npm\n", breaks: "REL-SCRIPTS-RESOLVE-WITHOUT-INSTALL" },
   "workflow-does-not-parse": { from: "jobs:\n", to: "jobs:\n  duplicate: {}\njobs:\n", breaks: "REL-PARSES" },
 };
 
@@ -216,6 +231,60 @@ if (parseError === null && doc?.jobs) {
     plan === undefined
       ? `no job outputs \`${PENDING_OUTPUT}\`, so the two release paths have nothing to key off.`
       : `job \`${plan.name}\` decides which release path runs and must hold nothing while doing it: no environment, no secrets, no OIDC identity. A job that chooses between versioning and publishing is worth no more trust than the two it chooses between.`,
+  );
+
+  // Every `node` script a job runs before it has installed anything must resolve on a bare
+  // checkout. Asserted over the real import closure rather than the job's step list, because the
+  // import that broke this was transitive: `pending.mjs` → `peers.mjs` → `semver`, two files away
+  // from the workflow. Positional, not per-job: the `publish` job does install dependencies, but
+  // its approval assertion runs before that step on purpose, so it is held to the same rule.
+  const BUILTIN = /^node:/;
+  const specifiers = (text) => [...text.matchAll(/(?:^|[\s;}])(?:import|export)\s[^;]*?from\s*["']([^"']+)["']|(?:^|[\s;}])import\s*\(\s*["']([^"']+)["']\s*\)|(?:^|[\s;}])import\s*["']([^"']+)["']/g)].map((match) => match[1] ?? match[2] ?? match[3]);
+  /** Every bare (non-builtin, non-relative) specifier reachable from a script, with the file it is in. */
+  const bareImports = (entry) => {
+    const found = [];
+    const seen = new Set();
+    const walk = (file) => {
+      if (seen.has(file) || !existsSync(`${root}${file}`)) return;
+      seen.add(file);
+      for (const specifier of specifiers(readFileSync(`${root}${file}`, "utf8"))) {
+        if (BUILTIN.test(specifier)) continue;
+        if (!specifier.startsWith(".")) {
+          found.push({ file, specifier });
+          continue;
+        }
+        walk(path.normalize(path.join(path.dirname(file), specifier)));
+      }
+    };
+    walk(entry);
+    return found;
+  };
+
+  const unresolvable = [];
+  for (const entry of jobs) {
+    let installed = false;
+    for (const step of steps(entry)) {
+      const script = typeof step.run === "string" ? step.run : "";
+      if (/\bpnpm\s+install\b/.test(script)) {
+        installed = true;
+        continue;
+      }
+      if (installed) continue;
+      for (const [, file] of script.matchAll(/\bnode\s+(scripts\/[\w./-]+\.mjs)/g)) {
+        if (!existsSync(`${root}${file}`)) {
+          unresolvable.push(`${entry.name} → "${step.name ?? file}" runs \`${file}\`, which does not exist`);
+          continue;
+        }
+        for (const { file: holder, specifier } of bareImports(file)) {
+          unresolvable.push(`${entry.name} → "${step.name ?? file}" runs \`${file}\` before any \`pnpm install\`, but ${holder === file ? "it" : `\`${holder}\`, which it imports,`} imports \`${specifier}\``);
+        }
+      }
+    }
+  }
+  check(
+    "REL-SCRIPTS-RESOLVE-WITHOUT-INSTALL",
+    unresolvable.length === 0,
+    `${unresolvable.join("; ")}. A job that has not installed dependencies has none: the import fails with ERR_MODULE_NOT_FOUND at startup, and because \`plan\` decides which release path runs, a \`plan\` that dies skips both of them — every release run doing nothing. Each runner is its own machine, so installing in another job does not help. Keep these scripts to \`node:\` builtins and relative imports, or install dependencies in the job before running them.`,
   );
 
   check(
