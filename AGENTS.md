@@ -46,6 +46,10 @@ Two readings of it have been measured and **both are wrong**:
   `75e44bf0` with a receipt at 12:36:03Z — three minutes after #533's failure,
   with no setting changed in between.
 
+A re-request is enough: #533's own failed auto-review at 12:33:23Z was followed
+by a bare `@codex review` at 12:37:14Z, and a review started on head `40a67e5`
+13 seconds later with nothing else changed.
+
 So: wait, re-request with a bare mention, and report the head as unreviewed
 until a receipt names it. Do not open a configuration change for it, and do not
 report it as clean.
