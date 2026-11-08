@@ -493,7 +493,7 @@ the comparison handle, the carousel controls and a focused slide draw an outline
 `action-foreground`, `link` and `focus` are aliases (`{color.primary}` / `{color.primary-foreground}` /
 `{color.ring}`) and are emitted as live `var()` references in **both** themes (`ALIAS_TOKENS` in
 `style-dictionary/sd.config.mjs`), so overriding `--primary` carries them along. `brand` is a real value
-(`blue.500` light, `blue.200` dark). `action-hover` / `action-pressed` are explicit hexes for the native
+(`indigo.500` light, `violet.400` dark). `action-hover` / `action-pressed` are explicit hexes for the native
 ports: `action` at 90% / 85% over `background`. The web derives the same states with opacity, and
 `scripts/check-contrast.mjs` fails if the explicit values drift from that derivation. See
 [/docs/theming](apps/web/src/app/docs/theming/page.mdx).
@@ -508,27 +508,27 @@ palette (`color.dark.json`), not a flip of these. The live table on
 | variable `--var` | value | Figma origin | notes |
 |---|---|---|---|
 | `--background` | `#ffffff` | `surfaceContainerLowest` | |
-| `--foreground` | `#050c11` | `onSurface` | |
-| `--primary` | `#1d4ed8` | *(was `Primay`, sic — navy `#1b3c53`)* | swapped for an `azure` action blue; the navy read near-black once pushed for contrast. Dark `--primary` = `#60a5fa` (`azure.400`). |
-| `--primary-foreground` | `#f0f7ff` | `On Primary` | |
+| `--foreground` | `#17233d` | `onSurface` | |
+| `--primary` | `#5143db` | *(was `Primay`, sic — navy `#1b3c53`)* | Kinetic Weave accessible indigo action, deeper than the identity `#6054f4` so hover and pressed text retain AA. Dark `--primary` = `#a78bfa` (`violet.400`). |
+| `--primary-foreground` | `#f6f7fc` | `On Primary` | |
 | `--secondary` | `#c7cfc7` | `secondaryContainer` *(was `#f1f3f1`)* | our "secondary" == Figma *container* role; deepened `green.50` → `green.200` so a secondary control reads against the page |
 | `--secondary-foreground` | `#465245` | `onSecondaryContainer` *(was `#748873`)* | `green.700`, 5.2:1 on the deepened surface |
 | `--muted` | `#f6f6f6` | `surfaceContainer` | |
 | `--muted-foreground` | `#6d6d6d` | `onSurfaceVariant` | |
-| `--accent` | `#f0f7ff` | `LightBlue` | the hover fill used by Outline/Ghost buttons |
-| `--accent-foreground` | `#1d4ed8` | — | **synth** = `primary` |
+| `--accent` | `#f0eeff` | `LightBlue` | the hover fill used by Outline/Ghost buttons |
+| `--accent-foreground` | `#5143db` | — | **synth** = `primary` |
 | `--destructive` | `#c60a0a` | *(Figma `error` `#ec5047` fails AA — 3.3:1)* | `red.500`, clears 5.6–6.1:1 (since 0.4.1) |
 | `--destructive-foreground` | `#fef3f2` | `onError` | |
 | `--warning` | `#7f5b21` | *(Figma `onWarningContainer` `#f97907` fails AA — 2.6:1)* | `amber.800`, clears 5.8–6.1:1 (since 0.4.2); dark stays bright `amber.400` |
 | `--border` / `--input` | `#92b2c8` | `outline` | |
-| `--ring` | `#1d4ed8` | — | tracks `--primary`; focus ring drawn via `--shadow-focus` (re-baked per theme) |
+| `--ring` | `#5143db` | — | tracks `--primary`; focus ring drawn via `--shadow-focus` (re-baked per theme) |
 | `--radius` | `8px` | `Button` | |
 
 ## Synthesized (not in Figma)
 
 | Token | Value | Rationale |
 |---|---|---|
-| `color.azure.*` ramp | Tailwind-blue-derived, 15 steps | Figma has no bright interactive blue; backs `--primary` / `--ring` / `--accent-foreground` (`azure.700` light, `azure.400` dark) |
+| `color.azure.*` ramp | Tailwind-blue-derived, 15 steps | Retained for existing consumer themes. The Kinetic Weave default uses additive indigo/violet/cyan/navy ramps; no existing primitive was removed. |
 | `--card`, `--popover` (+ `-foreground`) | = background / foreground | the semantic contract needs them; Figma has no card/popover tokens |
 | `--accent-foreground` | `primary` | readable text on `accent` |
 | `--success`, `--success-foreground` | `green.600` / `green.50` | Figma has no success colour; taken from the green ramp, kept distinct from `secondary` |

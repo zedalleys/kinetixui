@@ -15,7 +15,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Controls & Actions/ComparisonSlider",
+  title: "Media & Content/ComparisonSlider",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<ComparisonSlider\\n  beforeLabel=\"Before\"\\n  afterLabel=\"After\"\\n  before={<img src=\"/before.jpg\" alt=\"\" />}\\n  after={<img src=\"/after.jpg\" alt=\"\" />}\\n/>", language: "tsx" } },

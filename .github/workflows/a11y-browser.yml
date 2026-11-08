@@ -39,6 +39,7 @@ on:
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
+      - "scripts/navigation-visual-negative-controls.mjs"
       - "scripts/overlay-visual.mjs"
       - "scripts/menu-visual.mjs"
       - "scripts/layout-visual.mjs"
@@ -52,6 +53,12 @@ on:
       - "scripts/angular-layout.mjs"
       - "scripts/angular-selection-motion.mjs"
       - "scripts/ui-dist-stamp.mjs"
+      - "scripts/story-id.mjs"
+      - "scripts/check-story-ids.mjs"
+      # story ids are derived from the component categories, so a rename here moves every gate's
+      # story id and this workflow has to run
+      - "components.manifest.json"
+      - "component-taxonomy.json"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
   pull_request:
@@ -78,6 +85,7 @@ on:
       - "scripts/entry-visual.mjs"
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
+      - "scripts/navigation-visual-negative-controls.mjs"
       - "scripts/overlay-visual.mjs"
       - "scripts/menu-visual.mjs"
       - "scripts/layout-visual.mjs"
@@ -91,6 +99,12 @@ on:
       - "scripts/angular-layout.mjs"
       - "scripts/angular-selection-motion.mjs"
       - "scripts/ui-dist-stamp.mjs"
+      - "scripts/story-id.mjs"
+      - "scripts/check-story-ids.mjs"
+      # story ids are derived from the component categories, so a rename here moves every gate's
+      # story id and this workflow has to run
+      - "components.manifest.json"
+      - "component-taxonomy.json"
       - "a11y-baseline.json"
       - ".github/workflows/a11y-browser.yml"
 
@@ -123,6 +137,44 @@ jobs:
 
       - name: Build Storybook
         run: pnpm build-storybook
+
+      # Before Chromium, because it is the cheap half of the same question: every gate below drives
+      # Storybook by story id, and an id that addresses nothing reports a missing story rather than the
+      # component being wrong. CAT-2 renamed three categories and moved `card`, which changed 52 ids at
+      # once; only three of them were checked by anything.
+      - name: Story ids resolve to real stories
+        run: pnpm check:story-ids
+
+      - name: Story-id gate negative controls (it really fails)
+        run: pnpm check:story-id-controls
+
+      # Chromium is re-downloaded on every run and the download time is not stable. Measured on #514's head
+      # 1a362696, same commit, same trigger: `Install Chromium` took 24s in `Accessibility (browser)` and
+      # 9m30s in `Accessibility (site)` — a 24x spread, and on an earlier head it reached 11m10s. In a job
+      # that finishes within minutes of its cap, that tail is the whole risk of a cancellation, and a
+      # cancellation truncates the run rather than failing loudly.
+      #
+      # So cache the browser instead of raising `timeout-minutes`, which would move the cliff and hide how
+      # close the job sits to it. The cap is deliberately unchanged by this.
+      #
+      # The key is the pinned Playwright version and nothing else. Playwright pins its browser revisions per
+      # version — 1.64.0 wants chromium-1248, chromium_headless_shell-1248 and ffmpeg-1013 — so a version
+      # bump is a new key and cannot be served a stale binary. Keying on the lockfile hash instead would
+      # miss on every unrelated dependency bump for no benefit.
+      #
+      # `--with-deps` is kept on a hit: the apt packages it installs live in the system, not in
+      # ~/.cache/ms-playwright, so they are not cacheable and must still be installed. With the browser
+      # already present, `playwright install` verifies the INSTALLATION_COMPLETE markers and downloads
+      # nothing — measured locally as exit 0 with no output.
+      - name: Playwright version, for the cache key
+        id: playwright
+        run: echo "version=$(node -p "require('./package.json').devDependencies.playwright")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ steps.playwright.outputs.version }}
 
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
@@ -306,3 +358,54 @@ jobs:
       # motion, and a 32-cell viewport, theme, direction and text matrix.
       - name: Angular selection motion (Switch 100ms, Checkbox/Radio/Toggle 200ms, forced colours, RTL, reduced motion)
         run: pnpm check:angular-selection-motion
+
+  # The negative controls for the focus-ring assertion in `axe`'s "Navigation and disclosure visual
+  # contract" step. They run the real gate four times — once unmutated, then once per injected defect —
+  # so they cost about as much as four copies of that step, and `axe` is a single 32-step sequence
+  # already inside six minutes of its 45-minute ceiling: added there on 2026-11-04 they pushed the job
+  # over it, and the last two steps were cancelled and skipped rather than run. They do not depend on
+  # anything `axe` computes, so they belong beside it rather than inside it, and they need the tokens,
+  # the package build and Chromium but not the Storybook build.
+  navigation-negative-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build tokens and UI
+        run: pnpm build:tokens && pnpm build:ui
+
+      # Same browser cache as the job above; see that job's note for the key and the measurement.
+      - name: Playwright version, for the cache key
+        id: playwright
+        run: echo "version=$(node -p "require('./package.json').devDependencies.playwright")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ steps.playwright.outputs.version }}
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Navigation focus-ring negative controls (the corrected assertion still catches its defect)
+        run: pnpm check:navigation-visual-negative-controls
+
+      # Hosted here rather than in `axe` deliberately: this needs Chromium, and the axe job already runs
+      # within about six minutes of its 45-minute cap. This job has a 25-minute cap and ~15 seconds of work,
+      # so the gate costs a Tailwind compile and two browser contexts in a job with room for them.
+      # One step, not two: the script measures the floor AND runs its four negative controls in the same
+      # browser launch, so splitting it would pay for the launch twice to assert the same thing.
+      - name: Reduced motion caps delays as well as durations (with negative controls)
+        run: pnpm check:reduced-motion-delay
