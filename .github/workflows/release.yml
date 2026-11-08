@@ -4,7 +4,19 @@ on:
   push:
     branches: [main]
 
-concurrency: release-${{ github.ref }}
+# NOT a workflow-level `concurrency` group, which is what this was until review round 2 found the
+# consequence. A run whose publish job is awaiting approval is still in progress, so it holds the
+# group — and with `cancel-in-progress` unset, later runs queue behind it rather than replacing it.
+# One unapproved publication would therefore have stopped `plan` and `version` for every subsequent
+# push, so the next changeset could not even open its Version PR until someone approved or cancelled
+# a publication nobody was asking about. That is the failure this whole design exists to avoid,
+# arriving by the back door, and it only became possible when the gate made a run able to wait.
+#
+# So serialization is scoped to the two jobs that mutate something, in groups of their own. Each
+# still serializes against its own kind; neither can hold up the other, and neither holds anything
+# while `preflight` or `plan` runs. `preflight` and `plan` are deliberately unserialized: they are
+# read-only, so two of them overlapping costs CI minutes and nothing else — which is the right
+# trade against a release that cannot start.
 
 # Least privilege at the top level: read-only. Each job raises only what it needs, so the
 # preflight job — the one that runs before any decision to publish — has no write access and no
@@ -91,16 +103,100 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # The only job that can mutate anything. It runs the same preflight again in-process (`pnpm
-  # release` is preflight + publish, from one code path) and publishes exactly the artifacts that
-  # preflight produced.
-  release:
-    needs: preflight
+  # Which of the two jobs below is the relevant one for this push. Nothing else: no credentials,
+  # no OIDC identity, no write permission, and no decision about whether to publish.
+  #
+  # Before this job existed, `release` did two unrelated things through one `changesets/action`
+  # call — with changesets pending it opened the Version PR, with none pending it published — so
+  # merging the Version PR *was* the publication, because the merge is the push that finds nothing
+  # pending. Gating that single job would have put an approval in front of opening a pull request.
+  # Splitting it needs this one fact decided first, by something that holds nothing.
+  plan:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # changesets opens the Version PR, and the release pushes its tags
+      contents: read
+    outputs:
+      changesets_pending: ${{ steps.pending.outputs.changesets_pending }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Are there changesets pending?
+        id: pending
+        run: node scripts/release/pending.mjs >> "$GITHUB_OUTPUT"
+
+  # Opens or updates the Version PR. Deliberately ungated and automatic, as it has always been:
+  # opening a pull request is not a publication and must not wait for anyone.
+  #
+  # It cannot publish, by two independent properties rather than by a condition: it is given no
+  # `publish:` command, and it holds no npm token and no `id-token`. Either alone would be enough;
+  # both, because this is the job an approval gate must not be allowed to creep onto.
+  version:
+    needs: [preflight, plan]
+    if: needs.plan.outputs.changesets_pending == 'true'
+    # Serialized against other Version PR runs only. Two of these at once would race on pushing the
+    # version branch.
+    concurrency: release-version-${{ github.ref }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # changesets pushes the version branch
       pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Create or update the Version PR
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+        with:
+          version: pnpm version-packages
+          commit: "chore: version packages"
+          title: "chore: version packages"
+          createGithubReleases: false
+        env:
+          # GITHUB_TOKEN can publish but can't open the Version Packages PR
+          # ("GitHub Actions is not permitted to create pull requests" — a
+          # deliberate org setting). Add a fine-grained PAT with `contents:write`
+          # + `pull-requests:write` as the RELEASE_PAT secret and the PR opens
+          # itself; without it, the branch is pushed and the PR is opened by hand.
+          #
+          # Stays a repository secret, not an environment one: its job is to open the Version PR,
+          # which must stay unapproved and automatic.
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT || secrets.GITHUB_TOKEN }}
+
+  # The only job that can publish, and the only one behind a human. `environment: publish-npm`
+  # means GitHub withholds that environment's secrets until a required reviewer approves, so this
+  # job cannot reach the registry while it is waiting — a property that does not depend on the rest
+  # of this file being right.
+  #
+  # It runs when no changesets are pending, which is the push that follows a Version PR merge. The
+  # merge now queues the publication; the approval performs it. Those are two acts again.
+  #
+  # Both conditions are positive string comparisons against `plan`'s output, so a `plan` that fails
+  # or emits nothing skips both jobs rather than selecting one. A stall is the correct direction for
+  # an error here to fall.
+  publish:
+    needs: [preflight, plan]
+    if: needs.plan.outputs.changesets_pending == 'false'
+    environment: publish-npm
+    # Serialized against other publications only, and never cancelled: `cancel-in-progress` stays
+    # unset, because interrupting a run partway through publishing leaves the registry holding some
+    # packages and not others, with the tags owed for them unwritten.
+    concurrency: release-publish-${{ github.ref }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # the release pushes its tags
       id-token: write # npm publish provenance (OIDC attestation)
+      actions: read # reading this run's own approval history
     steps:
       # Full history and tags, which only this job needs. Release tags are verified by the commit
       # they resolve to, and a tag-only recovery has to create them at the commit the release
@@ -113,6 +209,21 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
+      # Before anything irreversible, and before the toolchain is even installed: prove a person
+      # approved THIS run for THIS environment.
+      #
+      # `environment:` above is the control. This closes the hole underneath it — an `environment:`
+      # naming an environment that does not exist, or one whose required reviewers were removed,
+      # does not fail: GitHub runs the job immediately, with the workflow file still claiming a
+      # gate. That fall-through is invisible to every check in this repository, because the
+      # configuration it depends on lives in GitHub settings. So the approval is read from the run
+      # itself. Fail-closed: no network, no `gh`, an empty history and an approval of some other
+      # environment are all refusals.
+      - name: A human approved this publication
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/release/approval.mjs --environment=publish-npm
+
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
 
       - uses: actions/setup-node@v4
@@ -123,13 +234,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Create Version PR or publish
+      # Runs the same preflight again in-process (`pnpm release` is preflight + publish, from one
+      # code path) and publishes exactly the artifacts that preflight produced. No `version:`
+      # command: this job versions nothing, so it cannot take the Version PR path by accident.
+      - name: Publish
         uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
-          version: pnpm version-packages
           publish: pnpm release
-          commit: "chore: version packages"
-          title: "chore: version packages"
           # The action's own Release creation works by parsing the Changesets CLI's `New tag:` lines out
           # of the publish command's stdout. `pnpm release` is this repository's own pipeline and prints
           # its own report, so there has never been anything there to parse — which is exactly why npm
@@ -140,17 +251,16 @@ jobs:
         env:
           # Where `pnpm release` records what it published and tagged. Read by the next step.
           KINETIXUI_RELEASE_SUMMARY: ${{ runner.temp }}/kinetixui-release.json
-          # GITHUB_TOKEN can publish but can't open the Version Packages PR
-          # ("GitHub Actions is not permitted to create pull requests" — a
-          # deliberate org setting). Add a fine-grained PAT with `contents:write`
-          # + `pull-requests:write` as the RELEASE_PAT secret and the PR opens
-          # itself; without it, publish still works and the PR is opened by hand.
-          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Auth: NPM_TOKEN. `pnpm publish` probes OIDC first (the harmless
           # ERR_PNPM_AUTH_TOKEN_EXCHANGE warning) and falls back to the token.
           # To move to token-less publishing, configure a Trusted Publisher for
           # each of @kinetixui/{tokens,ui,cli} on npmjs.com (repo + this
           # workflow filename), then drop these two lines.
+          #
+          # This must be an ENVIRONMENT secret of `publish-npm`, not a repository secret. A
+          # repository secret is readable by any job in any workflow, so a copy left at that scope
+          # would hand the credential to a job nobody approved and leave this gate decorative.
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           # provenance also comes from each package's publishConfig; this env is a

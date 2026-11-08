@@ -33,7 +33,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Form Inputs/GuestPicker",
+  title: "Forms & Inputs/GuestPicker",
   parameters: {
     layout: "padded",
     docs: { source: { code: "<GuestPicker\n  label=\"Guests\"\n  categories={[\n    { id: \"adults\", label: \"Adults\", description: \"13 or older\", min: 1 },\n    { id: \"children\", label: \"Children\", description: \"Ages 2–12\" },\n    { id: \"infants\", label: \"Infants\", description: \"Under 2\", max: 2 },\n  ]}\n  value={guests}\n  onValueChange={setGuests}\n  maxTotal={9}\n  formatSummary={(v) => /* your plural rules */ \\`\\${v.adults} adults\\`}\n/>", language: "tsx" } },

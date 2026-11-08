@@ -10,6 +10,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
+import yaml from "js-yaml";
 import semver from "semver";
 import { validateAllowlist } from "../contract.mjs";
 import { buildPlan } from "../plan.mjs";
@@ -267,11 +268,20 @@ describe("the release scripts", () => {
 
   /** Both release jobs need tags: one creates them, the other asserts against them. */
   it("checks out full history in every job that depends on tags", () => {
-    const workflow = readFileSync(`${root}.github/workflows/release.yml`, "utf8");
-    const checkouts = workflow.split("actions/checkout@v4").slice(1);
-    assert.equal(checkouts.length, 2, "release.yml should have exactly two checkouts");
-    for (const [index, block] of checkouts.entries()) {
-      assert.match(block.slice(0, 200), /fetch-depth:\s*0/, `release.yml checkout ${index + 1} is shallow`);
+    // Asserted per job rather than over the file's checkouts in order, because the number of jobs
+    // is not the invariant: `plan` was added as a third checkout and reads only `.changeset/`, so a
+    // shallow checkout is correct there and a count would have made it a failure. What matters is
+    // that every job whose work is about tags gets the tags — `pnpm test:release` asserts against
+    // real release tags, and `publish` has to be able to name the commit a release went out from,
+    // which once other work has landed on main is not HEAD. At the default depth those assertions
+    // skip themselves and the gate reports green without running.
+    const workflow = yaml.load(readFileSync(`${root}.github/workflows/release.yml`, "utf8"));
+    const NEEDS_TAGS = { preflight: true, plan: false, version: true, publish: true };
+    assert.deepEqual(Object.keys(workflow.jobs).sort(), Object.keys(NEEDS_TAGS).sort(), "the jobs in release.yml have changed; this contract has to change with them rather than around them");
+    for (const [name, job] of Object.entries(workflow.jobs)) {
+      const checkouts = job.steps.filter((step) => typeof step.uses === "string" && step.uses.startsWith("actions/checkout@"));
+      assert.equal(checkouts.length, 1, `job ${name} should check out exactly once`);
+      if (NEEDS_TAGS[name]) assert.equal(checkouts[0].with?.["fetch-depth"], 0, `job ${name} depends on tags but checks out shallow`);
     }
     const ci = readFileSync(`${root}.github/workflows/ci.yml`, "utf8");
     assert.match(ci.slice(ci.indexOf("actions/checkout@v4"), ci.indexOf("actions/checkout@v4") + 200), /fetch-depth:\s*0/);

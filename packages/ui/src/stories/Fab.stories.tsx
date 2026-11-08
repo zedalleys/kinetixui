@@ -21,7 +21,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Controls & Actions/Fab",
+  title: "Actions & Controls/Fab",
   component: Fab,
   args: { variant: "Primary", size: "default", extended: false },
   argTypes: {

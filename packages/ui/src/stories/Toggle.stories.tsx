@@ -12,7 +12,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Controls & Actions/Toggle",
+  title: "Actions & Controls/Toggle",
   component: Toggle,
   args: { variant: "default", size: "default" },
   argTypes: {

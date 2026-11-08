@@ -17,8 +17,15 @@ import { ExplorerTabs } from "./explorer-tabs";
  *
  * A server component. The panel the page opens on (the first platform) renders here as HTML; the other four
  * reach the page only as compact data and are drawn by the same renderer (`explorer-panel.tsx`) when their tab
- * is chosen, so four excerpts the reader may never open add neither markup nor a component tree to the page.
- * The tab selection is the only client state (`explorer-tabs.tsx`).
+ * is chosen, so excerpts the reader may never open add neither markup nor a component tree to the page.
+ *
+ * One of those four is an exception, and it is what stops the section from resizing under the reader. The panels
+ * are not the same height — Angular's shows two files where every other platform shows one, and the file paths
+ * and evidence lines wrap to different numbers of lines at different widths — so swapping the mounted panel
+ * swapped the height of the card and everything below it moved. The tallest panel is therefore also sent as
+ * markup and laid out under the open one as an inert reserve (`explorer-tabs.tsx`): the card is as tall as the
+ * tallest panel whichever tab is open, at every width, text size and direction, because the reserve IS that
+ * panel rather than a height copied off it. Which platform that is is read from the data here, not named.
  */
 
 export type ExplorerFile = {
@@ -69,6 +76,18 @@ export function ImplementationExplorer({
     files: t.files.map((f) => ({ file: f.file, firstLine: f.firstLine, lastLine: f.lastLine, lines: toRuns(f.lines), reads: f.readsToken })),
   });
   const [first, ...rest] = platforms;
+  // The tallest panel, by the shape that decides its height: how many files it shows, then how many lines of
+  // source in all. Read from the data rather than named, so a platform that grows a second file becomes the
+  // reserve on its own. `check:home-systems` measures the result and fails if some other panel is taller.
+  const tallest = platforms.reduce((a, b) =>
+    b.files.length !== a.files.length
+      ? b.files.length > a.files.length
+        ? b
+        : a
+      : b.files.reduce((n, f) => n + f.lines.length, 0) > a.files.reduce((n, f) => n + f.lines.length, 0)
+        ? b
+        : a,
+  );
   return (
     <ExplorerTabs
       component={component}
@@ -76,6 +95,11 @@ export function ImplementationExplorer({
       // the panel the page opens on, rendered here as HTML; the rest wait as data until their tab is chosen
       initial={<ExplorerPanel component={component} data={data(first!)} />}
       later={Object.fromEntries(rest.map((t) => [TAB_OF[t.platform], data(t)]))}
+      reserve={{
+        tab: TAB_OF[tallest.platform] as CodeTab,
+        // the tallest panel itself, drawn for its height alone: no copy button, no focusable scroller
+        panel: <ExplorerPanel component={component} data={data(tallest)} reserve />,
+      }}
       footer={
         <p className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-body-sm text-muted-foreground">
           <span>

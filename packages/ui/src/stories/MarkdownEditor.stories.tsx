@@ -13,7 +13,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Form Inputs/MarkdownEditor",
+  title: "Forms & Inputs/MarkdownEditor",
   parameters: {
     layout: "padded",
     docs: { source: { code: "<MarkdownEditor\\n  value={text}\\n  onValueChange={setText}\\n  rows={8}\\n/>", language: "tsx" } },
