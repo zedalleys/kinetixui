@@ -126,10 +126,13 @@ t(Object.keys(generated).length > 10, `usage-examples.generated.ts parsed (${Obj
 // or fail on where the wrap happened to fall, which is not a fact about the claim.
 const flat = (s) => s.replace(/\s+/g, " ");
 
-// "Ours, today" is the single paragraph in the article allowed to carry live figures.
-const start = art.indexOf("Ours, today:");
+// The dated current-state paragraph is the single one in the article allowed to carry live
+// figures. It is dated rather than "today" so a reader can tell when it was measured, which means
+// this locator is the canonical pair of the heading in article.md: changing one without the other
+// leaves `today` empty, and an empty subject passes every assertion below vacuously.
+const start = art.indexOf("Ours, as of 7 November 2026:");
 const today = start < 0 ? "" : flat(art.slice(start, art.indexOf("Those are generated", start)));
-t(today.length > 0, "article has an 'ours, today' paragraph to check");
+t(today.length > 0, "article has a dated current-state paragraph to check");
 t(
   today.includes(`${comps.length} catalogue entries`),
   `today: ${comps.length} catalogue entries`,

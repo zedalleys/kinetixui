@@ -31,7 +31,7 @@ const article = readFileSync(path.join(a01, "article.md"), "utf8");
 
 /** The paragraph the defect was found in, as the repository carries it. */
 const currentParagraph = (() => {
-  const m = article.match(/Ours, today:[\s\S]*?flatter the number\./);
+  const m = article.match(/Ours, as of \d{1,2} \w+ \d{4}:[\s\S]*?flatter the number\./);
   return m ? m[0] : null;
 })();
 
@@ -41,8 +41,11 @@ describe("ART-001 stale sweep — the subject exists", () => {
    * at all: findStaleFigures("") is empty, so "the paragraph is clean" is vacuously true for a
    * missing paragraph. The regression test is only evidence while its subject is there.
    */
-  it("the article still carries the 'Ours, today' current-state paragraph", () => {
-    assert.ok(currentParagraph, "could not find the 'Ours, today: … flatter the number.' paragraph in article.md");
+  it("the article still carries the dated current-state paragraph", () => {
+    assert.ok(
+      currentParagraph,
+      "could not find the 'Ours, as of <date>: … flatter the number.' paragraph in article.md",
+    );
   });
 
   it("that paragraph states a documented-exception count ending in 9", () => {
