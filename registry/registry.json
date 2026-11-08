@@ -366,7 +366,8 @@
         "tailwind-merge"
       ],
       "registryDependencies": [
-        "tokens"
+        "tokens",
+        "spinner"
       ],
       "files": [
         {
