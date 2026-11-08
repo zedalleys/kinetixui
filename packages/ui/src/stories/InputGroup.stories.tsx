@@ -24,7 +24,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Form Inputs/InputGroup",
+  title: "Forms & Inputs/InputGroup",
   parameters: {
     layout: "padded",
     docs: { source: { code: "<InputGroup>\\n  <InputGroupText>https://</InputGroupText>\\n  <InputGroupInput placeholder=\"kinetixui.com\" />\\n</InputGroup>\\n\\n<InputGroup>\\n  <InputGroupAddon align=\"start\">$</InputGroupAddon>\\n  <InputGroupInput placeholder=\"0.00\" />\\n  <InputGroupText>USD</InputGroupText>\\n</InputGroup>", language: "tsx" } },

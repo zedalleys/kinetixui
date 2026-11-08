@@ -58,7 +58,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Overlays/Tour",
+  title: "Feedback & Status/Tour",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<Tour\\n  open={open}\\n  onOpenChange={setOpen}\\n  stepIndex={stepIndex}\\n  onStepIndexChange={setStepIndex}\\n  steps={[\\n    { target: '[data-tour=\"save\"]', title: \"Save your work\", content: \"…\" },\\n    { target: '[data-tour=\"share\"]', title: \"Invite others\", content: \"…\" },\\n  ]}\\n/>", language: "tsx" } },

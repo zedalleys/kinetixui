@@ -167,7 +167,7 @@ const AXE_BASELINE = {
     "--opacity-disabled, and the add-on dims with it. WCAG 1.4.3 exempts text that is part of an inactive user " +
     "interface component; axe exempts only text inside a disabled control, and the add-on is a sibling of the input. " +
     "Dimming it is deliberate: a disabled field whose prefix stayed at full strength would read as half-enabled. " +
-    "React carries the same entry (form-inputs-inputgroup--entry-states).",
+    "React carries the same entry, the InputGroup entry-states case.",
   'composite|dark|color-contrast|kx-input-group[data-kx-case="disabled"] > kx-input-group-text': "Same finding as the light entry.",
   'composite|light|color-contrast|kx-multi-select[inputid="ms-disabled"] > .kx-multi-select__field > kx-tag > .kx-tag__text':
     "The chosen-value chip of the disabled MultiSelect. The input is disabled, so the whole field takes --opacity-disabled " +

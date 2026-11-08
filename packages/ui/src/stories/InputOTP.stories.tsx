@@ -15,7 +15,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Form Inputs/InputOTP",
+  title: "Forms & Inputs/InputOTP",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<InputOTP maxLength={6} aria-label=\\\"One-time code\\\">\\n  <InputOTPGroup>\\n    <InputOTPSlot index={0} />\\n    ...\\n    <InputOTPSlot index={5} />\\n  </InputOTPGroup>\\n</InputOTP>", language: "tsx" } },
