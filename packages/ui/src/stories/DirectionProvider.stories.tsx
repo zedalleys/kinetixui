@@ -35,7 +35,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Components/DirectionProvider",
+  title: "Layout & Structure/DirectionProvider",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<html dir={dir}>\n  <KinetixDirectionProvider dir={dir}>\n    <Select>\n      <SelectTrigger><SelectValue placeholder=\"Select a fruit\" /></SelectTrigger>\n      <SelectContent>\n        <SelectItem value=\"apple\">Apple</SelectItem>\n      </SelectContent>\n    </Select>\n  </KinetixDirectionProvider>\n</html>", language: "tsx" } },

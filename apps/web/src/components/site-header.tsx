@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Layers } from "lucide-react";
+import { BrandMark } from "./brand-mark";
 import { cn } from "@/lib/utils";
 import { mainNav, siteConfig } from "@/lib/site";
 import { CommandMenu } from "./command-menu";
@@ -25,11 +25,9 @@ export function SiteHeader() {
       */}
       <div className="mx-auto flex min-h-12 max-w-screen-2xl flex-wrap items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:px-8">
         <Link href="/" className="group flex items-center gap-2.5">
-          <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:rotate-6">
-            <Layers className="size-[18px]" />
-          </span>
-          <span className="font-display text-wordmark font-bold uppercase tracking-[0.18em]">
-            Kinetix<span className="text-primary">ui</span>
+          <BrandMark className="size-8 shrink-0 transition-transform duration-300 group-hover:-translate-y-0.5" />
+          <span className="font-display text-wordmark font-bold tracking-[-0.035em]">
+            Kinetix<span className="text-brand">UI</span>
           </span>
         </Link>
 

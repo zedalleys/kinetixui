@@ -24,7 +24,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Form Inputs/MultiSelect",
+  title: "Forms & Inputs/MultiSelect",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<MultiSelect\\n  value={value}\\n  onValueChange={setValue}\\n  placeholder=\"Select platforms…\"\\n  options={[\\n    { value: \"react\", label: \"React\" },\\n    { value: \"swiftui\", label: \"SwiftUI\" },\\n  ]}\\n/>", language: "tsx" } },

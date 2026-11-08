@@ -11,7 +11,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Form Inputs/PasswordInput",
+  title: "Forms & Inputs/PasswordInput",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<PasswordInput placeholder=\"••••••••\" />", language: "tsx" } },
