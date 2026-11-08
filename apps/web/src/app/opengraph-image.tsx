@@ -27,8 +27,9 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const BACKGROUND = "#ffffff"; // --background
-const FOREGROUND = "#050c11"; // --foreground
-const ACTION = "#1d4ed8"; // --action / --primary
+const FOREGROUND = "#17233D"; // --foreground
+const BRAND = "#6054F4"; // --brand (identity indigo). The mark is identity, not an interactive affordance,
+// so it carries `brand` rather than `action` (#5143db) — see design-assets/identity/v1/README.md.
 const MUTED = "#6d6d6d"; // --muted-foreground
 
 export default function Image() {
@@ -48,23 +49,12 @@ export default function Image() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 12,
-              background: ACTION,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: BACKGROUND,
-              fontSize: 38,
-              fontWeight: 700,
-            }}
-          >
-            K
-          </div>
-          <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: 6, textTransform: "uppercase" }}>
+          <svg width="64" height="64" viewBox="0 0 100 100" fill="none">
+            <rect x="14" y="12" width="21" height="76" rx="10.5" fill={BRAND} />
+            <path d="M38 50 L79 82" stroke="#28C7D9" strokeWidth="22" strokeLinecap="round" />
+            <path d="M22 78 L78 21" stroke="#A78BFA" strokeWidth="22" strokeLinecap="round" />
+          </svg>
+          <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: -1 }}>
             {siteConfig.name}
           </div>
         </div>

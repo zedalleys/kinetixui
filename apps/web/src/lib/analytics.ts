@@ -62,8 +62,21 @@ export const ANALYTICS_LOCATIONS = [
   "hero", "primary_nav", "sidebar", "installation", "code_example", "platform_tabs", "code_tab", "component_header", "footer", "content", "command_menu",
   // What `verification_inspected` opened or followed (BD-W5 F-09).
   "verification_details", "workflow_evidence", "evidence_link",
+  // IA-5.21. Which control on a surface a `cta_clicked` came from, where `source` alone cannot say: a component
+  // page carries TWO paths to installation (the preview's setup link and the install strip's), and both are
+  // `source: component_page`. `not_found` is the 404 page's own control. See `CTA_LOCATIONS`.
+  "not_found", "component_preview", "component_onboarding",
 ] as const;
 export type AnalyticsLocation = (typeof ANALYTICS_LOCATIONS)[number];
+
+/*
+ * The ONLY values `cta_clicked.location` may carry (IA-5.21 §3.1). A closed subset of `ANALYTICS_LOCATIONS`, so a
+ * location is one of four compile-time constants and can never be a route, a DOM id, a query parameter or anything
+ * a visitor typed. `component_preview` and `component_onboarding` are the two installation paths on a component
+ * page, which `source: component_page` alone cannot tell apart.
+ */
+export const CTA_LOCATIONS = ["footer", "not_found", "component_preview", "component_onboarding"] as const;
+export type CtaLocation = (typeof CTA_LOCATIONS)[number];
 
 /** What a product call-to-action is FOR — never its visible label and never its destination URL. */
 export const ANALYTICS_CTA_TARGETS = [
@@ -155,7 +168,14 @@ type Shape<Required extends keyof EventProps, Optional extends keyof EventProps 
  * compile error.
  */
 export interface AnalyticsEvents {
-  cta_clicked: { source: AnalyticsSource; target: AnalyticsCtaTarget };
+  /*
+   * `location` is OPTIONAL and additive (IA-5.21): an event without it is as valid as it ever was, so every
+   * `cta_clicked` recorded before this exists stays comparable and no historical analytics is invalidated. It is
+   * drawn from the closed `CTA_LOCATIONS` list in `analytics-surfaces.ts` and never from a route, a DOM id, a
+   * query parameter or anything a visitor typed. It answers only the question `source` cannot: WHICH control on
+   * a surface, where one surface holds two.
+   */
+  cta_clicked: { source: AnalyticsSource; target: AnalyticsCtaTarget; location?: CtaLocation };
   docs_viewed: Shape<"page", "source" | "platform">;
   installation_viewed: Shape<never, "source" | "platform">;
   cli_command_copied: Shape<"source", "package">;

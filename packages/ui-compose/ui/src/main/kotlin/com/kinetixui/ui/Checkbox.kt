@@ -1,5 +1,6 @@
 package com.kinetixui.ui
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.triStateToggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,13 +44,19 @@ fun KinetixCheckbox(
 ) {
     val colors = KinetixColorScheme.current
     val checkedLike = state != ToggleableState.Off
-    val borderColor = when {
+    val targetBorder = when {
         isError -> colors.destructive
         checkedLike -> colors.action
         else -> colors.border
     }
-    val fillColor = if (checkedLike) (if (isError) colors.destructive else colors.action) else colors.background
+    val targetFill = if (checkedLike) (if (isError) colors.destructive else colors.action) else colors.background
     val glyphColor = colors.actionForeground
+    // `selection-state` (fast, standard): the fill and the edge settle, timed from the tokens and
+    // suppressed through the one shared preference reader. Before MX1d both were handed straight to
+    // the modifier and cut in one frame.
+    val reduceMotion = KinetixDisclosureMotion.rememberReduceMotion()
+    val borderColor by animateColorAsState(targetBorder, KinetixSelectionMotion.spec(reduceMotion), label = "KinetixCheckboxBorder")
+    val fillColor by animateColorAsState(targetFill, KinetixSelectionMotion.spec(reduceMotion), label = "KinetixCheckboxFill")
     val shape = RoundedCornerShape(dimensionResource(R.dimen.radius_sm))
 
     Box(
@@ -65,6 +73,12 @@ fun KinetixCheckbox(
             .border(dimensionResource(R.dimen.border_width_focus), borderColor, shape),
         contentAlignment = Alignment.Center,
     ) {
+        // The glyph still swaps in one frame while the fill settles. Deliberate, and a stated
+        // difference from the React port, which fades the tick in over `fast` and removes it at
+        // once: a cross-fade between the tick and the dash is the one transition that can show a
+        // tick on a box's way OUT of mixed, which #400 fixed on the web by keying display on state.
+        // Doing it properly here means composing both glyphs and animating alpha; the fill already
+        // carries the state change, so it is recorded rather than half-built.
         when (state) {
             // Decorative: the state is triStateToggleable's to announce, not a glyph's.
             ToggleableState.On -> KinetixIcon(KinetixIcons.Check, 12.dp, tint = glyphColor)

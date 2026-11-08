@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "id": "proj_reorder001",
+  "name": "Reordered storefront",
+  "domain": "domain:commerce",
+  "designSystem": {
+    "preset": "KX1_eyJ2IjoxLCJiIjoiaW5kaWdvIn0"
+  },
+  "pages": [
+    {
+      "id": "page_home",
+      "name": "Home",
+      "route": "/",
+      "root": {
+        "id": "node_4",
+        "kind": "slot",
+        "name": "page",
+        "children": [
+          {
+            "id": "node_9",
+            "kind": "block",
+            "ref": "block:order-summary"
+          },
+          {
+            "id": "node_2",
+            "kind": "block",
+            "ref": "block:cta-banner",
+            "props": {
+              "heading": "Moved to the middle, id unchanged"
+            }
+          },
+          {
+            "id": "node_6",
+            "kind": "component",
+            "ref": "component:Button",
+            "props": {
+              "children": "Pay now",
+              "variant": "default"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "nextNodeId": 12,
+  "retiredNodeIds": [
+    "node_3",
+    "node_10",
+    "node_11"
+  ]
+}
