@@ -29,6 +29,7 @@
     "check:token-contract": "node scripts/check-token-contract.mjs",
     "check:motion-tokens": "node scripts/check-motion-tokens.mjs",
     "check:motion-identity-controls": "node scripts/motion-identity-negative-controls.mjs",
+    "check:reduced-motion-delay": "node scripts/reduced-motion-delay.mjs",
     "gen:release-meta": "node scripts/gen-release-meta.mjs",
     "check:releases": "node scripts/check-releases.mjs",
     "check:release-links": "node scripts/check-release-links.mjs",
