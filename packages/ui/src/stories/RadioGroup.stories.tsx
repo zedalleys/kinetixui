@@ -16,7 +16,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Form Inputs/RadioGroup",
+  title: "Forms & Inputs/RadioGroup",
   component: RadioGroup,
   args: { defaultValue: "comfortable", disabled: false },
   argTypes: {

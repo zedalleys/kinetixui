@@ -43,12 +43,12 @@ const c = (ramp, step) => {
  * should look like the product's default.
  */
 const T = {
-  bg: c("blue", 900),
-  surface: c("blue", 800),
-  fg: c("blue", 50),
-  muted: c("blue", 100),
+  bg: c("navy", 950),
+  surface: c("navy", 800),
+  fg: c("navy", 50),
+  muted: c("navy", 100),
   border: c("blue", 400),
-  primary: c("azure", 400),
+  primary: c("violet", 400),
   warn: c("amber", 400) ?? c("azure", 300),
   mono: "ui-monospace, SFMono-Regular, Menlo, monospace",
   sans: "Inter, ui-sans-serif, system-ui, sans-serif",
@@ -61,7 +61,7 @@ const parity = JSON.parse(readFileSync(`${ROOT}/platform-parity.json`, "utf8"));
 const blocks = JSON.parse(readFileSync(`${ROOT}/block-parity.json`, "utf8"));
 
 const entries = Object.entries(manifest.components);
-const recipes = entries.filter(([, v]) => /not a component/i.test(v.platformNote ?? "")).map(([k]) => k);
+const recipes = entries.filter(([, v]) => v.kind === "recipe").map(([k]) => k);
 const componentCount = entries.length - recipes.length;
 const defs = manifest.platformDefinitions;
 const platformRows = Object.entries(defs).map(([name, d]) => ({
@@ -146,9 +146,9 @@ const emit = (id, svg, meta) => {
 
   const body = defsBlock + h1
     + text(64, y0 - 18, "DAY 1 — one intent, three platforms", { size: 18, font: T.mono, fill: T.muted })
-    + col(64, "Web", ["padding  16", "radius   12", "accent   #1d4ed8"])
-    + col(414, "iOS", ["padding  16", "radius   12", "accent   #1d4ed8"])
-    + col(764, "Android", ["padding  16", "radius   12", "accent   #1d4ed8"])
+    + col(64, "Web", ["padding  16", "radius   12", "accent   #5143db"])
+    + col(414, "iOS", ["padding  16", "radius   12", "accent   #5143db"])
+    + col(764, "Android", ["padding  16", "radius   12", "accent   #5143db"])
     + text(64, y0 + 300, "MONTH 6 — nobody decided this", { size: 18, font: T.mono, fill: T.primary })
     + (() => {
         const yy = y0 + 330;
@@ -156,8 +156,8 @@ const emit = (id, svg, meta) => {
           box(x, yy, 300, 230, { stroke: T.primary, dash: "6 5" }) +
           text(x + 24, yy + 44, label, { size: 22, weight: 600 }) +
           vals.map((v, i) => text(x + 24, yy + 90 + i * 40, v, { size: 20, font: T.mono, fill: changed.includes(i) ? T.primary : T.muted })).join("");
-        return c2(64, "Web", ["padding  20", "radius   12", "accent   #1d4ed8"], [0])
-          + c2(414, "iOS", ["padding  16", "radius   16", "accent   #1d4ed8"], [1])
+        return c2(64, "Web", ["padding  20", "radius   12", "accent   #5143db"], [0])
+          + c2(414, "iOS", ["padding  16", "radius   16", "accent   #5143db"], [1])
           + c2(764, "Android", ["padding  16", "radius   12", "accent   #1f4a63"], [2]);
       })()
     + text(64, y0 + 620, "Each change was locally correct. None was written anywhere the others could see.", { size: 22, fill: T.fg })

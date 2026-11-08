@@ -1736,8 +1736,8 @@
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
-      "Flutter": "experimental"
+      "Compose": "beta",
+      "Flutter": "beta"
     },
     "rating": {
       "React": "beta",
@@ -1898,14 +1898,14 @@
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "beta"
     },
     "toggle-group": {
       "React": "beta",
       "Angular": "preview",
       "SwiftUI": "experimental",
-      "Compose": "experimental",
+      "Compose": "beta",
       "Flutter": "experimental"
     },
     "tooltip": {
@@ -1943,12 +1943,12 @@
       "experimental": 90
     },
     "Compose": {
-      "experimental": 83,
-      "beta": 7
+      "experimental": 80,
+      "beta": 10
     },
     "Flutter": {
-      "experimental": 84,
-      "beta": 6
+      "experimental": 83,
+      "beta": 7
     }
   },
   "catalogueVerification": {
@@ -2411,6 +2411,7 @@
         "build",
         "interaction",
         "largeText",
+        "reducedMotion",
         "rtl"
       ]
     },
@@ -3685,10 +3686,14 @@
         "build"
       ],
       "Compose": [
-        "build"
+        "accessibility",
+        "build",
+        "interaction"
       ],
       "Flutter": [
+        "accessibility",
         "build",
+        "interaction",
         "largeText",
         "rtl"
       ]
@@ -4312,6 +4317,7 @@
         "build"
       ],
       "Compose": [
+        "accessibility",
         "build",
         "interaction"
       ],
@@ -4345,7 +4351,9 @@
         "build"
       ],
       "Compose": [
-        "build"
+        "accessibility",
+        "build",
+        "interaction"
       ],
       "Flutter": [
         "build",
@@ -4466,8 +4474,8 @@
     },
     "Compose": {
       "build": 90,
-      "interaction": 7,
-      "accessibility": 7,
+      "interaction": 9,
+      "accessibility": 10,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 7,
@@ -4476,11 +4484,11 @@
     },
     "Flutter": {
       "build": 90,
-      "interaction": 6,
-      "accessibility": 6,
+      "interaction": 7,
+      "accessibility": 7,
       "rtl": 58,
       "largeText": 58,
-      "reducedMotion": 7,
+      "reducedMotion": 8,
       "visual": 0,
       "published": 0
     }

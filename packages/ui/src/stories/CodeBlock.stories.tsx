@@ -13,7 +13,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Foundations/CodeBlock",
+  title: "Data Display/CodeBlock",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<CodeBlock filename=\"button.tsx\" code={source} />", language: "tsx" } },

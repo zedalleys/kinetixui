@@ -20,8 +20,6 @@
  *
  * See RELEASING.md → "Peer ranges across cohorts".
  */
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import path from "node:path";
 import semver from "semver";
 
 /** The only dependency field that carries a compatibility claim rather than a resolved edge. */
@@ -33,39 +31,12 @@ const BUMP_ORDER = ["none", "patch", "minor", "major"];
 const higher = (a, b) => (BUMP_ORDER.indexOf(b) > BUMP_ORDER.indexOf(a) ? b : a);
 
 /**
- * Parse one changeset's frontmatter into the releases it names.
- *
- * The body is prose and is deliberately ignored. Quoted and unquoted package names are both valid
- * YAML and both appear in the wild, so both are accepted.
- *
- * @param {string} text the file's contents
- * @returns {{name: string, type: "patch"|"minor"|"major"}[]}
+ * Both of these moved to changesets.mjs, which imports nothing outside `node:`, and are re-exported
+ * here so every existing caller is unchanged and there is still exactly one rule for what a pending
+ * changeset is. The move exists because `release.yml`'s `plan` job runs the reader on a
+ * dependency-free checkout and this module imports `semver`. See changesets.mjs.
  */
-export function parseChangeset(text) {
-  const frontmatter = text.split(/^---\s*$/m)[1] ?? "";
-  return [...frontmatter.matchAll(/^\s*"?([^"\s:]+)"?\s*:\s*(patch|minor|major)\s*$/gm)].map(([, name, type]) => ({
-    name,
-    type,
-  }));
-}
-
-/**
- * Every pending changeset in the repository. The filesystem half; everything downstream is pure.
- *
- * @param {string} root repository root
- * @returns {{id: string, releases: {name: string, type: string}[]}[]}
- */
-export function readPendingChangesets(root) {
-  const dir = path.join(root, ".changeset");
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir)
-    .filter((name) => name.endsWith(".md") && name.toLowerCase() !== "readme.md")
-    .sort()
-    .map((name) => ({
-      id: name.replace(/\.md$/, ""),
-      releases: parseChangeset(readFileSync(path.join(dir, name), "utf8")),
-    }));
-}
+export { parseChangeset, readPendingChangesets } from "./changesets.mjs";
 
 /**
  * The version each directly named package will carry once `changeset version` runs.
@@ -209,4 +180,93 @@ function incompatible({ pkg, dependency, range, next, releasing, at }) {
     `claim reaches npm. Or keep ${dependency} inside the range ${pkg.name}\n` +
     `already supports.`
   );
+}
+
+/**
+ * Check that no peer claim has stopped accepting a version it was already published accepting.
+ *
+ * `auditPeerCompatibility` above asks one question — does this range accept what is about to ship —
+ * and a range can satisfy it while having become *narrower*. That is not hypothetical: when
+ * @kinetixui/tokens crossed @kinetixui/angular's `<0.27.0` ceiling, `changeset version` rewrote the
+ * range to `>=0.27.0 <0.28.0`. It accepts the new tokens, so the audit above passes, and the floor
+ * silently rose from 0.24.0 — a *patch* release of @kinetixui/angular telling every consumer on
+ * tokens 0.24–0.26 that it no longer supports them.
+ *
+ * So the floor is a declared value, not an inferred one. `peerFloor` in
+ * `release/publish-packages.json` names the oldest version of each workspace peer a package is
+ * published as supporting, and this asserts the manifest's range still accepts that version.
+ * Raising a floor then means editing two files that each say so in plain text, which is the point:
+ * the decision is visible in review rather than computed into a Version PR.
+ *
+ * What it checks is the lower bound, not the whole shape of the range: a range that kept 0.24.0 and
+ * excluded something in the middle would pass. That case has never occurred here and inventing a
+ * guard for it would mean declaring the full supported set of every peer; the bound that actually
+ * moved is the one asserted.
+ *
+ * Deliberately NOT read from git. A baseline recovered from the base branch would be unavailable in
+ * a shallow CI checkout, and a gate that skips itself when it cannot find its input is a gate that
+ * cannot fail. A committed datum is available everywhere or absent loudly.
+ *
+ * Deliberately NOT escapable. There is no per-package waiver, because no release has needed to drop
+ * peer support yet; when one does, the floor is what it edits, with a changeset saying why.
+ *
+ * @param {object} input
+ * @param {{name: string, version: string, directory: string, manifest: object}[]} input.packages
+ * @param {{name: string, peerFloor?: Record<string, string>}[]} input.allowlist
+ * @returns {{ok: boolean, errors: string[], checked: object[]}}
+ */
+export function auditPeerFloors({ packages, allowlist }) {
+  const byName = new Map(packages.map((pkg) => [pkg.name, pkg]));
+  const errors = [];
+  const checked = [];
+
+  for (const entry of allowlist) {
+    const floors = entry.peerFloor;
+    if (!floors || typeof floors !== "object") continue;
+    const pkg = byName.get(entry.name);
+    if (!pkg) continue; // `classify()` already reports an allowlist entry with no package
+
+    const at = `${pkg.directory}/package.json`;
+    for (const [dependency, floor] of Object.entries(floors)) {
+      if (semver.valid(floor) === null) {
+        errors.push(
+          `${entry.name}: release/publish-packages.json declares a peerFloor for ${dependency} of ` +
+            `"${floor}", which is not a single semver version. The floor is one version — the oldest ` +
+            `one still supported — not a range.`,
+        );
+        continue;
+      }
+
+      const range = pkg.manifest?.[PEER_FIELD]?.[dependency];
+      if (typeof range !== "string") {
+        errors.push(
+          `${entry.name}: release/publish-packages.json declares a peerFloor for ${dependency}, ` +
+            `but ${at} declares no ${dependency} peer range at all. Either the peer was removed — ` +
+            `which drops support for the version the floor names — or the floor is stale.`,
+        );
+        continue;
+      }
+      if (semver.validRange(range) === null) continue; // auditPeerCompatibility reports the parse failure
+
+      const keeps = semver.satisfies(floor, range);
+      checked.push({ dependent: entry.name, dependency, floor, range, keeps });
+      if (!keeps) {
+        errors.push(
+          `${entry.name}@${pkg.version} declares ${dependency} "${range}",\n` +
+            `which no longer accepts ${dependency}@${floor} — the oldest version this package is\n` +
+            `published as supporting.\n` +
+            `\n` +
+            `Narrowing a peer range drops support a published artifact already claimed. A consumer on\n` +
+            `an older ${dependency} that takes this release gets an unmet peer, and if this package is\n` +
+            `releasing as a patch, nothing in its version tells them so.\n` +
+            `\n` +
+            `Widening the ceiling is the usual fix: keep the lower bound and raise the upper one in\n` +
+            `${at}. If support really is being dropped, say so — raise peerFloor for\n` +
+            `${dependency} in release/publish-packages.json and add a changeset explaining it.`,
+        );
+      }
+    }
+  }
+
+  return { ok: errors.length === 0, errors, checked };
 }

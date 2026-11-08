@@ -10,6 +10,7 @@ import { CATALOG_PLATFORMS, NATIVE_PLATFORMS, evidenceStatus, type Platform } fr
 type Guidance = { type: "native-equivalent" | "composition" | "planned"; reason?: string; wave?: string };
 type ManifestComponent = {
   status: string;
+  kind: "component" | "recipe";
   platforms: string[];
   platformNote?: string;
   platformGuidance?: Record<string, Guidance>;
@@ -26,14 +27,15 @@ export const platformCount = count;
 /**
  * Catalogue entries that the manifest itself says are not components.
  *
- * `combobox` is a documented composition of `Command`, and its `platformNote` says so in as many words.
- * Detected from that note rather than named here, so a second recipe needs no edit — the same derivation
- * `scripts/marketing-stats.mjs` uses, which is why the two agree.
+ * `combobox` is a documented composition of `Command`. This used to be detected by matching "not a component"
+ * in its `platformNote`; the manifest now declares `kind: "recipe"` and `check:manifest` holds the note and the
+ * kind to each other, so the prose stays true for the marketing drafts that still parse it while the code reads
+ * a field. `scripts/marketing-stats.mjs` reads the same field, which is why the two agree.
  *
  * This matters publicly: "98 components" overstates by one, and `marketing/CLAIMS.md` B2 makes the honest
  * phrasing a condition of quoting the number at all.
  */
-export const recipes = all.filter((n) => /not a component/i.test(components[n]!.platformNote ?? ""));
+export const recipes = all.filter((n) => components[n]!.kind === "recipe");
 
 /** Entries that really are components — 98 minus the documented recipes. */
 export const componentCount = componentTotal - recipes.length;

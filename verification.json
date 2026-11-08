@@ -69,8 +69,8 @@
     },
     "Compose": {
       "build": 90,
-      "interaction": 7,
-      "accessibility": 7,
+      "interaction": 9,
+      "accessibility": 10,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 7,
@@ -79,11 +79,11 @@
     },
     "Flutter": {
       "build": 90,
-      "interaction": 6,
-      "accessibility": 6,
+      "interaction": 7,
+      "accessibility": 7,
       "rtl": 58,
       "largeText": 58,
-      "reducedMotion": 7,
+      "reducedMotion": 8,
       "visual": 0,
       "published": 0
     }
@@ -113,15 +113,15 @@
     "Compose": {
       "not-implemented": 19,
       "source": 0,
-      "build": 86,
-      "headless": 4,
+      "build": 83,
+      "headless": 7,
       "runtime": 0
     },
     "Flutter": {
       "not-implemented": 19,
       "source": 0,
-      "build": 85,
-      "headless": 5,
+      "build": 84,
+      "headless": 6,
       "runtime": 0
     }
   },
@@ -1039,6 +1039,21 @@
         ]
       },
       {
+        "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt",
+        "environment": "robolectric",
+        "kinds": [
+          "accessibility",
+          "interaction"
+        ],
+        "components": [
+          "checkbox",
+          "radio-group",
+          "switch",
+          "toggle",
+          "toggle-group"
+        ]
+      },
+      {
         "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt",
         "environment": "robolectric",
         "kinds": [
@@ -1184,6 +1199,20 @@
         ]
       },
       {
+        "file": "packages/ui-flutter/test/selection_motion_test.dart",
+        "environment": "flutter_test",
+        "kinds": [
+          "accessibility",
+          "interaction",
+          "reducedMotion"
+        ],
+        "components": [
+          "checkbox",
+          "radio-group",
+          "toggle"
+        ]
+      },
+      {
         "file": "packages/ui-flutter/test/semantics_test.dart",
         "environment": "flutter_test",
         "kinds": [
@@ -1305,7 +1334,7 @@
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1379,7 +1408,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1445,7 +1474,7 @@
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2144,7 +2173,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -2183,9 +2212,11 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ],
         "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284",
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-150"
         ]
       },
@@ -2194,9 +2225,12 @@
           "packages/ui-flutter (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-flutter/test/interaction_test.dart:18-111"
+          "packages/ui-flutter/test/interaction_test.dart:18-111",
+          "packages/ui-flutter/test/selection_motion_test.dart:156-274",
+          "packages/ui-flutter/test/selection_motion_test.dart:275-305"
         ],
         "accessibility": [
+          "packages/ui-flutter/test/selection_motion_test.dart:306-394",
           "packages/ui-flutter/test/semantics_test.dart:30-116"
         ],
         "rtl": [
@@ -2204,6 +2238,9 @@
         ],
         "largeText": [
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/selection_motion_test.dart:275-305"
         ]
       }
     },
@@ -2582,7 +2619,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2645,7 +2682,7 @@
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2774,7 +2811,7 @@
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2842,7 +2879,7 @@
           "packages/ui/src/components-direction-portal.test.tsx:48-483"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2972,7 +3009,7 @@
           "packages/ui/src/components-direction-portal.test.tsx:48-483"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3042,7 +3079,7 @@
           "packages/ui/src/components-overlay.test.tsx:325-491"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3353,7 +3390,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3377,7 +3414,7 @@
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3546,7 +3583,7 @@
           "packages/ui/src/components-form.test.tsx:311-562"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3613,7 +3650,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3682,7 +3719,7 @@
           "packages/ui/src/components-form.test.tsx:311-562"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3837,7 +3874,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4042,7 +4079,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4190,7 +4227,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4261,7 +4298,7 @@
           "packages/ui/src/components-form.test.tsx:311-562"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4317,7 +4354,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4509,7 +4546,7 @@
           "scripts/a11y-browser.mjs:35-560"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4678,7 +4715,7 @@
           "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4760,7 +4797,7 @@
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4787,7 +4824,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4847,7 +4884,7 @@
           "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4974,7 +5011,7 @@
           "packages/ui/src/components-selection.test.tsx:138-208"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -5014,11 +5051,23 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ]
       },
       "Flutter": {
         "build": [
           "packages/ui-flutter (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-flutter/test/selection_motion_test.dart:156-274"
+        ],
+        "accessibility": [
+          "packages/ui-flutter/test/selection_motion_test.dart:306-394"
         ],
         "rtl": [
           "packages/ui-flutter/test/adaptivity_test.dart:32-68"
@@ -5103,7 +5152,7 @@
           "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5183,7 +5232,7 @@
           "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5317,7 +5366,7 @@
           "packages/ui/src/components-form.test.tsx:311-562"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5438,7 +5487,7 @@
           "packages/ui/src/components-overlay.test.tsx:325-491"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5625,7 +5674,7 @@
           "packages/ui/src/components-form.test.tsx:311-562"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5870,7 +5919,7 @@
           "packages/ui/src/switch-motion.test.tsx:263-303"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -5920,13 +5969,15 @@
         ],
         "interaction": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:53-203"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:67-343"
         ],
         "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284",
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-150"
         ],
         "reducedMotion": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:53-203"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:67-343"
         ]
       },
       "Flutter": {
@@ -6111,7 +6162,7 @@
           "packages/ui/src/components-keyboard.test.tsx:259-314"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -6254,7 +6305,7 @@
           "packages/ui/src/components-form.test.tsx:311-562"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6322,7 +6373,7 @@
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6343,7 +6394,7 @@
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6398,7 +6449,7 @@
           "packages/ui/src/toggle-motion.test.tsx:217-281"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -6437,7 +6488,11 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ]
       },
       "Flutter": {
@@ -6445,7 +6500,8 @@
           "packages/ui-flutter (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-flutter/test/interaction_test.dart:18-111"
+          "packages/ui-flutter/test/interaction_test.dart:18-111",
+          "packages/ui-flutter/test/selection_motion_test.dart:156-274"
         ],
         "accessibility": [
           "packages/ui-flutter/test/semantics_test.dart:30-116"
@@ -6476,7 +6532,7 @@
           "packages/ui/src/toggle-motion.test.tsx:217-281"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -6516,6 +6572,12 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ]
       },
       "Flutter": {
@@ -6548,7 +6610,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -8900,10 +8962,22 @@
         "level": "build"
       },
       "Compose": {
-        "level": "build"
+        "level": "headless",
+        "interaction": [
+          "robolectric"
+        ],
+        "accessibility": [
+          "robolectric"
+        ]
       },
       "Flutter": {
-        "level": "build"
+        "level": "headless",
+        "interaction": [
+          "flutter_test"
+        ],
+        "accessibility": [
+          "flutter_test"
+        ]
       }
     },
     "rating": {
@@ -9633,8 +9707,11 @@
         "level": "build"
       },
       "Compose": {
-        "level": "build",
+        "level": "headless",
         "interaction": [
+          "robolectric"
+        ],
+        "accessibility": [
           "robolectric"
         ]
       },
@@ -9674,7 +9751,13 @@
         "level": "build"
       },
       "Compose": {
-        "level": "build"
+        "level": "headless",
+        "interaction": [
+          "robolectric"
+        ],
+        "accessibility": [
+          "robolectric"
+        ]
       },
       "Flutter": {
         "level": "build"
@@ -9797,19 +9880,19 @@
       "source": 0,
       "build": 19,
       "headless": 0,
-      "runtime": 2
+      "runtime": 3
     },
     "Angular": {
       "not-implemented": 0,
       "source": 0,
-      "build": 20,
+      "build": 21,
       "headless": 1,
       "runtime": 0
     },
     "SwiftUI": {
       "not-implemented": 0,
       "source": 0,
-      "build": 21,
+      "build": 22,
       "headless": 0,
       "runtime": 0
     },
@@ -9817,14 +9900,14 @@
       "not-implemented": 0,
       "source": 0,
       "build": 18,
-      "headless": 3,
+      "headless": 4,
       "runtime": 0
     },
     "Flutter": {
       "not-implemented": 0,
       "source": 0,
       "build": 18,
-      "headless": 3,
+      "headless": 4,
       "runtime": 0
     }
   },
@@ -11919,6 +12002,128 @@
           ],
           "limitations": [
             "no interaction test",
+            "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
+          ]
+        }
+      }
+    },
+    "boarding-pass": {
+      "title": "Boarding pass",
+      "platforms": {
+        "React": {
+          "level": "runtime",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/boarding-pass.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:165-196",
+              "environment": "chromium"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/boarding-pass.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/BoardingPassBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "headless",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt:272-288",
+              "environment": "robolectric"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt:257-271",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (robolectric), not observed in a browser or on a device",
+            "accessibility tested headless only (robolectric), not observed in a browser or on a device"
+          ]
+        },
+        "Flutter": {
+          "level": "headless",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/boarding_pass_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/boarding_pass_block_test.dart:283-311",
+              "environment": "flutter_test"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/boarding_pass_block_test.dart:259-282",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (flutter_test), not observed in a browser or on a device",
             "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
           ]
         }
