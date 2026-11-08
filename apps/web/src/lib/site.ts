@@ -1,4 +1,5 @@
 import uiPkg from "@kinetixui/ui/package.json";
+import { CATEGORY_ORDER as TAXONOMY_ORDER, categoryOf as categoryOfSlug } from "./component-taxonomy";
 import { IOT_MATURITY } from "./iot";
 import { PLATFORMS, PLATFORM_DEFINITIONS, type Platform } from "./platform-parity";
 import { availabilityClause } from "./platform-prose";
@@ -189,62 +190,20 @@ export const componentDocs: NavItem[] = [
   built("Virtual List", "virtual-list"),
 ];
 
-/** slug → sidebar category. Mirrors the taxonomy in scripts/gen-stories.mjs. */
-export const COMPONENT_CATEGORY: Record<string, string> = {
-  "aspect-ratio": "Foundations", separator: "Foundations", skeleton: "Foundations",
-  spinner: "Foundations", label: "Foundations", image: "Foundations", "code-block": "Foundations",
-  kbd: "Foundations", "direction-provider": "Foundations",
+/**
+ * The functional taxonomy, generated from `components.manifest.json` (`pnpm gen:manifest`).
+ *
+ * Both of these used to be hand-written here, with a 107-entry twin in `scripts/gen-stories.mjs` and a
+ * comment in each claiming to mirror the other. They had drifted, and an unknown slug fell back to
+ * "Data Display" (CAT-BUG-019). Re-exported rather than re-declared so every existing import keeps working.
+ */
+export { COMPONENT_CATEGORY, CATEGORY_ORDER, CATEGORY_RULE, categoryOf } from "@/lib/component-taxonomy";
 
-  input: "Form Inputs", textarea: "Form Inputs", checkbox: "Form Inputs", "radio-group": "Form Inputs",
-  select: "Form Inputs", "native-select": "Form Inputs", "multi-select": "Form Inputs", slider: "Form Inputs", switch: "Form Inputs", "input-otp": "Form Inputs",
-  "input-group": "Form Inputs", "password-input": "Form Inputs", "number-input": "Form Inputs",
-  field: "Form Inputs", form: "Form Inputs", "file-upload": "Form Inputs", "date-picker": "Form Inputs",
-  calendar: "Form Inputs", rating: "Form Inputs", "color-picker": "Form Inputs", "markdown-editor": "Form Inputs",
-  "guest-picker": "Form Inputs", "country-select": "Form Inputs", "phone-input": "Form Inputs",
-  "date-range-input": "Form Inputs", "time-slot-picker": "Form Inputs", "address-fields": "Form Inputs",
-
-  button: "Controls & Actions", "button-group": "Controls & Actions", toggle: "Controls & Actions",
-  "toggle-group": "Controls & Actions", "segmented-control": "Controls & Actions",
-  fab: "Controls & Actions", pagination: "Controls & Actions", command: "Controls & Actions",
-  combobox: "Controls & Actions", "comparison-slider": "Controls & Actions",
-
-  breadcrumb: "Navigation", tabs: "Navigation", "tab-bar": "Navigation", "navigation-menu": "Navigation",
-  "page-header": "Navigation", "tree-view": "Navigation",
-  "navigation-bar": "Navigation", "app-bar": "Navigation", menubar: "Navigation", sidebar: "Navigation",
-  stepper: "Navigation", "table-of-contents": "Navigation",
-
-  dialog: "Overlays", "alert-dialog": "Overlays", sheet: "Overlays", drawer: "Overlays",
-  popover: "Overlays", "hover-card": "Overlays", tooltip: "Overlays", "dropdown-menu": "Overlays",
-  "notification-center": "Overlays", tour: "Overlays",
-  "context-menu": "Overlays", modal: "Overlays",
-
-  alert: "Feedback", inform: "Feedback", banner: "Feedback", progress: "Feedback", "circular-progress": "Feedback",
-  empty: "Feedback", "result-state": "Feedback",
-  sonner: "Feedback", badge: "Feedback", tag: "Feedback", metric: "Feedback",
-
-  accordion: "Data Display", card: "Data Display", table: "Data Display", "data-table": "Data Display", "data-grid": "Data Display",
-  carousel: "Data Display", chart: "Data Display", avatar: "Data Display", "avatar-group": "Data Display", collapsible: "Data Display",
-  "scroll-area": "Data Display", resizable: "Data Display", list: "Data Display", quote: "Data Display",
-  footer: "Data Display", "audio-player": "Data Display", "description-list": "Data Display",
-  timeline: "Data Display", marquee: "Data Display", "message-bubble": "Data Display",
-  "virtual-list": "Data Display", "json-viewer": "Data Display", "diff-viewer": "Data Display",
-  "kanban-board": "Data Display", "reference-code": "Data Display", "price-breakdown": "Data Display",
-  "pass-card": "Data Display", "amount-display": "Data Display",
-};
-
-export const CATEGORY_ORDER = [
-  "Foundations",
-  "Form Inputs",
-  "Controls & Actions",
-  "Navigation",
-  "Overlays",
-  "Feedback",
-  "Data Display",
-] as const;
-
-const componentGroups: NavGroup[] = CATEGORY_ORDER.map((title) => ({
+const componentGroups: NavGroup[] = TAXONOMY_ORDER.map((title) => ({
   title,
-  items: componentDocs.filter((i) => (COMPONENT_CATEGORY[slugOf(i.href)] ?? "Data Display") === title),
+  // categoryOf, not a lookup with a default: a component missing from the manifest throws here rather than
+  // appearing under Data Display, and check:manifest is what keeps the throw unreachable.
+  items: componentDocs.filter((i) => categoryOfSlug(slugOf(i.href)) === title),
 }));
 
 /** The docs' own guide pages, without the per-component groups. What the mobile menu lists. */
