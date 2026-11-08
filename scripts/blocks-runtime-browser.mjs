@@ -18,6 +18,13 @@
  * Only what a passage asserts counts. The accessibility pass runs axe over each block's own preview in light
  * and dark, left-to-right and right-to-left. The interaction passes drive one block each and assert what changed:
  * order summary by keyboard and by pointer, receipt and the boarding pass by keyboard. A block with no interaction passage here stays Build verified on React.
+ *
+ * ── Whose failure is it ───────────────────────────────────────────────
+ * A failed request is attributed by its **origin**, never by the wording of an error message, following
+ * scripts/global-search-browser.mjs. A same-origin failure is this site's defect and fails the gate; another
+ * origin's failure is listed and does not, because the blocks are not answerable for it. The one thing wording
+ * is still used for is to drop Chromium's bare "Failed to load resource" console line, which carries no URL and
+ * so cannot say whose failure it is — the response listener reports that same failure with its URL instead.
  */
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -35,14 +42,43 @@ const fail = (msg) => failures.push(msg);
 const passed = [];
 const ok = (msg) => passed.push(msg);
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
-const errors = [];
 
-async function open({ scheme = "light", dir = "ltr", width = 1280, permissions = [] } = {}) {
+const ORIGIN = new URL(base).origin;
+/** One run's collected failures: this site's own, which fail the gate, and other origins', which are listed. */
+const sink = () => ({ firstParty: [], thirdParty: new Set() });
+const live = sink();
+
+/**
+ * Who owns a response failure. `null` when nothing failed. The decision is the request's origin and status
+ * — two facts about the request — and never the text of a message, which no origin owns.
+ */
+function classifyResponse(status, url) {
+  if (status < 400) return null;
+  const { origin, pathname } = new URL(url);
+  return origin === ORIGIN ? { party: "first", message: `${status} for ${pathname}` } : { party: "third", message: `${status} ${origin}${pathname}` };
+}
+
+function watch(page, into = live) {
+  page.on("pageerror", (e) => into.firstParty.push(e.message));
+  page.on("console", (m) => {
+    // Chromium logs a failed request as a bare "Failed to load resource" with no URL, so its wording cannot say
+    // whose failure it is. The response listener below reports that same failure with its URL, which can.
+    if (/^Failed to load resource/.test(m.text())) return;
+    if (m.type() === "error") into.firstParty.push(m.text());
+  });
+  page.on("response", (r) => {
+    const owner = classifyResponse(r.status(), r.url());
+    if (!owner) return;
+    if (owner.party === "first") into.firstParty.push(owner.message);
+    else into.thirdParty.add(owner.message);
+  });
+  return page;
+}
+
+async function open({ scheme = "light", dir = "ltr", width = 1280, permissions = [], into = live } = {}) {
   const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme, reducedMotion: "reduce" });
   if (permissions.length) await context.grantPermissions(permissions, { origin: base });
-  const page = await context.newPage();
-  page.on("pageerror", (e) => errors.push(e.message));
-  page.on("console", (m) => (m.type() === "error" && !/^Failed to load resource/.test(m.text()) ? errors.push(m.text()) : null));
+  const page = watch(await context.newPage(), into);
   await page.goto(`${base}/blocks`);
   await page.waitForLoadState("networkidle");
   await page.evaluate(
@@ -210,7 +246,61 @@ for (const width of [390, 1280])
   }
 if (!failures.some((f) => f.startsWith("layout"))) ok("layout: order-summary, receipt and boarding-pass stay inside the viewport at 390 and 1280, LTR and RTL");
 
-if (errors.length) for (const e of [...new Set(errors)]) fail(`console: ${e}`);
+/* ── controls: the attribution above, exercised through the same listener the run uses ──────────────
+ * Origin attribution is only worth having if it actually fires, and if it fires on the side it claims. These
+ * drive real responses through `watch` into a throwaway sink, so a control can assert both buckets without
+ * putting anything in the run's own. Each one fails this gate when the classifier stops telling the two apart.
+ */
+{
+  const probe = sink();
+  const { context, page } = await open({ into: probe });
+  const settle = () => page.waitForTimeout(250);
+  // the real third party this site talks to: its own Content-Security-Policy allows connect-src to 'self' and
+  // api.github.com only, so an invented origin never reaches the response listener at all
+  const THIRD = "https://api.github.com";
+  await page.route(`${THIRD}/**`, (route) =>
+    route.fulfill({
+      status: route.request().url().endsWith("/healthy") ? 200 : 503,
+      contentType: "text/plain",
+      // deliberately the wording a first-party failure would use: if attribution read messages, this would pass as ours
+      body: "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+    }),
+  );
+
+  // positive control — a same-origin failure is this site's and must fail the gate. Chromium's console calls this
+  // one a bare "Failed to load resource", which is exactly what the old wording-based rule dropped.
+  const ours = `/__kx-origin-control-${Date.now()}`;
+  const status = await page.evaluate(async (path) => (await fetch(path).catch(() => ({ status: 0 }))).status, ours);
+  await settle();
+  if (status !== 404) fail(`control: expected ${ours} to answer 404, got ${status}`);
+  if (!probe.firstParty.some((e) => e.includes(ours))) fail(`control: a same-origin 404 was not attributed to this site (${probe.firstParty.length} first-party entr(y/ies))`);
+  if ([...probe.thirdParty].some((e) => e.includes(ours))) fail("control: a same-origin failure was filed against another origin");
+
+  // negative control — another origin's outage is listed and must NOT fail the gate, whatever its message says
+  const before = probe.firstParty.length;
+  await page.evaluate(async (u) => void (await fetch(`${u}/__kx-origin-control/probe`).catch(() => {})), THIRD);
+  await settle();
+  if (!probe.thirdParty.has("503 https://api.github.com/__kx-origin-control/probe"))
+    fail(`control: a third-party 503 was not listed (${[...probe.thirdParty].join(", ") || "nothing listed"})`);
+  if (probe.firstParty.length !== before) fail(`control: a third-party 503 was attributed to this site (${probe.firstParty.slice(before).join("; ")})`);
+
+  // negative control — a third-party response that SUCCEEDS is not a failure, however alarming its body reads
+  const quiet = { first: probe.firstParty.length, third: probe.thirdParty.size };
+  await page.evaluate(async (u) => void (await fetch(`${u}/__kx-origin-control/healthy`).catch(() => {})), THIRD);
+  await settle();
+  if (probe.firstParty.length !== quiet.first || probe.thirdParty.size !== quiet.third) fail("control: a third-party 200 whose body reads like an error was recorded as a failure");
+
+  // and the status floor itself, on both sides, without a browser in the way
+  if (classifyResponse(200, `${base}/blocks`) !== null || classifyResponse(304, `${THIRD}/x`) !== null) fail("control: a response under 400 was classified as a failure");
+  if (classifyResponse(500, `${base}/x`)?.party !== "first" || classifyResponse(500, `${THIRD}/x`)?.party !== "third") fail("control: classifyResponse does not separate the two origins at the same status");
+
+  if (!failures.some((f) => f.startsWith("control"))) ok("controls: a same-origin 404 fails the gate, a third-party 503 is listed without failing it, and a third-party 200 reading like an error is neither");
+  await context.close();
+}
+
+if (live.firstParty.length) for (const e of [...new Set(live.firstParty)]) fail(`console: ${e}`);
+else ok("no page errors, console errors or failed same-origin requests");
+if (live.thirdParty.size) passed.push(`(not this site's) third-party requests failed: ${[...live.thirdParty].join(", ")}`);
 await browser.close();
 for (const p of passed) console.log(`  ✓ ${p}`);
 for (const f of failures) console.error(`  x ${f}`);
