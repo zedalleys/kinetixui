@@ -22,6 +22,7 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
+import { createFailureLog } from "./blocks-runtime-console.mjs";
 
 const arg = (name, fallback) => (process.argv.includes(name) ? process.argv[process.argv.indexOf(name) + 1] : fallback);
 const base = arg("--base", "http://127.0.0.1:3000").replace(/\/$/, "");
@@ -35,14 +36,18 @@ const fail = (msg) => failures.push(msg);
 const passed = [];
 const ok = (msg) => passed.push(msg);
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined });
-const errors = [];
+// Whose failure each browser event was, decided by the origin of the request that failed rather than by
+// how the console happened to word it. See blocks-runtime-console.mjs for why that distinction exists.
+const browserLog = createFailureLog(base);
 
 async function open({ scheme = "light", dir = "ltr", width = 1280, permissions = [] } = {}) {
   const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme, reducedMotion: "reduce" });
   if (permissions.length) await context.grantPermissions(permissions, { origin: base });
   const page = await context.newPage();
-  page.on("pageerror", (e) => errors.push(e.message));
-  page.on("console", (m) => (m.type() === "error" && !/^Failed to load resource/.test(m.text()) ? errors.push(m.text()) : null));
+  page.on("pageerror", (e) => browserLog.pageError({ url: page.url(), message: e.message }));
+  page.on("console", (m) => (m.type() === "error" ? browserLog.consoleError({ url: page.url(), text: m.text() }) : null));
+  page.on("response", (r) => browserLog.response({ url: r.url(), status: r.status() }));
+  page.on("requestfailed", (r) => browserLog.requestFailed({ url: r.url(), errorText: r.failure()?.errorText ?? "" }));
   await page.goto(`${base}/blocks`);
   await page.waitForLoadState("networkidle");
   await page.evaluate(
@@ -210,7 +215,11 @@ for (const width of [390, 1280])
   }
 if (!failures.some((f) => f.startsWith("layout"))) ok("layout: order-summary, receipt and boarding-pass stay inside the viewport at 390 and 1280, LTR and RTL");
 
-if (errors.length) for (const e of [...new Set(errors)]) fail(`console: ${e}`);
+const { failures: browserFailures, thirdParty } = browserLog.report();
+for (const e of browserFailures) fail(`console: ${e}`);
+// Reported, deliberately not failed: this site cannot answer for another host being down, and a product
+// gate that goes red when one is teaches its reader to re-run it rather than read it.
+if (thirdParty.length) ok(`(not this site's) third-party requests failed: ${thirdParty.join(", ")}`);
 await browser.close();
 for (const p of passed) console.log(`  ✓ ${p}`);
 for (const f of failures) console.error(`  x ${f}`);
