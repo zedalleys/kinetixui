@@ -53,6 +53,8 @@ beforeEach(() => {
 type Surface = {
   surface: string;
   source: "footer" | "not_found" | "component_page";
+  /** IA-5.21: which control on the surface, where `source` alone cannot say (both component-page paths share one). */
+  location: "footer" | "not_found" | "component_preview" | "component_onboarding";
   path: string;
   render: () => unknown;
   /** Some surfaces hide the link behind one step a reader takes anyway (the preview's Code tab). */
@@ -64,6 +66,7 @@ const SURFACES: readonly Surface[] = [
   {
     surface: "footer",
     source: "footer",
+    location: "footer",
     path: "/docs/theming",
     render: () => render(<><AnalyticsProvider /><SiteFooter /></>),
     link: () => within(screen.getByRole("contentinfo")).getByRole("link", { name: "Installation" }),
@@ -71,6 +74,7 @@ const SURFACES: readonly Surface[] = [
   {
     surface: "404 page",
     source: "not_found",
+    location: "not_found",
     path: "/docs/does-not-exist",
     render: () => render(<><AnalyticsProvider /><NotFound /></>),
     link: () => screen.getByRole("link", { name: "Installation" }),
@@ -78,6 +82,7 @@ const SURFACES: readonly Surface[] = [
   {
     surface: "component preview",
     source: "component_page",
+    location: "component_preview",
     path: "/docs/components/button",
     render: () => render(<><AnalyticsProvider /><ComponentPreview name="button-demo" /></>),
     // the setup link lives in the Code tab, which is where a reader who wants React source actually is
@@ -87,6 +92,7 @@ const SURFACES: readonly Surface[] = [
   {
     surface: "component onboarding (install strip)",
     source: "component_page",
+    location: "component_onboarding",
     path: "/docs/components/button",
     render: () => render(<><AnalyticsProvider /><ComponentMeta /></>),
     link: () => screen.getByRole("link", { name: "React Setup →" }),
@@ -94,7 +100,7 @@ const SURFACES: readonly Surface[] = [
 ];
 
 describe("every internal path to installation is attributed", () => {
-  it.each(SURFACES)("$surface: one click, exactly one cta_clicked from $source", async ({ path, source, render: renderSurface, reveal, link }) => {
+  it.each(SURFACES)("$surface: one click, exactly one cta_clicked from $source at $location", async ({ path, source, location, render: renderSurface, reveal, link }) => {
     nav.pathname = path;
     window.history.pushState({}, "", path);
     renderSurface();
@@ -102,7 +108,7 @@ describe("every internal path to installation is attributed", () => {
     const anchor = link();
     track.mockClear();
     await userEvent.click(anchor);
-    expect(track.mock.calls).toEqual([["cta_clicked", { source, target: "installation" }]]);
+    expect(track.mock.calls).toEqual([["cta_clicked", { source, target: "installation", location }]]);
   });
 
   it.each(SURFACES)("$surface: the CTA's destination is the installation page itself", async ({ path, render: r, reveal, link }) => {
@@ -123,7 +129,7 @@ describe("every internal path to installation is attributed", () => {
     expect(track.mock.calls.filter(([event]) => event === "cta_clicked")).toEqual([]);
   });
 
-  it.each(SURFACES)("$surface: a keyboard reaches the CTA and Enter produces the same single event", async ({ path, source, render: r, reveal, link }) => {
+  it.each(SURFACES)("$surface: a keyboard reaches the CTA and Enter produces the same single event", async ({ path, source, location, render: r, reveal, link }) => {
     nav.pathname = path;
     window.history.pushState({}, "", path);
     r();
@@ -138,7 +144,7 @@ describe("every internal path to installation is attributed", () => {
     await userEvent.keyboard("{Enter}");
     // The provider listens for `click`, which is what Enter on a focused anchor produces — so the keyboard path and
     // the pointer path are one event, not two code paths. (This is jsdom's activation, not a real browser's.)
-    expect(track.mock.calls).toEqual([["cta_clicked", { source, target: "installation" }]]);
+    expect(track.mock.calls).toEqual([["cta_clicked", { source, target: "installation", location }]]);
   });
 });
 

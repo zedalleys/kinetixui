@@ -71,7 +71,7 @@ function InstallStrip({ slug, pathname }: { slug: string; pathname: string }) {
                   other four platforms' setup links are not tagged `installation`. */}
               <Link
                 href={SETUP_SECTION_HREF[p]}
-                {...(p === "React" ? ctaAttrs("component_page", "installation") : {})}
+                {...(p === "React" ? ctaAttrs("component_page", "installation", "component_onboarding") : {})}
                 className="text-primary underline underline-offset-2"
               >
                 {/* named per platform for assistive tech; the visible words stay short and are part of the name */}

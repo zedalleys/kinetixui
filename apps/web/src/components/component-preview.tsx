@@ -169,7 +169,7 @@ export function ComponentPreview({
               has no platform property, and tagging all five would merge five destinations into one count. */}
           <Link
             href={setupHref[tab]}
-            {...(tab === "react" ? ctaAttrs("component_page", "installation") : {})}
+            {...(tab === "react" ? ctaAttrs("component_page", "installation", "component_preview") : {})}
             className="text-primary underline underline-offset-2"
           >
             {label} installation and setup

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 const LINKS: { href: string; label: string; cta?: ReturnType<typeof ctaAttrs> }[] = [
   { href: "/docs", label: "Documentation" },
   { href: "/components", label: "Components" },
-  { href: "/docs/installation", label: "Installation", cta: ctaAttrs("not_found", "installation") },
+  { href: "/docs/installation", label: "Installation", cta: ctaAttrs("not_found", "installation", "not_found") },
   { href: "/docs/changelog", label: "Changelog" },
 ];
 

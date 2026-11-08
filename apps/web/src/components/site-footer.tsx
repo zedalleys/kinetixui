@@ -13,7 +13,7 @@ const COLS: { title: string; links: { label: string; href: string; cta?: ReturnT
     title: "Docs",
     links: [
       { label: "Introduction", href: "/docs" },
-      { label: "Installation", href: "/docs/installation", cta: ctaAttrs("footer", "installation") },
+      { label: "Installation", href: "/docs/installation", cta: ctaAttrs("footer", "installation", "footer") },
       { label: "Theming", href: "/docs/theming" },
       { label: "Accessibility", href: "/docs/accessibility" },
     ],
