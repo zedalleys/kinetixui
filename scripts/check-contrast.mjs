@@ -36,17 +36,46 @@ for (const fam of Object.keys(prim)) {
   }
 }
 
-const lum = (hex) => {
-  const c = hex.replace("#", "");
-  const [r, g, b] = [0, 2, 4]
-    .map((i) => parseInt(c.slice(i, i + 2), 16) / 255)
+/**
+ * Relative luminance (WCAG 2.x) from channels in 0-255, which do NOT have to be
+ * integers.
+ *
+ * A colour from a token is an 8-bit hex, but a colour a component actually
+ * renders can be a composite — a status tint at 10% over a surface — and that
+ * composite is a real number per channel. Until 2026-11-05 this file rounded
+ * each composited channel to an 8-bit hex before measuring, which made dark
+ * `on-info-container` on `info`@0.1 over `muted` report **4.50:1 AA** when its
+ * true value is **4.4847:1**, below the bar; the emitted SwiftUI values give
+ * 4.4823:1. Rounding moved each channel by up to 0.4/255 and the true value sat
+ * 0.0153 under the threshold, so that was enough to manufacture a pass. Of the
+ * sixteen alpha pairs below it was the only one whose verdict the rounding
+ * changed, but one unearned green is one too many: a gate that cannot see the
+ * value it is judging is not evidence.
+ *
+ * So the threshold is applied to the unrounded composite. Rounding is for the
+ * printed hex only — presentation, never comparison.
+ */
+const lumCh = ([r, g, b]) => {
+  const [lr, lg, lb] = [r, g, b]
+    .map((v) => v / 255)
     .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
 };
-const ratio = (a, b) => {
-  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+const channels = (hex) => {
+  const c = hex.replace("#", "");
+  return [0, 2, 4].map((i) => parseInt(c.slice(i, i + 2), 16));
+};
+const lum = (hex) => lumCh(channels(hex));
+const ratioOfLum = (a, b) => {
+  const [hi, lo] = [a, b].sort((x, y) => y - x);
   return (hi + 0.05) / (lo + 0.05);
 };
+const ratio = (a, b) => ratioOfLum(lum(a), lum(b));
+/** The composite a component renders, per channel, unrounded. */
+const over = (fill, surface, alpha) =>
+  [0, 1, 2].map((i) => channels(fill)[i] * alpha + channels(surface)[i] * (1 - alpha));
+/** An unrounded composite shown as a hex. For the log; never measured. */
+const asHex = (ch) => `#${ch.map((v) => Math.round(v).toString(16).padStart(2, "0")).join("")}`;
 
 // Real foreground/surface pairs components render as body text — must clear AA.
 // `fg` is drawn as text on `bg`; every entry maps to a class combo that ships
@@ -93,6 +122,18 @@ const ALPHA_TEXT_PAIRS = [
   // Native Banner/Inform draw the same text on the same tint (`onInfoContainer`); a banner inside a
   // muted panel is the tighter case — `info` itself is 3.90:1 there.
   ["on-info-container", "info", 0.1, "muted", "Banner/Inform information on a muted surface"],
+  // The other three statuses draw the same shape — a tinted bar or medallion with the status colour as
+  // its text — in Banner, Inform and ResultState. They were not measured here, and two of them failed:
+  // raw `success` is 4.20:1 on its own 15% tint over `muted` (light) and 4.4982:1 (dark), raw
+  // `destructive` is 4.28:1 on its own 10% tint over `muted` (dark). Each now has an `on-container`
+  // sibling tuned against `muted`, the tightest surface these notices ship on, and every status is
+  // measured on both surfaces so the asymmetry that hid those two cannot come back.
+  ["on-success-container", "success", 0.15, "background", "Banner/Inform/ResultState success"],
+  ["on-success-container", "success", 0.15, "muted", "Banner/Inform/ResultState success on a muted surface"],
+  ["on-warning-container", "warning", 0.15, "background", "Banner/Inform/ResultState warning"],
+  ["on-warning-container", "warning", 0.15, "muted", "Banner/Inform/ResultState warning on a muted surface"],
+  ["on-destructive-container", "destructive", 0.1, "background", "Banner/Inform/ResultState error"],
+  ["on-destructive-container", "destructive", 0.1, "muted", "Banner/Inform/ResultState error on a muted surface"],
   // IoT device, group and activity cards tint their surface to carry state. `--muted-foreground`
   // is tuned against `--background` and `--muted` and has no margin left on a 10% tint (4.43:1 on
   // primary, 4.33:1 on destructive), which is how three contrast violations reached main unseen.
@@ -211,11 +252,13 @@ for (const mode of ["light", "dark"]) {
       failures += 1;
       continue;
     }
-    const bl = (i) => Math.round(parseInt(S[fill].slice(1 + 2 * i, 3 + 2 * i), 16) * alpha + parseInt(S[surface].slice(1 + 2 * i, 3 + 2 * i), 16) * (1 - alpha));
-    const blended = `#${[0, 1, 2].map((i) => bl(i).toString(16).padStart(2, "0")).join("")}`;
-    const r = ratio(S[fg], blended);
+    // Measured on the unrounded composite; the hex is printed, not compared.
+    const blendedCh = over(S[fill], S[surface], alpha);
+    const r = ratioOfLum(lum(S[fg]), lumCh(blendedCh));
     if (r < 4.5) failures += 1;
-    console.log(`  ${`${fg} / ${fill}@${alpha}`.padEnd(44)} ${r.toFixed(2)}:1  ${r >= 4.5 ? "AA" : "** FAIL **"}  (${where})`);
+    console.log(
+      `  ${`${fg} / ${fill}@${alpha}`.padEnd(44)} ${r.toFixed(4)}:1  ${r >= 4.5 ? "AA" : "** FAIL **"}  over ${asHex(blendedCh)}  (${where})`,
+    );
   }
 
   console.log(`--- ${mode} — explicit action states match the web's derivation ---`);

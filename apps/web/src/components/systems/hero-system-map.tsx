@@ -21,9 +21,10 @@ import { breakable } from "./breakable";
  *
  * Layout: one structure at every width (no second tree hidden with CSS). The outputs and the platforms share a
  * grid (`.kx-map-grid`, subgrid): side by side in rows on a phone — each output beside the platforms that read
- * it, the token boundary a dashed rule between the two columns — and in columns from 34rem, where the CSS
- * output spans the two web platforms it feeds. Either way the generated layer, the boundary and the written
- * layer are all on screen, and four outputs visibly feed five platforms.
+ * it, the token boundary a dashed rule between the two columns — and in columns from 34rem, where the outputs
+ * share one row of equal tracks regardless of how many platforms each feeds. Either way the generated layer, the
+ * boundary and the written layer are all on screen, and four outputs visibly feed five platforms — the fan-out
+ * is carried by the traces, which are measured from the real boxes, not by one output being wider than another.
  *
  * Semantics: the platforms are a tablist and the detail overlay is its tabpanel, so a keyboard or screen-reader
  * user gets exactly what a pointer user gets — selecting a platform is the interaction, hovering only
@@ -456,7 +457,7 @@ export function HeroSystemMap({
         dir={dir}
         orientation={columns ? "horizontal" : "vertical"}
         className="kx-map-grid mt-8"
-        style={{ ["--kx-impl" as string]: platforms.length }}
+        style={{ ["--kx-impl" as string]: platforms.length, ["--kx-outputs" as string]: outputs.length }}
       >
         {/* ── the token boundary ── */}
         <p className="kx-map-boundary flex items-center gap-3">
@@ -559,11 +560,12 @@ function MapTraces({
 
   return (
     <svg
+      data-map-traces=""
       aria-hidden="true"
       focusable="false"
-      className="pointer-events-none absolute inset-0 overflow-visible"
-      width={geometry.width}
-      height={geometry.height}
+      className="overflow-visible"
+      // Sized by its own `inset`, out of flow and untouchable inline: see the note in `trace-layer.tsx`.
+      style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
       viewBox={`0 0 ${geometry.width} ${geometry.height}`}
     >
       {geometry.generated.map((g) => (

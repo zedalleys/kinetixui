@@ -30,6 +30,7 @@ import { CreateActions } from "./create-actions";
 import { CreateExport } from "./create-export";
 import { CreatePreview, SCENE_LABELS } from "./create-preview";
 import { CreateSidebar } from "./create-sidebar";
+import { SectionHead } from "@/components/section-head";
 
 /**
  * The workspace shell.
@@ -204,32 +205,39 @@ export function CreateWorkspace({ initialConfig }: { initialConfig?: CreateConfi
           {/* Sticky on desktop only, and only as tall as the viewport: the panel is long now, and a
               preview that scrolled away would mean judging a colour from memory. */}
           <div className="lg-rem:sticky lg-rem:top-20">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
-              <div className="flex items-baseline gap-4">
-                <span className="font-mono text-body-sm font-medium text-primary">[08]</span>
-                {/* Named for what it is. A browser rendering the web components — not a SwiftUI, Compose
-                    or Flutter preview, and never to be captioned as one. */}
-                <h2 id="create-preview-heading" className="eyebrow">
-                  Kinetix theme preview
-                </h2>
-              </div>
-
-              {/* One scene at a time: the library SegmentedControl, a radiogroup with one tab stop. */}
-              <SegmentedControl
-                aria-label="Preview scene"
-                dir={dir}
-                value={config.previewScene}
-                onValueChange={(scene) => {
-                  if (scene) dispatch({ type: "set-scene", scene: scene as PreviewScene });
-                }}
-              >
-                {PREVIEW_SCENES.map((scene) => (
-                  <SegmentedControlItem key={scene} value={scene} className="text-sm">
-                    {SCENE_LABELS[scene]}
-                  </SegmentedControlItem>
-                ))}
-              </SegmentedControl>
-            </div>
+            {/* The same SectionHead the configuration column's six sections use, rather than the
+                hand-rolled copy that stood here. The copy had drifted — `items-center` and `gap-3`
+                against the shared head's `items-baseline` and `gap-x-4` — so the two columns'
+                rules began on the same line while the text under them did not: [08] and its label
+                sat 11px below [01] and its label. Nothing here is new; it is the shared head with
+                the scene switcher in its actions slot. */}
+            <SectionHead
+              index="08"
+              label="Kinetix theme preview"
+              actions={
+                /* One scene at a time: the library SegmentedControl, a radiogroup with one tab stop. */
+                <SegmentedControl
+                  aria-label="Preview scene"
+                  dir={dir}
+                  value={config.previewScene}
+                  onValueChange={(scene) => {
+                    if (scene) dispatch({ type: "set-scene", scene: scene as PreviewScene });
+                  }}
+                >
+                  {PREVIEW_SCENES.map((scene) => (
+                    <SegmentedControlItem key={scene} value={scene} className="text-sm">
+                      {SCENE_LABELS[scene]}
+                    </SegmentedControlItem>
+                  ))}
+                </SegmentedControl>
+              }
+            />
+            {/* Named for what it is. A browser rendering the web components — not a SwiftUI, Compose
+                or Flutter preview, and never to be captioned as one. Visually the eyebrow above is the
+                heading; this carries it into the outline, the same way the configuration sections do. */}
+            <h2 id="create-preview-heading" className="sr-only">
+              Kinetix theme preview
+            </h2>
 
             <div className="mt-4 overflow-hidden rounded-xl border border-border shadow-sm">
               <div className="max-h-[70svh] min-h-[32rem] overflow-y-auto">

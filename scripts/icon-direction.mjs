@@ -25,6 +25,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { contrast, framer, serveStatic } from "./visual-harness.mjs";
+import { storyId } from "./story-id.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -41,17 +42,17 @@ const DPR = 4;
  * direction that must hold in both.
  */
 const CASES = [
-  { component: "NavigationBar", story: "navigation-navigationbar--default", icon: (p) => p.getByRole("button", { name: "Back" }).locator("svg"), along: "inline start", label: "Back" },
-  { component: "Pagination", story: "controls-actions-pagination--default", icon: (p) => p.getByRole("link", { name: "Go to previous page" }).locator("svg"), along: "inline start", label: "Previous" },
-  { component: "Pagination", story: "controls-actions-pagination--default", icon: (p) => p.getByRole("link", { name: "Go to next page" }).locator("svg"), along: "inline end", label: "Next" },
-  { component: "Breadcrumb", story: "navigation-breadcrumb--default", icon: (p) => p.locator('li[role="presentation"] svg.lucide-chevron-right').first(), along: "inline end", label: "separator" },
-  { component: "JsonViewer", story: "data-display-jsonviewer--default", icon: (p) => p.locator('[role="treeitem"][aria-expanded="false"] > div > button svg.lucide-chevron-right').first(), along: "inline end", label: "collapsed disclosure" },
-  { component: "JsonViewer", story: "data-display-jsonviewer--default", icon: (p) => p.getByRole("button", { name: "Collapse" }).nth(1).locator("svg"), fixed: "down", label: "expanded disclosure",
+  { component: "NavigationBar", story: storyId("navigation-bar", "Default"), icon: (p) => p.getByRole("button", { name: "Back" }).locator("svg"), along: "inline start", label: "Back" },
+  { component: "Pagination", story: storyId("pagination", "Default"), icon: (p) => p.getByRole("link", { name: "Go to previous page" }).locator("svg"), along: "inline start", label: "Previous" },
+  { component: "Pagination", story: storyId("pagination", "Default"), icon: (p) => p.getByRole("link", { name: "Go to next page" }).locator("svg"), along: "inline end", label: "Next" },
+  { component: "Breadcrumb", story: storyId("breadcrumb", "Default"), icon: (p) => p.locator('li[role="presentation"] svg.lucide-chevron-right').first(), along: "inline end", label: "separator" },
+  { component: "JsonViewer", story: storyId("json-viewer", "Default"), icon: (p) => p.locator('[role="treeitem"][aria-expanded="false"] > div > button svg.lucide-chevron-right').first(), along: "inline end", label: "collapsed disclosure" },
+  { component: "JsonViewer", story: storyId("json-viewer", "Default"), icon: (p) => p.getByRole("button", { name: "Collapse" }).nth(1).locator("svg"), fixed: "down", label: "expanded disclosure",
     // A nested node, opened here: the root's chevron sits under the copy button in RTL (a layout finding
     // recorded in the audit, not an icon-direction one), so its ink is not the chevron's alone.
     prepare: (p) => p.getByRole("button", { name: "Expand" }).first().click() },
-  { component: "TreeView", story: "navigation-treeview--default", icon: (p) => p.locator('[role="treeitem"][aria-expanded="true"] svg.lucide-chevron-right').first(), fixed: "down", label: "expanded disclosure" },
-  { component: "Accordion", story: "data-display-accordion--default", icon: (p) => p.locator("button[aria-expanded] svg.lucide-chevron-down").first(), fixed: "down", label: "chevron (not directional)" },
+  { component: "TreeView", story: storyId("tree-view", "Default"), icon: (p) => p.locator('[role="treeitem"][aria-expanded="true"] svg.lucide-chevron-right').first(), fixed: "down", label: "expanded disclosure" },
+  { component: "Accordion", story: storyId("accordion", "Default"), icon: (p) => p.locator("button[aria-expanded] svg.lucide-chevron-down").first(), fixed: "down", label: "chevron (not directional)" },
 ];
 
 /**

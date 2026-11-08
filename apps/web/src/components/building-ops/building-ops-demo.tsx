@@ -165,7 +165,7 @@ export function BuildingOpsDemo({ initialScenario = DEFAULT_SCENARIO, seed = DEF
       data-scenario={scenario.id}
       className={cn("dark bg-background text-foreground [color-scheme:dark]", isFullscreen && "h-full overflow-auto")}
     >
-      <div className="mx-auto grid max-w-[110rem] grid-cols-[minmax(0,1fr)] gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 lg-rem:px-6">
+      <div className="mx-auto grid max-w-[110rem] grid-cols-[minmax(0,1fr)] gap-3 px-3 py-3 sm:gap-4 sm-rem:px-4 sm:py-4 lg-rem:px-6">
         {/* Console header */}
         <header className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">

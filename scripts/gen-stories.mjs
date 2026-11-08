@@ -48,40 +48,18 @@ const HANDWRITTEN = new Set(["button", "input", "textarea"]);
  */
 const NO_STORY = {};
 
-const GROUP = {
-  "aspect-ratio": "Foundations", separator: "Foundations", skeleton: "Foundations",
-  spinner: "Foundations", label: "Foundations", image: "Foundations", "code-block": "Foundations",
-  kbd: "Foundations",
-  input: "Form Inputs", textarea: "Form Inputs", checkbox: "Form Inputs", "radio-group": "Form Inputs",
-  select: "Form Inputs", "native-select": "Form Inputs", "multi-select": "Form Inputs", slider: "Form Inputs", switch: "Form Inputs", "input-otp": "Form Inputs",
-  "input-group": "Form Inputs", "password-input": "Form Inputs", "number-input": "Form Inputs",
-  field: "Form Inputs", form: "Form Inputs", "file-upload": "Form Inputs", "date-picker": "Form Inputs",
-  calendar: "Form Inputs", rating: "Form Inputs", "color-picker": "Form Inputs", "markdown-editor": "Form Inputs",
-  "guest-picker": "Form Inputs", "country-select": "Form Inputs", "phone-input": "Form Inputs",
-  "date-range-input": "Form Inputs", "time-slot-picker": "Form Inputs", "address-fields": "Form Inputs",
-  button: "Controls & Actions", "button-group": "Controls & Actions", toggle: "Controls & Actions", "toggle-group": "Controls & Actions", "segmented-control": "Controls & Actions",
-  fab: "Controls & Actions", pagination: "Controls & Actions", command: "Controls & Actions",
-  combobox: "Controls & Actions", "comparison-slider": "Controls & Actions",
-  breadcrumb: "Navigation", tabs: "Navigation", "tab-bar": "Navigation", "navigation-menu": "Navigation",
-  "page-header": "Navigation", "tree-view": "Navigation",
-  "navigation-bar": "Navigation", menubar: "Navigation", sidebar: "Navigation", stepper: "Navigation",
-  "table-of-contents": "Navigation",
-  dialog: "Overlays", "alert-dialog": "Overlays", sheet: "Overlays", drawer: "Overlays",
-  popover: "Overlays", "hover-card": "Overlays", tooltip: "Overlays", "dropdown-menu": "Overlays",
-  "notification-center": "Overlays", tour: "Overlays",
-  "context-menu": "Overlays", modal: "Overlays",
-  alert: "Feedback", inform: "Feedback", banner: "Feedback", progress: "Feedback", "circular-progress": "Feedback",
-  empty: "Feedback", "result-state": "Feedback",
-  sonner: "Feedback", badge: "Feedback", tag: "Feedback", metric: "Feedback",
-  accordion: "Data Display", card: "Data Display", table: "Data Display", "data-table": "Data Display", "data-grid": "Data Display",
-  carousel: "Data Display", chart: "Data Display", avatar: "Data Display", "avatar-group": "Data Display",
-  collapsible: "Data Display", "scroll-area": "Data Display", resizable: "Data Display", list: "Data Display",
-  quote: "Data Display", footer: "Data Display", "audio-player": "Data Display", "description-list": "Data Display",
-  timeline: "Data Display", marquee: "Data Display", "message-bubble": "Data Display",
-  "virtual-list": "Data Display", "json-viewer": "Data Display", "diff-viewer": "Data Display",
-  "kanban-board": "Data Display", "reference-code": "Data Display", "price-breakdown": "Data Display",
-  "pass-card": "Data Display", "amount-display": "Data Display",
-};
+/**
+ * slug → Storybook group title, generated from `components.manifest.json` (`pnpm gen:manifest`).
+ *
+ * This was a 107-entry hand-written map, and `apps/web/src/lib/site.ts` had a 109-entry one. They had
+ * drifted on `app-bar` and `direction-provider`, which fell through to the "Components" group here while the
+ * website filed them under Navigation and Foundations (CAT-BUG-019). Both read the same generated file now,
+ * and an unknown slug is a problem rather than a default group.
+ */
+const TAXONOMY = JSON.parse(readFileSync(`${ROOT}/component-taxonomy.json`, "utf8"));
+const GROUP = Object.fromEntries(
+  Object.entries(TAXONOMY.components).map(([slug, e]) => [slug, e.category]),
+);
 
 const PADDED = new Set([
   "chart", "data-table", "data-grid", "kanban-board", "markdown-editor", "table", "footer", "calendar", "resizable", "carousel",
@@ -1076,7 +1054,7 @@ const EXTRA = {
       // whole strip hidden and shown, or unmounted. Each \`data-kx-action\` button is one of those; \`check:tabs-indicator\`
       // presses them and measures the bar against the chosen tab.
       name: "Indicator",
-      imports: "Button",
+      imports: "Button TABS_MOTION",
       render: `() => {
     const all = ["Overview", "Activity", "Deployments", "Analytics", "Logs", "Storage", "Preferences", "Members", "Billing", "Integrations"];
     const [tabs, setTabs] = React.useState(all);
@@ -1087,6 +1065,9 @@ const EXTRA = {
     const [hidden, setHidden] = React.useState(false);
     const [renamed, setRenamed] = React.useState(false);
     const [mounted, setMounted] = React.useState(true);
+    // Cycling through \`TABS_MOTION\` rather than a list written here keeps the lab honest: it offers the
+    // presets the component actually publishes, and a preset added later appears without touching this story.
+    const [motion, setMotion] = React.useState(TABS_MOTION[0]);
     const actions: [string, string, () => void][] = [
       ["select-last", "Choose last", () => setValue(tabs[tabs.length - 1])],
       ["select-second", "Choose second", () => setValue(tabs[1])],
@@ -1101,6 +1082,7 @@ const EXTRA = {
       ["orientation", "Flip orientation", () => setOrientation((o) => (o === "horizontal" ? "vertical" : "horizontal"))],
       ["hidden", "Hide or show", () => setHidden((h) => !h)],
       ["unmount", "Unmount or mount", () => setMounted((m) => !m)],
+      ["motion", "Next motion preset", () => setMotion((m) => TABS_MOTION[(TABS_MOTION.indexOf(m) + 1) % TABS_MOTION.length])],
     ];
     return (
       <div className="grid w-[22rem] max-w-full grid-cols-[minmax(0,1fr)] gap-4">
@@ -1112,7 +1094,7 @@ const EXTRA = {
         <div hidden={hidden}>
           {mounted ? (
           <Tabs value={value} onValueChange={setValue} dir={dir} orientation={orientation} className={orientation === "vertical" ? "flex gap-4" : undefined}>
-            <TabsList data-kx-case="lab" aria-label="Project sections" className={orientation === "vertical" ? "w-auto" : undefined}>
+            <TabsList data-kx-case="lab" motion={motion} aria-label="Project sections" className={orientation === "vertical" ? "w-auto" : undefined}>
               {tabs.map((t, i) => (
                 <TabsTrigger key={t} value={t} disabled={disabled === t}>{t}{i === 1 ? " " + (renamed ? 1280 : 3) : null}</TabsTrigger>
               ))}
@@ -1477,11 +1459,38 @@ mkdirSync(OUT, { recursive: true });
 let written = 0;
 const generated = [];
 const problems = [];
+/**
+ * The hand-written stories keep their own `title`, so they are the one place a group label can still drift
+ * from the manifest — and they did: Button sat in "Controls & Actions" and Input in "Form Inputs" after CAT-2
+ * renamed both. Checked here rather than rewritten, because the rest of these files is deliberately not
+ * generated.
+ */
+for (const slug of HANDWRITTEN) {
+  const Name = title(slug);
+  const path = `${OUT}/${Name}.stories.tsx`;
+  if (!existsSync(path)) continue;
+  const declared = /title:\s*"([^"/]+)\//.exec(readFileSync(path, "utf8"))?.[1];
+  const group = GROUP[slug];
+  if (declared !== group) {
+    problems.push(
+      `${Name}.stories.tsx is hand-written and titled "${declared}/${Name}", but ${slug} is in "${group}" — ` +
+        `change the title to match components.manifest.json.`,
+    );
+  }
+}
+
 for (const { key, component, source } of entries) {
   const slug = key.replace(/-demo$/, "");
   if (HANDWRITTEN.has(slug)) continue;
   const Name = title(slug);
-  const group = GROUP[slug] ?? "Components";
+  const group = GROUP[slug];
+  if (!group) {
+    problems.push(
+      `${slug}: no category in component-taxonomy.json, so it has no Storybook group. Add a category to ` +
+        `components.manifest.json and run \`pnpm gen:manifest\`.`,
+    );
+    continue;
+  }
   const layout = PADDED.has(slug) ? "padded" : "centered";
   // A percentage width needs a parent with a width. `layout: "centered"` gives it one sized to its own
   // content, so the demo resolves to zero and the story renders a control that is not there — silently,

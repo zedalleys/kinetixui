@@ -13,14 +13,27 @@
  *   - headline: the hero headline never splits a word across lines, at phone to wide widths and at 200% text
  *   - map, phone: the generated-output layer, the token boundary and the written layer are all on screen; the
  *     written branches are dashed and the generated ones solid
- *   - map, desktop: four outputs over five platforms, and no trace runs through an output it does not belong to
+ *   - map, desktop: four outputs over five platforms, every output card the same width, and no trace runs
+ *     through an output it does not belong to
  *   - no horizontal overflow at any of those widths, in either direction
+ *   - height: the page settles at a bounded height and stays there, with the stylesheet and without it — the
+ *     trace overlays must never write a measured size into a layout property inside the subtree they observe
+ *   - overlays: a decorative trace overlay never takes part in layout or in hit testing, with the stylesheet and
+ *     without it — a sampled grid over every overlay's box lands on the page behind it, never on the overlay
  *   - hero tour: the platforms advance on their own, hold under the pointer, pause from a keyboard-operable
  *     button (aria-pressed), stop once the reader chooses one, and do not run at all under reduced motion
- *   - structure (a performance guard, not a timing threshold): the HTML carries only the open explorer panel and
- *     the payload no second copy of it; the hero map's client props stay under a byte budget; the hero map, its
- *     outputs and its tabs exist once at phone and desktop widths (no duplicate mobile tree); every excerpt, on
- *     every tab, stays inside the 7-line window
+ *   - hero decoration: the glow never lands on the hero's copy column at the widths where the system map sits
+ *     below it and stays a bounded share of it where the map sits beside it; the lede paragraph — the site's
+ *     `muted-foreground` role at its smallest, with the least headroom over WCAG AA — keeps 4.5:1 against the
+ *     most adverse background pixel under its own glyphs; and the gradient itself stays a wash, measured as
+ *     what it adds to the pixels underneath rather than read from the stylesheet
+ *   - structure (a performance guard, not a timing threshold): the HTML carries the open explorer panel and the
+ *     height reserve and nothing else, and the payload no second copy of the open one; the hero map's client
+ *     props stay under a byte budget; the hero map, its outputs and its tabs exist once at phone and desktop
+ *     widths (no duplicate mobile tree); every excerpt, on every tab, stays inside the 7-line window
+ *   - explorer height: the card is exactly the same height on all five tabs, at every width `check:a11y-site`
+ *     sweeps and at 200% text, with a negative control that takes the reserve out and proves the measurement
+ *     sees the difference it is there to catch
  */
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
@@ -55,7 +68,7 @@ const check = async (name, fn) => {
   }
 };
 
-async function open({ width, height = 900, scale = 1, reducedMotion = 'reduce' }) {
+async function open({ width, height = 900, scale = 1, reducedMotion = 'reduce', blockStyles = false }) {
   const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, reducedMotion });
   await context.addInitScript(() => {
     try {
@@ -63,6 +76,7 @@ async function open({ width, height = 900, scale = 1, reducedMotion = 'reduce' }
     } catch {}
   });
   const page = await context.newPage();
+  if (blockStyles) await page.route('**/*.css', (route) => route.abort());
   if (scale !== 1) {
     // 200% text the way a reader sets it, as check:a11y-site does
     const cdp = await context.newCDPSession(page);
@@ -256,6 +270,7 @@ const mapFacts = (page) =>
       rem: parseFloat(getComputedStyle(document.documentElement).fontSize),
       chipsVisible: chips.filter(visible).length,
       chips: chips.length,
+      chipWidths: chips.map((c) => Math.round(c.getBoundingClientRect().width)),
       tabsVisible: tabs.filter(visible).length,
       boundaryVisible: visible(boundary),
       generated: traces.filter((p) => p.dataset.kind === 'generated').map(dashed),
@@ -266,10 +281,11 @@ const mapFacts = (page) =>
   });
 
 for (const [width, dir] of [[320, 'ltr'], [390, 'ltr'], [390, 'rtl'], [768, 'ltr'], [1024, 'ltr'], [1280, 'ltr'], [1440, 'ltr'], [1440, 'rtl'], [1920, 'ltr']]) {
-  await check(`map at ${width}px ${dir.toUpperCase()}: generated layer, boundary, dashed written layer, no trace through another output`, async () => {
+  await check(`map at ${width}px ${dir.toUpperCase()}: generated layer, boundary, equal-width outputs, dashed written layer, no trace through another output`, async () => {
     const { page, context } = await open({ width, height: width < 600 ? 844 : 900 });
     await setDir(page, dir);
     await page.waitForTimeout(200);
+    await page.locator('[data-hero-system-map]').scrollIntoViewIfNeeded();
     const f = await mapFacts(page);
     // the map switches from rows to columns at a container width of 34rem
     assert.equal(f.layout, f.mapWidth >= 34 * f.rem ? 'columns' : 'rows', `layout at a ${f.mapWidth}px map`);
@@ -281,7 +297,80 @@ for (const [width, dir] of [[320, 'ltr'], [390, 'ltr'], [390, 'rtl'], [768, 'ltr
     assert.ok(f.generated.every((d) => !d), 'generated traces are solid');
     assert.ok(f.written.every((d) => d), 'written traces are dashed');
     assert.deepEqual(f.through, [], 'a trace runs through an output it does not belong to');
+    // every generated output is one card of the same size: fan-out is shown by the traces, not by a wider card
+    assert.equal(
+      Math.max(...f.chipWidths) - Math.min(...f.chipWidths) <= 1,
+      true,
+      `the outputs are not equal width: ${f.chipWidths.join(', ')}`,
+    );
     assert.ok(f.overflow <= 0, `horizontal overflow ${f.overflow}px`);
+    await context.close();
+  });
+}
+
+// ---- page height: the drawings never feed their own measurement back -----------------------------------------------
+/*
+ * The hero map and the trace layers measure their host and draw into an overlay inside it, so a measured size in
+ * any layout property of that overlay is a feedback loop: the host grows, the ResizeObserver fires, it measures
+ * again. It ran at tens of thousands of pixels a second when the overlay took its height from the measurement.
+ *
+ * The overlay therefore takes its size from its own `inset` and only its `viewBox` from the measurement, and it
+ * is positioned inline so it stays out of flow even when the stylesheet never arrives. Both halves are checked
+ * here: with the page's CSS, and with it blocked, which is the condition that put the overlay back in flow.
+ *
+ * `pointer-events` is inline for the same reason. With no stylesheet the overlay has no positioned ancestor, so
+ * its `inset: 0` resolves against the viewport and it covers the page; a hit-test grid over each overlay proves
+ * the page behind it is still reachable. Scrolled first, because the sections are `content-visibility: auto` and
+ * an overlay in a skipped subtree has no geometry to test.
+ */
+const TRACES = '[data-trace-layer], [data-map-traces]';
+for (const blockStyles of [false, true]) {
+  await check(`overlays: page height settles, nothing grabs a click${blockStyles ? ', with the stylesheet blocked' : ''}`, async () => {
+    const { page, context } = await open({ width: 1440, blockStyles });
+    const height = () => page.evaluate(() => document.documentElement.scrollHeight);
+    await page.waitForTimeout(1000);
+    const settled = await height();
+    await page.waitForTimeout(3000);
+    const later = await height();
+    // the loop grew the page by tens of thousands of px a second, so this tolerance still separates it from a
+    // late font or a lazily decoded image
+    assert.ok(later - settled < 500, `page grew from ${settled}px to ${later}px over 3s while idle`);
+    assert.ok(later < 60_000, `page is ${later}px tall`);
+    const measured = await page
+      .locator(TRACES)
+      .evaluateAll((svgs) => svgs.filter((s) => s.hasAttribute('width') || s.hasAttribute('height')).length);
+    assert.equal(measured, 0, 'a trace overlay carries a width/height attribute, which its measurement can reach');
+    const inFlow = await page.locator(TRACES).evaluateAll((svgs) => svgs.filter((s) => getComputedStyle(s).position !== 'absolute').length);
+    assert.equal(inFlow, 0, 'a trace overlay is in flow, so its drawing takes part in the layout it measures');
+
+    // hit testing: walk the page first so no overlay is inside a skipped `content-visibility: auto` subtree
+    for (let i = 0; i < 20; i += 1) {
+      await page.mouse.wheel(0, 700);
+      await page.waitForTimeout(80);
+    }
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+    const grabbed = await page.evaluate((sel) => {
+      let tested = 0;
+      let onOverlay = 0;
+      for (const svg of document.querySelectorAll(sel)) {
+        svg.scrollIntoView({ block: 'center' });
+        const box = svg.getBoundingClientRect();
+        for (let fx = 0.05; fx < 1; fx += 0.05) {
+          for (let fy = 0.05; fy < 1; fy += 0.05) {
+            const x = box.left + box.width * fx;
+            const y = box.top + box.height * fy;
+            if (x < 1 || y < 1 || x > window.innerWidth - 1 || y > window.innerHeight - 1) continue;
+            tested += 1;
+            const top = document.elementFromPoint(x, y);
+            if (top && (top === svg || svg.contains(top))) onOverlay += 1;
+          }
+        }
+      }
+      return { tested, onOverlay };
+    }, TRACES);
+    assert.ok(grabbed.tested > 100, `only ${grabbed.tested} hit-test points landed inside an overlay's box`);
+    assert.equal(grabbed.onOverlay, 0, `${grabbed.onOverlay} of ${grabbed.tested} points hit a decorative overlay instead of the page`);
     await context.close();
   });
 }
@@ -291,7 +380,9 @@ const heroSelected = (page) => page.locator(`${HERO} [role="tab"][aria-selected=
 
 await check('hero tour: advances on its own, holds under the pointer, pauses from its button, stops on a choice', async () => {
   const { page, context } = await open({ width: 1440, reducedMotion: 'no-preference' });
+  await page.locator('[data-hero-system-map]').scrollIntoViewIfNeeded();
   await page.mouse.move(0, 890); // keep the pointer off the map
+  await page.locator('[data-hero-system-map]').scrollIntoViewIfNeeded();
   const first = await heroSelected(page);
   await page.waitForTimeout(5500);
   const second = await heroSelected(page);
@@ -329,6 +420,7 @@ await check('hero tour: advances on its own, holds under the pointer, pauses fro
 await check('hero tour: none under reduced motion, and no pause button', async () => {
   const { page, context } = await open({ width: 1440 });
   await page.mouse.move(0, 890);
+  await page.locator('[data-hero-system-map]').scrollIntoViewIfNeeded();
   const first = await heroSelected(page);
   await page.waitForTimeout(5500);
   assert.equal(await heroSelected(page), first, 'the tour ran under reduced motion');
@@ -365,14 +457,37 @@ function objectAt(text, start) {
 const EXCERPT_LINES = 7; // lib/systems-in-motion.ts cuts every excerpt to a 7-line window
 const HERO_PROPS_BUDGET = 4096; // the hero map's serialized props: token, outputs, platforms, theme facts
 
-await check('structure: the explorer sends one panel as HTML, the other four as data only', async () => {
+/*
+ * The open panel and ONE more: the height reserve.
+ *
+ * The explorer's panels are not the same height, and only one is mounted, so the card used to resize under the
+ * reader on every tab change. The tallest panel is therefore also rendered, inert and invisible, in the same
+ * grid cell as the open one, which holds the card at that height whatever is open (`explorer-tabs.tsx`). That
+ * is a deliberate loosening of this guard from one panel to two, and no further: the three panels that are
+ * neither open nor the reserve must still reach the page as data only.
+ */
+const EXPLORER_PANELS_IN_HTML = 2;
+
+await check('structure: the explorer sends the open panel and the reserve as HTML, the rest as data only', async () => {
   const { html, flight } = await rawPage();
+  const panels = (html.match(/class="kx-code-facts"/g) ?? []).length; // one facts list per rendered panel
+  assert.equal(panels, EXPLORER_PANELS_IN_HTML, `${panels} explorer panels in the HTML; the open one and the reserve belong there`);
+  // the copy control and the keyboard-reachable scroller belong to the OPEN panel; the reserve renders neither
+  const at = html.indexOf('data-explorer-reserve=""');
+  assert.ok(at > -1, 'no height reserve in the explorer markup');
+  const opening = html.slice(at, html.indexOf('>', at));
+  assert.ok(opening.includes('aria-hidden="true"'), 'the reserve is in the accessibility tree');
+  assert.ok(opening.includes('inert'), 'the reserve is not inert');
+  const end = html.indexOf('kx-code-facts', at);
+  const inside = html.slice(at, end > -1 ? end : html.length);
+  assert.ok(opening.includes('invisible'), 'the reserve is not hidden from paint');
+  assert.ok(!inside.includes('Copy the '), 'the reserve renders a copy control');
+  assert.ok(!inside.includes('role="region"'), 'the reserve renders a focusable code region');
+  // the open panel's code blocks ride once in the payload for hydration; the reserve's ride once beside them,
+  // and nothing else does — the count is per FILE, since the reserve is the panel that shows two
   const pres = (html.match(/<pre\b[^>]*class="kx-code /g) ?? []).length;
-  assert.equal(pres, 1, `${pres} explorer code blocks in the HTML; only the open panel belongs there`);
-  // the open panel's element tree rides once in the payload for hydration; a second copy means a hidden panel
-  // was rendered as elements again
   const trees = flight.split('kx-code font-mono').length - 1;
-  assert.ok(trees <= 1, `${trees} explorer code trees in the React payload`);
+  assert.ok(trees <= pres, `${trees} explorer code trees in the React payload for ${pres} in the HTML`);
 });
 
 await check(`structure: hero map props stay under ${HERO_PROPS_BUDGET} bytes (static evidence stays on the server)`, async () => {
@@ -384,7 +499,7 @@ await check(`structure: hero map props stay under ${HERO_PROPS_BUDGET} bytes (st
 });
 
 for (const width of [390, 1440]) {
-  await check(`structure at ${width}px: one hero map, one explorer, one panel of at most ${EXCERPT_LINES} lines per file`, async () => {
+  await check(`structure at ${width}px: one hero map, one explorer, open panel + reserve, at most ${EXCERPT_LINES} lines per file`, async () => {
     const { page, context } = await open({ width });
     const f = await page.evaluate(() => {
       const count = (sel) => document.querySelectorAll(sel).length;
@@ -396,6 +511,8 @@ for (const width of [390, 1440]) {
         explorers: count('[data-implementation-explorer]'),
         explorerTabs: count('[data-implementation-explorer] [role="tab"]'),
         pres: count('[data-implementation-explorer] pre.kx-code'),
+        // the reserve is one panel's worth of markup, and it is the only hidden one
+        reserves: count('[data-explorer-reserve]'),
         lines: [...document.querySelectorAll('[data-implementation-explorer] pre.kx-code')].map(
           (p) => p.querySelectorAll('.kx-ln').length,
         ),
@@ -408,7 +525,7 @@ for (const width of [390, 1440]) {
     assert.equal(f.tablists, 1, `${f.tablists} hero tab lists`);
     assert.equal(f.explorers, 1, `${f.explorers} explorers`);
     assert.equal(f.explorerTabs, 5, `${f.explorerTabs} explorer tabs`);
-    assert.equal(f.pres, 1, `${f.pres} explorer code blocks mounted; only the open panel should be`);
+    assert.ok(f.reserves <= 1, `${f.reserves} inert reserves; the card reserves one panel's height, not more`);
     assert.ok(f.lines.every((n) => n >= 1 && n <= EXCERPT_LINES), `excerpt line counts ${f.lines}`);
     // switching tabs mounts that panel and only that one, still inside the line window
     const platforms = await page.locator(`${EXPLORER} [role="tab"]`).evaluateAll((t) => t.map((n) => n.dataset.platform));
@@ -418,14 +535,456 @@ for (const width of [390, 1440]) {
       assert.ok(g.length >= 1 && g.every((n) => n >= 1 && n <= EXCERPT_LINES), `${platform}: excerpt line counts ${g}`);
       const shown = await page.locator('[data-implementation-explorer] [role="tabpanel"]:not([hidden])').count();
       assert.equal(shown, 1, `${platform}: ${shown} panels mounted`);
+      const hidden = await page.evaluate(() => document.querySelectorAll('[data-explorer-reserve]').length);
+      assert.ok(hidden <= 1, `${platform}: ${hidden} inert reserves`);
     }
     await context.close();
   });
 }
+
+/*
+ * The explorer's height, on every tab.
+ *
+ * The defect: the explorer mounts one panel at a time and the panels are not the same height — Angular's shows
+ * two files where the others show one, and the file paths and the evidence line wrap to different numbers of
+ * lines at different widths and text sizes. Changing tabs therefore changed the height of the card and moved
+ * everything below it. Measured on the commit before the fix: 217px of movement at 1280px and 714px at 320px /
+ * 200% text, in every one of the ten views below.
+ *
+ * The contract: the card is EXACTLY the same height on all five tabs, in every view. Exactly, not within a
+ * tolerance — the reserve is the tallest panel itself laid out under the open one, so an equal height is what
+ * the layout produces rather than what a number approximates. A tolerance here would hide the first few pixels
+ * of any future drift, which is the whole quantity worth watching.
+ *
+ * The negative control: the same measurement is taken again with the reserve removed from the document. That is
+ * the broken layout this gate exists to catch, and the run fails if the measurement does NOT see it move. A
+ * height check that cannot tell a reserved card from an unreserved one measures nothing.
+ */
+const EXPLORER_CARD = '[data-implementation-explorer]';
+
+/** The card's height on each tab, in order, at the current viewport. */
+async function cardHeights(page) {
+  const platforms = await page.locator(`${EXPLORER} [role="tab"]`).evaluateAll((t) => t.map((n) => n.dataset.platform));
+  const out = [];
+  for (const platform of platforms) {
+    await page.locator(`${EXPLORER} [role="tab"][data-platform="${platform}"]`).click();
+    await page.waitForTimeout(100); // the panel swap is synchronous; this settles the layout around it
+    const h = await page.evaluate((sel) => document.querySelector(sel).getBoundingClientRect().height, EXPLORER_CARD);
+    out.push([platform, Math.round(h)]);
+  }
+  return out;
+}
+
+const shown = (rows) => rows.map(([p, h]) => `${p} ${h}px`).join(', ');
+
+/*
+ * Three widths rather than five, at both text sizes: a phone at the narrowest width the site supports, a
+ * tablet, and a desktop. Each view is a page load and ten tab changes, and the defect is a property of the
+ * layout rather than of a breakpoint — it was the same 217px at 768, 1024 and 1280 before the fix. 320 and
+ * 200% text are in because that is where it was largest (714px) and where a reserved height most easily runs
+ * short.
+ */
+for (const [name, width, scale] of [
+  ['small-phone', 320, 1],
+  ['tablet', 768, 1],
+  ['desktop', 1280, 1],
+  ['small-phone', 320, 2],
+  ['tablet', 768, 2],
+  ['desktop', 1280, 2],
+]) {
+  await check(`explorer height at ${name}/${width}px/text${scale * 100}%: the same on every tab, and the control proves it`, async () => {
+    const { page, context } = await open({ width, scale });
+    try {
+      await page.locator(EXPLORER).scrollIntoViewIfNeeded();
+      const held = await cardHeights(page);
+      const heights = held.map(([, h]) => h);
+      const spread = Math.max(...heights) - Math.min(...heights);
+      assert.equal(spread, 0, `the card changes height between tabs: ${shown(held)}`);
+
+      // Negative control: with the reserve out of the layout the card is content-sized again, and these numbers
+      // must move. `display:none` rather than removing the node — the reserve is React's to own, and tearing it
+      // out of the DOM makes the next tab change fail to reconcile and takes the whole explorer with it, which
+      // would read as a spectacular pass.
+      const hid = await page.evaluate(() => {
+        const el = document.querySelector('[data-explorer-reserve]');
+        if (!el) return false;
+        el.style.display = 'none';
+        return true;
+      });
+      assert.ok(hid, 'control: no reserve to take out of the layout');
+      const unheld = await cardHeights(page);
+      const bare = unheld.map(([, h]) => h);
+      const bareSpread = Math.max(...bare) - Math.min(...bare);
+      assert.ok(
+        bareSpread > 0,
+        `control: the card did not change height with the reserve removed (${shown(unheld)}) — ` +
+          'this measurement cannot see the defect it is here to catch',
+      );
+      console.log(`     ${name}/${width}px/text${scale * 100}%: held ${heights[0]}px on every tab; control spread ${bareSpread}px`);
+    } finally {
+      await context.close();
+    }
+  });
+}
+
+/*
+ * The hero's decorative glow, and what it is allowed to touch.
+ *
+ * The glow is placed from a corner rather than centred, so one offset means different things at different
+ * widths: anchored to the top it sits under the system map while the map is beside the copy, but below
+ * `lg-rem` the map moves under the copy and the same offset puts the gradient over the headline and the
+ * lede instead. Which case a width is in is read from the hero grid's own resolved columns rather than from
+ * a breakpoint this file holds a second copy of. That is not only a composition question. The lede is `muted-foreground` at 16px, which
+ * clears WCAG AA by 0.60 in light theme, and a gradient over it spent 0.82 of that: measured at 390px it
+ * took the most adverse background pixel under the paragraph's glyphs to 4.28:1 against the 4.5 floor,
+ * with 39% of those glyph pixels below it, across roughly 320px to 740px.
+ *
+ * axe cannot catch this. It will not resolve a background behind a gradient, so `color-contrast` reports
+ * "incomplete" rather than a violation — the hero passes `check:a11y-site` either way. This is the check
+ * that does not, which is why it samples rendered pixels instead of asking axe.
+ *
+ * These were written against the defect rather than against the fix: with the old placement restored in
+ * the same build, the placement checks fail at 320, 390 and 768 and the contrast checks fail there at
+ * 4.28:1, 4.28:1 and 4.47:1. They are not equivalent to each other, and an independent review measured
+ * where each stops. Placement is the strict one: a different offset moves the box and fails it while the
+ * lede still reads 4.98:1 and passes. Contrast is the backstop, for a regression that leaves the box where
+ * it is. Neither sees the gradient itself, which is why the tint check below exists.
+ */
+const AA = 4.5; // WCAG 1.4.3 for text under 18.66px, which the lede is at every width
+const COPY = '[data-hero-copy]'; // the hero's copy column, hooked for this check rather than matched on a utility class
+const LEDE = 'h1.kx-hero-title + p';
+// What the glow may add to the page underneath it, as a per-channel 0-255 delta, measured by hiding it.
+//
+// The owner asked for a clearly visible circular light spot confined to the art, so this is a band rather
+// than a ceiling: a floor says the light is actually there, a ceiling says it is still light and not a
+// wash. The band was widened from a bare `<= 40` when the hero became the OH38WC1 mesh, whose aura is the
+// atmosphere the facets float in rather than a faint tint behind a solid, and the pair of numbers is what
+// the old single ceiling documented about itself.
+//
+// What each bound excludes, measured on this build: the glow renders at a 75 delta. The floor of 55 fails
+// the aura at `opacity: 0.45`, where the light spot stops reading as a light spot (measured 34). The
+// ceiling of 110 fails it when the radial gradient is replaced by a flat saturated circle (measured 215
+// for `#28c7d9`, 232 for navy) — a disc of colour sitting on the page instead of atmosphere behind the
+// facets. Changing the blur alone does NOT reach the ceiling: `blur(6px)` instead of 22px measures 75,
+// the same as shipped, because the gradient's own centre is already its brightest pixel and sharpening
+// the falloff does not raise the peak. Both bounds are exercised in
+// scripts/home-systems-negative-controls.mjs. The independent copy-overlap and rendered-AA checks above
+// protect readable text whatever this band allows.
+const MIN_TINT = 55;
+const MAX_TINT = 110;
+
+/** WCAG relative luminance of one sRGB triple. */
+const luminance = (r, g, b) => {
+  const f = (c) => (c / 255 <= 0.04045 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+};
+const contrast = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+
+/**
+ * The worst contrast any part of `selector`'s text has against what is actually rendered behind it.
+ *
+ * WCAG assumes one flat background and a gradient has none, so this takes the conservative reading: hide
+ * the text, screenshot each line box of it, and compare the element's own colour against the most adverse
+ * background pixel under that line. The mean would be the generous reading — at 390px it gave 4.59:1 for a
+ * paragraph whose worst point was 4.28:1, which is the difference between reporting this defect and
+ * missing it.
+ */
+async function worstTextContrast(page, selector) {
+  const info = await page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) return null;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    return {
+      lines: [...range.getClientRects()].map((r) => ({ x: r.left, y: r.top, w: r.width, h: r.height })),
+      color: getComputedStyle(el).color,
+    };
+  }, selector);
+  assert.ok(info, `${selector} is not on the page`);
+  assert.ok(info.lines.length, `${selector} renders no text`);
+
+  // Wait for the hide to be *painted*, not merely parsed. A fixed 100ms wait here was enough almost always
+  // and not always: at 1440px this check reported the lede's worst point as 1.29:1, which is the signature of
+  // the glyphs still being in the shot — the text's own colour against its antialiased edge. The negative
+  // control in scripts/home-systems-negative-controls.mjs reproduces that number by skipping the hide, so a
+  // reading near 1:1 means the instrument, not the page. Two frames after the computed style has actually
+  // changed is the guarantee the timeout was standing in for.
+  await page.addStyleTag({ content: `${selector} { visibility: hidden !important }` });
+  await page.waitForFunction(
+    (sel) => getComputedStyle(document.querySelector(sel)).visibility === 'hidden',
+    selector,
+  );
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+
+  const scroll = await page.evaluate(() => ({ x: window.scrollX, y: window.scrollY }));
+  const [r, g, b] = info.color.match(/[\d.]+/g).map(Number);
+  const text = luminance(r, g, b);
+  let worst = Infinity;
+  for (const line of info.lines) {
+    // inset by a pixel: the glyph box's own edge carries the antialiasing of whatever sits beside it
+    // `fullPage` so the clip is document-relative: a viewport-bounded shot throws on a line below the fold,
+    // and that reads as a contrast failure rather than as the tooling problem it is
+    const clip = {
+      x: Math.round(line.x + scroll.x) + 1,
+      y: Math.round(line.y + scroll.y) + 1,
+      width: Math.round(line.w) - 2,
+      height: Math.round(line.h) - 2,
+    };
+    if (clip.width < 1 || clip.height < 1 || clip.y < 0) continue;
+    const shot = (await page.screenshot({ clip, fullPage: true })).toString('base64');
+    const seen = await page.evaluate(async (data) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${data}`;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const px = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      const f = (c) => (c / 255 <= 0.04045 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4);
+      let min = 2;
+      let max = -1;
+      for (let i = 0; i < px.length; i += 4) {
+        const l = 0.2126 * f(px[i]) + 0.7152 * f(px[i + 1]) + 0.0722 * f(px[i + 2]);
+        if (l < min) min = l;
+        if (l > max) max = l;
+      }
+      return { min, max };
+    }, shot);
+    worst = Math.min(worst, contrast(text, seen.min), contrast(text, seen.max));
+  }
+  assert.ok(Number.isFinite(worst), `${selector}: no line box could be sampled`);
+  return worst;
+}
+
+for (const width of [320, 390, 768, 1024, 1440]) {
+  await check(`hero glow at ${width}px: off the copy, behind the polygon`, async () => {
+    const { page, context } = await open({ width });
+    const f = await page.evaluate(
+      ({ copySel }) => {
+        const hero = document.querySelector('section.kx-chapter');
+        const glow = hero?.querySelector('.kx-polygon-aura');
+        const copy = document.querySelector(copySel);
+        const map = hero?.querySelector('.kx-hero-polygon');
+        if (!hero || !glow || !copy || !map) return null;
+        const box = (el) => el.getBoundingClientRect();
+        const share = (a, b) => {
+          const w = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+          const h = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+          return (100 * w * h) / (b.width * b.height);
+        };
+        const g = box(glow);
+        // the branch comes from the layout that is actually on screen, not from a width this script holds a
+        // copy of: if `lg-rem` moves in the config, or the glow's own breakpoint drifts away from the grid's,
+        // this still asks the question that matters — where the map is, is the glow over it?
+        const grid = copy.parentElement;
+        const columns = getComputedStyle(grid).gridTemplateColumns.split(/\s+/).filter(Boolean).length;
+        return {
+          columns,
+          onCopy: share(g, box(copy)),
+          onMap: share(g, box(map)),
+          mapTop: box(map).top,
+          mapHeight: box(map).height,
+          copyBottom: box(copy).bottom,
+          glowTop: g.top,
+        };
+      },
+      { copySel: COPY },
+    );
+    assert.ok(f, 'hero, glow, copy column and system map are all on the page');
+    assert.ok(f.columns === 1 || f.columns === 2, `the hero grid resolved to ${f.columns} columns`);
+    if (f.columns === 1) {
+      // one column: the map is under the copy, so the glow belongs to the map and must not reach the type
+      assert.ok(f.mapTop > f.copyBottom, `the map starts at ${Math.round(f.mapTop)}px, above the copy's end`);
+      assert.equal(Math.round(f.onCopy), 0, `the glow covers ${f.onCopy.toFixed(1)}% of the copy column`);
+      assert.ok(f.onMap > 25, `the glow covers only ${f.onMap.toFixed(1)}% of the map`);
+    } else {
+      // two columns: the map is beside the copy and the glow sits under it, as the approved composition has it.
+      // The copy column's own edge is inside the glow's box here — 2.6% of it at 1024, 0% at 1440 — so this
+      // asks for a bound rather than for nothing, which is what an unqualified `onMap` test would be: a glow
+      // covering the whole hero would satisfy that and fail a reader.
+      assert.ok(f.onMap > 25, `the glow covers only ${f.onMap.toFixed(1)}% of the map`);
+      assert.ok(f.onCopy < 10, `the glow covers ${f.onCopy.toFixed(1)}% of the copy column`);
+      // and it comes down from above the map, as the top anchor puts it. Without this a glow still anchored
+      // to the bottom here — the one-column treatment left on past the grid's switch — reads as 80% of the
+      // map and passes, which is the composition the owner approved in reverse.
+      assert.ok(f.glowTop - f.mapTop <= f.mapHeight * .15, 'the glow belongs behind the upper polygon');
+    }
+    await context.close();
+  });
+}
+
+for (const width of [320, 390, 768, 1024, 1440]) {
+  await check(`hero lede at ${width}px: AA against whatever is rendered behind it`, async () => {
+    const { page, context } = await open({ width });
+    const worst = await worstTextContrast(page, LEDE);
+    assert.ok(worst >= AA, `the lede's worst point is ${worst.toFixed(2)}:1, under ${AA}:1`);
+    await context.close();
+  });
+}
+
+/*
+ * The hero's first view. Two separate claims, measured rather than asserted:
+ *
+ *   1. The artwork is ended by its own fade, not by the frame. The mesh is decoration that bleeds
+ *      to the page's edges, so it is allowed to run out of the hero — but a reader must see it
+ *      dissolve, not meet a straight cut. Before the first-view fix the supplied artwork's portrait
+ *      viewBox drove the hero's height (the polygon column stood 1279px against a 670px copy column
+ *      at 1920x1030) and the viewport sliced it flat: 841 of 1030 right-edge pixels carried mesh
+ *      ink, and the hero's closing ticker band sat 423px below the fold.
+ *
+ *   2. The install command and the beta line that qualifies it land inside the first view, at the
+ *      widths where the copy column physically fits one. Below roughly 800px of viewport height the
+ *      column is taller than the viewport whatever the layout does, so those cases are not claimed.
+ *
+ * The ink is measured as the artwork's own contribution — the same pixels with the polygon and
+ * without it — so it does not depend on what the artwork happens to be sitting on.
+ */
+const FIRST_VIEW = [
+  { width: 1920, height: 1030, fold: true },
+  { width: 1920, height: 1080, fold: true },
+  { width: 1536, height: 864, fold: true },
+  { width: 1440, height: 900, fold: true },
+  { width: 1366, height: 768, fold: true },
+  // the copy column alone is taller than these viewports: edges are still checked, the fold is not
+  { width: 1280, height: 720, fold: false },
+  { width: 1024, height: 768, fold: false },
+];
+const EDGE_INK = 12;
+const edgeInkProfile = async (page, width, height) => {
+  const shoot = async () => (await page.screenshot()).toString('base64');
+  const lit = await shoot();
+  await page.addStyleTag({ content: '.kx-hero-polygon { visibility: hidden !important }' });
+  await page.waitForTimeout(150);
+  const unlit = await shoot();
+  return page.evaluate(
+    async ([a, b, W, H, T]) => {
+      const load = (d) =>
+        new Promise((r) => {
+          const i = new Image();
+          i.onload = () => r(i);
+          i.src = `data:image/png;base64,${d}`;
+        });
+      const [ia, ib] = await Promise.all([load(a), load(b)]);
+      const pixels = (img) => {
+        const c = document.createElement('canvas');
+        c.width = W;
+        c.height = H;
+        const x = c.getContext('2d');
+        x.drawImage(img, 0, 0);
+        return x.getImageData(0, 0, W, H).data;
+      };
+      const A = pixels(ia);
+      const B = pixels(ib);
+      const ink = (x, y) => {
+        const i = (y * W + x) * 4;
+        return Math.abs(A[i] - B[i]) + Math.abs(A[i + 1] - B[i + 1]) + Math.abs(A[i + 2] - B[i + 2]);
+      };
+      let start = 0;
+      let end = 0;
+      let fold = 0;
+      for (let y = 0; y < H; y += 1) {
+        if (ink(0, y) > T) start += 1;
+        if (ink(W - 1, y) > T) end += 1;
+      }
+      for (let x = 0; x < W; x += 1) if (ink(x, H - 1) > T) fold += 1;
+      return { start, end, fold };
+    },
+    [lit, unlit, width, height, EDGE_INK],
+  );
+};
+
+for (const { width, height, fold } of FIRST_VIEW) {
+  for (const rtl of [false, true]) {
+    const where = `${width}x${height}${rtl ? ' RTL' : ''}`;
+    await check(`hero first view at ${where}: the artwork fades out, it is not cut off`, async () => {
+      const { page, context } = await open({ width, height });
+      if (rtl) {
+        await page.evaluate(() => document.documentElement.setAttribute('dir', 'rtl'));
+        await page.waitForTimeout(150);
+      }
+      const edges = await edgeInkProfile(page, width, height);
+      assert.equal(edges.end, 0, `${edges.end} pixels of mesh ink reach the viewport's trailing edge`);
+      assert.equal(edges.start, 0, `${edges.start} pixels of mesh ink reach the viewport's leading edge`);
+      assert.equal(edges.fold, 0, `${edges.fold} pixels of mesh ink are cut by the fold`);
+      await context.close();
+    });
+
+    if (!fold) continue;
+    await check(`hero first view at ${where}: the install command and the beta line are above the fold`, async () => {
+      const { page, context } = await open({ width, height });
+      if (rtl) {
+        await page.evaluate(() => document.documentElement.setAttribute('dir', 'rtl'));
+        await page.waitForTimeout(150);
+      }
+      const seen = await page.evaluate(() => {
+        const copy = document.querySelector('[data-hero-copy]');
+        const command = copy.querySelector('pre, code')?.closest('div');
+        const beta = [...copy.querySelectorAll('a')].pop();
+        const bottom = (el) => (el ? Math.round(el.getBoundingClientRect().bottom) : null);
+        return { command: bottom(command), beta: bottom(beta), fold: window.innerHeight };
+      });
+      assert.ok(seen.command !== null && seen.beta !== null, 'the install command and the beta line are on the page');
+      assert.ok(
+        seen.command <= seen.fold,
+        `the install command ends ${seen.command - seen.fold}px below the fold (${seen.command} > ${seen.fold})`,
+      );
+      assert.ok(
+        seen.beta <= seen.fold,
+        `the beta line ends ${seen.beta - seen.fold}px below the fold (${seen.beta} > ${seen.fold})`,
+      );
+      await context.close();
+    });
+  }
+}
+
+await check('hero glow: the circular light spot is visible and bounded', async () => {
+  const { page, context } = await open({ width: 1440 });
+  const box = await page.evaluate(() => {
+    const glow = document.querySelector('section.kx-chapter .kx-polygon-aura');
+    if (!glow) return null;
+    const r = glow.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.round(r.left)),
+      y: Math.max(0, Math.round(r.top)),
+      width: Math.min(window.innerWidth, Math.round(r.right)) - Math.max(0, Math.round(r.left)),
+      height: Math.min(window.innerHeight, Math.round(r.bottom)) - Math.max(0, Math.round(r.top)),
+    };
+  });
+  assert.ok(box && box.width > 1 && box.height > 1, 'the glow has a box inside the viewport at 1440px');
+  // the same pixels with the gradient and without it: the difference is the decoration's whole contribution,
+  // whatever it happens to be sitting on, so this does not depend on the map's layout staying put
+  const pixels = async () => {
+    const shot = (await page.screenshot({ clip: box })).toString('base64');
+    return page.evaluate(async (data) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${data}`;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      return [...ctx.getImageData(0, 0, canvas.width, canvas.height).data];
+    }, shot);
+  };
+  const lit = await pixels();
+  await page.addStyleTag({ content: '.kx-polygon-aura { display: none !important }' });
+  await page.waitForTimeout(100);
+  const unlit = await pixels();
+  let tint = 0;
+  for (let i = 0; i < lit.length; i += 4) {
+    for (let c = 0; c < 3; c += 1) tint = Math.max(tint, Math.abs(lit[i + c] - unlit[i + c]));
+  }
+  assert.ok(tint >= MIN_TINT, `the light spot shifts a channel by only ${tint}, under the visibility floor ${MIN_TINT}`);
+  assert.ok(tint <= MAX_TINT, `the glow shifts a channel by ${tint}, over ${MAX_TINT}`);
+  await context.close();
+});
 
 await browser.close();
 if (failures.length) {
   console.error(`\nhome-systems: ${failures.length} check(s) failed`);
   process.exit(1);
 }
-console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, tour, structure');
+console.log('\nhome-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, overlays (height and hit testing), tour, hero decoration (placement, lede contrast and gradient strength), structure');

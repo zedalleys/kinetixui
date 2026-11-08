@@ -1,0 +1,82 @@
+[
+  {
+    "label": "desktop",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "create-desktop",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "mobile",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "create-mobile",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "desktop-dark-rtl",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "create-desktop-dark-rtl",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "mobile-dark-rtl",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "create-mobile-dark-rtl",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "narrow",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "create-narrow",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "tablet",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "create-tablet",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "zoom",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "create-zoom",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "narrow-zoom",
+    "overflow": 0,
+    "axe": []
+  },
+  {
+    "label": "create-narrow-zoom",
+    "overflow": 0,
+    "axe": []
+  }
+]

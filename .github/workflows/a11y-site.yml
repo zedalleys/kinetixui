@@ -23,6 +23,14 @@ on:
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
+      - "scripts/rebrand-browser.mjs"
+      - "scripts/rebrand-hero-negative-controls.mjs"
+      - "scripts/hero-light-browser.mjs"
+      - "scripts/cursor-glow-browser.mjs"
+      - "scripts/cursor-glow-negative-controls.mjs"
+      - "apps/web/src/components/hero-mesh.json"
+      - "apps/web/src/components/hero-mesh-source.json"
+      - "scripts/gen-hero-mesh.mjs"
       - "scripts/web-quality-browser.mjs"
       - "scripts/blocks-discovery-browser.mjs"
       - "scripts/blocks-runtime-browser.mjs"
@@ -55,6 +63,14 @@ on:
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
+      - "scripts/rebrand-browser.mjs"
+      - "scripts/rebrand-hero-negative-controls.mjs"
+      - "scripts/hero-light-browser.mjs"
+      - "scripts/cursor-glow-browser.mjs"
+      - "scripts/cursor-glow-negative-controls.mjs"
+      - "apps/web/src/components/hero-mesh.json"
+      - "apps/web/src/components/hero-mesh-source.json"
+      - "scripts/gen-hero-mesh.mjs"
       - "scripts/web-quality-browser.mjs"
       - "scripts/blocks-discovery-browser.mjs"
       - "scripts/blocks-runtime-browser.mjs"
@@ -80,7 +96,7 @@ concurrency:
 jobs:
   axe:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -101,6 +117,34 @@ jobs:
 
       - name: Build site
         run: pnpm build:web
+
+      # Chromium is re-downloaded on every run and the download time is not stable. Measured on #514's head
+      # 1a362696, same commit, same trigger: `Install Chromium` took 24s in `Accessibility (browser)` and
+      # 9m30s in `Accessibility (site)` — a 24x spread, and on an earlier head it reached 11m10s. In a job
+      # that finishes within minutes of its cap, that tail is the whole risk of a cancellation, and a
+      # cancellation truncates the run rather than failing loudly.
+      #
+      # So cache the browser instead of raising `timeout-minutes`, which would move the cliff and hide how
+      # close the job sits to it. The cap is deliberately unchanged by this.
+      #
+      # The key is the pinned Playwright version and nothing else. Playwright pins its browser revisions per
+      # version — 1.64.0 wants chromium-1248, chromium_headless_shell-1248 and ffmpeg-1013 — so a version
+      # bump is a new key and cannot be served a stale binary. Keying on the lockfile hash instead would
+      # miss on every unrelated dependency bump for no benefit.
+      #
+      # `--with-deps` is kept on a hit: the apt packages it installs live in the system, not in
+      # ~/.cache/ms-playwright, so they are not cacheable and must still be installed. With the browser
+      # already present, `playwright install` verifies the INSTALLATION_COMPLETE markers and downloads
+      # nothing — measured locally as exit 0 with no output.
+      - name: Playwright version, for the cache key
+        id: playwright
+        run: echo "version=$(node -p "require('./package.json').devDependencies.playwright")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ steps.playwright.outputs.version }}
 
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
@@ -152,8 +196,53 @@ jobs:
       # direction change (vertical on a phone), no text in them is under 12px, the headline never splits a word,
       # and the hero map keeps its generated layer, boundary and dashed written layer on a phone with no trace
       # running through an output it does not belong to.
-      - name: Homepage systems visuals (tabs, type floor, headline, map)
+      - name: Homepage systems visuals (tabs, type floor, headline, map, hero decoration)
         run: pnpm check:home-systems
+
+      # The rebranded hero, against the running production build: the owner-supplied mesh renders unaltered,
+      # the light travels its edges, and the hero answers the reader with nothing — it is decoration (owner
+      # decision, 2026-11-06), so Tab never lands in it and a drag, the arrow keys and Home all leave the
+      # drawing exactly where it was. Run directly: this workflow's path filters cover the script, not
+      # package.json.
+      # The mesh the hero renders is generated from the owner-supplied source; a stale one would make every
+      # assertion below agree with the wrong geometry.
+      - name: Hero mesh is current with its source
+        run: node scripts/gen-hero-mesh.mjs --check
+
+      - name: Rebrand hero (mesh, light, and decoration only — no controls)
+        run: REBRAND_BASE=http://127.0.0.1:3000 node scripts/rebrand-browser.mjs
+
+      # The step above was green on 2026-11-05 while the hero kept breathing and shimmering after
+      # `data-running` went false, and offscreen: `running` gated the rAF pulse loop, the two CSS
+      # `infinite` animations were gated by nothing, and the gate's only suspension evidence was the
+      # pulse coordinates, which do stop. It now measures the body transform and a facet's opacity as
+      # well, and these controls let a continuous animation ignore `data-running` again — both layers
+      # at once, then each alone — and require the gate to fail every time. A lifecycle assertion that
+      # has never been made to fail is not evidence that the motion stops.
+      - name: Hero negative controls (a layer ignoring data-running, and each removed control put back)
+        run: REBRAND_BASE=http://127.0.0.1:3000 node scripts/rebrand-hero-negative-controls.mjs
+
+      # The hero claim that needs a measurement rather than an assertion, and is too slow to repeat per
+      # viewport — the light's lap timed against the duration hero-mesh.json declares — and, since the hero
+      # became decoration, the other half of the focus contract it used to measure: Tab must never land in
+      # the illustration, in light or dark.
+      - name: Hero light (timed lap, and the hero takes no focus)
+        run: node scripts/hero-light-browser.mjs --base http://127.0.0.1:3000
+
+      # The site-wide pointer glow. Making a brightening follow the cursor across every page is an
+      # accessibility change before it is a visual one, and nothing else in CI moves a mouse: no axe run and
+      # no contrast gate here has a pointer anywhere, so none of them can see what this layer does to a
+      # rendered background. This measures it — the layer follows the viewport, an opaque surface still
+      # occludes it, and with the glow at full strength behind each distinct text pair four pages actually
+      # render, in light and dark, no pair that met AA without it falls under AA with it.
+      - name: Site-wide cursor glow (viewport tracking, occlusion, AA with the glow lit)
+        run: node scripts/cursor-glow-browser.mjs --base http://127.0.0.1:3000
+
+      # …and the three claims above are only worth the run if they can fail. These raise the tint to a level
+      # measured to take real homepage text under AA, lift the layer over the content, and stop it following
+      # the viewport, and require the gate to fail each time.
+      - name: Cursor glow negative controls (a tint that breaks AA, a glow over content, a glow that scrolls)
+        run: node scripts/cursor-glow-negative-controls.mjs --base http://127.0.0.1:3000
 
       # The website's own compact text, measured rather than read from source: no readable label under 12px, the
       # touched labels at 4.5:1 in light and dark, touch-sized hit areas on a coarse pointer with no overlaps, and

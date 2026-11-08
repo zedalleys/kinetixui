@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Boxes, Palette, Smartphone, Zap } from "lucide-react";
 import { Button } from "@kinetixui/ui";
+import { HeroPolygon } from "@/components/hero-polygon";
 import { HeroCommand } from "@/components/hero-command";
 import { PlatformTicker } from "@/components/platform-ticker";
 import { Reveal } from "@/components/reveal";
@@ -175,18 +176,20 @@ export default function HomePage() {
       <PlatformMarkSprite />
 
       {/* ─── [01] hero ───────────────────────────────────────────────────────── */}
-      <section className="kx-chapter overflow-hidden border-b border-border">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 kx-grid-bg opacity-50" />
-        <div aria-hidden="true" className="kx-glow -end-40 -top-32 size-[46rem]" />
+      <section className="kx-brand-hero kx-chapter overflow-hidden border-b border-border">
         <div className={container}>
           {/*
             Hero vertical rhythm is a mobile-first decision. At 390×800 the primary CTA and the install command
             have to land in the first viewport, so the copy column comes first in the DOM and the system map
             follows it — beside it once there is room, below it on a phone.
           */}
-          <div className="grid grid-cols-1 gap-14 py-12 sm:py-16 md:py-24 lg-rem:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg-rem:items-center lg-rem:gap-12 xl-rem:gap-20">
+          {/* Above `lg-rem` the vertical rhythm is viewport-derived and owned by brand-hero.css, which is
+              why there is no `lg-rem:py-*` here: a fixed desktop padding cannot give room back on a
+              short laptop, which is where the install command was falling below the fold. */}
+          <div className="kx-brand-hero-grid grid grid-cols-1 gap-6 pt-12 sm:pt-16">
             {/* a size container: the headline is sized against this column, so its longest word always fits it */}
-            <div className="max-w-3xl [container-type:inline-size]">
+            {/* `data-hero-copy`: what the hero's decoration must stay off below `lg-rem`, which check:home-systems asserts */}
+            <div data-hero-copy className="kx-brand-hero-copy relative z-10 max-w-3xl [container-type:inline-size]">
               {/*
                 The headline names the architecture rather than counting platforms: one shared language, and an
                 implementation per platform written in that platform's idiom (CLAIMS.md A2, A3). The number is
@@ -207,13 +210,13 @@ export default function HomePage() {
                 whose web and native apps drift apart the moment they are maintained separately.
               </p>
 
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button asChild size="lg">
+              <div className="mt-8 flex flex-wrap items-center gap-3 [&>*]:max-w-full">
+                <Button asChild size="lg" className="whitespace-normal">
                   <Link href="/components" {...ctaAttrs("homepage_hero", "browse_components")}>
                     Explore components <ArrowUpRight className="size-4" />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="Outline">
+                <Button asChild size="lg" variant="Outline" className="whitespace-normal">
                   <Link href="/docs/platforms" {...ctaAttrs("homepage_hero", "platform_coverage")}>
                     See what each platform covers
                   </Link>
@@ -235,7 +238,13 @@ export default function HomePage() {
                   <Link
                     href="/docs/installation"
                     {...ctaAttrs("homepage_hero", "installation")}
-                    className="text-primary underline-offset-4 hover:underline"
+                    // Always underlined, for the same reason as the "What ships where" link below: inside
+                    // mixed foreground/muted text, colour alone does not mark a link. It measured 1.31:1
+                    // against the muted prose around it in light and 1.14:1 in dark, against the 3:1 that
+                    // technique G183 asks of a colour-only link under WCAG 1.4.1, which states no ratio of
+                    // its own — and the hero's old backdrop gradient hid that from axe, which could only report
+                    // "contrast could not be determined" while it was there.
+                    className="text-primary underline underline-offset-4"
                   >
                     Installation
                   </Link>{" "}
@@ -254,7 +263,7 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <HeroSystemMap token={story.token} outputs={story.outputs} platforms={mapPlatforms} />
+            <HeroPolygon />
           </div>
         </div>
 
@@ -266,6 +275,12 @@ export default function HomePage() {
             </span>
             <PlatformTicker />
           </div>
+        </div>
+      </section>
+
+      <section aria-label="Token to native implementation map" className="border-b border-border">
+        <div className={`${container} py-12 md:py-16`}>
+          <HeroSystemMap token={story.token} outputs={story.outputs} platforms={mapPlatforms} />
         </div>
       </section>
 

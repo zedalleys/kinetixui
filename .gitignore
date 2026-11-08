@@ -31,3 +31,6 @@ packages/ui-compose/.idea/
 packages/ui-compose/**/*.iml
 # Generated release worksheets only — hand-written drafts under drafts/<id>/ ARE tracked.
 marketing/content/drafts/release-*.md
+
+# Local browser captures; durable direction and design records remain tracked.
+.impeccable/review/

@@ -39,6 +39,19 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            // The module cannot be built on a dev box — its plugin repositories are unreachable from
+            // there — so CI's log is the only place a Kotlin test failure is ever read. Gradle's
+            // default compact format prints "AssertionError at File.kt:344" and nothing else, which
+            // is not enough to fix anything: the assertion's own message, the expected and actual
+            // values and any `println` are all dropped. FULL plus the standard streams is what makes
+            // a failure here diagnosable without a second speculative push.
+            all {
+                it.testLogging {
+                    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+                    showStandardStreams = true
+                    events("failed")
+                }
+            }
         }
     }
 
@@ -56,6 +69,11 @@ android {
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     implementation("androidx.compose.ui:ui")
+    // `animateColorAsState` lives in androidx.compose.animation, not animation-core (which is where
+    // `animateDpAsState` and `tween` come from, and which arrives transitively). MX1d needs it for the
+    // selection-state colour specs, so it is declared rather than relied on through material3's own
+    // dependency graph. BOM-versioned and first-party: no new third-party dependency.
+    implementation("androidx.compose.animation:animation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
@@ -86,6 +104,35 @@ dependencies {
 // automated, the same "own your credentials, own the button" stance as the
 // Flutter and SwiftUI publish workflows.
 // ---------------------------------------------------------------------------
+// The version a publication carries is the one thing about it that cannot be
+// corrected later: a Central coordinate is immutable, so publishing under the
+// wrong number burns that number permanently. This used to resolve to a silent
+// "0.1.0" whenever VERSION_NAME failed to arrive — a dropped env var in a
+// workflow refactor, a typo'd property name, a `gradle` invocation added
+// without it — which is precisely how a wrong version gets published without
+// anyone noticing. Ordinary builds (assemble, test, lint) still need *some*
+// version, so they get an obviously unpublishable placeholder, and every
+// publish task refuses to run on it.
+val requestedVersion = providers.gradleProperty("VERSION_NAME")
+    .orElse(providers.environmentVariable("VERSION_NAME"))
+    .map(String::trim).filter(String::isNotEmpty)
+
+val unversionedPlaceholder = "0.0.0-unversioned"
+
+tasks.matching { it.name.startsWith("publish") }.configureEach {
+    val taskPath = path
+    doFirst {
+        if (!requestedVersion.isPresent) {
+            throw GradleException(
+                "VERSION_NAME is not set, so this publication would carry the " +
+                    "placeholder version \"" + unversionedPlaceholder + "\". Pass the " +
+                    "version explicitly: VERSION_NAME=0.1.0 gradle " + taskPath +
+                    " (or -PVERSION_NAME=0.1.0).",
+            )
+        }
+    }
+}
+
 val centralUsername = providers.gradleProperty("mavenCentralUsername")
     .orElse(providers.environmentVariable("MAVEN_CENTRAL_USERNAME"))
     .map(String::trim).filter(String::isNotEmpty)
@@ -103,9 +150,7 @@ publishing {
         register<MavenPublication>("release") {
             groupId = "com.kinetixui"
             artifactId = "ui-compose"
-            version = providers.gradleProperty("VERSION_NAME")
-                .orElse(providers.environmentVariable("VERSION_NAME"))
-                .getOrElse("0.1.0")
+            version = requestedVersion.getOrElse(unversionedPlaceholder)
 
             afterEvaluate {
                 from(components["release"])
