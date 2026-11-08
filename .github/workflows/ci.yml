@@ -125,7 +125,10 @@ jobs:
       # Proves the preflight can fail: each control breaks one property it asserts.
       - name: "Native publish preflight: negative controls"
         run: |
-          for control in $(node scripts/check-native-publish-preflight.mjs --list-negatives); do
+          controls=$(node scripts/check-native-publish-preflight.mjs --list-negatives)
+          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          for control in $controls; do
             echo "--- $control"
             node scripts/check-native-publish-preflight.mjs --negative="$control"
           done
@@ -139,7 +142,10 @@ jobs:
 
       - name: "SwiftUI mirror publish route: negative controls"
         run: |
-          for control in $(node scripts/adoption/swiftui-mirror-consumer.mjs --list-negatives); do
+          controls=$(node scripts/adoption/swiftui-mirror-consumer.mjs --list-negatives)
+          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          for control in $controls; do
             echo "--- $control"
             node scripts/adoption/swiftui-mirror-consumer.mjs --negative="$control"
           done
