@@ -948,6 +948,28 @@ which covers every caller including a local run (`VI-PREFLIGHT-MODES-ARE-EXCLUSI
 position. Validating the shape stays a separate, earlier step, which is how these workflows are
 already written.
 
+**And no selector may be passed twice.** Each of `--version=`, `--authorize-version=`, `--line=`,
+`--lines-file=` and `--negative=` carries a single value and is read with the first matching
+argument, so a second occurrence is discarded in silence while still satisfying any check that only
+asks whether the right spelling is present. Review measured both halves of that: once a line
+authorizes a version, `--authorize-version=0.1.0 --authorize-version="$VERSION" --line=ui-compose`
+passes every structural check — the second argument really is bound to the dispatch input — and
+authorizes `0.1.0` for a `9.9.9` dispatch; `--line=ui-compose --line=ui-swiftui` satisfies a check
+looking for the SwiftUI line while reading Compose's authorization. The mode guard does not cover
+this, because it counts distinct modes rather than occurrences. The script now refuses a repeated
+selector before reading any of them, and `VI-VERSION-AUTHORIZED` rejects the repetition in a
+publish workflow by position.
+
+**Both guards are proved by running them, not by reading them.** `VI-PREFLIGHT-MODES-ARE-EXCLUSIVE`
+asserts the source, and review showed what that is worth alone: delete the `process.exit(1)` under
+the conflict condition and the assertion still passes, because the condition, the message and the
+mode list are all still there — the script then prints its own refusal and carries on into the
+shape check, which exits 0. A diagnostic is not a refusal. So
+`VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO` writes the script as the checks see it to a throwaway
+module and invokes it: four conflicting or repeated invocations must exit nonzero *with the guard's
+own wording*, and a single mode must still exit 0 — otherwise a script broken in any way at all
+would satisfy every refusal.
+
 That fixture seam is `--lines-file=`, and **a publish workflow may not pass it** — also part of
 `VI-VERSION-AUTHORIZED`, and also added after review. Pointed at the accepting fixture, a publish
 step authorized `0.1.0` while the canonical declaration authorized nothing, and every other check

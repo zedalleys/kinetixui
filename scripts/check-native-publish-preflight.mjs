@@ -31,7 +31,8 @@
  * Every check is named, and the name is what the negative control uses. A check that stops being
  * true is either a defect to fix or a decision to record — not a line to delete here.
  */
-import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
 
@@ -139,6 +140,13 @@ const NEGATIVES = {
   "compose-authorization-also-asks-for-the-shape": { file: ".github/workflows/publish-compose.yml", from: '--authorize-version="$VERSION" --line=ui-compose', to: '--authorize-version="$VERSION" --line=ui-compose --version="$VERSION"', breaks: "VI-VERSION-AUTHORIZED" },
   "flutter-authorization-also-asks-for-the-shape": { file: ".github/workflows/publish-flutter.yml", from: '--authorize-version="$VERSION" --line=ui-flutter', to: '--version="$VERSION" --authorize-version="$VERSION" --line=ui-flutter', breaks: "VI-VERSION-AUTHORIZED" },
   "preflight-allows-two-modes-at-once": { file: "scripts/check-native-publish-preflight.mjs", from: "if (requestedModes.length > 1) {\n  console.error(", to: "if (false) {\n  console.error(", breaks: "VI-PREFLIGHT-MODES-ARE-EXCLUSIVE" },
+  // A diagnostic is not a refusal. Each of these keeps the guard's condition and its message and
+  // removes only the exit, which is exactly what a source-text assertion cannot see.
+  "preflight-mode-guard-reports-without-exiting": { file: "scripts/check-native-publish-preflight.mjs", from: "  );\n  process.exit(1);\n}\n\nif (process.argv.includes(\"--list-negatives\"))", to: "  );\n}\n\nif (process.argv.includes(\"--list-negatives\"))", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "preflight-allows-a-repeated-selector": { file: "scripts/check-native-publish-preflight.mjs", from: "if (repeatedFlags.length > 0) {\n  console.error(", to: "if (false) {\n  console.error(", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  // The same two bypasses by position in a publish workflow, one per selector.
+  "compose-authorization-repeats-the-version-selector": { file: ".github/workflows/publish-compose.yml", from: '--authorize-version="$VERSION" --line=ui-compose', to: '--authorize-version=0.1.0 --authorize-version="$VERSION" --line=ui-compose', breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-authorization-repeats-the-line-selector": { file: ".github/workflows/publish-swiftui.yml", from: '--authorize-version="$VERSION" --line=ui-swiftui', to: '--authorize-version="$VERSION" --line=ui-swiftui --line=ui-compose', breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-authorization-reads-another-line": { file: ".github/workflows/publish-swiftui.yml", from: "--line=ui-swiftui", to: "--line=ui-compose", breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-publish-unvalidated-version": { file: ".github/workflows/publish-swiftui.yml", from: "--version=", to: "--ignored-version=", breaks: "WF-VERSION-VALIDATED" },
   // A vendored copy drifting from its canonical source, which is what a publish from an
@@ -193,6 +201,32 @@ const NEGATIVES = {
   "swiftui-version-interpolated": { file: ".github/workflows/publish-swiftui.yml", from: '--version="$VERSION"', to: "--version='${{ inputs.version }}'", breaks: "WF-VERSION-NOT-INTERPOLATED" },
   "swiftui-version-interpolated-in-block": { file: ".github/workflows/publish-swiftui.yml", from: "          SHA=$(git rev-parse swiftui-dist)", to: "          SHA=$(git rev-parse swiftui-dist) # ${{ inputs.version }}", breaks: "WF-VERSION-NOT-INTERPOLATED" },
 };
+
+/*
+ * ONE VALUE PER SELECTOR, COUNTED BEFORE ANY OF THEM IS READ.
+ *
+ * Every selector below is read with `process.argv.find(...)`, which takes the FIRST occurrence and
+ * ignores the rest — and that was a bypass, found in review. Once a line legitimately authorizes a
+ * version, `--authorize-version=0.1.0 --authorize-version="$VERSION" --line=ui-compose` satisfies
+ * every structural check in VI-VERSION-AUTHORIZED, because the second argument really is bound to
+ * the dispatch input; the parser then authorizes 0.1.0 and exits 0 for a 9.9.9 dispatch. Repeating
+ * `--line=` does the same to the other half: `--line=ui-compose --line=ui-swiftui` satisfies a
+ * check looking for the SwiftUI line while reading Compose's authorization.
+ *
+ * The mode guard below does not cover this — it counts distinct modes, not occurrences. So the
+ * count is the gate: a selector that carries one value may be passed at most once, and anything
+ * else is an error rather than an argument discarded in silence.
+ */
+const SINGLE_VALUE_FLAGS = ["--version=", "--authorize-version=", "--line=", "--lines-file=", "--negative="];
+const repeatedFlags = SINGLE_VALUE_FLAGS.filter(
+  (flag) => process.argv.filter((arg) => arg.startsWith(flag)).length > 1,
+);
+if (repeatedFlags.length > 0) {
+  console.error(
+    `::error::${repeatedFlags.join(" and ")} was passed more than once. Each of these selectors carries a single value and is read with the first matching argument, so a later occurrence is discarded in silence — which is how a second, correctly bound argument comes to satisfy a structural check while the first one decides the outcome.`,
+  );
+  process.exit(1);
+}
 
 /*
  * EXACTLY ONE MODE PER RUN, DECIDED BEFORE ANY OF THEM RUNS.
@@ -816,6 +850,71 @@ check(
 );
 
 /*
+ * AND THE SAME TWO GUARDS, PROVED BY RUNNING THEM.
+ *
+ * The check above reads source text, and review showed what that is worth on its own: delete the
+ * `process.exit(1)` under the conflict condition and the assertion still passes, because the
+ * condition, the diagnostic and the mode list are all still there. The script then prints the
+ * conflict and carries on into the shape check, which exits 0 — the very bypass the guard exists
+ * to close, with its own refusal in the log above it.
+ *
+ * A diagnostic is not a refusal. So the guards are also run: this writes the source as the checks
+ * see it — mutated, when a negative control is in force — to a throwaway module and invokes it.
+ * Each conflicting or repeated invocation must exit NONZERO, and the refusal must be the guard's
+ * own wording, so an unrelated failure cannot pass as proof. A single mode must still exit 0, or a
+ * script broken in any way at all would satisfy every refusal here.
+ *
+ * None of these invocations reaches the checks below: each one exits in the argument handling, so
+ * there is no recursion.
+ */
+const runSelfCopy = (args) => {
+  /* The copy lives under node_modules so that its bare `js-yaml` import resolves the same way the
+   * real script's does — that import runs before any argument is looked at, so a copy anywhere
+   * else would fail for a reason that has nothing to do with the guards. */
+  let dir;
+  try {
+    dir = mkdtempSync(`${root}node_modules/.preflight-arg-control-`);
+  } catch (error) {
+    return { status: null, output: `the throwaway copy could not be written under node_modules (${error.message}), so the argument guards were not exercised` };
+  }
+  try {
+    const file = `${dir}/preflight.mjs`;
+    writeFileSync(file, selfSource);
+    const run = spawnSync(process.execPath, [file, ...args], { cwd: root, encoding: "utf8" });
+    return { status: run.status, output: `${run.stdout ?? ""}${run.stderr ?? ""}` };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+};
+
+const ARGUMENT_REFUSALS = [
+  { args: ["--version=0.1.0", "--list-negatives"], says: "were passed together", why: "two modes in one invocation" },
+  { args: ["--authorize-version=9.9.9", "--line=ui-compose", "--version=9.9.9"], says: "were passed together", why: "the measured bypass: an authorization decided by the shape check" },
+  { args: ["--authorize-version=0.1.0", "--authorize-version=9.9.9", "--line=ui-compose"], says: "was passed more than once", why: "a repeated --authorize-version=, where only the first value is read" },
+  { args: ["--line=ui-compose", "--line=ui-swiftui", "--authorize-version=9.9.9"], says: "was passed more than once", why: "a repeated --line=, which reads one line's authorization while naming another" },
+];
+
+const argumentFailures = [];
+for (const { args, says, why } of ARGUMENT_REFUSALS) {
+  const { status, output } = runSelfCopy(args);
+  if (status !== 1) {
+    argumentFailures.push(`\`${args.join(" ")}\` exited ${status === null ? "without a status" : status} rather than 1 — ${why} — and the output was ${JSON.stringify(output.trim().slice(0, 200))}`);
+  } else if (!output.includes(says)) {
+    argumentFailures.push(`\`${args.join(" ")}\` exited ${status}, but not with the guard's own refusal (expected it to say "${says}"); it said ${JSON.stringify(output.trim().slice(0, 200))}, so this proves nothing about ${why}`);
+  }
+}
+const singleMode = runSelfCopy(["--version=0.1.0"]);
+if (singleMode.status !== 0) {
+  argumentFailures.push(`\`--version=0.1.0\` alone exited ${singleMode.status}, so the refusals above are not evidence: a script that cannot run at all refuses everything. It said ${JSON.stringify(singleMode.output.trim().slice(0, 200))}`);
+}
+
+check(
+  "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO",
+  argumentFailures.length === 0,
+  `${argumentFailures.join("; ")}. Conflicting modes and a repeated single-value selector must END the run, not merely be reported: each of these invocations is a route to a publish authorized by the wrong question, and all of them exit 0 if the guard loses its \`process.exit(1)\` while keeping its diagnostic.`,
+);
+
+/*
  * The staging script now has a dependency, and that is a new way for a publish to fail late. It
  * imports `mdast-util-from-markdown` — see the comment above the changelog gate for why — so any
  * job that runs it on a bare checkout dies at the import rather than at a gate. `publish-flutter.yml`
@@ -1317,6 +1416,19 @@ for (const workflow of workflows) {
      * combination out of a publish workflow by position as well. */
     if (/--version=/.test(step.script)) {
       unauthorized.push(`${workflow.path} → "${step.name}" passes \`--version=\` alongside \`--authorize-version=\`. Each mode of the preflight exits on its own, so the run would be decided by the shape check rather than by the authorization. Measured: that combination exited 0 while release/native-release-lines.json authorized nothing. Validate the shape in its own earlier step, as these workflows already do`);
+    }
+    /* And the same bypass by repetition rather than by mode. These selectors are read with the
+     * first matching argument, so a second one is discarded in silence while still satisfying a
+     * check that only asks whether the right spelling is present. Measured in review: once a line
+     * authorizes a version, `--authorize-version=0.1.0 --authorize-version="$VERSION"` passed every
+     * structural check here and authorized 0.1.0 for a 9.9.9 dispatch; `--line=` repeats the trick
+     * on the other half. The script refuses both outright now; this keeps them out of a publish
+     * workflow by position as well. */
+    for (const selector of ["--authorize-version=", "--line="]) {
+      const occurrences = step.script.split(selector).length - 1;
+      if (occurrences > 1) {
+        unauthorized.push(`${workflow.path} → "${step.name}" passes \`${selector}\` ${occurrences} times. Only the first occurrence is read, so the others satisfy a check without affecting what is authorized — which is a publication approved by an argument that never ran`);
+      }
     }
     if (/--lines-file=/.test(step.script)) {
       unauthorized.push(`${workflow.path} → "${step.name}" passes \`--lines-file=\`. That option exists only so ci.yml can prove the authorization accepts and refuses correctly against fixtures; a publish must read the canonical release/native-release-lines.json. Measured: pointed at the accepting fixture, this step authorized 0.1.0 while the canonical file authorized nothing, and every other check here still passed`);
