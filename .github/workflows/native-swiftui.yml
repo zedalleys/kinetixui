@@ -167,6 +167,16 @@ jobs:
             echo "::error::$SUITE PASSED with the defect restored. The gate does not measure what it claims."
             exit 1
           fi
+          # A broken harness fails every test, so it can satisfy a control by accident. Measured on
+          # a0f3a64e: `checkbox-value-dropped` and `switch-value-dropped` both went GREEN while the
+          # accessibility walk was finding nothing at all, because "found 0" is what a broken walk
+          # prints and is also exactly what those controls grep for. So rule the harness out first,
+          # for every control, before believing any expected message.
+          if grep -qF -- "reached nothing below the hosted view" "$RUNNER_TEMP/control.log"; then
+            echo "::error::The harness itself failed — the walk reached nothing below the hosted view — so this run says nothing about the restored defect, whatever messages it printed."
+            tail -40 "$RUNNER_TEMP/control.log"
+            exit 1
+          fi
           grep -qF -- "$EXPECT" "$RUNNER_TEMP/control.log" \
             || { echo "::error::The suite failed, but not with \"$EXPECT\" — so this control proves nothing."; tail -40 "$RUNNER_TEMP/control.log"; exit 1; }
           echo "Control held: the suite failed for its own reason."
