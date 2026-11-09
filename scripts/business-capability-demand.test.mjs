@@ -3,7 +3,15 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { demandProblems, isRealDay } from "./business-capability-demand.mjs";
 
+/** Fixed, so the fixture cases below assert one behaviour rather than drifting with the clock. */
 const TODAY = "2026-11-09";
+/**
+ * The real UTC day, which is what the generator passes. The live-inventory check below MUST use this,
+ * not TODAY: `check:capabilities` runs this file before the generator, so a fixed day here would reject
+ * a signal legitimately recorded after it and fail CI on correct evidence. Reported by Codex on #549.
+ */
+const UTC_TODAY = new Date().toISOString().slice(0, 10);
+const tomorrow = () => new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
 const at = "A / DataGrid";
 
 /** A signal that satisfies every rule. Each negative control below breaks exactly one thing. */
@@ -39,7 +47,7 @@ test("the real inventory passes, and every row states a demand position", () => 
   const data = JSON.parse(readFileSync("docs/business-capabilities.json", "utf8"));
   const rows = data.families.flatMap((f) => f.capabilities);
   assert.ok(rows.length > 0, "no capability rows were read");
-  const found = rows.flatMap((r) => demandProblems(`${r.name}`, r, TODAY));
+  const found = rows.flatMap((r) => demandProblems(`${r.name}`, r, UTC_TODAY));
   assert.deepEqual(found, []);
 });
 
@@ -91,6 +99,12 @@ test("negative control: a whitespace ref fails", () => {
 test("negative control: an evidenced signal with no date fails", () => {
   const { date, ...noDate } = signal();
   assert.match(problems({ state: "evidenced", signals: [noDate] }).join("\n"), /missing date/);
+});
+
+test("a signal dated today passes, and one dated tomorrow does not — checked against the real clock", () => {
+  const today = (date) => demandProblems(at, row({ state: "evidenced", signals: [signal({ date })] }), UTC_TODAY);
+  assert.deepEqual(today(UTC_TODAY), [], "a signal recorded today must be accepted");
+  assert.match(today(tomorrow()).join("\n"), /is in the future/);
 });
 
 test("negative control: a future date fails", () => {
