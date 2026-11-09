@@ -202,6 +202,25 @@ export function noteErrors(note, version, rel, known = manifestSlugs()) {
     const url = note.githubReleaseUrl;
     if (typeof url !== "string" || !url.startsWith(RELEASE_URL) || !url.includes(version)) {
       e.push(at(`githubReleaseUrl must start with ${RELEASE_URL} and name ${version} (got ${JSON.stringify(url)})`));
+    } else {
+      // `githubReleaseUrl` is a URL like any `href`, and until now it was held to none of the same
+      // discipline — prefix and version only. It has a reader of its own that no href has:
+      // `check-releases.mjs:66` extracts it from the GENERATED TypeScript with a quote-delimited
+      // regex, `githubReleaseUrl: "([^"]*)"`. `JSON.stringify` escapes an embedded quote as `\"`, so
+      // that regex truncates the value at the quote. Measured end to end on the real scripts, in a
+      // tree with the packages at 0.28.0:
+      //
+      //   .../releases/tag/v0.28.0        -> check:releases ok
+      //   .../releases/tag/release-"0.28.0 -> accepted by this gate, then Version PR generation
+      //                                       fails: `githubReleaseUrl must ... name the version`
+      //
+      // So the same character rules apply here. The quote is not in the allowed set, which is what
+      // settles this case; the rest of `linkErrors` costs nothing and keeps one policy for both
+      // fields, rather than two that have to be remembered separately.
+      //
+      // NOT fixed here: `check-releases.mjs`'s extraction is itself the defect, and it is the file
+      // #507 rewrites for the same class of bug. Changing it in this PR would collide with that one.
+      e.push(...linkErrors(url, at("githubReleaseUrl")));
     }
   }
   return e;

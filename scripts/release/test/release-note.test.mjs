@@ -460,6 +460,42 @@ it("accepts a destination character if and only if a URL may carry it unencoded"
   }
 });
 
+// Codex finding, 2026-11-09, and the answer to the structural question I had asked it: there is a
+// FOURTH reader. `check-releases.mjs:66` extracts `githubReleaseUrl` from the GENERATED TypeScript
+// with a quote-delimited regex, `githubReleaseUrl: "([^"]*)"`. `JSON.stringify` escapes an embedded
+// quote as `\"`, so that regex truncates the value at the quote:
+//
+//   .../releases/tag/release-"0.28.0  -> the reader extracts .../releases/tag/release-\
+//
+// and Version PR generation then fails with `githubReleaseUrl must ... name the version`, after the
+// merge. Until now this field was held to prefix-and-version only, while every `href` went through
+// the whole link policy — so the same URL text was legal in one field and refused in the other.
+it("holds githubReleaseUrl to the same character policy as an href", () => {
+  const T = "https://github.com/zedalleys/kinetixui/releases/tag/";
+  const note = (githubReleaseUrl) => ({ version: "0.28.0", summary: "s", changes: [{ title: "t" }], breaking: [], githubReleaseUrl });
+  const run = (url) => noteErrors(note(url), "0.28.0", "release/notes/0.28.0.json");
+
+  assert.deepEqual(run(`${T}v0.28.0`), [], "the ordinary form must stay accepted");
+  // Which rule catches each was measured, not guessed: a quote and a space are percent-encoded by
+  // `new URL`, so canonical form refuses them before the character allowlist is ever consulted.
+  for (const [url, pattern] of [
+    [`${T}release-"0.28.0`, /is not the canonical form/],
+    [`${T}v0.28.0 x`, /is not the canonical form/],
+    [`${T}a(0.28.0`, /unbalanced parentheses/],
+    [`${T}v0.28.0%`, /percent-escape/],
+  ]) {
+    const e = run(url);
+    assert.equal(e.length, 1, `${url} was accepted`);
+    assert.match(e[0], pattern);
+    assert.match(e[0], /githubReleaseUrl/, "the message must name the field, not just the value");
+  }
+
+  // And the quote really does defeat the downstream reader, or the case above proves nothing about
+  // why it matters. This is that reader's own pattern, applied to the serialized form.
+  const serialized = `    githubReleaseUrl: ${JSON.stringify(`${T}release-"0.28.0`)},`;
+  assert.notEqual(serialized.match(/githubReleaseUrl: "([^"]*)"/)?.[1], `${T}release-"0.28.0`);
+});
+
 // The control Codex asked for: at the rendered Markdown destination, not only at `new URL`. This
 // drives the real renderer, so it binds on the real escaping rather than on my reading of the spec.
 it("every href the gate accepts survives the real Markdown renderer unchanged", async () => {
