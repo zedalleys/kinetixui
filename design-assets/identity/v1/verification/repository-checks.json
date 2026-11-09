@@ -1,0 +1,110 @@
+[
+  {
+    "name": "check:breakpoints",
+    "exit": 0
+  },
+  {
+    "name": "check:stories",
+    "exit": 0
+  },
+  {
+    "name": "check:verification",
+    "exit": 0
+  },
+  {
+    "name": "check:manifest",
+    "exit": 0
+  },
+  {
+    "name": "check:capabilities",
+    "exit": 0
+  },
+  {
+    "name": "check:keyboard",
+    "exit": 0
+  },
+  {
+    "name": "check:platform-source",
+    "exit": 0
+  },
+  {
+    "name": "check:platform-completeness",
+    "exit": 0
+  },
+  {
+    "name": "check:native-motion",
+    "exit": 0
+  },
+  {
+    "name": "check:platform-code",
+    "exit": 0
+  },
+  {
+    "name": "check:usage",
+    "exit": 0
+  },
+  {
+    "name": "check:block-source",
+    "exit": 0
+  },
+  {
+    "name": "check:blocks",
+    "exit": 0
+  },
+  {
+    "name": "check:iot-examples",
+    "exit": 0
+  },
+  {
+    "name": "check:flagship-examples",
+    "exit": 0
+  },
+  {
+    "name": "check:icons",
+    "exit": 0
+  },
+  {
+    "name": "check:registry-deps",
+    "exit": 0
+  },
+  {
+    "name": "check:registry-motion",
+    "exit": 0
+  },
+  {
+    "name": "check:iot-dist",
+    "exit": 0
+  },
+  {
+    "name": "check:angular-blocks",
+    "exit": 0
+  },
+  {
+    "name": "check:angular-api",
+    "exit": 0
+  },
+  {
+    "name": "check:angular-graduation",
+    "exit": 0
+  },
+  {
+    "name": "check:distribution",
+    "exit": 0
+  },
+  {
+    "name": "check:content",
+    "exit": 0
+  },
+  {
+    "name": "check:seo",
+    "exit": 0
+  },
+  {
+    "name": "check:editorial",
+    "exit": 0
+  },
+  {
+    "name": "check:release-links",
+    "exit": 0
+  }
+]

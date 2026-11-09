@@ -340,9 +340,36 @@ export default {
  * and `animation: none` an actively dangerous one: Radix unmounts an overlay on `animationend`,
  * and an animation that never runs never fires it, so the overlay would stay in the tree.
  *
+ * ## The delays
+ *
+ * Capping the durations and leaving the DELAYS was a hole, and it inverted the setting's purpose:
+ * a reader who asked for less motion waited LONGER for the information than one who did not.
+ * Measured in Chromium on `25e0bdff` against this floor as it then stood, with
+ * `transition-duration: 300ms; transition-delay: 700ms` under `prefers-reduced-motion: reduce`:
+ *
+ *   computed transition-duration: 1e-05s   transition-delay: 0.7s
+ *   at 50ms, 200ms, 400ms, 600ms: the OLD value       at 900ms: the new one
+ *
+ * The duration cap had done its job — nothing interpolated — and then the element sat on the
+ * stale state for the full 700ms and snapped. The same measurement for an `animation` with a
+ * 700ms delay: `animationend` fired at **719ms**, and the content was invisible until then.
+ *
+ * Zeroing both delays is the same trade as shortening the durations, and for the same reason: the
+ * end state still arrives, it arrives at once. It is specifically NOT the dangerous case the
+ * paragraph above rules out — the animation still runs and still fires `animationend` (measured
+ * at 13ms with the caps in place, so a Radix overlay unmounts sooner rather than never).
+ *
+ * A negative `animation-delay`, which is how a decorative loop phases its elements apart, loses
+ * that phasing. Under this floor it had already lost it: `animation-duration: 0.01ms` with
+ * `animation-iteration-count: 1` means every such element has finished its single frame before a
+ * reader could see any offset. So nothing observable changes there.
+ *
  * Components that need more than this still say so at their own call site with
  * `motion-reduce:`, and `packages/iot` already does exactly that where a pulse or a bar carries
  * meaning. This is the floor, not a replacement for that.
+ *
+ * Proven by `pnpm check:reduced-motion-delay`, which compiles THIS config and measures the result
+ * in a browser rather than reading the source, and by that gate's negative controls.
      */
     ({ addBase }: { addBase: (styles: Record<string, unknown>) => void }) => {
       addBase({
@@ -350,7 +377,9 @@ export default {
           "*, ::before, ::after": {
             "animation-duration": "0.01ms !important",
             "animation-iteration-count": "1 !important",
+            "animation-delay": "0ms !important",
             "transition-duration": "0.01ms !important",
+            "transition-delay": "0ms !important",
             "scroll-behavior": "auto !important",
           },
         },

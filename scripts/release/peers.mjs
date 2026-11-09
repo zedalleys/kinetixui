@@ -20,8 +20,6 @@
  *
  * See RELEASING.md → "Peer ranges across cohorts".
  */
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import path from "node:path";
 import semver from "semver";
 
 /** The only dependency field that carries a compatibility claim rather than a resolved edge. */
@@ -33,39 +31,12 @@ const BUMP_ORDER = ["none", "patch", "minor", "major"];
 const higher = (a, b) => (BUMP_ORDER.indexOf(b) > BUMP_ORDER.indexOf(a) ? b : a);
 
 /**
- * Parse one changeset's frontmatter into the releases it names.
- *
- * The body is prose and is deliberately ignored. Quoted and unquoted package names are both valid
- * YAML and both appear in the wild, so both are accepted.
- *
- * @param {string} text the file's contents
- * @returns {{name: string, type: "patch"|"minor"|"major"}[]}
+ * Both of these moved to changesets.mjs, which imports nothing outside `node:`, and are re-exported
+ * here so every existing caller is unchanged and there is still exactly one rule for what a pending
+ * changeset is. The move exists because `release.yml`'s `plan` job runs the reader on a
+ * dependency-free checkout and this module imports `semver`. See changesets.mjs.
  */
-export function parseChangeset(text) {
-  const frontmatter = text.split(/^---\s*$/m)[1] ?? "";
-  return [...frontmatter.matchAll(/^\s*"?([^"\s:]+)"?\s*:\s*(patch|minor|major)\s*$/gm)].map(([, name, type]) => ({
-    name,
-    type,
-  }));
-}
-
-/**
- * Every pending changeset in the repository. The filesystem half; everything downstream is pure.
- *
- * @param {string} root repository root
- * @returns {{id: string, releases: {name: string, type: string}[]}[]}
- */
-export function readPendingChangesets(root) {
-  const dir = path.join(root, ".changeset");
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir)
-    .filter((name) => name.endsWith(".md") && name.toLowerCase() !== "readme.md")
-    .sort()
-    .map((name) => ({
-      id: name.replace(/\.md$/, ""),
-      releases: parseChangeset(readFileSync(path.join(dir, name), "utf8")),
-    }));
-}
+export { parseChangeset, readPendingChangesets } from "./changesets.mjs";
 
 /**
  * The version each directly named package will carry once `changeset version` runs.

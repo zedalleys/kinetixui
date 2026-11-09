@@ -21,7 +21,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Form Inputs/NativeSelect",
+  title: "Forms & Inputs/NativeSelect",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<NativeSelect defaultValue=\"\">\\n  <NativeSelectOption value=\"\" disabled>Select a fruit…</NativeSelectOption>\\n  <NativeSelectOptGroup label=\"Citrus\">\\n    <NativeSelectOption value=\"orange\">Orange</NativeSelectOption>\\n  </NativeSelectOptGroup>\\n</NativeSelect>", language: "tsx" } },

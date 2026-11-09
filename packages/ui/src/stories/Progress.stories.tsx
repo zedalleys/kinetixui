@@ -14,7 +14,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Feedback/Progress",
+  title: "Feedback & Status/Progress",
   component: Progress,
   args: { value: 66 },
   argTypes: { value: { control: { type: "range", min: 0, max: 100 } } },
