@@ -7,12 +7,13 @@ import {
   deriveAttribution,
   getAttributionContext,
   initAttribution,
-  isInternalBrowser,
+  isInternalSession,
   normalizeCampaign,
   normalizeContent,
   normalizeMedium,
   normalizeSource,
   resetAttributionForTests,
+  INTERNAL_TRAFFIC_TYPE,
   sanitizeAttributionProps,
   toProps,
   type AttributionInput,
@@ -701,15 +702,96 @@ describe("diagnostic traffic marking", () => {
 describe("internal traffic marking", () => {
   // The owner's own visits were indistinguishable from audience traffic: the PostHog "internal" cohort is
   // person-based and, with person_profiles: "identified_only" and no login, can never have a member.
-  it("marks this browser, not just the tab, and keeps the mark into a new session", () => {
+  it("marks this SESSION and a new independent session does NOT inherit it (IA-5.21 4.2.5)", () => {
     initAttribution(input("?kx_traffic=internal", "", "/"), false);
     expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "internal" });
-    window.sessionStorage.clear(); // a new tab or session on the same browser
+    // A new browser session. Before IA-5.21 4.1 the mark was device-scoped and survived this; it must not now.
+    window.sessionStorage.clear();
+    resetAttributionForTests();
     initAttribution(input("?utm_source=linkedin&utm_medium=social&utm_campaign=kx_p1_a_parity_proof", "", "/docs/platforms"), false);
-    expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "internal", kx_campaign: "kx_p1_a_parity_proof" });
+    expect(getAttributionContext()).not.toHaveProperty("kx_traffic_type");
+    // the rest of the attribution still lands, so the session is measured — just not excluded
+    expect(getAttributionContext()).toMatchObject({ kx_campaign: "kx_p1_a_parity_proof" });
   });
 
-  it("removes the browser mark with ?kx_traffic=clear", () => {
+  it("keeps the mark across client-side navigation within the same session", () => {
+    initAttribution(input("?kx_traffic=internal", "", "/"), false);
+    for (const path of ["/docs", "/docs/installation", "/components"]) {
+      initAttribution(input("", "", path), false);
+      expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "internal" });
+    }
+  });
+
+  it("keeps the mark across a reload in the same tab, which does not clear sessionStorage", () => {
+    initAttribution(input("?kx_traffic=internal", "", "/"), false);
+    resetAttributionForTests(); // a fresh module state, as a reload gives — sessionStorage survives it
+    initAttribution(input("", "", "/"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "internal" });
+  });
+
+  it("stores the mark in sessionStorage only, and leaves no device-scoped key behind", () => {
+    window.localStorage.setItem("kx_analytics_internal_v1", "internal"); // a browser carrying the old device mark
+    initAttribution(input("?kx_traffic=internal", "", "/"), false);
+    expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "internal" });
+    // the mark is in sessionStorage
+    expect(window.sessionStorage.getItem("kx_analytics_internal_v2")).toBe("internal");
+    // and the superseded device key is gone, not merely ignored: the marker holds no durable identifier
+    expect(window.localStorage.getItem("kx_analytics_internal_v1")).toBeNull();
+  });
+
+  it("does not resurrect a mark from the old device key: an unmarked session stays unmarked", () => {
+    window.localStorage.setItem("kx_analytics_internal_v1", "internal");
+    initAttribution(input("", "", "/"), false);
+    expect(getAttributionContext()).not.toHaveProperty("kx_traffic_type");
+    expect(window.localStorage.getItem("kx_analytics_internal_v1")).toBeNull();
+  });
+
+  it("stores the bare literal and nothing identifying: no id, no fingerprint, no timestamp", () => {
+    initAttribution(input("?kx_traffic=internal", "", "/"), false);
+    // The whole stored value is the word itself, so the mark cannot carry a durable personal identifier.
+    expect(window.sessionStorage.getItem("kx_analytics_internal_v2")).toBe("internal");
+    const ctx = getAttributionContext() as Record<string, unknown>;
+    expect(ctx.kx_traffic_type).toBe("internal");
+    // and nothing person-shaped rides along with it
+    for (const key of Object.keys(ctx)) expect(key).not.toMatch(/user|person|email|id$|_id|device|fingerprint/i);
+  });
+
+  it("is independent of any sign-in: it marks with no account, and grants nothing", () => {
+    // The site has no sign-in at all, so the marker cannot depend on one. Compared against an IDENTICAL unmarked
+    // visit, marking changes exactly one property and touches nothing else about who or what the session is.
+    const visit = (search: string) => {
+      resetAttributionForTests();
+      window.sessionStorage.clear();
+      window.localStorage.clear();
+      initAttribution(input(search, "https://www.google.com/", "/docs"), false);
+      return getAttributionContext() as Record<string, unknown>;
+    };
+    const unmarked = visit("?utm_campaign=kx_p1_a_parity_proof");
+    const marked = visit("?utm_campaign=kx_p1_a_parity_proof&kx_traffic=internal");
+    const changed = [...new Set([...Object.keys(unmarked), ...Object.keys(marked)])].filter((k) => unmarked[k] !== marked[k]);
+    expect(changed).toEqual(["kx_traffic_type"]);
+    expect(unmarked).not.toHaveProperty("kx_traffic_type");
+  });
+
+  it("is an exclusion hint, not authentication: anyone can set it and it unlocks nothing", () => {
+    // Anybody can append the parameter, so the only thing it may ever do is label traffic.
+    initAttribution(input("?kx_traffic=internal", "https://news.ycombinator.com/", "/"), false);
+    const ctx = getAttributionContext() as Record<string, unknown>;
+    expect(ctx.kx_traffic_type).toBe("internal");
+    // the referrer is still recorded truthfully — marking does not launder where the visit came from
+    expect(ctx.kx_referrer).not.toBe("direct");
+  });
+
+  it("emits the exact literal the reporting filter counts, so marker and filter cannot drift", () => {
+    // `scripts/marketing-weekly-report.mjs` and `adoption-funnel-report.mjs` both count
+    // `properties.kx_traffic_type = 'internal'`. If this module ever emitted another spelling, every marked
+    // session would silently re-enter the audience cohort, which is the failure this pins.
+    initAttribution(input("?kx_traffic=internal", "", "/"), false);
+    expect((getAttributionContext() as Record<string, unknown>).kx_traffic_type).toBe(INTERNAL_TRAFFIC_TYPE);
+    expect(INTERNAL_TRAFFIC_TYPE).toBe("internal");
+  });
+
+  it("removes the session mark with ?kx_traffic=clear, so marking is reversible", () => {
     initAttribution(input("?kx_traffic=internal"), false);
     initAttribution(input("?kx_traffic=clear"), false);
     expect(getAttributionContext()).not.toHaveProperty("kx_traffic_type");
@@ -718,7 +800,7 @@ describe("internal traffic marking", () => {
     expect(getAttributionContext()).not.toHaveProperty("kx_traffic_type");
   });
 
-  it("reports a diagnostic tab on an internal browser as diagnostic, the narrower fact", () => {
+  it("reports a diagnostic tab in an internal session as diagnostic, the narrower fact", () => {
     initAttribution(input("?kx_traffic=internal"), false);
     initAttribution(input("?kx_traffic=diagnostic"), false);
     expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "diagnostic" });
@@ -738,7 +820,7 @@ describe("internal traffic marking", () => {
     });
     initAttribution(input("?kx_traffic=internal"), false);
     expect(getAttributionContext()).toMatchObject({ kx_traffic_type: "internal" });
-    expect(isInternalBrowser("")).toBe(true);
+    expect(isInternalSession("")).toBe(true);
   });
 
   it("sends nothing under Do Not Track, internal or not", () => {

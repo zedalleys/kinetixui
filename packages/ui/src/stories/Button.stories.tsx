@@ -6,7 +6,7 @@ const SIZES = ["sm", "md", "lg", "icon"] as const;
 const STATES = ["Default", "Hover", "Focus", "Active", "Disabled"] as const;
 
 const meta = {
-  title: "Controls & Actions/Button",
+  title: "Actions & Controls/Button",
   component: Button,
   parameters: {
     layout: "centered",

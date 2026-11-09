@@ -39,6 +39,19 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            // The module cannot be built on a dev box — its plugin repositories are unreachable from
+            // there — so CI's log is the only place a Kotlin test failure is ever read. Gradle's
+            // default compact format prints "AssertionError at File.kt:344" and nothing else, which
+            // is not enough to fix anything: the assertion's own message, the expected and actual
+            // values and any `println` are all dropped. FULL plus the standard streams is what makes
+            // a failure here diagnosable without a second speculative push.
+            all {
+                it.testLogging {
+                    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+                    showStandardStreams = true
+                    events("failed")
+                }
+            }
         }
     }
 
@@ -56,6 +69,11 @@ android {
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     implementation("androidx.compose.ui:ui")
+    // `animateColorAsState` lives in androidx.compose.animation, not animation-core (which is where
+    // `animateDpAsState` and `tween` come from, and which arrives transitively). MX1d needs it for the
+    // selection-state colour specs, so it is declared rather than relied on through material3's own
+    // dependency graph. BOM-versioned and first-party: no new third-party dependency.
+    implementation("androidx.compose.animation:animation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
