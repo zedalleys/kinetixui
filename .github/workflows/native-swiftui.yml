@@ -138,6 +138,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # A control compares two runs: the suite green on sound sources, then red once the defect is
+      # back. Only the second was ever measured here, and that is how `switch-value-dropped` reported
+      # "Control held" on a940aefa while the accessibility walk was finding nothing usable at all —
+      # its expected message, "found 0", is what the suite prints for ANY reason the element is
+      # missing, a broken harness included. No wording can fix that: "zero of the thing we looked
+      # for" is never unique to one cause. The baseline is what makes it unique, so take it first and
+      # refuse to go on without it. The step after this one may only ever turn a green suite red.
+      - name: "Baseline: ${{ matrix.suite }} must be green BEFORE the defect goes back"
+        env:
+          SUITE: ${{ matrix.suite }}
+        run: |
+          set -o pipefail
+          if ! swift test --filter "$SUITE" 2>&1 | tee "$RUNNER_TEMP/baseline.log"; then
+            echo "::error::$SUITE is already failing on unmodified sources, so this control can measure nothing: a suite that is red either way cannot tell you the defect was detected. Fix the suite first."
+            tail -40 "$RUNNER_TEMP/baseline.log"
+            exit 1
+          fi
+          echo "Baseline green: whatever the next step turns red is the defect."
+
       - name: "Restore the defect: ${{ matrix.control }}"
         env:
           FILE: ${{ matrix.file }}
@@ -167,11 +186,11 @@ jobs:
             echo "::error::$SUITE PASSED with the defect restored. The gate does not measure what it claims."
             exit 1
           fi
-          # A broken harness fails every test, so it can satisfy a control by accident. Measured on
-          # a0f3a64e: `checkbox-value-dropped` and `switch-value-dropped` both went GREEN while the
-          # accessibility walk was finding nothing at all, because "found 0" is what a broken walk
-          # prints and is also exactly what those controls grep for. So rule the harness out first,
-          # for every control, before believing any expected message.
+          # A second net under the baseline above: the harness's own vacuous-pass guard. It only fires
+          # when the walk reaches NOTHING below the host, which is why it did not save
+          # `switch-value-dropped` on a940aefa — two unlabelled nodes were enough to satisfy it. Kept
+          # because it names the cause precisely when it does fire; it is not what makes a control
+          # sound, and must not be relied on as if it were.
           if grep -qF -- "reached nothing below the hosted view" "$RUNNER_TEMP/control.log"; then
             echo "::error::The harness itself failed — the walk reached nothing below the hosted view — so this run says nothing about the restored defect, whatever messages it printed."
             tail -40 "$RUNNER_TEMP/control.log"
