@@ -109,6 +109,31 @@ it("finds the newComponents key outside quoted strings, so prose cannot disable 
   assert.equal(none.status, 0, none.out);
 });
 
+// Codex finding, 2026-11-09, raised on #465 and belonging here, because the reader is this file.
+// The worse half of the case above: prose can invent a WHOLE BLOCK where the note has no
+// `newComponents` field at all. The old pattern is unanchored and ends at the first `\n    ],`, so
+// starting inside the summary string it runs on to the close of the NEXT array and reads that
+// array's strings as slugs. Reproduced against the real writer's serialization:
+//
+//   summary: "newComponents: release metadata improvements."
+//   changes: [{ title: "metadata" }]        (and any key after it, so `changes` closes with "],")
+//     -> old pattern extracts ["metadata"] -> `newComponents slug "metadata" is not in the manifest`
+//     -> this file's string-aware scan extracts []
+//
+// The terminator is why a key must follow `changes`; with `changes` last there is no `\n    ],` and
+// the old pattern finds nothing, which is why this needs its own fixture rather than the one above.
+it("does not read a following array as slugs when prose mentions the key", () => {
+  const changesThenAnotherKey = `    changes: [
+      {
+        title: "metadata"
+      }
+    ],
+    migration: "none",`;
+  const r = run({ summary: "newComponents: release metadata improvements.", raw: changesThenAnotherKey });
+  assert.equal(r.status, 0, `prose invented a newComponents block out of the changes array:\n${r.out}`);
+  assert.doesNotMatch(r.out, /metadata/, "a change title was read as a component slug");
+});
+
 // --- the remaining cases from the verification list ----------------------------------------------
 
 it("reads every slug across several groups, and several slugs in one group", () => {
