@@ -31,7 +31,7 @@
  * Every check is named, and the name is what the negative control uses. A check that stops being
  * true is either a defect to fix or a decision to record — not a line to delete here.
  */
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
 
@@ -176,6 +176,7 @@ const NEGATIVES = {
   "flutter-changelog-does-not-parse-markdown": { file: "scripts/publish/stage-flutter-package.mjs", from: "fromMarkdown(changelogSource).children.some(", to: "changelogLines.map((line) => ({ type: \"heading\", depth: 2, children: [{ type: \"text\", value: line }], position: { start: { line: 1 } } })).some(", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
   "flutter-changelog-accepts-any-heading-depth": { file: "scripts/publish/stage-flutter-package.mjs", from: "node.depth === 2 &&", to: "node.depth >= 2 &&", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
   "flutter-changelog-accepts-a-setext-heading": { file: "scripts/publish/stage-flutter-package.mjs", from: '/^ {0,3}##[ \\t]/u.test(changelogLines[node.position.start.line - 1] ?? "") &&', to: "", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
+  "flutter-staging-run-without-its-dependencies": { file: ".github/workflows/native-flutter.yml", from: "      - name: Install (the staging script's parser)\n        run: pnpm install --frozen-lockfile\n", to: "", breaks: "VI-FLUTTER-STAGING-HAS-ITS-DEPENDENCIES" },
   "flutter-changelog-controls-not-run": { file: ".github/workflows/ci.yml", from: "node scripts/publish/flutter-changelog-heading-controls.mjs", to: "echo skipped", breaks: "VI-FLUTTER-CHANGELOG-CONTROLS-RUN" },
   // The one that actually bit: the refusal's wording changed and native-flutter.yml's control still
   // grepped the old sentence, so it failed with "proves nothing" after the push rather than before.
@@ -758,6 +759,41 @@ check(
       nativeFlutterWorkflow.includes(`stage-flutter-package.mjs ${probe} `),
     ),
   `native-flutter.yml must prove the changelog refusal fires by matching the refusal's own wording, and scripts/publish/stage-flutter-package.mjs must still produce it: the refusal says \`has no \\\`## <version>\\\` release heading\`, and each version the workflow greps for must be one it stages. Measured: ${changelogRefusalProbes.length === 0 ? "the workflow greps for no such refusal at all" : `the workflow probes ${changelogRefusalProbes.join(", ")}`}. Without this, changing the refusal's wording leaves the control grepping a sentence that no longer exists — it then fails with "proves nothing", which is loud, but only after a push.`,
+);
+
+/*
+ * The staging script now has a dependency, and that is a new way for a publish to fail late. It
+ * imports `mdast-util-from-markdown` — see the comment above the changelog gate for why — so any
+ * job that runs it on a bare checkout dies at the import rather than at a gate. `publish-flutter.yml`
+ * already installs for the preflight's YAML parser, so the real publish path was fine; this was
+ * measured on native-flutter.yml's `publish-dry-run` job, which had no install step and went red
+ * the moment the dependency landed. Gated here in the same commit that fixes it, because the next
+ * job someone adds that runs this script will have the same hole and a red rehearsal is the good
+ * outcome, not the guaranteed one.
+ */
+const stagingWithoutInstall = [];
+for (const path of readdirSync(`${root}.github/workflows`).filter((name) => /\.ya?ml$/u.test(name))) {
+  const text = source(`.github/workflows/${path}`);
+  if (!text.includes("stage-flutter-package.mjs")) continue;
+  let document;
+  try {
+    document = yaml.load(text);
+  } catch {
+    stagingWithoutInstall.push(`.github/workflows/${path} does not parse as YAML`);
+    continue;
+  }
+  for (const [jobName, job] of Object.entries(document?.jobs ?? {})) {
+    const steps = Array.isArray(job?.steps) ? job.steps : [];
+    const runsStaging = steps.some((step) => String(step?.run ?? "").includes("stage-flutter-package.mjs"));
+    if (!runsStaging) continue;
+    const installs = steps.some((step) => /pnpm install/u.test(String(step?.run ?? "")));
+    if (!installs) stagingWithoutInstall.push(`.github/workflows/${path} → job "${jobName}"`);
+  }
+}
+check(
+  "VI-FLUTTER-STAGING-HAS-ITS-DEPENDENCIES",
+  stagingWithoutInstall.length === 0,
+  `every workflow job that runs scripts/publish/stage-flutter-package.mjs must install dependencies first — the script imports a CommonMark parser, so on a bare checkout it dies at the import instead of at a gate, and a publish job that fails that way has already warmed a toolchain and proved nothing. Missing: ${stagingWithoutInstall.join(", ") || "(nothing)"}.`,
 );
 
 check(

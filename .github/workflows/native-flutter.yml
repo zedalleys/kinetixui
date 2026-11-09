@@ -80,6 +80,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # stage-flutter-package.mjs asks a CommonMark parser what a changelog heading is, rather than
+      # scanning the text itself, because five hand-written versions of that question were defeated
+      # in review. So this job can no longer run on a bare checkout: the parser has to be installed
+      # first, exactly as publish-flutter.yml installs it before the same script runs there.
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install (the staging script's parser)
+        run: pnpm install --frozen-lockfile
+
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
