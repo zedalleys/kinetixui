@@ -59,8 +59,8 @@
     },
     "SwiftUI": {
       "build": 90,
-      "interaction": 5,
-      "accessibility": 5,
+      "interaction": 0,
+      "accessibility": 0,
       "rtl": 0,
       "largeText": 0,
       "reducedMotion": 7,
@@ -106,8 +106,8 @@
     "SwiftUI": {
       "not-implemented": 19,
       "source": 0,
-      "build": 85,
-      "headless": 5,
+      "build": 90,
+      "headless": 0,
       "runtime": 0
     },
     "Compose": {
@@ -945,20 +945,6 @@
         ]
       },
       {
-        "file": "packages/ui-swiftui/Tests/KinetixUITests/InteractionTests.swift",
-        "environment": "xctest",
-        "kinds": [
-          "interaction"
-        ],
-        "components": [
-          "button",
-          "checkbox",
-          "switch",
-          "tabs",
-          "toggle"
-        ]
-      },
-      {
         "file": "packages/ui-swiftui/Tests/KinetixUITests/LoopMotionTests.swift",
         "environment": "xctest",
         "kinds": [
@@ -969,20 +955,6 @@
           "message-bubble",
           "skeleton",
           "spinner"
-        ]
-      },
-      {
-        "file": "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift",
-        "environment": "xctest",
-        "kinds": [
-          "accessibility"
-        ],
-        "components": [
-          "button",
-          "checkbox",
-          "switch",
-          "tabs",
-          "toggle"
         ]
       },
       {
@@ -1910,12 +1882,6 @@
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
-        ],
-        "interaction": [
-          "packages/ui-swiftui/Tests/KinetixUITests/InteractionTests.swift:22-123"
-        ],
-        "accessibility": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:22-135"
         ]
       },
       "Compose": {
@@ -2219,12 +2185,6 @@
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
-        ],
-        "interaction": [
-          "packages/ui-swiftui/Tests/KinetixUITests/InteractionTests.swift:22-123"
-        ],
-        "accessibility": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:22-135"
         ]
       },
       "Compose": {
@@ -5972,12 +5932,6 @@
         "build": [
           "packages/ui-swiftui (compiled by CI)"
         ],
-        "interaction": [
-          "packages/ui-swiftui/Tests/KinetixUITests/InteractionTests.swift:22-123"
-        ],
-        "accessibility": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:22-135"
-        ],
         "reducedMotion": [
           "packages/ui-swiftui/Tests/KinetixUITests/SlideMotionTests.swift:5-38",
           "packages/ui-swiftui/Tests/KinetixUITests/SwitchMotionTests.swift:5-108"
@@ -6218,12 +6172,6 @@
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
-        ],
-        "interaction": [
-          "packages/ui-swiftui/Tests/KinetixUITests/InteractionTests.swift:22-123"
-        ],
-        "accessibility": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:22-135"
         ]
       },
       "Compose": {
@@ -6507,12 +6455,6 @@
       "SwiftUI": {
         "build": [
           "packages/ui-swiftui (compiled by CI)"
-        ],
-        "interaction": [
-          "packages/ui-swiftui/Tests/KinetixUITests/InteractionTests.swift:22-123"
-        ],
-        "accessibility": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:22-135"
         ]
       },
       "Compose": {
@@ -7180,13 +7122,7 @@
         ]
       },
       "SwiftUI": {
-        "level": "headless",
-        "interaction": [
-          "xctest"
-        ],
-        "accessibility": [
-          "xctest"
-        ]
+        "level": "build"
       },
       "Compose": {
         "level": "headless",
@@ -7357,13 +7293,7 @@
         ]
       },
       "SwiftUI": {
-        "level": "headless",
-        "interaction": [
-          "xctest"
-        ],
-        "accessibility": [
-          "xctest"
-        ]
+        "level": "build"
       },
       "Compose": {
         "level": "headless",
@@ -9459,13 +9389,7 @@
         ]
       },
       "SwiftUI": {
-        "level": "headless",
-        "interaction": [
-          "xctest"
-        ],
-        "accessibility": [
-          "xctest"
-        ]
+        "level": "build"
       },
       "Compose": {
         "level": "headless",
@@ -9588,13 +9512,7 @@
         ]
       },
       "SwiftUI": {
-        "level": "headless",
-        "interaction": [
-          "xctest"
-        ],
-        "accessibility": [
-          "xctest"
-        ]
+        "level": "build"
       },
       "Compose": {
         "level": "headless",
@@ -9754,13 +9672,7 @@
         ]
       },
       "SwiftUI": {
-        "level": "headless",
-        "interaction": [
-          "xctest"
-        ],
-        "accessibility": [
-          "xctest"
-        ]
+        "level": "build"
       },
       "Compose": {
         "level": "headless",

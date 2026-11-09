@@ -88,70 +88,63 @@ jobs:
           CONTROL: ${{ matrix.control }}
         run: node scripts/adoption/swiftui-consumer.mjs --negative="$CONTROL"
 
-  # Proves the semantics and interaction suites can fail. Each control restores a defect one of them
-  # was written to catch, runs the suite that detects it, and must fail FOR THAT REASON — a run that
-  # fails for any other reason proves nothing and is reported as such. Both claims need a control:
-  # a passing `SemanticsTests` says nothing about whether a press is ever carried out. The sabotage
-  # happens on the runner's throwaway checkout and is never committed.
+  # Proves the SwiftUI selection-semantics suite can fail. Each control restores a defect
+  # `SelectionSemanticsTests` was written to catch, and must turn that suite from green to red FOR
+  # THAT DEFECT'S OWN REASON. The sabotage happens on the runner's throwaway checkout and is never
+  # committed.
+  #
+  # ── The rule these controls are built on ────────────────────────────────────
+  #
+  # A control is a comparison of TWO runs: the suite green on unmodified sources, then red once the
+  # defect is back. Measuring only the second half is the mistake that cost this repository three
+  # rounds of CI. A control whose expectation is "zero of the thing we searched for" —
+  # "found 0", "no such element", an empty result — is never sound, because every other kind of
+  # breakage prints the same thing: a compile error, an empty fixture, a dead harness. It reads
+  # "control held" while verifying nothing at all, which is precisely the failure the job exists to
+  # prevent.
+  #
+  # So: take the baseline first, and refuse to go on without it. Then require a message that only
+  # the restored defect produces — a sentence about the WRONG VALUE it yields, not about the absence
+  # of a right one. The grep is the second check; the baseline is what makes the control sound, and
+  # it must not be removed in favour of a cleverer expectation.
   semantics-negative-controls:
     runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          # The MX1d defect itself: the selected trait keyed on the raw bool, so a mixed box
-          # announced itself as selected.
-          - control: mixed-reads-as-selected
-            suite: SemanticsTests
-            file: Sources/KinetixUI/Checkbox.swift
-            find: ".accessibilityAddTraits(state.isFullySelected ? [.isSelected] : [])"
-            replace: ".accessibilityAddTraits(isOn ? [.isSelected] : [])"
-            # Keying the trait on the raw bool leaves the `isOn: false` mixed case correct by accident,
-            # so only the `isOn: true` assertion detects it. Its message is the one to match.
-            expect: "a mixed box whose underlying value is true must not be announced as selected"
-          # The announcement removed altogether: mixed becomes silent again.
-          - control: checkbox-value-dropped
-            suite: SemanticsTests
-            file: Sources/KinetixUI/Checkbox.swift
-            find: ".accessibilityValue(state.accessibilityValue)"
-            replace: ""
-            expect: "Expected exactly one checkbox in the accessibility tree, found 0"
-          # The switch stops saying which way it is set.
-          - control: switch-value-dropped
-            suite: SemanticsTests
-            file: Sources/KinetixUI/Switch.swift
-            find: '.accessibilityValue(isOn ? "On" : "Off")'
-            replace: ""
-            expect: "Expected exactly one switch in the accessibility tree, found 0"
-          # The interaction claim needs a control of its own: `SemanticsTests` passing says nothing
-          # about whether a press is ever carried out. Removing the toggle's own state change leaves a
-          # control that still renders and still announces itself, and does nothing when pressed.
-          - control: toggle-press-does-nothing
-            suite: InteractionTests
-            file: Sources/KinetixUI/Toggle.swift
-            find: "isOn.toggle()"
-            replace: ""
-            expect: "pressing a toggle inverts its pressed state, from either state"
+          # The MX1d defect at its source: accessibility deriving the state from the bool again, so a
+          # mixed box resolves to on/off and stops being mixed at all.
+          - control: mixed-resolves-from-the-bool
+            file: Sources/KinetixUI/KinetixSelectionSemantics.swift
+            find: "if indeterminate { return .mixed }"
+            replace: "if indeterminate { return isOn ? .on : .off }"
+            expect: "a box showing a dash is mixed whatever the underlying isOn says"
+          # The other half of MX1d: mixed taking the binary selected trait, so a reader is told
+          # "selected" about a partially-checked box.
+          - control: mixed-claims-the-selected-trait
+            file: Sources/KinetixUI/KinetixSelectionSemantics.swift
+            find: "var isFullySelected: Bool { self == .on }"
+            replace: "var isFullySelected: Bool { self != .off }"
+            expect: "mixed must not take the selected trait"
+          # Mixed made silent: announced with one of the other two states' words, which is how the
+          # defect presented before #411 — a mixed box and an unchecked box read identically.
+          - control: mixed-announced-as-unchecked
+            file: Sources/KinetixUI/KinetixSelectionSemantics.swift
+            find: 'case .mixed: return "Mixed"'
+            replace: 'case .mixed: return "Unchecked"'
+            expect: "mixed must not be announced as either of the other two"
     defaults:
       run:
         working-directory: packages/ui-swiftui
     steps:
       - uses: actions/checkout@v4
 
-      # A control compares two runs: the suite green on sound sources, then red once the defect is
-      # back. Only the second was ever measured here, and that is how `switch-value-dropped` reported
-      # "Control held" on a940aefa while the accessibility walk was finding nothing usable at all —
-      # its expected message, "found 0", is what the suite prints for ANY reason the element is
-      # missing, a broken harness included. No wording can fix that: "zero of the thing we looked
-      # for" is never unique to one cause. The baseline is what makes it unique, so take it first and
-      # refuse to go on without it. The step after this one may only ever turn a green suite red.
-      - name: "Baseline: ${{ matrix.suite }} must be green BEFORE the defect goes back"
-        env:
-          SUITE: ${{ matrix.suite }}
+      - name: "Baseline: the suite must be green BEFORE the defect goes back"
         run: |
           set -o pipefail
-          if ! swift test --filter "$SUITE" 2>&1 | tee "$RUNNER_TEMP/baseline.log"; then
-            echo "::error::$SUITE is already failing on unmodified sources, so this control can measure nothing: a suite that is red either way cannot tell you the defect was detected. Fix the suite first."
+          if ! swift test --filter SelectionSemanticsTests 2>&1 | tee "$RUNNER_TEMP/baseline.log"; then
+            echo "::error::SelectionSemanticsTests is already failing on unmodified sources, so this control can measure nothing: a suite that is red either way cannot tell you the defect was detected. Fix the suite first."
             tail -40 "$RUNNER_TEMP/baseline.log"
             exit 1
           fi
@@ -177,25 +170,14 @@ jobs:
       - name: The suite must now fail, and say why
         env:
           EXPECT: ${{ matrix.expect }}
-          SUITE: ${{ matrix.suite }}
         run: |
-          # Without pipefail the pipeline reports tee's status, not swift test's, and the
-          # control would read every run as a pass.
+          # Without pipefail the pipeline reports tee's status, not swift test's, and the control
+          # would read every run as a pass.
           set -o pipefail
-          if swift test --filter "$SUITE" 2>&1 | tee "$RUNNER_TEMP/control.log"; then
-            echo "::error::$SUITE PASSED with the defect restored. The gate does not measure what it claims."
-            exit 1
-          fi
-          # A second net under the baseline above: the harness's own vacuous-pass guard. It only fires
-          # when the walk reaches NOTHING below the host, which is why it did not save
-          # `switch-value-dropped` on a940aefa — two unlabelled nodes were enough to satisfy it. Kept
-          # because it names the cause precisely when it does fire; it is not what makes a control
-          # sound, and must not be relied on as if it were.
-          if grep -qF -- "reached nothing below the hosted view" "$RUNNER_TEMP/control.log"; then
-            echo "::error::The harness itself failed — the walk reached nothing below the hosted view — so this run says nothing about the restored defect, whatever messages it printed."
-            tail -40 "$RUNNER_TEMP/control.log"
+          if swift test --filter SelectionSemanticsTests 2>&1 | tee "$RUNNER_TEMP/control.log"; then
+            echo "::error::SelectionSemanticsTests PASSED with the defect restored. The gate does not measure what it claims."
             exit 1
           fi
           grep -qF -- "$EXPECT" "$RUNNER_TEMP/control.log" \
             || { echo "::error::The suite failed, but not with \"$EXPECT\" — so this control proves nothing."; tail -40 "$RUNNER_TEMP/control.log"; exit 1; }
-          echo "Control held: the suite failed for its own reason."
+          echo "Control held: green before, and red for its own reason after."
