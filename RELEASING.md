@@ -999,6 +999,14 @@ as present and decided nothing, both measured as a green preflight before review
   carrying a live publication must now also carry an authorization at a **lower step index in the
   same job**, because a failing step ending its own job's remaining steps is the entire mechanism
   and nothing weaker than that stops an upload.
+- the publication **delegated somewhere the check does not read**. The ordering above found a
+  publication by a contiguous command token, which is a discovery mechanism: the Compose upload body
+  moved into a local composite action (a `uses:` step has no `run:` at all) or into
+  `bash ./publish.sh` carries no token, so nothing was found and nothing was ordered — with the
+  publishing step's name, condition and env all kept. The ordering is therefore required of the step
+  `PUBLISH_CONTRACT` **names**, and, fail-closed, that step's own `run:` must carry a recognised
+  live publication. A publishing step that delegates its body is refused rather than scanned,
+  because "no publication was found" must never read as "there is none".
 
 That fixture seam is `--lines-file=`, and **a publish workflow may not pass it** — also part of
 `VI-VERSION-AUTHORIZED`, and also added after review. Pointed at the accepting fixture, a publish

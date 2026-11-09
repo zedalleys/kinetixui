@@ -160,6 +160,12 @@ const NEGATIVES = {
   // nothing. Both measured as passing before these clauses existed.
   "compose-authorization-continues-on-error": { file: ".github/workflows/publish-compose.yml", from: "      - name: Authorize the version\n", to: "      - name: Authorize the version\n        continue-on-error: true\n", breaks: "VI-VERSION-AUTHORIZED" },
   "flutter-authorization-continues-on-error": { file: ".github/workflows/publish-flutter.yml", from: "      - name: Authorize the version\n", to: "      - name: Authorize the version\n        continue-on-error: 'true'\n", breaks: "VI-VERSION-AUTHORIZED" },
+  // A publication delegated somewhere this file does not read. Both measured passing on 11d9c9b,
+  // with the publishing step's name, condition and env all kept: the token sweep found nothing, so
+  // the ordering check had nothing to order.
+  "compose-publication-delegated-to-a-local-action": { file: ".github/workflows/publish-compose.yml", from: /        run: \|\n          if \[ -z "\$MAVEN_CENTRAL_USERNAME"[\s\S]*?Deployments\."\n/, to: "        uses: ./.github/actions/publish-compose\n", breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-publication-delegated-to-a-script-file": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          bash ./publish.sh", breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-publishing-step-renamed-away-from-the-contract": { file: ".github/workflows/publish-swiftui.yml", from: "      - name: Push to mirror\n", to: "      - name: Push to the mirror repository\n", breaks: "VI-VERSION-AUTHORIZED" },
   "compose-publishes-before-it-authorizes": { file: ".github/workflows/publish-compose.yml", from: /^      - name: Authorize the version\n(?:        .*\n)+\n/m, to: "", also: { file: ".github/workflows/publish-compose.yml", from: '          echo "::notice::Uploaded. Release the deployment at https://central.sonatype.com -> Deployments."', to: '          echo "::notice::Uploaded. Release the deployment at https://central.sonatype.com -> Deployments."\n\n      - name: Authorize the version\n        if: ${{ inputs.dry_run == false }}\n        working-directory: .\n        env:\n          VERSION: ${{ inputs.version }}\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-compose' }, breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-authorization-moved-into-a-later-job": { file: ".github/workflows/publish-swiftui.yml", from: /^      - name: Authorize the version\n(?:        .*\n)+\n/m, to: "", also: { file: ".github/workflows/publish-swiftui.yml", from: '          echo "Published. Consumers: .package(url: \\"<mirror-url>\\", from: \\"$VERSION\\")"', to: '          echo "Published. Consumers: .package(url: \\"<mirror-url>\\", from: \\"$VERSION\\")"\n\n  authorize_afterwards:\n    needs: publish\n    runs-on: ubuntu-latest\n    steps:\n      - name: Authorize the version\n        if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION: ${{ inputs.version }}\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-swiftui' }, breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-authorization-reads-another-line": { file: ".github/workflows/publish-swiftui.yml", from: "--line=ui-swiftui", to: "--line=ui-compose", breaks: "VI-VERSION-AUTHORIZED" },
@@ -1205,6 +1211,10 @@ const documentSteps = (doc) => {
          */
         continueOnError: mapping["continue-on-error"] === undefined ? null : String(mapping["continue-on-error"]),
         script: typeof mapping.run === "string" ? mapping.run : "",
+        /* What the step delegates to instead of a script. A `uses:` step has no `run:`, so every
+         * check that reads `script` sees nothing — which is indistinguishable from a step that does
+         * nothing, and was measured as a way to hide a publication. */
+        uses: typeof mapping.uses === "string" ? mapping.uses : null,
         /*
          * The environment the step's script actually sees, step keys winning over the job's.
          * Resolved rather than read off the step alone: a value moved to job level is inherited by
@@ -1522,6 +1532,44 @@ for (const workflow of workflows) {
     const authorizedValue = step.env?.VERSION;
     if (authorizedValue !== "${{ inputs.version }}") {
       unauthorized.push(`${workflow.path} → "${step.name}" binds \`VERSION: ${authorizedValue === undefined ? "(nothing)" : authorizedValue}\`; it must be exactly \`\${{ inputs.version }}\`. The publish steps read the dispatch input independently, so any other value here authorizes one version and publishes another — measured: a literal left this entire preflight green`);
+    }
+  }
+
+
+  /*
+   * AND THE ORDERING HAS TO HOLD FOR THE *DECLARED* PUBLISHING STEP, NOT ONLY FOR ONE THIS FILE
+   * RECOGNISES BY ITS COMMAND.
+   *
+   * The sweep above finds a publication by a contiguous command token, and that is a discovery
+   * mechanism: a publication delegated somewhere else carries no token and is not found. Review
+   * measured both forms on `11d9c9b` — the Compose upload body moved into a local composite action
+   * (`uses:`, so `script` is empty) and the same body moved into `bash ./publish.sh` — each with the
+   * publishing step's name, condition and env kept and the authorization moved below it. The whole
+   * preflight exited 0 both times. An ordering check that depends on finding the publication is
+   * only as strong as the finding.
+   *
+   * PUBLISH_CONTRACT names the one step allowed to publish, per workflow, and that name does not
+   * depend on what the step's body happens to contain. So the ordering is required of it by name,
+   * and — fail-closed — the publication has to be WRITTEN THERE: the step's own `run:` must carry a
+   * recognised live publication. A step that delegates its body to an action or a script file is
+   * refused outright rather than scanned, because its body is a file this check does not read, and
+   * "I could not find a publication" must never read as "there is none".
+   */
+  const declaredPublishStep = PUBLISH_CONTRACT[workflow.path]?.publishes;
+  if (declaredPublishStep) {
+    const declared = steps.filter((step) => step.name === declaredPublishStep);
+    if (declared.length === 0) {
+      unauthorized.push(`${workflow.path} has no step named "${declaredPublishStep}", which PUBLISH_CONTRACT names as the one step allowed to publish. The ordering of the authorization is required of that step by name, so a renamed or removed publishing step leaves nothing for it to be ordered against`);
+    }
+    for (const step of declared) {
+      if (sideEffectLines(step.script).length === 0) {
+        unauthorized.push(`${workflow.path} → "${step.name}" (${step.path}) does not carry a recognised live publication in its own \`run:\`${step.uses ? ` — it runs \`uses: ${step.uses}\`` : step.script.trim() ? ` — its script is ${JSON.stringify(step.script.trim().slice(0, 80))}` : " — it has no script at all"}. The publication must be written in this step, not delegated to an action or a script file: a delegated body is a file this check does not read, and every structural property here would still pass while the upload happened somewhere unexamined. Measured: the body moved into a local composite action, and into \`bash ./publish.sh\`, each left this entire preflight green`);
+      }
+      const earlier = authorizing.filter((a) => a.job === step.job && a.index < step.index);
+      if (earlier.length === 0) {
+        const sameJob = authorizing.filter((a) => a.job === step.job);
+        unauthorized.push(`${workflow.path} → "${step.name}" (${step.path}) is the declared publishing step and has no version authorization before it in the same job. ${sameJob.length === 0 ? `jobs.${step.job} runs no authorization at all` : `the authorization is at ${sameJob.map((a) => a.path).join(", ")}, after it`}. This is asked of the declared step by name rather than of a step whose command this file recognises, because a publication delegated elsewhere carries no recognisable command and was measured passing the sweep-based ordering check`);
+      }
     }
   }
 
