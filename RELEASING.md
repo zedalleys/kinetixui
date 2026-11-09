@@ -966,9 +966,20 @@ the conflict condition and the assertion still passes, because the condition, th
 mode list are all still there — the script then prints its own refusal and carries on into the
 shape check, which exits 0. A diagnostic is not a refusal. So
 `VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO` writes the script as the checks see it to a throwaway
-module and invokes it: four conflicting or repeated invocations must exit nonzero *with the guard's
-own wording*, and a single mode must still exit 0 — otherwise a script broken in any way at all
-would satisfy every refusal.
+module and invokes it: five conflicting or repeated invocations must exit 1 *with the guard's own
+wording*, and two things must still succeed — a single mode, and a read of a repo-relative file —
+because otherwise a script broken in any way at all would satisfy every refusal.
+
+That second asymmetry is there because the check failed open once, in exactly this way. The copy
+first lived one directory too deep, so it resolved everything it read against
+`<repo>/node_modules/` rather than the repository. With the exit removed from the repeated-selector
+guard, the copy printed the guard's diagnostic, fell through into the authorization, and exited 1
+on a missing file — a nonzero exit carrying the guard's own wording, which the predicate read as
+enforcement. **A probe is only evidence that a guard refused if the same invocation would have
+passed without it.** So the copy is now a direct child of the repository root, like `scripts/` is;
+the probes that fall through into the authorization are aimed at the accepting fixture with the
+authorized version first, so their fallthrough necessarily exits 0; and the repo-relative read is
+asserted, which is what would have caught the misplacement.
 
 That fixture seam is `--lines-file=`, and **a publish workflow may not pass it** — also part of
 `VI-VERSION-AUTHORIZED`, and also added after review. Pointed at the accepting fixture, a publish

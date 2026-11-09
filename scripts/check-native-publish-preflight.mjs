@@ -144,6 +144,12 @@ const NEGATIVES = {
   // removes only the exit, which is exactly what a source-text assertion cannot see.
   "preflight-mode-guard-reports-without-exiting": { file: "scripts/check-native-publish-preflight.mjs", from: "  );\n  process.exit(1);\n}\n\nif (process.argv.includes(\"--list-negatives\"))", to: "  );\n}\n\nif (process.argv.includes(\"--list-negatives\"))", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   "preflight-allows-a-repeated-selector": { file: "scripts/check-native-publish-preflight.mjs", from: "if (repeatedFlags.length > 0) {\n  console.error(", to: "if (false) {\n  console.error(", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  // The mutation that made this check fail open once: the repeated-selector guard keeps its
+  // condition and its message and loses only the exit. Aimed at a copy one directory too deep, the
+  // fallthrough then failed on ENOENT and the predicate read a nonzero exit plus the guard's own
+  // wording as enforcement. Registered separately from the mode guard's because the two guards fall
+  // through to different places, and that is the whole difficulty.
+  "preflight-repeated-selector-guard-reports-without-exiting": { file: "scripts/check-native-publish-preflight.mjs", from: "  );\n  process.exit(1);\n}\n\n/*\n * EXACTLY ONE MODE PER RUN", to: "  );\n}\n\n/*\n * EXACTLY ONE MODE PER RUN", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   // The same two bypasses by position in a publish workflow, one per selector.
   "compose-authorization-repeats-the-version-selector": { file: ".github/workflows/publish-compose.yml", from: '--authorize-version="$VERSION" --line=ui-compose', to: '--authorize-version=0.1.0 --authorize-version="$VERSION" --line=ui-compose', breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-authorization-repeats-the-line-selector": { file: ".github/workflows/publish-swiftui.yml", from: '--authorize-version="$VERSION" --line=ui-swiftui', to: '--authorize-version="$VERSION" --line=ui-swiftui --line=ui-compose', breaks: "VI-VERSION-AUTHORIZED" },
@@ -868,44 +874,77 @@ check(
  * there is no recursion.
  */
 const runSelfCopy = (args) => {
-  /* The copy lives under node_modules so that its bare `js-yaml` import resolves the same way the
-   * real script's does — that import runs before any argument is looked at, so a copy anywhere
-   * else would fail for a reason that has nothing to do with the guards. */
-  let dir;
+  /*
+   * WHERE THE COPY LIVES IS PART OF THE PROOF, and getting it wrong made this check fail open
+   * once. The script resolves everything it reads against `new URL("..", import.meta.url)`, so a
+   * copy one directory too deep reads `<repo>/node_modules/release/native-release-lines.json`,
+   * which does not exist. Measured: with the exit removed from the repeated-selector guard, the
+   * copy printed the guard's diagnostic, fell through into the authorization, and exited 1 on
+   * ENOENT — so the predicate below saw a nonzero exit and the guard's own wording, and called a
+   * lost refusal enforcement.
+   *
+   * So the copy is a direct child of the repository root, exactly like scripts/ is, which makes its
+   * `..` the repository. node_modules is used because the script's bare `js-yaml` import runs
+   * before any argument is read, and that is where it resolves from. REPO-RELATIVE-READS below is
+   * what keeps this honest: it requires the copy to successfully read a file by repo-relative path.
+   */
+  const file = `${root}node_modules/.preflight-arg-control-${process.pid}-${Math.random().toString(36).slice(2)}.mjs`;
   try {
-    dir = mkdtempSync(`${root}node_modules/.preflight-arg-control-`);
+    writeFileSync(file, selfSource);
   } catch (error) {
-    return { status: null, output: `the throwaway copy could not be written under node_modules (${error.message}), so the argument guards were not exercised` };
+    return { status: null, output: `the throwaway copy could not be written beside node_modules (${error.message}), so the argument guards were not exercised` };
   }
   try {
-    const file = `${dir}/preflight.mjs`;
-    writeFileSync(file, selfSource);
     const run = spawnSync(process.execPath, [file, ...args], { cwd: root, encoding: "utf8" });
     return { status: run.status, output: `${run.stdout ?? ""}${run.stderr ?? ""}` };
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(file, { force: true });
   }
 };
 
+/*
+ * EVERY PROBE'S FALLTHROUGH MUST NECESSARILY SUCCEED.
+ *
+ * A probe is only evidence that the guard *refused* if the same invocation would have *passed*
+ * without it. Two of these fall through to the semver shape check or to --list-negatives, which
+ * exit 0 on their own. The two repeated selectors fall through into the authorization, so they are
+ * aimed at the ACCEPTING fixture and the first of the two values is the one it authorizes — a
+ * fallthrough there exits 0 and prints a PASS, and nothing else about the invocation can fail.
+ * Without that, a lost refusal looks identical to any unrelated failure.
+ */
+const ACCEPTING = "scripts/publish/fixtures/native-release-lines/authorized.json";
 const ARGUMENT_REFUSALS = [
-  { args: ["--version=0.1.0", "--list-negatives"], says: "were passed together", why: "two modes in one invocation" },
-  { args: ["--authorize-version=9.9.9", "--line=ui-compose", "--version=9.9.9"], says: "were passed together", why: "the measured bypass: an authorization decided by the shape check" },
-  { args: ["--authorize-version=0.1.0", "--authorize-version=9.9.9", "--line=ui-compose"], says: "was passed more than once", why: "a repeated --authorize-version=, where only the first value is read" },
-  { args: ["--line=ui-compose", "--line=ui-swiftui", "--authorize-version=9.9.9"], says: "was passed more than once", why: "a repeated --line=, which reads one line's authorization while naming another" },
+  { args: ["--version=0.1.0", "--list-negatives"], says: "were passed together", why: "two modes in one invocation, which would fall through to --list-negatives and exit 0" },
+  { args: ["--authorize-version=9.9.9", "--line=ui-compose", "--version=9.9.9"], says: "were passed together", why: "the measured bypass: an authorization that would fall through to the shape check and exit 0 while nothing is authorized" },
+  { args: ["--version=0.1.0", "--version=9.9.9"], says: "was passed more than once", why: "a repeated --version=, which would fall through to the shape check on the first value and exit 0" },
+  { args: ["--authorize-version=0.1.0", "--authorize-version=9.9.9", "--line=ui-compose", `--lines-file=${ACCEPTING}`], says: "was passed more than once", why: "a repeated --authorize-version=, which would fall through and authorize the first value against the accepting fixture, exiting 0 for a 9.9.9 dispatch" },
+  { args: ["--line=ui-compose", "--line=ui-swiftui", "--authorize-version=0.1.0", `--lines-file=${ACCEPTING}`], says: "was passed more than once", why: "a repeated --line=, which would fall through and read ui-compose's authorization from the accepting fixture while naming ui-swiftui, exiting 0" },
 ];
 
 const argumentFailures = [];
 for (const { args, says, why } of ARGUMENT_REFUSALS) {
   const { status, output } = runSelfCopy(args);
   if (status !== 1) {
-    argumentFailures.push(`\`${args.join(" ")}\` exited ${status === null ? "without a status" : status} rather than 1 — ${why} — and the output was ${JSON.stringify(output.trim().slice(0, 200))}`);
+    argumentFailures.push(`\`${args.join(" ")}\` exited ${status === null ? "without a status" : status} rather than 1 — ${why} — and the output was ${JSON.stringify(output.trim().slice(0, 240))}`);
   } else if (!output.includes(says)) {
-    argumentFailures.push(`\`${args.join(" ")}\` exited ${status}, but not with the guard's own refusal (expected it to say "${says}"); it said ${JSON.stringify(output.trim().slice(0, 200))}, so this proves nothing about ${why}`);
+    argumentFailures.push(`\`${args.join(" ")}\` exited 1, but not with the guard's own refusal (expected it to say "${says}"); it said ${JSON.stringify(output.trim().slice(0, 240))}, so this proves nothing about ${why}`);
   }
 }
+
+/*
+ * The two asymmetries, without which every refusal above is satisfied by a broken script.
+ *
+ *   a single mode must still pass        — or the script cannot run at all
+ *   a repo-relative read must still work — or the copy is in the wrong place, and the refusals
+ *                                          above are ENOENT wearing the guard's diagnostic
+ */
 const singleMode = runSelfCopy(["--version=0.1.0"]);
 if (singleMode.status !== 0) {
-  argumentFailures.push(`\`--version=0.1.0\` alone exited ${singleMode.status}, so the refusals above are not evidence: a script that cannot run at all refuses everything. It said ${JSON.stringify(singleMode.output.trim().slice(0, 200))}`);
+  argumentFailures.push(`\`--version=0.1.0\` alone exited ${singleMode.status}, so the refusals above are not evidence: a script that cannot run at all refuses everything. It said ${JSON.stringify(singleMode.output.trim().slice(0, 240))}`);
+}
+const repoRelative = runSelfCopy(["--authorize-version=0.1.0", "--line=ui-compose", `--lines-file=${ACCEPTING}`]);
+if (repoRelative.status !== 0 || !repoRelative.output.includes("FIXTURE RUN")) {
+  argumentFailures.push(`the throwaway copy could not authorize 0.1.0 out of ${ACCEPTING}, exiting ${repoRelative.status} and saying ${JSON.stringify(repoRelative.output.trim().slice(0, 240))}. It must resolve repo-relative paths exactly as the real script does, or a probe that falls through fails on a missing file and the refusals above measure nothing`);
 }
 
 check(
