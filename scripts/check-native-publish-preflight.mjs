@@ -170,13 +170,16 @@ const NEGATIVES = {
   // 2026-11-09 and that substring test accepted the version appearing in a sentence, so each of
   // these is a route back to a permanent publish whose changelog does not document it.
   "flutter-changelog-matches-a-substring": { file: "scripts/publish/stage-flutter-package.mjs", from: "^##[ \\t]+${version", to: "${version", breaks: "VI-FLUTTER-CHANGELOG-GATES-VERSION" },
-  "flutter-changelog-counts-a-comment": { file: "scripts/publish/stage-flutter-package.mjs", from: '.replace(/<!--[\\s\\S]*?(?:-->|$)/g, "")', to: "", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
-  "flutter-changelog-counts-a-fence": { file: "scripts/publish/stage-flutter-package.mjs", from: "return !insideFence && versionHeading.test(line);", to: "return versionHeading.test(line);", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
+  // Three ways to stop reading the changelog the way it renders. The last two were measured in
+  // review: each made a heading still inside a fenced example count, which fails OPEN.
+  "flutter-changelog-counts-a-comment": { file: "scripts/publish/stage-flutter-package.mjs", from: "if (!startedInsideComment && versionHeading.test(visible)) {", to: "if (versionHeading.test(visible)) {", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
+  "flutter-changelog-closes-a-fence-of-any-length": { file: "scripts/publish/stage-flutter-package.mjs", from: "closing[1].length >= openFence.length", to: "closing[1].length >= 0", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
+  "flutter-changelog-closes-a-fence-of-any-marker": { file: "scripts/publish/stage-flutter-package.mjs", from: "closing[1][0] === openFence.marker", to: "closing[1][0] !== \"\\u0000\"", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
   "flutter-changelog-controls-not-run": { file: ".github/workflows/ci.yml", from: "node scripts/publish/flutter-changelog-heading-controls.mjs", to: "echo skipped", breaks: "VI-FLUTTER-CHANGELOG-CONTROLS-RUN" },
   // The one that actually bit: the refusal's wording changed and native-flutter.yml's control still
   // grepped the old sentence, so it failed with "proves nothing" after the push rather than before.
   "flutter-changelog-refusal-reworded": { file: "scripts/publish/stage-flutter-package.mjs", from: "has no \\`## ${version}\\` release heading", to: "has no entry for ${version}", breaks: "VI-FLUTTER-CHANGELOG-CONTROL-ASSERTS-THE-REFUSAL" },
-  "flutter-changelog-control-probes-an-unstaged-version": { file: ".github/workflows/native-flutter.yml", from: "has no `## 9.9.9-unlogged` release heading", to: "has no `## 9.9.9-never-staged` release heading", breaks: "VI-FLUTTER-CHANGELOG-CONTROL-ASSERTS-THE-REFUSAL" },
+  "flutter-changelog-control-probes-an-unstaged-version": { file: ".github/workflows/native-flutter.yml", from: "has no .## 9.9.9-unlogged. release heading", to: "has no .## 9.9.9-never-staged. release heading", breaks: "VI-FLUTTER-CHANGELOG-CONTROL-ASSERTS-THE-REFUSAL" },
   "swiftui-version-interpolated": { file: ".github/workflows/publish-swiftui.yml", from: '--version="$VERSION"', to: "--version='${{ inputs.version }}'", breaks: "WF-VERSION-NOT-INTERPOLATED" },
   "swiftui-version-interpolated-in-block": { file: ".github/workflows/publish-swiftui.yml", from: "          SHA=$(git rev-parse swiftui-dist)", to: "          SHA=$(git rev-parse swiftui-dist) # ${{ inputs.version }}", breaks: "WF-VERSION-NOT-INTERPOLATED" },
 };
@@ -724,9 +727,10 @@ check(
 
 check(
   "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS",
-  flutterStaging.includes('.replace(/<!--[\\s\\S]*?(?:-->|$)/g, "")') &&
-    flutterStaging.includes("return !insideFence && versionHeading.test(line);"),
-  "scripts/publish/stage-flutter-package.mjs must strip HTML comments and skip fenced code blocks before looking for the release heading. `<!-- ## 0.1.0 -->` and a `## 0.1.0` inside a ```markdown fence are both text that reads like an entry to a line-by-line check and renders as nothing on pub.dev, which is the same class of defect as the substring test this replaced.",
+  flutterStaging.includes("if (!startedInsideComment && versionHeading.test(visible)) {") &&
+    flutterStaging.includes("closing[1][0] === openFence.marker") &&
+    flutterStaging.includes("closing[1].length >= openFence.length"),
+  "scripts/publish/stage-flutter-package.mjs must read fences and comments the way Markdown does, in one pass, because each makes the other literal: a fenced block closes only on the same delimiter character at least as long as the opener, and a line that starts inside an HTML comment cannot carry a heading. Measured in review: toggling on any ``` let a `## 0.1.0` inside a four-backtick block count, and stripping `<!-- … -->` file-wide before scanning deleted fence boundaries sitting inside examples — both FAIL OPEN, which is a permanent publish whose changelog does not document it.",
 );
 
 /*
@@ -739,9 +743,12 @@ check(
  * also checks the probe version the control greps for is the one it actually stages.
  */
 const nativeFlutterWorkflow = source(".github/workflows/native-flutter.yml");
-const changelogRefusalProbes = [...nativeFlutterWorkflow.matchAll(/has no `## ([^`]+)` release heading/g)].map(
-  (match) => match[1],
-);
+/* The workflow matches the refusal's backticks with `.` rather than writing them, because a
+ * backtick inside double quotes is command substitution and inside single quotes shellcheck
+ * reports SC2016 — so this accepts any single character where the backticks are. */
+const changelogRefusalProbes = [
+  ...nativeFlutterWorkflow.matchAll(/has no .## ([^ ]+). release heading/g),
+].map((match) => match[1]);
 check(
   "VI-FLUTTER-CHANGELOG-CONTROL-ASSERTS-THE-REFUSAL",
   changelogRefusalProbes.length > 0 &&

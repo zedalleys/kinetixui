@@ -954,11 +954,25 @@ authorization.
 ## 0.1.0
 ```
 
-A date or title after the version is fine (`## 0.1.0 - 2026-11-09`). Nothing else counts — not the
-version mentioned in prose, not a `### 0.1.0` subsection, not a longer version that starts with it
-(`## 0.1.0-beta.1`), not a commented-out heading, and not an example inside a code fence. Comments
-and fenced blocks are stripped and skipped rather than matched, because both are text that reads
-like a heading and renders as nothing.
+A date or title after the version is fine (`## 0.1.0 - 2026-11-09`), and so is a trailing comment.
+Nothing else counts — not the version mentioned in prose, not a `### 0.1.0` subsection, not a longer
+version that starts with it (`## 0.1.0-beta.1`), not a commented-out heading, and not an example
+inside a code fence.
+
+Fences and comments are read **together, in one pass, in the order Markdown reads them**, because
+each makes the other literal. Inside a fenced block nothing is a comment, and only a matching
+closing fence ends it — the same delimiter character, at least as long as the opener, nothing else
+on the line. Outside one, the parts of a line sitting inside an HTML comment are removed, a comment
+may open and close mid-line or span lines, and an unterminated `<!--` runs to the end of the file.
+A heading has to begin at the start of its line, so a line that *starts* inside a comment carries
+none however it ends, which is what CommonMark does with text after `-->`.
+
+That is not over-engineering; two simpler versions were measured wrong. Toggling on any ``` ignores
+the delimiter's length, so a `## 0.1.0` still inside a four-backtick block counted. Stripping
+`<!-- … -->` from the whole file before scanning deleted fence boundaries that sat inside examples,
+which moved which block a heading belonged to — and an unmatched literal `<!--` inside an example
+swallowed every real heading after it. The first two **fail open**: the heading renders as code and
+the publish proceeds.
 
 This check used to be `changelog.includes(version)`, a substring test, and it was measurably wrong:
 the committed changelog's only heading is `## Unreleased` and its prose says the first version is
@@ -970,5 +984,5 @@ pub.dev version is immutable and the entry cannot be added afterwards.
 in source, but the source checks are not what caught the defect: the old one passed for as long as
 the unsound test was there, because it asserted that a gate *existed*. What proves the behaviour is
 `scripts/publish/flutter-changelog-heading-controls.mjs`, which runs the real staging script against
-one changelog it must accept and seven that only look like a release heading. `ci.yml` runs it on
-every pull request and `VI-FLUTTER-CHANGELOG-CONTROLS-RUN` asserts that it does.
+four changelogs it must accept and eleven that only look like a release heading. `ci.yml` runs it
+on every pull request and `VI-FLUTTER-CHANGELOG-CONTROLS-RUN` asserts that it does.

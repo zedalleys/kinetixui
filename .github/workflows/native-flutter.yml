@@ -115,7 +115,10 @@ jobs:
             echo "::error::Staging accepted a version with no \`## <version>\` release heading. pub would warn and exit non-zero mid-publish, and the entry cannot be added once the version is permanent."
             exit 1
           fi
-          grep -qF 'has no `## 9.9.9-unlogged` release heading' "$RUNNER_TEMP/unlogged.log" \
+          # The backticks the refusal puts around the heading are matched with `.` rather than
+          # written literally: inside double quotes a backtick is command substitution, and inside
+          # single quotes shellcheck reports SC2016. Same device as the name control below.
+          grep -qE 'has no .## 9.9.9-unlogged. release heading' "$RUNNER_TEMP/unlogged.log" \
             || { echo '::error::Staging failed for some other reason, so this control proves nothing.'; cat "$RUNNER_TEMP/unlogged.log"; exit 1; }
           echo "::notice::Staging refused a version with no release heading in the changelog."
 

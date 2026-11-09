@@ -80,6 +80,42 @@ const CASES = [
     changelog: `# Changelog\n\nWrite entries like this:\n\n\`\`\`markdown\n## ${VERSION}\n\n- What changed.\n\`\`\`\n`,
   },
   {
+    id: "nested-fence-with-a-longer-delimiter",
+    accepts: false,
+    why: "a four-backtick block containing a three-backtick line is still open, so a heading after that line is still code — found in review, and it failed open",
+    changelog: `# Changelog\n\nNesting an example inside an example:\n\n\`\`\`\`markdown\n\`\`\`\n## ${VERSION}\n\`\`\`\`\n`,
+  },
+  {
+    id: "fence-boundaries-inside-a-literal-comment",
+    accepts: false,
+    why: "the fence boundaries between a literal `<!--` and a later `-->` inside examples must not be deleted; stripping comments file-wide first moved which block the heading belonged to — found in review, and it failed open",
+    changelog: `# Changelog\n\n\`\`\`markdown\n<!--\n\`\`\`\n-->\n\`\`\`markdown\n## ${VERSION}\n\`\`\`\n`,
+  },
+  {
+    id: "tilde-fence",
+    accepts: false,
+    why: "a tilde fence is a fence too, so a heading inside one is an example",
+    changelog: `# Changelog\n\n~~~markdown\n## ${VERSION}\n~~~\n`,
+  },
+  {
+    id: "heading-after-an-example-holding-an-unmatched-comment-marker",
+    accepts: true,
+    why: "a literal `<!--` inside a fenced example is code, so it must not swallow the real release heading that follows — the fail-closed half of the same review finding",
+    changelog: `# Changelog\n\n\`\`\`markdown\n<!-- how to hide an entry\n\`\`\`\n\n## ${VERSION}\n\n- First preview.\n`,
+  },
+  {
+    id: "heading-with-a-trailing-comment",
+    accepts: true,
+    why: "a comment after the version does not stop the line rendering as a release heading",
+    changelog: `# Changelog\n\n## ${VERSION} <!-- cut 2026-11-09 -->\n\n- First preview.\n`,
+  },
+  {
+    id: "heading-on-the-same-line-as-a-comment-close",
+    accepts: false,
+    why: "CommonMark ends an HTML block at the line carrying `-->`, so the rest of that line is part of the block and not a heading",
+    changelog: `# Changelog\n\n<!-- drafted\n--> ## ${VERSION}\n\n- Not a heading.\n`,
+  },
+  {
     id: "unrelated-number",
     accepts: false,
     why: "a line that happens to contain the number is not an entry",
