@@ -1014,6 +1014,23 @@ as present and decided nothing, both measured as a green preflight before review
   the authorization step must run exactly
   `node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=<line>`
   and nothing else — one spelling, for the same reason the step condition has one.
+- the **interpreter and the directory** the pinned command runs under. The pin fixes the command's
+  text and says nothing about what executes it. A custom `shell:` is a wrapper around the whole
+  script, so `shell: bash -c 'bash {0}; exit 0'` left the pinned string byte-identical, left every
+  predicate above green, and reported success when the authorization refused; the wrapper was
+  measured separately exiting 0 on a script that exits 1. `working-directory:` is the same trick on
+  the other axis: the command is intact and resolves against another directory, where
+  `scripts/check-native-publish-preflight.mjs` is a missing file rather than a gate. Both are
+  inherited through `defaults.run` on the job and on the workflow, so the **effective** value is
+  what is checked, not the step's own key — the Flutter control proves the inherited case, where the
+  job's `defaults.run` carries only a working directory and the shell comes from the workflow. The
+  authorization must therefore carry **no `shell:`** (the runner default ends the job on a non-zero
+  exit) and a working directory that is the repository root, which the repo-relative command needs.
+
+The same property — **a refusal must end the job** — has now been found lost in four distinct
+places: `continue-on-error`, the step's position, the command's own text, and the interpreter that
+runs it. That is why the command is pinned rather than described clause by clause, and why each new
+clause names what its own spelling costs.
 
 That fixture seam is `--lines-file=`, and **a publish workflow may not pass it** — also part of
 `VI-VERSION-AUTHORIZED`, and also added after review. Pointed at the accepting fixture, a publish

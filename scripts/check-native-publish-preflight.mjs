@@ -172,6 +172,13 @@ const NEGATIVES = {
   "swiftui-publishing-step-renamed-away-from-the-contract": { file: ".github/workflows/publish-swiftui.yml", from: "      - name: Push to mirror\n", to: "      - name: Push to the mirror repository\n", breaks: "VI-VERSION-AUTHORIZED" },
   "compose-publishes-before-it-authorizes": { file: ".github/workflows/publish-compose.yml", from: /^      - name: Authorize the version\n(?:        .*\n)+\n/m, to: "", also: { file: ".github/workflows/publish-compose.yml", from: '          echo "::notice::Uploaded. Release the deployment at https://central.sonatype.com -> Deployments."', to: '          echo "::notice::Uploaded. Release the deployment at https://central.sonatype.com -> Deployments."\n\n      - name: Authorize the version\n        if: ${{ inputs.dry_run == false }}\n        working-directory: .\n        env:\n          VERSION: ${{ inputs.version }}\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-compose' }, breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-authorization-moved-into-a-later-job": { file: ".github/workflows/publish-swiftui.yml", from: /^      - name: Authorize the version\n(?:        .*\n)+\n/m, to: "", also: { file: ".github/workflows/publish-swiftui.yml", from: '          echo "Published. Consumers: .package(url: \\"<mirror-url>\\", from: \\"$VERSION\\")"', to: '          echo "Published. Consumers: .package(url: \\"<mirror-url>\\", from: \\"$VERSION\\")"\n\n  authorize_afterwards:\n    needs: publish\n    runs-on: ubuntu-latest\n    steps:\n      - name: Authorize the version\n        if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION: ${{ inputs.version }}\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-swiftui' }, breaks: "VI-VERSION-AUTHORIZED" },
+  // The interpreter and the directory, which decide what the pinned command means. All three
+  // measured passing on 2c61302 with the pinned `run:` string byte-identical. The flutter one is
+  // inherited: the job's own `defaults.run` carries only a working directory, so the shell comes
+  // from the workflow, which a check reading the step alone would call absent.
+  "compose-authorization-runs-under-a-shell-that-masks-refusal": { file: ".github/workflows/publish-compose.yml", from: "      - name: Authorize the version\n", to: "      - name: Authorize the version\n        shell: bash -c 'bash {0}; exit 0'\n", breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-inherits-a-masking-shell-from-workflow-defaults": { file: ".github/workflows/publish-flutter.yml", from: "\njobs:\n", to: "\ndefaults:\n  run:\n    shell: bash -c 'bash {0}; exit 0'\n\njobs:\n", breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-authorization-runs-in-another-directory": { file: ".github/workflows/publish-swiftui.yml", from: "      - name: Authorize the version\n", to: "      - name: Authorize the version\n        working-directory: packages/ui-swiftui\n", breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-authorization-reads-another-line": { file: ".github/workflows/publish-swiftui.yml", from: "--line=ui-swiftui", to: "--line=ui-compose", breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-publish-unvalidated-version": { file: ".github/workflows/publish-swiftui.yml", from: "--version=", to: "--ignored-version=", breaks: "WF-VERSION-VALIDATED" },
   // A vendored copy drifting from its canonical source, which is what a publish from an
@@ -1229,6 +1236,37 @@ const documentSteps = (doc) => {
           ...(job && typeof job === "object" && job.env && typeof job.env === "object" ? job.env : {}),
           ...(mapping.env && typeof mapping.env === "object" ? mapping.env : {}),
         },
+        /*
+         * The interpreter the step's script actually runs under, and the directory it runs in, with
+         * the step's own key winning over `defaults.run` on the job and then on the workflow.
+         *
+         * Both decide what the pinned authorization command MEANS, which is why neither can be left
+         * unread. Measured on this repository: adding `shell: bash -c 'bash {0}; exit 0'` to the
+         * Compose authorization step left the pinned `run:` string and every predicate in this file
+         * untouched and this entire preflight green, while that wrapper reports success even when
+         * the authorization refuses — the fourth distinct place a refusal has been found unable to
+         * end its job. A `working-directory` override is the same shape: the command text is intact
+         * and resolves somewhere else, where `node scripts/...` is a missing file rather than a
+         * gate. Resolved rather than read off the step alone because `defaults.run` is inherited,
+         * so a check reading only the step would call an inherited override absent.
+         */
+        shell: (() => {
+          const defaultsOf = (owner) =>
+            owner && typeof owner === "object" && owner.defaults && typeof owner.defaults === "object" && owner.defaults.run && typeof owner.defaults.run === "object"
+              ? owner.defaults.run
+              : {};
+          const resolved = mapping.shell ?? defaultsOf(job).shell ?? defaultsOf(doc).shell;
+          return resolved === undefined ? null : String(resolved);
+        })(),
+        workingDirectory: (() => {
+          const defaultsOf = (owner) =>
+            owner && typeof owner === "object" && owner.defaults && typeof owner.defaults === "object" && owner.defaults.run && typeof owner.defaults.run === "object"
+              ? owner.defaults.run
+              : {};
+          const resolved =
+            mapping["working-directory"] ?? defaultsOf(job)["working-directory"] ?? defaultsOf(doc)["working-directory"];
+          return resolved === undefined ? null : String(resolved);
+        })(),
       });
     });
   }
@@ -1480,6 +1518,29 @@ for (const workflow of workflows) {
     const pinnedAuthorization = `node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=${line}`;
     if (step.script.trim() !== pinnedAuthorization) {
       unauthorized.push(`${workflow.path} → "${step.name}" must run exactly \`${pinnedAuthorization}\` and nothing else; it runs ${JSON.stringify(step.script.trim())}. Anything around the command can discard its exit status, and then the authorization's refusal is a line in a log rather than the end of the job — measured: appending \`|| true\` left this entire preflight green, the refusal printed, the shell exited 0 and the publication ran`);
+    }
+
+    /*
+     * AND THE INTERPRETER MAY NOT SWALLOW IT EITHER.
+     *
+     * The pin above fixes the command's text; it says nothing about what runs that text. A custom
+     * `shell:` is a wrapper around the script, so `shell: bash -c 'bash {0}; exit 0'` leaves the
+     * pinned string and every predicate here untouched and still reports success when the
+     * authorization refuses — measured on this repository as a green preflight, and the wrapper
+     * measured separately as exiting 0 on a script that exits 1. `working-directory` is the same
+     * trick on the other axis: the command is intact and resolves against another directory, where
+     * `scripts/check-native-publish-preflight.mjs` is a missing file. Both are inherited through
+     * `defaults.run`, so the effective value is what is asked about, not the step's own key.
+     *
+     * The runner default propagates a non-zero exit, so the safe spelling is no override at all.
+     * One directory is allowed because the job defaults point at the package and the repo-relative
+     * command needs the root.
+     */
+    if (step.shell !== null) {
+      unauthorized.push(`${workflow.path} → "${step.name}" runs the version authorization under \`shell: ${step.shell}\` (its own key or one inherited from \`defaults.run\`). The authorization must run under the runner's default shell, which ends the job on a non-zero exit; a custom shell is a wrapper around the pinned command and decides for itself what to exit with — measured: \`shell: bash -c 'bash {0}; exit 0'\` left this entire preflight green while reporting success on a refusal`);
+    }
+    if (step.workingDirectory !== null && step.workingDirectory !== ".") {
+      unauthorized.push(`${workflow.path} → "${step.name}" runs the version authorization in \`working-directory: ${step.workingDirectory}\` (its own key or one inherited from \`defaults.run\`). The pinned command is repo-relative, so anywhere but the repository root it names a file that is not there and the step fails for a reason that has nothing to do with the version — or, in a directory that happens to hold a copy, authorizes out of a file nobody reviewed`);
     }
 
     /*
