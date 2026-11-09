@@ -87,3 +87,70 @@ jobs:
         env:
           CONTROL: ${{ matrix.control }}
         run: node scripts/adoption/swiftui-consumer.mjs --negative="$CONTROL"
+
+  # Proves the semantics suite can fail. Each control restores a defect the suite was written to
+  # catch, runs only that suite, and must fail FOR THAT REASON — a run that fails for any other
+  # reason proves nothing and is reported as such. The sabotage happens on the runner's throwaway
+  # checkout and is never committed.
+  semantics-negative-controls:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The MX1d defect itself: the selected trait keyed on the raw bool, so a mixed box
+          # announced itself as selected.
+          - control: mixed-reads-as-selected
+            file: Sources/KinetixUI/Checkbox.swift
+            find: ".accessibilityAddTraits(state.isFullySelected ? [.isSelected] : [])"
+            replace: ".accessibilityAddTraits(isOn ? [.isSelected] : [])"
+            expect: "a partially-checked box must not be announced as selected"
+          # The announcement removed altogether: mixed becomes silent again.
+          - control: checkbox-value-dropped
+            file: Sources/KinetixUI/Checkbox.swift
+            find: ".accessibilityValue(state.accessibilityValue)"
+            replace: ""
+            expect: "Expected exactly one checkbox in the accessibility tree, found 0"
+          # The switch stops saying which way it is set.
+          - control: switch-value-dropped
+            file: Sources/KinetixUI/Switch.swift
+            find: '.accessibilityValue(isOn ? "On" : "Off")'
+            replace: ""
+            expect: "Expected exactly one switch in the accessibility tree, found 0"
+    defaults:
+      run:
+        working-directory: packages/ui-swiftui
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Restore the defect: ${{ matrix.control }}"
+        env:
+          FILE: ${{ matrix.file }}
+          FIND: ${{ matrix.find }}
+          REPLACE: ${{ matrix.replace }}
+        run: |
+          grep -qF -- "$FIND" "$FILE" \
+            || { echo "::error::$FIND is no longer in $FILE, so this control no longer restores anything. Update the control or delete it."; exit 1; }
+          python3 - "$FILE" "$FIND" "$REPLACE" <<'PY'
+          import sys
+          path, find, replace = sys.argv[1], sys.argv[2], sys.argv[3]
+          src = open(path).read()
+          assert src.count(find) == 1, f"{find!r} appears {src.count(find)} times in {path}; a control must be unambiguous"
+          open(path, "w").write(src.replace(find, replace))
+          PY
+          git --no-pager diff --stat
+
+      - name: The semantics suite must now fail, and say why
+        env:
+          EXPECT: ${{ matrix.expect }}
+        run: |
+          # Without pipefail the pipeline reports tee's status, not swift test's, and the
+          # control would read every run as a pass.
+          set -o pipefail
+          if swift test --filter SemanticsTests 2>&1 | tee "$RUNNER_TEMP/control.log"; then
+            echo "::error::The semantics suite PASSED with the defect restored. The gate does not measure what it claims."
+            exit 1
+          fi
+          grep -qF -- "$EXPECT" "$RUNNER_TEMP/control.log" \
+            || { echo "::error::The suite failed, but not with \"$EXPECT\" — so this control proves nothing."; tail -40 "$RUNNER_TEMP/control.log"; exit 1; }
+          echo "Control held: the suite failed for its own reason."
