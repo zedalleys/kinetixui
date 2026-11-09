@@ -395,6 +395,47 @@ it("refuses unbalanced parentheses in a route or a URL, which Markdown would red
   assert.deepEqual(linkErrors("/docs/a%28b", "where"), []);
 });
 
+// Codex finding, 2026-11-09, on `60570f41`, and the fourth of one shape. `&` and `;` are both legal
+// URL characters and both needed, but together they can form an HTML character reference, which
+// CommonMark DECODES inside a link destination. Measured through a real CommonMark parser:
+//
+//   https://x.test/?a=1&copy;=2  -> reader gets .../?a=1%C2%A9=2
+//   https://x.test/?a=1&#65;=2   -> reader gets .../?a=1A=2
+//   /docs/forms#input&copy;      -> reader gets .../docs/forms#input%C2%A9
+//
+// All four were canonical, or survived the route branch's equality rule, and were accepted.
+it("refuses an HTML character reference, which Markdown would decode", () => {
+  for (const href of ["https://x.test/?a=1&copy;=2", "https://x.test/?a=1&#65;=2", "https://x.test/?a=1&#x41;=2", "/docs/forms#input&copy;"]) {
+    const e = linkErrors(href, "where");
+    assert.equal(e.length, 1, `${href} was accepted`);
+    assert.match(e[0], /character reference/);
+  }
+  // An ampersand without a reference shape is ordinary and must stay accepted: `?a=1&b=2` is how
+  // every query with two parameters is written, and CommonMark leaves it alone.
+  for (const href of ["https://x.test/?a=1&b=2", "/docs/forms?a=1&b=2", "https://x.test/?a=1&b=2#c"]) {
+    assert.deepEqual(linkErrors(href, "where"), [], `${href} is an ordinary query and must be accepted`);
+  }
+});
+
+// Stronger than the fixture list below, and the answer to having been wrong about Markdown's
+// significant characters three times: sweep EVERY printable ASCII character plus a few beyond it,
+// and assert the gate's verdict matches RFC 3986's allowed set exactly. A character I failed to
+// think about fails here rather than in a release body, which is the whole point.
+it("accepts a destination character if and only if a URL may carry it unencoded", () => {
+  const allowed = new Set([..."ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'*+,;="]);
+  const chars = [];
+  for (let c = 0x20; c < 0x7f; c++) chars.push(String.fromCharCode(c));
+  chars.push("\t", "\n", "\r", "\0", "\u007f", "é", " ", "​", "“");
+  for (const c of chars) {
+    // Parentheses and "%" are decided by their own rules (balance, and canonical form), so they are
+    // not part of this character question and are covered by the tests above and below.
+    if (c === "(" || c === ")" || c === "%") continue;
+    const accepted = linkErrors(`/docs/a${c}b`, "where").length === 0;
+    assert.equal(accepted, allowed.has(c),
+      `/docs/a${JSON.stringify(c)}b was ${accepted ? "accepted" : "refused"}; RFC 3986 ${allowed.has(c) ? "allows" : "does not allow"} ${JSON.stringify(c)}`);
+  }
+});
+
 // The control Codex asked for: at the rendered Markdown destination, not only at `new URL`. This
 // drives the real renderer, so it binds on the real escaping rather than on my reading of the spec.
 it("every href the gate accepts survives the real Markdown renderer unchanged", async () => {

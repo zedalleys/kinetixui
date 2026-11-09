@@ -251,10 +251,36 @@ const SITE_ORIGIN = "https://release-note-gate.invalid";
  * rather than parentheses. BOTH branches of `linkErrors` go through it, because the defect is in the
  * consumer and so does not care which spelling the note used. The canonical-form rule below does not
  * cover this: `https://x.test/a(b` is already canonical.
+ *
+ * Three rules, in the order they were learned, each from a counterexample that survived the one
+ * before: an allowlist of URL characters, balanced parentheses, and no HTML character reference. The
+ * allowlist is deliberately first and deliberately broad, because the lesson of those three rounds is
+ * that enumerating Markdown's significant characters one review at a time does not converge.
  */
 function markdownDestinationErrors(dest, href, where) {
-  if (/[\s\u0000-\u001f\u007f]/.test(dest)) {
-    return [`${where}: "${href}" contains whitespace or a control character, which ends a Markdown link destination early when this note is rendered into the GitHub Release body.`];
+  // Rule 1, and the one that matters most: an allowlist of the characters RFC 3986 permits in a URL.
+  // Three rounds of review here each found one more Markdown-significant character, so enumerating
+  // them is the losing move. Anything outside this set is refused instead, which covers whitespace,
+  // control characters, `<`, `>`, a backtick, a quote and a backslash in one rule, and covers
+  // whatever else Markdown treats as syntax that I have not thought of.
+  const offending = [...dest].find((c) => !/[A-Za-z0-9\-._~:/?#[\]@!$&'()*+,;=%]/.test(c));
+  if (offending !== undefined) {
+    return [`${where}: "${href}" contains ${JSON.stringify(offending)}, which is not a character a URL may carry unencoded. This href is also rendered into a Markdown link destination for the GitHub Release, where whitespace, "<", a backtick and a quote each change where the reader goes — percent-encode it.`];
+  }
+  // Rule 3 (rule 2, balanced parentheses, is below). `&` and `;` are both legal URL characters and
+  // both needed — `?a=1&b=2` is ordinary — but together they can form an HTML character reference,
+  // which CommonMark DECODES inside a link destination. Measured through a real CommonMark parser:
+  //
+  //   https://x.test/?a=1&copy;=2    -> reader gets .../?a=1%C2%A9=2
+  //   https://x.test/?a=1&#65;=2     -> reader gets .../?a=1A=2
+  //   /docs/forms#input&copy;        -> reader gets .../docs/forms#input%C2%A9
+  //
+  // `?a=1&b=2` is untouched, because it has no `;`. This refuses the SHAPE rather than consulting
+  // the HTML5 named-reference list, so `&notareference;` is refused too: being conservative here
+  // costs an author one percent-encoding and costs a reader nothing.
+  const reference = /&(?:[A-Za-z][A-Za-z0-9]{0,31}|#[0-9]{1,7}|#[xX][0-9A-Fa-f]{1,6});/.exec(dest);
+  if (reference !== null) {
+    return [`${where}: "${href}" contains ${JSON.stringify(reference[0])}, which CommonMark decodes as a character reference when this note is rendered into the GitHub Release body, so the reader's URL is not the one written here. Percent-encode the "&" as "%26".`];
   }
   let depth = 0;
   for (const c of dest) {
