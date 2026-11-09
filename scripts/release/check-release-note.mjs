@@ -235,6 +235,38 @@ const ALLOWED_SCHEMES = new Set(["https:"]);
 /** Resolution base for site-absolute routes. Only its origin is compared, never emitted as a link. */
 const SITE_ORIGIN = "https://release-note-gate.invalid";
 
+/**
+ * An href has a reader that is not a URL parser at all. `release-notes.mjs:124` interpolates the
+ * destination into a Markdown link, `([docs](<dest>))`, for the GitHub Release body, and a Markdown
+ * link destination has its own grammar: it ends at whitespace, and its parentheses must balance.
+ *
+ * Measured through a real CommonMark parser, with the rendered destination resolved against a
+ * release page — every one of these passes URL parsing and lands somewhere else:
+ *
+ *   /docs/a(b    -> reader lands on /docs/a(b)   (the link's own ")" is absorbed)
+ *   /docs/a)b    -> reader lands on /docs/a      (the destination ends early)
+ *   /docs/a(b(c  -> no link is rendered at all
+ *
+ * Balanced parentheses are fine — `/docs/a(b)` renders correctly — so this bans unbalanced ones
+ * rather than parentheses. BOTH branches of `linkErrors` go through it, because the defect is in the
+ * consumer and so does not care which spelling the note used. The canonical-form rule below does not
+ * cover this: `https://x.test/a(b` is already canonical.
+ */
+function markdownDestinationErrors(dest, href, where) {
+  if (/[\s\u0000-\u001f\u007f]/.test(dest)) {
+    return [`${where}: "${href}" contains whitespace or a control character, which ends a Markdown link destination early when this note is rendered into the GitHub Release body.`];
+  }
+  let depth = 0;
+  for (const c of dest) {
+    if (c === "(") depth++;
+    else if (c === ")" && --depth < 0) break;
+  }
+  if (depth !== 0) {
+    return [`${where}: "${href}" has unbalanced parentheses. This href is rendered into a Markdown link destination for the GitHub Release, where the parentheses must balance or the reader is sent somewhere else — percent-encode them as "%28" and "%29".`];
+  }
+  return [];
+}
+
 export function linkErrors(href, where) {
   if (typeof href !== "string" || href.trim() === "") return [`${where} must be a non-empty string`];
   if (href !== href.trim()) return [`${where}: "${href}" has leading or trailing whitespace`];
@@ -271,7 +303,9 @@ export function linkErrors(href, where) {
     if (normalised !== href) {
       return [`${where}: "${href}" is read by a browser as ${JSON.stringify(normalised)}, so the note does not say where the link goes. Write the route exactly as it resolves.`];
     }
-    return [];
+    // The renderer makes a route absolute against the site (`absolute()` at release-notes.mjs:76)
+    // before putting it in the Markdown destination, so check the string it will actually emit.
+    return markdownDestinationErrors(`https://kinetixui.com${href}`, href, where);
   }
 
   // `offSite` stays the single source of truth for "does this name a route here?" — the question
@@ -322,11 +356,14 @@ export function linkErrors(href, where) {
   // Those first two are exactly the spellings the two BROWSER readings agree on, so an agreement
   // check between them is not enough: it accepted an href that this consumer silently redirects.
   //
-  // So require the canonical serialization instead. It is a strictly stronger condition, measured
-  // rather than assumed: across backslash, space, tab, angle-bracket, backtick, quote, uppercase-host
-  // and missing-trailing-slash spellings, there is no href that is canonical and still breaks in
-  // Markdown. It also subsumes the resolve-in-a-page check, because a canonical URL always begins
-  // `scheme://` and so reads the same alone and in a page. One invariant for all three readers.
+  // So require the canonical serialization. That settles every spelling above, and it subsumes the
+  // resolve-in-a-page check too, because a canonical URL always begins `scheme://` and so reads the
+  // same alone and in a page.
+  //
+  // It is NOT on its own enough for the Markdown reader, which is the correction to an earlier
+  // version of this comment: `https://x.test/a(b` is already canonical and still sends the reader to
+  // `https://x.test/a(b)`. Parentheses are the gap, because they are the one Markdown-significant
+  // character a URL parser leaves alone. `markdownDestinationErrors` covers that for both branches.
   //
   // It refuses a few spellings that would in fact work — `https://github.com` without the trailing
   // slash, an uppercase host — and that is the right trade here, because the message names the exact
@@ -335,7 +372,7 @@ export function linkErrors(href, where) {
   if (href !== url.href) {
     return [`${where}: "${href}" is not the canonical form of the URL it names, which is "${url.href}". Write that instead: this href is also rendered verbatim into a Markdown link destination for the GitHub Release, where a backslash, space or tab changes where the reader goes.`];
   }
-  return [];
+  return markdownDestinationErrors(href, href, where);
 }
 
 // ---------------------------------------------------------------------------------------------

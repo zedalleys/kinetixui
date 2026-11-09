@@ -362,6 +362,39 @@ it("refuses an https spelling that is not the canonical URL, and names what to w
   for (const [, canonical] of cases) assert.deepEqual(linkErrors(canonical, "where"), []);
 });
 
+// Found by asking the question the commit above should have asked: is canonical form SUFFICIENT, or
+// only sufficient for the characters I happened to try? It is not sufficient. `https://x.test/a(b` is
+// already canonical, and `/docs/a(b` already survives the route branch's own equality rule, because
+// parentheses are the one Markdown-significant character a URL parser leaves alone. Measured through
+// a real CommonMark parser, with the rendered destination resolved against a release page:
+//
+//   /docs/a(b           -> reader lands on /docs/a(b)   (the link's own ")" is absorbed)
+//   /docs/a)b           -> reader lands on /docs/a      (destination ends early)
+//   https://x.test/a(b(c-> no link rendered at all
+//
+// So this is a third hole of the same shape, and it was on BOTH branches — which answers the other
+// thing I had not proved: the route branch was indeed the inconsistent one.
+it("refuses unbalanced parentheses in a route or a URL, which Markdown would redirect", () => {
+  for (const href of ["/docs/a(b", "/docs/a)b", "https://x.test/a(b", "https://x.test/a)b", "https://x.test/a(b(c"]) {
+    // Each is accepted by every URL-level rule this gate has, which is why it needed its own.
+    if (href.startsWith("/")) {
+      const u = new URL(href, "https://kinetixui.com/docs/changelog");
+      assert.equal(`${u.pathname}${u.search}${u.hash}`, href, `fixture is wrong: ${href} fails the route rule already`);
+    } else {
+      assert.equal(new URL(href).href, href, `fixture is wrong: ${href} is not canonical`);
+    }
+    const e = linkErrors(href, "where");
+    assert.equal(e.length, 1, `${href} was accepted`);
+    assert.match(e[0], /unbalanced parentheses/);
+  }
+  // Balanced parentheses render correctly, so they stay accepted: the ban is on "unbalanced".
+  for (const href of ["/docs/a(b)", "https://x.test/a(b)", "https://x.test/a(b)(c)"]) {
+    assert.deepEqual(linkErrors(href, "where"), [], `${href} renders correctly and must be accepted`);
+  }
+  // And the escape the message tells the author to use has to work.
+  assert.deepEqual(linkErrors("/docs/a%28b", "where"), []);
+});
+
 // The control Codex asked for: at the rendered Markdown destination, not only at `new URL`. This
 // drives the real renderer, so it binds on the real escaping rather than on my reading of the spec.
 it("every href the gate accepts survives the real Markdown renderer unchanged", async () => {
