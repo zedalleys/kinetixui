@@ -1336,7 +1336,7 @@
     "button": {
       "React": "beta",
       "Angular": "preview",
-      "SwiftUI": "experimental",
+      "SwiftUI": "beta",
       "Compose": "beta",
       "Flutter": "beta"
     },
@@ -1376,7 +1376,7 @@
     "checkbox": {
       "React": "beta",
       "Angular": "preview",
-      "SwiftUI": "experimental",
+      "SwiftUI": "beta",
       "Compose": "beta",
       "Flutter": "beta"
     },
@@ -1839,7 +1839,7 @@
     "switch": {
       "React": "beta",
       "Angular": "preview",
-      "SwiftUI": "experimental",
+      "SwiftUI": "beta",
       "Compose": "beta",
       "Flutter": "beta"
     },
@@ -1866,7 +1866,7 @@
     "tabs": {
       "React": "beta",
       "Angular": "preview",
-      "SwiftUI": "experimental",
+      "SwiftUI": "beta",
       "Compose": "beta",
       "Flutter": "beta"
     },
@@ -1897,7 +1897,7 @@
     "toggle": {
       "React": "beta",
       "Angular": "preview",
-      "SwiftUI": "experimental",
+      "SwiftUI": "beta",
       "Compose": "beta",
       "Flutter": "beta"
     },
@@ -1940,7 +1940,8 @@
       "preview": 80
     },
     "SwiftUI": {
-      "experimental": 90
+      "experimental": 85,
+      "beta": 5
     },
     "Compose": {
       "experimental": 81,
@@ -2259,7 +2260,9 @@
         "published"
       ],
       "SwiftUI": [
-        "build"
+        "accessibility",
+        "build",
+        "interaction"
       ],
       "Compose": [
         "accessibility",
@@ -2399,7 +2402,9 @@
         "published"
       ],
       "SwiftUI": [
-        "build"
+        "accessibility",
+        "build",
+        "interaction"
       ],
       "Compose": [
         "accessibility",
@@ -4085,7 +4090,9 @@
         "rtl"
       ],
       "SwiftUI": [
+        "accessibility",
         "build",
+        "interaction",
         "reducedMotion"
       ],
       "Compose": [
@@ -4190,7 +4197,9 @@
         "rtl"
       ],
       "SwiftUI": [
-        "build"
+        "accessibility",
+        "build",
+        "interaction"
       ],
       "Compose": [
         "accessibility",
@@ -4312,7 +4321,9 @@
         "published"
       ],
       "SwiftUI": [
-        "build"
+        "accessibility",
+        "build",
+        "interaction"
       ],
       "Compose": [
         "accessibility",
@@ -4462,8 +4473,8 @@
     },
     "SwiftUI": {
       "build": 90,
-      "interaction": 0,
-      "accessibility": 0,
+      "interaction": 5,
+      "accessibility": 5,
       "rtl": 0,
       "largeText": 0,
       "reducedMotion": 7,
