@@ -169,12 +169,13 @@ const NEGATIVES = {
   // The changelog gate, three ways to loosen it. It was `changelog.includes(version)` until
   // 2026-11-09 and that substring test accepted the version appearing in a sentence, so each of
   // these is a route back to a permanent publish whose changelog does not document it.
-  "flutter-changelog-matches-a-substring": { file: "scripts/publish/stage-flutter-package.mjs", from: "^##[ \\t]+${version", to: "${version", breaks: "VI-FLUTTER-CHANGELOG-GATES-VERSION" },
-  // Three ways to stop reading the changelog the way it renders. The last two were measured in
-  // review: each made a heading still inside a fenced example count, which fails OPEN.
-  "flutter-changelog-counts-a-comment": { file: "scripts/publish/stage-flutter-package.mjs", from: "if (!startedInsideComment && versionHeading.test(visible)) {", to: "if (versionHeading.test(visible)) {", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
-  "flutter-changelog-closes-a-fence-of-any-length": { file: "scripts/publish/stage-flutter-package.mjs", from: "closing[1].length >= openFence.length", to: "closing[1].length >= 0", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
-  "flutter-changelog-closes-a-fence-of-any-marker": { file: "scripts/publish/stage-flutter-package.mjs", from: "closing[1][0] === openFence.marker", to: "closing[1][0] !== \"\\u0000\"", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
+  "flutter-changelog-matches-a-substring": { file: "scripts/publish/stage-flutter-package.mjs", from: "String.raw`^${version", to: "String.raw`${version", breaks: "VI-FLUTTER-CHANGELOG-GATES-VERSION" },
+  "flutter-changelog-accepts-any-boundary": { file: "scripts/publish/stage-flutter-package.mjs", from: "(?=\\s|$)`", to: "`", breaks: "VI-FLUTTER-CHANGELOG-GATES-VERSION" },
+  // Three ways to stop asking Markdown what a heading is. Every hand-written answer tried here was
+  // defeated in review, and always in the fail-OPEN direction.
+  "flutter-changelog-does-not-parse-markdown": { file: "scripts/publish/stage-flutter-package.mjs", from: "fromMarkdown(changelogSource).children.some(", to: "changelogLines.map((line) => ({ type: \"heading\", depth: 2, children: [{ type: \"text\", value: line }], position: { start: { line: 1 } } })).some(", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
+  "flutter-changelog-accepts-any-heading-depth": { file: "scripts/publish/stage-flutter-package.mjs", from: "node.depth === 2 &&", to: "node.depth >= 2 &&", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
+  "flutter-changelog-accepts-a-setext-heading": { file: "scripts/publish/stage-flutter-package.mjs", from: '/^ {0,3}##[ \\t]/u.test(changelogLines[node.position.start.line - 1] ?? "") &&', to: "", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
   "flutter-changelog-controls-not-run": { file: ".github/workflows/ci.yml", from: "node scripts/publish/flutter-changelog-heading-controls.mjs", to: "echo skipped", breaks: "VI-FLUTTER-CHANGELOG-CONTROLS-RUN" },
   // The one that actually bit: the refusal's wording changed and native-flutter.yml's control still
   // grepped the old sentence, so it failed with "proves nothing" after the push rather than before.
@@ -720,17 +721,17 @@ check(
 check(
   "VI-FLUTTER-CHANGELOG-GATES-VERSION",
   /node scripts\/publish\/stage-flutter-package\.mjs/.test(flutterWorkflow) &&
-    flutterStaging.includes("^##[ \\t]+${version") &&
-    flutterStaging.includes("(?=[ \\t]|$)"),
-  "scripts/publish/stage-flutter-package.mjs must require an exact `## <version>` release heading in packages/ui-flutter/CHANGELOG.md — the version anchored to a level-2 heading, and ended by whitespace or the end of the line so that `## 0.1.0-beta.1` cannot satisfy a publish of 0.1.0. A substring test is not enough: it accepts the number appearing in a sentence, and a published version whose changelog does not document it cannot be corrected, because the version is immutable.",
+    flutterStaging.includes("String.raw`^${version") &&
+    flutterStaging.includes("(?=\\s|$)`"),
+  "scripts/publish/stage-flutter-package.mjs must require an exact `## <version>` release heading in packages/ui-flutter/CHANGELOG.md — the version anchored to the start of the heading's text, and ended by whitespace or the end of it so that `## 0.1.0-beta.1` cannot satisfy a publish of 0.1.0 while `## 0.1.0 - 2026-11-09` can. A substring test is not enough: it accepts the number appearing in a sentence, and a published version whose changelog does not document it cannot be corrected, because the version is immutable.",
 );
 
 check(
   "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS",
-  flutterStaging.includes("if (!startedInsideComment && versionHeading.test(visible)) {") &&
-    flutterStaging.includes("closing[1][0] === openFence.marker") &&
-    flutterStaging.includes("closing[1].length >= openFence.length"),
-  "scripts/publish/stage-flutter-package.mjs must read fences and comments the way Markdown does, in one pass, because each makes the other literal: a fenced block closes only on the same delimiter character at least as long as the opener, and a line that starts inside an HTML comment cannot carry a heading. Measured in review: toggling on any ``` let a `## 0.1.0` inside a four-backtick block count, and stripping `<!-- … -->` file-wide before scanning deleted fence boundaries sitting inside examples — both FAIL OPEN, which is a permanent publish whose changelog does not document it.",
+  flutterStaging.includes("fromMarkdown(changelogSource).children.some(") &&
+    flutterStaging.includes("node.depth === 2 &&") &&
+    flutterStaging.includes('/^ {0,3}##[ \\t]/u.test(changelogLines[node.position.start.line - 1] ?? "") &&'),
+  "scripts/publish/stage-flutter-package.mjs must ask a CommonMark parser what a heading is — `fromMarkdown`, a depth-2 heading among the document's top-level children, written as ATX — rather than scanning the text itself. Three hand-written versions were defeated in review, each by a different piece of the spec (fence delimiter lengths, info strings that may not contain backticks, comment fragments joined into a `##` that was never parsed, raw HTML blocks), and every failure counted a heading that renders as code or literal HTML. All of them FAIL OPEN, which is a permanent publish whose changelog does not document it. This is the same move check-native-publish-preflight.mjs itself made when it replaced a hand-written workflow reader with js-yaml.",
 );
 
 /*

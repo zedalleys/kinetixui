@@ -116,6 +116,48 @@ const CASES = [
     changelog: `# Changelog\n\n<!-- drafted\n--> ## ${VERSION}\n\n- Not a heading.\n`,
   },
   {
+    id: "fence-opener-with-a-backtick-in-its-info-string",
+    accepts: false,
+    why: "a backtick fence's info string may not contain backticks, so ```foo` is not an opener and the real fence opens on the next line — found in review, and it failed open",
+    changelog: `# Changelog\n\n\`\`\`foo\`\n\`\`\`\n## ${VERSION}\n\`\`\`\n`,
+  },
+  {
+    id: "inside-a-raw-html-block",
+    accepts: false,
+    why: "a line inside an HTML block is literal content, not a heading — found in review, and it failed open",
+    changelog: `# Changelog\n\n<pre>\n## ${VERSION}\n</pre>\n`,
+  },
+  {
+    id: "comment-splits-the-heading-prefix",
+    accepts: false,
+    why: "`#<!-- x -->#  0.1.0` is a paragraph; joining the fragments outside the comment manufactures a `##` that Markdown never parsed — found in review, and it failed open",
+    changelog: `#<!-- x -->#  ${VERSION}\n`,
+  },
+  {
+    id: "comment-opens-a-phantom-fence",
+    accepts: false,
+    why: "removing a leading comment made ` ```js` look like an opener, so the real opener read as its closer and exposed a heading that stays fenced — found in review, and it failed open",
+    changelog: `<!-- x --> \`\`\`js\n\`\`\`\n## ${VERSION}\n\`\`\`\n`,
+  },
+  {
+    id: "indented-code-block",
+    accepts: false,
+    why: "four spaces make it an indented code block, so the line is code",
+    changelog: `# Changelog\n\nLike this:\n\n    ## ${VERSION}\n`,
+  },
+  {
+    id: "inside-a-blockquote",
+    accepts: false,
+    why: "a heading inside a blockquote is quoted, not this document's release section",
+    changelog: `# Changelog\n\n> ## ${VERSION}\n>\n> Quoted from somewhere else.\n`,
+  },
+  {
+    id: "setext-heading",
+    accepts: false,
+    why: "an underlined heading is depth 2 to the parser but is not the `## X.Y.Z` spelling the release process documents; refusing it fails closed",
+    changelog: `# Changelog\n\n${VERSION}\n-----\n\n- First preview.\n`,
+  },
+  {
     id: "unrelated-number",
     accepts: false,
     why: "a line that happens to contain the number is not an entry",

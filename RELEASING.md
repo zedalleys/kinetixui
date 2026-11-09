@@ -955,34 +955,33 @@ authorization.
 ```
 
 A date or title after the version is fine (`## 0.1.0 - 2026-11-09`), and so is a trailing comment.
-Nothing else counts — not the version mentioned in prose, not a `### 0.1.0` subsection, not a longer
-version that starts with it (`## 0.1.0-beta.1`), not a commented-out heading, and not an example
-inside a code fence.
+The requirement, precisely: a **heading node at depth 2 among the document's top-level children**,
+**written as ATX** (the line it starts on begins with `##`), whose text **begins with exactly this
+version**, ended by whitespace or the end of the text.
 
-Fences and comments are read **together, in one pass, in the order Markdown reads them**, because
-each makes the other literal. Inside a fenced block nothing is a comment, and only a matching
-closing fence ends it — the same delimiter character, at least as long as the opener, nothing else
-on the line. Outside one, the parts of a line sitting inside an HTML comment are removed, a comment
-may open and close mid-line or span lines, and an unterminated `<!--` runs to the end of the file.
-A heading has to begin at the start of its line, so a line that *starts* inside a comment carries
-none however it ends, which is what CommonMark does with text after `-->`.
+**A CommonMark parser answers that question, not a regex over the text.** The check runs
+`mdast-util-from-markdown` over the changelog, so fenced blocks, fence info strings, raw HTML
+blocks, HTML comments, indented code and blockquotes are the parser's problem rather than this
+repository's. That is the same move `check-native-publish-preflight.mjs` made when it replaced a
+hand-written workflow reader with `js-yaml`, and for the same reason: **three hand-written versions
+of this check were defeated in review, each by a different piece of the spec, and every single
+failure counted a heading that renders as code or as literal HTML.** They all fail *open* — the
+publish proceeds and the version is permanent. The defeated versions, in order:
 
-That is not over-engineering; two simpler versions were measured wrong. Toggling on any ``` ignores
-the delimiter's length, so a `## 0.1.0` still inside a four-backtick block counted. Stripping
-`<!-- … -->` from the whole file before scanning deleted fence boundaries that sat inside examples,
-which moved which block a heading belonged to — and an unmatched literal `<!--` inside an example
-swallowed every real heading after it. The first two **fail open**: the heading renders as code and
-the publish proceeds.
+| Attempt | Defeated by |
+| --- | --- |
+| `changelog.includes(version)` | the version appearing in a sentence — which is what the committed changelog contains |
+| toggle fence state on any ``` | a four-backtick block containing a three-backtick line |
+| strip comments, then scan lines | deleted fence boundaries; `#<!-- x -->#  0.1.0` joined into a `##` that was never parsed; a stripped comment opening a phantom fence; `` ```foo` `` read as an opener although a backtick fence's info string may not contain backticks; and `<pre>` around a heading, which none of them modelled at all |
 
-This check used to be `changelog.includes(version)`, a substring test, and it was measurably wrong:
-the committed changelog's only heading is `## Unreleased` and its prose says the first version is
-undecided, so because that sentence contains the characters `0.1.0`, staging `0.1.0` passed. The
-most likely first release would have published with no changelog entry — permanently, because a
-pub.dev version is immutable and the entry cannot be added afterwards.
+Two deliberate refusals, both failing closed: a **setext** heading (`0.1.0` underlined with `-----`)
+is depth 2 to the parser but is not the `## X.Y.Z` spelling this document defines, and a heading
+**inside a blockquote or list item** is not a top-level release section.
 
 `VI-FLUTTER-CHANGELOG-GATES-VERSION` and `VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS` pin the contract
 in source, but the source checks are not what caught the defect: the old one passed for as long as
 the unsound test was there, because it asserted that a gate *existed*. What proves the behaviour is
 `scripts/publish/flutter-changelog-heading-controls.mjs`, which runs the real staging script against
-four changelogs it must accept and eleven that only look like a release heading. `ci.yml` runs it
-on every pull request and `VI-FLUTTER-CHANGELOG-CONTROLS-RUN` asserts that it does.
+four changelogs it must accept and eighteen that only look like a release heading — every defeated
+attempt above is a standing case. `ci.yml` runs it on every pull request and
+`VI-FLUTTER-CHANGELOG-CONTROLS-RUN` asserts that it does.

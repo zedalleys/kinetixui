@@ -20,6 +20,8 @@
  * every pull request instead of only when someone dispatches a publish.
  */
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { fromMarkdown } from "mdast-util-from-markdown";
+import { toString as mdastToString } from "mdast-util-to-string";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -129,77 +131,50 @@ if (!existsSync(changelogPath)) {
   die(`${changelogPath} does not exist. pub.dev renders it as the Changelog tab and scores its absence.`);
 }
 
+/*
+ * WHAT COUNTS AS A HEADING IS A MARKDOWN QUESTION, SO A MARKDOWN PARSER ANSWERS IT.
+ *
+ * Three hand-written versions of this check were defeated in review, each by a different piece of
+ * CommonMark, and every failure was in the same direction — a heading that renders as code or as
+ * literal HTML was counted, so a permanent publish would have gone out with no changelog entry:
+ *
+ *   - a substring test accepted the version appearing in a sentence;
+ *   - toggling fence state on any ``` ignored the delimiter's character and length, so a heading
+ *     still inside a four-backtick block counted;
+ *   - stripping `<!-- … -->` and scanning what was left deleted fence boundaries, manufactured a
+ *     `##` prefix out of two fragments (`#<!-- x -->#  0.1.0`), opened phantom fences, and read a
+ *     `` ```foo` `` line as an opener although a backtick fence's info string may not contain
+ *     backticks;
+ *   - and none of them knew about raw HTML blocks, so `<pre>` around a heading counted too.
+ *
+ * `js-yaml` replaced a hand-written workflow reader in check-native-publish-preflight.mjs for
+ * exactly this reason. The same answer applies here: `mdast-util-from-markdown` is the CommonMark
+ * reference block parser, so fences, info strings, HTML blocks, comments, indented code and
+ * blockquotes are its problem rather than this file's.
+ *
+ * The contract, which RELEASING.md documents:
+ *
+ *   - a heading node, at depth 2, among the document's TOP-LEVEL children. A heading inside a
+ *     blockquote or a list item is not a release section.
+ *   - written as ATX — the line it starts on begins with `##`. A setext heading (`0.1.0` over
+ *     `-----`) is depth 2 to the parser but is not the `## X.Y.Z` spelling the release process
+ *     documents, so it is refused. That is deliberate and it fails closed.
+ *   - whose text begins with exactly this version, ended by whitespace or the end of the text, so
+ *     `## 0.1.0-beta.1` cannot satisfy a publish of 0.1.0 while `## 0.1.0 - 2026-11-09` can.
+ */
+const changelogSource = readFileSync(changelogPath, "utf8");
+const changelogLines = changelogSource.split(/\r?\n/);
 const versionHeading = new RegExp(
-  // `##`, the exact version, and then the end of the line or a separator before a title or date.
-  // The lookahead is what keeps `## 0.1.0-beta.1` from satisfying a publish of 0.1.0.
-  String.raw`^##[ \t]+${version.replace(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`)}(?=[ \t]|$)`,
+  String.raw`^${version.replace(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`)}(?=\s|$)`,
   "u",
 );
-
-/*
- * Fences and comments have to be read TOGETHER, in the order Markdown reads them, because each one
- * makes the other literal. Two measured ways to get this wrong, both found in review:
- *
- *   - Toggling on any ``` ignores the delimiter's character and length. A four-backtick block
- *     containing a three-backtick line was treated as closed, and a `## 0.1.0` still inside the
- *     block counted. That FAILS OPEN — the heading renders as code and the publish proceeds.
- *   - Stripping `<!-- … -->` from the whole file before scanning lines deletes fence boundaries
- *     that happen to sit between a literal `<!--` and a later `-->` inside an example. That moved
- *     which block a heading belonged to, and an unmatched literal `<!--` inside an example also
- *     swallowed every real heading after it.
- *
- * So: one pass, two states. Inside a fenced block nothing is a comment and only a matching closing
- * fence — same character, at least as long, nothing else on the line — ends it. Outside one, the
- * parts of a line that sit inside an HTML comment are removed, a comment may open and close
- * mid-line or span lines, and an unterminated `<!--` runs to the end of the file as it does in
- * Markdown. A heading must begin at the start of its line, so a line that *starts* inside a comment
- * cannot carry one however it ends — which is also what CommonMark does with text after `-->`.
- */
-const FENCE = /^ {0,3}(`{3,}|~{3,})/u;
-const CLOSING_FENCE = /^ {0,3}(`{3,}|~{3,})[ \t]*$/u;
-
-let hasVersionHeading = false;
-let openFence = null;
-let insideComment = false;
-
-for (const line of readFileSync(changelogPath, "utf8").split(/\r?\n/)) {
-  if (openFence) {
-    const closing = CLOSING_FENCE.exec(line);
-    if (closing && closing[1][0] === openFence.marker && closing[1].length >= openFence.length) {
-      openFence = null;
-    }
-    continue;
-  }
-
-  const startedInsideComment = insideComment;
-  let visible = "";
-  let rest = line;
-  while (rest.length > 0) {
-    if (insideComment) {
-      const closes = rest.indexOf("-->");
-      if (closes === -1) break;
-      insideComment = false;
-      rest = rest.slice(closes + "-->".length);
-    } else {
-      const opens = rest.indexOf("<!--");
-      if (opens === -1) {
-        visible += rest;
-        break;
-      }
-      visible += rest.slice(0, opens);
-      insideComment = true;
-      rest = rest.slice(opens + "<!--".length);
-    }
-  }
-
-  if (!startedInsideComment && versionHeading.test(visible)) {
-    hasVersionHeading = true;
-    break;
-  }
-
-  const opening = FENCE.exec(visible);
-  if (opening) openFence = { marker: opening[1][0], length: opening[1].length };
-}
+const hasVersionHeading = fromMarkdown(changelogSource).children.some(
+  (node) =>
+    node.type === "heading" &&
+    node.depth === 2 &&
+    /^ {0,3}##[ \t]/u.test(changelogLines[node.position.start.line - 1] ?? "") &&
+    versionHeading.test(mdastToString(node)),
+);
 
 if (!hasVersionHeading) {
   die(`${changelogPath} has no \`## ${version}\` release heading. A mention of ${version} in prose, a \`### ${version}\` subsection, a longer version that starts with it, a commented-out heading and an example inside a code fence all read like an entry and render as nothing, so none of them counts. \`pub publish\` warns when the changelog does not cover the version and exits non-zero, and the entry cannot be added after the version is published. Add a \`## ${version}\` section first.`);
