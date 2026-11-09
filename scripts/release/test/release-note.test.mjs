@@ -417,6 +417,28 @@ it("refuses an HTML character reference, which Markdown would decode", () => {
   }
 });
 
+// The fifth, and I found it by measuring a claim of my own instead of asserting it. I had left `%`
+// out of the character sweep below on the reasoning that canonical form (https) and pathname equality
+// (routes) would catch a malformed escape. They do not. Measured through a real CommonMark parser:
+//
+//   /docs/a%b           -> reader lands on /docs/a%25b
+//   /docs/a%            -> reader lands on /docs/a%25
+//   https://x.test/a%b  -> reader lands on https://x.test/a%25b
+//
+// `%zz` and `%2z` do survive the renderer today, and are refused anyway: a malformed escape is a
+// defect in the URL whatever this one consumer happens to do with it.
+it("requires every % to begin a well-formed percent-escape", () => {
+  for (const href of ["/docs/a%b", "/docs/a%", "/docs/a%zzb", "/docs/a%2zb", "https://x.test/a%b", "https://x.test/a%zzb"]) {
+    const e = linkErrors(href, "where");
+    assert.equal(e.length, 1, `${href} was accepted`);
+    assert.match(e[0], /percent-escape/);
+  }
+  // Well-formed escapes stay accepted, including an escaped percent sign itself.
+  for (const href of ["/docs/a%20b", "/docs/a%25b", "/docs/a%28b", "https://x.test/a%20b", "https://x.test/a%2Fb"]) {
+    assert.deepEqual(linkErrors(href, "where"), [], `${href} is a valid escape and must be accepted`);
+  }
+});
+
 // Stronger than the fixture list below, and the answer to having been wrong about Markdown's
 // significant characters three times: sweep EVERY printable ASCII character plus a few beyond it,
 // and assert the gate's verdict matches RFC 3986's allowed set exactly. A character I failed to
@@ -427,8 +449,10 @@ it("accepts a destination character if and only if a URL may carry it unencoded"
   for (let c = 0x20; c < 0x7f; c++) chars.push(String.fromCharCode(c));
   chars.push("\t", "\n", "\r", "\0", "\u007f", "é", " ", "​", "“");
   for (const c of chars) {
-    // Parentheses and "%" are decided by their own rules (balance, and canonical form), so they are
-    // not part of this character question and are covered by the tests above and below.
+    // Three characters are legal in a URL but carry their own rule, because legality per character
+    // is not the whole question for them: parentheses must balance, and a "%" must introduce two hex
+    // digits. The fixture this sweep builds, `/docs/a<c>b`, is a single unbalanced paren or a
+    // malformed escape for exactly those, so they are tested by name above rather than here.
     if (c === "(" || c === ")" || c === "%") continue;
     const accepted = linkErrors(`/docs/a${c}b`, "where").length === 0;
     assert.equal(accepted, allowed.has(c),

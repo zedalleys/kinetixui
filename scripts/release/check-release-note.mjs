@@ -282,6 +282,19 @@ function markdownDestinationErrors(dest, href, where) {
   if (reference !== null) {
     return [`${where}: "${href}" contains ${JSON.stringify(reference[0])}, which CommonMark decodes as a character reference when this note is rendered into the GitHub Release body, so the reader's URL is not the one written here. Percent-encode the "&" as "%26".`];
   }
+  // Rule 4. `%` is in the allowlist above because every percent-escape needs it, and I had reasoned
+  // that a malformed escape would be caught by canonical form on one branch and pathname equality on
+  // the other. That reasoning was wrong, and measuring it is what showed it: `/docs/a%b` and
+  // `/docs/a%` both survive those rules, and the renderer emits `%25b` and `%25`, so the reader gets
+  // a different path. So a `%` must introduce a well-formed escape.
+  //
+  // `%zz` and `%2z` happen to survive the renderer today, and are refused anyway: a malformed escape
+  // is a defect in the URL whatever this one consumer does with it, and "it renders correctly by
+  // accident" is not a property to build on.
+  const escape = /%(?![0-9A-Fa-f]{2})/.exec(dest);
+  if (escape !== null) {
+    return [`${where}: "${href}" has a "%" at position ${escape.index} that does not begin a valid percent-escape. Write "%25" for a literal percent sign: otherwise the Markdown renderer rewrites it and the reader gets a different URL.`];
+  }
   let depth = 0;
   for (const c of dest) {
     if (c === "(") depth++;
