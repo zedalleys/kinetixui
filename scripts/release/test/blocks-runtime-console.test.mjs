@@ -184,6 +184,24 @@ describe("blocks runtime gate — the classifier's own parts", () => {
     assert.equal(log.report().failures.length, 1);
   });
 
+  /*
+   * The status floor. Raised by the #546 author after reviewing this file: `if (status < 400) return;`
+   * was unpinned here, so changing it to `status < 0` left all 19 tests green and was caught only by the
+   * browser gate, which runs for 40 minutes and only when a script or apps/web file changes. A floor
+   * nothing asserts is a floor that can be removed by accident.
+   */
+  it("a successful response from another origin records nothing at all", () => {
+    const log = createFailureLog(BASE);
+    log.response({ url: STAR_COUNT, status: 200 });
+    assert.deepEqual(log.report(), { failures: [], thirdParty: [] });
+  });
+
+  it("a redirect from our own origin records nothing either, so the floor cannot drift down", () => {
+    const log = createFailureLog(BASE);
+    log.response({ url: `${BASE}/docs`, status: 304 });
+    assert.deepEqual(log.report(), { failures: [], thirdParty: [] });
+  });
+
   it("repeated identical failures are reported once", () => {
     const log = createFailureLog(BASE);
     for (let i = 0; i < 3; i++) log.response({ url: `${BASE}/blocks`, status: 500 });

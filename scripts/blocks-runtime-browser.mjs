@@ -248,18 +248,22 @@ if (!failures.some((f) => f.startsWith("layout"))) ok("layout: order-summary, re
   const status = await page.evaluate(async (u) => (await fetch(u)).status, ours);
   if (status !== 404) fail(`control: expected ${ours} to answer 404, got ${status}`);
   let seen = probe.report();
-  if (!seen.failures.some((e) => e.includes(`404 for ${ours}`)))
+  if (!seen.failures.includes(`404 for ${ours}`))
     fail(`control: a same-origin 404 was not attributed to this site (${seen.failures.length} first-party entr${seen.failures.length === 1 ? "y" : "ies"})`);
   const first = seen.failures.length;
 
   // Negative: another origin failing is listed and must not join the tally, or the positive control
   // above would also pass an implementation that simply blames everything on this site.
-  const theirs = "https://api.github.com/__kx-origin-control/probe";
-  await context.route(/api\.github\.com/, (r) => r.fulfill({ status: 503, body: "" }));
-  await page.evaluate((u) => fetch(u).catch(() => {}), theirs);
+  //
+  // Matched and asserted on the parsed host and the whole expected entry, never on a substring of a URL:
+  // `url.includes("api.github.com")` is also true of `https://evil.example/?x=api.github.com`, and a
+  // control that imprecise is the same defect this gate exists to fix.
+  const theirs = new URL("https://api.github.com/__kx-origin-control/probe");
+  await context.route((u) => u.hostname === theirs.hostname, (r) => r.fulfill({ status: 503, body: "" }));
+  await page.evaluate((u) => fetch(u).catch(() => {}), theirs.href);
   await page.waitForTimeout(250);
   seen = probe.report();
-  if (!seen.thirdParty.some((e) => e.includes("api.github.com"))) fail("control: a third-party 503 was not listed as someone else's");
+  if (!seen.thirdParty.includes(`503 ${theirs.origin}${theirs.pathname}`)) fail(`control: a third-party 503 was not listed as someone else's (listed: ${seen.thirdParty.join("; ") || "nothing"})`);
   if (seen.failures.length !== first) fail(`control: a third-party 503 joined this site's failures (${seen.failures.slice(first).join("; ")})`);
 
   await context.close();
