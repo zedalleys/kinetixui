@@ -156,6 +156,12 @@ const NEGATIVES = {
   // The same two bypasses by position in a publish workflow, one per selector.
   "compose-authorization-repeats-the-version-selector": { file: ".github/workflows/publish-compose.yml", from: '--authorize-version="$VERSION" --line=ui-compose', to: '--authorize-version=0.1.0 --authorize-version="$VERSION" --line=ui-compose', breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-authorization-repeats-the-line-selector": { file: ".github/workflows/publish-swiftui.yml", from: '--authorize-version="$VERSION" --line=ui-swiftui', to: '--authorize-version="$VERSION" --line=ui-swiftui --line=ui-compose', breaks: "VI-VERSION-AUTHORIZED" },
+  // A gate that does not stop the job is not a gate, and a gate that runs after the upload decides
+  // nothing. Both measured as passing before these clauses existed.
+  "compose-authorization-continues-on-error": { file: ".github/workflows/publish-compose.yml", from: "      - name: Authorize the version\n", to: "      - name: Authorize the version\n        continue-on-error: true\n", breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-continues-on-error": { file: ".github/workflows/publish-flutter.yml", from: "      - name: Authorize the version\n", to: "      - name: Authorize the version\n        continue-on-error: 'true'\n", breaks: "VI-VERSION-AUTHORIZED" },
+  "compose-publishes-before-it-authorizes": { file: ".github/workflows/publish-compose.yml", from: /^      - name: Authorize the version\n(?:        .*\n)+\n/m, to: "", also: { file: ".github/workflows/publish-compose.yml", from: '          echo "::notice::Uploaded. Release the deployment at https://central.sonatype.com -> Deployments."', to: '          echo "::notice::Uploaded. Release the deployment at https://central.sonatype.com -> Deployments."\n\n      - name: Authorize the version\n        if: ${{ inputs.dry_run == false }}\n        working-directory: .\n        env:\n          VERSION: ${{ inputs.version }}\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-compose' }, breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-authorization-moved-into-a-later-job": { file: ".github/workflows/publish-swiftui.yml", from: /^      - name: Authorize the version\n(?:        .*\n)+\n/m, to: "", also: { file: ".github/workflows/publish-swiftui.yml", from: '          echo "Published. Consumers: .package(url: \\"<mirror-url>\\", from: \\"$VERSION\\")"', to: '          echo "Published. Consumers: .package(url: \\"<mirror-url>\\", from: \\"$VERSION\\")"\n\n  authorize_afterwards:\n    needs: publish\n    runs-on: ubuntu-latest\n    steps:\n      - name: Authorize the version\n        if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION: ${{ inputs.version }}\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-swiftui' }, breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-authorization-reads-another-line": { file: ".github/workflows/publish-swiftui.yml", from: "--line=ui-swiftui", to: "--line=ui-compose", breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-publish-unvalidated-version": { file: ".github/workflows/publish-swiftui.yml", from: "--version=", to: "--ignored-version=", breaks: "WF-VERSION-VALIDATED" },
   // A vendored copy drifting from its canonical source, which is what a publish from an
@@ -1187,8 +1193,17 @@ const documentSteps = (doc) => {
         path: `jobs.${jobId}.steps[${index}]`,
         name: mapping.name ?? mapping.uses ?? "an unnamed step",
         job: jobId,
+        index,
         jobCondition,
         condition: mapping.if === undefined ? null : String(mapping.if),
+        /*
+         * Whether a failure of this step stops the ones after it. A failing step ends its job — that
+         * is what makes a gate a gate — unless it carries `continue-on-error: true`, which turns the
+         * refusal into a logged warning and runs the publication anyway. Retained here because a
+         * check that reads only a step's condition and its arguments cannot see it: measured, adding
+         * it to the Compose authorization left this entire preflight green.
+         */
+        continueOnError: mapping["continue-on-error"] === undefined ? null : String(mapping["continue-on-error"]),
         script: typeof mapping.run === "string" ? mapping.run : "",
         /*
          * The environment the step's script actually sees, step keys winning over the job's.
@@ -1432,6 +1447,17 @@ for (const workflow of workflows) {
     if (step.condition !== APPROVED_STEP_CONDITION) {
       unauthorized.push(`${workflow.path} → "${step.name}" runs the version authorization with ${step.condition === null ? "no step-level condition" : `\`if: ${step.condition}\``}. It must carry \`if: ${APPROVED_STEP_CONDITION}\`, the same spelling as the publication: gating it any other way either blocks the dry run from rehearsing or lets a real publish past`);
     }
+    /*
+     * A GATE THAT DOES NOT STOP THE JOB IS NOT A GATE.
+     *
+     * Found in review, measured: adding `continue-on-error: true` to the Compose authorization left
+     * this entire preflight green. The refusal still prints, the step still shows red, and the
+     * publication runs anyway — the one property that makes a refusal a refusal is that the job
+     * ends, and nothing here was asking about it.
+     */
+    if (step.continueOnError !== null && step.continueOnError !== "false") {
+      unauthorized.push(`${workflow.path} → "${step.name}" carries \`continue-on-error: ${step.continueOnError}\`. The authorization's whole effect is that a refusal ends the job before the publication; with this, the refusal is a logged warning and the upload happens anyway. Measured: adding it left every other check in this block green`);
+    }
     if (!new RegExp(`--line=${line}(?![\\w-])`).test(step.script)) {
       unauthorized.push(`${workflow.path} → "${step.name}" must authorize against \`--line=${line}\`. Another line's authorization is another package's release decision, and reading the wrong one is how ${line} publishes on a number that was never declared for it`);
     }
@@ -1496,6 +1522,36 @@ for (const workflow of workflows) {
     const authorizedValue = step.env?.VERSION;
     if (authorizedValue !== "${{ inputs.version }}") {
       unauthorized.push(`${workflow.path} → "${step.name}" binds \`VERSION: ${authorizedValue === undefined ? "(nothing)" : authorizedValue}\`; it must be exactly \`\${{ inputs.version }}\`. The publish steps read the dispatch input independently, so any other value here authorizes one version and publishes another — measured: a literal left this entire preflight green`);
+    }
+  }
+
+  /*
+   * AND IT HAS TO RUN FIRST.
+   *
+   * The second half of the same finding, and it was a bypass too: moving "Authorize the version"
+   * after "Publish to Maven Central (Portal staging)" left the preflight green, because the check
+   * looked for an authorizing step *anywhere* in the workflow and never asked where. Steps in a
+   * job run in order, so an authorization after the upload refuses a coordinate that is already
+   * permanent — the gate reads as present and decides nothing.
+   *
+   * So each job carrying a live publication must also carry an authorization at a LOWER step
+   * index. Same job, because that is what makes the ordering GitHub's rather than a convention:
+   * a failing step ends its own job's remaining steps, and nothing weaker than that stops an
+   * upload. A publication in a job with no authorization in front of it is the same defect in its
+   * starkest form, so it is reported by the same clause.
+   */
+  for (const step of steps) {
+    if (sideEffectLines(step.script).length === 0) continue;
+    const earlier = authorizing.filter((a) => a.job === step.job && a.index < step.index);
+    if (earlier.length === 0) {
+      const sameJob = authorizing.filter((a) => a.job === step.job);
+      unauthorized.push(
+        `${workflow.path} → "${step.name}" (${step.path}) carries a live publication with no version authorization before it in the same job. ${
+          sameJob.length === 0
+            ? `jobs.${step.job} runs no authorization at all`
+            : `the authorization is at ${sameJob.map((a) => a.path).join(", ")}, after it`
+        }. Steps run in order and a failing step ends the job, which is the whole mechanism: an authorization that runs after the upload refuses a coordinate that is already permanent. Measured: moving the Compose authorization below the publish step left every other check in this block green`,
+      );
     }
   }
 

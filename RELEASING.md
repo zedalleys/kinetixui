@@ -986,6 +986,20 @@ them, and a fixture that authorizes nothing is reported rather than assumed
 (`accepting-fixture-authorizes-nothing`): a hardcoded version would stop being true the day the
 fixture was edited, and the probes would go on passing while proving less.
 
+**An authorization must stop the job, and must run before the upload.** Two more ways the gate read
+as present and decided nothing, both measured as a green preflight before review found them:
+
+- `continue-on-error: true` on the authorization step. The refusal still prints and the step still
+  shows red, but a failing step only ends its job without that key — so the publication ran anyway.
+  `VI-VERSION-AUTHORIZED` now rejects any `continue-on-error` other than `false` on an authorizing
+  step.
+- the authorization step moved *after* the publish step, or into a job that `needs:` the publishing
+  one. The check looked for an authorizing step anywhere in the workflow and never asked where. An
+  authorization that runs after the upload refuses a coordinate that is already permanent. Every job
+  carrying a live publication must now also carry an authorization at a **lower step index in the
+  same job**, because a failing step ending its own job's remaining steps is the entire mechanism
+  and nothing weaker than that stops an upload.
+
 That fixture seam is `--lines-file=`, and **a publish workflow may not pass it** — also part of
 `VI-VERSION-AUTHORIZED`, and also added after review. Pointed at the accepting fixture, a publish
 step authorized `0.1.0` while the canonical declaration authorized nothing, and every other check
