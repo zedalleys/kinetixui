@@ -294,6 +294,28 @@ export function linkErrors(href, where) {
   let url;
   try { url = new URL(href); } catch { return [`${where}: "${href}" is not a parseable URL`]; }
   if (url.host === "") return [`${where}: "${href}" has no host`];
+  // A scheme and a host still are not enough, because `new URL(href)` on its own is not how a
+  // browser reads an href. For a special scheme the WHATWG parser takes what follows "https:" as an
+  // AUTHORITY when the URL is parsed alone, but as a relative PATH when it is resolved against a
+  // base page of the same scheme. Measured against `https://kinetixui.com/docs/changelog`:
+  //
+  //   https:github.com/zedalleys/kinetixui   alone -> https://github.com/zedalleys/kinetixui
+  //                                      in a page -> https://kinetixui.com/docs/github.com/...
+  //   https:/github.com/zedalleys/kinetixui  alone -> https://github.com/zedalleys/kinetixui
+  //                                      in a page -> https://kinetixui.com/github.com/...
+  //
+  // So this gate read a GitHub link where the reader gets a local route that does not exist — and
+  // `offSite` calls the same text off-site, so `check:release-links` never looks for that route
+  // either. Neither gate catches it and the link is broken for every reader.
+  //
+  // The rule is the one the site-absolute branch above already applies: decide on where the href
+  // RESOLVES, not on what its text looks like. Requiring a literal "https://" would be the wrong
+  // test — `https:\\github.com/x` has no "//" and yet reaches github.com, because the backslashes
+  // are read as slashes, so the two readings agree and there is nothing wrong with it.
+  const inPage = new URL(href, `${SITE_ORIGIN}/docs/changelog`);
+  if (inPage.href !== url.href) {
+    return [`${where}: "${href}" is read as ${JSON.stringify(url.href)} on its own but as ${JSON.stringify(inPage.href.replace(SITE_ORIGIN, "<this site>"))} inside a page, so a reader does not go where the note says. A scheme followed by fewer than two slashes is a relative path when the page has the same scheme — write "https://" in full.`];
+  }
   return [];
 }
 

@@ -303,6 +303,43 @@ it("refuses a route whose text is not how a browser reads it", () => {
   assert.match(e[0], /is read by a browser as "\/x"/);
 });
 
+// Codex finding, 2026-11-09, and the third instance of one shape: the gate deciding on the literal
+// text while the browser decides on the resolution. The two commits before this closed it for an
+// href beginning with "/"; this closes it for one beginning with "https:". A special scheme followed
+// by fewer than two slashes parses as an authority ALONE and as a relative path IN A PAGE, so these
+// passed as GitHub links and sent the reader to a local route that does not exist. `offSite` calls
+// them off-site, so `check:release-links` never looked for that route either.
+it("refuses an https spelling a browser resolves as a relative path", () => {
+  for (const href of ["https:github.com/zedalleys/kinetixui/releases", "https:/github.com/zedalleys/kinetixui/releases"]) {
+    // The fixture has to really be asymmetric, or this test proves nothing about the gate.
+    const alone = new URL(href).href;
+    const inPage = new URL(href, "https://kinetixui.com/docs/changelog").href;
+    assert.notEqual(inPage, alone, `fixture is wrong: ${JSON.stringify(href)} reads alike both ways`);
+    assert.equal(new URL(inPage).origin, "https://kinetixui.com",
+      `fixture is wrong: ${JSON.stringify(href)} does not land on this site in a page`);
+    assert.ok(offSite(href), "links.mjs calls it off-site, so check:release-links will not check that route");
+
+    const e = linkErrors(href, "where");
+    assert.equal(e.length, 1, `${JSON.stringify(href)} was accepted`);
+    assert.match(e[0], /inside a page/);
+  }
+});
+
+// The other half of that finding, and the reason the fix is an agreement check and not a test for a
+// literal "https://": these spellings have fewer than two forward slashes and are still correct,
+// because a browser reads "\" as "/" before resolving. Refusing them would be this gate rejecting
+// content that works — the failure direction that costs a release day.
+it("accepts an https spelling whose two readings agree, however it is punctuated", () => {
+  const B = String.fromCharCode(92);
+  for (const href of [`https:${B}${B}github.com/x`, `https:/${B}github.com/x`]) {
+    assert.equal(new URL(href, "https://kinetixui.com/docs/changelog").href, new URL(href).href,
+      `fixture is wrong: ${JSON.stringify(href)} is asymmetric and belongs in the test above`);
+    assert.deepEqual(linkErrors(href, "where"), [], `${JSON.stringify(href)} reaches the right host and must be accepted`);
+  }
+  // And a host with no path, whose standalone href gains a trailing slash, is not a disagreement.
+  assert.deepEqual(linkErrors("https://github.com", "where"), []);
+});
+
 // Compatibility, measured rather than asserted: every link the project has ever shipped must pass.
 // This is what makes the narrowing safe to land, and it would fail loudly if the allowlist were cut
 // further without checking.
