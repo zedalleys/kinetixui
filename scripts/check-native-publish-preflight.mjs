@@ -134,6 +134,11 @@ const NEGATIVES = {
   // other check in the block still passed.
   "compose-authorization-reads-a-fixture": { file: ".github/workflows/publish-compose.yml", from: '--authorize-version="$VERSION" --line=ui-compose', to: '--authorize-version="$VERSION" --line=ui-compose --lines-file=scripts/publish/fixtures/native-release-lines/authorized.json', breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-authorization-reads-a-fixture": { file: ".github/workflows/publish-swiftui.yml", from: '--authorize-version="$VERSION" --line=ui-swiftui', to: '--authorize-version="$VERSION" --line=ui-swiftui --lines-file=/tmp/anything.json', breaks: "VI-VERSION-AUTHORIZED" },
+  // The mode-conflict bypass, by position in a publish workflow and in the script itself. Both
+  // layers matter: the first covers the three workflows, the second covers every caller.
+  "compose-authorization-also-asks-for-the-shape": { file: ".github/workflows/publish-compose.yml", from: '--authorize-version="$VERSION" --line=ui-compose', to: '--authorize-version="$VERSION" --line=ui-compose --version="$VERSION"', breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-also-asks-for-the-shape": { file: ".github/workflows/publish-flutter.yml", from: '--authorize-version="$VERSION" --line=ui-flutter', to: '--version="$VERSION" --authorize-version="$VERSION" --line=ui-flutter', breaks: "VI-VERSION-AUTHORIZED" },
+  "preflight-allows-two-modes-at-once": { file: "scripts/check-native-publish-preflight.mjs", from: "if (requestedModes.length > 1) {\n  console.error(", to: "if (false) {\n  console.error(", breaks: "VI-PREFLIGHT-MODES-ARE-EXCLUSIVE" },
   "swiftui-authorization-reads-another-line": { file: ".github/workflows/publish-swiftui.yml", from: "--line=ui-swiftui", to: "--line=ui-compose", breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-publish-unvalidated-version": { file: ".github/workflows/publish-swiftui.yml", from: "--version=", to: "--ignored-version=", breaks: "WF-VERSION-VALIDATED" },
   // A vendored copy drifting from its canonical source, which is what a publish from an
@@ -188,6 +193,33 @@ const NEGATIVES = {
   "swiftui-version-interpolated": { file: ".github/workflows/publish-swiftui.yml", from: '--version="$VERSION"', to: "--version='${{ inputs.version }}'", breaks: "WF-VERSION-NOT-INTERPOLATED" },
   "swiftui-version-interpolated-in-block": { file: ".github/workflows/publish-swiftui.yml", from: "          SHA=$(git rev-parse swiftui-dist)", to: "          SHA=$(git rev-parse swiftui-dist) # ${{ inputs.version }}", breaks: "WF-VERSION-NOT-INTERPOLATED" },
 };
+
+/*
+ * EXACTLY ONE MODE PER RUN, DECIDED BEFORE ANY OF THEM RUNS.
+ *
+ * Each mode below exits early, so whichever is handled first in this file wins — and that was a
+ * bypass of the authorization gate, found in review. `--authorize-version=9.9.9 --line=ui-compose
+ * --version=9.9.9` exited 0 while the canonical declaration authorized nothing: the `--version=`
+ * branch comes first, is a shape check, and exits successfully before the authorization is ever
+ * reached. Its log line even reads "is a publishable version", which in a publish job's output
+ * would pass for authorization at a glance.
+ *
+ * VI-VERSION-AUTHORIZED also rejects `--version=` on an authorizing step by position, but that
+ * only covers the three publish workflows. This covers every caller, including a human at a
+ * terminal, and it is the layer that cannot be routed around by adding a fourth workflow.
+ */
+const MODES = ["--list-negatives", "--version=", "--authorize-version=", "--negative="];
+const requestedModes = MODES.filter((mode) =>
+  mode.endsWith("=")
+    ? process.argv.some((arg) => arg.startsWith(mode))
+    : process.argv.includes(mode),
+);
+if (requestedModes.length > 1) {
+  console.error(
+    `::error::${requestedModes.join(" and ")} were passed together, and each of them ends the run on its own. One mode per invocation: whichever is handled first would decide the exit code, and a shape check standing in for an authorization is how a publish gets approved by the wrong question.`,
+  );
+  process.exit(1);
+}
 
 if (process.argv.includes("--list-negatives")) {
   console.log(Object.keys(NEGATIVES).join("\n"));
@@ -765,6 +797,25 @@ check(
 );
 
 /*
+ * This script checks itself here, which is unusual and deliberate. Every mode exits early, so the
+ * order they are handled in is load-bearing, and in review that order was a bypass: an authorizing
+ * command that also carried `--version=` was decided by the shape check and exited 0 while the
+ * canonical declaration authorized nothing. VI-VERSION-AUTHORIZED keeps that combination out of
+ * the three publish workflows by position, but a fourth workflow, a local run or a script would
+ * not pass through it. The refusal in the mode handling is what covers those, so it is worth a
+ * check of its own rather than being the one guard with no control behind it.
+ */
+const selfSource = source("scripts/check-native-publish-preflight.mjs");
+check(
+  "VI-PREFLIGHT-MODES-ARE-EXCLUSIVE",
+  selfSource.includes("if (requestedModes.length > 1) {\n  console.error(") &&
+    ["--list-negatives", "--version=", "--authorize-version=", "--negative="].every((mode) =>
+      new RegExp(`const MODES = \\[[^\\]]*"${mode.replace(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`)}"`, "u").test(selfSource),
+    ),
+  "scripts/check-native-publish-preflight.mjs must refuse two modes in one invocation before any of them runs, and MODES must list every mode that exits early. Each mode ends the run on its own, so whichever is handled first decides the exit code. Measured in review: `--authorize-version=9.9.9 --line=ui-compose --version=9.9.9` exited 0 — the shape check answered for the authorization — while release/native-release-lines.json authorized nothing, and the log read \"is a publishable version\".",
+);
+
+/*
  * The staging script now has a dependency, and that is a new way for a publish to fail late. It
  * imports `mdast-util-from-markdown` — see the comment above the changelog gate for why — so any
  * job that runs it on a bare checkout dies at the import rather than at a gate. `publish-flutter.yml`
@@ -1257,6 +1308,16 @@ for (const workflow of workflows) {
      * canonical file authorized nothing at all. So the seam is prohibited here by position: a
      * publish workflow reads `release/native-release-lines.json` and has no say in the matter.
      */
+    /* Another supported option, another bypass — this one found in review. Each mode of the
+     * preflight exits early, so an authorizing command that also carries `--version=` is decided
+     * by whichever is handled first, and `--version=` is a semver SHAPE check. Measured:
+     * `--authorize-version=9.9.9 --line=ui-compose --version=9.9.9` exited 0 while the canonical
+     * declaration authorized nothing, printing "is a publishable version" into the job log. The
+     * script now refuses conflicting modes outright, which covers every caller; this keeps the
+     * combination out of a publish workflow by position as well. */
+    if (/--version=/.test(step.script)) {
+      unauthorized.push(`${workflow.path} → "${step.name}" passes \`--version=\` alongside \`--authorize-version=\`. Each mode of the preflight exits on its own, so the run would be decided by the shape check rather than by the authorization. Measured: that combination exited 0 while release/native-release-lines.json authorized nothing. Validate the shape in its own earlier step, as these workflows already do`);
+    }
     if (/--lines-file=/.test(step.script)) {
       unauthorized.push(`${workflow.path} → "${step.name}" passes \`--lines-file=\`. That option exists only so ci.yml can prove the authorization accepts and refuses correctly against fixtures; a publish must read the canonical release/native-release-lines.json. Measured: pointed at the accepting fixture, this step authorized 0.1.0 while the canonical file authorized nothing, and every other check here still passed`);
     }

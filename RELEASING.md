@@ -937,6 +937,17 @@ different versions. `ci.yml` additionally runs the authorization against the fix
 `scripts/publish/fixtures/native-release-lines/`: one that authorizes and five that must refuse,
 because a gate that refuses everything proves nothing.
 
+**A publish workflow may not pass `--version=` on the authorization step either.** Every mode of
+the preflight exits on its own, so an invocation carrying two of them is decided by whichever is
+handled first — and `--version=` is a semver *shape* check. Measured in review:
+`--authorize-version=9.9.9 --line=ui-compose --version=9.9.9` exited 0 while the declaration
+authorized nothing, printing `PASS: "9.9.9" is a publishable version` into the job log, which would
+read as authorization at a glance. The script now refuses two modes in one invocation outright,
+which covers every caller including a local run (`VI-PREFLIGHT-MODES-ARE-EXCLUSIVE`), and
+`VI-VERSION-AUTHORIZED` additionally keeps the combination out of the three publish workflows by
+position. Validating the shape stays a separate, earlier step, which is how these workflows are
+already written.
+
 That fixture seam is `--lines-file=`, and **a publish workflow may not pass it** — also part of
 `VI-VERSION-AUTHORIZED`, and also added after review. Pointed at the accepting fixture, a publish
 step authorized `0.1.0` while the canonical declaration authorized nothing, and every other check
