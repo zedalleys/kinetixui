@@ -34,7 +34,7 @@ final class SemanticsTests: XCTestCase {
 
     func testButtonIsAnnouncedAsAnEnabledButtonCarryingItsLabel() {
         let nodes = AccessibilityTree.elements(of: KinetixButton(action: {}) { Text("Save") })
-        guard let button = AccessibilityTree.one(in: nodes, "button") { $0.role == .button } else { return }
+        guard let button = AccessibilityTree.one(in: nodes, "button", where: { $0.role == .button }) else { return }
 
         XCTAssertEqual(button.label, "Save", "the button's accessible name is its label text")
         XCTAssertTrue(button.enabled)
@@ -44,7 +44,7 @@ final class SemanticsTests: XCTestCase {
         let nodes = AccessibilityTree.elements(
             of: KinetixButton(action: {}) { Text("Save") }.disabled(true)
         )
-        guard let button = AccessibilityTree.one(in: nodes, "button") { $0.role == .button } else { return }
+        guard let button = AccessibilityTree.one(in: nodes, "button", where: { $0.role == .button }) else { return }
 
         XCTAssertFalse(button.enabled, "a disabled button must not be offered as actionable")
     }
@@ -57,7 +57,7 @@ final class SemanticsTests: XCTestCase {
     func testCheckboxAnnouncesCheckedAndUnchecked() {
         for (isOn, expected) in [(true, "Checked"), (false, "Unchecked")] {
             let nodes = AccessibilityTree.elements(of: KinetixCheckbox(isOn: .constant(isOn)))
-            guard let box = AccessibilityTree.one(in: nodes, "checkbox") { $0.value != nil } else { return }
+            guard let box = AccessibilityTree.one(in: nodes, "checkbox", where: { $0.value != nil }) else { return }
 
             XCTAssertEqual(box.value, expected)
             XCTAssertEqual(box.selected, isOn, "the selected trait follows the fully-checked state")
@@ -68,7 +68,7 @@ final class SemanticsTests: XCTestCase {
         let nodes = AccessibilityTree.elements(
             of: KinetixCheckbox(isOn: .constant(false), indeterminate: true)
         )
-        guard let box = AccessibilityTree.one(in: nodes, "checkbox") { $0.value != nil } else { return }
+        guard let box = AccessibilityTree.one(in: nodes, "checkbox", where: { $0.value != nil }) else { return }
 
         XCTAssertEqual(box.value, "Mixed", "mixed must reach the reader, not be silent")
         XCTAssertFalse(box.selected, "an unchecked partially-checked box must not be announced as selected")
@@ -80,7 +80,7 @@ final class SemanticsTests: XCTestCase {
         let nodes = AccessibilityTree.elements(
             of: KinetixCheckbox(isOn: .constant(true), indeterminate: true)
         )
-        guard let box = AccessibilityTree.one(in: nodes, "checkbox") { $0.value != nil } else { return }
+        guard let box = AccessibilityTree.one(in: nodes, "checkbox", where: { $0.value != nil }) else { return }
 
         XCTAssertEqual(box.value, "Mixed")
         // This assertion, and only this one, detects the MX1d defect: keying the selected trait on the
@@ -97,7 +97,7 @@ final class SemanticsTests: XCTestCase {
     func testSwitchAnnouncesOnAndOff() {
         for (isOn, expected) in [(true, "On"), (false, "Off")] {
             let nodes = AccessibilityTree.elements(of: KinetixSwitch(isOn: .constant(isOn)))
-            guard let toggle = AccessibilityTree.one(in: nodes, "switch") { $0.value != nil } else { return }
+            guard let toggle = AccessibilityTree.one(in: nodes, "switch", where: { $0.value != nil }) else { return }
 
             XCTAssertEqual(toggle.value, expected)
         }
@@ -110,7 +110,7 @@ final class SemanticsTests: XCTestCase {
             let nodes = AccessibilityTree.elements(
                 of: KinetixToggle(isOn: .constant(isOn)) { Text("B") }
             )
-            guard let toggle = AccessibilityTree.one(in: nodes, "toggle") { $0.role == .button } else { return }
+            guard let toggle = AccessibilityTree.one(in: nodes, "toggle", where: { $0.role == .button }) else { return }
 
             XCTAssertEqual(toggle.selected, isOn)
             XCTAssertEqual(toggle.label, "B")
@@ -124,7 +124,7 @@ final class SemanticsTests: XCTestCase {
             let nodes = AccessibilityTree.elements(
                 of: KinetixTabsTrigger("One", isSelected: isSelected, action: {})
             )
-            guard let tab = AccessibilityTree.one(in: nodes, "tab") { $0.role == .button } else { return }
+            guard let tab = AccessibilityTree.one(in: nodes, "tab", where: { $0.role == .button }) else { return }
 
             XCTAssertEqual(tab.selected, isSelected)
             XCTAssertEqual(tab.label, "One")

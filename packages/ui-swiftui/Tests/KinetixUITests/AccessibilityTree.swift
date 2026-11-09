@@ -125,6 +125,14 @@ enum AccessibilityTree {
     ///
     /// Deliberately strict about there being exactly one: two matches mean the fixture is ambiguous and
     /// an assertion about "the checkbox" would be asserting about whichever came first.
+    ///
+    /// Every caller passes the predicate INSIDE the parentheses, as `where: { ... }`, and must keep
+    /// doing so. Written as a trailing closure it reads better — but every call here sits in a `guard`
+    /// condition, where Swift parses `{ ... }` as the start of the statement body rather than as an
+    /// argument, and the call then fails to compile with "missing argument for parameter 'where'".
+    /// That is a parsing rule about conditions, not about this signature: a trailing closure is fine
+    /// in an ordinary expression, which is why `KinetixButton(action: {}) { Text("Save") }` compiles
+    /// in these same files.
     static func one(
         in nodes: [AXNode],
         _ what: String,

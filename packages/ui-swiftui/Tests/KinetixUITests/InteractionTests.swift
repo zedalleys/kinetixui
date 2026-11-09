@@ -43,7 +43,7 @@ final class InteractionTests: XCTestCase {
     func testPressingAnEnabledButtonRunsItsAction() {
         var pressed = false
         let nodes = AccessibilityTree.elements(of: KinetixButton(action: { pressed = true }) { Text("Save") })
-        guard let element = AccessibilityTree.one(in: nodes, "button") { $0.role == .button } else { return }
+        guard let element = AccessibilityTree.one(in: nodes, "button", where: { $0.role == .button }) else { return }
 
         XCTAssertTrue(element.element.accessibilityPerformPress(), "the button must offer a press action")
         XCTAssertTrue(pressed, "pressing an enabled button runs its action")
@@ -54,7 +54,7 @@ final class InteractionTests: XCTestCase {
         let nodes = AccessibilityTree.elements(
             of: KinetixButton(action: { pressed = true }) { Text("Save") }.disabled(true)
         )
-        guard let element = AccessibilityTree.one(in: nodes, "button") { $0.role == .button } else { return }
+        guard let element = AccessibilityTree.one(in: nodes, "button", where: { $0.role == .button }) else { return }
 
         _ = element.element.accessibilityPerformPress()
         XCTAssertFalse(pressed, "a disabled button must not run its action when pressed")
@@ -66,7 +66,7 @@ final class InteractionTests: XCTestCase {
         for start in [false, true] {
             let box = Box(start)
             let nodes = AccessibilityTree.elements(of: KinetixCheckbox(isOn: box.binding))
-            guard let element = AccessibilityTree.one(in: nodes, "checkbox") { $0.value != nil } else { return }
+            guard let element = AccessibilityTree.one(in: nodes, "checkbox", where: { $0.value != nil }) else { return }
 
             XCTAssertTrue(element.element.accessibilityPerformPress(), "the checkbox must offer a press action")
             XCTAssertEqual(box.value, !start, "pressing a checkbox inverts it, from either state")
@@ -79,7 +79,7 @@ final class InteractionTests: XCTestCase {
         for start in [false, true] {
             let box = Box(start)
             let nodes = AccessibilityTree.elements(of: KinetixSwitch(isOn: box.binding))
-            guard let element = AccessibilityTree.one(in: nodes, "switch") { $0.value != nil } else { return }
+            guard let element = AccessibilityTree.one(in: nodes, "switch", where: { $0.value != nil }) else { return }
 
             XCTAssertTrue(element.element.accessibilityPerformPress(), "the switch must offer a press action")
             XCTAssertEqual(box.value, !start, "pressing a switch inverts it, from either state")
@@ -94,7 +94,7 @@ final class InteractionTests: XCTestCase {
             let nodes = AccessibilityTree.elements(
                 of: KinetixToggle(isOn: box.binding) { Text("B") }
             )
-            guard let element = AccessibilityTree.one(in: nodes, "toggle") { $0.role == .button } else { return }
+            guard let element = AccessibilityTree.one(in: nodes, "toggle", where: { $0.role == .button }) else { return }
 
             XCTAssertTrue(element.element.accessibilityPerformPress(), "the toggle must offer a press action")
             XCTAssertEqual(box.value, !start, "pressing a toggle inverts its pressed state, from either state")
@@ -112,7 +112,7 @@ final class InteractionTests: XCTestCase {
             let nodes = AccessibilityTree.elements(
                 of: KinetixTabsTrigger("One", isSelected: isSelected, action: { selected = "One" })
             )
-            guard let element = AccessibilityTree.one(in: nodes, "tab") { $0.role == .button } else { return }
+            guard let element = AccessibilityTree.one(in: nodes, "tab", where: { $0.role == .button }) else { return }
 
             XCTAssertTrue(element.element.accessibilityPerformPress(), "the tab trigger must offer a press action")
             XCTAssertEqual(selected, "One", "pressing a tab trigger reports the tab it stands for")
