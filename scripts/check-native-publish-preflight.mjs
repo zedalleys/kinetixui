@@ -177,6 +177,9 @@ const NEGATIVES = {
   "flutter-changelog-accepts-any-heading-depth": { file: "scripts/publish/stage-flutter-package.mjs", from: "node.depth === 2 &&", to: "node.depth >= 2 &&", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
   "flutter-changelog-accepts-a-setext-heading": { file: "scripts/publish/stage-flutter-package.mjs", from: '/^ {0,3}##[ \\t]/u.test(changelogLines[node.position.start.line - 1] ?? "") &&', to: "", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
   "flutter-staging-run-without-its-dependencies": { file: ".github/workflows/native-flutter.yml", from: "      - name: Install (the staging script's parser)\n        run: pnpm install --frozen-lockfile\n", to: "", breaks: "VI-FLUTTER-STAGING-HAS-ITS-DEPENDENCIES" },
+  // Presence is not the property; order is. This moves the install to a step AFTER the one that
+  // runs the script, which is an install the script never sees because it died at the import.
+  "flutter-staging-installs-after-the-script-runs": { file: ".github/workflows/native-flutter.yml", from: "      - name: Install (the staging script's parser)\n        run: pnpm install --frozen-lockfile\n\n", to: "", also: { file: ".github/workflows/native-flutter.yml", from: "      - name: Staging refuses a version with no release heading in the changelog", to: "      - name: Install (after the script has already run)\n        run: pnpm install --frozen-lockfile\n\n      - name: Staging refuses a version with no release heading in the changelog" }, breaks: "VI-FLUTTER-STAGING-HAS-ITS-DEPENDENCIES" },
   "flutter-changelog-controls-not-run": { file: ".github/workflows/ci.yml", from: "node scripts/publish/flutter-changelog-heading-controls.mjs", to: "echo skipped", breaks: "VI-FLUTTER-CHANGELOG-CONTROLS-RUN" },
   // The one that actually bit: the refusal's wording changed and native-flutter.yml's control still
   // grepped the old sentence, so it failed with "proves nothing" after the push rather than before.
@@ -789,13 +792,13 @@ for (const path of readdirSync(`${root}.github/workflows`).filter((name) => /\.y
     );
     if (firstStaging === -1) continue;
     /* Ordering matters, not merely presence: a job that installs after staging has already died at
-     * the import. So the install has to come before the FIRST step that runs the script.
+     * the import. So the install has to come before the FIRST step that runs the script, and
+     * `flutter-staging-installs-after-the-script-runs` moves a real install past a real staging
+     * step to prove that clause fires.
      *
-     * This is STEP-GRANULAR, and that is the honest limit of it. An install and a staging run in
-     * the same step, in that wrong order, compare equal here and pass. Writing a control that
-     * reorders two steps of a real workflow in one textual substitution turned out to need most of
-     * a job quoted into the mutation table, which is a worse trade than stating the gap: the only
-     * control below is the absent-install one, so the ordering clause is asserted and unproven. */
+     * The comparison is STEP-GRANULAR, which is its one remaining limit: an install and a staging
+     * run inside the SAME step, in that wrong order, compare equal here and pass. Nothing in the
+     * repository is written that way, and a step that does both is already doing two jobs. */
     const install = steps.findIndex((step) => /pnpm install/u.test(String(step?.run ?? "")));
     if (install === -1) {
       stagingWithoutInstall.push(`.github/workflows/${path} → job "${jobName}" never installs`);
