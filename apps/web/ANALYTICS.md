@@ -76,7 +76,7 @@ explicit that installs are not measurable on-site, and there is deliberately no 
 | `installation_viewed` | `/docs/installation` is viewed, with `platform: react` | `AnalyticsProvider` |
 | `component_viewed` | a component's docs page is viewed | `AnalyticsProvider` |
 | `changelog_viewed` | `/docs/changelog` is viewed | `AnalyticsProvider` |
-| `cta_clicked` | a link marked with `ctaAttrs(source, target)` is clicked | `AnalyticsProvider` listener; markup on the homepage, `/iot`, the Use cases hub (`/capabilities`, source `use_cases_hub`) and each use-case page's next steps (source `use_case_page`) |
+| `cta_clicked` | a link marked with `ctaAttrs(source, target, location?)` is clicked. `location` is OPTIONAL and limited to the four `CTA_LOCATIONS` (`footer`, `not_found`, `component_preview`, `component_onboarding`); a CTA that names none emits no `location` property at all, so every event recorded before the property existed stays valid and comparable. An unrecognised value is dropped and the CTA still counts | `AnalyticsProvider` listener; markup on the homepage, `/iot`, the Use cases hub (`/capabilities`, source `use_cases_hub`), each use-case page's next steps (source `use_case_page`), and the four paths to installation: the footer (source `footer`), the 404 page (source `not_found`), and on a component page both the preview's React setup link and the install strip's "React Setup →" (both source `component_page`, told apart only by `location`: `component_preview` versus `component_onboarding`). Only React's setup destination is `/docs/installation`, so the other four platforms' setup links are not tagged: the event has no `platform` property and tagging them would merge five destinations into one count |
 | `platform_selected` | the user switches a platform tab: in a component's code view, a block's code view on `/blocks` (with `block`), or the homepage cross-platform example. The choice is shared by every switcher and remembered between pages (`platform-preference.ts`); restoring it on a later page, or opening a page with `?platform=`, is not a selection and fires nothing | `ComponentPreview`, `Showcase`, `CrossPlatformFlagship` |
 | `component_code_viewed` | on a component page, the user opens the Code tab (`location: code_tab`) or, with it open, switches to another platform's code (`location: platform_tabs`). Carries `component`, the `platform` whose code is now on screen, and `source: component_page`; never the code. Not fired on render, on a restored platform, on a planned port (no code shown) or on a copy. Neither Qualified Evaluation nor Adoption Intent (analytics.md §3) | `ComponentPreview` |
 | `github_clicked` | a link into our GitHub repository is clicked | `AnalyticsProvider` listener |
@@ -250,10 +250,14 @@ the probe checklist are in [`marketing/analytics.md`](../../marketing/analytics.
 
 ### Internal traffic
 
-The team's own browsing is marked once per browser, not per test: open any page with `?kx_traffic=internal`. The
-mark lives in `localStorage` (`kx_analytics_internal_v1`), so it survives new tabs and restarts of that browser, and
-every event carries `kx_traffic_type: "internal"`. A diagnostic mark in the same tab wins; `?kx_traffic=clear`
-removes both. Vercel Web Analytics drops internal page views for the same reason it drops diagnostic ones. Why a mark
+The team's own browsing is marked per session, not per test: open any page with `?kx_traffic=internal`. The mark
+lives in `sessionStorage` (`kx_analytics_internal_v2`), so it survives client-side navigation and a reload in that
+tab and every event in the session carries `kx_traffic_type: "internal"` — but a **new browser session does not
+inherit it** and must be marked again (IA-5.21 §4.1; it was device-scoped under `kx_analytics_internal_v1` before,
+and that key is deleted on next load so no durable marker is left). The stored value is the bare word `internal`:
+no id, no fingerprint, nothing tied to a person, and independent of any sign-in. **The parameter is an exclusion
+hint, not authentication** — anyone can append it and it grants nothing. A diagnostic mark in the same tab wins;
+`?kx_traffic=clear` removes both, so marking is reversible. Vercel Web Analytics drops internal page views for the same reason it drops diagnostic ones. Why a mark
 and not PostHog's "internal users" cohort: with `person_profiles: identified_only` and no sign-in, the site never
 identifies anyone, so a person cohort is always empty (marketing/analytics.md §11 *Traffic cohorts*).
 

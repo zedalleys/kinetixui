@@ -20,7 +20,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Controls & Actions/Command",
+  title: "Actions & Controls/Command",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<Command>\\n  <CommandInput placeholder=\"Type a command…\" />\\n  <CommandList>\\n    <CommandEmpty>No results found.</CommandEmpty>\\n    <CommandGroup heading=\"Suggestions\">\\n      <CommandItem>Calendar</CommandItem>\\n    </CommandGroup>\\n  </CommandList>\\n</Command>", language: "tsx" } },

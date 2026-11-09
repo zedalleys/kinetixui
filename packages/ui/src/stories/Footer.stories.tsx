@@ -27,7 +27,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Data Display/Footer",
+  title: "Layout & Structure/Footer",
   parameters: {
     layout: "padded",
     docs: { source: { code: "<Footer>\\n  <div className=\"grid grid-cols-2 gap-6\">\\n    <FooterColumn title=\"Product\">\\n      <FooterLink href=\"/pricing\">Pricing</FooterLink>\\n    </FooterColumn>\\n  </div>\\n  <FooterBottom>© 2026 Acme Inc.</FooterBottom>\\n</Footer>", language: "tsx" } },

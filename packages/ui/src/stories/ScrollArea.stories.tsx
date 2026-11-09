@@ -13,7 +13,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Data Display/ScrollArea",
+  title: "Layout & Structure/ScrollArea",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<ScrollArea className=\"h-40 w-56 rounded-md border p-4\">\\n  {tags.map((t) => <div key={t}>{t}</div>)}\\n</ScrollArea>", language: "tsx" } },

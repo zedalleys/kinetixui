@@ -386,9 +386,11 @@ KinetixTabsContent {
         KinetixRadioButton(
           selected: density == value,
           onTap: () => setState(() => density = value),
+          label: value,
         ),
         const SizedBox(width: 8),
-        Text(value),
+        // The control carries the name; the visible copy would otherwise be announced twice.
+        ExcludeSemantics(child: Text(value)),
       ]),
   ],
 )`,
