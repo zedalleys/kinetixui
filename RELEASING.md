@@ -1007,6 +1007,13 @@ as present and decided nothing, both measured as a green preflight before review
   `PUBLISH_CONTRACT` **names**, and, fail-closed, that step's own `run:` must carry a recognised
   live publication. A publishing step that delegates its body is refused rather than scanned,
   because "no publication was found" must never read as "there is none".
+- the command **swallowing its own failure** inside `run:`. Appending `|| true` to the
+  authorization left the whole preflight green: the refusal printed, the shell exited 0 and the
+  publication ran. A step-level failure only exists if the command's exit status reaches the step,
+  and `||`, `;`, a pipe, `set +e` and an `if` wrapper all end that. So the command is **pinned**:
+  the authorization step must run exactly
+  `node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=<line>`
+  and nothing else — one spelling, for the same reason the step condition has one.
 
 That fixture seam is `--lines-file=`, and **a publish workflow may not pass it** — also part of
 `VI-VERSION-AUTHORIZED`, and also added after review. Pointed at the accepting fixture, a publish

@@ -158,6 +158,10 @@ const NEGATIVES = {
   "swiftui-authorization-repeats-the-line-selector": { file: ".github/workflows/publish-swiftui.yml", from: '--authorize-version="$VERSION" --line=ui-swiftui', to: '--authorize-version="$VERSION" --line=ui-swiftui --line=ui-compose', breaks: "VI-VERSION-AUTHORIZED" },
   // A gate that does not stop the job is not a gate, and a gate that runs after the upload decides
   // nothing. Both measured as passing before these clauses existed.
+  // The same property lost a third way: inside `run:`. Measured green before the command was pinned.
+  "compose-authorization-swallows-its-failure": { file: ".github/workflows/publish-compose.yml", from: '--authorize-version="$VERSION" --line=ui-compose', to: '--authorize-version="$VERSION" --line=ui-compose || true', breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-authorization-is-wrapped-in-a-conditional": { file: ".github/workflows/publish-swiftui.yml", from: 'run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-swiftui', to: 'run: |\n          if node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-swiftui; then echo authorized; fi', breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-disables-errexit-first": { file: ".github/workflows/publish-flutter.yml", from: 'run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-flutter', to: 'run: |\n          set +e\n          node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-flutter', breaks: "VI-VERSION-AUTHORIZED" },
   "compose-authorization-continues-on-error": { file: ".github/workflows/publish-compose.yml", from: "      - name: Authorize the version\n", to: "      - name: Authorize the version\n        continue-on-error: true\n", breaks: "VI-VERSION-AUTHORIZED" },
   "flutter-authorization-continues-on-error": { file: ".github/workflows/publish-flutter.yml", from: "      - name: Authorize the version\n", to: "      - name: Authorize the version\n        continue-on-error: 'true'\n", breaks: "VI-VERSION-AUTHORIZED" },
   // A publication delegated somewhere this file does not read. Both measured passing on 11d9c9b,
@@ -1457,6 +1461,27 @@ for (const workflow of workflows) {
     if (step.condition !== APPROVED_STEP_CONDITION) {
       unauthorized.push(`${workflow.path} → "${step.name}" runs the version authorization with ${step.condition === null ? "no step-level condition" : `\`if: ${step.condition}\``}. It must carry \`if: ${APPROVED_STEP_CONDITION}\`, the same spelling as the publication: gating it any other way either blocks the dry run from rehearsing or lets a real publish past`);
     }
+    /*
+     * AND THE COMMAND ITSELF MAY NOT SWALLOW ITS OWN FAILURE.
+     *
+     * The third place the same property can be lost, after `continue-on-error` and the step's
+     * position: inside `run:`. Measured in review — appending `|| true` to the authorization
+     * command left the whole preflight green, and the refusal then printed while the shell exited 0
+     * and the publication ran. A step-level failure only exists if the command's exit status
+     * reaches the step, and `||`, `;`, a pipe, `set +e` and an `if` wrapper all end that.
+     *
+     * Each clause above describes one property of this command, and this requires the command
+     * itself: one line, exactly the invocation, nothing before or after it. That is stricter than
+     * the sum of those clauses and it is deliberate — a gate whose spelling is pinned is one that
+     * can be read at a glance before a publication, the same reason WF-PUBLISH-STEP-CONDITION
+     * allows one spelling of the condition. The clauses stay because each names what its own
+     * spelling would cost, which a single "does not match" cannot.
+     */
+    const pinnedAuthorization = `node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=${line}`;
+    if (step.script.trim() !== pinnedAuthorization) {
+      unauthorized.push(`${workflow.path} → "${step.name}" must run exactly \`${pinnedAuthorization}\` and nothing else; it runs ${JSON.stringify(step.script.trim())}. Anything around the command can discard its exit status, and then the authorization's refusal is a line in a log rather than the end of the job — measured: appending \`|| true\` left this entire preflight green, the refusal printed, the shell exited 0 and the publication ran`);
+    }
+
     /*
      * A GATE THAT DOES NOT STOP THE JOB IS NOT A GATE.
      *
