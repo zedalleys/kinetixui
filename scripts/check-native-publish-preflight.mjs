@@ -784,10 +784,26 @@ for (const path of readdirSync(`${root}.github/workflows`).filter((name) => /\.y
   }
   for (const [jobName, job] of Object.entries(document?.jobs ?? {})) {
     const steps = Array.isArray(job?.steps) ? job.steps : [];
-    const runsStaging = steps.some((step) => String(step?.run ?? "").includes("stage-flutter-package.mjs"));
-    if (!runsStaging) continue;
-    const installs = steps.some((step) => /pnpm install/u.test(String(step?.run ?? "")));
-    if (!installs) stagingWithoutInstall.push(`.github/workflows/${path} → job "${jobName}"`);
+    const firstStaging = steps.findIndex((step) =>
+      String(step?.run ?? "").includes("stage-flutter-package.mjs"),
+    );
+    if (firstStaging === -1) continue;
+    /* Ordering matters, not merely presence: a job that installs after staging has already died at
+     * the import. So the install has to come before the FIRST step that runs the script.
+     *
+     * This is STEP-GRANULAR, and that is the honest limit of it. An install and a staging run in
+     * the same step, in that wrong order, compare equal here and pass. Writing a control that
+     * reorders two steps of a real workflow in one textual substitution turned out to need most of
+     * a job quoted into the mutation table, which is a worse trade than stating the gap: the only
+     * control below is the absent-install one, so the ordering clause is asserted and unproven. */
+    const install = steps.findIndex((step) => /pnpm install/u.test(String(step?.run ?? "")));
+    if (install === -1) {
+      stagingWithoutInstall.push(`.github/workflows/${path} → job "${jobName}" never installs`);
+    } else if (install > firstStaging) {
+      stagingWithoutInstall.push(
+        `.github/workflows/${path} → job "${jobName}" installs at step ${install + 1}, after it first runs the script at step ${firstStaging + 1}`,
+      );
+    }
   }
 }
 check(
