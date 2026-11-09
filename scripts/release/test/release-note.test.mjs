@@ -321,23 +321,66 @@ it("refuses an https spelling a browser resolves as a relative path", () => {
 
     const e = linkErrors(href, "where");
     assert.equal(e.length, 1, `${JSON.stringify(href)} was accepted`);
-    assert.match(e[0], /inside a page/);
+    // Refused by the canonical-form rule in the test below, which subsumes this one: a canonical
+    // URL always begins `scheme://` and so reads the same alone and in a page. This case stays
+    // because the two readings disagreeing is the defect, and the rule that fixes it may change.
+    assert.ok(e[0].includes(new URL(href).href), `message does not name the destination: ${e[0]}`);
   }
 });
 
-// The other half of that finding, and the reason the fix is an agreement check and not a test for a
-// literal "https://": these spellings have fewer than two forward slashes and are still correct,
-// because a browser reads "\" as "/" before resolving. Refusing them would be this gate rejecting
-// content that works — the failure direction that costs a release day.
-it("accepts an https spelling whose two readings agree, however it is punctuated", () => {
+// Codex finding, 2026-11-09, on the commit above — and the case that decided what the rule has to
+// be. I had asserted here that `https:\\github.com/x` MUST be accepted, because both browser
+// readings agree on it. They do. But an href has a third reader: `release-notes.mjs:76,124` renders
+// it verbatim into a Markdown link destination for the GitHub Release, and a Markdown destination has
+// its own escaping. Measured through a real CommonMark parser, `https:\\github.com/x` is rendered as
+// `https:%5Cgithub.com/x` and a reader on a release page lands on
+// `github.com/zedalleys/kinetixui/releases/tag/%5Cgithub.com/x`.
+//
+// So agreement between two readers was never the property worth checking. Canonical form is: it is
+// strictly stronger, and measurably so — across backslash, space, tab, `<`, backtick, quote,
+// uppercase-host and missing-trailing-slash spellings there is no href that is canonical and still
+// breaks in Markdown.
+it("refuses an https spelling that is not the canonical URL, and names what to write", () => {
   const B = String.fromCharCode(92);
-  for (const href of [`https:${B}${B}github.com/x`, `https:/${B}github.com/x`]) {
-    assert.equal(new URL(href, "https://kinetixui.com/docs/changelog").href, new URL(href).href,
-      `fixture is wrong: ${JSON.stringify(href)} is asymmetric and belongs in the test above`);
-    assert.deepEqual(linkErrors(href, "where"), [], `${JSON.stringify(href)} reaches the right host and must be accepted`);
+  const cases = [
+    [`https:${B}${B}github.com/x`, "https://github.com/x"],
+    [`https:/${B}github.com/x`, "https://github.com/x"],
+    ["https://x.test/a b", "https://x.test/a%20b"],
+    ["https://x.test/a\tb", "https://x.test/ab"],
+    ["https://X.TEST/a", "https://x.test/a"],
+    ["https://github.com", "https://github.com/"],
+  ];
+  for (const [href, canonical] of cases) {
+    assert.equal(new URL(href).href, canonical, `fixture is wrong for ${JSON.stringify(href)}`);
+    const e = linkErrors(href, "where");
+    assert.equal(e.length, 1, `${JSON.stringify(href)} was accepted`);
+    // The message has to carry the replacement text, because this rule refuses some spellings that
+    // would have worked and the author needs to know exactly what to put there.
+    assert.ok(e[0].includes(canonical), `message does not name "${canonical}": ${e[0]}`);
   }
-  // And a host with no path, whose standalone href gains a trailing slash, is not a disagreement.
-  assert.deepEqual(linkErrors("https://github.com", "where"), []);
+  // The canonical form of each is accepted, so the rule is a spelling requirement and not a ban.
+  for (const [, canonical] of cases) assert.deepEqual(linkErrors(canonical, "where"), []);
+});
+
+// The control Codex asked for: at the rendered Markdown destination, not only at `new URL`. This
+// drives the real renderer, so it binds on the real escaping rather than on my reading of the spec.
+it("every href the gate accepts survives the real Markdown renderer unchanged", async () => {
+  const { renderReleaseNotes } = await import("../../release-notes.mjs");
+  const render = (href) => renderReleaseNotes({
+    RELEASES: [{ version: "9.9.9", date: "2026-01-01", summary: "s", changes: [{ title: "t", href }], breaking: [] }],
+    releaseTypeAt: () => "minor",
+    packagesChanged: () => [],
+  }, "9.9.9");
+
+  for (const href of ["https://github.com/x", "https://x.test/a%20b", "https://x.test/a?q=1#f", "/docs/forms"]) {
+    assert.deepEqual(linkErrors(href, "where"), [], `fixture is wrong: ${href} is not accepted by the gate`);
+    const md = render(href);
+    // A site-absolute route is made absolute against the site; anything else must appear verbatim.
+    const expected = href.startsWith("/") ? `https://kinetixui.com${href}` : href;
+    assert.ok(md.includes(`([docs](${expected}))`), `${href} was not rendered as ${expected}:\n${md}`);
+    // And the destination must need no Markdown escaping, or the renderer's verbatim copy is a bug.
+    assert.doesNotMatch(expected, /[\\\s<>`"()]/, `${expected} needs Markdown escaping`);
+  }
 });
 
 // Compatibility, measured rather than asserted: every link the project has ever shipped must pass.

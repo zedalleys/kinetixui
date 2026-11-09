@@ -308,13 +308,32 @@ export function linkErrors(href, where) {
   // `offSite` calls the same text off-site, so `check:release-links` never looks for that route
   // either. Neither gate catches it and the link is broken for every reader.
   //
-  // The rule is the one the site-absolute branch above already applies: decide on where the href
-  // RESOLVES, not on what its text looks like. Requiring a literal "https://" would be the wrong
-  // test — `https:\\github.com/x` has no "//" and yet reaches github.com, because the backslashes
-  // are read as slashes, so the two readings agree and there is nothing wrong with it.
-  const inPage = new URL(href, `${SITE_ORIGIN}/docs/changelog`);
-  if (inPage.href !== url.href) {
-    return [`${where}: "${href}" is read as ${JSON.stringify(url.href)} on its own but as ${JSON.stringify(inPage.href.replace(SITE_ORIGIN, "<this site>"))} inside a page, so a reader does not go where the note says. A scheme followed by fewer than two slashes is a relative path when the page has the same scheme — write "https://" in full.`];
+  // And a note's href has a THIRD reader, which settles what the rule has to be. `release-notes.mjs`
+  // renders the GitHub Release body, and `absolute()` at line 76 passes a non-"/" href through
+  // verbatim into a Markdown link destination, `([docs](<href>))`. A Markdown destination is not a
+  // URL: it has its own escaping. Measured through a real CommonMark parser, with the rendered
+  // destination then resolved against a release page:
+  //
+  //   note href                  rendered destination     the reader actually lands on
+  //   https:\\github.com/x   ->  https:%5Cgithub.com/x -> github.com/zedalleys/kinetixui/releases/tag/%5Cgithub.com/x
+  //   https:/\github.com/x   ->  https:/%5Cgithub.com/x-> github.com/%5Cgithub.com/x
+  //   https://x.test/a b     ->  (destination ends at the space)
+  //
+  // Those first two are exactly the spellings the two BROWSER readings agree on, so an agreement
+  // check between them is not enough: it accepted an href that this consumer silently redirects.
+  //
+  // So require the canonical serialization instead. It is a strictly stronger condition, measured
+  // rather than assumed: across backslash, space, tab, angle-bracket, backtick, quote, uppercase-host
+  // and missing-trailing-slash spellings, there is no href that is canonical and still breaks in
+  // Markdown. It also subsumes the resolve-in-a-page check, because a canonical URL always begins
+  // `scheme://` and so reads the same alone and in a page. One invariant for all three readers.
+  //
+  // It refuses a few spellings that would in fact work — `https://github.com` without the trailing
+  // slash, an uppercase host — and that is the right trade here, because the message names the exact
+  // text to write instead. All 3 absolute URLs across the five curated notes and the whole activated
+  // history are already canonical, so this refuses nothing the project has shipped.
+  if (href !== url.href) {
+    return [`${where}: "${href}" is not the canonical form of the URL it names, which is "${url.href}". Write that instead: this href is also rendered verbatim into a Markdown link destination for the GitHub Release, where a backslash, space or tab changes where the reader goes.`];
   }
   return [];
 }
