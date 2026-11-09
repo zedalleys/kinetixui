@@ -824,6 +824,121 @@ for (const width of [320, 390, 768, 1024, 1440]) {
   });
 }
 
+/*
+ * The hero's first view. Two separate claims, measured rather than asserted:
+ *
+ *   1. The artwork is ended by its own fade, not by the frame. The mesh is decoration that bleeds
+ *      to the page's edges, so it is allowed to run out of the hero — but a reader must see it
+ *      dissolve, not meet a straight cut. Before the first-view fix the supplied artwork's portrait
+ *      viewBox drove the hero's height (the polygon column stood 1279px against a 670px copy column
+ *      at 1920x1030) and the viewport sliced it flat: 841 of 1030 right-edge pixels carried mesh
+ *      ink, and the hero's closing ticker band sat 423px below the fold.
+ *
+ *   2. The install command and the beta line that qualifies it land inside the first view, at the
+ *      widths where the copy column physically fits one. Below roughly 800px of viewport height the
+ *      column is taller than the viewport whatever the layout does, so those cases are not claimed.
+ *
+ * The ink is measured as the artwork's own contribution — the same pixels with the polygon and
+ * without it — so it does not depend on what the artwork happens to be sitting on.
+ */
+const FIRST_VIEW = [
+  { width: 1920, height: 1030, fold: true },
+  { width: 1920, height: 1080, fold: true },
+  { width: 1536, height: 864, fold: true },
+  { width: 1440, height: 900, fold: true },
+  { width: 1366, height: 768, fold: true },
+  // the copy column alone is taller than these viewports: edges are still checked, the fold is not
+  { width: 1280, height: 720, fold: false },
+  { width: 1024, height: 768, fold: false },
+];
+const EDGE_INK = 12;
+const edgeInkProfile = async (page, width, height) => {
+  const shoot = async () => (await page.screenshot()).toString('base64');
+  const lit = await shoot();
+  await page.addStyleTag({ content: '.kx-hero-polygon { visibility: hidden !important }' });
+  await page.waitForTimeout(150);
+  const unlit = await shoot();
+  return page.evaluate(
+    async ([a, b, W, H, T]) => {
+      const load = (d) =>
+        new Promise((r) => {
+          const i = new Image();
+          i.onload = () => r(i);
+          i.src = `data:image/png;base64,${d}`;
+        });
+      const [ia, ib] = await Promise.all([load(a), load(b)]);
+      const pixels = (img) => {
+        const c = document.createElement('canvas');
+        c.width = W;
+        c.height = H;
+        const x = c.getContext('2d');
+        x.drawImage(img, 0, 0);
+        return x.getImageData(0, 0, W, H).data;
+      };
+      const A = pixels(ia);
+      const B = pixels(ib);
+      const ink = (x, y) => {
+        const i = (y * W + x) * 4;
+        return Math.abs(A[i] - B[i]) + Math.abs(A[i + 1] - B[i + 1]) + Math.abs(A[i + 2] - B[i + 2]);
+      };
+      let start = 0;
+      let end = 0;
+      let fold = 0;
+      for (let y = 0; y < H; y += 1) {
+        if (ink(0, y) > T) start += 1;
+        if (ink(W - 1, y) > T) end += 1;
+      }
+      for (let x = 0; x < W; x += 1) if (ink(x, H - 1) > T) fold += 1;
+      return { start, end, fold };
+    },
+    [lit, unlit, width, height, EDGE_INK],
+  );
+};
+
+for (const { width, height, fold } of FIRST_VIEW) {
+  for (const rtl of [false, true]) {
+    const where = `${width}x${height}${rtl ? ' RTL' : ''}`;
+    await check(`hero first view at ${where}: the artwork fades out, it is not cut off`, async () => {
+      const { page, context } = await open({ width, height });
+      if (rtl) {
+        await page.evaluate(() => document.documentElement.setAttribute('dir', 'rtl'));
+        await page.waitForTimeout(150);
+      }
+      const edges = await edgeInkProfile(page, width, height);
+      assert.equal(edges.end, 0, `${edges.end} pixels of mesh ink reach the viewport's trailing edge`);
+      assert.equal(edges.start, 0, `${edges.start} pixels of mesh ink reach the viewport's leading edge`);
+      assert.equal(edges.fold, 0, `${edges.fold} pixels of mesh ink are cut by the fold`);
+      await context.close();
+    });
+
+    if (!fold) continue;
+    await check(`hero first view at ${where}: the install command and the beta line are above the fold`, async () => {
+      const { page, context } = await open({ width, height });
+      if (rtl) {
+        await page.evaluate(() => document.documentElement.setAttribute('dir', 'rtl'));
+        await page.waitForTimeout(150);
+      }
+      const seen = await page.evaluate(() => {
+        const copy = document.querySelector('[data-hero-copy]');
+        const command = copy.querySelector('pre, code')?.closest('div');
+        const beta = [...copy.querySelectorAll('a')].pop();
+        const bottom = (el) => (el ? Math.round(el.getBoundingClientRect().bottom) : null);
+        return { command: bottom(command), beta: bottom(beta), fold: window.innerHeight };
+      });
+      assert.ok(seen.command !== null && seen.beta !== null, 'the install command and the beta line are on the page');
+      assert.ok(
+        seen.command <= seen.fold,
+        `the install command ends ${seen.command - seen.fold}px below the fold (${seen.command} > ${seen.fold})`,
+      );
+      assert.ok(
+        seen.beta <= seen.fold,
+        `the beta line ends ${seen.beta - seen.fold}px below the fold (${seen.beta} > ${seen.fold})`,
+      );
+      await context.close();
+    });
+  }
+}
+
 await check('hero glow: the circular light spot is visible and bounded', async () => {
   const { page, context } = await open({ width: 1440 });
   const box = await page.evaluate(() => {

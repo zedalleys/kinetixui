@@ -141,7 +141,22 @@ export function HeroPolygon() {
   return (
     <div ref={root} className="kx-hero-polygon" data-running={running}>
       <div className="kx-polygon-aura" aria-hidden="true" />
-      <svg className="kx-hero-mesh" viewBox={mesh.viewBox} aria-hidden="true" focusable="false" role="presentation">
+      {/*
+        `slice`: the artwork keeps its own proportions and fills whatever box the layout gives it,
+        rather than the box growing to the artwork's portrait aspect ratio. Above `lg-rem` that box is
+        landscape and height-budgeted (brand-hero.css), so the supplied mesh is framed rather than
+        scaled down to a stamp. What falls outside the frame is ended by the radial mask's fade, not by
+        the frame's edge — `check:rebrand-hero` measures that no mesh ink reaches the viewport's edge.
+        Below `lg-rem` the box still takes the artwork's own aspect ratio, so slice and meet agree there.
+      */}
+      <svg
+        className="kx-hero-mesh"
+        viewBox={mesh.viewBox}
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+        focusable="false"
+        role="presentation"
+      >
         <defs>
           {/* Four facet materials, from the deepest return face to the
               highlight. Stop colours come from CSS so the dark theme re-tints

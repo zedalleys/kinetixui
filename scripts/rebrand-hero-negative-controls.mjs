@@ -32,6 +32,15 @@
  *   tab-stop-returns      the illustration takes focus again
  *   drag-returns          a drag on a facet turns the network again
  *   keys-return           the arrow keys turn it again
+ *   pause-returns         Space and Escape stop the hero again
+ *
+ * `pause-returns` was added on 2026-11-07, when the first-view fix made the
+ * polygon short enough that Space's page-scroll could carry it out of the
+ * viewport. `data-running` is the visibility switch as well as the motion one,
+ * so the pause assertion had been reading whichever of the two the scroll
+ * happened to leave behind — it failed about one run in two with no defect
+ * present. The gate now returns to the top before reading it, and this control
+ * is what shows the assertion still catches a pause that is really there.
  *
  * `body-escapes` and `facets-escapes` are not redundant. The gate compares the
  * body transform and a facet's opacity as one object, so a single blanket control would pass even if
@@ -79,6 +88,7 @@ const CONTROLS = [
   ["tab-stop-returns", "the illustration takes focus again", /Tab reached the hero|holds a focus stop/],
   ["drag-returns", "a drag on a facet turns the network again", /a 180px drag moved the artwork/],
   ["keys-return", "the arrow keys turn the network again", /the arrow keys moved the artwork/],
+  ["pause-returns", "Space and Escape stop the hero again", /the pause control was supposed to be gone/],
 ];
 
 let failures = 0;
