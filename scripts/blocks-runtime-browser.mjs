@@ -40,14 +40,23 @@ const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_C
 // how the console happened to word it. See blocks-runtime-console.mjs for why that distinction exists.
 const browserLog = createFailureLog(base);
 
+/**
+ * Attach the four event streams to a page. Named and shared on purpose: the controls at the end of this
+ * file drive real responses through *this* function rather than through a copy, so they prove the wiring
+ * and not just the classifier the unit tests already cover.
+ */
+function watch(page, log) {
+  page.on("pageerror", (e) => log.pageError({ url: page.url(), message: e.message }));
+  page.on("console", (m) => (m.type() === "error" ? log.consoleError({ url: page.url(), text: m.text() }) : null));
+  page.on("response", (r) => log.response({ url: r.url(), status: r.status() }));
+  page.on("requestfailed", (r) => log.requestFailed({ url: r.url(), errorText: r.failure()?.errorText ?? "" }));
+}
+
 async function open({ scheme = "light", dir = "ltr", width = 1280, permissions = [] } = {}) {
   const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme, reducedMotion: "reduce" });
   if (permissions.length) await context.grantPermissions(permissions, { origin: base });
   const page = await context.newPage();
-  page.on("pageerror", (e) => browserLog.pageError({ url: page.url(), message: e.message }));
-  page.on("console", (m) => (m.type() === "error" ? browserLog.consoleError({ url: page.url(), text: m.text() }) : null));
-  page.on("response", (r) => browserLog.response({ url: r.url(), status: r.status() }));
-  page.on("requestfailed", (r) => browserLog.requestFailed({ url: r.url(), errorText: r.failure()?.errorText ?? "" }));
+  watch(page, browserLog);
   await page.goto(`${base}/blocks`);
   await page.waitForLoadState("networkidle");
   await page.evaluate(
@@ -214,6 +223,49 @@ for (const width of [390, 1280])
     await context.close();
   }
 if (!failures.some((f) => f.startsWith("layout"))) ok("layout: order-summary, receipt and boarding-pass stay inside the viewport at 390 and 1280, LTR and RTL");
+
+/* ── controls: real responses through the same `watch` wiring, into a throwaway log ───────────────────
+ * The unit tests in scripts/release/test/blocks-runtime-console.test.mjs drive the classifier with
+ * synthetic events, so they prove the rule but not that Chromium hands this script the event the rule
+ * needs. These two drive real responses through `watch` instead. Ported from #546, which proved the
+ * first-party half is the one that was invisible: before a response listener existed, a block preview
+ * answering 404 left nothing in this gate at all.
+ *
+ * The third-party origin has to be api.github.com. `apps/web/next.config.mjs` sets
+ * `connect-src 'self' https://api.github.com`, so any other host is refused by our own policy and the
+ * fetch never reaches a response at all — which the classifier would rightly read as this site's defect.
+ */
+{
+  const probe = createFailureLog(base);
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = await context.newPage();
+  watch(page, probe);
+  await page.goto(base);
+
+  // Positive: one of our own routes answering 404 is this site's, and Chromium logs it as the bare
+  // "Failed to load resource" with no URL — exactly the message the replaced rule discarded.
+  const ours = `/__kx-origin-control-${Date.now()}`;
+  const status = await page.evaluate(async (u) => (await fetch(u)).status, ours);
+  if (status !== 404) fail(`control: expected ${ours} to answer 404, got ${status}`);
+  let seen = probe.report();
+  if (!seen.failures.some((e) => e.includes(`404 for ${ours}`)))
+    fail(`control: a same-origin 404 was not attributed to this site (${seen.failures.length} first-party entr${seen.failures.length === 1 ? "y" : "ies"})`);
+  const first = seen.failures.length;
+
+  // Negative: another origin failing is listed and must not join the tally, or the positive control
+  // above would also pass an implementation that simply blames everything on this site.
+  const theirs = "https://api.github.com/__kx-origin-control/probe";
+  await context.route(/api\.github\.com/, (r) => r.fulfill({ status: 503, body: "" }));
+  await page.evaluate((u) => fetch(u).catch(() => {}), theirs);
+  await page.waitForTimeout(250);
+  seen = probe.report();
+  if (!seen.thirdParty.some((e) => e.includes("api.github.com"))) fail("control: a third-party 503 was not listed as someone else's");
+  if (seen.failures.length !== first) fail(`control: a third-party 503 joined this site's failures (${seen.failures.slice(first).join("; ")})`);
+
+  await context.close();
+  if (!failures.some((f) => f.startsWith("control")))
+    ok("controls: through the same listeners the run uses, one of our own 404s is this site's and another origin's 503 is listed without failing the gate");
+}
 
 const { failures: browserFailures, thirdParty } = browserLog.report();
 for (const e of browserFailures) fail(`console: ${e}`);
