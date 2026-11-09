@@ -981,6 +981,11 @@ the probes that fall through into the authorization are aimed at the accepting f
 authorized version first, so their fallthrough necessarily exits 0; and the repo-relative read is
 asserted, which is what would have caught the misplacement.
 
+The probes read the fixture's authorized line and version out of the file rather than repeating
+them, and a fixture that authorizes nothing is reported rather than assumed
+(`accepting-fixture-authorizes-nothing`): a hardcoded version would stop being true the day the
+fixture was edited, and the probes would go on passing while proving less.
+
 That fixture seam is `--lines-file=`, and **a publish workflow may not pass it** — also part of
 `VI-VERSION-AUTHORIZED`, and also added after review. Pointed at the accepting fixture, a publish
 step authorized `0.1.0` while the canonical declaration authorized nothing, and every other check

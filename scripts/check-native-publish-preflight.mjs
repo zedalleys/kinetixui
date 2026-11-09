@@ -149,6 +149,9 @@ const NEGATIVES = {
   // fallthrough then failed on ENOENT and the predicate read a nonzero exit plus the guard's own
   // wording as enforcement. Registered separately from the mode guard's because the two guards fall
   // through to different places, and that is the whole difficulty.
+  // The two authorization probes depend on the accepting fixture really authorizing something. If it
+  // stops, their fallthrough fails there instead of passing and they quietly stop being evidence.
+  "accepting-fixture-authorizes-nothing": { file: "scripts/publish/fixtures/native-release-lines/authorized.json", from: '"authorizedNext": "0.1.0"', to: '"authorizedNext": null', breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   "preflight-repeated-selector-guard-reports-without-exiting": { file: "scripts/check-native-publish-preflight.mjs", from: "  );\n  process.exit(1);\n}\n\n/*\n * EXACTLY ONE MODE PER RUN", to: "  );\n}\n\n/*\n * EXACTLY ONE MODE PER RUN", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   // The same two bypasses by position in a publish workflow, one per selector.
   "compose-authorization-repeats-the-version-selector": { file: ".github/workflows/publish-compose.yml", from: '--authorize-version="$VERSION" --line=ui-compose', to: '--authorize-version=0.1.0 --authorize-version="$VERSION" --line=ui-compose', breaks: "VI-VERSION-AUTHORIZED" },
@@ -913,15 +916,32 @@ const runSelfCopy = (args) => {
  * Without that, a lost refusal looks identical to any unrelated failure.
  */
 const ACCEPTING = "scripts/publish/fixtures/native-release-lines/authorized.json";
+/*
+ * The accepting fixture's own values, read rather than repeated. Two probes below depend on that
+ * fixture really authorizing something for some line — that is what makes their fallthrough exit 0
+ * — and a hardcoded `0.1.0` would quietly stop being true if the fixture were edited, leaving the
+ * probes weak and still green. So the line and the version come from the file, and a fixture that
+ * authorizes nothing is reported instead of assumed.
+ */
+const acceptingFixture = JSON.parse(source(ACCEPTING));
+const acceptingLine = Object.keys(acceptingFixture?.lines ?? {}).find(
+  (key) => typeof acceptingFixture.lines[key]?.authorizedNext === "string",
+);
+const acceptingVersion = acceptingLine ? acceptingFixture.lines[acceptingLine].authorizedNext : undefined;
+const otherLine = Object.keys(acceptingFixture?.lines ?? {}).find((key) => key !== acceptingLine) ?? "ui-swiftui";
+
 const ARGUMENT_REFUSALS = [
   { args: ["--version=0.1.0", "--list-negatives"], says: "were passed together", why: "two modes in one invocation, which would fall through to --list-negatives and exit 0" },
   { args: ["--authorize-version=9.9.9", "--line=ui-compose", "--version=9.9.9"], says: "were passed together", why: "the measured bypass: an authorization that would fall through to the shape check and exit 0 while nothing is authorized" },
   { args: ["--version=0.1.0", "--version=9.9.9"], says: "was passed more than once", why: "a repeated --version=, which would fall through to the shape check on the first value and exit 0" },
-  { args: ["--authorize-version=0.1.0", "--authorize-version=9.9.9", "--line=ui-compose", `--lines-file=${ACCEPTING}`], says: "was passed more than once", why: "a repeated --authorize-version=, which would fall through and authorize the first value against the accepting fixture, exiting 0 for a 9.9.9 dispatch" },
-  { args: ["--line=ui-compose", "--line=ui-swiftui", "--authorize-version=0.1.0", `--lines-file=${ACCEPTING}`], says: "was passed more than once", why: "a repeated --line=, which would fall through and read ui-compose's authorization from the accepting fixture while naming ui-swiftui, exiting 0" },
+  { args: [`--authorize-version=${acceptingVersion}`, "--authorize-version=9.9.9", `--line=${acceptingLine}`, `--lines-file=${ACCEPTING}`], says: "was passed more than once", why: `a repeated --authorize-version=, which would fall through and authorize the first value (${acceptingVersion}, which ${ACCEPTING} authorizes) exiting 0 for a 9.9.9 dispatch` },
+  { args: [`--line=${acceptingLine}`, `--line=${otherLine}`, `--authorize-version=${acceptingVersion}`, `--lines-file=${ACCEPTING}`], says: "was passed more than once", why: `a repeated --line=, which would fall through and read ${acceptingLine}'s authorization while naming ${otherLine}, exiting 0` },
 ];
 
 const argumentFailures = [];
+if (!acceptingLine) {
+  argumentFailures.push(`${ACCEPTING} authorizes no version for any line, so the two probes that fall through into the authorization would fail there for that reason rather than passing, and they stop being evidence that the guard refused. Keep one accepting line in that fixture — ci.yml's authorization matrix needs it for the same reason`);
+}
 for (const { args, says, why } of ARGUMENT_REFUSALS) {
   const { status, output } = runSelfCopy(args);
   if (status !== 1) {
@@ -942,9 +962,9 @@ const singleMode = runSelfCopy(["--version=0.1.0"]);
 if (singleMode.status !== 0) {
   argumentFailures.push(`\`--version=0.1.0\` alone exited ${singleMode.status}, so the refusals above are not evidence: a script that cannot run at all refuses everything. It said ${JSON.stringify(singleMode.output.trim().slice(0, 240))}`);
 }
-const repoRelative = runSelfCopy(["--authorize-version=0.1.0", "--line=ui-compose", `--lines-file=${ACCEPTING}`]);
+const repoRelative = runSelfCopy([`--authorize-version=${acceptingVersion}`, `--line=${acceptingLine}`, `--lines-file=${ACCEPTING}`]);
 if (repoRelative.status !== 0 || !repoRelative.output.includes("FIXTURE RUN")) {
-  argumentFailures.push(`the throwaway copy could not authorize 0.1.0 out of ${ACCEPTING}, exiting ${repoRelative.status} and saying ${JSON.stringify(repoRelative.output.trim().slice(0, 240))}. It must resolve repo-relative paths exactly as the real script does, or a probe that falls through fails on a missing file and the refusals above measure nothing`);
+  argumentFailures.push(`the throwaway copy could not authorize ${acceptingVersion} out of ${ACCEPTING}, exiting ${repoRelative.status} and saying ${JSON.stringify(repoRelative.output.trim().slice(0, 240))}. It must resolve repo-relative paths exactly as the real script does, or a probe that falls through fails on a missing file and the refusals above measure nothing`);
 }
 
 check(
