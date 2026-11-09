@@ -14,7 +14,12 @@
 // macOS, which is where `swift test` has no simulator), or anything on a real device. It proves
 // that the rendered hierarchy carries the role, value and state the sources declare.
 //
-// kx-verify: accessibility, interaction
+// The marker claims `accessibility` and nothing else. Driving a control is a separate claim with its
+// own subjects, and it lives in `InteractionTests.swift`: a file-level marker credits every component
+// the file mentions, so a combined marker here would have credited tabs and toggle with interaction
+// evidence that no assertion in this file produces.
+//
+// kx-verify: accessibility
 //
 
 #if canImport(AppKit)
@@ -22,14 +27,6 @@ import AppKit
 import SwiftUI
 import XCTest
 import KinetixUI
-
-/// A mutable `Binding` backed by a box, so a test can press a control and read the result.
-/// `Binding.constant` cannot show that a press did anything.
-private final class Box<Value> {
-    var value: Value
-    init(_ value: Value) { self.value = value }
-    var binding: Binding<Value> { Binding(get: { self.value }, set: { self.value = $0 }) }
-}
 
 final class SemanticsTests: XCTestCase {
 
@@ -74,7 +71,7 @@ final class SemanticsTests: XCTestCase {
         guard let box = AccessibilityTree.one(in: nodes, "checkbox") { $0.value != nil } else { return }
 
         XCTAssertEqual(box.value, "Mixed", "mixed must reach the reader, not be silent")
-        XCTAssertFalse(box.selected, "a partially-checked box must not be announced as selected")
+        XCTAssertFalse(box.selected, "an unchecked partially-checked box must not be announced as selected")
     }
 
     func testCheckboxMixedWinsOverTheUnderlyingValue() {
@@ -86,7 +83,13 @@ final class SemanticsTests: XCTestCase {
         guard let box = AccessibilityTree.one(in: nodes, "checkbox") { $0.value != nil } else { return }
 
         XCTAssertEqual(box.value, "Mixed")
-        XCTAssertFalse(box.selected)
+        // This assertion, and only this one, detects the MX1d defect: keying the selected trait on the
+        // raw bool leaves the `isOn: false` case correct by accident. So this message is the one the
+        // `mixed-reads-as-selected` negative control greps for, and the two must change together.
+        XCTAssertFalse(
+            box.selected,
+            "a mixed box whose underlying value is true must not be announced as selected"
+        )
     }
 
     // MARK: KinetixSwitch
@@ -126,40 +129,6 @@ final class SemanticsTests: XCTestCase {
             XCTAssertEqual(tab.selected, isSelected)
             XCTAssertEqual(tab.label, "One")
         }
-    }
-
-    // MARK: pressing through the accessibility layer
-    //
-    // `accessibilityPerformPress()` is the action an assistive technology invokes, not a synthetic tap.
-    // This is the whole of the `interaction` claim: the control is driven and the result is asserted.
-
-    func testPressingTheCheckboxThroughAccessibilityTogglesIt() {
-        let box = Box(false)
-        let nodes = AccessibilityTree.elements(of: KinetixCheckbox(isOn: box.binding))
-        guard let element = AccessibilityTree.one(in: nodes, "checkbox") { $0.value != nil } else { return }
-
-        XCTAssertTrue(element.element.accessibilityPerformPress(), "the checkbox must offer a press action")
-        XCTAssertTrue(box.value, "pressing an unchecked box checks it")
-    }
-
-    func testPressingTheSwitchThroughAccessibilityTogglesIt() {
-        let box = Box(false)
-        let nodes = AccessibilityTree.elements(of: KinetixSwitch(isOn: box.binding))
-        guard let element = AccessibilityTree.one(in: nodes, "switch") { $0.value != nil } else { return }
-
-        XCTAssertTrue(element.element.accessibilityPerformPress(), "the switch must offer a press action")
-        XCTAssertTrue(box.value)
-    }
-
-    func testPressingADisabledButtonDoesNothing() {
-        var pressed = false
-        let nodes = AccessibilityTree.elements(
-            of: KinetixButton(action: { pressed = true }) { Text("Save") }.disabled(true)
-        )
-        guard let element = AccessibilityTree.one(in: nodes, "button") { $0.role == .button } else { return }
-
-        _ = element.element.accessibilityPerformPress()
-        XCTAssertFalse(pressed, "a disabled button must not run its action when pressed")
     }
 }
 #endif

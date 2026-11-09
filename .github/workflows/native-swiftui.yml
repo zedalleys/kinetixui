@@ -88,10 +88,11 @@ jobs:
           CONTROL: ${{ matrix.control }}
         run: node scripts/adoption/swiftui-consumer.mjs --negative="$CONTROL"
 
-  # Proves the semantics suite can fail. Each control restores a defect the suite was written to
-  # catch, runs only that suite, and must fail FOR THAT REASON — a run that fails for any other
-  # reason proves nothing and is reported as such. The sabotage happens on the runner's throwaway
-  # checkout and is never committed.
+  # Proves the semantics and interaction suites can fail. Each control restores a defect one of them
+  # was written to catch, runs the suite that detects it, and must fail FOR THAT REASON — a run that
+  # fails for any other reason proves nothing and is reported as such. Both claims need a control:
+  # a passing `SemanticsTests` says nothing about whether a press is ever carried out. The sabotage
+  # happens on the runner's throwaway checkout and is never committed.
   semantics-negative-controls:
     runs-on: macos-latest
     strategy:
@@ -101,22 +102,36 @@ jobs:
           # The MX1d defect itself: the selected trait keyed on the raw bool, so a mixed box
           # announced itself as selected.
           - control: mixed-reads-as-selected
+            suite: SemanticsTests
             file: Sources/KinetixUI/Checkbox.swift
             find: ".accessibilityAddTraits(state.isFullySelected ? [.isSelected] : [])"
             replace: ".accessibilityAddTraits(isOn ? [.isSelected] : [])"
-            expect: "a partially-checked box must not be announced as selected"
+            # Keying the trait on the raw bool leaves the `isOn: false` mixed case correct by accident,
+            # so only the `isOn: true` assertion detects it. Its message is the one to match.
+            expect: "a mixed box whose underlying value is true must not be announced as selected"
           # The announcement removed altogether: mixed becomes silent again.
           - control: checkbox-value-dropped
+            suite: SemanticsTests
             file: Sources/KinetixUI/Checkbox.swift
             find: ".accessibilityValue(state.accessibilityValue)"
             replace: ""
             expect: "Expected exactly one checkbox in the accessibility tree, found 0"
           # The switch stops saying which way it is set.
           - control: switch-value-dropped
+            suite: SemanticsTests
             file: Sources/KinetixUI/Switch.swift
             find: '.accessibilityValue(isOn ? "On" : "Off")'
             replace: ""
             expect: "Expected exactly one switch in the accessibility tree, found 0"
+          # The interaction claim needs a control of its own: `SemanticsTests` passing says nothing
+          # about whether a press is ever carried out. Removing the toggle's own state change leaves a
+          # control that still renders and still announces itself, and does nothing when pressed.
+          - control: toggle-press-does-nothing
+            suite: InteractionTests
+            file: Sources/KinetixUI/Toggle.swift
+            find: "isOn.toggle()"
+            replace: ""
+            expect: "pressing a toggle inverts its pressed state, from either state"
     defaults:
       run:
         working-directory: packages/ui-swiftui
@@ -140,15 +155,16 @@ jobs:
           PY
           git --no-pager diff --stat
 
-      - name: The semantics suite must now fail, and say why
+      - name: The suite must now fail, and say why
         env:
           EXPECT: ${{ matrix.expect }}
+          SUITE: ${{ matrix.suite }}
         run: |
           # Without pipefail the pipeline reports tee's status, not swift test's, and the
           # control would read every run as a pass.
           set -o pipefail
-          if swift test --filter SemanticsTests 2>&1 | tee "$RUNNER_TEMP/control.log"; then
-            echo "::error::The semantics suite PASSED with the defect restored. The gate does not measure what it claims."
+          if swift test --filter "$SUITE" 2>&1 | tee "$RUNNER_TEMP/control.log"; then
+            echo "::error::$SUITE PASSED with the defect restored. The gate does not measure what it claims."
             exit 1
           fi
           grep -qF -- "$EXPECT" "$RUNNER_TEMP/control.log" \

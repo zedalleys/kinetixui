@@ -945,6 +945,20 @@
         ]
       },
       {
+        "file": "packages/ui-swiftui/Tests/KinetixUITests/InteractionTests.swift",
+        "environment": "xctest",
+        "kinds": [
+          "interaction"
+        ],
+        "components": [
+          "button",
+          "checkbox",
+          "switch",
+          "tabs",
+          "toggle"
+        ]
+      },
+      {
         "file": "packages/ui-swiftui/Tests/KinetixUITests/LoopMotionTests.swift",
         "environment": "xctest",
         "kinds": [
@@ -961,8 +975,7 @@
         "file": "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift",
         "environment": "xctest",
         "kinds": [
-          "accessibility",
-          "interaction"
+          "accessibility"
         ],
         "components": [
           "button",
@@ -1899,10 +1912,10 @@
           "packages/ui-swiftui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:17-166"
+          "packages/ui-swiftui/Tests/KinetixUITests/InteractionTests.swift:22-123"
         ],
         "accessibility": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:17-166"
+          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:22-135"
         ]
       },
       "Compose": {
@@ -2208,10 +2221,10 @@
           "packages/ui-swiftui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:17-166"
+          "packages/ui-swiftui/Tests/KinetixUITests/InteractionTests.swift:22-123"
         ],
         "accessibility": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:17-166"
+          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:22-135"
         ]
       },
       "Compose": {
@@ -5960,10 +5973,10 @@
           "packages/ui-swiftui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:17-166"
+          "packages/ui-swiftui/Tests/KinetixUITests/InteractionTests.swift:22-123"
         ],
         "accessibility": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:17-166"
+          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:22-135"
         ],
         "reducedMotion": [
           "packages/ui-swiftui/Tests/KinetixUITests/SlideMotionTests.swift:5-38",
@@ -6207,10 +6220,10 @@
           "packages/ui-swiftui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:17-166"
+          "packages/ui-swiftui/Tests/KinetixUITests/InteractionTests.swift:22-123"
         ],
         "accessibility": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:17-166"
+          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:22-135"
         ]
       },
       "Compose": {
@@ -6496,10 +6509,10 @@
           "packages/ui-swiftui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:17-166"
+          "packages/ui-swiftui/Tests/KinetixUITests/InteractionTests.swift:22-123"
         ],
         "accessibility": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:17-166"
+          "packages/ui-swiftui/Tests/KinetixUITests/SemanticsTests.swift:22-135"
         ]
       },
       "Compose": {
