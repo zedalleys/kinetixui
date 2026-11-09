@@ -220,6 +220,16 @@ jobs:
           fi
           echo "::notice::No native publish is authorized by release/native-release-lines.json, as declared."
 
+      # The same reasoning one layer down. The preflight asserts that Flutter staging HAS a changelog
+      # gate, and it passed for as long as that gate was a substring test that accepted the version
+      # appearing in a sentence — which is what the committed CHANGELOG.md actually contains. This
+      # runs the real staging script against one changelog it must accept and seven that look like a
+      # release heading and are not: prose, a `###` subsection, a longer version that starts with
+      # this one, two shapes of commented-out heading, an example inside a code fence, and an
+      # unrelated line carrying the number. Throwaway copies, nothing uploaded, no registry contacted.
+      - name: "Flutter changelog gate: accepts a release heading, refuses what only looks like one"
+        run: node scripts/publish/flutter-changelog-heading-controls.mjs
+
       # The preflight above asserts the shape of the dry-run guard; this runs the real step body and
       # counts the pushes, because a shape check would pass a guard that reads right and behaves
       # wrong. Stubbed `git`, nothing pushed, no remote contacted.

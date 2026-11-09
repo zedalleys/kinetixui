@@ -891,11 +891,32 @@ irreversible registry has been through a reviewed diff. There is no fallback ver
 inferred from another package's number: an unknown line, an undeclared cohort, a null
 `authorizedNext`, a mismatch, an already-published version and an unreadable file are all refusals.
 
-**No native publish is authorized today.** `cohort` and `authorizedNext` are `null` on all three
-lines, because no native package has ever been published and neither the cohort policy nor a first
-version has been decided. A real native publish therefore fails closed at the authorization step.
-Making one possible means committing those values, which is a release decision and a reviewable
-diff — see the file's own `$comment` for the sequence, including moving the number into `published`
+### Owner decisions, 2026-11-09
+
+**`cohort` is `own` on all three lines.** The native libraries declare no dependency on the npm core
+cohort — they consume generated token output rather than depending on `@kinetixui/tokens` — and
+Maven Central, pub.dev and SwiftPM each have their own release mechanics and their own kind of
+immutability. A shared number would assert a compatibility guarantee nothing enforces, so each
+native line versions independently. Precedent: `@kinetixui/angular` is already its own release
+group.
+
+**The approved first public version of each line is `0.1.0`** — Compose, Flutter and SwiftUI alike.
+That is a release *plan*. It is deliberately **not** written into `authorizedNext`, because
+planning a number and authorizing its publication are different decisions and only the second one
+opens the door.
+
+**No native publish is authorized today.** `authorizedNext` is `null` on all three lines, so a real
+native publish fails closed at the authorization step. A later dedicated release-authorization pull
+request sets `authorizedNext` per line, one line at a time, and only once that line's registry
+prerequisites are verified:
+
+| Line | Outstanding registry prerequisites |
+| --- | --- |
+| `ui-compose` | A Central Portal namespace for `com.kinetixui` verified, a published GPG key, and the four signing and credential secrets present in the publish environment. |
+| `ui-flutter` | The pub.dev **verified publisher for `kinetixui.com` actually created**, its domain verification succeeding, the intended Google account owning and managing it, and `kinetix_ui` associated with that publisher as part of the first publish. None of those facts is established today and none may be assumed. |
+| `ui-swiftui` | The mirror repository existing and writable by the publish workflow. This is the only one of the three whose first publish can be undone, so it is the one to rehearse on. |
+
+See the file's own `$comment` for the sequence, including moving the number into `published`
 afterwards.
 
 **A dry run is deliberately not gated on this file.** Rehearsing the full release path under any
@@ -923,3 +944,31 @@ in the block still passed. A publish reads `release/native-release-lines.json` a
 the matter; as a second layer, a run that uses the override labels its own output as a fixture run
 that authorizes no publication, so such a log can never be mistaken later for a real
 authorization.
+
+### The Flutter changelog must carry a real release heading
+
+`scripts/publish/stage-flutter-package.mjs` refuses to stage a version unless
+`packages/ui-flutter/CHANGELOG.md` contains an exact level-2 release heading for it:
+
+```markdown
+## 0.1.0
+```
+
+A date or title after the version is fine (`## 0.1.0 - 2026-11-09`). Nothing else counts — not the
+version mentioned in prose, not a `### 0.1.0` subsection, not a longer version that starts with it
+(`## 0.1.0-beta.1`), not a commented-out heading, and not an example inside a code fence. Comments
+and fenced blocks are stripped and skipped rather than matched, because both are text that reads
+like a heading and renders as nothing.
+
+This check used to be `changelog.includes(version)`, a substring test, and it was measurably wrong:
+the committed changelog's only heading is `## Unreleased` and its prose says the first version is
+undecided, so because that sentence contains the characters `0.1.0`, staging `0.1.0` passed. The
+most likely first release would have published with no changelog entry — permanently, because a
+pub.dev version is immutable and the entry cannot be added afterwards.
+
+`VI-FLUTTER-CHANGELOG-GATES-VERSION` and `VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS` pin the contract
+in source, but the source checks are not what caught the defect: the old one passed for as long as
+the unsound test was there, because it asserted that a gate *existed*. What proves the behaviour is
+`scripts/publish/flutter-changelog-heading-controls.mjs`, which runs the real staging script against
+one changelog it must accept and seven that only look like a release heading. `ci.yml` runs it on
+every pull request and `VI-FLUTTER-CHANGELOG-CONTROLS-RUN` asserts that it does.

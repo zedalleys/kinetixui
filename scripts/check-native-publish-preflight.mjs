@@ -166,7 +166,13 @@ const NEGATIVES = {
   "compose-integrity-gate-removed": { file: ".github/workflows/native-compose.yml", from: "VERSION_NAME is not set", to: "the build failed", breaks: "VI-COMPOSE-INTEGRITY-GATE" },
   "swiftui-tag-not-from-input": { file: ".github/workflows/publish-swiftui.yml", from: 'git push "$MIRROR" "$SHA:refs/tags/$VERSION"', to: 'git push "$MIRROR" "$SHA:refs/tags/$(date +%Y.%m.%d)"', breaks: "VI-SWIFTUI-TAG-FROM-VALIDATED-INPUT" },
   "flutter-version-not-asserted": { file: "scripts/publish/stage-flutter-package.mjs", from: "if (!lines.includes(`version: ${version}`)) {", to: "if (false) {", breaks: "VI-FLUTTER-VERSION-ASSERTED" },
-  "flutter-changelog-ungated": { file: "scripts/publish/stage-flutter-package.mjs", from: "does not mention ${version}", to: "has no entry", breaks: "VI-FLUTTER-CHANGELOG-GATES-VERSION" },
+  // The changelog gate, three ways to loosen it. It was `changelog.includes(version)` until
+  // 2026-11-09 and that substring test accepted the version appearing in a sentence, so each of
+  // these is a route back to a permanent publish whose changelog does not document it.
+  "flutter-changelog-matches-a-substring": { file: "scripts/publish/stage-flutter-package.mjs", from: "^##[ \\t]+${version", to: "${version", breaks: "VI-FLUTTER-CHANGELOG-GATES-VERSION" },
+  "flutter-changelog-counts-a-comment": { file: "scripts/publish/stage-flutter-package.mjs", from: '.replace(/<!--[\\s\\S]*?(?:-->|$)/g, "")', to: "", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
+  "flutter-changelog-counts-a-fence": { file: "scripts/publish/stage-flutter-package.mjs", from: "return !insideFence && versionHeading.test(line);", to: "return versionHeading.test(line);", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
+  "flutter-changelog-controls-not-run": { file: ".github/workflows/ci.yml", from: "node scripts/publish/flutter-changelog-heading-controls.mjs", to: "echo skipped", breaks: "VI-FLUTTER-CHANGELOG-CONTROLS-RUN" },
   "swiftui-version-interpolated": { file: ".github/workflows/publish-swiftui.yml", from: '--version="$VERSION"', to: "--version='${{ inputs.version }}'", breaks: "WF-VERSION-NOT-INTERPOLATED" },
   "swiftui-version-interpolated-in-block": { file: ".github/workflows/publish-swiftui.yml", from: "          SHA=$(git rev-parse swiftui-dist)", to: "          SHA=$(git rev-parse swiftui-dist) # ${{ inputs.version }}", breaks: "WF-VERSION-NOT-INTERPOLATED" },
 };
@@ -691,10 +697,38 @@ check(
   "publish-flutter.yml must stage through scripts/publish/stage-flutter-package.mjs, and that script must read pubspec.yaml back off disk and assert it carries exactly `version: <the requested version>`. Without the read-back, a rewrite that quietly did nothing publishes the committed placeholder under the requested version — permanently, because a pub.dev version cannot be reused.",
 );
 
+/*
+ * The changelog gate, and the reason it is three checks rather than one.
+ *
+ * VI-FLUTTER-CHANGELOG-GATES-VERSION used to read `/does not mention \$\{version\}/` — it asserted
+ * that staging HAS a changelog gate, and it passed for as long as that gate was
+ * `changelog.includes(version)`. Measured on 2026-11-07: the committed CHANGELOG.md had no release
+ * section at all, only `## Unreleased`, and said in prose that the first version was undecided;
+ * because that sentence contained `0.1.0`, staging 0.1.0 passed. A check that a mechanism exists
+ * cannot tell a sound test from an unsound one. So the contract is named here, what renders is
+ * distinguished from what merely looks like a heading, and the behaviour itself is proved by
+ * ci.yml running scripts/publish/flutter-changelog-heading-controls.mjs — which is the only one of
+ * the three that would have caught the original defect, and is therefore asserted to run.
+ */
 check(
   "VI-FLUTTER-CHANGELOG-GATES-VERSION",
-  /does not mention \$\{version\}/.test(flutterStaging),
-  "scripts/publish/stage-flutter-package.mjs must refuse a version packages/ui-flutter/CHANGELOG.md does not mention. `pub publish` only warns, and a warning is enough to abort the publish mid-run; worse, a published version whose changelog never mentions it cannot be corrected, because the version is immutable.",
+  /node scripts\/publish\/stage-flutter-package\.mjs/.test(flutterWorkflow) &&
+    flutterStaging.includes("^##[ \\t]+${version") &&
+    flutterStaging.includes("(?=[ \\t]|$)"),
+  "scripts/publish/stage-flutter-package.mjs must require an exact `## <version>` release heading in packages/ui-flutter/CHANGELOG.md — the version anchored to a level-2 heading, and ended by whitespace or the end of the line so that `## 0.1.0-beta.1` cannot satisfy a publish of 0.1.0. A substring test is not enough: it accepts the number appearing in a sentence, and a published version whose changelog does not document it cannot be corrected, because the version is immutable.",
+);
+
+check(
+  "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS",
+  flutterStaging.includes('.replace(/<!--[\\s\\S]*?(?:-->|$)/g, "")') &&
+    flutterStaging.includes("return !insideFence && versionHeading.test(line);"),
+  "scripts/publish/stage-flutter-package.mjs must strip HTML comments and skip fenced code blocks before looking for the release heading. `<!-- ## 0.1.0 -->` and a `## 0.1.0` inside a ```markdown fence are both text that reads like an entry to a line-by-line check and renders as nothing on pub.dev, which is the same class of defect as the substring test this replaced.",
+);
+
+check(
+  "VI-FLUTTER-CHANGELOG-CONTROLS-RUN",
+  source(".github/workflows/ci.yml").includes("node scripts/publish/flutter-changelog-heading-controls.mjs"),
+  "ci.yml must run scripts/publish/flutter-changelog-heading-controls.mjs. The two checks above read the staging source; only running the gate against a changelog that accepts and seven that must refuse can show the test behind the refusal is sound, and that is precisely what the source checks missed before.",
 );
 
 // ---------------------------------------------------------------------------

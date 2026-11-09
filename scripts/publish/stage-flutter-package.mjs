@@ -103,13 +103,51 @@ if (!existsSync(join(packageDir, "LICENSE"))) {
  * changelog never mentions it is a package page that cannot say what the release contained — and
  * the entry cannot be added afterwards, because the version is immutable. So the warning becomes a
  * refusal here, before anything is uploaded, rather than a surprise mid-publish.
+ *
+ * WHAT IS REQUIRED IS A RELEASE HEADING, NOT A MENTION. This check used to be
+ * `changelog.includes(version)`, a substring test, and it was measurably wrong: the committed
+ * CHANGELOG.md had no release section at all — its only heading was `## Unreleased` — and said in
+ * prose that the first version was undecided. Because that sentence contained the characters
+ * `0.1.0`, staging 0.1.0 passed. The most likely first release would have published with no
+ * changelog entry, permanently, which is exactly the outcome this check exists to prevent.
+ *
+ * So the contract is an exact level-2 heading whose version is the one being published:
+ *
+ *   PASS  ## 0.1.0                     a release section for this version
+ *   PASS  ## 0.1.0 - 2026-11-09        a title or date after it, separated from the version
+ *   FAIL  Preparing for 0.1.0          prose; renders as a paragraph, not a section
+ *   FAIL  ### 0.1.0                    a subsection of some other release, not this release
+ *   FAIL  ## 0.1.0-beta.1              a different version that merely starts with this one
+ *   FAIL  <!-- ## 0.1.0 -->            commented out, so pub.dev renders nothing
+ *   FAIL  ## 0.1.0 inside a code fence an example of a heading, not a heading
+ *
+ * Comments and fences are stripped and skipped rather than matched, because both are text that
+ * looks like a heading and renders as something else — which is the whole class of defect here.
  */
 const changelogPath = join(packageDir, "CHANGELOG.md");
 if (!existsSync(changelogPath)) {
   die(`${changelogPath} does not exist. pub.dev renders it as the Changelog tab and scores its absence.`);
 }
-if (!readFileSync(changelogPath, "utf8").includes(version)) {
-  die(`${changelogPath} does not mention ${version}. \`pub publish\` warns about this and exits non-zero, and the entry cannot be added after the version is published. Add the section for ${version} first.`);
+
+/* An HTML comment renders as nothing, so a heading inside one is not a heading. An unterminated
+ * `<!--` swallows the rest of the file, in Markdown and here alike. */
+const changelog = readFileSync(changelogPath, "utf8").replace(/<!--[\s\S]*?(?:-->|$)/g, "");
+const versionHeading = new RegExp(
+  // `##`, the exact version, and then the end of the line or a separator before a title or date.
+  // The lookahead is what keeps `## 0.1.0-beta.1` from satisfying a publish of 0.1.0.
+  String.raw`^##[ \t]+${version.replace(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`)}(?=[ \t]|$)`,
+  "u",
+);
+let insideFence = false;
+const hasVersionHeading = changelog.split(/\r?\n/).some((line) => {
+  if (/^ {0,3}(?:```|~~~)/u.test(line)) {
+    insideFence = !insideFence;
+    return false;
+  }
+  return !insideFence && versionHeading.test(line);
+});
+if (!hasVersionHeading) {
+  die(`${changelogPath} has no \`## ${version}\` release heading. A mention of ${version} in prose, a \`### ${version}\` subsection, a longer version that starts with it, a commented-out heading and an example inside a code fence all read like an entry and render as nothing, so none of them counts. \`pub publish\` warns when the changelog does not cover the version and exits non-zero, and the entry cannot be added after the version is published. Add a \`## ${version}\` section first.`);
 }
 
-console.log(`PASS: ${packageDir} staged for publish as ${version} (publish_to removed, LICENSE copied, CHANGELOG mentions the version).`);
+console.log(`PASS: ${packageDir} staged for publish as ${version} (publish_to removed, LICENSE copied, CHANGELOG carries a \`## ${version}\` release heading).`);
