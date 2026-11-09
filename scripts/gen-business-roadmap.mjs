@@ -25,6 +25,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildDiscovery } from "./business-discovery.mjs";
+import { demandProblems } from "./business-capability-demand.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DATA = join(ROOT, "docs/business-capabilities.json");
@@ -48,17 +49,8 @@ const TARGETS = {
 const STATUSES = ["existing", "partial", "planned", "not-planned"];
 const DELIVERY = ["component", "block", "recipe"];
 const TIERS = ["core", "pro"];
-// Demand (owner decision D-12a). `unmeasured` means nobody has looked; `unknown` means someone looked and
-// found nothing conclusive; `evidenced` means at least one signal with provenance. Absence of evidence is a
-// state a row can hold honestly, which is why there is no default and no numeric score — see DEMAND_KEYS.
-const DEMAND_STATES = ["unmeasured", "unknown", "evidenced"];
-const DEMAND_SOURCES = ["interview", "issue", "discussion", "email", "inbound", "support", "sales", "other"];
-const CONFIDENCE = ["low", "medium", "high"];
-// Closed key sets. A row cannot grow a `score`, a `total` or a `rank`: demand is signals with provenance, and
-// any ordering is computed at read time from those signals rather than stored where it can be edited.
-const DEMAND_KEYS = new Set(["state", "signals"]);
-const SIGNAL_KEYS = new Set(["date", "source", "ref", "signal", "confidence", "askedForThisCapability", "notes"]);
-const SIGNAL_REQUIRED = ["date", "source", "ref", "signal", "confidence", "askedForThisCapability"];
+// Demand (owner decision D-12a) is validated by ./business-capability-demand.mjs, which its sibling
+// .test.mjs tests directly — `pnpm check:capabilities` runs that test before this generator.
 // Two capability names are each listed as an alternative by two different rows. Folding family T's
 // `Gantt` into family B's row (D-12a) turned the name check alias-aware, which is what found them; they
 // are older than that change and neither is this slice's defect. Repairing one means deciding which row
@@ -107,39 +99,6 @@ for (const [i, w] of KNOWN_NAME_COLLISIONS.entries()) {
   if (waived.has(w.name)) errors.push(`KNOWN_NAME_COLLISIONS[${i}]: "${w.name}" is registered twice`);
   waived.add(w.name);
 }
-const demandErrors = (at, row) => {
-  const d = row.demand;
-  if (!d || typeof d !== "object" || Array.isArray(d)) return errors.push(`${at}: no demand block`);
-  for (const k of Object.keys(d)) if (!DEMAND_KEYS.has(k)) errors.push(`${at}: demand key "${k}" is not part of the model`);
-  if (!DEMAND_STATES.includes(d.state)) errors.push(`${at}: demand state "${d.state}"`);
-  if (!Array.isArray(d.signals)) return errors.push(`${at}: demand.signals is not an array`);
-  // The point of the model: a state that claims evidence must carry it, and a state that claims none
-  // must not. Either way the data cannot say one thing and hold another.
-  if (d.state === "evidenced" && d.signals.length === 0)
-    errors.push(`${at}: demand is "evidenced" with no signals — evidence is the thing that makes it evidenced`);
-  if (d.state !== "evidenced" && d.signals.length > 0)
-    errors.push(`${at}: demand is "${d.state}" but carries ${d.signals.length} signal(s) — set the state to "evidenced" or remove them`);
-  d.signals.forEach((s, i) => {
-    const sat = `${at}: demand.signals[${i}]`;
-    if (!s || typeof s !== "object" || Array.isArray(s)) return errors.push(`${sat} is not an object`);
-    for (const k of Object.keys(s)) if (!SIGNAL_KEYS.has(k)) errors.push(`${sat}: key "${k}" is not part of the model`);
-    for (const k of SIGNAL_REQUIRED) if (!(k in s)) errors.push(`${sat}: missing ${k}`);
-    if ("date" in s) {
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(s.date)) errors.push(`${sat}: date "${s.date}" is not an ISO yyyy-mm-dd day`);
-      else if (Number.isNaN(Date.parse(s.date))) errors.push(`${sat}: date "${s.date}" is not a real day`);
-      else if (s.date > today) errors.push(`${sat}: date "${s.date}" is in the future`);
-    }
-    if ("source" in s && !DEMAND_SOURCES.includes(s.source)) errors.push(`${sat}: source "${s.source}"`);
-    if ("confidence" in s && !CONFIDENCE.includes(s.confidence)) errors.push(`${sat}: confidence "${s.confidence}"`);
-    // Provenance a reader can open, and the asker's own words. Both are what stop a signal being an
-    // assertion that someone wanted something.
-    if ("ref" in s && (typeof s.ref !== "string" || s.ref.trim() === "")) errors.push(`${sat}: ref is empty — a signal needs a source a reader can open`);
-    if ("signal" in s && (typeof s.signal !== "string" || s.signal.trim() === "")) errors.push(`${sat}: signal is empty — record what was actually said`);
-    if ("askedForThisCapability" in s && typeof s.askedForThisCapability !== "boolean")
-      errors.push(`${sat}: askedForThisCapability must be true or false — it separates "wanted this" from "had this problem"`);
-  });
-};
-
 for (const family of data.families) {
   for (const row of family.capabilities) {
     const at = `${family.id} / ${row.name}`;
@@ -151,7 +110,7 @@ for (const family of data.families) {
           errors.push(`${at}: capability name "${alt}" is already claimed by ${prior} — one capability, two rows`);
       } else seen.set(alt, at);
     }
-    demandErrors(at, row);
+    errors.push(...demandProblems(at, row, today));
     // "—" renders as "no dependency" in the table and passes every shape check while naming nothing.
     // An empty array says the same thing and a checker can read it.
     if (row.dependsOn.includes("—"))
