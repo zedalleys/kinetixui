@@ -23,7 +23,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 const repoRoot = join(process.cwd(), "../..");
 const script = join(repoRoot, "scripts/check-native-motion.mjs");
-const specPath = join(repoRoot, "scripts/native-motion-spec.mjs");
+const specPath = join(repoRoot, "scripts/native-motion-additions.mjs");
 
 type Family = { helper: string; members: string[]; test: string; directional: boolean; strict: boolean };
 type Platform = { dir: string; ext: string; families: Record<string, Family> };
@@ -97,7 +97,9 @@ const PREFERENCE: Record<string, string> = {
 /** Test declarations covering both directions in a family's own vocabulary. */
 function suite(platform: string, familyName: string, only?: "forward" | "reverse") {
   const pair =
-    familyName === "selection"
+    familyName === "numeric"
+      ? { forward: "increasesTheValue", reverse: "decreasesTheValue" }
+      : familyName === "selection"
       ? { forward: "offToOnIsSuppressed", reverse: "onToOffIsSuppressed" }
       : familyName === "selectionState"
         ? { forward: "uncheckedToCheckedIsSuppressed", reverse: "checkedToUncheckedIsSuppressed" }
@@ -362,4 +364,19 @@ describe("the ledger cannot go stale", () => {
   // the overlap. It is a defensive clause against a future edit that adds a component to a family and
   // forgets to delete its ledger entry — which is exactly what this slice did for Switch, and is the
   // reason the clause exists at all.
+});
+
+// The additive numeric family is subject to the same strict routing gate as loops and slides.
+describe("numeric family cannot silently lose the reader's setting", () => {
+  for (const [name, p] of Object.entries(spec.platforms)) {
+    it(`${name}: rejects a member that reads the preference but stops calling the helper`, () => {
+      const dir = fixture();
+      const family = p.families.numeric;
+      write(dir, join(p.dir, family.members[0]), ANIMATES[name] + PREFERENCE[name]);
+      const result = run(dir);
+      expect(result.ok).toBe(false);
+      expect(result.output).toContain("strict numeric family");
+      expect(result.output).toContain(`never calls ${family.helper.replace(p.ext, "")}`);
+    });
+  }
 });

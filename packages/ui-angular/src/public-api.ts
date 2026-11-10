@@ -250,3 +250,4 @@ export type { KxResizableDirection } from './lib/resizable';
 export { KxResizableHandle, KxResizablePanel, KxResizablePanelGroup } from './lib/resizable';
 export { KxCarousel, KxCarouselContent, KxCarouselItem, KxCarouselNext, KxCarouselPrevious } from './lib/carousel';
 export { KxComparisonSlider } from './lib/comparison-slider';
+export { KxAnimatedNumber } from './lib/animated-number';

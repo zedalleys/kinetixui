@@ -573,3 +573,6 @@ export {
 } from "./components/address-fields";
 
 export { cn } from "./lib/utils";
+
+export { AnimatedNumber, useAnimatedNumber } from "./lib/animated-number";
+export type { AnimatedNumberProps } from "./lib/animated-number";
