@@ -61,6 +61,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
+import { storyId } from "./story-id.mjs";
 import { serveStatic } from "./visual-harness.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -85,12 +86,12 @@ assertUiDistMatchesSource("react-overlays");
  *   keys             the collection surfaces, which are opened and moved from the keyboard
  */
 const CASES = [
-  { slug: "dialog", story: "overlays-dialog--default", trigger: { role: "button", name: "Edit profile" }, surface: "[role=dialog]", trap: true, outsideDismisses: true, insidePress: true },
-  { slug: "alert-dialog", story: "overlays-alertdialog--default", trigger: { role: "button", name: "Delete account" }, surface: "[role=alertdialog]", trap: true, outsideDismisses: false, insidePress: true },
-  { slug: "sheet", story: "overlays-sheet--default", trigger: { role: "button", name: "Open" }, surface: "[role=dialog]", trap: true, outsideDismisses: true, insidePress: true },
-  { slug: "popover", story: "overlays-popover--default", trigger: { role: "button", name: "Open popover" }, surface: "[role=dialog]", trap: false, outsideDismisses: true, insidePress: true },
-  { slug: "dropdown-menu", story: "overlays-dropdownmenu--default", trigger: { role: "button", name: "Open" }, surface: "[role=menu]", trap: true, outsideDismisses: true, insidePress: false, keys: { item: "[role=menuitem]" } },
-  { slug: "select", story: "form-inputs-select--default", trigger: { role: "combobox" }, surface: "[role=listbox]", trap: true, outsideDismisses: true, insidePress: false, keys: { item: "[role=option]", commits: true } },
+  { slug: "dialog", story: storyId("dialog", "Default"), trigger: { role: "button", name: "Edit profile" }, surface: "[role=dialog]", trap: true, outsideDismisses: true, insidePress: true },
+  { slug: "alert-dialog", story: storyId("alert-dialog", "Default"), trigger: { role: "button", name: "Delete account" }, surface: "[role=alertdialog]", trap: true, outsideDismisses: false, insidePress: true },
+  { slug: "sheet", story: storyId("sheet", "Default"), trigger: { role: "button", name: "Open" }, surface: "[role=dialog]", trap: true, outsideDismisses: true, insidePress: true },
+  { slug: "popover", story: storyId("popover", "Default"), trigger: { role: "button", name: "Open popover" }, surface: "[role=dialog]", trap: false, outsideDismisses: true, insidePress: true },
+  { slug: "dropdown-menu", story: storyId("dropdown-menu", "Default"), trigger: { role: "button", name: "Open" }, surface: "[role=menu]", trap: true, outsideDismisses: true, insidePress: false, keys: { item: "[role=menuitem]" } },
+  { slug: "select", story: storyId("select", "Default"), trigger: { role: "combobox" }, surface: "[role=listbox]", trap: true, outsideDismisses: true, insidePress: false, keys: { item: "[role=option]", commits: true } },
 ];
 
 const index = JSON.parse(readFileSync(join(staticDir, "index.json"), "utf8"));
