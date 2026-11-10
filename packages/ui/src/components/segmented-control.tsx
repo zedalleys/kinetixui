@@ -18,6 +18,14 @@ import { cn } from "../lib/utils";
  * `--background` text: near-black on the light well, and near-white on the dark one, where a black fill would
  * sink into the near-black track. It used to be a raised `--card` segment, which a light track barely set apart.
  *
+ * `type="single"` alone does not keep a segment chosen. Radix clears a single-select ToggleGroup when the
+ * chosen item is activated again, which leaves the radiogroup with no checked radio and — because
+ * `data-[state=on]` is the only thing that paints a segment — nothing marked at all. Every controlled
+ * consumer in this repository had written its own `if (next)` guard against that empty value, and the
+ * uncontrolled ones could not. So the control holds its own value and refuses to be emptied by its own
+ * items: a second activation of the chosen segment is a no-op, and `onValueChange` is never called with
+ * `""`. A consumer that genuinely wants nothing chosen can still pass `value=""` itself.
+ *
  * States (TOKENS.md, "Selection controls"): an unchosen segment has `--muted-foreground` text and answers the
  * pointer with the same `--foreground` state layer the other selection controls use (8% hover, 14% pressed);
  * chosen is the inverse fill, a change of luminance far past 3:1, so it is never hue alone, and under forced
@@ -29,14 +37,30 @@ export type SegmentedControlProps = Omit<ToggleGroupPrimitive.ToggleGroupSingleP
 const SegmentedControl = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
   SegmentedControlProps
->(({ className, ...props }, ref) => (
-  <ToggleGroupPrimitive.Root
-    ref={ref}
-    type="single"
-    className={cn("inline-flex min-w-0 max-w-full flex-wrap items-center rounded-lg border border-border/50 bg-surface-grouped p-1 font-sans", className)}
-    {...props}
-  />
-));
+>(({ className, value, defaultValue, onValueChange, ...props }, ref) => {
+  // Held here rather than left to the primitive, because refusing the empty value is only half the fix:
+  // an uncontrolled ToggleGroup clears its own state, so swallowing the callback would still leave the
+  // strip blank. A consumer passing `value` stays in charge of it, including an empty one.
+  const controlled = value !== undefined;
+  const [own, setOwn] = React.useState(defaultValue ?? "");
+  const current = controlled ? value : own;
+  return (
+    <ToggleGroupPrimitive.Root
+      ref={ref}
+      type="single"
+      value={current}
+      onValueChange={(next) => {
+        // The chosen segment was activated again. A segmented control answers one question, so the answer
+        // it already has stands; it is not a toggle that can be switched off.
+        if (next === "") return;
+        if (!controlled) setOwn(next);
+        onValueChange?.(next);
+      }}
+      className={cn("inline-flex min-w-0 max-w-full flex-wrap items-center rounded-lg border border-border/50 bg-surface-grouped p-1 font-sans", className)}
+      {...props}
+    />
+  );
+});
 SegmentedControl.displayName = "SegmentedControl";
 
 const SegmentedControlItem = React.forwardRef<
