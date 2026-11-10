@@ -76,6 +76,13 @@ const DECISIONS = ["matches", "kept-name", "kept-value", "outside-proposal"];
  * half its claims untestable: the contract side could be mutated and the ledger side could not. The
  * CLI never passes it. `apps/web/src/lib/motion-tokens-guard.test.ts` does, to watch the ledger-side
  * clauses fail.
+ *
+ * Its type is deliberately the shape clause 6 reads, not `typeof PLATFORMS`: a control that proves the
+ * missing-`contractRole` diagnosis has to pass a ledger with that key absent, which the exact type of
+ * the real ledger forbids.
+ *
+ * @param {Record<string, string>} [overrides] file content keyed by repo-relative path
+ * @param {Record<string, { dir?: string, families?: Record<string, { contractRole?: string, helper?: string }> }>} [ledgerPlatforms]
  */
 export function motionErrors(overrides = {}, ledgerPlatforms = PLATFORMS) {
   const read = (p) => (p in overrides ? overrides[p] : readFileSync(join(ROOT, p), "utf8"));
