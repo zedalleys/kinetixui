@@ -10018,7 +10018,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -10113,7 +10113,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -10208,7 +10208,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -10309,7 +10309,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -10404,7 +10404,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -10505,7 +10505,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -10606,7 +10606,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -10707,7 +10707,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -10802,7 +10802,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -10897,7 +10897,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -10992,7 +10992,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -11087,7 +11087,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -11182,7 +11182,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -11307,7 +11307,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -11420,7 +11420,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -11521,7 +11521,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -11646,7 +11646,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -11777,7 +11777,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -11884,7 +11884,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ],
@@ -11997,13 +11997,13 @@
           ],
           "interaction": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:97-144",
+              "ref": "scripts/blocks-runtime-browser.mjs:111-158",
               "environment": "chromium"
             }
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ]
@@ -12113,13 +12113,13 @@
           ],
           "interaction": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:165-196",
+              "ref": "scripts/blocks-runtime-browser.mjs:179-210",
               "environment": "chromium"
             }
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ]
@@ -12235,13 +12235,13 @@
           ],
           "interaction": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:145-164",
+              "ref": "scripts/blocks-runtime-browser.mjs:159-178",
               "environment": "chromium"
             }
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
               "environment": "chromium"
             }
           ]
