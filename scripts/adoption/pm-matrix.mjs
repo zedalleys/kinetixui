@@ -112,6 +112,7 @@ const NEGATIVES = {
   'yarn-classic-dlx': 'yarn dlx under Yarn Classic must fail, which is what the docs caveat claims',
   'bare-bin-lookup-failure': 'an unreachable registry must make bare-bin-name report NOT MEASURED, never a pass',
   'stale-cli-version': 'an execute route resolving a CLI version this tree does not declare must fail',
+  'berry-cli-version': 'ambient and supplied Berry ignore progress but strictly compare the final CLI version',
   'berry-unmeasured-pass': 'an unmeasured yarn-berry must not read as a pass, nor let the run claim every route was exercised',
 };
 
@@ -155,10 +156,12 @@ function checkExecute(pm) {
     return;
   }
   const want = expectedCliVersion();
-  const ok = out === want;
+  // Ambient Berry prints the same dlx progress as an explicitly supplied Berry binary.
+  const reported = pm === 'yarn' ? out.split('\n').pop().trim() : out;
+  const ok = reported === want;
   record('execute', pm, ok, ok
-    ? `${bin} ${args.join(' ')} --version -> ${out}, which is what packages/cli/package.json declares`
-    : `${bin} ${args.join(' ')} --version -> ${JSON.stringify(out)}, but this tree declares ${want} in packages/cli/package.json`);
+    ? `${bin} ${args.join(' ')} --version -> ${reported}, which is what packages/cli/package.json declares`
+    : `${bin} ${args.join(' ')} --version -> ${JSON.stringify(reported)}, but this tree declares ${want} in packages/cli/package.json`);
 }
 
 /* ------------------------------------------------------------------ the install route */
@@ -292,6 +295,35 @@ if (negative) {
    * numbers. Before the manifest comparison existed this shim passed at exit 0, which is how the
    * cell came to be described as checking something it never checked.
    */
+  if (negative === 'berry-cli-version') {
+    const want = expectedCliVersion();
+    const dir = mkdtempSync(join(tmpdir(), 'kinetixui-neg-berry-version-'));
+    const bin = join(dir, 'yarn');
+    writeFileSync(bin, '#!/bin/sh\nif [ "$1" = "--version" ]; then echo 4.14.1; exit 0; fi\nprintf "YN0000: installation progress\\n%s\\n" "$KX_CONTROL_CLI_VERSION"\n', { mode: 0o755 });
+    let ok = true;
+    try {
+      for (const reported of [want, '0.0.1', `${want}-unexpected`]) {
+        const run = spawnSync(process.execPath, [fileURLToPath(import.meta.url), '--pm=yarn', '--execute-only', `--yarn-berry=${bin}`], {
+          encoding: 'utf8',
+          env: { ...process.env, PATH: `${dir}:${process.env.PATH}`, KX_CONTROL_CLI_VERSION: reported },
+        });
+        const out = `${run.stdout || ''}${run.stderr || ''}`;
+        const matches = reported === want;
+        const state = matches ? 'PASS' : 'FAIL';
+        const held = run.status === (matches ? 0 : 1)
+          && new RegExp(`^${state} {2}execute {2}yarn {2}`, 'm').test(out)
+          && new RegExp(`^${state} {2}execute {2}yarn-berry `, 'm').test(out)
+          && out.includes(want) && out.includes(reported);
+        console.log(`  ${held ? 'ok  ' : 'FAIL'}  both Berry routes reporting ${reported} against ${want}`);
+        if (!held) console.error(out);
+        ok = held && ok;
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+    console.log(`${ok ? 'PASS' : 'FAIL'}  negative berry-cli-version`);
+    process.exit(ok ? 0 : 1);
+  }
   if (negative === 'stale-cli-version') {
     const want = expectedCliVersion();
     const WRONG = '0.0.1';
@@ -377,8 +409,12 @@ if (negative) {
       process.exit(1);
     }
     const dir = mkdtempSync(join(tmpdir(), 'kinetixui-berry-control-'));
+    // This mutation concerns only the unmeasured row. Never execute ambient Yarn or contact npm.
+    writeFileSync(join(dir, 'yarn'), '#!/bin/sh\nif [ "$1" = "--version" ]; then echo 1.22.22; exit 0; fi\necho "Classic has no dlx" >&2\nexit 1\n', { mode: 0o755 });
     const run = (file) => {
-      const r = spawnSync(process.execPath, [file, '--execute-only', '--pm=yarn'], { encoding: 'utf8' });
+      const r = spawnSync(process.execPath, [file, '--execute-only', '--pm=yarn'], {
+        encoding: 'utf8', env: { ...process.env, PATH: `${dir}:${process.env.PATH}` },
+      });
       return `${r.stdout ?? ''}${r.stderr ?? ''}`;
     };
     const fixedFile = join(dir, 'fixed.mjs');
