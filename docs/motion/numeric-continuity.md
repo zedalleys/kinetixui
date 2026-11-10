@@ -55,3 +55,21 @@ Flutter (under the application's MediaQuery):
 ```dart
 KinetixAnimatedNumber(value: completion, format: (v) => '${v.round()}%')
 ```
+
+## Remaining native ledger entries
+
+These nine pre-existing entries are preserved; this PR does not claim full native motion parity.
+
+| Platform | Component | Recorded scope |
+|---|---|---|
+| SwiftUI | CircularProgress | Determinate ring sweep; progress feedback family |
+| SwiftUI | Dialog | Opacity-only fade is already an accepted reduced form; no demonstrated positional-motion defect |
+| SwiftUI | Input | Focus-ring feedback transition |
+| SwiftUI | Progress | Determinate bar; progress feedback family |
+| SwiftUI | Textarea | Focus-ring feedback transition |
+| Compose | CircularProgress | Determinate ring sweep; progress feedback family |
+| Compose | Progress | Determinate bar; progress feedback family |
+| Compose | Carousel | Programmatic pager scrolling; separate carousel/pager family |
+| Flutter | JsonViewer | Data-viewer disclosure; separate follow-up |
+
+The historical local totals above describe the original implementation base. After refresh to main `66f5c26c`, React passes 693 tests and Angular passes 369, with package builds and generated checks rerun. Native source is unchanged by this refresh; the prior 93 SwiftUI, 199 Flutter and 125 Compose results are historical local evidence, not fresh remote CI receipts. Current-head CI and Codex review are required separately before any merge decision.
