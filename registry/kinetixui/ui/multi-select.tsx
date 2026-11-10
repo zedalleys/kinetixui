@@ -64,7 +64,9 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
       // Tag itself; see focusAfterRemoval in ../lib/utils.
       const fromChipRow = next.length === 0 && anchorRef.current?.contains(document.activeElement) === true;
       set(next);
-      if (fromChipRow) anchorRef.current?.focus();
+      // ...and only if nobody moved it meanwhile: a consumer's onValueChange that restores focus to a
+      // control of its own has made a deliberate choice, and that choice wins.
+      if (fromChipRow && anchorRef.current?.contains(document.activeElement)) anchorRef.current.focus();
     };
     const labelFor = (v: string) => options.find((o) => o.value === v)?.label ?? v;
 

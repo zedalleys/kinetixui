@@ -227,6 +227,37 @@ describe("MultiSelect takes its own focus back", () => {
     expect(document.activeElement).toBe(screen.getByRole("combobox"));
   });
 
+  it("leaves focus where the consumer put it when onValueChange moves it", async () => {
+    // Raised by Codex on #554 (P2): the field's focus fallback ran after onValueChange and took
+    // focus back from a consumer that had deliberately moved it to another control.
+    const user = userEvent.setup();
+    function Field() {
+      const [value, setValue] = React.useState(["a"]);
+      const next = React.useRef<HTMLButtonElement>(null);
+      return (
+        <div>
+          <MultiSelect
+            options={options}
+            value={value}
+            onValueChange={(v) => {
+              setValue(v);
+              next.current?.focus();
+            }}
+            aria-label="Woods"
+          />
+          <button ref={next} type="button">
+            Next control
+          </button>
+        </div>
+      );
+    }
+    render(<Field />);
+    screen.getByRole("button", { name: "Remove Ash" }).focus();
+    await user.keyboard("{Enter}");
+    await settled();
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Next control" }));
+  });
+
   it("removes a chip by keyboard without opening the list", async () => {
     // The field's own onKeyDown used to preventDefault every Enter that reached it, including the
     // ones bubbling from a chip's remove button — so the chip was never removed and the list opened
