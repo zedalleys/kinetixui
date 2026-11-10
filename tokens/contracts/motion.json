@@ -442,9 +442,84 @@
         "scripts/check-registry-motion.mjs",
         "scripts/check-native-motion.mjs"
       ],
-      "note": "Loops have no destination, so the contract is their reduced form (a static rest), not a duration pair. Each loop keeps its own period (caret 1.25s, typing 1.2s, marquee 32s), set on the keyframe animation rather than a transition tier. `slower` (1000ms) is documented for loops but nothing reads it as a period today: InputOTP's caret pairs `animate-caret-blink` with the transition utility `duration-slower`, which does not change an animation's duration.",
-      "consumers": [],
-      "deviations": []
+      "note": "Loops have no destination, so the contract is their reduced form (a static rest), not a duration pair. Each loop keeps its own period (caret 1.25s, typing 1.2s, marquee 32s), set on the keyframe animation rather than a transition tier. `slower` (1000ms) is documented for loops but nothing reads it as a period today: InputOTP's caret pairs `animate-caret-blink` with the transition utility `duration-slower`, which does not change an animation's duration. Platform coverage: this role is implemented on all five platforms and was declared on none of them until now — the role sat at `proven` with zero consumers, a weaker bar than `observed`, because the two-platform rule exempted loops. The consumers below are the files that decide whether a loop runs; Angular's spinner departs from `rest` and says so.",
+      "consumers": [
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/spinner.tsx",
+          "expects": [
+            "animate-spin motion-reduce:animate-none"
+          ]
+        },
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/skeleton.tsx",
+          "expects": [
+            "animate-pulse rounded-md bg-muted motion-reduce:animate-none"
+          ]
+        },
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/marquee.tsx",
+          "expects": [
+            "animate-marquee motion-reduce:animate-none"
+          ]
+        },
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/message-bubble.tsx",
+          "expects": [
+            "animate-typing-dot motion-reduce:animate-none motion-reduce:opacity-70"
+          ]
+        },
+        {
+          "platform": "angular",
+          "file": "packages/ui-angular/src/styles.css",
+          "expects": [
+            ".kx-skeleton { animation: none; }",
+            ".kx-marquee__track { animation: none; }"
+          ]
+        },
+        {
+          "platform": "swiftui",
+          "file": "packages/ui-swiftui/Sources/KinetixUI/KinetixLoopMotion.swift",
+          "expects": [
+            "guard !reduceMotion else { return nil }",
+            "public static func runs(reduceMotion: Bool) -> Bool { !reduceMotion }"
+          ]
+        },
+        {
+          "platform": "compose",
+          "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixLoopMotion.kt",
+          "expects": [
+            "fun runs(reduceMotion: Boolean): Boolean = !reduceMotion"
+          ]
+        },
+        {
+          "platform": "flutter",
+          "file": "packages/ui-flutter/lib/src/kinetix_loop_motion.dart",
+          "expects": [
+            "!KinetixDisclosureMotion.reduceMotionOf(context)",
+            "controller.reset();"
+          ]
+        }
+      ],
+      "deviations": [
+        {
+          "platform": "angular",
+          "file": "packages/ui-angular/src/styles.css",
+          "uses": ".kx-spinner { animation-duration: 3s; }",
+          "departs": "reducedForm",
+          "reason": "Angular's spinner does not take this role's `rest` form: with reduce it keeps turning at a 3s period, on the stated judgement that a frozen spinner reads as a hung page. React cannot make the same choice — `@kinetixui/ui`'s Tailwind floor caps every animation at 0.01ms and one iteration, so a slowed React spinner is a single frozen frame and the repository settled on `motion-reduce:animate-none` instead (apps/web/src/lib/motion-contract.test.ts refuses a React loop that slows). Angular ships its own stylesheet with no such floor, so the period survives. The divergence is a platform fact, not a drift: 3s is held under the reduced-motion floor of `check:angular-browser`, and the ring keeps its `role=status` and accessible name in both modes."
+        },
+        {
+          "platform": "angular",
+          "file": "packages/ui-angular/src/styles.css",
+          "uses": ".kx-circular-progress:not([aria-valuenow]) svg { animation-duration: 3s; }",
+          "departs": "reducedForm",
+          "reason": "The indeterminate circular progress is the spinner's second form and follows the same judgement and the same 3s period; it is recorded separately because it is a different selector in a different reduced-motion block, and a single entry would stop naming one of them."
+        }
+      ]
     }
   },
   "untokenised": {
