@@ -1,7 +1,7 @@
 import * as React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Tag } from "./components/tag";
 import { FileUpload } from "./components/file-upload";
 import { MultiSelect } from "./components/multi-select";
@@ -288,5 +288,63 @@ describe("focusAfterRemoval's own contract", () => {
     await settled();
     expect(document.activeElement).not.toBe(peer);
     document.body.innerHTML = "";
+  });
+});
+
+describe("focus handoff is direction-independent, scheduled once, and never stale", () => {
+  const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+  it("follows document order in a right-to-left tree, which is also the Tab order there", async () => {
+    const user = userEvent.setup();
+    render(
+      <div dir="rtl">
+        <Chips />
+      </div>,
+    );
+    screen.getByRole("button", { name: "Remove Linen" }).focus();
+    await user.keyboard("{Enter}");
+    await settled();
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Remove Wool" }));
+  });
+
+  it("focuses the survivor exactly once, and nothing arrives late", async () => {
+    const user = userEvent.setup();
+    render(<Chips />);
+    const survivor = screen.getByRole("button", { name: "Remove Wool" });
+    const focus = vi.spyOn(survivor, "focus");
+    screen.getByRole("button", { name: "Remove Linen" }).focus();
+    await user.keyboard("{Enter}");
+    await settled();
+    await frame();
+    await frame();
+    expect(focus).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not steal focus the user has since moved, when the removal commits late", async () => {
+    // The removal lands a frame after the click. By then the user (or the consumer) has put focus
+    // on something else, so the keyboard is not stranded and the helper must step aside.
+    const user = userEvent.setup();
+    function LateChips() {
+      const [tags, setTags] = React.useState(["A", "B", "C"]);
+      return (
+        <div>
+          {tags.map((t) => (
+            <Tag key={t} onRemove={() => requestAnimationFrame(() => setTags((cur) => cur.filter((x) => x !== t)))}>
+              {t}
+            </Tag>
+          ))}
+          <button type="button">Elsewhere</button>
+        </div>
+      );
+    }
+    render(<LateChips />);
+    screen.getByRole("button", { name: "Remove A" }).focus();
+    await user.keyboard("{Enter}");
+    const elsewhere = screen.getByRole("button", { name: "Elsewhere" });
+    elsewhere.focus();
+    await frame();
+    await frame();
+    expect(screen.queryByText("A")).toBeNull();
+    expect(document.activeElement).toBe(elsewhere);
   });
 });
