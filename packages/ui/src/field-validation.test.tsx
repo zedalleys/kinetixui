@@ -1,7 +1,10 @@
 import * as React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { act } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
 import { Field, FieldControl, FieldDescription, FieldLabel, FieldMessage } from "./components/field";
 import { AddressFields } from "./components/address-fields";
 import { Input } from "./components/input";
@@ -259,5 +262,59 @@ describe("Field announces a message that appears", () => {
     );
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.queryByRole("status")).toBeNull();
+  });
+});
+
+describe("Field is stable under SSR, hydration and StrictMode", () => {
+  const Shape = ({ nested = false }: { nested?: boolean }) => (
+    <Field invalid>
+      <FieldLabel>Email</FieldLabel>
+      <FieldControl>
+        <Input />
+      </FieldControl>
+      <FieldDescription>We never share it.</FieldDescription>
+      {nested ? <div><FieldMessage>Required</FieldMessage></div> : <FieldMessage>Required</FieldMessage>}
+    </Field>
+  );
+
+  it("server markup already names exactly the parts that rendered, for direct children", () => {
+    const html = renderToString(<Shape />);
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const input = doc.querySelector("input")!;
+    const ids = (input.getAttribute("aria-describedby") ?? "").split(" ");
+    expect(ids).toHaveLength(2);
+    for (const id of ids) expect(doc.getElementById(id), id).not.toBeNull();
+  });
+
+  it.each([false, true])("hydrates without a mismatch warning (nested=%s) and ends fully wired", async (nested) => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    container.innerHTML = renderToString(<Shape nested={nested} />);
+    await act(async () => {
+      hydrateRoot(container, <Shape nested={nested} />);
+    });
+    const hydrationErrors = errors.mock.calls.filter((c) => /hydrat|did not match|mismatch/i.test(String(c[0])));
+    errors.mockRestore();
+    expect(hydrationErrors).toEqual([]);
+    expect(danglingIdrefs(container)).toEqual([]);
+    expect(container.querySelector("input")!.getAttribute("aria-describedby")!.split(" ")).toHaveLength(2);
+    container.remove();
+  });
+
+  it("survives StrictMode's mount, unmount, remount without losing a nested part", () => {
+    const { container } = render(
+      <React.StrictMode>
+        <Shape nested />
+      </React.StrictMode>,
+    );
+    expect(container.querySelector("input")!.getAttribute("aria-describedby")!.split(" ")).toHaveLength(2);
+    expect(danglingIdrefs(container)).toEqual([]);
+  });
+
+  it("produces one live region per message, and never makes the control itself live", () => {
+    const { container } = render(<Shape />);
+    expect(container.querySelectorAll('[role="alert"], [role="status"], [aria-live]')).toHaveLength(1);
+    expect(container.querySelector("input")!.hasAttribute("aria-live")).toBe(false);
   });
 });
