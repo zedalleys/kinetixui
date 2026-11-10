@@ -21,8 +21,9 @@
  * 4. The contract (tokens/contracts/motion.json) is held to the source: every tier is described, every
  *    MX1 proposal decision still matches the values, every role names real tokens and a known reduced
  *    form, every "proven" role names evidence that exists and consumers on at least two platforms,
- *    every consumer still contains what the role says it uses, and every recorded deviation still
- *    deviates.
+ *    every consumer still contains what the role says it uses and names at least one thing to look
+ *    for, and every recorded deviation still deviates — either from the role's tokens, or, where it
+ *    says `departs: "reducedForm"`, from the role's reduced form.
  * 5. The set of consumer identities — (role, platform, file) — matches tokens/contracts/motion-consumers.json
  *    exactly, in both directions. Point 4 can only validate the consumers that are present; this is what
  *    notices one that has gone missing, which no other gate in the repository does.
@@ -228,7 +229,15 @@ export function motionErrors(overrides = {}) {
     const consumers = role.consumers ?? [];
     if (role.status === "proven") {
       if (!(role.evidence ?? []).length) fail(`${at} is proven but cites no evidence`);
-      if (!isLoop && new Set(consumers.map((c) => c.platform)).size < 2) fail(`${at} is proven but has consumers on fewer than two platforms`);
+      /* The two-platform rule applies to loops as well. It did not, and the exemption was wider than the
+       * reason for it: a loop is exempt from naming a duration/easing PAIRING, because it has no
+       * destination to arrive at, but nothing about that frees it from naming the platforms it runs on.
+       * With the exemption in place `loop` sat at "proven" on zero consumers — a weaker bar than
+       * "observed", which demands at least one — so the role's platform coverage was undeclared, no
+       * `loop|…` identity existed, and the register in point 5 had nothing to hold. Four React
+       * components, one Angular stylesheet and three native helpers were all implemented and tested in
+       * their own suites the whole time; the contract simply did not say so. */
+      if (new Set(consumers.map((c) => c.platform)).size < 2) fail(`${at} is proven but has consumers on fewer than two platforms`);
     }
     if (role.status === "observed" && !consumers.length) fail(`${at} is observed but lists no consumer`);
     if (role.status === "proposed" && consumers.length) fail(`${at} is proposed but lists consumers; promote it to observed`);
@@ -252,6 +261,12 @@ export function motionErrors(overrides = {}) {
         }
       }
       if (!isLoop && (!seenD.size || !seenE.size)) fail(`${cat}: names no role duration or no role easing, so it proves nothing about the pairing`);
+      /* A loop consumer is held to the same shape of claim, in its own vocabulary. It cannot name a
+       * duration/easing pairing — its period is a keyframe, not a tier — but it can name the source
+       * that decides whether the loop runs, which is the whole of its contract. An empty `expects`
+       * would register a platform and check nothing in it, so the identity would survive the file
+       * being rewritten; that is the hole the register exists to close, re-opened from the inside. */
+      if (isLoop && !(c.expects ?? []).length) fail(`${cat}: names nothing to look for, so registering it proves nothing about the reduced form`);
     }
     for (const dv of role.deviations ?? []) {
       const dat = `${at}, ${dv.platform} deviation in ${dv.file}`;
@@ -260,7 +275,23 @@ export function motionErrors(overrides = {}) {
       else if (!read(dv.file).includes(dv.uses)) fail(`${dat}: no longer contains "${dv.uses}"; if it was aligned, remove the deviation`);
       const offRole = [...dv.uses.matchAll(DUR_REF)].some(([, d]) => !(role.duration ?? []).includes(d)) ||
         [...dv.uses.matchAll(EASE_REF)].some(([, e]) => !(role.easing ?? []).includes(e));
-      if (!offRole) fail(`${dat}: "${dv.uses}" uses only the role's own tokens, so it is not a deviation`);
+      /* Two kinds of deviation, and until now the contract could only say one of them.
+       *
+       * A TOKEN deviation reaches for a timing that is not the role's, and the test above is exactly
+       * right for it: if every token in `uses` belongs to the role, nothing departed.
+       *
+       * A REDUCED-FORM deviation departs from what the role does when the reader asks for less motion,
+       * and it can do that without naming a token at all. Angular's spinner is the live case: with
+       * reduce it keeps turning at `animation-duration: 3s` instead of taking this role's `rest`. There
+       * is no token in that declaration for the test above to find — `animation-duration` is not
+       * `--duration-…` — so the only ways to record it were to omit Angular, which would have left the
+       * contract claiming a coverage it does not have, or to file it as a consumer, which would have
+       * claimed it rests when it does not. `departs: "reducedForm"` is the third option, and it is held
+       * to the two things that make it checkable: the source still says it, and a reason says why. */
+      if (dv.departs !== undefined && dv.departs !== "reducedForm") fail(`${dat}: departs "${dv.departs}" is not a kind of deviation; the only named kind is reducedForm`);
+      if (dv.departs === "reducedForm") {
+        if (offRole) fail(`${dat}: is filed as a reduced-form deviation but "${dv.uses}" already reaches for a token outside the role; record it as a token deviation and drop \`departs\``);
+      } else if (!offRole) fail(`${dat}: "${dv.uses}" uses only the role's own tokens, so it is not a deviation`);
     }
   }
 
