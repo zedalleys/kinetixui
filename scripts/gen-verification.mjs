@@ -39,6 +39,14 @@
  *   DERIVED SUITES. `kx-verify-covers:` names a durable source of subjects — a story directory, a shared
  *                   fixture — for suites that take their subjects from a listing rather than from imports.
  *                   It is never a hand-written list of component names.
+ *   URL-DRIVEN GATES. A browser gate imports no component: it navigates to a story id and drives the page.
+ *                   Its source therefore contains no KinetixUI symbol, so there is no coverage fact to
+ *                   read, and inference falls back to whatever names happen to appear in the file — which
+ *                   credited `form` to the Switch gate, from `new FormData(...)`. `kx-verify-only:` states
+ *                   the subjects for exactly that case, and is checked against the manifest and the
+ *                   platform's own implementation list. It REPLACES inference for its passage, so an
+ *                   incidental symbol cannot widen the claim. It is the narrowest of the three, and it is
+ *                   the only one to reach for when a gate drives the component over a URL.
  *   STRICT SYMBOLS. Off React, a symbol must carry the `Kinetix`/`Kx` prefix. That is what stops Angular's
  *                   own `FormControl` from being read as coverage of the KinetixUI `form` component.
  *
@@ -96,6 +104,8 @@ const CLAIMABLE = KINDS.filter((k) => k !== "build" && k !== "published");
 
 const MARKER = /kx-verify:\s*([a-zA-Z, ]+)\s*$/;
 const COVERS = /kx-verify-covers:\s*(\S+)/;
+/** An explicit subject list, for a gate whose source names no component because it drives one over a URL. */
+const ONLY = /kx-verify-only:\s*([a-z0-9][a-z0-9, -]*?)\s*$/;
 
 /**
  * Where each platform's evidence lives. `extra` files are suites that are not themselves unit tests.
@@ -117,7 +127,7 @@ const ANGULAR_SUITE_SCRIPTS = [
   { pkg: "packages/ui-angular/package.json", name: "test", is: "vitest run" },
 ];
 const TEST_SOURCES = {
-  React: { dirs: ["packages/ui/src"], match: /\.test\.tsx$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm --filter @kinetixui/ui test", scripts: [{ pkg: "packages/ui/package.json", name: "test", is: "vitest run" }] }, extra: ["scripts/a11y-browser.mjs", "scripts/large-text.mjs", "scripts/motion.mjs"], extraEnvironment: "chromium" },
+  React: { dirs: ["packages/ui/src"], match: /\.test\.tsx$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm --filter @kinetixui/ui test", scripts: [{ pkg: "packages/ui/package.json", name: "test", is: "vitest run" }] }, extra: ["scripts/a11y-browser.mjs", "scripts/large-text.mjs", "scripts/motion.mjs", "scripts/switch-motion.mjs", "scripts/toggle-motion.mjs", "scripts/checkbox-radio-motion.mjs", "scripts/tabs-indicator.mjs", "scripts/react-overlays.mjs"], extraEnvironment: "chromium" },
   Angular: { dirs: ["packages/ui-angular/src"], match: /\.spec\.ts$/, environment: "jsdom", runs: { workflow: "ci.yml", command: "pnpm test:angular", scripts: ANGULAR_SUITE_SCRIPTS }, extra: ["scripts/angular-browser.mjs", "scripts/angular-overlays.mjs", "scripts/angular-collections.mjs", "scripts/angular-layout.mjs"], extraEnvironment: "chromium" },
   SwiftUI: { dirs: ["packages/ui-swiftui/Tests"], match: /\.swift$/, environment: "xctest", runs: { workflow: "native-swiftui.yml", command: "swift test" } },
   Compose: { dirs: ["packages/ui-compose/ui/src/test"], match: /\.kt$/, environment: "robolectric", runs: { workflow: "native-compose.yml", command: "./gradlew :ui:testDebugUnitTest" } },
@@ -288,12 +298,17 @@ export function passages(text) {
     const m = line.match(MARKER);
     if (m) {
       close(i);
-      current = { kinds: m[1].split(",").map((k) => k.trim()).filter(Boolean), covers: null, body: [], start: i + 1 };
+      current = { kinds: m[1].split(",").map((k) => k.trim()).filter(Boolean), covers: null, only: null, body: [], start: i + 1 };
       return;
     }
     const c = current && line.match(COVERS);
     if (c) {
       current.covers = c[1];
+      return;
+    }
+    const o = current && line.match(ONLY);
+    if (o) {
+      current.only = o[1].split(",").map((x) => x.trim()).filter(Boolean);
       return;
     }
     if (current) current.body.push(line);
@@ -369,7 +384,27 @@ for (const platform of platforms) {
         continue;
       }
       let slugs;
-      if (claim.covers) {
+      if (claim.only) {
+        // Two subject sources would leave it ambiguous which one the claim rests on, and a reader could not
+        // tell from the file which won. Refused rather than given a precedence rule to remember.
+        if (claim.covers) {
+          errors.push(`${where}: carries both kx-verify-only and kx-verify-covers — a passage declares its subjects one way`);
+          continue;
+        }
+        const unknownSubjects = claim.only.filter((sl) => !components[sl]);
+        if (unknownSubjects.length) {
+          errors.push(`${where}: kx-verify-only names ${unknownSubjects.join(", ")} — not a component in the manifest`);
+          continue;
+        }
+        // A gate cannot verify a component this platform does not implement, so a stale entry left behind
+        // after a component is dropped from a platform fails here rather than publishing a phantom claim.
+        const notOnPlatform = claim.only.filter((sl) => !(components[sl].platforms ?? []).includes(platform));
+        if (notOnPlatform.length) {
+          errors.push(`${where}: kx-verify-only names ${notOnPlatform.join(", ")}, which the manifest does not implement on ${platform}`);
+          continue;
+        }
+        slugs = claim.only;
+      } else if (claim.covers) {
         slugs = slugsFromCovers(claim.covers, platform);
         if (slugs === null) {
           errors.push(`${where}: kx-verify-covers points at ${claim.covers}, which does not exist`);

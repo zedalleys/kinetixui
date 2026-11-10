@@ -20,8 +20,17 @@ final class SelectionSemanticsTests: XCTestCase {
     func testMixedWinsOverTheUnderlyingBool() {
         // The glyph already behaved this way — a box showing a dash is mixed whatever `isOn` says.
         // Accessibility now agrees with the glyph, which is the whole fix.
-        XCTAssertEqual(KinetixTriState.resolve(isOn: true, indeterminate: true), .mixed)
-        XCTAssertEqual(KinetixTriState.resolve(isOn: false, indeterminate: true), .mixed)
+        // These two carry messages because the `mixed-resolves-from-the-bool` negative control greps
+        // for the first one: a control needs a sentence only the restored defect can produce, and a
+        // bare `XCTAssertEqual failed` is not one. Change this wording and change the control with it.
+        XCTAssertEqual(
+            KinetixTriState.resolve(isOn: true, indeterminate: true), .mixed,
+            "a box showing a dash is mixed whatever the underlying isOn says"
+        )
+        XCTAssertEqual(
+            KinetixTriState.resolve(isOn: false, indeterminate: true), .mixed,
+            "a box showing a dash is mixed whatever the underlying isOn says"
+        )
     }
 
     func testTheTwoDefiniteStatesResolveFromTheBool() {
@@ -43,7 +52,12 @@ final class SelectionSemanticsTests: XCTestCase {
     func testMixedIsNotSelected() {
         // `.isSelected` is a binary trait, so mixed must not take it: a reader hearing "selected"
         // for a partially-checked box has been told something false.
-        XCTAssertFalse(KinetixTriState.mixed.isFullySelected)
+        // The first message is what the `mixed-claims-the-selected-trait` control greps for — see the
+        // note above. The other two need no control of their own.
+        XCTAssertFalse(
+            KinetixTriState.mixed.isFullySelected,
+            "mixed must not take the selected trait"
+        )
         XCTAssertFalse(KinetixTriState.off.isFullySelected)
         XCTAssertTrue(KinetixTriState.on.isFullySelected)
     }
