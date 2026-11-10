@@ -39,7 +39,7 @@
   "totals": {
     "React": {
       "build": 109,
-      "interaction": 48,
+      "interaction": 49,
       "accessibility": 109,
       "rtl": 38,
       "largeText": 39,
@@ -92,8 +92,8 @@
     "React": {
       "not-implemented": 0,
       "source": 0,
-      "build": 61,
-      "headless": 28,
+      "build": 60,
+      "headless": 29,
       "runtime": 20
     },
     "Angular": {
@@ -452,6 +452,17 @@
           "price-breakdown",
           "reference-code",
           "result-state"
+        ]
+      },
+      {
+        "file": "packages/ui/src/rating-radio.test.tsx",
+        "environment": "jsdom",
+        "kinds": [
+          "accessibility",
+          "interaction"
+        ],
+        "components": [
+          "rating"
         ]
       },
       {
@@ -5131,8 +5142,12 @@
         "build": [
           "packages/ui (compiled by CI)"
         ],
+        "interaction": [
+          "packages/ui/src/rating-radio.test.tsx:29-200"
+        ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
+          "packages/ui/src/rating-radio.test.tsx:29-200",
           "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
@@ -9046,7 +9061,10 @@
     },
     "rating": {
       "React": {
-        "level": "build",
+        "level": "headless",
+        "interaction": [
+          "jsdom"
+        ],
         "accessibility": [
           "chromium",
           "jsdom"
