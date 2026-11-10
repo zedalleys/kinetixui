@@ -35,6 +35,19 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # Runs BEFORE every generator in this job, and that ordering is the whole point. `Generated files in
+      # sync` below regenerates and then diffs, which catches a mirror whose CONTENT drifted but is blind to
+      # one that is missing from the commit: `git diff` says nothing about untracked files, so a mirror that
+      # was generated locally and never `git add`ed is recreated by CI, ignored by the diff, and shipped as a
+      # `registry.json` entry pointing at a path the repository does not carry. This gate writes nothing and
+      # compares the output it WOULD produce against what the checkout actually holds, so it sees the
+      # omission. Moving it after any generator would silently defeat it.
+      - name: Registry is its source's fixed point
+        run: pnpm check:registry-fixed-point
+
+      - name: Registry fixed-point negative controls
+        run: pnpm check:registry-fixed-point-controls
+
       - name: Build tokens
         run: pnpm build:tokens
 
@@ -60,6 +73,12 @@ jobs:
       - name: Contrast audit (WCAG AA text pairs)
         run: pnpm check:contrast
 
+      # The gate above used to round each composited channel to 8-bit before measuring, which printed
+      # AA for a pair at 4.4847:1. These controls restore that defect and the token it hid, and require
+      # the corrected gate to catch it — so a future change cannot quietly round again.
+      - name: Contrast negative controls (the corrected gate still catches the rounding defect)
+        run: pnpm check:contrast-negative-controls
+
       # The browser axe pass is path-filtered; this checks the filter still covers every package
       # that has stories, so a package cannot drift outside the accessibility gate unnoticed.
       - name: Accessibility gate covers every package with stories
@@ -84,6 +103,13 @@ jobs:
       # is referenced that does not exist; tokens/contracts/motion.json still matches the components it names.
       - name: Motion tokens and contract agree
         run: pnpm check:motion-tokens
+
+      # The step above validates the consumers the contract HAS, so it cannot see one that has gone
+      # missing — deleting SwiftUI's selection-control entry left it and check:native-motion both green.
+      # tokens/contracts/motion-consumers.json closes that, and this proves the closure still works:
+      # a dropped, retyped or unregistered consumer must each fail, in memory, with no build.
+      - name: Motion consumer-identity controls (a dropped platform really fails)
+        run: pnpm check:motion-identity-controls
 
       - name: Changelog page is current with the packages
         run: pnpm check:releases
@@ -130,6 +156,33 @@ jobs:
             node scripts/check-native-publish-preflight.mjs --negative="$control"
           done
 
+      # The npm route's own door. release.yml is `on: push: branches: [main]`, so until the publish
+      # job was split out and bound to the `publish-npm` environment, merging the Version PR *was*
+      # the publication. This asserts the arrangement that replaced it: one gated publishing job,
+      # one publication step inside it, the run's approval asserted before that step, and the
+      # preflight, pending-changeset read and Version PR paths left ungated and credential-free —
+      # because an approval in front of opening a pull request is how a gate gets switched off.
+      - name: Release approval gate
+        run: pnpm check:release-approval-gate
+
+      # Proves it can fail: each control removes one property and must break the check that names it.
+      - name: "Release approval gate: negative controls"
+        run: |
+          controls=$(node scripts/check-release-approval-gate.mjs --list-negatives)
+          count=$(echo "$controls" | grep -c .)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          echo "running $count negative control(s)"
+          for control in $controls; do
+            echo "--- $control"
+            node scripts/check-release-approval-gate.mjs --negative="$control"
+          done
+
+      # The preflight above asserts the shape of the dry-run guard; this runs the real step body and
+      # counts the pushes, because a shape check would pass a guard that reads right and behaves
+      # wrong. Stubbed `git`, nothing pushed, no remote contacted.
+      - name: SwiftUI publish fails closed on every non-false dry_run
+        run: node scripts/publish/swiftui-dry-run-polarity.mjs
+
       # packages/ui-swiftui reaches a consumer as a `git subtree split` pushed to a mirror and
       # resolved by `.package(url:, from:)`, which scripts/adoption/swiftui-consumer.mjs cannot
       # cover because it resolves the vendored path. The layout layer needs no Swift; native-swiftui.yml
@@ -173,13 +226,63 @@ jobs:
       - name: Verification evidence is current with the tests
         run: pnpm check:verification
 
-      - name: Component manifest check (status, platforms, guidance, maturity)
+      - name: Component manifest check (taxonomy, status, platforms, guidance, maturity)
         run: pnpm check:manifest
+
+      # The gate above prints "ok" whether it is validating or quietly doing nothing, and most of what it
+      # validates is invisible while the tree is correct. This corrupts the manifest one rule at a time and
+      # asserts check:manifest fails with the right message each time, then restores it.
+      - name: Manifest gate negative controls (each rule really fails)
+        run: pnpm check:manifest-controls
 
       # The business capability roadmap may only call something existing if the manifest, the IoT package,
       # the blocks manifest or a file says so; its tables are generated from docs/business-capabilities.json.
       - name: Business capability roadmap is truthful and current
         run: pnpm check:capabilities
+
+      # `commerce` is a business domain and `Commerce` is a block category, enforced until now by two
+      # scripts that did not know about each other. This holds the namespaces apart: the block-category
+      # → domain map must be complete, prefixed on both sides, resolve against the canonical files, and
+      # declare no relationship the derived discovery index does not demonstrate. A domain must also
+      # cite at least one capability family — registering an id is the easy half.
+      - name: Identifier namespaces (the two commerces stay apart)
+        run: pnpm check:taxonomy-namespaces
+
+      - name: "Identifier namespaces: negative controls"
+        # The list is captured and counted first: a command substitution that fails inside a `for`
+        # word list does NOT trip `bash -e`, so an empty list would make this step pass having proved
+        # nothing at all — the exact way a gate loses its teeth silently.
+        run: |
+          controls=$(node scripts/check-taxonomy-namespaces.mjs --list-negatives)
+          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          echo "running $count negative control(s)"
+          for control in $controls; do
+            echo "--- $control"
+            node scripts/check-taxonomy-namespaces.mjs --negative="$control"
+          done
+
+      # docs/create/create-project.schema.json is the only structural source for a stored Create
+      # document; scripts/create-schema/json-schema.mjs interprets it rather than re-expressing it.
+      # The expected-invalid corpus is what gives the round-trip property teeth: a validator that
+      # accepted everything would pass a round-trip test. Each of those documents must be rejected for
+      # the reason it declares, not merely rejected.
+      - name: Create document schema (stored documents, references, migration refusals)
+        run: pnpm check:create-schema
+
+      - name: "Create document schema: negative controls"
+        # The list is captured and counted first: a command substitution that fails inside a `for`
+        # word list does NOT trip `bash -e`, so an empty list would make this step pass having proved
+        # nothing at all — the exact way a gate loses its teeth silently.
+        run: |
+          controls=$(node scripts/check-create-schema.mjs --list-negatives)
+          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          echo "running $count negative control(s)"
+          for control in $controls; do
+            echo "--- $control"
+            node scripts/check-create-schema.mjs --negative="$control"
+          done
 
       # Keyboard documentation is derived from the keyboard tests, so a behaviour that stops being tested
       # stops being documented. This fails if the two have drifted apart.
@@ -335,7 +438,20 @@ jobs:
           node scripts/vendor-compose-tokens.mjs
           node scripts/vendor-swiftui-tokens.mjs
           node scripts/vendor-flutter-tokens.mjs
-          git add -N packages/ui-compose packages/ui-swiftui packages/ui-flutter
+          # `git diff` compares the worktree against the index and is silent about untracked files, so a
+          # generated file that was never `git add`ed is regenerated here and then ignored. `-N` was applied
+          # to the three native directories only; every other path below had the same blindness. Applying it
+          # to all of them makes a generated file that is missing from the commit show up as an addition.
+          git add -N \
+            packages/tokens/dist \
+            packages/ui-compose \
+            packages/ui-swiftui \
+            packages/ui-flutter \
+            apps/web/public/r \
+            apps/web/public/specs \
+            registry/kinetixui \
+            specs/components \
+            packages/ui/src/stories
           if ! git diff --exit-code -- \
             packages/tokens/dist \
             packages/ui-compose \

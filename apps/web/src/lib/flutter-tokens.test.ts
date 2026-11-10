@@ -185,10 +185,12 @@ describe("generated Flutter shadows match tokens/semantic/shadow*.json", () => {
     }
   });
 
-  it("gives the dark focus ring a genuinely different colour from light (not a copy)", () => {
-    expect(shadowLight).toContain("0xFF1D4ED8"); // light ring
-    expect(shadowDark).toContain("0xFF60A5FA"); // dark ring
-    expect(shadowDark).not.toContain("0xFF1D4ED8");
+  it("gives the dark focus ring a different colour from light", () => {
+    const lightHex = source.shadow.focus.$value[0]!.color;
+    const darkHex = dark.shadow.focus.$value[0]!.color;
+    expect(lightHex).not.toBe(darkHex);
+    expect(shadowLight).toContain(shadowHexToDartColor(lightHex));
+    expect(shadowDark).toContain(shadowHexToDartColor(darkHex));
   });
 });
 

@@ -69,8 +69,8 @@
     },
     "Compose": {
       "build": 90,
-      "interaction": 7,
-      "accessibility": 6,
+      "interaction": 9,
+      "accessibility": 9,
       "rtl": 1,
       "largeText": 0,
       "reducedMotion": 7,
@@ -79,11 +79,11 @@
     },
     "Flutter": {
       "build": 90,
-      "interaction": 6,
-      "accessibility": 5,
+      "interaction": 7,
+      "accessibility": 6,
       "rtl": 58,
       "largeText": 58,
-      "reducedMotion": 7,
+      "reducedMotion": 8,
       "visual": 0,
       "published": 0
     }
@@ -93,8 +93,8 @@
       "not-implemented": 0,
       "source": 0,
       "build": 60,
-      "headless": 49,
-      "runtime": 0
+      "headless": 29,
+      "runtime": 20
     },
     "Angular": {
       "not-implemented": 29,
@@ -113,15 +113,15 @@
     "Compose": {
       "not-implemented": 19,
       "source": 0,
-      "build": 86,
-      "headless": 4,
+      "build": 83,
+      "headless": 7,
       "runtime": 0
     },
     "Flutter": {
       "not-implemented": 19,
       "source": 0,
-      "build": 85,
-      "headless": 5,
+      "build": 84,
+      "headless": 6,
       "runtime": 0
     }
   },
@@ -496,7 +496,8 @@
         "file": "scripts/a11y-browser.mjs",
         "environment": "chromium",
         "kinds": [
-          "accessibility"
+          "accessibility",
+          "interaction"
         ],
         "components": [
           "accordion",
@@ -611,6 +612,17 @@
         ]
       },
       {
+        "file": "scripts/checkbox-radio-motion.mjs",
+        "environment": "chromium",
+        "kinds": [
+          "interaction"
+        ],
+        "components": [
+          "checkbox",
+          "radio-group"
+        ]
+      },
+      {
         "file": "scripts/large-text.mjs",
         "environment": "chromium",
         "kinds": [
@@ -671,6 +683,52 @@
           "radio-group",
           "switch",
           "tabs",
+          "toggle",
+          "toggle-group"
+        ]
+      },
+      {
+        "file": "scripts/react-overlays.mjs",
+        "environment": "chromium",
+        "kinds": [
+          "interaction"
+        ],
+        "components": [
+          "alert-dialog",
+          "dialog",
+          "dropdown-menu",
+          "popover",
+          "select",
+          "sheet"
+        ]
+      },
+      {
+        "file": "scripts/switch-motion.mjs",
+        "environment": "chromium",
+        "kinds": [
+          "interaction"
+        ],
+        "components": [
+          "switch"
+        ]
+      },
+      {
+        "file": "scripts/tabs-indicator.mjs",
+        "environment": "chromium",
+        "kinds": [
+          "interaction"
+        ],
+        "components": [
+          "tabs"
+        ]
+      },
+      {
+        "file": "scripts/toggle-motion.mjs",
+        "environment": "chromium",
+        "kinds": [
+          "interaction"
+        ],
+        "components": [
           "toggle",
           "toggle-group"
         ]
@@ -1040,6 +1098,21 @@
         ]
       },
       {
+        "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt",
+        "environment": "robolectric",
+        "kinds": [
+          "accessibility",
+          "interaction"
+        ],
+        "components": [
+          "checkbox",
+          "radio-group",
+          "switch",
+          "toggle",
+          "toggle-group"
+        ]
+      },
+      {
         "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt",
         "environment": "robolectric",
         "kinds": [
@@ -1175,6 +1248,20 @@
         ]
       },
       {
+        "file": "packages/ui-flutter/test/selection_motion_test.dart",
+        "environment": "flutter_test",
+        "kinds": [
+          "accessibility",
+          "interaction",
+          "reducedMotion"
+        ],
+        "components": [
+          "checkbox",
+          "radio-group",
+          "toggle"
+        ]
+      },
+      {
         "file": "packages/ui-flutter/test/semantics_test.dart",
         "environment": "flutter_test",
         "kinds": [
@@ -1211,7 +1298,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -1290,13 +1377,13 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1310,7 +1397,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1359,18 +1446,20 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:1242-1653"
+          "packages/ui/src/components-keyboard.test.tsx:1242-1653",
+          "scripts/a11y-browser.mjs:417-587",
+          "scripts/react-overlays.mjs:56-380"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1430,13 +1519,13 @@
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "packages/ui/src/components-business.test.tsx:358-460",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1450,7 +1539,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1511,7 +1600,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1561,7 +1650,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1596,7 +1685,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1646,7 +1735,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1678,7 +1767,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1728,7 +1817,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1774,7 +1863,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1835,7 +1924,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1902,7 +1991,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -1948,7 +2037,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-business.test.tsx:461-543"
@@ -1980,7 +2069,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2032,7 +2121,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2091,7 +2180,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2128,14 +2217,15 @@
           "packages/ui/src/checkbox-radio-motion.test.tsx:253-448",
           "packages/ui/src/checkbox-radio-motion.test.tsx:50-252",
           "packages/ui/src/components-keyboard.test.tsx:315-544",
-          "packages/ui/src/components-selection.test.tsx:27-137"
+          "packages/ui/src/components-selection.test.tsx:27-137",
+          "scripts/checkbox-radio-motion.mjs:40-452"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -2174,9 +2264,11 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ],
         "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284",
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-150"
         ]
       },
@@ -2185,9 +2277,12 @@
           "packages/ui-flutter (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-flutter/test/interaction_test.dart:18-111"
+          "packages/ui-flutter/test/interaction_test.dart:18-111",
+          "packages/ui-flutter/test/selection_motion_test.dart:156-274",
+          "packages/ui-flutter/test/selection_motion_test.dart:275-305"
         ],
         "accessibility": [
+          "packages/ui-flutter/test/selection_motion_test.dart:306-394",
           "packages/ui-flutter/test/semantics_test.dart:30-116"
         ],
         "rtl": [
@@ -2195,6 +2290,9 @@
         ],
         "largeText": [
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/selection_motion_test.dart:275-305"
         ]
       }
     },
@@ -2205,7 +2303,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2255,7 +2353,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2316,7 +2414,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -2393,7 +2491,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2422,7 +2520,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2460,7 +2558,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-overlay.test.tsx:325-491"
@@ -2513,7 +2611,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2562,18 +2660,19 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:67-258"
+          "packages/ui/src/components-keyboard.test.tsx:67-258",
+          "scripts/a11y-browser.mjs:417-587"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2625,18 +2724,19 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-business.test.tsx:61-357"
+          "packages/ui/src/components-business.test.tsx:61-357",
+          "scripts/a11y-browser.mjs:417-587"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "packages/ui/src/components-business.test.tsx:358-460",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2653,7 +2753,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-keyboard.test.tsx:545-1103"
@@ -2685,7 +2785,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2720,7 +2820,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2748,18 +2848,19 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-business.test.tsx:61-357"
+          "packages/ui/src/components-business.test.tsx:61-357",
+          "scripts/a11y-browser.mjs:417-587"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "packages/ui/src/components-business.test.tsx:358-460",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2773,7 +2874,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2817,17 +2918,19 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:67-258",
-          "packages/ui/src/components-overlay.test.tsx:36-324"
+          "packages/ui/src/components-overlay.test.tsx:36-324",
+          "scripts/a11y-browser.mjs:417-587",
+          "scripts/react-overlays.mjs:56-380"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-direction-portal.test.tsx:48-483"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2886,7 +2989,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2921,7 +3024,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/checkbox-radio-motion.test.tsx:449-492",
@@ -2947,17 +3050,18 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-overlay.test.tsx:36-324"
+          "packages/ui/src/components-overlay.test.tsx:36-324",
+          "scripts/a11y-browser.mjs:417-587"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-direction-portal.test.tsx:48-483"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3016,18 +3120,20 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:67-258",
-          "packages/ui/src/components-overlay.test.tsx:325-491"
+          "packages/ui/src/components-overlay.test.tsx:325-491",
+          "scripts/a11y-browser.mjs:417-587",
+          "scripts/react-overlays.mjs:56-380"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-overlay.test.tsx:325-491"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3080,7 +3186,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3124,7 +3230,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3176,7 +3282,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3237,7 +3343,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3272,7 +3378,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3335,10 +3441,10 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3351,18 +3457,19 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-business.test.tsx:61-357"
+          "packages/ui/src/components-business.test.tsx:61-357",
+          "scripts/a11y-browser.mjs:417-587"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "packages/ui/src/components-business.test.tsx:358-460",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3376,7 +3483,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3429,7 +3536,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3473,7 +3580,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3525,13 +3632,13 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-562"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3595,10 +3702,10 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3661,13 +3768,13 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-562"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3728,7 +3835,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3757,7 +3864,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3771,7 +3878,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3819,10 +3926,10 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3880,7 +3987,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3935,7 +4042,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -3964,7 +4071,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4016,18 +4123,19 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:1242-1653"
+          "packages/ui/src/components-keyboard.test.tsx:1242-1653",
+          "scripts/a11y-browser.mjs:417-587"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4080,7 +4188,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4118,7 +4226,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4168,14 +4276,15 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:1242-1653",
-          "packages/ui/src/components-overlay.test.tsx:36-324"
+          "packages/ui/src/components-overlay.test.tsx:36-324",
+          "scripts/a11y-browser.mjs:417-587"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4240,13 +4349,13 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-562"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4299,10 +4408,10 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4336,7 +4445,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4394,7 +4503,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-rtl.test.tsx:60-259"
@@ -4435,7 +4544,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4491,10 +4600,10 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4554,7 +4663,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4598,7 +4707,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4657,13 +4766,13 @@
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "packages/ui/src/components-transactional.test.tsx:147-254",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4677,7 +4786,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4739,13 +4848,13 @@
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "packages/ui/src/components-business.test.tsx:358-460",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4760,11 +4869,13 @@
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:67-258",
           "packages/ui/src/components-overlay.test.tsx:325-491",
-          "packages/ui/src/components-overlay.test.tsx:36-324"
+          "packages/ui/src/components-overlay.test.tsx:36-324",
+          "scripts/a11y-browser.mjs:417-587",
+          "scripts/react-overlays.mjs:56-380"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-direction-portal.test.tsx:48-483",
@@ -4772,7 +4883,7 @@
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4826,13 +4937,13 @@
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "packages/ui/src/components-transactional.test.tsx:147-254",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4846,7 +4957,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4896,7 +5007,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -4949,17 +5060,18 @@
           "packages/ui/src/checkbox-radio-motion.test.tsx:50-252",
           "packages/ui/src/components-keyboard.test.tsx:315-544",
           "packages/ui/src/components-selection.test.tsx:138-208",
-          "packages/ui/src/components-selection.test.tsx:27-137"
+          "packages/ui/src/components-selection.test.tsx:27-137",
+          "scripts/checkbox-radio-motion.mjs:40-452"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-selection.test.tsx:138-208"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -4999,11 +5111,23 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ]
       },
       "Flutter": {
         "build": [
           "packages/ui-flutter (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-flutter/test/selection_motion_test.dart:156-274"
+        ],
+        "accessibility": [
+          "packages/ui-flutter/test/selection_motion_test.dart:306-394"
         ],
         "rtl": [
           "packages/ui-flutter/test/adaptivity_test.dart:32-68"
@@ -5024,7 +5148,7 @@
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "packages/ui/src/rating-radio.test.tsx:29-200",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5086,13 +5210,13 @@
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "packages/ui/src/components-transactional.test.tsx:147-254",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5106,7 +5230,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5166,13 +5290,13 @@
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "packages/ui/src/components-transactional.test.tsx:147-254",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-transactional.test.tsx:255-317"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5186,7 +5310,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5242,7 +5366,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5295,18 +5419,19 @@
         "interaction": [
           "packages/ui/src/components-form.test.tsx:311-562",
           "packages/ui/src/components-form.test.tsx:39-310",
-          "packages/ui/src/components-keyboard.test.tsx:1242-1653"
+          "packages/ui/src/components-keyboard.test.tsx:1242-1653",
+          "scripts/react-overlays.mjs:56-380"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-form.test.tsx:311-562"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5365,7 +5490,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5416,18 +5541,20 @@
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:1242-1653",
           "packages/ui/src/components-overlay.test.tsx:325-491",
-          "packages/ui/src/components-overlay.test.tsx:36-324"
+          "packages/ui/src/components-overlay.test.tsx:36-324",
+          "scripts/a11y-browser.mjs:417-587",
+          "scripts/react-overlays.mjs:56-380"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-overlay.test.tsx:325-491"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5486,7 +5613,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5545,7 +5672,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5608,13 +5735,13 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-562"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5672,7 +5799,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5731,7 +5858,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5790,7 +5917,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5848,18 +5975,19 @@
           "packages/ui/src/components-keyboard.test.tsx:315-544",
           "packages/ui/src/components-selection.test.tsx:138-208",
           "packages/ui/src/components-selection.test.tsx:27-137",
-          "packages/ui/src/switch-motion.test.tsx:27-262"
+          "packages/ui/src/switch-motion.test.tsx:27-262",
+          "scripts/switch-motion.mjs:44-476"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-selection.test.tsx:138-208",
           "packages/ui/src/switch-motion.test.tsx:263-303"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -5909,13 +6037,15 @@
         ],
         "interaction": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:53-203"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:67-343"
         ],
         "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284",
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-150"
         ],
         "reducedMotion": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:53-203"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt:67-343"
         ]
       },
       "Flutter": {
@@ -5946,7 +6076,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6004,7 +6134,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6033,7 +6163,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6090,17 +6220,18 @@
           "packages/ui (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui/src/components-keyboard.test.tsx:259-314"
+          "packages/ui/src/components-keyboard.test.tsx:259-314",
+          "scripts/tabs-indicator.mjs:39-990"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-keyboard.test.tsx:259-314"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -6180,7 +6311,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6237,13 +6368,13 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-form.test.tsx:311-562"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6305,13 +6436,13 @@
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "packages/ui/src/components-business.test.tsx:358-460",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6326,13 +6457,13 @@
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
           "packages/ui/src/components-business.test.tsx:358-460",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-business.test.tsx:461-543"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6377,17 +6508,18 @@
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:1242-1653",
           "packages/ui/src/components-selection.test.tsx:27-137",
-          "packages/ui/src/toggle-motion.test.tsx:110-216"
+          "packages/ui/src/toggle-motion.test.tsx:110-216",
+          "scripts/toggle-motion.mjs:40-352"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/toggle-motion.test.tsx:217-281"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -6426,7 +6558,11 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ]
       },
       "Flutter": {
@@ -6434,7 +6570,8 @@
           "packages/ui-flutter (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-flutter/test/interaction_test.dart:18-111"
+          "packages/ui-flutter/test/interaction_test.dart:18-111",
+          "packages/ui-flutter/test/selection_motion_test.dart:156-274"
         ],
         "accessibility": [
           "packages/ui-flutter/test/semantics_test.dart:30-116"
@@ -6455,17 +6592,18 @@
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:1242-1653",
           "packages/ui/src/components-selection.test.tsx:27-137",
-          "packages/ui/src/toggle-motion.test.tsx:110-216"
+          "packages/ui/src/toggle-motion.test.tsx:110-216",
+          "scripts/toggle-motion.mjs:40-352"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/toggle-motion.test.tsx:217-281"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
           "scripts/motion.mjs:24-334"
@@ -6505,6 +6643,12 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
+        ],
+        "accessibility": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt:121-284"
         ]
       },
       "Flutter": {
@@ -6526,18 +6670,19 @@
         ],
         "interaction": [
           "packages/ui/src/components-keyboard.test.tsx:1242-1653",
-          "packages/ui/src/components-overlay.test.tsx:36-324"
+          "packages/ui/src/components-overlay.test.tsx:36-324",
+          "scripts/a11y-browser.mjs:417-587"
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-direction-portal.test.tsx:48-483",
           "packages/ui/src/components-rtl.test.tsx:60-259"
         ],
         "largeText": [
-          "scripts/large-text.mjs:99-738"
+          "scripts/large-text.mjs:99-739"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6593,7 +6738,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "rtl": [
           "packages/ui/src/components-direction-portal.test.tsx:48-483"
@@ -6638,7 +6783,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6667,7 +6812,7 @@
         ],
         "accessibility": [
           "packages/ui/src/components-a11y.test.tsx:17-74",
-          "scripts/a11y-browser.mjs:35-560"
+          "scripts/a11y-browser.mjs:35-416"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6780,8 +6925,9 @@
     },
     "alert-dialog": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -7225,8 +7371,9 @@
     },
     "checkbox": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -7469,8 +7616,9 @@
     },
     "context-menu": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -7499,8 +7647,9 @@
     },
     "country-select": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -7589,8 +7738,9 @@
     },
     "date-range-input": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -7641,8 +7791,9 @@
     },
     "dialog": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -7716,8 +7867,9 @@
     },
     "drawer": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -7746,8 +7898,9 @@
     },
     "dropdown-menu": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -7942,8 +8095,9 @@
     },
     "guest-picker": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -8338,8 +8492,9 @@
     },
     "menubar": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -8417,8 +8572,9 @@
     },
     "modal": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -8752,8 +8908,9 @@
     },
     "popover": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -8859,8 +9016,9 @@
     },
     "radio-group": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -8883,10 +9041,22 @@
         "level": "build"
       },
       "Compose": {
-        "level": "build"
+        "level": "headless",
+        "interaction": [
+          "robolectric"
+        ],
+        "accessibility": [
+          "robolectric"
+        ]
       },
       "Flutter": {
-        "level": "build"
+        "level": "headless",
+        "interaction": [
+          "flutter_test"
+        ],
+        "accessibility": [
+          "flutter_test"
+        ]
       }
     },
     "rating": {
@@ -9054,8 +9224,9 @@
     },
     "select": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -9112,8 +9283,9 @@
     },
     "sheet": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -9312,8 +9484,9 @@
     },
     "switch": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -9435,8 +9608,9 @@
     },
     "tabs": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -9595,8 +9769,9 @@
     },
     "toggle": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -9619,8 +9794,11 @@
         "level": "build"
       },
       "Compose": {
-        "level": "build",
+        "level": "headless",
         "interaction": [
+          "robolectric"
+        ],
+        "accessibility": [
           "robolectric"
         ]
       },
@@ -9636,8 +9814,9 @@
     },
     "toggle-group": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -9660,7 +9839,13 @@
         "level": "build"
       },
       "Compose": {
-        "level": "build"
+        "level": "headless",
+        "interaction": [
+          "robolectric"
+        ],
+        "accessibility": [
+          "robolectric"
+        ]
       },
       "Flutter": {
         "level": "build"
@@ -9668,8 +9853,9 @@
     },
     "tooltip": {
       "React": {
-        "level": "headless",
+        "level": "runtime",
         "interaction": [
+          "chromium",
           "jsdom"
         ],
         "accessibility": [
@@ -9783,19 +9969,19 @@
       "source": 0,
       "build": 19,
       "headless": 0,
-      "runtime": 2
+      "runtime": 3
     },
     "Angular": {
       "not-implemented": 0,
       "source": 0,
-      "build": 20,
+      "build": 21,
       "headless": 1,
       "runtime": 0
     },
     "SwiftUI": {
       "not-implemented": 0,
       "source": 0,
-      "build": 21,
+      "build": 22,
       "headless": 0,
       "runtime": 0
     },
@@ -9803,14 +9989,14 @@
       "not-implemented": 0,
       "source": 0,
       "build": 18,
-      "headless": 3,
+      "headless": 4,
       "runtime": 0
     },
     "Flutter": {
       "not-implemented": 0,
       "source": 0,
       "build": 18,
-      "headless": 3,
+      "headless": 4,
       "runtime": 0
     }
   },
@@ -11905,6 +12091,128 @@
           ],
           "limitations": [
             "no interaction test",
+            "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
+          ]
+        }
+      }
+    },
+    "boarding-pass": {
+      "title": "Boarding pass",
+      "platforms": {
+        "React": {
+          "level": "runtime",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/boarding-pass.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:165-196",
+              "environment": "chromium"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:63-96",
+              "environment": "chromium"
+            }
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/boarding-pass.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/BoardingPassBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "headless",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt:272-288",
+              "environment": "robolectric"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/BoardingPassBlockTest.kt:257-271",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (robolectric), not observed in a browser or on a device",
+            "accessibility tested headless only (robolectric), not observed in a browser or on a device"
+          ]
+        },
+        "Flutter": {
+          "level": "headless",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/boarding_pass_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/boarding_pass_block_test.dart:283-311",
+              "environment": "flutter_test"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/boarding_pass_block_test.dart:259-282",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (flutter_test), not observed in a browser or on a device",
             "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
           ]
         }

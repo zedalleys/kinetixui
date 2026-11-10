@@ -1,0 +1,77 @@
+{
+  "implementationCommit": "7fba3a8af4560b30364efad942cdd8f1f46952ef",
+  "productionBuild": {
+    "pass": true,
+    "staticPages": 154
+  },
+  "unitTests": {
+    "web": 2576,
+    "react": 649,
+    "themeEngine": 668,
+    "angular": 368,
+    "swiftui": 79,
+    "flutter": 172,
+    "compose": 101
+  },
+  "contrast": "pass; existing tracked non-text exceptions retained",
+  "tokenContractRows": 26,
+  "legacyPrimitiveValues": "unchanged",
+  "legacySemanticNames": "preserved",
+  "siteAccessibility": {
+    "initialSweep": {
+      "pages": 36,
+      "views": 720,
+      "viewFindings": 25,
+      "issue": "dark-mode linked inline-code contrast on five documentation pages"
+    },
+    "fix": "Dark-mode linked code retains its parent surface instead of a lighter code-chip fill.",
+    "affectedPageRetest": {
+      "views": 100,
+      "findings": 0,
+      "overflow": 0
+    },
+    "finalFullCI": "pending; required before merge"
+  },
+  "merged": false,
+  "released": false,
+  "repositoryGates": {
+    "pass": 27,
+    "details": "repository-checks.json"
+  },
+  "heroRefinement": {
+    "visibleControls": 0,
+    "autoplay": "floating rotation at 12 deg/s (a 30-second revolution) and a traveling light whose lap is 16.7-16.8 seconds as timed in the browser by check:hero-beacon, not quoted \u2014 the lap follows the cage geometry, so it moves whenever the circuit does. The earlier \"24-second / 14-second\" figures predate the cage-tracing beacon and were wrong for this head. Fresh playback each visit.",
+    "gradient": "four facet materials: luminous cyan, translucent glass, deeper teal shadows and indigo return edges",
+    "checks": [
+      "production build",
+      "changed-component lint",
+      "seven hero browser cases (check:rebrand-hero, now wired into CI)",
+      "hero beacon gate: cage traversal, junction pulses, timed loop, drag, offscreen, focus contrast (check:hero-beacon)",
+      "homepage keyboard, contrast and aura safeguards",
+      "component-use guard",
+      "typography guard"
+    ],
+    "platformTests": "original rebrand validation; platform and token sources unchanged"
+  },
+  "backgroundCircle": {
+    "size": "82% of artwork column",
+    "blur": "18px",
+    "appearance": "broad cyan luminous center with circular fading edges; separate dark-mode treatment",
+    "pixelVisibilityBudget": {
+      "minimumChannelDelta": 55,
+      "maximumChannelDelta": 110
+    },
+    "textContrastFloor": "unchanged: 4.5:1"
+  },
+  "polygonColorEnhancement": {
+    "materials": [
+      "light",
+      "glass",
+      "shadow",
+      "edge"
+    ],
+    "palette": "cyan and teal with indigo shading",
+    "geometry": "original nine facets and brand-colored wireframe unchanged",
+    "backgroundCircle": "preserved"
+  }
+}

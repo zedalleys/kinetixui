@@ -22,6 +22,7 @@
 // the end strips the historical sentences before scanning, so correcting today's copy can never be
 // achieved by quietly editing the before/after the article rests on.
 import { readFileSync } from "node:fs";
+import { findStaleFigures } from "./stale-figures.mjs";
 const dir = new URL("./", import.meta.url);
 const root = new URL("../../../../", dir);
 const TITLE = "Your cross-platform design system may be lying about parity";
@@ -125,10 +126,13 @@ t(Object.keys(generated).length > 10, `usage-examples.generated.ts parsed (${Obj
 // or fail on where the wrap happened to fall, which is not a fact about the claim.
 const flat = (s) => s.replace(/\s+/g, " ");
 
-// "Ours, today" is the single paragraph in the article allowed to carry live figures.
-const start = art.indexOf("Ours, today:");
+// The dated current-state paragraph is the single one in the article allowed to carry live
+// figures. It is dated rather than "today" so a reader can tell when it was measured, which means
+// this locator is the canonical pair of the heading in article.md: changing one without the other
+// leaves `today` empty, and an empty subject passes every assertion below vacuously.
+const start = art.indexOf("Ours, as of 7 November 2026:");
 const today = start < 0 ? "" : flat(art.slice(start, art.indexOf("Those are generated", start)));
-t(today.length > 0, "article has an 'ours, today' paragraph to check");
+t(today.length > 0, "article has a dated current-state paragraph to check");
 t(
   today.includes(`${comps.length} catalogue entries`),
   `today: ${comps.length} catalogue entries`,
@@ -156,28 +160,12 @@ for (const [name, body] of [["article.md", art], ["linkedin.md", li], ["x-thread
 }
 t(demoTotal >= 100 && demoTotal < 110, `migration: ${demoTotal} demo keys total — "a hundred-odd" still fair`);
 
-// Stale current-state figures. Historical sentences are removed first: they are the before/after the
-// piece rests on, each pinned to a commit in verify-evidence.mjs, and must survive this sweep intact.
-const HISTORICAL = [
-  /SwiftUI 91 → 90/g,
-  /Compose\s*\n?90 → 89/g,
-  /Flutter 91 → 90/g,
-  /full coverage 90 → 89/g,
-  /platforms:\s*\n?90 → 89/g,
-  /On all four catalogue-complete platforms: 90 → 89/g,
-  /91\/90\/91 → 90\/89\/90/g,
-  /91 · 90 · 91/g,
-  /Coverage after: SwiftUI \*\*90\*\*, Compose \*\*89\*\*, Flutter \*\*90\*\*, all-four \*\*89\*\*/g,
-  /Coverage before the correction[^\n]*/gi,
-  /took it 90 → 89/g,
-  /90 → 89/g,
-];
-const STALE = ["Angular 11", "Compose 89", "89 of 98", "89/98", "9 documented exceptions", "Three of a hundred"];
+// Stale current-state figures. The sweep itself lives in stale-figures.mjs so it can be tested:
+// it used a bare substring test, which matched "9 documented exceptions" inside today's correct
+// "19 documented exceptions" and asserted the same paragraph both correct and stale on one run.
 for (const f of files.concat("sources.md")) {
-  let body = read(f);
-  for (const h of HISTORICAL) body = body.replace(h, "");
-  for (const stale of STALE) {
-    if (body.includes(stale)) t(false, `${f}: stale current-state figure "${stale}" outside a historical sentence`);
+  for (const stale of findStaleFigures(read(f))) {
+    t(false, `${f}: stale current-state figure "${stale}" outside a historical sentence`);
   }
 }
 t(true, "no stale current-state figures (historical before/after left intact)");

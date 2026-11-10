@@ -23,7 +23,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Feedback/Empty",
+  title: "Feedback & Status/Empty",
   parameters: {
     layout: "centered",
     docs: { source: { code: "<Empty>\\n  <EmptyHeader>\\n    <EmptyMedia variant=\"icon\"><Search /></EmptyMedia>\\n    <EmptyTitle>No results found</EmptyTitle>\\n    <EmptyDescription>Try adjusting your search or filters.</EmptyDescription>\\n  </EmptyHeader>\\n  <EmptyContent>\\n    <Button variant=\"Outline\" size=\"sm\">Clear filters</Button>\\n  </EmptyContent>\\n</Empty>", language: "tsx" } },

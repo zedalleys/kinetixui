@@ -1,0 +1,40 @@
+{
+  "junctionNodesPulsed": 6,
+  "offEdgeMaxUnits": 0,
+  "beaconUnitsPerSecond": 172,
+  "haloUnitsPerSecond": 85,
+  "haloRadiusRange": [
+    6,
+    17
+  ],
+  "measuredLapSeconds": 16.7,
+  "lapsObserved": 2,
+  "beaconTravelsDuringDrag": true,
+  "focusIndicator": {
+    "rectangularFrame": false,
+    "stroke": "rgb(82, 67, 219)",
+    "strokeWidth": "2px"
+  },
+  "reducedMotion": {
+    "autoplay": false,
+    "beaconHidden": true,
+    "keyboardRotationKept": true
+  },
+  "offscreenSuspends": true,
+  "focusContrast_light": {
+    "changedPixels": 24433,
+    "best": 7.18,
+    "topDecile": 5.83,
+    "shareAt3to1": 54
+  },
+  "focusContrast_dark": {
+    "changedPixels": 24146,
+    "best": 9.84,
+    "topDecile": 9.06,
+    "shareAt3to1": 45
+  },
+  "cageFollowsBrandRole": {
+    "light": "rgb(96, 82, 244)",
+    "dark": "rgb(166, 137, 250)"
+  }
+}
