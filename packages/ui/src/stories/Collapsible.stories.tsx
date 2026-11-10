@@ -20,7 +20,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Data Display/Collapsible",
+  title: "Layout & Structure/Collapsible",
   component: Collapsible,
   args: { defaultOpen: false, disabled: false },
   argTypes: { defaultOpen: { control: "boolean" }, disabled: { control: "boolean" } },

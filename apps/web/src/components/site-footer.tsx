@@ -1,13 +1,19 @@
 import Link from "next/link";
-import { Layers } from "lucide-react";
+import { BrandMark } from "./brand-mark";
 import { siteConfig } from "@/lib/site";
+import { ctaAttrs } from "@/lib/analytics-surfaces";
 
-const COLS: { title: string; links: { label: string; href: string }[] }[] = [
+/**
+ * `cta` marks a link whose click is a product CTA. Only the path to installation carries one: the footer is on
+ * every route, so tagging each link here would attribute ordinary navigation as intent. Plain data attributes,
+ * read by the provider's delegated listener, so this file stays a server component.
+ */
+const COLS: { title: string; links: { label: string; href: string; cta?: ReturnType<typeof ctaAttrs> }[] }[] = [
   {
     title: "Docs",
     links: [
       { label: "Introduction", href: "/docs" },
-      { label: "Installation", href: "/docs/installation" },
+      { label: "Installation", href: "/docs/installation", cta: ctaAttrs("footer", "installation", "footer") },
       { label: "Theming", href: "/docs/theming" },
       { label: "Accessibility", href: "/docs/accessibility" },
     ],
@@ -38,9 +44,16 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
   theme, each inked in that theme's values of the same tokens:
   - light, by day: `azure.1000`/`950` ink and `azure.900` mid-tones (the ramp `primary` comes from) on light
     `accent`, highlights in `background`;
-  - dark, at evening: dark `accent` (blue.700) sky with stars and a dusk glow on the horizon, the land in
-    `background` (blue.900) silhouettes with moonlit edges. Not an inversion — that reads as a photographic
+  - dark, at evening: dark `accent` (blue.700) sky over land in `background` (blue.900), the palms, mesas,
+    dunes and oasis water carried as near-black tonal masses. Not an inversion — that reads as a photographic
     negative — but the same tones re-lit for night.
+  The evening plate's brightest sky is the cloud band above the horizon, averaging about 52/255 against a
+  31/255 upper sky; below the band the plate darkens all the way down to about 14/255 at its foot, so there is
+  no glow at the horizon itself — the 24 rows under the horizon line average 36/255 against 42/255 for the 24
+  above it, and nothing rim-lights the land's edge. The land is graded rather than flat: mean 20/255 with a
+  5th-to-95th-percentile spread of 13–31/255. The upper sky carries scattered stipple specks, the brightest
+  31/255 above its local background and 182 of 199 under 16/255 — present in the file, but not legible as
+  stars at the size the footer renders. Measured on `public/footer/arabian-landscape-evening-2880.webp`.
   The mark matches the header (`primary`), headings are `foreground` and the secondary text is `foreground` at
   70%: 18.2:1 and 7.3:1 on light `accent`, 14.7:1 and 7.8:1 on dark. `muted-foreground` is 4.8:1 on light
   `accent`, so it is not used.
@@ -72,11 +85,9 @@ export function SiteFooter() {
         <div className="grid gap-10 pb-12 pt-16 lg:grid-cols-[2fr_repeat(3,minmax(0,1fr))] lg:pt-20">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground">
-                <Layers className="size-[18px]" />
-              </span>
-              <span className="font-display text-wordmark font-bold uppercase tracking-[0.18em]">
-                Kinetix<span className="text-primary">ui</span>
+              <BrandMark className="size-8 shrink-0" />
+              <span className="font-display text-wordmark font-bold tracking-[-0.035em]">
+                Kinetix<span className="text-brand">UI</span>
               </span>
             </div>
             {/* The canonical tagline, not a second copy of it: this paragraph carried the retired
@@ -97,6 +108,7 @@ export function SiteFooter() {
                       <Link
                         href={l.href}
                         {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+                        {...(l.cta ?? {})}
                         className={`text-foreground/70 transition-colors hover:text-foreground ${focusRing}`}
                       >
                         {l.label}

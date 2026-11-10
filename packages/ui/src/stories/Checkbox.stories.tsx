@@ -12,7 +12,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Form Inputs/Checkbox",
+  title: "Forms & Inputs/Checkbox",
   component: Checkbox,
   args: { disabled: false, defaultChecked: false },
   argTypes: { disabled: { control: "boolean" }, defaultChecked: { control: "boolean" } },

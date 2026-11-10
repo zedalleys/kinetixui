@@ -37,7 +37,7 @@ const Demo = () => {
   };
 
 const meta = {
-  title: "Form Inputs/TimeSlotPicker",
+  title: "Forms & Inputs/TimeSlotPicker",
   parameters: {
     layout: "padded",
     docs: { source: { code: "<TimeSlotPicker\n  label=\"Pickup time\"\n  timeZoneLabel=\"Times in Riyadh (GMT+3)\"\n  value={slot}\n  onValueChange={setSlot}\n  groups={[\n    { label: \"Morning\", slots: [{ value: \"09:00\", label: \"09:00\" }, { value: \"09:30\", label: \"09:30\", unavailable: true }] },\n    { label: \"Afternoon\", slots: [{ value: \"14:00\", label: \"14:00\", note: \"1 left\" }] },\n  ]}\n/>", language: "tsx" } },

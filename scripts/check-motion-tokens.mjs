@@ -23,6 +23,9 @@
  *    form, every "proven" role names evidence that exists and consumers on at least two platforms,
  *    every consumer still contains what the role says it uses, and every recorded deviation still
  *    deviates.
+ * 5. The set of consumer identities — (role, platform, file) — matches tokens/contracts/motion-consumers.json
+ *    exactly, in both directions. Point 4 can only validate the consumers that are present; this is what
+ *    notices one that has gone missing, which no other gate in the repository does.
  *
  * It is a static check. It does not prove rendered motion (`check:motion`, `check:loop-motion`) or
  * native runtime behaviour (native-*.yml); native mappings here are validated against generated
@@ -261,6 +264,44 @@ export function motionErrors(overrides = {}) {
     }
   }
 
+  /* Every check above reads the consumers the contract HAS. None of them can notice one that should be
+   * there and is not, so a platform can lose its entry with nothing red: delete SwiftUI's from
+   * `selection-control` and four platforms remain, which still satisfies "proven needs two". Measured on
+   * `a92de6e` — check:motion-tokens and check:native-motion were both green with that object gone.
+   * Retyping a consumer's `platform` or `file` is the same hole from the other side: the old identity is
+   * gone and the new one was never reviewed.
+   *
+   * Not hypothetical bookkeeping. The three MX1d branches each add one consumer to the same role at the
+   * same position, so git conflicts INSIDE a single consumer object — the `platform` and `file` lines
+   * collide while the shared `expects` block sits outside the markers. Resolve that textually rather than
+   * structurally and the object silently belongs to one platform only, with every gate passing.
+   *
+   * So the identities are written down too, and the two must agree in both directions. */
+  const register = JSON.parse(read("tokens/contracts/motion-consumers.json"));
+  const held = new Set(register.identities ?? []);
+  const actual = new Set(
+    Object.entries(contract.roles ?? {}).flatMap(([name, role]) =>
+      (role.consumers ?? []).map((c) => `${name}|${c.platform}|${c.file}`),
+    ),
+  );
+  for (const id of [...held].sort()) {
+    if (!actual.has(id)) {
+      fail(
+        `contract: motion-consumers.json holds "${id}", which the contract no longer lists. ` +
+          `If that consumer was deliberately removed, delete the line from motion-consumers.json in the same commit; ` +
+          `if a merge dropped it, restore it to tokens/contracts/motion.json.`,
+      );
+    }
+  }
+  for (const id of [...actual].sort()) {
+    if (!held.has(id)) {
+      fail(
+        `contract: the contract lists consumer "${id}", which motion-consumers.json does not hold. ` +
+          `Add that exact line to its "identities" so the addition is reviewed.`,
+      );
+    }
+  }
+
   for (const [dim, u] of Object.entries(contract.untokenised ?? {})) {
     if (!u.decision || !u.reason || !u.addWhen) fail(`contract: untokenised "${dim}" needs decision, reason and addWhen`);
     if (motion[dim]) fail(`contract: "${dim}" is now a token group in motion.json but the contract still lists it as untokenised`);
@@ -283,8 +324,10 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const c = JSON.parse(readFileSync(join(ROOT, "tokens/contracts/motion.json"), "utf8"));
   const roles = Object.entries(c.roles);
   const by = (s) => roles.filter(([, r]) => r.status === s).map(([n]) => n).join(", ") || "none";
+  const identities = roles.reduce((n, [, r]) => n + (r.consumers ?? []).length, 0);
   console.log(
     `check:motion-tokens — source, 2 web stylesheets and 6 native files agree; no dead motion references; ` +
-      `contract holds (proven: ${by("proven")}; observed: ${by("observed")}; proposed: ${by("proposed")}).`,
+      `contract holds (proven: ${by("proven")}; observed: ${by("observed")}; proposed: ${by("proposed")}); ` +
+      `${identities} consumer identities, all registered.`,
   );
 }

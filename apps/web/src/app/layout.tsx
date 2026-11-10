@@ -4,11 +4,13 @@ import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { CursorGlow } from "@/components/cursor-glow";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import { PlatformLocationSync } from "@/components/platform-location-sync";
 import { VercelAnalytics } from "@/components/vercel-analytics";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
+import "./brand-hero.css";
 
 /**
  * Fonts are served from this repository, not fetched from Google at build time.
@@ -108,6 +110,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             Skip to content
           </a>
+          {/* The site-wide pointer glow, deliberately BEFORE the content
+              wrapper: both are positioned at stacking level 0, so the later
+              element paints over the earlier one and the glow stays behind
+              everything that carries meaning. See cursor-glow.tsx. */}
+          <CursorGlow />
           <div className="relative flex min-h-dvh flex-col">
             <SiteHeader />
             <main id="main-content" className="flex-1">

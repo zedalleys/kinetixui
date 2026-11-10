@@ -4,60 +4,60 @@
 
 .dark {
   --scrim: 0 0% 0% / 0.6; /** black at 60%: a dark page is already near-black, so 40% would barely dim it; 60% keeps the modal separated from what is behind it. */
-  --action-hover: 213 71% 62%; /** explicit hover fill for native ports: `action` at 90% over `background` (#60a5fa over #050c11). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree. */
-  --action-pressed: 213 62% 58%; /** explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA. */
-  --background: 205 55% 4%;
-  --foreground: 212 100% 97%;
-  --card: 205 50% 9%;
-  --card-foreground: 212 100% 97%;
-  --popover: 205 50% 9%;
-  --popover-foreground: 212 100% 97%;
-  --primary: 213 94% 68%; /** light-theme primary is a bright #1d4ed8; on the near-black dark surface that would be ~2.9:1, so dark uses a lighter step of the same blue (#60a5fa, ~7.6:1 on bg). Two independent palettes — this is not a flip of the light value. */
-  --primary-foreground: 205 55% 4%; /** near-black text on the light-blue dark --primary (~7:1) */
+  --action-hover: 246 63% 78%; /** explicit hover fill for native ports: `action` at 90% over `background` (#BBB3FF over #0C1229). The web renders this as `bg-action/90`; `check:contrast` asserts the two agree. */
+  --action-pressed: 245 52% 74%; /** explicit pressed fill for native ports: `action` at 85% over `background`. The web renders this as `bg-action/85`; `check:contrast` asserts the two agree and that text on it clears AA. */
+  --background: 228 55% 10%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --foreground: 230 50% 98%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --card: 221 42% 19%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --card-foreground: 230 50% 98%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --popover: 221 42% 19%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --popover-foreground: 230 50% 98%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --primary: 246 100% 85%; /** the accessible dark-theme action colour, not the identity colour: `brand` keeps Soft Violet (violet.400). Soft Violet as text measured 4.43:1 on bg-primary/10 over `card`, 3.72:1 on the same tint over `muted` and 4.31:1 on `accent` once the Kinetic Weave dark surfaces rose to navy.800/navy.700, so it fails AA as a foreground. indigo.300 is the light step of Electric Indigo and measures 7.58:1 on `card`, 6.28:1 on `accent` and 5.13:1 at the worst tint. Mirrors light, where the action is indigo.600 rather than the identity indigo.500. */
+  --primary-foreground: 228 55% 10%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --secondary: 120 8% 20%;
   --secondary-foreground: 120 8% 90%;
-  --muted: 205 52% 13%;
-  --muted-foreground: 204 33% 68%;
-  --surface-grouped: 205 52% 6%; /** Between the page (blue.900) and `card` (blue.800), so a card on a grouped section reads as raised, as it does in light. Not an alias of `muted`: dark `muted` (blue.700) is lighter than `card`. */
-  --accent: 205 52% 13%;
-  --accent-foreground: 212 100% 97%;
-  --destructive: 0 63% 64%;
+  --muted: 222 37% 25%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --muted-foreground: 222 28% 75%; /** secondary text. Kinetic Weave v1 moved this off navy.100: at 88% lightness it measured 13.26:1 on --background beside a 17.31:1 --foreground, so dark had almost no secondary/primary hierarchy where light's pair is 5.10:1 against 15.84:1. navy.200 measures 9.31:1 on --background, 7.27:1 on --card, 6.02:1 on --muted and 4.94:1 at the worst composited tint this repository renders (bg-primary/10 over --muted) — comfortably above AA everywhere while reading as subordinate to --foreground. This is also what lets the MultiSelect placeholder sit below its selected value: check:composite-visual measures the placeholder at 9.38:1 and the value at 9.90:1 on the rendered dark field, where navy.100 put the placeholder at 13.37:1 and inverted the hierarchy. That 0.52 margin is deliberate but narrow — a future change to --secondary or --secondary-foreground can close it, so the gate, not this description, is the contract. */
+  --surface-grouped: 223 51% 14%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --accent: 222 37% 25%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --accent-foreground: 230 50% 98%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --destructive: 0 63% 75%; /** red.300 was sized for the old near-black dark page; on the Kinetic Weave navy.800 `card` it measures 4.33:1 and 3.87:1 on its own 10% tint, both below AA. red.200 measures 6.50:1 on `card`, 5.39:1 on `muted` and 5.46:1 on its own 10% tint over `card`; `destructive-foreground` on the solid fill is 8.59:1. */
   --destructive-foreground: 0 90% 8%;
   --success: 116 8% 59%;
   --success-foreground: 120 8% 10%;
   --warning: 37 100% 73%;
   --warning-foreground: 37 100% 8%;
-  --border: 204 33% 33%;
-  --input: 204 33% 33%;
-  --ring: 213 94% 68%; /** focus ring — tracks dark --primary (#60a5fa) */
-  --chart-1: 204 33% 68%;
+  --border: 222 22% 37%; /** the Kinetic Weave boundary step. Was `blue.400`, a slate-blue (hue 204) the rebrand never revisited, while every dark surface moved to navy (hue 222). `navy.600` was chosen to match `blue.400`'s weight exactly — 2.53:1 against `background`, 1.98:1 against `card`, the same figures — so this stays the deliberately subtle boundary that ACCESSIBILITY-AUDIT.md §A3 describes and keeps its KNOWN_SUB3 entry. Hue only; nothing about the visual weight changed. */
+  --input: 222 22% 37%; /** the input outline. Same hue-only correction as `border`, which it has always matched: `blue.400` → `navy.600` at identical measured weight (2.53:1 on `background`). */
+  --ring: 246 100% 85%; /** focus ring — tracks dark --primary, as it has since the azure palette. */
+  --chart-1: 255 92% 76%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --chart-2: 116 8% 59%;
   --chart-3: 37 100% 73%;
   --chart-4: 0 63% 64%;
   --chart-5: 24 24% 77%;
-  --chart-6: 204 25% 56%;
+  --chart-6: 186 70% 50%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
   --chart-7: 0 62% 52%;
   --chart-8: 117 8% 49%;
-  --sidebar: 205 50% 9%;
-  --sidebar-foreground: 212 100% 97%;
-  --sidebar-primary: 213 94% 68%;
-  --sidebar-primary-foreground: 205 55% 4%;
-  --sidebar-accent: 205 52% 13%;
-  --sidebar-accent-foreground: 212 100% 97%;
-  --sidebar-border: 204 33% 33%;
-  --sidebar-ring: 213 94% 68%;
-  --tertiary: 204 33% 33%;
+  --sidebar: 221 42% 19%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --sidebar-foreground: 230 50% 98%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --sidebar-primary: 246 100% 85%; /** mirrors --primary, as it did under the azure palette. */
+  --sidebar-primary-foreground: 228 55% 10%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --sidebar-accent: 222 37% 25%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --sidebar-accent-foreground: 230 50% 98%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --sidebar-border: 222 22% 37%; /** the sidebar boundary. Same hue-only correction as `border`: `blue.400` → `navy.600` at identical measured weight. */
+  --sidebar-ring: 246 100% 85%;
+  --tertiary: 222 22% 37%; /** the Switch off-track. Hue-only correction from the slate-blue `blue.400` to `navy.600` at identical measured weight (1.98:1 against `card`). This stays below 3:1 **by design** — switch.tsx and check-contrast.mjs' KNOWN_SUB3 both record that the thumb's travel and `aria-checked` carry the state, not the track's contrast — so the tracked SC 1.4.11 exception is unchanged, neither removed nor broadened. Raising the track to 3:1 would be a separate, cross-platform design call. */
   --tertiary-foreground: 212 100% 97%;
-  --info: 204 33% 68%;
-  --info-foreground: 205 55% 4%;
-  --on-info-container: 204 33% 68%; /** text and icons on a tinted info surface. Dark: the same step as `info`, which already clears AA on the dark tint (7.70:1 over the page) because a 10% tint lightens a dark surface away from light text. */
+  --info: 204 33% 68%; /** the informational status hue. Kinetic Weave deliberately left the status families on the inherited slate-blue rather than moving them onto the identity ramp: an informational state has to stay distinguishable from `primary`, and indigo is now primary. As text on the dark surfaces it measures 8.3095:1 on `background`, 6.4885:1 on `card` and 5.3784:1 on `muted`. Text *on* an `info` fill is `on-info-container`, not `info-foreground` — see that token. */
+  --info-foreground: 205 55% 4%; /** the near-black that pairs with a solid `info` fill, 8.8315:1 on it. No component in the library draws this pair today — Banner, Inform and ResultState all use `bg-info/10` with `on-info-container` — so it is a contract kept for consumers rather than a rendered combination, and check-contrast.mjs measures the tinted pair that is rendered. */
+  --on-info-container: 204 35% 76%; /** text and icons on a tinted info surface. Dark: one step lighter than `info`, for the same reason `on-success-container` and `on-destructive-container` are — a 10% tint lightens a dark surface *toward* light text, which erodes the ratio rather than helping it. Measured unrounded on an `info`/10 tint: `blue.75` is 5.6916:1 over `muted`, 6.8255:1 over `card` and 8.9926:1 over the page, and every emitted platform value stays within 0.07 of those (web's integer HSL is the lowest at 5.6301:1). `info`'s own step, which this used to be, is 4.4847:1 over `muted`. Until 2026-11-05 this token was that step and this description claimed it cleared AA, because check-contrast.mjs rounded the composite to 8-bit before measuring and so printed 4.50:1 — see that script's header. */
   --on-success-container: 115 8% 70%; /** text and icons on a tinted success surface. Dark: one step lighter than `success`, which measures 4.4982:1 on its own 15% tint over `muted` — at the AA threshold rather than clearly over it. This is 6.03:1 at the same worst case. */
   --on-warning-container: 37 100% 73%; /** text and icons on a tinted warning surface. Dark: the same step as `warning`, which already clears AA on the dark tint (7.38:1 at its worst case) because a tint lightens a dark surface away from light text. */
-  --on-destructive-container: 0 63% 75%; /** text and icons on a tinted error surface. Dark: one step lighter than `destructive`, which is 4.28:1 on its own 10% tint over `muted` and fails AA. This is 6.38:1 at the same worst case. */
-  --semantic-muted-on-container: 204 33% 68%; /** secondary text on a tinted container. Dark: identical to --muted-foreground, which already clears AA on every dark tint (6.92:1 on bg-primary/10 over --card, 7.24:1 on bg-destructive/10). Darkening is a light-mode problem only, because a 10% tint lightens a dark surface away from the text rather than toward it. Light counterpart is darker — see color.light.json. */
-  --brand: 204 25% 56%; /** identity colour, lightened so it stays legible on the dark surface (the light navy would vanish). Independent of light, not a flip. */
-  --brand-foreground: 205 55% 4%; /** text/icons on `brand` */
-  --semantic-on-info-container: 204 33% 68%; /** text on a tinted info surface (bg-info/10). Dark: same as --info, which already clears AA on the dark tint. Light counterpart is darker — see color.light.json. */
+  --on-destructive-container: 0 64% 81%; /** text and icons on a tinted error surface. Dark: one step lighter than `destructive`, so the container text stays distinct from the status colour itself. red.150 measures 5.57:1 on a destructive/10 tint over `muted` and 6.68:1 over `card`. */
+  --semantic-muted-on-container: 225 39% 88%; /** secondary text on a tinted container. Dark: deliberately one step lighter than --muted-foreground, which Kinetic Weave moved to navy.200. The two roles diverge because a 10% tint lightens a dark surface toward the text, eroding the ratio: navy.100 holds 7.04:1 on the worst tint this repository renders (bg-primary/10 over --muted) where navy.200 would fall to 4.94:1. Darkening is a light-mode problem only. Light counterpart is darker — see color.light.json. */
+  --brand: 255 92% 76%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --brand-foreground: 228 55% 10%; /** Kinetic Weave v1 semantic role; existing token name preserved. */
+  --semantic-on-info-container: 204 35% 76%; /** text on a tinted info surface (bg-info/10). Dark: one step lighter than --info (blue.75), because --info's own step falls to 4.4847:1 on an info/10 tint over --muted. Light counterpart is darker — see color.light.json. */
   --action: var(--primary); /** the interactive colour (buttons, selected controls). Defaults to `primary`; override `--action` on its own to split the interactive colour from `primary`. */
   --action-foreground: var(--primary-foreground); /** text/icons on `action` */
   --focus: var(--ring); /** focus indicator colour. Defaults to `ring`; override `--focus` to theme focus separately. */
