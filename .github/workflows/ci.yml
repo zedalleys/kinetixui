@@ -213,6 +213,7 @@ jobs:
           expect_refusal cohort-undeclared.json   0.1.0 "a version with no declared cohort has no agreed meaning"
           expect_refusal already-published.json   0.1.0 "an immutable coordinate cannot be republished"
           expect_refusal unreadable.json          0.1.0 "an unreadable declaration authorizes nothing"
+          expect_refusal malformed-history.json   0.1.0 "a publication history of the wrong type is unknown history, not empty history"
           # And the real file, which is the state that matters: no native publish is authorized today.
           if node scripts/check-native-publish-preflight.mjs --authorize-version=0.1.0 --line=ui-compose > /dev/null 2>&1; then
             echo "::error::release/native-release-lines.json authorized a publish. If that is intended it is a release decision and this line should be removed in the same pull request that makes it."

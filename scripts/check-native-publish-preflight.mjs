@@ -151,6 +151,12 @@ const NEGATIVES = {
   // through to different places, and that is the whole difficulty.
   // The two authorization probes depend on the accepting fixture really authorizing something. If it
   // stops, their fallthrough fails there instead of passing and they quietly stop being evidence.
+  // The malformed-history bypass, found by review at 951692f8 and measured there: with the type
+  // guard removed the probe's own invocation exits 0 and authorizes a republication. The second
+  // control keeps the fixture carrying the defect — repaired to a well-formed array it would refuse
+  // for the ordinary mismatch reason, and the probe would stop proving anything about the type.
+  "preflight-accepts-a-malformed-publication-history": { file: "scripts/check-native-publish-preflight.mjs", from: "if (!Array.isArray(line.published)) {\n    refuse(", to: "if (false) {\n    refuse(", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "malformed-history-fixture-is-repaired": { file: "scripts/publish/fixtures/native-release-lines/malformed-history.json", from: '"published": "0.1.0"', to: '"published": ["9.9.9"]', breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   "accepting-fixture-authorizes-nothing": { file: "scripts/publish/fixtures/native-release-lines/authorized.json", from: '"authorizedNext": "0.1.0"', to: '"authorizedNext": null', breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   "preflight-repeated-selector-guard-reports-without-exiting": { file: "scripts/check-native-publish-preflight.mjs", from: "  );\n  process.exit(1);\n}\n\n/*\n * EXACTLY ONE MODE PER RUN", to: "  );\n}\n\n/*\n * EXACTLY ONE MODE PER RUN", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   // The same two bypasses by position in a publish workflow, one per selector.
@@ -354,7 +360,20 @@ if (authorizeArg !== undefined) {
   if (line.cohort !== "own" && line.cohort !== "core") {
     refuse(`${linesFile} → ${lineKey}.cohort is ${JSON.stringify(line.cohort)}. It must be declared as "own" (its own version line) or "core" (lockstep with the @kinetixui/{tokens,ui,cli} cohort) before ${line.coordinate ?? lineKey} publishes anything. The cohort is what a version number *means*, and npm 0.27.0 and a native 0.27.0 are the same string and two unrelated promises — so it is declared, never inferred.`);
   }
-  if (Array.isArray(line.published) && line.published.includes(authorizeArg)) {
+  /*
+   * The publication history decides whether this version may be published at all, so its SHAPE is
+   * part of the decision, not a detail. `Array.isArray(...) && ...includes(...)` read as a safe
+   * guard and was one: a declaration carrying `published: "0.1.0"` skipped the refusal entirely and
+   * authorized a republication. Measured — the same invocation against the same line exits 1 with
+   * `published: ["0.1.0"]` and exited 0 with `published: "0.1.0"`, differing only in that type.
+   * Nothing validates this file's schema, and a string is exactly what a hand-edit of a one-element
+   * array produces, so the type is asserted here, where the decision is made. An absent `published`
+   * is refused too: "no history was found" must never read as "there is none".
+   */
+  if (!Array.isArray(line.published)) {
+    refuse(`${linesFile} → ${lineKey}.published is ${JSON.stringify(line.published)}, not an array. That field is the publication history this gate checks a version against, and a non-array one is not read as empty — it is read as unknown, which authorizes nothing. Declare it as an array, \`[]\` when the line has published nothing.`);
+  }
+  if (line.published.includes(authorizeArg)) {
     refuse(`${linesFile} records ${authorizeArg} as already published on ${line.coordinate ?? lineKey}. A ${line.channel ?? "registry"} version cannot be republished or corrected; publish a superseding version instead.`);
   }
   if (line.authorizedNext === null || line.authorizedNext === undefined) {
@@ -939,6 +958,9 @@ const runSelfCopy = (args) => {
  * Without that, a lost refusal looks identical to any unrelated failure.
  */
 const ACCEPTING = "scripts/publish/fixtures/native-release-lines/authorized.json";
+/* The declaration whose publication history carries the wrong TYPE. Read as a committed file so the
+ * probe below exercises the same path a real publish would, not a shape built in memory here. */
+const MALFORMED_HISTORY = "scripts/publish/fixtures/native-release-lines/malformed-history.json";
 /*
  * The accepting fixture's own values, read rather than repeated. Two probes below depend on that
  * fixture really authorizing something for some line — that is what makes their fallthrough exit 0
@@ -959,9 +981,28 @@ const ARGUMENT_REFUSALS = [
   { args: ["--version=0.1.0", "--version=9.9.9"], says: "was passed more than once", why: "a repeated --version=, which would fall through to the shape check on the first value and exit 0" },
   { args: [`--authorize-version=${acceptingVersion}`, "--authorize-version=9.9.9", `--line=${acceptingLine}`, `--lines-file=${ACCEPTING}`], says: "was passed more than once", why: `a repeated --authorize-version=, which would fall through and authorize the first value (${acceptingVersion}, which ${ACCEPTING} authorizes) exiting 0 for a 9.9.9 dispatch` },
   { args: [`--line=${acceptingLine}`, `--line=${otherLine}`, `--authorize-version=${acceptingVersion}`, `--lines-file=${ACCEPTING}`], says: "was passed more than once", why: `a repeated --line=, which would fall through and read ${acceptingLine}'s authorization while naming ${otherLine}, exiting 0` },
+  /*
+   * Not an argument at all, but the same failure shape one layer in: the question is well formed and
+   * the DECLARATION's own shape decides the answer. Probed here rather than asserted off the source
+   * because this guard, like the two above it, is only worth what it exits with.
+   */
+  { args: [`--authorize-version=0.1.0`, "--line=ui-compose", `--lines-file=${MALFORMED_HISTORY}`], says: "not an array", why: `a publication history that is a string rather than an array, which skipped the already-published refusal entirely — measured: this exact fixture authorized 0.1.0 and exited 0, while the same line with \`published: ["0.1.0"]\` refused it` },
 ];
 
 const argumentFailures = [];
+/*
+ * The malformed fixture has to keep carrying the wrong TYPE, and that is checked here rather than
+ * through the probe: a `--negative=` mutation lives in this process's memory, while the probe runs a
+ * spawned copy that reads the fixture off disk, so a repaired fixture is invisible to it. Repaired
+ * to a well-formed array the file would still refuse — for the ordinary mismatch — and the probe
+ * would stay green while proving nothing about the type at all.
+ */
+const malformedLine = JSON.parse(source(MALFORMED_HISTORY))?.lines?.["ui-compose"];
+if (Array.isArray(malformedLine?.published) || malformedLine?.authorizedNext !== "0.1.0") {
+  argumentFailures.push(
+    `${MALFORMED_HISTORY} must declare ui-compose with a NON-array \`published\` and \`authorizedNext: "0.1.0"\`; it declares published ${JSON.stringify(malformedLine?.published)} and authorizedNext ${JSON.stringify(malformedLine?.authorizedNext)}. The type is the whole defect — with a well-formed array the probe below is refused for the ordinary version mismatch and stops being evidence about the shape`,
+  );
+}
 if (!acceptingLine) {
   argumentFailures.push(`${ACCEPTING} authorizes no version for any line, so the two probes that fall through into the authorization would fail there for that reason rather than passing, and they stop being evidence that the guard refused. Keep one accepting line in that fixture — ci.yml's authorization matrix needs it for the same reason`);
 }

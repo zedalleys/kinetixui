@@ -1,0 +1,6 @@
+{
+  "$comment": "Fixture — the publication history is a string instead of an array, the shape a hand-edit of a one-element array produces. Must refuse: the already-published check reads this field, and a non-array one is unknown history, not empty history. Measured before the guard existed: this exact file authorized 0.1.0 while `published: [\"0.1.0\"]` refused it, the two differing only in that type.",
+  "lines": {
+    "ui-compose": { "coordinate": "com.kinetixui:ui-compose", "channel": "Maven Central", "cohort": "own", "published": "0.1.0", "authorizedNext": "0.1.0" }
+  }
+}

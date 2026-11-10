@@ -919,6 +919,16 @@ prerequisites are verified:
 See the file's own `$comment` for the sequence, including moving the number into `published`
 afterwards.
 
+**`published` must be an array, and the gate asserts its type before reading it.** Found by review
+and measured: a line declaring `published: "0.1.0"` — the shape a hand-edit of a one-element array
+produces — skipped the already-published refusal entirely and authorized a republication, while the
+same line with `published: ["0.1.0"]` refused it. The two invocations differed only in that type.
+Nothing validates this file's schema, so the shape is checked where the decision is made, and an
+absent `published` is refused too: "no history was found" must never read as "there is none". The
+fixture `malformed-history.json` carries that shape, `ci.yml` requires it to be refused, and two
+controls hold it in place — one restoring the bypass, one repairing the fixture, because a fixture
+quietly fixed would leave the probe green while proving nothing about the type.
+
 **A dry run is deliberately not gated on this file.** Rehearsing the full release path under any
 shape-valid version is how a defect in that path is found before it is irreversible, so the
 authorization step carries the publication's own condition and nothing else depends on the
