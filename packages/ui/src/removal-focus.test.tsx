@@ -103,6 +103,38 @@ describe("Tag hands the keyboard on when a chip is removed", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
+  it("leaves a consumer's own focus restoration alone", async () => {
+    // A chip group typed into an input usually wants focus back in that input, and the handler says
+    // so by focusing it. The helper must not overrule that. Raised by Codex on #554 as a P2 and
+    // reproduced before the guard existed: focus went to "Remove B" instead of the input.
+    const user = userEvent.setup();
+    function ChipInput() {
+      const [tags, setTags] = React.useState(["A", "B", "C"]);
+      const inputRef = React.useRef<HTMLInputElement>(null);
+      return (
+        <div>
+          {tags.map((t) => (
+            <Tag
+              key={t}
+              onRemove={() => {
+                setTags((cur) => cur.filter((x) => x !== t));
+                inputRef.current?.focus();
+              }}
+            >
+              {t}
+            </Tag>
+          ))}
+          <input ref={inputRef} aria-label="Add a tag" />
+        </div>
+      );
+    }
+    render(<ChipInput />);
+    screen.getByRole("button", { name: "Remove A" }).focus();
+    await user.keyboard("{Enter}");
+    await settled();
+    expect(document.activeElement).toBe(screen.getByLabelText("Add a tag"));
+  });
+
   it("negative control: a chip whose remove button is not announced to the helper drops focus", async () => {
     // The pre-fix button, verbatim in behaviour: it calls onRemove and nothing else.
     function LegacyChips() {
