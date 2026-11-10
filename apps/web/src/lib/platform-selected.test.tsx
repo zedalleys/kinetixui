@@ -173,6 +173,7 @@ describe("homepage implementation explorer", () => {
       ]}
       initial={<p>react panel</p>}
       later={{ swift: panel("SwiftUI"), dart: panel("Flutter") }}
+      reserve={{ tab: "dart", panel: <p>height reserve</p> }}
       footer={null}
     />
   );
