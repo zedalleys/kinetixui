@@ -4,7 +4,7 @@ import * as React from "react";
 import { Slot, Slottable } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
-import { cn, focusAfterRemoval } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 /**
  * Tag — reconciled 1:1 with the KinetixUI design source, node 54855:14021.
@@ -54,18 +54,7 @@ const Tag = React.forwardRef<HTMLSpanElement, TagProps>(
     const removeButton = onRemove && (
       <button
         type="button"
-        data-kx-remove=""
-        onClick={(event) => {
-          // The button is about to unmount with its own chip. Hand the keyboard to the next chip's
-          // remove button first, or focus is dropped on <body> and the next Tab restarts from the
-          // top of the page. Scoped to this chip's own container, so one group's last chip does not
-          // send focus into an unrelated group. See focusAfterRemoval in ../lib/utils.
-          const trigger = event.currentTarget;
-          focusAfterRemoval(trigger, "[data-kx-remove]", {
-            scope: trigger.closest("[data-slot=tag]")?.parentElement ?? null,
-          });
-          onRemove();
-        }}
+        onClick={onRemove}
         aria-label={name}
         className="-me-0.5 ms-0.5 rounded-[2px] opacity-muted outline-none transition-opacity hover:opacity-visible focus-visible:ring-1 focus-visible:ring-current"
       >
@@ -73,7 +62,7 @@ const Tag = React.forwardRef<HTMLSpanElement, TagProps>(
       </button>
     );
     return (
-      <Comp ref={ref} data-slot="tag" className={cn(tagVariants({ variant }), className)} {...props}>
+      <Comp ref={ref} className={cn(tagVariants({ variant }), className)} {...props}>
         {asChild ? <Slottable>{children}</Slottable> : children}
         {removeButton}
       </Comp>

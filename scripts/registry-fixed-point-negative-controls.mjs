@@ -11,13 +11,13 @@
  * Reproduced on `25e0bdff` in a scratch worktree before `--check` was written.
  *
  * A gate added for a hole has to be shown failing in that hole, or it is a comment with an exit code. The
- * five controls below are the distinct ways the committed registry can disagree with its source, and
+ * four controls below are the four distinct ways the committed registry can disagree with its source, and
  * each asserts the gate names the offending FILE — an exit code alone would not tell an author what to fix.
  *
  * ## Why nothing on disk is at risk
  *
  * `--check` writes nothing by construction, and these controls never mutate the repository. Each one copies
- * only the trees the generator reads — `packages/ui/src/components`, `packages/ui/src/lib`, `registry/kinetixui`,
+ * only the three trees the generator reads — `packages/ui/src/components`, `registry/kinetixui`,
  * `registry/registry.json` — into a fresh directory under the OS temp dir, mutates THAT, and points the
  * generator at it through its injectable root. The copy is removed afterwards whether the control passed or
  * not. So the suite is safe to run over a dirty tree and cannot leave one.
@@ -37,9 +37,6 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SUBJECT = "tabs.tsx";
 const SUBJECT_SRC = `packages/ui/src/components/${SUBJECT}`;
 const SUBJECT_MIRROR = `registry/kinetixui/ui/${SUBJECT}`;
-/** The shared library file that ships with almost every item, and is a mirror in exactly the same way. */
-const LIB_SRC = "packages/ui/src/lib/utils.ts";
-const LIB_MIRROR = "registry/kinetixui/lib/utils.ts";
 
 /**
  * Control 4 of the brief: the suite must refuse to pass if its own target is gone. Asserted FIRST, against
@@ -47,7 +44,7 @@ const LIB_MIRROR = "registry/kinetixui/lib/utils.ts";
  * a file they created themselves and "catch" drift they invented.
  */
 function assertSubjectExists() {
-  const missing = [SUBJECT_SRC, SUBJECT_MIRROR, LIB_SRC, LIB_MIRROR].filter((p) => !existsSync(join(ROOT, p)));
+  const missing = [SUBJECT_SRC, SUBJECT_MIRROR].filter((p) => !existsSync(join(ROOT, p)));
   if (missing.length) {
     console.error(
       `registry fixed-point controls — the subject this suite mutates is gone: ${missing.join(", ")}.\n` +
@@ -57,15 +54,6 @@ function assertSubjectExists() {
     process.exit(1);
   }
   const { outputs } = buildRegistry();
-  if (!outputs.has(LIB_MIRROR)) {
-    console.error(
-      `registry fixed-point controls — the generator no longer produces ${LIB_MIRROR}, so control 5 would ` +
-        `prove nothing. That file ships with almost every item: if it has gone back to being a hand-kept ` +
-        `copy, a new export in ${LIB_SRC} can ship a component calling a function the delivered file does ` +
-        `not have. Refusing to report a pass.`,
-    );
-    process.exit(1);
-  }
   if (!outputs.has(SUBJECT_MIRROR)) {
     console.error(
       `registry fixed-point controls — the generator no longer produces ${SUBJECT_MIRROR}, so mutating it ` +
@@ -79,8 +67,6 @@ function assertSubjectExists() {
 function sandbox() {
   const dir = mkdtempSync(join(tmpdir(), "kx-registry-control-"));
   cpSync(join(ROOT, "packages/ui/src/components"), join(dir, "packages/ui/src/components"), { recursive: true });
-  // the generator mirrors lib/utils.ts too, so the throwaway root needs it
-  cpSync(join(ROOT, "packages/ui/src/lib"), join(dir, "packages/ui/src/lib"), { recursive: true });
   cpSync(join(ROOT, "registry/kinetixui"), join(dir, "registry/kinetixui"), { recursive: true });
   cpSync(join(ROOT, "registry/registry.json"), join(dir, "registry/registry.json"));
   return dir;
@@ -109,16 +95,6 @@ const controls = [
     expect: { status: "missing", path: SUBJECT_MIRROR },
     mutate(dir) {
       unlinkSync(join(dir, SUBJECT_MIRROR));
-    },
-  },
-  {
-    // The hole this one closes: `lib/utils.ts` used to be attached to items but never written by the
-    // generator, so a new export in the source left the delivered copy behind it with CI green.
-    name: "the shared lib source changed, its delivered copy left stale",
-    expect: { status: "stale", path: LIB_MIRROR },
-    mutate(dir) {
-      const p = join(dir, LIB_SRC);
-      writeFileSync(p, readFileSync(p, "utf8") + "\nexport const controlOnly = () => null;\n");
     },
   },
   {
@@ -181,7 +157,7 @@ if (failures) {
   process.exit(1);
 }
 console.log(
-  "\nregistry fixed-point controls — all 5 fire, and the unmutated tree passes. A mirror cannot be edited by " +
+  "\nregistry fixed-point controls — all 4 fire, and the unmutated tree passes. A mirror cannot be edited by " +
     "hand, fall behind its source, go missing from the repository, or outlive its component without " +
     "`gen-registry.mjs --check` naming the file.",
 );

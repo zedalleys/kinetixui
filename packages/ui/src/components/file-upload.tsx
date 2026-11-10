@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { File, Loader2, TriangleAlert, Upload, X } from "lucide-react";
-import { cn, focusAfterRemoval } from "../lib/utils";
+import { cn } from "../lib/utils";
 import { Button } from "./button";
 
 /**
@@ -58,7 +58,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
     };
 
     return (
-      <div ref={ref} data-slot="file-upload" className={cn("flex w-full flex-col gap-3 font-sans", className)} {...props}>
+      <div ref={ref} className={cn("flex w-full flex-col gap-3 font-sans", className)} {...props}>
         {/* A drag-and-drop surface, not a control: the Button inside is the one keyboard/AT target
             (a role="button" containing a Button is nested-interactive). Clicking the surface stays a
             mouse convenience. */}
@@ -166,18 +166,7 @@ function FileUploadItem({ file, onRemove, onRetry }: FileUploadItemProps) {
       {onRemove && (
         <button
           type="button"
-          data-kx-remove=""
-          onClick={(event) => {
-            // This button unmounts with its own row, which would drop focus on <body> and send the
-            // next Tab back to the top of the page. The next row's remove button takes it; when the
-            // last row goes, the dropzone's own Browse button does. See focusAfterRemoval in ../lib/utils.
-            const trigger = event.currentTarget;
-            const root = trigger.closest("[data-slot=file-upload]");
-            focusAfterRemoval(trigger, "[data-kx-remove]", {
-              fallback: root?.querySelector<HTMLElement>("[data-slot=button]") ?? null,
-            });
-            onRemove(file.id);
-          }}
+          onClick={() => onRemove(file.id)}
           aria-label={`Remove ${file.name}`}
           className="shrink-0 rounded-[2px] p-0.5 text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-1 focus-visible:ring-current"
         >
