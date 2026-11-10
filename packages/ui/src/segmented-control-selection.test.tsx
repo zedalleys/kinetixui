@@ -186,3 +186,207 @@ describe("a segmented control keeps its answer", () => {
     expect(chosen()).toEqual([]);
   });
 });
+
+/**
+ * Selection follows focus — the radiogroup contract.
+ *
+ * Measured before the change: with focus on the first segment, ArrowRight moved focus to the second
+ * and left the selection states at `on,off,off`. The root is a `radiogroup` and the items are
+ * `radio`s, and in a radiogroup the ARIA practices have an arrow key move focus AND check what it
+ * lands on. Radix's roving focus moves focus alone, so arrowing left the reader on a segment that
+ * was not the answer until they pressed Enter as well.
+ *
+ * This is a deliberate behaviour change: `onValueChange` now fires on an arrow press. Home, End,
+ * wrapping and direction come from the primitive's roving focus and are unchanged — the selection
+ * simply follows wherever it puts focus.
+ */
+describe("selection follows focus, as a radiogroup's does", () => {
+  const FOUR = ["list", "grid", "board", "feed"] as const;
+
+  function Strip({
+    dir,
+    disabled,
+    onChange,
+    uncontrolled,
+  }: {
+    dir?: "ltr" | "rtl";
+    disabled?: string;
+    onChange?: (v: string) => void;
+    uncontrolled?: boolean;
+  }) {
+    const [v, setV] = React.useState("grid");
+    const items = FOUR.map((c) => (
+      <SegmentedControlItem key={c} value={c} disabled={c === disabled}>
+        {c}
+      </SegmentedControlItem>
+    ));
+    return uncontrolled ? (
+      <SegmentedControl defaultValue="grid" aria-label="View" dir={dir} onValueChange={onChange}>
+        {items}
+      </SegmentedControl>
+    ) : (
+      <SegmentedControl
+        value={v}
+        aria-label="View"
+        dir={dir}
+        onValueChange={(next) => {
+          setV(next);
+          onChange?.(next);
+        }}
+      >
+        {items}
+      </SegmentedControl>
+    );
+  }
+
+  const marked = () =>
+    screen
+      .getAllByRole("radio")
+      .filter((r) => r.getAttribute("data-state") === "on")
+      .map((r) => r.textContent);
+  const focused = () => (document.activeElement as HTMLElement)?.textContent;
+
+  it("ArrowRight and ArrowLeft move focus and the answer together", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Strip onChange={onChange} />);
+    screen.getByRole("radio", { name: "grid" }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(focused()).toBe("board");
+    expect(marked()).toEqual(["board"]);
+    await user.keyboard("{ArrowLeft}");
+    expect(focused()).toBe("grid");
+    expect(marked()).toEqual(["grid"]);
+    expect(onChange.mock.calls.map(([v]) => v)).toEqual(["board", "grid"]);
+  });
+
+  it("keeps aria-checked in step with focus", async () => {
+    const user = userEvent.setup();
+    render(<Strip />);
+    screen.getByRole("radio", { name: "grid" }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("radio", { name: "board" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "grid" })).toHaveAttribute("aria-checked", "false");
+    // Exactly one radio is checked, which is the whole point of refusing the empty value.
+    expect(screen.getAllByRole("radio").filter((r) => r.getAttribute("aria-checked") === "true")).toHaveLength(1);
+  });
+
+  it("reports each arrow exactly once, and reports nothing for a key that moves nowhere", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Strip onChange={onChange} />);
+    screen.getByRole("radio", { name: "grid" }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(onChange).toHaveBeenCalledTimes(1);
+    // The focus handler and the primitive's own activation both arrive for a press; the second is a
+    // no-op because the value is already the current one, so a consumer sees one call per movement.
+    await user.keyboard("{Enter}");
+    await user.keyboard(" ");
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("follows Home and End too, because they move focus", async () => {
+    const user = userEvent.setup();
+    render(<Strip />);
+    screen.getByRole("radio", { name: "grid" }).focus();
+    await user.keyboard("{Home}");
+    expect(focused()).toBe("list");
+    expect(marked()).toEqual(["list"]);
+    await user.keyboard("{End}");
+    expect(focused()).toBe("feed");
+    expect(marked()).toEqual(["feed"]);
+  });
+
+  it("follows the reading direction, not the physical key", async () => {
+    // Radix flips the arrows for `dir="rtl"`, so ArrowLeft is "next" there. The selection goes with
+    // focus either way, which is what makes this direction-correct without a direction branch here.
+    const user = userEvent.setup();
+    render(<Strip dir="rtl" />);
+    screen.getByRole("radio", { name: "grid" }).focus();
+    await user.keyboard("{ArrowLeft}");
+    expect(focused()).toBe("board");
+    expect(marked()).toEqual(["board"]);
+    await user.keyboard("{ArrowRight}");
+    expect(focused()).toBe("grid");
+    expect(marked()).toEqual(["grid"]);
+  });
+
+  it("never checks a disabled segment, because focus does not land on one", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Strip disabled="board" onChange={onChange} />);
+    // jsdom lets a script focus a disabled button where a browser would not. Either way, landing on a
+    // disabled segment must not change the answer.
+    screen.getByRole("radio", { name: "board" }).focus();
+    expect(marked()).toEqual(["grid"]);
+    expect(onChange).not.toHaveBeenCalled();
+    screen.getByRole("radio", { name: "grid" }).focus();
+    await user.keyboard("{ArrowRight}");
+    // Roving focus steps over the disabled segment, so the answer steps over it too.
+    expect(focused()).toBe("feed");
+    expect(marked()).toEqual(["feed"]);
+    expect(onChange.mock.calls.map(([v]) => v)).toEqual(["feed"]);
+  });
+
+  it("works the same uncontrolled", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Strip uncontrolled onChange={onChange} />);
+    screen.getByRole("radio", { name: "grid" }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(focused()).toBe("board");
+    expect(marked()).toEqual(["board"]);
+    expect(onChange).toHaveBeenCalledExactlyOnceWith("board");
+  });
+
+  it("keeps the strip to one tab stop, and tabbing in checks nothing new", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <>
+        <button type="button">before</button>
+        <Strip uncontrolled onChange={onChange} />
+        <button type="button">after</button>
+      </>,
+    );
+    screen.getByRole("button", { name: "before" }).focus();
+    await user.tab();
+    // Roving focus lands on the chosen segment, so there is nothing to change.
+    expect(focused()).toBe("grid");
+    expect(marked()).toEqual(["grid"]);
+    expect(onChange).not.toHaveBeenCalled();
+    await user.tab();
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "after" }));
+  });
+
+  it("still cannot be emptied, by arrow or by re-activation", async () => {
+    // The guarantee #555 added survives this change.
+    const user = userEvent.setup();
+    render(<Strip />);
+    screen.getByRole("radio", { name: "grid" }).focus();
+    await user.keyboard("{ArrowRight}{ArrowRight}{Enter} ");
+    expect(marked()).toHaveLength(1);
+  });
+
+  it("negative control: roving focus alone leaves the answer behind", async () => {
+    // The behaviour before this change, test-local: arrow moves focus, selection stays put.
+    function Legacy() {
+      const [v, setV] = React.useState("grid");
+      return (
+        <ToggleGroupPrimitive.Root type="single" value={v} aria-label="Legacy" onValueChange={setV}>
+          {FOUR.map((c) => (
+            <ToggleGroupPrimitive.Item key={c} value={c}>
+              {c}
+            </ToggleGroupPrimitive.Item>
+          ))}
+        </ToggleGroupPrimitive.Root>
+      );
+    }
+    const user = userEvent.setup();
+    render(<Legacy />);
+    screen.getByRole("radio", { name: "grid" }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(focused()).toBe("board");
+    expect(marked()).toEqual(["grid"]);
+  });
+});
