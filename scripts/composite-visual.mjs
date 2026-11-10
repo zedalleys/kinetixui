@@ -63,6 +63,7 @@ import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { PERCEPTIBLE_MS, SUPPRESSED_MS } from "./motion-states.mjs";
 import { buildAngularSubject, waitForAngular, contrast, framer, serveStatic } from "./visual-harness.mjs";
 import { gate } from "./visual-gates.mjs";
+import { storyId } from "./story-id.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const COVERS = gate("scripts/composite-visual.mjs").covers;
@@ -83,10 +84,10 @@ const frame = framer({ dpr: DPR, pad: PAD });
 /* ── subjects ─────────────────────────────────────────────────────────── */
 
 const STORY = {
-  "input-group": "form-inputs-inputgroup--entry-states",
-  "number-input": "form-inputs-numberinput--entry-states",
-  "multi-select": "form-inputs-multiselect--entry-states",
-  "input-otp": "form-inputs-inputotp--entry-states",
+  "input-group": storyId("input-group", "Entry States"),
+  "number-input": storyId("number-input", "Entry States"),
+  "multi-select": storyId("multi-select", "Entry States"),
+  "input-otp": storyId("input-otp", "Entry States"),
 };
 
 /**

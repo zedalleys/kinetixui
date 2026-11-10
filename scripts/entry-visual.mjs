@@ -61,6 +61,7 @@ import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { PERCEPTIBLE_MS, SUPPRESSED_MS } from "./motion-states.mjs";
 import { buildAngularSubject, waitForAngular, contrast, decode, lum, serveStatic } from "./visual-harness.mjs";
 import { gate } from "./visual-gates.mjs";
+import { storyId } from "./story-id.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const COVERS = gate("scripts/entry-visual.mjs").covers;
@@ -80,11 +81,11 @@ const PAD = 12;
 /* ── subjects ─────────────────────────────────────────────────────────── */
 
 const STORY = {
-  input: "form-inputs-input--entry-states",
-  textarea: "form-inputs-textarea--entry-states",
-  select: "form-inputs-select--entry-states",
-  "native-select": "form-inputs-nativeselect--entry-states",
-  tabs: "navigation-tabs--states",
+  input: storyId("input", "Entry States"),
+  textarea: storyId("textarea", "Entry States"),
+  select: storyId("select", "Entry States"),
+  "native-select": storyId("native-select", "Entry States"),
+  tabs: storyId("tabs", "States"),
 };
 /** registry slug → which cases its story renders */
 const FIELDS = {

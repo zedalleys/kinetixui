@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "proj_minimal01",
+  "name": "Minimal",
+  "domain": "domain:commerce",
+  "designSystem": {
+    "preset": "KX1_eyJ2IjoxfQ"
+  },
+  "pages": [
+    {
+      "id": "page_home",
+      "name": "Home",
+      "route": "/",
+      "root": {
+        "id": "node_1",
+        "kind": "slot",
+        "name": "page"
+      }
+    }
+  ],
+  "nextNodeId": 2,
+  "provenance": {
+    "node_99": {
+      "by": "human",
+      "at": "2026-11-02T12:00:00Z"
+    }
+  }
+}

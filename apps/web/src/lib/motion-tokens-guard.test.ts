@@ -41,6 +41,7 @@ function mutate(path: string, from: string, to: string): Record<string, string> 
 const MOTION = "tokens/primitives/motion.json";
 const CONTRACT = "tokens/contracts/motion.json";
 const ANGULAR = "packages/ui-angular/src/styles.css";
+const REGISTER = "tokens/contracts/motion-consumers.json";
 
 describe("check:motion-tokens", () => {
   it("passes on the repository as it is", () => {
@@ -201,6 +202,116 @@ describe("check:motion-tokens", () => {
     const { code, out } = run({ [CONTRACT]: JSON.stringify(contract) });
     expect(code).toBe(1);
     expect(out).toMatch(/role "overlay" is proven but has consumers on fewer than two platforms/);
+  });
+
+  /**
+   * The loop clauses. Each of these passed before the exemption narrowed, which is the whole reason
+   * they are here: `loop` was "proven" on zero consumers, so its platform coverage was unstated and
+   * the identity register had nothing of its to hold.
+   */
+  it("refuses a proven loop role on fewer than two platforms", () => {
+    const contract = JSON.parse(read(CONTRACT));
+    contract.roles.loop.consumers = [];
+    contract.roles.loop.deviations = [];
+    const { code, out } = run({ [CONTRACT]: JSON.stringify(contract) });
+    expect(code).toBe(1);
+    expect(out).toMatch(/role "loop" is proven but has consumers on fewer than two platforms/);
+  });
+
+  it("refuses a loop consumer that names nothing to look for", () => {
+    const contract = JSON.parse(read(CONTRACT));
+    contract.roles.loop.consumers[0].expects = [];
+    const { code, out } = run({ [CONTRACT]: JSON.stringify(contract) });
+    expect(code).toBe(1);
+    expect(out).toMatch(/names nothing to look for, so registering it proves nothing about the reduced form/);
+  });
+
+  it("notices a loop platform dropped from the contract", () => {
+    const contract = JSON.parse(read(CONTRACT));
+    const before = contract.roles.loop.consumers.length;
+    contract.roles.loop.consumers = contract.roles.loop.consumers.filter(
+      (c: { platform: string }) => c.platform !== "flutter",
+    );
+    expect(contract.roles.loop.consumers.length, "the flutter loop consumer anchor is gone").toBe(before - 1);
+    const { code, out } = run({ [CONTRACT]: JSON.stringify(contract) });
+    expect(code).toBe(1);
+    expect(out).toMatch(/loop\|flutter\|packages\/ui-flutter\/lib\/src\/kinetix_loop_motion\.dart/);
+  });
+
+  it("refuses a deviation filed under a kind of departure that does not exist", () => {
+    const contract = JSON.parse(read(CONTRACT));
+    contract.roles.loop.deviations[0].departs = "vibes";
+    const { code, out } = run({ [CONTRACT]: JSON.stringify(contract) });
+    expect(code).toBe(1);
+    expect(out).toMatch(/departs "vibes" is not a kind of deviation/);
+  });
+
+  it("refuses a reduced-form deviation that is really a token deviation", () => {
+    const contract = JSON.parse(read(CONTRACT));
+    contract.roles.loop.deviations[0].uses = "transition: stroke-dashoffset var(--duration-base) var(--easing-standard)";
+    const { code, out } = run({ [CONTRACT]: JSON.stringify(contract) });
+    expect(code).toBe(1);
+    expect(out).toMatch(/already reaches for a token outside the role; record it as a token deviation/);
+  });
+
+  it("still refuses a reduced-form deviation whose source no longer says it", () => {
+    const contract = JSON.parse(read(CONTRACT));
+    contract.roles.loop.deviations[0].uses = ".kx-spinner { animation-duration: 4s; }";
+    const { code, out } = run({ [CONTRACT]: JSON.stringify(contract) });
+    expect(code).toBe(1);
+    expect(out).toMatch(/no longer contains "\.kx-spinner \{ animation-duration: 4s; \}"/);
+  });
+
+  /**
+   * Clause 6 — the contract and the native ledger must agree about which platforms have the motion.
+   * The ledger side needs its own seam: it is a static ESM import, so `--overrides` (which replaces
+   * file content) cannot reach it, and `motionErrors(overrides, ledgerPlatforms)` is what makes the
+   * other half of the clause watchable. These cases call it in-process rather than through the CLI.
+   */
+  it("notices a native family the contract does not mention", async () => {
+    const { motionErrors } = await import("../../../../scripts/check-motion-tokens.mjs");
+    const contract = JSON.parse(read(CONTRACT));
+    contract.roles.spatial.deviations = [];
+    const errors: string[] = motionErrors({ [CONTRACT]: JSON.stringify(contract) });
+    expect(errors.join("\n")).toMatch(
+      /the native ledger wires SwiftUI slide .*which the contract's "spatial" role does not mention on swiftui/,
+    );
+  });
+
+  it("notices a contract native entry that is no family's helper", async () => {
+    const { motionErrors } = await import("../../../../scripts/check-motion-tokens.mjs");
+    const contract = JSON.parse(read(CONTRACT));
+    const swift = contract.roles.loop.consumers.find((c: { platform: string }) => c.platform === "swiftui");
+    expect(swift, "the swiftui loop consumer anchor is gone").toBeTruthy();
+    swift.file = "packages/ui-swiftui/Sources/KinetixUI/KinetixMotion.swift";
+    const register = JSON.parse(read(REGISTER));
+    register.identities = register.identities.map((i: string) =>
+      i === "loop|swiftui|packages/ui-swiftui/Sources/KinetixUI/KinetixLoopMotion.swift"
+        ? "loop|swiftui|packages/ui-swiftui/Sources/KinetixUI/KinetixMotion.swift"
+        : i,
+    );
+    const errors: string[] = motionErrors({
+      [CONTRACT]: JSON.stringify(contract),
+      [REGISTER]: JSON.stringify(register),
+    });
+    expect(errors.join("\n")).toMatch(/names a native file that is no motion family's helper/);
+  });
+
+  it("refuses a native family that does not say which role it implements", async () => {
+    const { motionErrors } = await import("../../../../scripts/check-motion-tokens.mjs");
+    const { PLATFORMS } = await import("../../../../scripts/native-motion-spec.mjs");
+    const ledger = structuredClone(PLATFORMS) as Record<
+      string,
+      { families: Record<string, { contractRole?: string }> }
+    >;
+    delete ledger.SwiftUI.families.loop.contractRole;
+    const errors: string[] = motionErrors({}, ledger);
+    expect(errors.join("\n")).toMatch(/the SwiftUI loop family names no contractRole/);
+  });
+
+  it("passes clause 6 on the ledger as it is", async () => {
+    const { motionErrors } = await import("../../../../scripts/check-motion-tokens.mjs");
+    expect(motionErrors()).toEqual([]);
   });
 
   it("refuses a token group the contract still calls untokenised", () => {

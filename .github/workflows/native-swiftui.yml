@@ -87,3 +87,97 @@ jobs:
         env:
           CONTROL: ${{ matrix.control }}
         run: node scripts/adoption/swiftui-consumer.mjs --negative="$CONTROL"
+
+  # Proves the SwiftUI selection-semantics suite can fail. Each control restores a defect
+  # `SelectionSemanticsTests` was written to catch, and must turn that suite from green to red FOR
+  # THAT DEFECT'S OWN REASON. The sabotage happens on the runner's throwaway checkout and is never
+  # committed.
+  #
+  # ── The rule these controls are built on ────────────────────────────────────
+  #
+  # A control is a comparison of TWO runs: the suite green on unmodified sources, then red once the
+  # defect is back. Measuring only the second half is the mistake that cost this repository three
+  # rounds of CI. A control whose expectation is "zero of the thing we searched for" —
+  # "found 0", "no such element", an empty result — is never sound, because every other kind of
+  # breakage prints the same thing: a compile error, an empty fixture, a dead harness. It reads
+  # "control held" while verifying nothing at all, which is precisely the failure the job exists to
+  # prevent.
+  #
+  # So: take the baseline first, and refuse to go on without it. Then require a message that only
+  # the restored defect produces — a sentence about the WRONG VALUE it yields, not about the absence
+  # of a right one. The grep is the second check; the baseline is what makes the control sound, and
+  # it must not be removed in favour of a cleverer expectation.
+  semantics-negative-controls:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The MX1d defect at its source: accessibility deriving the state from the bool again, so a
+          # mixed box resolves to on/off and stops being mixed at all.
+          - control: mixed-resolves-from-the-bool
+            file: Sources/KinetixUI/KinetixSelectionSemantics.swift
+            find: "if indeterminate { return .mixed }"
+            replace: "if indeterminate { return isOn ? .on : .off }"
+            expect: "a box showing a dash is mixed whatever the underlying isOn says"
+          # The other half of MX1d: mixed taking the binary selected trait, so a reader is told
+          # "selected" about a partially-checked box.
+          - control: mixed-claims-the-selected-trait
+            file: Sources/KinetixUI/KinetixSelectionSemantics.swift
+            find: "var isFullySelected: Bool { self == .on }"
+            replace: "var isFullySelected: Bool { self != .off }"
+            expect: "mixed must not take the selected trait"
+          # Mixed made silent: announced with one of the other two states' words, which is how the
+          # defect presented before #411 — a mixed box and an unchecked box read identically.
+          - control: mixed-announced-as-unchecked
+            file: Sources/KinetixUI/KinetixSelectionSemantics.swift
+            find: 'case .mixed: return "Mixed"'
+            replace: 'case .mixed: return "Unchecked"'
+            expect: "mixed must not be announced as either of the other two"
+    defaults:
+      run:
+        working-directory: packages/ui-swiftui
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Baseline: the suite must be green BEFORE the defect goes back"
+        run: |
+          set -o pipefail
+          if ! swift test --filter SelectionSemanticsTests 2>&1 | tee "$RUNNER_TEMP/baseline.log"; then
+            echo "::error::SelectionSemanticsTests is already failing on unmodified sources, so this control can measure nothing: a suite that is red either way cannot tell you the defect was detected. Fix the suite first."
+            tail -40 "$RUNNER_TEMP/baseline.log"
+            exit 1
+          fi
+          echo "Baseline green: whatever the next step turns red is the defect."
+
+      - name: "Restore the defect: ${{ matrix.control }}"
+        env:
+          FILE: ${{ matrix.file }}
+          FIND: ${{ matrix.find }}
+          REPLACE: ${{ matrix.replace }}
+        run: |
+          grep -qF -- "$FIND" "$FILE" \
+            || { echo "::error::$FIND is no longer in $FILE, so this control no longer restores anything. Update the control or delete it."; exit 1; }
+          python3 - "$FILE" "$FIND" "$REPLACE" <<'PY'
+          import sys
+          path, find, replace = sys.argv[1], sys.argv[2], sys.argv[3]
+          src = open(path).read()
+          assert src.count(find) == 1, f"{find!r} appears {src.count(find)} times in {path}; a control must be unambiguous"
+          open(path, "w").write(src.replace(find, replace))
+          PY
+          git --no-pager diff --stat
+
+      - name: The suite must now fail, and say why
+        env:
+          EXPECT: ${{ matrix.expect }}
+        run: |
+          # Without pipefail the pipeline reports tee's status, not swift test's, and the control
+          # would read every run as a pass.
+          set -o pipefail
+          if swift test --filter SelectionSemanticsTests 2>&1 | tee "$RUNNER_TEMP/control.log"; then
+            echo "::error::SelectionSemanticsTests PASSED with the defect restored. The gate does not measure what it claims."
+            exit 1
+          fi
+          grep -qF -- "$EXPECT" "$RUNNER_TEMP/control.log" \
+            || { echo "::error::The suite failed, but not with \"$EXPECT\" — so this control proves nothing."; tail -40 "$RUNNER_TEMP/control.log"; exit 1; }
+          echo "Control held: green before, and red for its own reason after."

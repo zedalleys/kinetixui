@@ -14,7 +14,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Controls & Actions/ToggleGroup",
+  title: "Actions & Controls/ToggleGroup",
   component: ToggleGroup,
   args: { type: "multiple" },
   argTypes: { type: { control: "inline-radio", options: ["single", "multiple"] } },

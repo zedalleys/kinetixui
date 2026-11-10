@@ -11,7 +11,7 @@ const Demo = () => (
   );
 
 const meta = {
-  title: "Foundations/AspectRatio",
+  title: "Layout & Structure/AspectRatio",
   component: AspectRatio,
   args: { ratio: 1.7778 },
   argTypes: { ratio: { control: { type: "number", step: 0.05 } } },

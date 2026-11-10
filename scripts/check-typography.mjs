@@ -76,7 +76,7 @@ const WEB_ALLOWED = {
     why: "SVG <text> hub and node labels inside the viewBox-scaled world map (user units, not CSS text)",
   },
   "app/opengraph-image.tsx": {
-    n: 5,
+    n: 4,
     why: "satori renders this into a 1200×630 PNG; its px are image pixels, not a page text size",
   },
 };

@@ -29,12 +29,24 @@
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary for local runs.
  */
+
+// This gate is what earns Checkbox and RadioGroup their Chromium `interaction` evidence. It navigates to
+// their stories and drives the real controls, asserting that the glyph DRAWN is the state ANNOUNCED on
+// every move — including the dash under an uncontrolled mixed box, which used to be a tick — plus touch,
+// rapid input, forced colours and RTL placement and keys.
+//
+// Subjects are declared, not inferred: this file imports no component. See switch-motion.mjs.
+//
+// kx-verify: interaction
+// kx-verify-only: checkbox, radio-group
+
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { serveStatic } from "./visual-harness.mjs";
+import { storyId } from "./story-id.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -52,10 +64,10 @@ const STANDARD = `cubic-bezier(${motion.easing.standard.$value.join(", ")})`;
 const SETTLE = FAST_MS + 150;
 
 const STORY = {
-  box: "form-inputs-checkbox--motion",
-  boxStates: "form-inputs-checkbox--states",
-  radio: "form-inputs-radiogroup--motion",
-  radioStates: "form-inputs-radiogroup--states",
+  box: storyId("checkbox", "Motion"),
+  boxStates: storyId("checkbox", "States"),
+  radio: storyId("radio-group", "Motion"),
+  radioStates: storyId("radio-group", "States"),
 };
 const HOVER = /rgba\([^)]*,\s*0\.08\)/;
 const PRESS = /rgba\([^)]*,\s*0\.14\)/;

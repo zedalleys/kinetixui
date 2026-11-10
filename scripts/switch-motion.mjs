@@ -31,12 +31,26 @@
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary for local runs.
  */
+
+// This gate is what earns Switch its Chromium `interaction` evidence. It navigates to the Switch stories
+// and drives the real control: `el.click()` in the page, `aria-checked` read back before the next frame,
+// and the thumb's rendered offset sampled every animation frame of the move (starts, only goes forward,
+// no overshoot, lands, mirrored in RTL), plus touch, rapid input, mid-travel reversal and form reset.
+//
+// Subjects are declared rather than inferred: this file imports no component — it drives one over a story
+// URL — so the symbol extractor has nothing true to read and falls back to incidental names. It read
+// `new FormData(...)` below as coverage of the `form` component, which this gate never touches.
+//
+// kx-verify: interaction
+// kx-verify-only: switch
+
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { serveStatic } from "./visual-harness.mjs";
+import { storyId } from "./story-id.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const staticDir = join(root, "apps/docs/storybook-static");
@@ -52,7 +66,7 @@ const INSTANT_MS = ms("instant");
 const STANDARD = `cubic-bezier(${motion.easing.standard.$value.join(", ")})`;
 const SETTLE = INSTANT_MS + 150;
 
-const STORY = { motion: "form-inputs-switch--motion", states: "form-inputs-switch--states" };
+const STORY = { motion: storyId("switch", "Motion"), states: storyId("switch", "States") };
 const HOVER = /rgba\([^)]*,\s*0\.08\)/;
 const PRESS = /rgba\([^)]*,\s*0\.14\)/;
 

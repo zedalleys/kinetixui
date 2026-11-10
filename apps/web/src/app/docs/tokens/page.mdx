@@ -32,7 +32,8 @@ The source is organised in two layers:
 ```text
 tokens/
 ├─ primitives/
-│  ├─ color.json        6 brand ramps + azure action ramp + synthesized neutral, 0–1000
+│  ├─ color.json        11 colour ramps (Kinetic Weave indigo/violet/cyan/navy + the inherited
+│  │                    azure, blue, green, taupe, cream, amber, red) + synthesized neutral + static
 │  ├─ dimension.json    spacing, radius, border width
 │  ├─ typography.json   Material-3 scale, Montserrat
 │  ├─ motion.json       duration + easing (cubicBezier)
@@ -62,14 +63,15 @@ file cannot be hand-edited without the pull request going red.
 
 ## Primitive and semantic tokens
 
-**Primitives** are the palette and scales: `color.azure.700`, `spacing.4`, `radius.md`. They say *what* a
+**Primitives** are the palette and scales: `color.indigo.600`, `spacing.4`, `radius.md`. They say *what* a
 value is.
 
 **Semantic tokens** say what a value is *for*: `color.primary`, `color.card`, `color.border`,
 `color.ring`. Components read only semantic tokens. A semantic token is usually an alias of a primitive,
 which is how two roles can share a value today and diverge later with a one-line change. The light theme's
-`primary` and `ring` both resolve to `color.azure.700`; `brand` is the navy `color.blue.500` that `primary`
-was moved off when the interactive colour needed more contrast.
+`primary` and `ring` both resolve to `color.indigo.600`; `brand` is the Kinetic Weave identity indigo
+`color.indigo.500`, which `primary` is deliberately a step away from so the interactive colour can hold
+contrast without moving the identity.
 
 ## One token on every platform
 
@@ -86,8 +88,9 @@ same colour. A test resolves every one of them back to the source hex and fails 
 ## Light and dark
 
 Dark is a second set of values for the same semantic names, not a second set of names. `primary` means
-"interactive colour" in both themes; only its value changes, from `azure.700` to the lighter `azure.400`
-that holds contrast on a dark surface.
+"interactive colour" in both themes; only its value changes, from `indigo.600` to the lighter `indigo.300`
+that holds contrast on a dark surface. `brand` moves independently — identity indigo in light, Soft Violet
+in dark — which is why the two roles exist separately.
 
 Style Dictionary runs **once per theme**, because two files defining the same token path would collide in a
 single run. The light pass emits every platform; the dark pass emits the web `globals.dark.css` **and** the
@@ -193,10 +196,10 @@ against the same token contract instead, and says how far each implementation is
 
 The [Button](/docs/components/button) is the most direct place to watch this token at work. Its primary
 variant fills with `action`, which aliases `primary`; its label is `action-foreground`; its keyboard focus is
-the `shadow.focus` ring, drawn in the same blue; its corners are the `md` radius and its padding comes from
+the `shadow.focus` ring, drawn in the same indigo; its corners are the `md` radius and its padding comes from
 the spacing scale. On its page:
 
-- **Toggle the site theme** and the fill moves from `azure.700` to `azure.400` with no change to the
+- **Toggle the site theme** and the fill moves from `indigo.600` to `indigo.300` with no change to the
   component, because only the token's value changed.
 - **Tab to a button** to see the focus ring, and hover or press it to see the fill step down to `action` at
   90% and 85%, values bounded by the contrast check rather than chosen by eye.

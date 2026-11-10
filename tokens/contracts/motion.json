@@ -228,7 +228,7 @@
       ],
       "reducedForm": "shorten",
       "evidence": [],
-      "note": "Large surfaces: Sheet opens on slow and closes on base. One React consumer and no rendered check, so it is recorded, not promoted.",
+      "note": "Large surfaces: Sheet opens on slow and closes on base. One React consumer and no rendered check, so it is recorded, not promoted. SwiftUI implements the same role with a cross-fade and framework-driven transitions; it is a declared deviation, not a consumer, because no SwiftUI source contains this role's token pairing. Compose and Flutter ship Sheet, Sidebar and Drawer with no slide motion at all, so they are absent here rather than deviating — the next bounded slice for this role.",
       "consumers": [
         {
           "platform": "react",
@@ -239,10 +239,18 @@
           ]
         }
       ],
-      "deviations": []
+      "deviations": [
+        {
+          "platform": "swiftui",
+          "file": "packages/ui-swiftui/Sources/KinetixUI/KinetixSlideMotion.swift",
+          "uses": "slides(reduceMotion: reduceMotion) ? .move(edge: edge) : .opacity",
+          "departs": "reducedForm",
+          "reason": "SwiftUI implements this role's intent for Sheet, Sidebar and Toaster, and reaches it two ways that are not the role's. Its reduced form is a cross-fade, not this role's `shorten`: sliding is positional movement, which is what Reduce Motion exists to remove, and a fade carries the same fact without it, which is Apple's own guidance. And its timings are not these tokens — enter and leave are `AnyTransition` values the framework drives, and the library's own dismissal (Toaster's auto-dismiss) borrows `KinetixSwitchMotion.durationSeconds`. So it is recorded here rather than as a consumer: a consumer entry would claim a `slow`/`base` on `standard` pairing that no SwiftUI source contains. `scripts/native-motion-spec.mjs` holds its three members to the helper as a strict family, and SlideMotionTests.swift tests both directions."
+        }
+      ]
     },
     "selection-indicator": {
-      "status": "proposed",
+      "status": "observed",
       "duration": [
         "base"
       ],
@@ -254,9 +262,25 @@
       ],
       "reducedForm": "remove-travel",
       "evidence": [],
-      "note": "A single indicator travelling between selected items (Tabs, SegmentedControl). Being built for React in PR #388; not on main. Promote to observed when #388 merges and add its consumer; promote to proven when a rendered midpoint check covers it.",
-      "consumers": [],
-      "deviations": []
+      "note": "A single indicator travelling between selected items. React's Tabs is the one consumer: one bar per list whose leading edge moves first and whose trailing edge follows, so it stretches across the gap and settles on the new label. Landed for React in #388. Observed rather than proven: `check:motion` measures a rendered midpoint for the travel in both directions and that reduced motion removes it, and `check:tabs-indicator` asserts the bar's geometry against the chosen tab, including `still` (a change that is not a change of tab must snap), but this repository promotes a role to proven on a SECOND platform consuming it, and no other platform has a travelling indicator. SegmentedControl is not a consumer: #388 gave its selected item a filled surface, and that fill settles on `fast`/`standard`, which is `selection-state`, not a travelling bar. `Tabs`'s `motion` prop chooses between this role's effect held back by `instant` (`classic`, the default), the same effect with the trailing edge held back a whole `base` so the two edges run in sequence (`fluid`), and no travel (`none`). The prop cannot set a duration: every preset is a choice between behaviours composed from this role's own tiers, so none of them can introduce a timing this contract does not know about.",
+      "consumers": [
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/tabs.tsx",
+          "expects": [
+            "[transition-duration:var(--duration-base)]",
+            "[transition-timing-function:var(--kx-tabs-ease,var(--easing-emphasized))]"
+          ]
+        }
+      ],
+      "deviations": [
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/tabs.tsx",
+          "uses": "fluid: { trail: \"var(--duration-base)\", ease: \"var(--easing-standard)\" }",
+          "reason": "`fluid` travels on `standard` rather than this role's `emphasized`, and the curve was measured rather than chosen by name. Fitted against the reference clip's frame-by-frame progression (40ms frames, 9 samples per edge, each curve allowed its best start offset so it is judged on shape), `standard` fits best on both edges — rms 0.077 leading, 0.091 trailing — and `emphasized` fits worst on the trailing edge at 0.218, because it covers most of its distance early where the reference creeps and then rushes. Rendered with `emphasized` the bar would draw itself in fast and then crawl, losing the hang that is the effect. `classic` is untouched and remains the role's canonical pairing; this applies only inside `fluid`. The measurement is in /mnt/project-files/motion/FLUID-TABS-FRAME-SPEC.md."
+        }
+      ]
     },
     "selection-state": {
       "status": "proven",
@@ -279,9 +303,10 @@
         "packages/ui/src/toggle-motion.test.tsx",
         "scripts/checkbox-radio-motion.mjs",
         "packages/ui/src/checkbox-radio-motion.test.tsx",
-        "scripts/angular-selection-motion.mjs"
+        "scripts/angular-selection-motion.mjs",
+        "packages/ui-flutter/test/selection_motion_test.dart"
       ],
-      "note": "Colour and surface change when a control becomes selected or unselected: Toggle, ToggleGroup items, Checkbox and Radio indicators. Owner decision 2026-10-17: fast (200ms). The semantic state changes at once; only the paint interpolates. Switch keeps selection-control (instant) unless a defect is shown. Adopted component by component from MX1b-1. Observed on React Toggle and ToggleGroup (MX1b-1a, which share toggleVariants): background, text and border colour on fast, measured in a browser. Observed on React Checkbox and RadioGroup (MX1b-1b): box fill, border and glyph colour on fast, and the tick, dash or dot fading in on fast (opacity). The Checkbox glyph leaves at once rather than fading, so a box going from mixed to unchecked never shows the tick on its way out. Promoted to proven when a second platform consumes it. MX1b-2 adopted it on Angular Checkbox, RadioGroup, Toggle and ToggleGroup: colour and edge on fast, the Checkbox glyph and the Radio dot fading on fast from their own layers, and the state layer kept on instant.",
+      "note": "Colour and surface change when a control becomes selected or unselected: Toggle, ToggleGroup items, Checkbox and Radio indicators. Owner decision 2026-10-17: fast (200ms). The semantic state changes at once; only the paint interpolates. Switch keeps selection-control (instant) unless a defect is shown. Adopted component by component from MX1b-1. Observed on React Toggle and ToggleGroup (MX1b-1a, which share toggleVariants): background, text and border colour on fast, measured in a browser. Observed on React Checkbox and RadioGroup (MX1b-1b): box fill, border and glyph colour on fast, and the tick, dash or dot fading in on fast (opacity). The Checkbox glyph leaves at once rather than fading, so a box going from mixed to unchecked never shows the tick on its way out. Promoted to proven when a second platform consumes it. MX1b-2 adopted it on Angular Checkbox, RadioGroup, Toggle and ToggleGroup: colour and edge on fast, the Checkbox glyph and the Radio dot fading on fast from their own layers, and the state layer kept on instant. SwiftUI joined in MX1d: KinetixSelectionMotion resolves fast/standard and returns nil under Reduce Motion, and KinetixToggle, KinetixCheckbox and KinetixRadioButton read it — source and resolver evidence only, since nothing in that package renders, so SwiftUI adds a consumer and no observation; the role's proven status rests on the React and Angular browser measurements, not on this. Compose joined in MX1d: KinetixSelectionMotion resolves fast/standard, collapses to tween(0) at animator scale 0, and Toggle, Checkbox and RadioButton read it through animateColorAsState. Compose adds a consumer and no observation: its Robolectric suite reads the semantics tree rather than an interpolated colour, so it does not carry the role's proven status — the React and Angular browser measurements do. MX1d adds Flutter as a consumer that also OBSERVES it, headlessly: selection_motion_test.dart stops the clock halfway through a checkbox's settle and reads the interpolated fill off the rendered tree, and the same for a toggle's background and a radio's edge and dot. flutter_test has no device, so this is a measured intermediate value at Headless, not a second browser measurement, and the role was already proven before it landed.",
       "consumers": [
         {
           "platform": "react",
@@ -317,9 +342,40 @@
             "border-color var(--duration-fast) var(--easing-standard)",
             "opacity var(--duration-fast) var(--easing-standard)"
           ]
+        },
+        {
+          "platform": "swiftui",
+          "file": "packages/ui-swiftui/Sources/KinetixUI/KinetixSelectionMotion.swift",
+          "expects": [
+            "KinetixDuration.fast",
+            "KinetixEasing.standard"
+          ]
+        },
+        {
+          "platform": "compose",
+          "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixSelectionMotion.kt",
+          "expects": [
+            "KinetixDuration.fast",
+            "KinetixEasing.standard"
+          ]
+        },
+        {
+          "platform": "flutter",
+          "file": "packages/ui-flutter/lib/src/kinetix_selection_motion.dart",
+          "expects": [
+            "KinetixDuration.fast",
+            "KinetixEasing.standard"
+          ]
         }
       ],
-      "deviations": []
+      "deviations": [
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/tabs.tsx",
+          "uses": "motion-safe:group-data-[kx-tabs-motion=fluid]/tabs:[transition-duration:var(--duration-base),var(--duration-fast),var(--duration-fast)]",
+          "reason": "Under Tabs' `fluid` preset the label's own colour runs at `base` rather than this role's `fast`, because it is choreographed to the indicator rather than answering on its own clock: the label being left fades across the leading edge's travel and the label being chosen brightens across the trailing edge's, which is what makes the two phases read as one movement. Deliberate and scoped: `color` alone is re-timed, the hover surface and the border stay on `fast` in the same declaration, and `classic` and `none` leave the label exactly as it was."
+        }
+      ]
     },
     "press-feedback": {
       "status": "proven",
@@ -394,9 +450,84 @@
         "scripts/check-registry-motion.mjs",
         "scripts/check-native-motion.mjs"
       ],
-      "note": "Loops have no destination, so the contract is their reduced form (a static rest), not a duration pair. Each loop keeps its own period (caret 1.25s, typing 1.2s, marquee 32s), set on the keyframe animation rather than a transition tier. `slower` (1000ms) is documented for loops but nothing reads it as a period today: InputOTP's caret pairs `animate-caret-blink` with the transition utility `duration-slower`, which does not change an animation's duration.",
-      "consumers": [],
-      "deviations": []
+      "note": "Loops have no destination, so the contract is their reduced form (a static rest), not a duration pair. Each loop keeps its own period (caret 1.25s, typing 1.2s, marquee 32s), set on the keyframe animation rather than a transition tier. `slower` (1000ms) is documented for loops but nothing reads it as a period today: InputOTP's caret pairs `animate-caret-blink` with the transition utility `duration-slower`, which does not change an animation's duration. Platform coverage: this role is implemented on all five platforms and was declared on none of them until now — the role sat at `proven` with zero consumers, a weaker bar than `observed`, because the two-platform rule exempted loops. The consumers below are the files that decide whether a loop runs; Angular's spinner departs from `rest` and says so.",
+      "consumers": [
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/spinner.tsx",
+          "expects": [
+            "animate-spin motion-reduce:animate-none"
+          ]
+        },
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/skeleton.tsx",
+          "expects": [
+            "animate-pulse rounded-md bg-muted motion-reduce:animate-none"
+          ]
+        },
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/marquee.tsx",
+          "expects": [
+            "animate-marquee motion-reduce:animate-none"
+          ]
+        },
+        {
+          "platform": "react",
+          "file": "packages/ui/src/components/message-bubble.tsx",
+          "expects": [
+            "animate-typing-dot motion-reduce:animate-none motion-reduce:opacity-70"
+          ]
+        },
+        {
+          "platform": "angular",
+          "file": "packages/ui-angular/src/styles.css",
+          "expects": [
+            ".kx-skeleton { animation: none; }",
+            ".kx-marquee__track { animation: none; }"
+          ]
+        },
+        {
+          "platform": "swiftui",
+          "file": "packages/ui-swiftui/Sources/KinetixUI/KinetixLoopMotion.swift",
+          "expects": [
+            "guard !reduceMotion else { return nil }",
+            "public static func runs(reduceMotion: Bool) -> Bool { !reduceMotion }"
+          ]
+        },
+        {
+          "platform": "compose",
+          "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixLoopMotion.kt",
+          "expects": [
+            "fun runs(reduceMotion: Boolean): Boolean = !reduceMotion"
+          ]
+        },
+        {
+          "platform": "flutter",
+          "file": "packages/ui-flutter/lib/src/kinetix_loop_motion.dart",
+          "expects": [
+            "!KinetixDisclosureMotion.reduceMotionOf(context)",
+            "controller.reset();"
+          ]
+        }
+      ],
+      "deviations": [
+        {
+          "platform": "angular",
+          "file": "packages/ui-angular/src/styles.css",
+          "uses": ".kx-spinner { animation-duration: 3s; }",
+          "departs": "reducedForm",
+          "reason": "Angular's spinner does not take this role's `rest` form: with reduce it keeps turning at a 3s period, on the stated judgement that a frozen spinner reads as a hung page. React cannot make the same choice — `@kinetixui/ui`'s Tailwind floor caps every animation at 0.01ms and one iteration, so a slowed React spinner is a single frozen frame and the repository settled on `motion-reduce:animate-none` instead (apps/web/src/lib/motion-contract.test.ts refuses a React loop that slows). Angular ships its own stylesheet with no such floor, so the period survives. The divergence is a platform fact, not a drift: 3s is held under the reduced-motion floor of `check:angular-browser`, and the ring keeps its `role=status` and accessible name in both modes."
+        },
+        {
+          "platform": "angular",
+          "file": "packages/ui-angular/src/styles.css",
+          "uses": ".kx-circular-progress:not([aria-valuenow]) svg { animation-duration: 3s; }",
+          "departs": "reducedForm",
+          "reason": "The indeterminate circular progress is the spinner's second form and follows the same judgement and the same 3s period; it is recorded separately because it is a different selector in a different reduced-motion block, and a single entry would stop naming one of them."
+        }
+      ]
     }
   },
   "untokenised": {

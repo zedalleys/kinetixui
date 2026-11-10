@@ -1,0 +1,20 @@
+{
+  "base": "http://127.0.0.1:3000",
+  "measuredAt": "2026-11-06T22:43:40.727Z",
+  "routes": 3,
+  "junctions": 26,
+  "lap": {
+    "measuredSeconds": 8.7,
+    "declaredSeconds": 9.4
+  },
+  "heroFocus_light": {
+    "focusableElements": 0,
+    "tabReachedHero": false,
+    "wireframeStrokeWidth": "1px"
+  },
+  "heroFocus_dark": {
+    "focusableElements": 0,
+    "tabReachedHero": false,
+    "wireframeStrokeWidth": "1px"
+  }
+}
