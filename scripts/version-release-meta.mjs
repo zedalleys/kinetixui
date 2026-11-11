@@ -22,7 +22,13 @@ if (!history.includes(`version: "${version}"`)) {
   // JSON is valid TypeScript; retain unquoted property names for the release tools' parser.
   const block = JSON.stringify(entry, null, 2).replace(/^  /gm, "    ").replace(/^}/m, "  }")
     .replace(/^\{/m, "  {").replace(/^(\s*)"([A-Za-z]+)":/gm, "$1$2:");
-  writeFileSync(file, source.replace(marker, `${marker}${block},\n`));
+  // A function replacement, because a string one would interpret `$$`, `$&`, `$1` and `` $` `` INSIDE
+  // the note's own prose. Measured on this script before the change: a summary reading
+  // "Replacement supports $$ characters." was written out as "... $ characters." — silent corruption of
+  // published text — and "$& characters." spliced this marker, newline and all, into the string
+  // literal, producing `error TS1002: Unterminated string literal`. `check:releases` reported
+  // `ok — 44 entries` in both cases, so nothing downstream catches it.
+  writeFileSync(file, source.replace(marker, () => `${marker}${block},\n`));
 }
 for (const script of ["gen-release-meta.mjs", "check-releases.mjs"]) {
   const result = spawnSync(process.execPath, [`${root}/scripts/${script}`], { cwd: root, stdio: "inherit" });
