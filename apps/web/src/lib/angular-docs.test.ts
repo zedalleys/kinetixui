@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { commandStringsOnPage } from "./pm-commands-mdx";
 import { PLATFORM_DEFINITIONS, platformsFor } from "./platform-parity";
 import { allDocsLinks, docsNav } from "./site";
 
@@ -59,9 +60,11 @@ describe("/docs/angular", () => {
     expect(distribution.published, "the manifest should say Angular is published").toBe(true);
     // An exact substring rather than a pattern built from the coordinate: escaping a value into a
     // regex by hand goes wrong quietly, and there is nothing to match loosely here.
-    const install = page.split(/\r?\n/).find((line) => line.trim().startsWith("npm i "));
-    expect(install, "the page should show an npm install command").toBeTruthy();
-    expect(install).toContain(distribution.coordinate);
+    // The page writes `<Command op="install-angular" />`; the command is resolved through the same contract
+    // the browser renders it with, so this guard cannot pass on a command the contract could not produce.
+    const installs = commandStringsOnPage(page).filter((c) => /\b(install|add)\b/.test(c));
+    expect(installs, "the page should show an install command").not.toHaveLength(0);
+    expect(installs.join("\n")).toContain(distribution.coordinate);
     expect(page).not.toMatch(/not published/i);
   });
 
