@@ -2784,6 +2784,7 @@
       "Flutter": [
         "build",
         "largeText",
+        "reducedMotion",
         "rtl"
       ]
     },
@@ -3902,6 +3903,7 @@
       "Flutter": [
         "build",
         "largeText",
+        "reducedMotion",
         "rtl"
       ]
     },
@@ -4489,7 +4491,7 @@
       "accessibility": 7,
       "rtl": 58,
       "largeText": 58,
-      "reducedMotion": 8,
+      "reducedMotion": 10,
       "visual": 0,
       "published": 0
     }
