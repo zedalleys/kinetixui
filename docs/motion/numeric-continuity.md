@@ -18,9 +18,13 @@ Use this for local summaries or a user-adjusted preview. Financial balances, cou
 
 ## Validation and integration boundary
 
-React: 668 tests passed. Angular: 369 tests passed and the package builds; its public API snapshot is regenerated. Flutter: 199 widget tests passed. SwiftUI: 93 XCTest tests passed, including two new resolver/compile checks; this is not a mounted VoiceOver or animation test. Compose: the complete Robolectric suite passed, including target semantics, an intermediate formatted value, retargeting and reduced motion. Android device/emulator and iOS device interaction tests were not run.
+The M4 refresh passed 719 React, 372 Angular, 93 SwiftUI, 126 Compose and 199 Flutter tests. React and Angular numeric fixtures exercised Chromium. The native runtime probes exercised SwiftUI and Flutter on the iPhone simulator and Compose on Android API 37. Compose also verifies that restoring motion cannot replay an interrupted value. Screen-reader speech and physical-device frame pacing remain outside these checks.
 
-The native guard composes `native-motion-additions.mjs` over `native-motion-spec.mjs`. Existing consumer identities and all nine declared gaps are preserved. PR #552 owns the original ledger and token contract; this work changes neither file. Strict numeric membership is checked with negative controls on all three native platforms. These bookkeeping checks supplement, rather than replace, platform behavior tests.
+### Contract decision
+
+Numeric continuity is an opt-in display utility for arbitrary numbers, including negative and unbounded values. It exposes exact target text to assistive technology and settles at that value when motion is reduced. Determinate progress communicates completion within a known range and carries progress semantics. Sharing timing tokens does not make these the same role.
+
+`native-motion-additions.mjs` adds strict preference and direction evidence for the utility on all three native platforms. The #552 catalogue ledger, role mappings and registered consumer identities retain their existing contract. The additive guard checks that numeric entries cannot replace a catalogue family or declare a catalogue role. These checks supplement platform behavior tests.
 
 This utility is deliberately outside the curated component catalogue; it does not change component or verification counts. No release version, changeset, publication credential, or protected environment is changed. Branch-specific Vercel settings disable automatic deployment for these two review branches.
 
@@ -72,4 +76,4 @@ These nine pre-existing entries are preserved; this PR does not claim full nativ
 | Compose | Carousel | Programmatic pager scrolling; separate carousel/pager family |
 | Flutter | JsonViewer | Data-viewer disclosure; separate follow-up |
 
-The historical local totals above describe the original implementation base. After refresh to main `66f5c26c`, React passes 693 tests and Angular passes 369, with package builds and generated checks rerun. Native source is unchanged by this refresh; the prior 93 SwiftUI, 199 Flutter and 125 Compose results are historical local evidence, not fresh remote CI receipts. Current-head CI and Codex review are required separately before any merge decision.
+The acceptance record uses GitHub checks and Codex review for the current commit.

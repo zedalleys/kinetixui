@@ -24,6 +24,7 @@ import { afterEach, describe, expect, it } from "vitest";
 const repoRoot = join(process.cwd(), "../..");
 const script = join(repoRoot, "scripts/check-native-motion.mjs");
 const specPath = join(repoRoot, "scripts/native-motion-additions.mjs");
+const baseSpecPath = join(repoRoot, "scripts/native-motion-spec.mjs");
 
 type Family = { helper: string; members: string[]; test: string; directional: boolean; strict: boolean };
 type Platform = { dir: string; ext: string; families: Record<string, Family> };
@@ -368,6 +369,28 @@ describe("the ledger cannot go stale", () => {
 
 // The additive numeric family is subject to the same strict routing gate as loops and slides.
 describe("numeric family cannot silently lose the reader's setting", () => {
+  it("adds a non-progress utility without reclassifying any catalogue family", () => {
+    const output = execFileSync(process.execPath, ["--input-type=module", "-e", `
+      import assert from "node:assert/strict";
+      import { PLATFORMS as base } from ${JSON.stringify(baseSpecPath)};
+      import { NUMERIC_UTILITY, PLATFORMS } from ${JSON.stringify(specPath)};
+      for (const [platform, { families }] of Object.entries(PLATFORMS)) {
+        const { numeric, ...catalogue } = families;
+        assert.deepEqual(catalogue, base[platform].families);
+        assert.equal(numeric, NUMERIC_UTILITY.native[platform]);
+        assert.equal(Object.hasOwn(numeric, "contractRole"), false);
+      }
+      const { native, ...semantics } = NUMERIC_UTILITY;
+      process.stdout.write(JSON.stringify(semantics));
+    `], { encoding: "utf8" });
+    expect(JSON.parse(output)).toEqual({
+      kind: "opt-in-utility",
+      value: "arbitrary-number",
+      accessibility: "exact-target-text",
+      reducedMotion: "snap-to-target",
+    });
+  });
+
   for (const [name, p] of Object.entries(spec.platforms)) {
     it(`${name}: rejects a member that reads the preference but stops calling the helper`, () => {
       const dir = fixture();
