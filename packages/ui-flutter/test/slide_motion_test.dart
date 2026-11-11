@@ -169,6 +169,40 @@ void main() {
     second.dispose();
   });
 
+  testWidgets('native Back dismisses the sheet before leaving its host route',
+      (t) async {
+    var visible = true;
+    await t.pumpWidget(MaterialApp(
+        home: Builder(
+            builder: (context) => TextButton(
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<
+                          void>(
+                      builder: (_) => KinetixTheme(
+                          child: StatefulBuilder(
+                              builder: (context, setState) => Stack(children: [
+                                    const Positioned.fill(
+                                        child: Text('Host route')),
+                                    KinetixSheet(
+                                        visible: visible,
+                                        onDismiss: () =>
+                                            setState(() => visible = false),
+                                        child: const Text('Modal content')),
+                                  ]))))),
+                  child: const Text('Open route'),
+                ))));
+    await t.tap(find.text('Open route'));
+    await t.pumpAndSettle();
+    expect(find.text('Modal content'), findsOneWidget);
+    await t.binding.handlePopRoute();
+    await t.pumpAndSettle();
+    expect(find.text('Host route'), findsOneWidget,
+        reason: 'Back must dismiss the top modal first');
+    expect(find.text('Modal content'), findsNothing);
+    await t.binding.handlePopRoute();
+    await t.pumpAndSettle();
+    expect(find.text('Open route'), findsOneWidget);
+  });
+
   test('spatial timing uses existing role tokens in both directions', () {
     expect(KinetixSlideMotion.duration(entering: true, reduceMotion: false),
         const Duration(milliseconds: 500));

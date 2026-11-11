@@ -125,74 +125,80 @@ class _KinetixSheetState extends State<KinetixSheet>
         }
         final progress = KinetixSlideMotion.curve.transform(_controller.value);
         return BlockSemantics(
-          child: FocusScope(
-            node: _scope,
-            descendantsAreFocusable: widget.visible,
-            descendantsAreTraversable: widget.visible,
-            onKeyEvent: (_, event) {
-              if (!widget.visible) return KeyEventResult.handled;
-              if (event is KeyDownEvent &&
-                  event.logicalKey == LogicalKeyboardKey.escape) {
-                widget.onDismiss();
-                return KeyEventResult.handled;
-              }
-              return KeyEventResult.ignored;
+          child: PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) {
+              if (!didPop && widget.visible) widget.onDismiss();
             },
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: ModalBarrier(
-                    color: c.scrim.withValues(alpha: c.scrim.a * progress),
-                    dismissible: widget.visible,
-                    onDismiss: widget.onDismiss,
-                    semanticsLabel: Localizations.of<MaterialLocalizations>(
-                                context, MaterialLocalizations)
-                            ?.modalBarrierDismissLabel ??
-                        'Dismiss',
+            child: FocusScope(
+              node: _scope,
+              descendantsAreFocusable: widget.visible,
+              descendantsAreTraversable: widget.visible,
+              onKeyEvent: (_, event) {
+                if (!widget.visible) return KeyEventResult.handled;
+                if (event is KeyDownEvent &&
+                    event.logicalKey == LogicalKeyboardKey.escape) {
+                  widget.onDismiss();
+                  return KeyEventResult.handled;
+                }
+                return KeyEventResult.ignored;
+              },
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: ModalBarrier(
+                      color: c.scrim.withValues(alpha: c.scrim.a * progress),
+                      dismissible: widget.visible,
+                      onDismiss: widget.onDismiss,
+                      semanticsLabel: Localizations.of<MaterialLocalizations>(
+                                  context, MaterialLocalizations)
+                              ?.modalBarrierDismissLabel ??
+                          'Dismiss',
+                    ),
                   ),
-                ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: FractionalTranslation(
-                    translation: Offset(0, 1 - progress),
-                    child: IgnorePointer(
-                      ignoring: !widget.visible,
-                      child: ExcludeSemantics(
-                        excluding: !widget.visible,
-                        child: Semantics(
-                          scopesRoute: true,
-                          explicitChildNodes: true,
-                          child: Material(
-                            color: c.background,
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(16)),
-                            elevation: 8,
-                            child: SafeArea(
-                              top: false,
-                              child: Padding(
-                                padding: const EdgeInsets.all(24),
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Center(
-                                          child: Container(
-                                              width: 36,
-                                              height: 4,
-                                              decoration: BoxDecoration(
-                                                  color: c.border,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          9999)))),
-                                      const SizedBox(height: 16),
-                                      DefaultTextStyle.merge(
-                                          style: AppText.bodyMd
-                                              .copyWith(color: c.foreground),
-                                          child: widget.child),
-                                    ],
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: FractionalTranslation(
+                      translation: Offset(0, 1 - progress),
+                      child: IgnorePointer(
+                        ignoring: !widget.visible,
+                        child: ExcludeSemantics(
+                          excluding: !widget.visible,
+                          child: Semantics(
+                            scopesRoute: true,
+                            explicitChildNodes: true,
+                            child: Material(
+                              color: c.background,
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(16)),
+                              elevation: 8,
+                              child: SafeArea(
+                                top: false,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Center(
+                                            child: Container(
+                                                width: 36,
+                                                height: 4,
+                                                decoration: BoxDecoration(
+                                                    color: c.border,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            9999)))),
+                                        const SizedBox(height: 16),
+                                        DefaultTextStyle.merge(
+                                            style: AppText.bodyMd
+                                                .copyWith(color: c.foreground),
+                                            child: widget.child),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -202,8 +208,8 @@ class _KinetixSheetState extends State<KinetixSheet>
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
