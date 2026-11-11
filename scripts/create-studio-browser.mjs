@@ -1,0 +1,246 @@
+#!/usr/bin/env node
+// Explicit local development browser verification; never targets a deployed service.
+import assert from "node:assert/strict";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { createRequire } from "node:module";
+import { chromium } from "playwright";
+const require = createRequire(import.meta.url);
+const base = process.env.CREATE_BASE ?? "http://127.0.0.1:3137";
+assert.ok(["127.0.0.1", "localhost"].includes(new URL(base).hostname), "Local verification only");
+const out = resolve(process.env.CREATE_ARTIFACTS ?? ".impeccable/review/create-studio");
+await mkdir(out, { recursive: true });
+const browser = await chromium.launch({ headless: true });
+const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+const page = await context.newPage();
+const errors = [], results = [], a11y = [];
+page.on("pageerror", error => errors.push(error.message));
+const pass = name => { results.push(name); console.log("PASS " + name); };
+const studio = page.locator(".create-studio");
+const inspector = studio.getByRole("complementary", { name: "Properties inspector" });
+async function save() {
+  await studio.getByRole("button", { name: "Save", exact: true }).click();
+  await page.waitForFunction(() => document.querySelector(".studio-save-state")?.textContent === "Saved locally");
+}
+async function changeText(text) {
+  await inspector.getByLabel("Text", { exact: true }).fill(text);
+  await inspector.getByRole("button", { name: "Apply", exact: true }).click();
+}
+async function capture(name) {
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(150);
+  await page.screenshot({ path: resolve(out, name), fullPage: true, animations: "disabled" });
+}
+async function scan(label) {
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(350); // Settle existing library color transitions before contrast sampling.
+  await page.addScriptTag({ path: require.resolve("axe-core/axe.min.js") });
+  const violations = await page.evaluate(async () => (await window.axe.run(document.querySelector(".create-studio"), { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"] } })).violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.map(n => ({ target: n.target, summary: n.failureSummary })) })));
+  a11y.push({ label, violations });
+}
+try {
+  await page.goto(base + "/create/studio");
+  await studio.getByRole("button", { name: "Start local workspace" }).click();
+  await studio.getByLabel("New product name").fill("Fieldnotes");
+  await studio.getByRole("button", { name: "New product", exact: true }).click();
+  await studio.getByRole("button", { name: "Add Button", exact: true }).waitFor();
+  await studio.getByRole("button", { name: "Add Button", exact: true }).click();
+  await changeText("Launch project");
+  await inspector.getByLabel("Variant", { exact: true }).selectOption("Outline");
+  await save();
+  pass("local account → first product → real Button → properties → save");
+  await studio.getByRole("button", { name: "Add Badge", exact: true }).click();
+  await studio.getByRole("button", { name: "Add Card", exact: true }).click();
+  await studio.getByRole("button", { name: "Add Input", exact: true }).click();
+  await studio.getByRole("button", { name: "Add Tabs", exact: true }).click();
+  await studio.getByRole("button", { name: "Layers", exact: true }).click();
+  const tree = studio.getByRole("tree", { name: "Screen layers" });
+  await tree.getByRole("treeitem", { name: "Button", exact: true }).click();
+  await tree.getByRole("treeitem", { name: "Badge", exact: true }).click({ modifiers: ["Shift"] });
+  assert.match(await inspector.innerText(), /2 layers selected/);
+  await tree.getByRole("treeitem", { name: "Button", exact: true }).click();
+  await inspector.getByRole("button", { name: "Move layer down" }).click();
+  await inspector.getByRole("button", { name: "Delete selected", exact: true }).click();
+  assert.equal(await tree.getByRole("treeitem", { name: "Button", exact: true }).count(), 0);
+  await studio.getByRole("button", { name: "Undo", exact: true }).click();
+  await tree.getByRole("treeitem", { name: "Button", exact: true }).waitFor();
+  await studio.getByRole("button", { name: "Redo", exact: true }).click();
+  assert.equal(await tree.getByRole("treeitem", { name: "Button", exact: true }).count(), 0);
+  await studio.getByRole("button", { name: "Undo", exact: true }).click();
+  await tree.getByRole("treeitem", { name: "Button", exact: true }).click();
+  await tree.getByRole("treeitem", { name: "Button", exact: true }).focus();
+  await page.keyboard.press("Home");
+  assert.match(await page.evaluate(() => document.activeElement?.textContent), /Page/);
+  pass("layers, multi-selection, keyboard navigation, move, deletion, undo and redo");
+  await studio.getByRole("button", { name: "Screen", exact: true }).click();
+  await studio.getByRole("button", { name: "Add frame", exact: true }).click();
+  await studio.getByRole("button", { name: "Library", exact: true }).click();
+  await studio.getByRole("button", { name: "Add Button", exact: true }).click();
+  await studio.getByLabel("Current screen").selectOption("page_home");
+  await save();
+  pass("multiple pages and frames within one free product");
+  await studio.getByRole("button", { name: "Zoom in", exact: true }).click();
+  assert.match(await studio.locator(".studio-world").getAttribute("style"), /scale\(1.1\)/);
+  const canvas = studio.getByRole("region", { name: "Design canvas" });
+  await canvas.focus();
+  const before = await studio.locator(".studio-world").getAttribute("style");
+  await page.keyboard.press("ArrowRight");
+  assert.notEqual(await studio.locator(".studio-world").getAttribute("style"), before);
+  await studio.getByRole("button", { name: "Use pan tool", exact: true }).click();
+  const box = await canvas.boundingBox();
+  await page.mouse.move(box.x + 100, box.y + 100);
+  await page.mouse.down(); await page.mouse.move(box.x + 170, box.y + 130); await page.mouse.up();
+  await studio.getByRole("button", { name: "Reset view", exact: true }).click();
+  await studio.getByRole("button", { name: "Use selection tool", exact: true }).click();
+  await studio.getByLabel("Viewport width").selectOption("390");
+  assert.equal(await studio.locator(".studio-world").evaluate(el => el.getBoundingClientRect().width), 390);
+  await studio.getByLabel("Viewport width").selectOption("960");
+  pass("zoom, keyboard pan, pointer pan and intrinsic preview widths");
+  await studio.getByRole("button", { name: "Preview", exact: true }).click();
+  const details = studio.locator(".studio-artboard").getByRole("tab", { name: "Details", exact: true });
+  await details.click();
+  assert.match(await studio.locator(".studio-artboard").getByRole("tabpanel").innerText(), /Make room/);
+  await studio.locator(".studio-artboard").getByLabel("Email address").focus();
+  assert.equal(await studio.locator(".studio-artboard").getByLabel("Email address").evaluate(el => el === document.activeElement), true);
+  await studio.getByRole("button", { name: "Back to editing", exact: true }).click();
+  pass("preview restores real Tabs and input focus behavior");
+  await studio.getByRole("button", { name: "Export React", exact: true }).click();
+  const exportDialog = page.getByRole("dialog", { name: "Your React source" });
+  await exportDialog.waitFor();
+  const downloadPromise = page.waitForEvent("download");
+  await exportDialog.getByRole("button", { name: "Download React", exact: true }).click();
+  await (await downloadPromise).saveAs(resolve(out, "browser-export.tsx"));
+  await page.keyboard.press("Escape");
+  assert.equal(await studio.getByRole("button", { name: "Export React", exact: true }).evaluate(el => el === document.activeElement), true);
+  pass("React export download and dialog focus return");
+  await studio.getByLabel("New product name").fill("Second product");
+  await studio.getByRole("button", { name: "New product", exact: true }).click();
+  const upgrade = page.getByRole("dialog", { name: "More products, when you’re ready." });
+  await upgrade.waitFor();
+  assert.match(await upgrade.innerText(), /Checkout is not configured/);
+  assert.equal(await upgrade.locator('input[type="password"],input[autocomplete="cc-number"]').count(), 0);
+  await upgrade.screenshot({ path: resolve(out, "upgrade.png") });
+  await page.keyboard.press("Escape");
+  assert.equal(await studio.getByRole("button", { name: "New product", exact: true }).evaluate(el => el === document.activeElement), true);
+  pass("second-product quota, honest checkout placeholder and modal focus return");
+  const state = await context.request.get(base + "/api/create-studio");
+  const account = await state.json();
+  const productId = account.products[0].id;
+  const otherContext = await browser.newContext();
+  const foreign = await otherContext.request.post(base + "/api/create-studio", { data: { operation: "session" }, headers: { origin: base } });
+  assert.equal(foreign.status(), 200);
+  assert.equal((await otherContext.request.get(base + "/api/create-studio?id=" + productId)).status(), 404);
+  assert.equal((await context.request.post(base + "/api/create-studio", { data: { operation: "create", name: "Bypass", key: "request_bypass" }, headers: { origin: "https://attacker.example" } })).status(), 403);
+  await otherContext.close();
+  pass("HTTP ownership boundary and foreign-origin rejection");
+  await page.reload(); await studio.getByRole("button", { name: "Start local workspace" }).click();
+  await studio.getByLabel("Open product").selectOption(productId);
+  await studio.getByRole("button", { name: "Layers", exact: true }).click();
+  await studio.getByRole("treeitem", { name: "Button", exact: true }).click();
+  assert.equal(await inspector.getByLabel("Text", { exact: true }).inputValue(), "Launch project");
+  pass("save/reopen preserves product identity, multiple screens and component properties");
+  await changeText("Recoverable draft");
+  await page.route("**/api/create-studio", async route => {
+    const body = route.request().postDataJSON();
+    if (body?.operation === "save") await route.abort("failed"); else await route.continue();
+  });
+  await studio.getByRole("button", { name: "Save", exact: true }).click();
+  await studio.getByRole("alert").waitFor();
+  assert.match(await studio.locator(".studio-save-state").innerText(), /Unsaved/);
+  assert.ok(await page.evaluate(() => Object.keys(localStorage).some(k => k.startsWith("kinetix-studio:"))));
+  await page.unroute("**/api/create-studio");
+  await save();
+  pass("save failure retains unsaved state and local draft; retry succeeds");
+  const sibling = await context.newPage();
+  await sibling.goto(base + "/create/studio");
+  await sibling.getByRole("button", { name: "Start local workspace" }).click();
+  await sibling.getByLabel("Open product").selectOption(productId);
+  await changeText("Newest revision"); await save();
+  await sibling.getByRole("button", { name: "Layers", exact: true }).click();
+  await sibling.getByRole("treeitem", { name: "Button", exact: true }).click();
+  await sibling.locator(".studio-inspector").getByLabel("Text", { exact: true }).fill("Stale writer");
+  await sibling.locator(".studio-inspector").getByRole("button", { name: "Apply", exact: true }).click();
+  await sibling.getByRole("button", { name: "Save", exact: true }).click();
+  await sibling.waitForFunction(() => document.querySelector(".create-studio .studio-error")?.textContent?.includes("newer revision"));
+  assert.match(await sibling.locator(".create-studio").getByRole("alert").innerText(), /newer revision/);
+  await sibling.close();
+  pass("two-tab revision conflict prevents silent overwrite");
+  await studio.getByRole("button", { name: "Layers", exact: true }).click().catch(() => {});
+  // Capture one batched visual matrix after functional checks.
+  await scan("desktop-light");
+  await capture("desktop.png");
+  await page.getByRole("button", { name: "Select theme", exact: true }).click();
+  await page.getByRole("menuitemradio", { name: "Dark", exact: true }).click();
+  await studio.getByRole("button", { name: "Dark canvas", exact: true }).click();
+  await scan("desktop-dark");
+  await capture("desktop-dark.png");
+  await page.getByRole("button", { name: "Select theme", exact: true }).click();
+  await page.getByRole("menuitemradio", { name: "Light", exact: true }).click();
+  await studio.getByRole("button", { name: "Light canvas", exact: true }).click();
+  await studio.getByRole("button", { name: "RTL", exact: true }).click();
+  await scan("desktop-rtl");
+  await capture("desktop-rtl.png");
+  await studio.getByRole("button", { name: "RTL", exact: true }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  await scan("mobile");
+  await capture("mobile.png");
+  await context.newCDPSession(page).then(cdp => cdp.send("Page.setFontSizes", { fontSizes: { standard: 32, fixed: 26 } }));
+  await page.setViewportSize({ width: 320, height: 900 });
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  const controlsContained = () => page.evaluate(() => [...document.querySelectorAll(".studio-panel-switch,.studio-reorder")].every(group => {
+    const bounds = group.getBoundingClientRect();
+    return [...group.querySelectorAll("button")].every(button => { const rect = button.getBoundingClientRect(); return rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1 && rect.top >= bounds.top - 1 && rect.bottom <= bounds.bottom + 1; });
+  }));
+  assert.equal(await controlsContained(), true, "200% controls must remain inside their visible groups");
+  const brokenWrap = await page.addStyleTag({ content: ".studio-panel-switch,.studio-reorder{flex-wrap:nowrap!important}" });
+  assert.equal(await controlsContained(), false, "negative control must detect clipped nowrap controls");
+  await brokenWrap.evaluate(element => element.remove());
+  assert.equal(await controlsContained(), true);
+  pass("200% control containment and nowrap negative control");
+  await scan("320-200-percent-text");
+  assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).fontSize), "32px");
+  // Playwright screenshots reset CDP Page.setFontSizes (measured 32→16 during capture).
+  // Preserve 200% rendered text using an explicit root size for the screenshot only.
+  await context.newCDPSession(page).then(cdp => cdp.send("Page.setFontSizes", { fontSizes: { standard: 16, fixed: 13 } }));
+  await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
+  await capture("mobile-200.png");
+  assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).fontSize), "32px");
+  await page.screenshot({ path: resolve(out, "mobile-200-top.png"), animations: "disabled" });
+  await inspector.scrollIntoViewIfNeeded();
+  await page.evaluate(() => { const panel = document.querySelector(".studio-inspector"); const header = document.querySelector("body header"); window.scrollTo(0, panel.getBoundingClientRect().top + scrollY - (header?.getBoundingClientRect().height ?? 0) - 16); });
+  await page.screenshot({ path: resolve(out, "mobile-200-inspector.png"), animations: "disabled" });
+  await page.emulateMedia({ reducedMotion: "reduce", forcedColors: "active" });
+  await capture("forced-colors-reduced-motion.png");
+  pass("responsive, RTL, light/dark, forced-colors and reduced-motion visual matrix");
+  const fixture = process.env.CREATE_EXPORT_FIXTURE;
+  if (fixture) {
+    const { createServer } = await import("node:http");
+    const server = createServer(async (req, res) => { try {
+      const name = new URL(req.url, "http://localhost").pathname === "/" ? "index.html" : new URL(req.url, "http://localhost").pathname.slice(1);
+      if (!["index.html", "bundle.js", "bundle.css", "utilities.css", "inter-latin.woff2"].includes(name)) { res.writeHead(404).end(); return; }
+      const content = await readFile(resolve(fixture, name));
+      res.setHeader("content-type", name.endsWith(".woff2") ? "font/woff2" : name.endsWith(".js") ? "text/javascript" : name.endsWith(".css") ? "text/css" : "text/html"); res.end(content);
+    } catch { res.writeHead(500).end(); } });
+    await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    const consumer = await context.newPage();
+    await consumer.goto(`http://127.0.0.1:${address.port}`);
+    await consumer.getByRole("button", { name: "Continue", exact: true }).waitFor();
+    await consumer.getByRole("tab", { name: "Details", exact: true }).click();
+    assert.match(await consumer.getByRole("tabpanel").innerText(), /Make room/);
+    await consumer.screenshot({ path: resolve(out, "export-consumer.png"), fullPage: true });
+    await consumer.close(); await new Promise(resolve => server.close(resolve));
+    pass("clean consumer bundle renders and Tabs operate in a real browser");
+  }
+  assert.deepEqual(errors, []);
+  const report = { results, runtimeErrors: errors, accessibility: a11y, limitations: ["Chromium only; no manual assistive-technology certification", "Local adapter only; no production auth/billing or hosted verification", "Intrinsic-width preview; viewport media-query emulation is deferred", "200% overflow/axe measured using CDP font preferences; screenshots preserve 32px root text with CSS because Playwright resets CDP fonts during capture"] };
+  await writeFile(resolve(out, "browser-results.json"), JSON.stringify(report, null, 2));
+  const violations = a11y.flatMap(x => x.violations);
+  assert.equal(violations.length, 0, JSON.stringify(a11y, null, 2));
+  console.log(JSON.stringify({ passed: results.length, axeViolations: violations.length, out }));
+} catch (error) {
+  await writeFile(resolve(out, "browser-failure.json"), JSON.stringify({ message: String(error), results, errors, a11y }, null, 2));
+  await page.screenshot({ path: resolve(out, "failure.png"), fullPage: true }).catch(() => {});
+  throw error;
+} finally { await browser.close(); }
