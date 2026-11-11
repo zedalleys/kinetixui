@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { analytics } from "@/lib/analytics";
 import { generateExport, TARGETS, TARGET_LIST, type ExportTarget } from "@/lib/create/export-targets";
 import type { CreateTheme } from "@/lib/create/theme-adapter";
+import { usePreferredPackageManager } from "@/lib/pm-preference";
 
 /**
  * Export.
@@ -78,9 +79,12 @@ export function CreateExport({
   // Only the selected target is generated. The theme is already memoized upstream on the config key,
   // so this recomputes when the design changes or the target changes — not on every render, and
   // never for the three targets nobody is looking at.
+  // The command is the execute route, which every package manager spells differently, so it follows the
+  // choice the reader already made in the documentation rather than asking again in a side panel.
+  const pm = usePreferredPackageManager();
   const result = React.useMemo(
-    () => generateExport(theme, target, symbol, presetCode),
-    [theme, target, symbol, presetCode],
+    () => generateExport(theme, target, symbol, presetCode, pm),
+    [theme, target, symbol, presetCode, pm],
   );
 
   const select = (next: ExportTarget) => {
@@ -218,9 +222,9 @@ export function CreateExport({
             </pre>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Needs{" "}
-            <code className="rounded bg-muted px-1 font-mono text-foreground">@kinetixui/cli</code> — it runs
-            the exporter this panel just ran.
+            Runs the exporter this panel just ran. The command fetches{" "}
+            <code className="rounded bg-muted px-1 font-mono text-foreground">@kinetixui/cli</code> for the one
+            run — nothing to install first — and is spelled for the package manager you picked in the docs.
           </p>
         </div>
       ) : null}

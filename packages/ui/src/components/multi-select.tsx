@@ -55,7 +55,19 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
       onValueChange?.(next);
     };
     const toggle = (v: string) => set(current.includes(v) ? current.filter((x) => x !== v) : [...current, v]);
-    const remove = (v: string) => set(current.filter((x) => x !== v));
+    const remove = (v: string) => {
+      const next = current.filter((x) => x !== v);
+      // Removing the LAST chip by its own button strands the keyboard: that button goes with the
+      // chip and there is no chip left to hand focus to, so the field takes it back. Guarded on the
+      // keyboard actually being in the chip row, because Backspace in the empty search field also
+      // removes a chip and that focus belongs to the search field. Chip-to-chip focus is handled in
+      // Tag itself; see focusAfterRemoval in ../lib/utils.
+      const fromChipRow = next.length === 0 && anchorRef.current?.contains(document.activeElement) === true;
+      set(next);
+      // ...and only if nobody moved it meanwhile: a consumer's onValueChange that restores focus to a
+      // control of its own has made a deliberate choice, and that choice wins.
+      if (fromChipRow && anchorRef.current?.contains(document.activeElement)) anchorRef.current.focus();
+    };
     const labelFor = (v: string) => options.find((o) => o.value === v)?.label ?? v;
 
     const trimmed = query.trim();
@@ -79,6 +91,11 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
               // Down Arrow as a way to open the popup, and a keyboard user who has just tabbed onto a
               // collapsed combobox reaches for it first. Without it the arrows did nothing at all here —
               // the only way in was Enter or Space.
+              // Only when the field itself has the keyboard. The chips live inside it and their
+              // remove buttons are focus stops of their own; a key pressed on one bubbles here, and
+              // this handler used to preventDefault it — so Enter on "Remove Ash" opened the list
+              // and never removed the chip. A chip was unremovable by keyboard.
+              if (e.target !== e.currentTarget) return;
               if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown" || e.key === "ArrowUp") {
                 e.preventDefault();
                 setOpen(true);
