@@ -163,6 +163,10 @@ const NEGATIVES = {
   // carrying the defect; repaired to "own" it would authorize, and the probe would prove nothing.
   "preflight-accepts-an-undeclared-cohort": { file: "scripts/check-native-publish-preflight.mjs", from: 'if (line.cohort !== "own" && line.cohort !== "core") {\n    refuse(', to: "if (false) {\n    refuse(", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   "undeclared-cohort-fixture-is-repaired": { file: "scripts/publish/fixtures/native-release-lines/cohort-undeclared.json", from: '"cohort": null', to: '"cohort": "own"', breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "preflight-accepts-a-malformed-history-entry": { file: "scripts/check-native-publish-preflight.mjs", from: 'line.published.forEach((entry, index) => {\n    if (typeof entry !== "string" || !SEMVER.test(entry)) {', to: "line.published.forEach((entry, index) => {\n    if (false) {", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "history-entry-checked-by-regex-alone": { file: "scripts/check-native-publish-preflight.mjs", from: 'line.published.forEach((entry, index) => {\n    if (typeof entry !== "string" || !SEMVER.test(entry)) {', to: "line.published.forEach((entry, index) => {\n    if (!SEMVER.test(entry)) {", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "preflight-accepts-a-duplicate-history-entry": { file: "scripts/check-native-publish-preflight.mjs", from: "}\n    if (seenHistory.has(entry)) {", to: "}\n    if (false) {", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "history-null-entry-fixture-is-repaired": { file: "scripts/publish/fixtures/native-release-lines/history-null-entry.json", from: '"published": [\n        null\n      ]', to: '"published": []', breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   "accepting-fixture-authorizes-nothing": { file: "scripts/publish/fixtures/native-release-lines/authorized.json", from: '"authorizedNext": "0.1.0"', to: '"authorizedNext": null', breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   "preflight-repeated-selector-guard-reports-without-exiting": { file: "scripts/check-native-publish-preflight.mjs", from: "  );\n  process.exit(1);\n}\n\n/*\n * EXACTLY ONE MODE PER RUN", to: "  );\n}\n\n/*\n * EXACTLY ONE MODE PER RUN", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   // The same two bypasses by position in a publish workflow, one per selector.
@@ -379,6 +383,28 @@ if (authorizeArg !== undefined) {
   if (!Array.isArray(line.published)) {
     refuse(`${linesFile} → ${lineKey}.published is ${JSON.stringify(line.published)}, not an array. That field is the publication history this gate checks a version against, and a non-array one is not read as empty — it is read as unknown, which authorizes nothing. Declare it as an array, \`[]\` when the line has published nothing.`);
   }
+  /*
+   * The array's SHAPE was asserted above; its ENTRIES are the history. `includes(authorizeArg)` only
+   * ever answers "is this exact string present", so an entry that is not a version string can never
+   * match — and is silently skipped, which reads as "that version is not recorded". Measured on the
+   * authorized fixture: `[null]`, `[1]`, `["bad"]`, `[""]`, `[" 0.1.0"]`, `["v0.0.9"]`, `[["0.0.9"]]`
+   * and `[{}]` all authorized 0.1.0 and exited 0. A history with one unreadable entry is a history
+   * this gate cannot read, so it is read as unknown and authorizes nothing — the same rule the type
+   * check above applies to the whole field. Each entry must pass the same SEMVER test a dispatched
+   * version passes, with no coercion (a number is not "1.0.0"; padding is not trimmed). A duplicate
+   * is refused too: a version cannot have been published twice, so one means the file was hand-merged
+   * or corrupted, and it is not worth guessing which copy was right.
+   */
+  const seenHistory = new Set();
+  line.published.forEach((entry, index) => {
+    if (typeof entry !== "string" || !SEMVER.test(entry)) {
+      refuse(`${linesFile} → ${lineKey}.published[${index}] is ${JSON.stringify(entry)}, not a version. Every entry in the publication history must be a MAJOR.MINOR.PATCH string with an optional -prerelease, exactly as it was published (no leading "v", no +build metadata, no surrounding whitespace). An entry this gate cannot read makes the whole history unknown, and an unknown history authorizes nothing.`);
+    }
+    if (seenHistory.has(entry)) {
+      refuse(`${linesFile} → ${lineKey}.published lists ${entry} more than once (second at index ${index}). A version can be published once, so a repeated entry means the history was edited by hand or merged badly, and which copy is true is not something this gate guesses. Remove the duplicate.`);
+    }
+    seenHistory.add(entry);
+  });
   if (line.published.includes(authorizeArg)) {
     refuse(`${linesFile} records ${authorizeArg} as already published on ${line.coordinate ?? lineKey}. A ${line.channel ?? "registry"} version cannot be republished or corrected; publish a superseding version instead.`);
   }
@@ -983,6 +1009,23 @@ const acceptingLine = Object.keys(acceptingFixture?.lines ?? {}).find(
 const acceptingVersion = acceptingLine ? acceptingFixture.lines[acceptingLine].authorizedNext : undefined;
 const otherLine = Object.keys(acceptingFixture?.lines ?? {}).find((key) => key !== acceptingLine) ?? "ui-swiftui";
 
+/*
+ * One fixture per way a history ENTRY can be unreadable inside a well-formed array. `says` is the
+ * guard's own wording, so a refusal for some other reason (a version mismatch, a missing file) does
+ * not pass for evidence. `unreadable` is what the in-process shape check below asserts the file still
+ * contains: a `--negative=` repair lives in this process's memory and the probe reads the file off
+ * disk, so a fixture quietly repaired to a clean history would leave the probe refusing for the
+ * ordinary version mismatch and proving nothing.
+ */
+const HISTORY_FIXTURE_DIR = "scripts/publish/fixtures/native-release-lines/";
+const HISTORY_ENTRY_FIXTURES = [
+  { file: `${HISTORY_FIXTURE_DIR}history-null-entry.json`, says: "published[0] is null", why: "a null history entry, skipped by includes() so the history read as empty", unreadable: (h) => h.some((e) => e === null) },
+  { file: `${HISTORY_FIXTURE_DIR}history-number-entry.json`, says: "published[0] is 1", why: "a numeric history entry, not coerced to a version and never equal to one", unreadable: (h) => h.some((e) => typeof e === "number") },
+  { file: `${HISTORY_FIXTURE_DIR}history-unparseable-entry.json`, says: 'published[0] is "bad"', why: "a history entry that is not a version string", unreadable: (h) => h.some((e) => typeof e === "string" && !SEMVER.test(e)) },
+  { file: `${HISTORY_FIXTURE_DIR}history-nested-entry.json`, says: "published[0] is [", why: "a history entry that is itself an array, which a regex test alone would coerce to a valid-looking string", unreadable: (h) => h.some((e) => Array.isArray(e)) },
+  { file: `${HISTORY_FIXTURE_DIR}history-duplicate-entry.json`, says: "lists 0.0.9 more than once", why: "a version listed twice in the history", unreadable: (h) => new Set(h).size !== h.length },
+];
+
 const ARGUMENT_REFUSALS = [
   { args: ["--version=0.1.0", "--list-negatives"], says: "were passed together", why: "two modes in one invocation, which would fall through to --list-negatives and exit 0" },
   { args: ["--authorize-version=9.9.9", "--line=ui-compose", "--version=9.9.9"], says: "were passed together", why: "the measured bypass: an authorization that would fall through to the shape check and exit 0 while nothing is authorized" },
@@ -996,6 +1039,8 @@ const ARGUMENT_REFUSALS = [
    */
   { args: [`--authorize-version=0.1.0`, "--line=ui-compose", `--lines-file=${MALFORMED_HISTORY}`], says: "not an array", why: `a publication history that is a string rather than an array, which skipped the already-published refusal entirely — measured: this exact fixture authorized 0.1.0 and exited 0, while the same line with \`published: ["0.1.0"]\` refused it` },
   { args: [`--authorize-version=0.1.0`, "--line=ui-compose", `--lines-file=${COHORT_UNDECLARED}`], says: ".cohort is", why: "a version authorized for a line whose cohort is not declared, which has no agreed meaning — measured: with the guard removed this exits 0 and authorizes it" },
+  /* Entries of the history, not its shape: each of these is an ARRAY whose element is unreadable, and each authorized 0.1.0 before per-entry validation. */
+  ...HISTORY_ENTRY_FIXTURES.map(({ file, says, why }) => ({ args: [`--authorize-version=0.1.0`, "--line=ui-compose", `--lines-file=${file}`], says, why: `${why} — measured: this exact fixture authorized 0.1.0 and exited 0` })),
 ];
 
 const argumentFailures = [];
@@ -1017,6 +1062,12 @@ if (undeclaredLine?.cohort === "own" || undeclaredLine?.cohort === "core" || und
   argumentFailures.push(
     `${COHORT_UNDECLARED} must declare ui-compose with a cohort that is neither "own" nor "core" and \`authorizedNext: "0.1.0"\`; it declares cohort ${JSON.stringify(undeclaredLine?.cohort)} and authorizedNext ${JSON.stringify(undeclaredLine?.authorizedNext)}. A declared cohort would authorize, and the probe would stop proving anything about the cohort refusal.`,
   );
+}
+for (const { file, unreadable } of HISTORY_ENTRY_FIXTURES) {
+  const history = JSON.parse(source(file))?.lines?.["ui-compose"];
+  if (!Array.isArray(history?.published) || !unreadable(history.published) || history.authorizedNext !== "0.1.0") {
+    argumentFailures.push(`${file} must declare ui-compose with an ARRAY \`published\` holding the unreadable entry its name describes, and \`authorizedNext: "0.1.0"\`; it declares published ${JSON.stringify(history?.published)} and authorizedNext ${JSON.stringify(history?.authorizedNext)}. A clean history would still be refused here for the ordinary version mismatch, and the probe would stop being evidence about the entry.`);
+  }
 }
 if (!acceptingLine) {
   argumentFailures.push(`${ACCEPTING} authorizes no version for any line, so the two probes that fall through into the authorization would fail there for that reason rather than passing, and they stop being evidence that the guard refused. Keep one accepting line in that fixture — ci.yml's authorization matrix needs it for the same reason`);

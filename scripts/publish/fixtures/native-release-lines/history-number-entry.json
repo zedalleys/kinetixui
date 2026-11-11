@@ -1,0 +1,14 @@
+{
+  "$comment": "Fixture \u2014 the publication history contains a number where a version string belongs; it is not coerced to \\\"1.0.0\\\" and never matches a dispatched version. Must refuse: every entry is part of the history the already-published check reads, and one this gate cannot read makes the whole history unknown, which authorizes nothing. Measured before per-entry validation: this exact file authorized 0.1.0 and exited 0.",
+  "lines": {
+    "ui-compose": {
+      "coordinate": "com.kinetixui:ui-compose",
+      "channel": "Maven Central",
+      "cohort": "own",
+      "published": [
+        1
+      ],
+      "authorizedNext": "0.1.0"
+    }
+  }
+}

@@ -214,6 +214,11 @@ jobs:
           expect_refusal already-published.json   0.1.0 "an immutable coordinate cannot be republished"
           expect_refusal unreadable.json          0.1.0 "an unreadable declaration authorizes nothing"
           expect_refusal malformed-history.json   0.1.0 "a publication history of the wrong type is unknown history, not empty history"
+          expect_refusal history-null-entry.json      0.1.0 "a null history entry is unreadable history, not an absent one"
+          expect_refusal history-number-entry.json    0.1.0 "a number is not coerced into a version"
+          expect_refusal history-unparseable-entry.json 0.1.0 "an entry that is not a version makes the history unknown"
+          expect_refusal history-nested-entry.json    0.1.0 "an array inside the history is not read as the version it contains"
+          expect_refusal history-duplicate-entry.json 0.1.0 "a version published twice means the history is corrupt"
           # And the real file, which is the state that matters: no native publish is authorized today.
           if node scripts/check-native-publish-preflight.mjs --authorize-version=0.1.0 --line=ui-compose > /dev/null 2>&1; then
             echo "::error::release/native-release-lines.json authorized a publish. If that is intended it is a release decision and this line should be removed in the same pull request that makes it."
