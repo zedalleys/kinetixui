@@ -38,7 +38,7 @@ function useCarousel() {
 const Carousel = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & CarouselProps
->(({ orientation = "horizontal", opts, setApi, plugins, className, children, ...props }, ref) => {
+>(({ orientation = "horizontal", opts, setApi, plugins, className, children, onKeyDown, ...props }, ref) => {
   const [carouselRef, api] = useEmblaCarousel(
     { ...opts, axis: orientation === "horizontal" ? "x" : "y" },
     plugins,
@@ -75,7 +75,14 @@ const Carousel = React.forwardRef<
     >
       <div
         ref={ref}
-        onKeyDownCapture={(e) => {
+        onKeyDown={(e) => {
+          // Bubble phase, and only for a key nothing inside has claimed: a text field inside a slide keeps
+          // its caret keys, a nested control that handled the arrow keeps it, and Alt/Ctrl/Meta+Arrow
+          // (browser Back, word-jump) is never ours.
+          onKeyDown?.(e);
+          if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+          const t = e.target as HTMLElement;
+          if (t.isContentEditable || t.closest("input:not([type=button]):not([type=checkbox]):not([type=submit]):not([type=reset]), textarea, select")) return;
           if (e.key === "ArrowLeft") {
             e.preventDefault();
             scrollPrev();
