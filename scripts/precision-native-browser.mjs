@@ -51,6 +51,18 @@ for (const width of [1440,390,320]) for (const theme of ['light','dark']) for (c
   for (const dir of ['ltr','rtl']) {
     await page.evaluate(d=>document.documentElement.dir=d,dir);
     await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+    // Geometry, not merely overflow: the bubble and thumb must express the same value in either direction.
+    const range = page.locator('#motion [role="slider"]');
+    for (const [startKey, stepKey, expected] of [['Home', 'PageUp', '20'], ['End', 'PageDown', '80']]) {
+      await range.press(startKey);
+      await range.press(stepKey);
+      await range.press(stepKey);
+      assert.equal(await range.getAttribute('aria-valuenow'), expected);
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      const thumb = await range.boundingBox();
+      const bubble = await page.locator('.kx-value-bubble').boundingBox();
+      assert.ok(Math.abs((thumb.x + thumb.width / 2) - (bubble.x + bubble.width / 2)) <= thumb.width / 2 + 2, `bubble/thumb mismatch ${width} ${theme} ${dir} scale ${scale}`);
+    }
     const fits = await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1);
     if (!fits) console.log(JSON.stringify(await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,offenders:[...document.querySelectorAll('body *')].filter(el=>{const r=el.getBoundingClientRect();return r.right>innerWidth+2&&r.width>0&&!(()=>{for(let a=el.parentElement;a&&a!==document.body;a=a.parentElement)if(['hidden','auto','scroll','clip'].includes(getComputedStyle(a).overflowX))return true;return false})()}).map(el=>({tag:el.tagName,cls:el.getAttribute('class')?.slice(0,100),text:el.textContent.slice(0,100),x:el.getBoundingClientRect().x,w:el.getBoundingClientRect().width})).slice(0,20)})),null,2));
     assert.ok(fits,`overflow ${width} ${theme} ${dir} scale ${scale}`);

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { FilePlus, Link2, Plus, Search, X } from "lucide-react";
+import { useDocumentDirection } from "@/lib/use-document-direction";
 import { Button, Fab, Input, Popover, PopoverContent, PopoverTrigger, Slider } from "@kinetixui/ui";
 
 /** Search keeps its label and focus while the workspace expands around it. Escape closes and restores focus. */
@@ -46,9 +47,10 @@ export function MotionSpeedDial({ onSelect }: { onSelect: (action: string) => vo
 
 /** The bubble uses the slider's value and follows logical direction. Semantics stay on Radix's thumb. */
 export function MotionRange({ value, onValueChange, labelId }: { value: number; onValueChange: (value: number) => void; labelId: string }) {
+  const dir = useDocumentDirection();
   return <div className="relative pb-1 pt-10">
     <div aria-hidden="true" className="kx-value-bubble absolute top-0 rounded-md bg-foreground px-2 py-1 text-xs tabular-nums text-background" style={{ insetInlineStart: `clamp(1rem, ${value}%, calc(100% - 1rem))` }}>{value}%</div>
-    <Slider aria-labelledby={labelId} value={[value]} onValueChange={([v]) => onValueChange(v!)} max={100} step={1} />
+    <Slider dir={dir} aria-labelledby={labelId} value={[value]} onValueChange={([v]) => onValueChange(v!)} max={100} step={1} />
   </div>;
 }
 
