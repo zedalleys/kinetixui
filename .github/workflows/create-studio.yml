@@ -58,6 +58,7 @@ jobs:
               ready=1
               break
             fi
+            echo "Waiting for local server, attempt $attempt"
             sleep 1
           done
           if [ "$ready" -ne 1 ]; then cat /tmp/create-server.log; exit 1; fi
