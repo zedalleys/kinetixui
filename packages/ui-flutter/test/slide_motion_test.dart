@@ -120,6 +120,55 @@ void main() {
     });
   }
 
+  testWidgets(
+      'closing disconnects text input and reversal restores the same field',
+      (t) async {
+    final first = TextEditingController(text: 'draft');
+    final second = TextEditingController(text: 'other');
+    var visible = false;
+    late StateSetter change;
+    await t.pumpWidget(MaterialApp(
+        home: KinetixTheme(child: StatefulBuilder(builder: (context, setState) {
+      change = setState;
+      return Stack(children: [
+        const Positioned.fill(child: Text('background')),
+        KinetixSheet(
+            visible: visible,
+            onDismiss: () => setState(() => visible = false),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              KinetixInput(controller: first),
+              KinetixInput(controller: second),
+            ])),
+      ]);
+    }))));
+    change(() => visible = true);
+    await t.pumpAndSettle();
+    await t.showKeyboard(find.byType(TextField).first);
+    expect(t.testTextInput.hasAnyClients, isTrue);
+    final focused =
+        t.widget<EditableText>(find.byType(EditableText).first).focusNode;
+    change(() => visible = false);
+    await t.pump();
+    expect(find.byType(KinetixInput), findsNWidgets(2),
+        reason: 'exit is still retained');
+    expect(t.testTextInput.hasAnyClients, isFalse,
+        reason:
+            'a retained closing field must not receive platform text updates');
+    await t.pump(const Duration(milliseconds: 40));
+    change(() => visible = true);
+    await t.pump();
+    await t.pump();
+    expect(focused.hasFocus, isTrue,
+        reason: 'reversal restores the same control, not its neighbor');
+    expect(first.text, 'draft');
+    await t.pumpAndSettle();
+    change(() => visible = false);
+    await t.pumpAndSettle();
+    await t.pumpWidget(const SizedBox());
+    first.dispose();
+    second.dispose();
+  });
+
   test('spatial timing uses existing role tokens in both directions', () {
     expect(KinetixSlideMotion.duration(entering: true, reduceMotion: false),
         const Duration(milliseconds: 500));

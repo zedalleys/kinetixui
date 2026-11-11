@@ -29,6 +29,7 @@ class _KinetixSheetState extends State<KinetixSheet>
     ..addStatusListener(_statusChanged);
   final FocusScopeNode _scope = FocusScopeNode(debugLabel: 'KinetixSheet');
   FocusNode? _opener;
+  FocusNode? _retainedFocus;
   bool? _reduced;
   int _focusEpoch = 0;
 
@@ -56,12 +57,26 @@ class _KinetixSheetState extends State<KinetixSheet>
     _controller.reverseDuration = KinetixSlideMotion.duration(
         entering: false, reduceMotion: reduceMotion);
     final epoch = ++_focusEpoch;
+    if (!widget.visible && _scope.hasFocus) {
+      final focused = FocusManager.instance.primaryFocus;
+      if (focused != _scope) _retainedFocus = focused;
+    }
+    // A retained exit remains modal, but its text fields must disconnect from
+    // the platform input client as soon as the controlled target is closed.
+    _scope.descendantsAreFocusable = widget.visible;
+    _scope.descendantsAreTraversable = widget.visible;
+    if (!widget.visible && _scope.hasFocus) _scope.requestFocus();
     if (widget.visible) {
       // Capture once per presentation, including a reversal of an unfinished exit.
       _opener ??= FocusManager.instance.primaryFocus;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || !widget.visible || epoch != _focusEpoch) return;
-        if (!_scope.hasFocus) {
+        final retained = _retainedFocus;
+        _retainedFocus = null;
+        if (retained?.context != null && retained!.canRequestFocus) {
+          retained.requestFocus();
+        } else if (!_scope.hasFocus ||
+            FocusManager.instance.primaryFocus == _scope) {
           _scope.requestFocus();
           _scope.nextFocus();
         }
@@ -84,6 +99,7 @@ class _KinetixSheetState extends State<KinetixSheet>
   void _restoreFocus() {
     final opener = _opener;
     _opener = null;
+    _retainedFocus = null;
     if (opener?.context != null && opener!.canRequestFocus) {
       opener.requestFocus();
     }
@@ -111,6 +127,8 @@ class _KinetixSheetState extends State<KinetixSheet>
         return BlockSemantics(
           child: FocusScope(
             node: _scope,
+            descendantsAreFocusable: widget.visible,
+            descendantsAreTraversable: widget.visible,
             onKeyEvent: (_, event) {
               if (!widget.visible) return KeyEventResult.handled;
               if (event is KeyDownEvent &&
