@@ -1,14 +1,17 @@
 package com.kinetixui.ui
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.dimensionResource
@@ -35,12 +38,14 @@ fun KinetixCircularProgress(
     label: String? = null,
 ) {
     val colors = KinetixColorScheme.current
-    val fraction by animateFloatAsState(
-        targetValue = (value / 100f).coerceIn(0f, 1f),
-        label = "KinetixCircularProgressFraction",
-    )
+    val reduceMotion = KinetixDisclosureMotion.rememberReduceMotion()
+    val target = KinetixProgressMotion.fraction(value)
+    val fraction = KinetixProgressMotion.animatedFraction(value, reduceMotion)
 
-    Box(modifier = modifier.size(size), contentAlignment = Alignment.Center) {
+    Box(modifier = modifier.size(size).semantics(mergeDescendants = true) {
+        progressBarRangeInfo = ProgressBarRangeInfo(target, 0f..1f)
+        if (label != null) contentDescription = label
+    }, contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(size)) {
             val stroke = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
             drawArc(
@@ -60,7 +65,8 @@ fun KinetixCircularProgress(
         }
         if (showValue || label != null) {
             Text(
-                text = label ?: "${(fraction * 100f).roundToInt()}%",
+                modifier = Modifier.clearAndSetSemantics { },
+                text = label ?: "${(target * 100f).roundToInt()}%",
                 color = colors.foreground,
                 fontSize = dimensionResource(R.dimen.font_size_label_md).value.sp,
                 lineHeight = dimensionResource(R.dimen.line_height_label_md).value.sp,

@@ -65,6 +65,13 @@ export const PLATFORMS = {
         members: ["Spinner.swift", "Skeleton.swift", "Marquee.swift", "MessageBubble.swift"],
         test: "packages/ui-swiftui/Tests/KinetixUITests/LoopMotionTests.swift",
       },
+      progress: {
+        contractRole: "progress-feedback",
+        strict: true,
+        helper: "KinetixProgressMotion.swift",
+        members: ["Progress.swift", "CircularProgress.swift"],
+        test: "packages/ui-swiftui/Tests/KinetixUITests/ProgressMotionTests.swift",
+      },
     },
   },
   Compose: {
@@ -107,6 +114,13 @@ export const PLATFORMS = {
         helper: "KinetixLoopMotion.kt",
         members: ["Spinner.kt", "Skeleton.kt", "Marquee.kt", "MessageBubble.kt"],
         test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/LoopMotionTest.kt",
+      },
+      progress: {
+        contractRole: "progress-feedback",
+        strict: true,
+        helper: "KinetixProgressMotion.kt",
+        members: ["Progress.kt", "CircularProgress.kt"],
+        test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/ProgressMotionTest.kt",
       },
     },
   },
@@ -163,15 +177,11 @@ export const PLATFORMS = {
  */
 export const KNOWN_GAPS = {
   SwiftUI: {
-    "CircularProgress.swift": "determinate ring sweep — progress feedback family, not this slice",
     "Dialog.swift": "opacity fade only: positional movement is what Reduce Motion removes, and a fade is the accepted replacement, so there is nothing concrete to fix",
     "Input.swift": "focus ring transition — feedback family",
-    "Progress.swift": "determinate bar — progress feedback family",
     "Textarea.swift": "focus ring transition — feedback family",
   },
   Compose: {
-    "CircularProgress.kt": "determinate ring sweep — progress feedback family",
-    "Progress.kt": "determinate bar — progress feedback family",
     "Carousel.kt": "animated page scrolling via PagerState — carousel/pager family, its own slice",
   },
   Flutter: {
@@ -188,6 +198,7 @@ export const KNOWN_GAPS = {
  * difference between "the word appears somewhere" and "a test says it covers this".
  */
 export const DIRECTION_TERMS = {
+  progress: { forward: /increas/i, reverse: /decreas/i },
   // A disclosure opens and closes.
   disclosure: {
     forward: /\b(expand|open|enter|reveal)/i,

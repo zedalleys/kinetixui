@@ -528,6 +528,44 @@
           "reason": "The indeterminate circular progress is the spinner's second form and follows the same judgement and the same 3s period; it is recorded separately because it is a different selector in a different reduced-motion block, and a single entry would stop naming one of them."
         }
       ]
+    },
+    "progress-feedback": {
+      "status": "observed",
+      "duration": [
+        "base"
+      ],
+      "easing": [
+        "linear"
+      ],
+      "properties": [
+        "bounded determinate fill fraction, width or ring trim/sweep"
+      ],
+      "reducedForm": "shorten",
+      "evidence": [
+        "packages/ui-swiftui/Tests/KinetixUITests/ProgressMotionTests.swift",
+        "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/ProgressMotionTest.kt"
+      ],
+      "note": "Owner approved scope from #563 on 2026-11-11. Determinate amounts only, not indeterminate loop motion or arbitrary numeric utilities. Initial presentation is the exact target; changes retarget without queuing. Reduced motion reaches the target immediately, and restoring motion does not replay stale interpolation. Accessible amount is the target, not intermediate frames. Inputs clamp to 0..100, NaN resolves to zero, infinities clamp to their respective endpoint. SwiftUI has source/resolver/compile evidence; Compose has headless state/semantics/clock evidence. No device or proven cross-platform rendering claim.",
+      "consumers": [
+        {
+          "platform": "swiftui",
+          "file": "packages/ui-swiftui/Sources/KinetixUI/KinetixProgressMotion.swift",
+          "expects": [
+            "KinetixDuration.base",
+            "KinetixEasing.linear",
+            "guard !reduceMotion else { return nil }"
+          ]
+        },
+        {
+          "platform": "compose",
+          "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixProgressMotion.kt",
+          "expects": [
+            "KinetixDuration.base",
+            "KinetixEasing.linear"
+          ]
+        }
+      ],
+      "deviations": []
     }
   },
   "untokenised": {

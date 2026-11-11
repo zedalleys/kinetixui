@@ -11,6 +11,7 @@ import SwiftUI
 
 public struct KinetixCircularProgress: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let value: Double
     private let size: CGFloat
@@ -33,7 +34,7 @@ public struct KinetixCircularProgress: View {
     }
 
     public var body: some View {
-        let fraction = CGFloat(max(0, min(1, value / 100)))
+        let fraction = CGFloat(KinetixProgressMotion.fraction(value))
         ZStack {
             Circle()
                 .stroke(colors.muted, lineWidth: strokeWidth)
@@ -42,7 +43,9 @@ public struct KinetixCircularProgress: View {
                 .stroke(style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
                 .fill(colors.action)
                 .rotationEffect(.degrees(-90))
-                .animation(.easeOut(duration: 0.3), value: fraction)
+                .animation(KinetixProgressMotion.animation(reduceMotion: reduceMotion), value: fraction)
+                .transition(.identity)
+                .id(reduceMotion)
             if showValue || label != nil {
                 Text(label ?? "\(Int((fraction * 100).rounded()))%")
                     .font(.kinetixLabelMd)
@@ -50,6 +53,9 @@ public struct KinetixCircularProgress: View {
             }
         }
         .frame(width: size, height: size)
+        .animation(nil, value: reduceMotion)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label ?? "Progress")
         .accessibilityValue("\(Int((fraction * 100).rounded())) percent")
     }
 }
