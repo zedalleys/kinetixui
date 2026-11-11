@@ -32,6 +32,7 @@ struct EmptyStateBlock: View {
 
 final class EmptyStateBlockTests: XCTestCase {
     func testEmptyStateBlockCompiles() {
-        XCTAssertNotNil(EmptyStateBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: EmptyStateBlock = EmptyStateBlock()
     }
 }

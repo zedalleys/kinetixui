@@ -42,6 +42,7 @@ struct CommentBoxBlock: View {
 
 final class CommentBoxBlockTests: XCTestCase {
     func testCommentBoxBlockCompiles() {
-        XCTAssertNotNil(CommentBoxBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: CommentBoxBlock = CommentBoxBlock()
     }
 }
