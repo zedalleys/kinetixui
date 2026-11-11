@@ -119,7 +119,7 @@ export const PLATFORMS = {
       disclosure: {
         contractRole: "disclosure",
         helper: "kinetix_disclosure_motion.dart",
-        members: ["accordion.dart", "collapsible.dart"],
+        members: ["accordion.dart", "collapsible.dart", "json_viewer.dart"],
         test: "packages/ui-flutter/test/disclosure_motion_test.dart",
       },
       selection: {
@@ -174,9 +174,7 @@ export const KNOWN_GAPS = {
     "Progress.kt": "determinate bar — progress feedback family",
     "Carousel.kt": "animated page scrolling via PagerState — carousel/pager family, its own slice",
   },
-  Flutter: {
-    "json_viewer.dart": "disclosure-shaped, but a data-viewer concern; its own slice",
-  },
+  Flutter: {},
 };
 
 /**

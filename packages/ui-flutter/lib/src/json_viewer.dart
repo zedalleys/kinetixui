@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'theme.dart';
+import 'kinetix_disclosure_motion.dart';
 
 /// Mirrors `packages/ui/src/components/json-viewer.tsx`: a collapsible,
 /// syntax-colored tree over arbitrary JSON-shaped data. Accepts the same
@@ -113,8 +114,12 @@ class _JsonNodeState extends State<_JsonNode> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 AnimatedRotation(
+                  // A duration-only update does not retime an in-flight implicit animation.
+                  // Reset only the decorative chevron when the system preference changes.
+                  key: ValueKey(KinetixDisclosureMotion.reduceMotionOf(context)),
                   turns: _expanded ? 0.25 : 0,
-                  duration: const Duration(milliseconds: 100),
+                  duration: KinetixDisclosureMotion.durationOf(context),
+                  curve: _expanded ? KinetixDisclosureMotion.enterCurve : KinetixDisclosureMotion.exitCurve,
                   child: Icon(Icons.chevron_right, size: 14, color: c.mutedForeground),
                 ),
                 if (widget.name != null) Text('"${widget.name}": ', style: _mono(c.mutedForeground)),

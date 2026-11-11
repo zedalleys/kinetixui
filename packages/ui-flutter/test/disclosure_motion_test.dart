@@ -287,4 +287,118 @@ void main() {
       expect(_collapsibleHeight(tester), 120);
     });
   });
+
+  group('KinetixJsonViewer disclosure preference', () {
+    late StateSetter changePreference;
+    bool reduced = false;
+    Future<void> pumpViewer(WidgetTester tester,
+        {bool reduce = false,
+        TextDirection direction = TextDirection.ltr}) async {
+      reduced = reduce;
+      await tester.pumpWidget(StatefulBuilder(builder: (context, setState) {
+        changePreference = setState;
+        return MediaQuery(
+          data: MediaQueryData(
+              disableAnimations: reduced,
+              textScaler: const TextScaler.linear(2)),
+          child: Directionality(
+              textDirection: direction,
+              child: KinetixTheme(
+                brightness: Brightness.light,
+                child: const KinetixJsonViewer(
+                    data: {'value': 42}, expandDepth: 0),
+              )),
+        );
+      }));
+    }
+
+    double turns(WidgetTester tester) => tester
+        .widget<RotationTransition>(find.byType(RotationTransition))
+        .turns
+        .value;
+    Future<void> toggle(WidgetTester tester) async {
+      await tester.tap(find.byIcon(Icons.chevron_right));
+      await tester.pump();
+    }
+
+    testWidgets(
+        'normal motion expands through a real chevron midpoint and reveals the value',
+        (tester) async {
+      await pumpViewer(tester);
+      await toggle(tester);
+      await tester.pump(const Duration(milliseconds: 80));
+      expect(turns(tester), greaterThan(0));
+      expect(turns(tester), lessThan(0.25));
+      expect(find.text('42'), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(turns(tester), 0.25);
+    });
+    testWidgets('normal motion collapses through a real chevron midpoint',
+        (tester) async {
+      await pumpViewer(tester);
+      await toggle(tester);
+      await tester.pumpAndSettle();
+      await toggle(tester);
+      await tester.pump(const Duration(milliseconds: 80));
+      expect(turns(tester), greaterThan(0));
+      expect(turns(tester), lessThan(0.25));
+      await tester.pumpAndSettle();
+      expect(turns(tester), 0);
+      expect(find.text('42'), findsNothing);
+    });
+    testWidgets(
+        'reduced motion expands and collapses in one frame with state intact',
+        (tester) async {
+      await pumpViewer(tester, reduce: true);
+      await toggle(tester);
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(turns(tester), 0.25);
+      expect(find.text('42'), findsOneWidget);
+      await toggle(tester);
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(turns(tester), 0);
+      expect(find.text('42'), findsNothing);
+    });
+    testWidgets(
+        'live reduced-motion change interrupts the current chevron animation',
+        (tester) async {
+      await pumpViewer(tester);
+      await toggle(tester);
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(turns(tester), lessThan(0.25));
+      changePreference(() => reduced = true);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(turns(tester), 0.25);
+    });
+    testWidgets(
+        'rapid reversal settles on the latest state and unmount cancels the ticker',
+        (tester) async {
+      await pumpViewer(tester);
+      await toggle(tester);
+      await tester.pump(const Duration(milliseconds: 60));
+      await toggle(tester);
+      await tester.pump(const Duration(milliseconds: 30));
+      await toggle(tester);
+      await tester.pumpAndSettle();
+      expect(turns(tester), 0.25);
+      await toggle(tester);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+    testWidgets(
+        'RTL and 200 percent text retain disclosure state under reduced motion',
+        (tester) async {
+      await pumpViewer(tester, reduce: true, direction: TextDirection.rtl);
+      await toggle(tester);
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(turns(tester), 0.25);
+      expect(find.text('42'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await toggle(tester);
+      await tester.pumpAndSettle();
+      expect(turns(tester), 0);
+    });
+  });
 }
