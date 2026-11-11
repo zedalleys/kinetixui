@@ -17,6 +17,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.yield
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,8 +60,19 @@ fun KinetixSheet(
         if (visible) {
             KinetixSheetMotion.show(sheetState, reduceMotion)
         } else {
-            KinetixSheetMotion.hide(sheetState, reduceMotion)
-            retained = false
+            while (true) {
+                try {
+                    KinetixSheetMotion.hide(sheetState, reduceMotion)
+                    retained = false
+                    break
+                } catch (interrupted: CancellationException) {
+                    // Native Back/drag can supersede the animation without
+                    // changing visible. Retry that closed target, but never
+                    // swallow cancellation of this effect on reversal/disposal.
+                    currentCoroutineContext().ensureActive()
+                    yield()
+                }
+            }
         }
     }
     val colors = KinetixColorScheme.current
@@ -68,6 +82,7 @@ fun KinetixSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
+        sheetGesturesEnabled = visible,
         modifier = modifier,
         containerColor = colors.background,
         scrimColor = colors.scrim,

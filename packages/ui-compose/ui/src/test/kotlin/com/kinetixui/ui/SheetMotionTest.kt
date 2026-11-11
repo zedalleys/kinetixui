@@ -10,11 +10,14 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.shadows.ShadowDialog
 import org.robolectric.annotation.Config
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -86,6 +89,26 @@ class SheetMotionTest {
         rule.runOnIdle { visible.value = false; attached.value = false }
         rule.mainClock.advanceTimeBy(1200)
         rule.onNodeWithTag("panel").assertDoesNotExist()
+    }
+
+    @Test fun nativeBackDuringControlledExitCannotLeaveTheModalShowing() {
+        preference(false)
+        val visible = mutableStateOf(false)
+        rule.setContent { KinetixTheme { KinetixSheet(visible.value, { visible.value = false }) { Text("Panel", Modifier.testTag("panel")) } } }
+        rule.runOnIdle { visible.value = true }
+        rule.onNodeWithTag("panel").assertExists()
+        val dialog = ShadowDialog.getLatestDialog()
+        rule.runOnIdle { assertTrue(dialog.isShowing) }
+        rule.mainClock.autoAdvance = false
+        rule.runOnIdle { visible.value = false }
+        rule.mainClock.advanceTimeByFrame()
+        rule.waitForIdle()
+        rule.mainClock.advanceTimeByFrame()
+        rule.runOnIdle { @Suppress("DEPRECATION") dialog.onBackPressed() }
+        rule.mainClock.advanceTimeBy(1200)
+        rule.waitForIdle()
+        rule.mainClock.advanceTimeByFrame()
+        rule.runOnIdle { assertFalse("a native interruption must not retain a hidden blocking Dialog", dialog.isShowing) }
     }
 
     @Test fun rapidReversalAndLiveReducedMotionDoNotLeaveAStaleDialog() {
