@@ -21,6 +21,10 @@ const UNLISTED_PUBLIC_ROUTES: readonly string[] = [
   // The Building Operations demo is a full-page composition reached from the /iot page's environments section,
   // not a docs page or a top-level product area, so it has no nav entry to inherit from.
   "/demos/building-operations",
+  //
+  // The guides index. The guides themselves reach the sitemap from their own registry (see sitemap.ts), and the
+  // index is linked from each guide's "Related reading" footer rather than from any nav.
+  "/guides",
 ];
 
 /** Every indexable route, absolute-path form (`/docs/tokens`), deduped, in a stable order. */

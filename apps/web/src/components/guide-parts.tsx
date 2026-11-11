@@ -73,6 +73,12 @@ export function GuideFooter({ slug }: { slug: string }) {
                 </Link>
               </li>
             ))}
+            {/* the index, so the cluster has one page that lists it and /guides is not an orphan route */}
+            <li>
+              <Link href="/guides" className={link}>
+                All guides
+              </Link>
+            </li>
           </ul>
         </nav>
       ) : null}
