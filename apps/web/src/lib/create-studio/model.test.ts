@@ -83,6 +83,29 @@ describe("command history and permanent identity retirement", () => {
     expect(() => execute(b, { type: "insert", ref: "component:Input", parentId: b.selection[0] })).toThrow("container");
     expect(() => execute(b, { type: "props", ids: b.selection, patch: { variant: "invented" } })).toThrow("Invalid option");
   });
+  it("carries restored identity across older property history and redo", () => {
+    let h = execute(newHistory(create()), { type: "insert", ref: "component:Button", parentId: "node_2" });
+    const original = h.selection[0];
+    h = execute(h, { type: "props", ids: [original], patch: { text: "Changed" } });
+    h = execute(h, { type: "delete", ids: [original] });
+    h = undo(h);
+    const restored = h.selection[0];
+    const frontier = h.doc.nextNodeId;
+    h = undo(h);
+    expect(findNode(h.doc, restored)?.props?.text).toBe("Continue");
+    expect(h.doc.nextNodeId).toBe(frontier);
+    h = redo(h);
+    expect(findNode(h.doc, restored)?.props?.text).toBe("Changed");
+    expect(h.doc.nextNodeId).toBe(frontier);
+    expect(h.doc.retiredNodeIds).not.toContain(restored);
+  });
+  it("preserves value-equal Figma bindings through unrelated undo/redo", () => {
+    const d = create();
+    d.figmaBinding = { fileKey: "abcdefgh", pageNodeId: "1:2", nodeIds: { page_home: "1:3" }, lastSyncedAt: "2026-11-11T00:00:00Z", lastSyncedDigest: "sha256:" + "a".repeat(64) };
+    const h = execute(newHistory(d), { type: "rename", name: "Renamed" });
+    expect(undo(h).doc.figmaBinding).toEqual(d.figmaBinding);
+    expect(redo(undo(h)).doc.figmaBinding).toEqual(d.figmaBinding);
+  });
   it("clears redo on a new command and allows multiple pages in the same product", () => {
     let h = execute(newHistory(create()), { type: "page", name: "Second screen" });
     expect(h.doc.pages).toHaveLength(2);

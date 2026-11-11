@@ -1,5 +1,5 @@
 import { ADAPTERS, adapterFor, type Props } from "./registry";
-import { assertDocument, findNode, walk, type Document, type Node } from "./model";
+import { assertDocument, findNode, walk, serializeDocument, type Document, type Node } from "./model";
 
 export type Command =
   | { type: "insert"; parentId: string; ref: string }
@@ -76,7 +76,7 @@ export function execute(history: History, command: Command): History {
   assertDocument(doc);
   return { doc, selection, past: [...history.past, { doc: history.doc, selection: history.selection }].slice(-100), future: [] };
 }
-function restore(current: History, snapshot: Snapshot): Snapshot {
+function restore(current: History, snapshot: Snapshot): { snapshot: Snapshot; remap: Map<string, string> } {
   const doc = structuredClone(snapshot.doc);
   const targetIds = idsOf(doc);
   const retired = new Set([...current.doc.retiredNodeIds ?? [], ...doc.retiredNodeIds ?? []]);
@@ -87,18 +87,27 @@ function restore(current: History, snapshot: Snapshot): Snapshot {
     if (retired.has(node.id)) { const old = node.id; node.id = `node_${doc.nextNodeId++}`; remap.set(old, node.id); }
   });
   if (doc.provenance) doc.provenance = Object.fromEntries(Object.entries(doc.provenance).map(([id, value]) => [remap.get(id) ?? id, value]));
-  if (remap.size || current.doc.figmaBinding !== doc.figmaBinding) doc.figmaBinding = null;
+  if (remap.size || serializeDocument(current.doc.figmaBinding ?? null) !== serializeDocument(doc.figmaBinding ?? null)) doc.figmaBinding = null;
   doc.retiredNodeIds = [...retired].sort();
   assertDocument(doc);
   const live = idsOf(doc);
-  return { doc, selection: snapshot.selection.map(id => remap.get(id) ?? id).filter(id => live.has(id)) };
+  return { snapshot: { doc, selection: snapshot.selection.map(id => remap.get(id) ?? id).filter(id => live.has(id)) }, remap };
+}
+function rebaseSnapshot(snapshot: Snapshot, remap: Map<string, string>): Snapshot {
+  if (!remap.size) return snapshot;
+  const doc = structuredClone(snapshot.doc);
+  doc.pages.forEach(page => walk(page.root, node => { node.id = remap.get(node.id) ?? node.id; }));
+  if (doc.provenance) doc.provenance = Object.fromEntries(Object.entries(doc.provenance).map(([id, record]) => [remap.get(id) ?? id, record]));
+  return { doc, selection: snapshot.selection.map(id => remap.get(id) ?? id) };
 }
 export function undo(history: History): History {
   const target = history.past.at(-1); if (!target) return history;
-  return { ...restore(history, target), past: history.past.slice(0, -1), future: [...history.future, { doc: history.doc, selection: history.selection }] };
+  const { snapshot, remap } = restore(history, target);
+  return { ...snapshot, past: history.past.slice(0, -1).map(s => rebaseSnapshot(s, remap)), future: [...history.future, { doc: history.doc, selection: history.selection }].map(s => rebaseSnapshot(s, remap)) };
 }
 export function redo(history: History): History {
   const target = history.future.at(-1); if (!target) return history;
-  return { ...restore(history, target), past: [...history.past, { doc: history.doc, selection: history.selection }], future: history.future.slice(0, -1) };
+  const { snapshot, remap } = restore(history, target);
+  return { ...snapshot, past: [...history.past, { doc: history.doc, selection: history.selection }].map(s => rebaseSnapshot(s, remap)), future: history.future.slice(0, -1).map(s => rebaseSnapshot(s, remap)) };
 }
 
