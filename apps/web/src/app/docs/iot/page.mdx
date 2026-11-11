@@ -34,9 +34,7 @@ pattern working — see [the IoT overview](/iot).
 
 ## Install
 
-```bash
-npm install @kinetixui/iot
-```
+<Command op="install-iot" />
 
 The module is versioned on its own line, apart from `@kinetixui/ui`, so the site-wide changelog does not
 list it. What changed in each version is in
@@ -61,13 +59,13 @@ source import graph, and against the built `dist` that npm ships.
 at all. There is no `react-dom` peer — no primitive renders a portal — and no `@kinetixui/ui` peer,
 since nothing here imports a component from it.
 
-```bash
-# functions only — no React required
-npm install @kinetixui/iot
+Functions only, with no React required:
 
-# using the primitives
-npm install @kinetixui/iot react
-```
+<Command op="install-iot" />
+
+Or, to use the primitives:
+
+<Command op="install-iot-react" />
 
 ### Styling prerequisite
 

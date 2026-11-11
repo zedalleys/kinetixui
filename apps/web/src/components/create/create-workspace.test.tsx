@@ -1,6 +1,7 @@
+import { PM_STORAGE_KEY, resetPackageManagerPreferenceForTests } from "@/lib/pm-preference";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { hexToHslChannels, hexToOklch } from "@kinetixui/create-theme";
 import { SHIPPED_TOKENS } from "@/lib/create/theme-adapter";
 import { CreateWorkspace } from "./create-workspace";
@@ -26,6 +27,13 @@ const varOf = (token: string) => previewRoot().style.getPropertyValue(token);
 async function openAdvanced(user: ReturnType<typeof userEvent.setup>) {
   await user.click(within(sidebar()).getByText("Semantic colours and raw overrides"));
 }
+
+// the package-manager preference lives in a module-level store; without this, the one test that sets it
+// would decide which manager every later test in this file sees
+afterEach(() => {
+  window.localStorage.removeItem(PM_STORAGE_KEY);
+  resetPackageManagerPreferenceForTests();
+});
 
 describe("first load", () => {
   it("shows the shipped Kinetix theme, fully populated, with nothing to copy", () => {
@@ -502,12 +510,26 @@ describe("export targets", () => {
     await user.click(within(sidebar()).getByLabelText("Hex"));
     await user.paste("#c2410c");
 
-    expect(commandOf()).toContain("kinetixui preset css ");
+    // the execute route, not the bare bin name: `kinetixui` is not on a reader's PATH
+    expect(commandOf()).toContain("npx @kinetixui/cli preset css ");
     expect(commandOf()).toContain("KX1_");
 
     await user.click(targetButton("Flutter"));
-    expect(commandOf()).toContain("kinetixui preset flutter ");
+    expect(commandOf()).toContain("npx @kinetixui/cli preset flutter ");
     expect(commandOf()).toContain("-o create_theme.dart");
+  });
+
+  it("spells the command in the package manager chosen in the documentation", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem(PM_STORAGE_KEY, "bun");
+    resetPackageManagerPreferenceForTests();
+    render(<CreateWorkspace />);
+
+    await user.click(within(sidebar()).getByLabelText("Hex"));
+    await user.paste("#c2410c");
+
+    expect(commandOf()).toContain("bunx @kinetixui/cli preset css ");
+    expect(commandOf()).not.toContain("npx @kinetixui/cli");
   });
 
   it("adds the name flag only once a name has actually been chosen", async () => {
