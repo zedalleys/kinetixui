@@ -1,0 +1,269 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:kinetix_ui/kinetix_ui.dart';
+import 'package:kinetix_ui/src/kinetix_slide_motion.dart';
+
+void main() {
+  for (final drawer in [false, true]) {
+    final kind = drawer ? 'Drawer' : 'Sheet';
+    Widget host(bool visible,
+            {bool reduced = false,
+            TextDirection direction = TextDirection.ltr,
+            VoidCallback? dismiss}) =>
+        MaterialApp(
+          home: MediaQuery(
+              data: MediaQueryData(disableAnimations: reduced),
+              child: Directionality(
+                textDirection: direction,
+                child: KinetixTheme(
+                    child: Stack(children: [
+                  const Positioned.fill(child: Text('background')),
+                  if (drawer)
+                    KinetixDrawer(
+                        visible: visible,
+                        onDismiss: dismiss ?? () {},
+                        child: const SizedBox(
+                            key: Key('body'),
+                            height: 120,
+                            child: Text('panel')))
+                  else
+                    KinetixSheet(
+                        visible: visible,
+                        onDismiss: dismiss ?? () {},
+                        child: const SizedBox(
+                            key: Key('body'),
+                            height: 120,
+                            child: Text('panel'))),
+                ])),
+              )),
+        );
+    double y(WidgetTester t) => t.getTopLeft(find.byKey(const Key('body'))).dy;
+    Finder barrier() => find.descendant(
+        of: find.byType(KinetixSheet), matching: find.byType(ModalBarrier));
+
+    testWidgets('$kind slides with normal motion on opening and closing',
+        (t) async {
+      await t.pumpWidget(host(false));
+      expect(find.text('panel'), findsNothing);
+      await t.pumpWidget(host(true));
+      final start = y(t);
+      await t.pump(const Duration(milliseconds: 250));
+      final middle = y(t);
+      await t.pumpAndSettle();
+      final end = y(t);
+      expect(start, greaterThan(middle));
+      expect(middle, greaterThan(end));
+      await t.pumpWidget(host(false));
+      expect(find.text('panel'), findsOneWidget,
+          reason: 'exit retains its content');
+      await t.pump(const Duration(milliseconds: 150));
+      expect(y(t), greaterThan(end));
+      expect(barrier(), findsOneWidget,
+          reason: 'background remains blocked during exit');
+      await t.pumpAndSettle();
+      expect(find.text('panel'), findsNothing);
+      expect(barrier(), findsNothing);
+    });
+
+    testWidgets('$kind reduced motion settles both directions and live changes',
+        (t) async {
+      await t.pumpWidget(host(false, reduced: true));
+      await t.pumpWidget(host(true, reduced: true));
+      final end = y(t);
+      expect(t.binding.transientCallbackCount, 0);
+      await t.pumpWidget(host(false, reduced: true));
+      expect(find.text('panel'), findsNothing);
+      await t.pumpWidget(host(true));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(y(t), greaterThan(end));
+      await t.pumpWidget(host(true, reduced: true));
+      expect(y(t), closeTo(end, 0.1));
+      expect(t.binding.transientCallbackCount, 0);
+      await t.pumpWidget(host(false));
+      await t.pump(const Duration(milliseconds: 50));
+      await t.pumpWidget(host(false, reduced: true));
+      expect(find.text('panel'), findsNothing);
+    });
+
+    testWidgets(
+        '$kind reverses from the current position and disposes safely in RTL',
+        (t) async {
+      await t.pumpWidget(host(false, direction: TextDirection.rtl));
+      await t.pumpWidget(host(true, direction: TextDirection.rtl));
+      await t.pump(const Duration(milliseconds: 150));
+      final position = y(t);
+      await t.pumpWidget(host(false, direction: TextDirection.rtl));
+      expect(y(t), closeTo(position, 0.1));
+      await t.pump(const Duration(milliseconds: 40));
+      final reversing = y(t);
+      await t.pumpWidget(host(true, direction: TextDirection.rtl));
+      expect(y(t), closeTo(reversing, 0.1));
+      await t.pumpAndSettle();
+      await t.pumpWidget(host(false));
+      await t.pumpWidget(const SizedBox());
+      await t.pumpAndSettle();
+      expect(t.takeException(), isNull);
+    });
+
+    testWidgets('$kind barrier dismisses once and blocks background semantics',
+        (t) async {
+      var dismissals = 0;
+      final semantics = t.ensureSemantics();
+      await t
+          .pumpWidget(host(true, reduced: true, dismiss: () => dismissals++));
+      expect(find.bySemanticsLabel('background'), findsNothing);
+      expect(find.bySemanticsLabel('panel'), findsOneWidget);
+      await t.tapAt(const Offset(10, 10));
+      expect(dismissals, 1);
+      semantics.dispose();
+    });
+  }
+
+  testWidgets(
+      'closing disconnects text input and reversal restores the same field',
+      (t) async {
+    final first = TextEditingController(text: 'draft');
+    final second = TextEditingController(text: 'other');
+    var visible = false;
+    late StateSetter change;
+    await t.pumpWidget(MaterialApp(
+        home: KinetixTheme(child: StatefulBuilder(builder: (context, setState) {
+      change = setState;
+      return Stack(children: [
+        const Positioned.fill(child: Text('background')),
+        KinetixSheet(
+            visible: visible,
+            onDismiss: () => setState(() => visible = false),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              KinetixInput(controller: first),
+              KinetixInput(controller: second),
+            ])),
+      ]);
+    }))));
+    change(() => visible = true);
+    await t.pumpAndSettle();
+    await t.showKeyboard(find.byType(TextField).first);
+    expect(t.testTextInput.hasAnyClients, isTrue);
+    final focused =
+        t.widget<EditableText>(find.byType(EditableText).first).focusNode;
+    change(() => visible = false);
+    await t.pump();
+    expect(find.byType(KinetixInput), findsNWidgets(2),
+        reason: 'exit is still retained');
+    expect(t.testTextInput.hasAnyClients, isFalse,
+        reason:
+            'a retained closing field must not receive platform text updates');
+    await t.pump(const Duration(milliseconds: 40));
+    change(() => visible = true);
+    await t.pump();
+    await t.pump();
+    expect(focused.hasFocus, isTrue,
+        reason: 'reversal restores the same control, not its neighbor');
+    expect(first.text, 'draft');
+    await t.pumpAndSettle();
+    change(() => visible = false);
+    await t.pumpAndSettle();
+    await t.pumpWidget(const SizedBox());
+    first.dispose();
+    second.dispose();
+  });
+
+  testWidgets('native Back dismisses the sheet before leaving its host route',
+      (t) async {
+    var visible = true;
+    await t.pumpWidget(MaterialApp(
+        home: Builder(
+            builder: (context) => TextButton(
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<
+                          void>(
+                      builder: (_) => KinetixTheme(
+                          child: StatefulBuilder(
+                              builder: (context, setState) => Stack(children: [
+                                    const Positioned.fill(
+                                        child: Text('Host route')),
+                                    KinetixSheet(
+                                        visible: visible,
+                                        onDismiss: () =>
+                                            setState(() => visible = false),
+                                        child: const Text('Modal content')),
+                                  ]))))),
+                  child: const Text('Open route'),
+                ))));
+    await t.tap(find.text('Open route'));
+    await t.pumpAndSettle();
+    expect(find.text('Modal content'), findsOneWidget);
+    await t.binding.handlePopRoute();
+    await t.pumpAndSettle();
+    expect(find.text('Host route'), findsOneWidget,
+        reason: 'Back must dismiss the top modal first');
+    expect(find.text('Modal content'), findsNothing);
+    await t.binding.handlePopRoute();
+    await t.pumpAndSettle();
+    expect(find.text('Open route'), findsOneWidget);
+  });
+
+  test('spatial timing uses existing role tokens in both directions', () {
+    expect(KinetixSlideMotion.duration(entering: true, reduceMotion: false),
+        const Duration(milliseconds: 500));
+    expect(KinetixSlideMotion.duration(entering: false, reduceMotion: false),
+        const Duration(milliseconds: 300));
+    expect(KinetixSlideMotion.duration(entering: true, reduceMotion: true),
+        Duration.zero);
+    expect(KinetixSlideMotion.duration(entering: false, reduceMotion: true),
+        Duration.zero);
+  });
+
+  testWidgets(
+      'focus enters, loops through panel controls, Escape dismisses and focus returns',
+      (t) async {
+    final opener = FocusNode();
+    final first = FocusNode();
+    final last = FocusNode();
+    var visible = false;
+    late StateSetter change;
+    await t.pumpWidget(MaterialApp(
+        home: KinetixTheme(child: StatefulBuilder(builder: (context, setState) {
+      change = setState;
+      return MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: Stack(children: [
+            TextButton(
+                focusNode: opener,
+                onPressed: () => setState(() => visible = true),
+                child: const Text('Open')),
+            KinetixSheet(
+                visible: visible,
+                onDismiss: () => setState(() => visible = false),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  TextButton(
+                      focusNode: first,
+                      onPressed: () {},
+                      child: const Text('First')),
+                  TextButton(
+                      focusNode: last,
+                      onPressed: () {},
+                      child: const Text('Last')),
+                ])),
+          ]));
+    }))));
+    opener.requestFocus();
+    await t.pump();
+    change(() => visible = true);
+    await t.pumpAndSettle();
+    expect(first.hasFocus, isTrue);
+    last.requestFocus();
+    await t.pump();
+    await t.sendKeyEvent(LogicalKeyboardKey.tab);
+    await t.pump();
+    expect(first.hasFocus, isTrue);
+    await t.sendKeyEvent(LogicalKeyboardKey.escape);
+    await t.pumpAndSettle();
+    expect(find.text('First'), findsNothing);
+    expect(opener.hasFocus, isTrue);
+    await t.pumpWidget(const SizedBox());
+    opener.dispose();
+    first.dispose();
+    last.dispose();
+  });
+}
