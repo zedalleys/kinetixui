@@ -138,6 +138,60 @@ pending changesets. A range that already accepts the planned version is left exa
 that does not fails the release with both numbers named. Offline, so it runs on an ordinary pull
 request — before the Version Packages PR exists. See [Peer ranges across cohorts](#peer-ranges-across-cohorts).
 
+**One PR entry point**: `pnpm check:release-notes` runs presence/schema validation and then
+cohort coverage. CI calls this once on the merge checkout. The lower-level commands remain available
+for diagnosis; they answer different questions and are not duplicate presence gates.
+
+**Release-note coverage**: a curated note has to account for every changeset the release consumes,
+not merely exist. The two are different questions and neither implies the other — a note can be
+present, well formed, correctly linked and typechecked while describing three of the five changesets
+the merge carries, and the other two then publish with no curated description at all. So each note
+carries structured `coverage` metadata and `pnpm check:release-note-coverage` compares two sets of
+changeset identifiers per release cohort: the set the planner says that cohort consumes, and the set
+the note declares. Nothing is matched against the note's prose — a changeset id is
+`brave-pandas-dance`, and a keyword search over prose can be satisfied by coincidence and defeated by
+a synonym.
+
+```json
+"coverage": [
+  { "cohort": "core", "version": "0.28.0", "changesets": ["rating-radio", "metric-wrap"] },
+  {
+    "cohort": "angular",
+    "version": "0.26.3",
+    "changesets": ["metric-wrap"],
+    "exclusions": [{ "changeset": "ci-only-tidy", "reason": "repository tooling, no consumer-visible change" }]
+  }
+]
+```
+
+A cohort is named *and* versioned because cohorts share numbers: core reached 0.26.1 while
+`@kinetixui/angular` was already at 0.26.1, and core 0.27.0 shipped beside Angular 0.26.2. A note
+keyed by the number alone cannot say which release line it is about, and the next release where two
+cohorts land on the same number would read identically and be wrong. One changeset naming packages in
+two cohorts is consumed by both and is owed a description by both — that is how the shared Metric fix
+went out as core 0.27.0 and Angular 0.26.2 at once.
+
+`exclusions` is the deliberate escape hatch: a changeset the author has decided not to describe, with
+a reason, which is a sentence in review rather than a silent omission. An id cannot be both covered
+and excluded, an excluded id must still be one the release consumes, and a reason is required.
+
+`coverage` is release *process* metadata and never reaches the changelog page:
+`version-release-meta.mjs` strips it on activation, because it is not a field of `Release` and `tsc`
+rejects an excess property on a typed object literal. The note file keeps it as the reviewable record.
+
+Three things it deliberately does not do. It does not require a note — a release-inert pull request
+is passed with a one-line report, and a **missing** note is `check:release-note`'s finding and
+`version-release-meta.mjs`'s post-merge throw. It does not fail a pull request for a gap its base
+branch already has, since a gap on `main` reaches every open pull request through the merge commit;
+those findings are reported and attributed to the base, and attribution is per changeset id, so a
+changeset added at this head is still strict even when the cohort is already failing for another one.
+And it cannot check a non-core cohort releasing alone, because `release/notes/<version>.json` is keyed
+by the core version and activated from `packages/ui/package.json` — an Angular-only or IoT-only
+release has no note file to declare coverage in. That is a gap in the note model, reported rather
+than invented around. Rules, the model and the negative controls are in
+[`scripts/release/note-coverage.mjs`](./scripts/release/note-coverage.mjs) and
+[`scripts/release/test/note-coverage.test.mjs`](./scripts/release/test/note-coverage.test.mjs).
+
 **Release-note links**: every internal link in `release/notes/<version>.json` and in the activated
 `apps/web/src/lib/releases.ts` is resolved against the built site — the path against the prerendered
 pages, the files under `public/` and the configured redirects, and any `#fragment` against the ids in
