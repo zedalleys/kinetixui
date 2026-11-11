@@ -5,8 +5,8 @@ import { Button } from "@kinetixui/ui";
 import { HeroPolygon } from "@/components/hero-polygon";
 import { HeroCommand } from "@/components/hero-command";
 import { PlatformTicker } from "@/components/platform-ticker";
+import { MotionLab } from "@/components/motion-lab";
 import { Reveal } from "@/components/reveal";
-import { SectionHead } from "@/components/section-head";
 import { StructuredData } from "@/components/structured-data";
 import { ComponentSpotlight, type SpotlightItem } from "@/components/systems/component-spotlight";
 import { EditorialMedia } from "@/components/systems/editorial-media";
@@ -171,7 +171,7 @@ export default function HomePage() {
   const container = "kx-edges relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8";
 
   return (
-    <div>
+    <div className="kx-precision-native">
       <StructuredData />
       <PlatformMarkSprite />
 
@@ -256,9 +256,9 @@ export default function HomePage() {
               <Link
                 href="/docs/changelog"
                 {...ctaAttrs("homepage_hero", "view_changelog")}
-                className="eyebrow group mt-5 inline-flex min-h-9 items-center gap-2 transition-colors hover:text-foreground"
+                className="text-sm group mt-5 inline-flex min-h-9 items-center gap-2 transition-colors hover:text-foreground"
               >
-                <span className="text-primary">[00]</span> Beta — every package is 0.x, MIT
+                Beta — every package is 0.x, MIT
                 <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100" />
               </Link>
             </div>
@@ -278,120 +278,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section aria-label="Token to native implementation map" className="border-b border-border">
-        <div className={`${container} py-12 md:py-16`}>
-          <HeroSystemMap token={story.token} outputs={story.outputs} platforms={mapPlatforms} />
-        </div>
-      </section>
-
-      {/* ─── [02] the trade ─────────────────────────────────────────────────────────────────────── */}
-      <section className="kx-defer border-b border-border">
-        <div className={`${container} py-20 md:py-28`}>
-          <Reveal>
-            <SectionHead index="02" label="The trade" meta="shared contract, not shared runtime" />
-            <div className="mt-10 grid grid-cols-1 gap-12 lg-rem:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg-rem:gap-20">
-              <div>
-                <h2 className="min-w-0 break-words text-balance font-display text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-6xl">
-                  Share the contract. Keep the platform.
-                </h2>
-                <p className="mt-6 max-w-xl text-muted-foreground md:text-lg">
-                  There are two ways to keep one design consistent across platforms. One runtime can draw every screen,
-                  and each platform&rsquo;s own behaviour becomes something to imitate. Or a contract is shared and
-                  each platform implements it in its own idiom — which means differences exist, and have to be written
-                  down. KinetixUI takes the second trade, and writes them down.
-                </p>
-              </div>
-              <dl className="self-end border-t border-border">
-                {(
-                  [
-                    ["Drawn by", "Each platform's own UI toolkit: the DOM, Angular templates, SwiftUI views, Compose and Flutter widgets."],
-                    ["Accessibility", "Each platform's own semantics, with test evidence recorded per platform where it exists."],
-                    ["Where platforms differ", `In the manifest, with a reason — ${documentedExceptionCount} documented exceptions today.`],
-                  ] as const
-                ).map(([k, v]) => (
-                  <div key={k} className="grid grid-cols-1 gap-1 border-b border-border py-5 sm-rem:grid-cols-[minmax(0,10rem)_minmax(0,1fr)] sm-rem:gap-6">
-                    <dt className="font-mono text-xs text-muted-foreground">{k}</dt>
-                    <dd className="text-sm leading-relaxed">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          </Reveal>
-
-          {/* Why systems drift: the four principles, staggered rather than stacked in equal rows. */}
-          <Reveal className="mt-20 grid grid-cols-1 gap-x-16 gap-y-12 md:grid-cols-2">
-            {FEATURES.map((f, i) => (
-              <div key={f.title} className={`group min-w-0 ${i % 2 === 1 ? "md:mt-16" : ""}`}>
-                <div className="flex items-center gap-4">
-                  {/* decorative sequence marker (a 40% tint): out of the accessibility tree; the heading carries the meaning */}
-                  <span
-                    aria-hidden
-                    data-n={String(i + 1).padStart(2, "0")}
-                    className="font-display text-5xl font-bold leading-none text-muted-foreground/40 transition-colors before:content-[attr(data-n)] group-hover:text-primary"
-                  />
-                  <span className="h-px flex-1 bg-border" aria-hidden="true" />
-                  <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-                    <f.icon className="size-5" />
-                  </span>
-                </div>
-                <h3 className="min-w-0 break-words mt-5 min-w-0 font-display text-xl font-semibold">{f.title}</h3>
-                <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground md:text-base">{f.body}</p>
-              </div>
-            ))}
-          </Reveal>
-
-          {/* An editorial interruption for real photography or video, later. Renders nothing without media. */}
-          <EditorialMedia className="mt-20" />
-        </div>
-      </section>
-
-      {/* ─── [03] token boundary ───────────────────────────────────────────────── */}
-      <section className="kx-defer kx-chapter overflow-hidden bg-muted/30 border-b border-border">
-        <div aria-hidden="true" className="kx-glow -start-48 top-1/3 size-[40rem]" />
-        <div className={`${container} py-20 md:py-28`}>
-          <Reveal>
-            <SectionHead index="03" label="Token boundary" meta="generated · written per platform" />
-            <div className="mt-10 grid grid-cols-1 gap-8 lg-rem:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg-rem:items-end">
-              <h2 className="min-w-0 break-words text-balance font-display text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-6xl">
-                Generated tokens. Hand-written components.
-              </h2>
-              {/*
-                The architecture paragraph: two things share a source and two things do not. Nothing is softened —
-                the platform list is derived, the hand-written claim stands, CI verification is stated.
-              */}
-              <p className="max-w-xl text-muted-foreground">
-                One DTCG token source generates every platform&rsquo;s native token output. {platformSentence} each
-                implement the same component contract natively — hand-written per platform, never one source
-                converted into five. And every platform claim is checked against real source in CI, so the coverage
-                you read is the coverage that exists.
-              </p>
-            </div>
-          </Reveal>
-          <Reveal className="mt-16">
-            <TokenPipeline
-              token={story.token}
-              outputs={story.outputs}
-              platforms={mapPlatforms}
-              buildScript="style-dictionary/build.mjs"
-              dirs={dirs}
-            />
-          </Reveal>
-        </div>
-      </section>
-
       {/* ─── [04] same contract, different platform ─────────────────────────────────────────────── */}
       <section id="flagship" className="kx-defer scroll-mt-24 border-b border-border">
         <div className={`${container} py-20 md:py-28`}>
-          <div className="grid grid-cols-1 gap-12 lg-rem:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg-rem:gap-16">
-            <Reveal className="lg-rem:sticky lg-rem:top-28 lg-rem:self-start">
-              <SectionHead index="04" label="Implementations" meta={`${STORY_COMPONENT} · ${componentPlatformCount} source trees`} />
+          <div className="grid grid-cols-1 gap-12 lg-rem:gap-10">
+            <Reveal className="kx-playground-intro">
               <h2 className="min-w-0 break-words mt-8 text-balance font-display text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-5xl">
-                Same contract. Different platform.
+                One component. Every platform.
               </h2>
               <p className="mt-6 text-muted-foreground md:text-lg">
-                KinetixUI does not convert one component implementation into five. The token is shared; the Switch
-                beside this is written once per platform, in that platform&rsquo;s own language — and every copy
-                reads the same <code className="text-foreground">action</code> colour.
+                Try the Switch, change its state, then explore the implementation in each platform&rsquo;s own language.
+                Your choice stays in place as you compare. Every copy reads the shared <code className="text-foreground">action</code> colour.
               </p>
               {/*
                 Availability, which is not maturity. Both sentences are generated from the manifest, and
@@ -423,10 +320,9 @@ export default function HomePage() {
       <section className="kx-defer border-b border-border bg-muted/30">
         <div className={`${container} py-20 md:py-28`}>
           <Reveal>
-            <SectionHead index="05" label="Components" meta={`${componentTotal} catalogue entries`} />
             <div className="mt-10 flex flex-wrap items-end justify-between gap-6">
               <h2 className="min-w-0 break-words max-w-2xl text-balance font-display text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-5xl">
-                Real components, and what is true of each one everywhere.
+                Small details. Complete interfaces.
               </h2>
               <Link
                 href="/components"
@@ -443,6 +339,101 @@ export default function HomePage() {
         </div>
       </section>
 
+      <MotionLab />
+
+      <section aria-label="Token to native implementation map" className="border-b border-border">
+        <div className={`${container} py-12 md:py-16`}>
+          <HeroSystemMap token={story.token} outputs={story.outputs} platforms={mapPlatforms} />
+        </div>
+      </section>
+
+      {/* ─── [02] the trade ─────────────────────────────────────────────────────────────────────── */}
+      <section className="kx-defer border-b border-border">
+        <div className={`${container} py-20 md:py-28`}>
+          <Reveal>
+            <div className="mt-10 grid grid-cols-1 gap-12 lg-rem:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg-rem:gap-20">
+              <div>
+                <h2 className="min-w-0 break-words text-balance font-display text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-6xl">
+                  A shared language. Native by design.
+                </h2>
+                <p className="mt-6 max-w-xl text-muted-foreground md:text-lg">
+                  There are two ways to keep one design consistent across platforms. One runtime can draw every screen,
+                  and each platform&rsquo;s own behaviour becomes something to imitate. Or a contract is shared and
+                  each platform implements it in its own idiom — which means differences exist, and have to be written
+                  down. KinetixUI takes the second trade, and writes them down.
+                </p>
+              </div>
+              <dl className="self-end border-t border-border">
+                {(
+                  [
+                    ["Drawn by", "Each platform's own UI toolkit: the DOM, Angular templates, SwiftUI views, Compose and Flutter widgets."],
+                    ["Accessibility", "Each platform's own semantics, with test evidence recorded per platform where it exists."],
+                    ["Where platforms differ", `In the manifest, with a reason — ${documentedExceptionCount} documented exceptions today.`],
+                  ] as const
+                ).map(([k, v]) => (
+                  <div key={k} className="grid grid-cols-1 gap-1 border-b border-border py-5 sm-rem:grid-cols-[minmax(0,10rem)_minmax(0,1fr)] sm-rem:gap-6">
+                    <dt className="font-mono text-xs text-muted-foreground">{k}</dt>
+                    <dd className="text-sm leading-relaxed">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </Reveal>
+
+          {/* Why systems drift: the four principles, staggered rather than stacked in equal rows. */}
+          <Reveal className="mt-20 grid grid-cols-1 gap-x-16 gap-y-12 md:grid-cols-2">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="group min-w-0">
+                <div className="flex items-center gap-4">
+                  <span className="h-px flex-1 bg-border" aria-hidden="true" />
+                  <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <f.icon className="size-5" />
+                  </span>
+                </div>
+                <h3 className="min-w-0 break-words mt-5 min-w-0 font-display text-xl font-semibold">{f.title}</h3>
+                <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground md:text-base">{f.body}</p>
+              </div>
+            ))}
+          </Reveal>
+
+          {/* An editorial interruption for real photography or video, later. Renders nothing without media. */}
+          <EditorialMedia className="mt-20" />
+        </div>
+      </section>
+
+      {/* ─── [03] token boundary ───────────────────────────────────────────────── */}
+      <section className="kx-defer kx-chapter overflow-hidden bg-muted/30 border-b border-border">
+        <div aria-hidden="true" className="kx-glow -start-48 top-1/3 size-[40rem]" />
+        <div className={`${container} py-20 md:py-28`}>
+          <Reveal>
+            <div className="mt-10 grid grid-cols-1 gap-8 lg-rem:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg-rem:items-end">
+              <h2 className="min-w-0 break-words text-balance font-display text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-6xl">
+                Generated tokens. Hand-written components.
+              </h2>
+              {/*
+                The architecture paragraph: two things share a source and two things do not. Nothing is softened —
+                the platform list is derived, the hand-written claim stands, CI verification is stated.
+              */}
+              <p className="max-w-xl text-muted-foreground">
+                One DTCG token source generates every platform&rsquo;s native token output. {platformSentence} each
+                implement the same component contract natively — hand-written per platform, never one source
+                converted into five. And every platform claim is checked against real source in CI, so the coverage
+                you read is the coverage that exists.
+              </p>
+            </div>
+          </Reveal>
+          <Reveal className="mt-16">
+            <TokenPipeline
+              token={story.token}
+              outputs={story.outputs}
+              platforms={mapPlatforms}
+              buildScript="style-dictionary/build.mjs"
+              dirs={dirs}
+            />
+          </Reveal>
+        </div>
+      </section>
+
       {/* ─── [06] verification ─────────────────────────────────────────────────── */}
       {/*
         `STRATEGY.md` names verification as the position and §7 names Credibility as the funnel's narrowest point.
@@ -452,7 +443,6 @@ export default function HomePage() {
         <div aria-hidden="true" className="kx-glow -end-32 top-10 size-[38rem]" />
         <div className={`${container} py-20 md:py-28`}>
           <Reveal>
-            <SectionHead index="06" label="Verification" meta="from the manifest this page was built from" />
             <div className="mt-10 grid grid-cols-1 gap-8 lg-rem:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg-rem:items-end">
               <h2 className="min-w-0 break-words text-balance font-display text-5xl font-semibold leading-[1.02] tracking-[-0.035em] md:text-7xl">
                 Claims you can check.
@@ -547,7 +537,6 @@ export default function HomePage() {
       <section className="kx-defer border-b border-border">
         <div className={`${container} py-20 md:py-28`}>
           <Reveal>
-            <SectionHead index="07" label="Start small" meta="three ways in" />
             <h2 className="min-w-0 break-words mt-8 max-w-3xl text-balance font-display text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-5xl">
               You do not have to replace your design system to use this one.
             </h2>
@@ -628,7 +617,6 @@ export default function HomePage() {
       {/* ─── [08] modules ───────────────────────────────────────────────────────────────────────── */}
       <section className="kx-defer border-b border-border bg-muted/30">
         <div className={`${container} grid grid-cols-1 gap-6 py-14 md:grid-cols-[minmax(0,0.6fr)_minmax(0,1.4fr)] md:items-baseline md:gap-12`}>
-          <SectionHead index="08" label="Modules" meta="beyond the catalogue" className="md:border-t-0 md:pt-0" />
           <div>
             <h2 className="min-w-0 break-words font-display text-2xl font-semibold tracking-[-0.02em] md:text-3xl">Connected-device products</h2>
             <p className="mt-3 max-w-2xl text-muted-foreground">
@@ -654,7 +642,6 @@ export default function HomePage() {
       <section className="kx-defer">
         <div className={`${container} py-24 md:py-32`}>
           <Reveal>
-            <SectionHead index="09" label="Who it's for" />
             <h2 className="min-w-0 break-words mt-10 max-w-5xl text-balance font-display text-5xl font-semibold leading-[1.02] tracking-[-0.035em] md:text-7xl">
               Built for teams that ship on more than one platform.
             </h2>

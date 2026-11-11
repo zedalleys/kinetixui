@@ -1,0 +1,210 @@
+[
+  {
+    "engine": "chromium",
+    "width": 390,
+    "dir": "ltr",
+    "reducedMotion": "reduce",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "chromium",
+    "width": 390,
+    "dir": "ltr",
+    "reducedMotion": "no-preference",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "chromium",
+    "width": 390,
+    "dir": "rtl",
+    "reducedMotion": "reduce",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "chromium",
+    "width": 390,
+    "dir": "rtl",
+    "reducedMotion": "no-preference",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "chromium",
+    "width": 1440,
+    "dir": "ltr",
+    "reducedMotion": "reduce",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "chromium",
+    "width": 1440,
+    "dir": "ltr",
+    "reducedMotion": "no-preference",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "chromium",
+    "width": 1440,
+    "dir": "rtl",
+    "reducedMotion": "reduce",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "chromium",
+    "width": 1440,
+    "dir": "rtl",
+    "reducedMotion": "no-preference",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "firefox",
+    "width": 390,
+    "dir": "ltr",
+    "reducedMotion": "reduce",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "firefox",
+    "width": 390,
+    "dir": "ltr",
+    "reducedMotion": "no-preference",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "firefox",
+    "width": 390,
+    "dir": "rtl",
+    "reducedMotion": "reduce",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "firefox",
+    "width": 390,
+    "dir": "rtl",
+    "reducedMotion": "no-preference",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "firefox",
+    "width": 1440,
+    "dir": "ltr",
+    "reducedMotion": "reduce",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "firefox",
+    "width": 1440,
+    "dir": "ltr",
+    "reducedMotion": "no-preference",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "firefox",
+    "width": 1440,
+    "dir": "rtl",
+    "reducedMotion": "reduce",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "firefox",
+    "width": 1440,
+    "dir": "rtl",
+    "reducedMotion": "no-preference",
+    "passed": true,
+    "source": "first successful run before local address collision"
+  },
+  {
+    "engine": "webkit",
+    "width": 390,
+    "dir": "ltr",
+    "reducedMotion": "reduce",
+    "platformPanelShift": 0,
+    "errors": [],
+    "passed": true,
+    "transport": "local HTTPS with production policy intact"
+  },
+  {
+    "engine": "webkit",
+    "width": 390,
+    "dir": "ltr",
+    "reducedMotion": "no-preference",
+    "platformPanelShift": 0,
+    "errors": [],
+    "passed": true,
+    "transport": "local HTTPS with production policy intact"
+  },
+  {
+    "engine": "webkit",
+    "width": 390,
+    "dir": "rtl",
+    "reducedMotion": "reduce",
+    "platformPanelShift": 0,
+    "errors": [],
+    "passed": true,
+    "transport": "local HTTPS with production policy intact"
+  },
+  {
+    "engine": "webkit",
+    "width": 390,
+    "dir": "rtl",
+    "reducedMotion": "no-preference",
+    "platformPanelShift": 0,
+    "errors": [],
+    "passed": true,
+    "transport": "local HTTPS with production policy intact"
+  },
+  {
+    "engine": "webkit",
+    "width": 1440,
+    "dir": "ltr",
+    "reducedMotion": "reduce",
+    "platformPanelShift": 0,
+    "errors": [],
+    "passed": true,
+    "transport": "local HTTPS with production policy intact"
+  },
+  {
+    "engine": "webkit",
+    "width": 1440,
+    "dir": "ltr",
+    "reducedMotion": "no-preference",
+    "platformPanelShift": 0,
+    "errors": [],
+    "passed": true,
+    "transport": "local HTTPS with production policy intact"
+  },
+  {
+    "engine": "webkit",
+    "width": 1440,
+    "dir": "rtl",
+    "reducedMotion": "reduce",
+    "platformPanelShift": 0,
+    "errors": [],
+    "passed": true,
+    "transport": "local HTTPS with production policy intact"
+  },
+  {
+    "engine": "webkit",
+    "width": 1440,
+    "dir": "rtl",
+    "reducedMotion": "no-preference",
+    "platformPanelShift": 0,
+    "errors": [],
+    "passed": true,
+    "transport": "local HTTPS with production policy intact"
+  }
+]

@@ -1,0 +1,44 @@
+/* Precision Native: the specimen leads; source and evidence remain close at hand. */
+.kx-precision-native { --kx-section-gap: clamp(3rem, 7vw, 6rem); }
+.kx-precision-native > section:not(.kx-brand-hero) > .kx-edges { padding-block: var(--kx-section-gap); }
+.kx-precision-native h2 { text-wrap: balance; }
+.kx-precision-native #flagship { background: hsl(var(--background)); }
+.kx-playground-canvas { padding: clamp(1.5rem, 5vw, 4rem); background: hsl(var(--muted) / .35); }
+.kx-playground-specimen { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding-block: 1.5rem; border-block: 1px solid hsl(var(--border)); }
+.kx-lab-panel { animation: kx-panel-arrive var(--duration-fast) var(--easing-enter); }
+.kx-lab-feedback { animation: kx-feedback-arrive var(--duration-fast) var(--easing-enter); }
+@keyframes kx-panel-arrive { from { opacity: .5; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes kx-feedback-arrive { from { opacity: .4; } to { opacity: 1; } }
+.kx-precision-native ::selection { background: hsl(var(--primary) / .2); color: hsl(var(--foreground)); }
+.kx-precision-native input { caret-color: hsl(var(--primary)); }
+.kx-lab-disclosure:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 4px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { .kx-lab-panel, .kx-lab-feedback { animation: none; } }
+@media (forced-colors: active) { .kx-playground-specimen { border-color: CanvasText; } }
+
+.kx-precision-native .kx-tile { border-radius: 1rem; background: hsl(var(--card)); }
+.kx-precision-native .kx-tile-preview { background: hsl(var(--muted) / .3); }
+.kx-precision-native .kx-tile-head > h3 { font-family: var(--font-display), sans-serif; }
+
+.kx-precision-native [data-reveal], .kx-precision-native [data-reveal][data-shown] { opacity: 1; transform: none; animation: none; }
+.kx-precision-native .kx-playground-intro { display: grid; gap: 1.5rem; }
+.kx-precision-native .kx-playground-intro > * { margin-block: 0; }
+@media (min-width: 64rem) {
+  .kx-precision-native .kx-playground-intro { grid-template-columns: 1fr 1fr; }
+  .kx-precision-native .kx-playground-intro > h2 { grid-row: span 2; }
+  .kx-playground { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); grid-template-rows: auto 1fr auto auto; }
+  .kx-playground > [role="tablist"] { grid-column: 1 / -1; }
+  .kx-playground-canvas { grid-area: 2 / 1 / 3 / 2; display: flex; flex-direction: column; justify-content: center; }
+  .kx-playground-tools { grid-area: 3 / 1 / 4 / 2; }
+  .kx-playground-source { grid-area: 2 / 2 / 4 / 3; border-inline-start: 1px solid hsl(var(--border)); }
+  .kx-playground > p { grid-area: 4 / 1 / 5 / -1; }
+}
+
+.kx-search-field { animation: kx-panel-arrive var(--duration-fast) var(--easing-enter); }
+.kx-chart-reveal { animation: kx-chart-unmask var(--duration-slow) var(--easing-enter); }
+@keyframes kx-chart-unmask { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+[dir="rtl"] .kx-chart-reveal { animation-name: kx-chart-unmask-rtl; }
+@keyframes kx-chart-unmask-rtl { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0); } }
+@media (prefers-reduced-motion: reduce) { .kx-search-field, .kx-chart-reveal { animation: none; } }
+
+.kx-value-bubble { transform: translateX(-50%); transition-property: none; }
+[dir="rtl"] .kx-value-bubble { transform: translateX(50%); }

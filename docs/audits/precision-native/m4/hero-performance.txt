@@ -1,0 +1,19 @@
+React commits for the whole root, hero running vs hero stopped
+  hero on screen, running          21 React commit(s) /  241 frames  (4104ms)
+  hero scrolled away, stopped      19 React commit(s) /  241 frames  (4104ms)
+  while the reader drags it        24 React commit(s) /  241 frames  (5135ms)
+
+  commits per second
+    hero running     5.12
+    hero stopped     4.63   <- the rest of the page, with the hero still
+    while dragging   4.67
+  the hero's motion costs 0.49 commit(s)/s on top of the page's own, and dragging 0.04
+
+DOM writes inside svg.kx-hero-mesh, by what was touched
+   2288  attributes:opacity on kx-mesh-node-glow
+   2288  attributes:r on kx-mesh-node-glow
+    264  attributes:cx on kx-mesh-pulse
+    264  attributes:cy on kx-mesh-pulse
+  (over 240 animation frames)
+
+  writes to the facets, the links, or the child lists: 0

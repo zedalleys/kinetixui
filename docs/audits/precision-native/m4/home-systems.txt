@@ -1,0 +1,82 @@
+ok   hero tabs, desktop: horizontal, Left/Right follow reading order, live dir change
+ok   hero tabs, phone: vertical, Up/Down move, Left/Right do not
+ok   explorer tabs: Left/Right follow reading order, live dir change
+ok   type floor 12px in the Systems in Motion visuals at 390px
+ok   type floor 12px in the Systems in Motion visuals at 1440px
+ok   headline keeps every word whole at 320px, 100% text
+ok   headline keeps every word whole at 375px, 100% text
+ok   headline keeps every word whole at 390px, 100% text
+ok   headline keeps every word whole at 768px, 100% text
+ok   headline keeps every word whole at 1024px, 100% text
+ok   headline keeps every word whole at 1280px, 100% text
+ok   headline keeps every word whole at 1440px, 100% text
+ok   headline keeps every word whole at 1920px, 100% text
+ok   headline keeps every word whole at 320px, 200% text
+ok   headline keeps every word whole at 768px, 200% text
+ok   headline keeps every word whole at 1280px, 200% text
+ok   map at 320px LTR: generated layer, boundary, equal-width outputs, dashed written layer, no trace through another output
+ok   map at 390px LTR: generated layer, boundary, equal-width outputs, dashed written layer, no trace through another output
+ok   map at 390px RTL: generated layer, boundary, equal-width outputs, dashed written layer, no trace through another output
+ok   map at 768px LTR: generated layer, boundary, equal-width outputs, dashed written layer, no trace through another output
+ok   map at 1024px LTR: generated layer, boundary, equal-width outputs, dashed written layer, no trace through another output
+ok   map at 1280px LTR: generated layer, boundary, equal-width outputs, dashed written layer, no trace through another output
+ok   map at 1440px LTR: generated layer, boundary, equal-width outputs, dashed written layer, no trace through another output
+ok   map at 1440px RTL: generated layer, boundary, equal-width outputs, dashed written layer, no trace through another output
+ok   map at 1920px LTR: generated layer, boundary, equal-width outputs, dashed written layer, no trace through another output
+ok   overlays: page height settles, nothing grabs a click
+ok   overlays: page height settles, nothing grabs a click, with the stylesheet blocked
+ok   hero tour: advances on its own, holds under the pointer, pauses from its button, stops on a choice
+ok   hero tour: none under reduced motion, and no pause button
+ok   structure: the explorer sends the open panel and the reserve as HTML, the rest as data only
+ok   structure: hero map props stay under 4096 bytes (static evidence stays on the server)
+ok   structure at 390px: one hero map, one explorer, open panel + reserve, at most 7 lines per file
+ok   structure at 1440px: one hero map, one explorer, open panel + reserve, at most 7 lines per file
+     small-phone/320px/text100%: held 1172px on every tab; control spread 229px
+ok   explorer height at small-phone/320px/text100%: the same on every tab, and the control proves it
+     tablet/768px/text100%: held 917px on every tab; control spread 198px
+ok   explorer height at tablet/768px/text100%: the same on every tab, and the control proves it
+     desktop/1280px/text100%: held 642px on every tab; control spread 136px
+ok   explorer height at desktop/1280px/text100%: the same on every tab, and the control proves it
+     small-phone/320px/text200%: held 3539px on every tab; control spread 698px
+ok   explorer height at small-phone/320px/text200%: the same on every tab, and the control proves it
+     tablet/768px/text200%: held 2251px on every tab; control spread 426px
+ok   explorer height at tablet/768px/text200%: the same on every tab, and the control proves it
+     desktop/1280px/text200%: held 1939px on every tab; control spread 394px
+ok   explorer height at desktop/1280px/text200%: the same on every tab, and the control proves it
+ok   hero glow at 320px: off the copy, behind the polygon
+ok   hero glow at 390px: off the copy, behind the polygon
+ok   hero glow at 768px: off the copy, behind the polygon
+ok   hero glow at 1024px: off the copy, behind the polygon
+ok   hero glow at 1440px: off the copy, behind the polygon
+ok   hero lede at 320px: AA against whatever is rendered behind it
+ok   hero lede at 390px: AA against whatever is rendered behind it
+ok   hero lede at 768px: AA against whatever is rendered behind it
+ok   hero lede at 1024px: AA against whatever is rendered behind it
+ok   hero lede at 1440px: AA against whatever is rendered behind it
+ok   hero first view at 1920x1030: the artwork fades out, it is not cut off
+ok   hero first view at 1920x1030: the install command and the beta line are above the fold
+ok   hero first view at 1920x1030 RTL: the artwork fades out, it is not cut off
+ok   hero first view at 1920x1030 RTL: the install command and the beta line are above the fold
+ok   hero first view at 1920x1080: the artwork fades out, it is not cut off
+ok   hero first view at 1920x1080: the install command and the beta line are above the fold
+ok   hero first view at 1920x1080 RTL: the artwork fades out, it is not cut off
+ok   hero first view at 1920x1080 RTL: the install command and the beta line are above the fold
+ok   hero first view at 1536x864: the artwork fades out, it is not cut off
+ok   hero first view at 1536x864: the install command and the beta line are above the fold
+ok   hero first view at 1536x864 RTL: the artwork fades out, it is not cut off
+ok   hero first view at 1536x864 RTL: the install command and the beta line are above the fold
+ok   hero first view at 1440x900: the artwork fades out, it is not cut off
+ok   hero first view at 1440x900: the install command and the beta line are above the fold
+ok   hero first view at 1440x900 RTL: the artwork fades out, it is not cut off
+ok   hero first view at 1440x900 RTL: the install command and the beta line are above the fold
+ok   hero first view at 1366x768: the artwork fades out, it is not cut off
+ok   hero first view at 1366x768: the install command and the beta line are above the fold
+ok   hero first view at 1366x768 RTL: the artwork fades out, it is not cut off
+ok   hero first view at 1366x768 RTL: the install command and the beta line are above the fold
+ok   hero first view at 1280x720: the artwork fades out, it is not cut off
+ok   hero first view at 1280x720 RTL: the artwork fades out, it is not cut off
+ok   hero first view at 1024x768: the artwork fades out, it is not cut off
+ok   hero first view at 1024x768 RTL: the artwork fades out, it is not cut off
+ok   hero glow: the circular light spot is visible and bounded
+
+home-systems ok — tabs (LTR/RTL/live, horizontal/vertical), type floor, headline, map layers and routing, overlays (height and hit testing), tour, hero decoration (placement, lede contrast and gradient strength), structure

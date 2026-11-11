@@ -1,0 +1,182 @@
+[
+  {
+    "profile": "desktop",
+    "run": 1,
+    "condition": "1440px, unthrottled localhost, fresh context",
+    "lcpMs": 100,
+    "cls": 0.000007619598765432099,
+    "clsAfterScrollAndToggle": 0.000007619598765432099,
+    "tbtProxyMs": 0,
+    "eventTiming": [
+      {
+        "name": "pointerdown",
+        "duration": 40
+      },
+      {
+        "name": "pointerup",
+        "duration": 40
+      },
+      {
+        "name": "click",
+        "duration": 40
+      }
+    ],
+    "automationClickRoundTripMs": 73,
+    "fontStatus": "loaded",
+    "scriptTransferredBytes": 857573,
+    "fontEncodedBytes": 102092,
+    "ttfbMs": 4.100000023841858,
+    "serverResponseWaitMs": 3.200000047683716,
+    "navigationDurationMs": 123.30000001192093
+  },
+  {
+    "profile": "desktop",
+    "run": 2,
+    "condition": "1440px, unthrottled localhost, fresh context",
+    "lcpMs": 108,
+    "cls": 0.000007619598765432099,
+    "clsAfterScrollAndToggle": 0.000007619598765432099,
+    "tbtProxyMs": 0,
+    "eventTiming": [
+      {
+        "name": "pointerdown",
+        "duration": 40
+      },
+      {
+        "name": "pointerup",
+        "duration": 40
+      },
+      {
+        "name": "click",
+        "duration": 40
+      }
+    ],
+    "automationClickRoundTripMs": 41,
+    "fontStatus": "loaded",
+    "scriptTransferredBytes": 857573,
+    "fontEncodedBytes": 102092,
+    "ttfbMs": 5.5,
+    "serverResponseWaitMs": 4.800000011920929,
+    "navigationDurationMs": 127.59999996423721
+  },
+  {
+    "profile": "desktop",
+    "run": 3,
+    "condition": "1440px, unthrottled localhost, fresh context",
+    "lcpMs": 100,
+    "cls": 0.000007619598765432099,
+    "clsAfterScrollAndToggle": 0.000007619598765432099,
+    "tbtProxyMs": 0,
+    "eventTiming": [
+      {
+        "name": "pointerdown",
+        "duration": 48
+      },
+      {
+        "name": "pointerup",
+        "duration": 48
+      },
+      {
+        "name": "click",
+        "duration": 48
+      }
+    ],
+    "automationClickRoundTripMs": 39,
+    "fontStatus": "loaded",
+    "scriptTransferredBytes": 857573,
+    "fontEncodedBytes": 102092,
+    "ttfbMs": 4.200000047683716,
+    "serverResponseWaitMs": 3.700000047683716,
+    "navigationDurationMs": 123.40000003576279
+  },
+  {
+    "profile": "mobile-4x",
+    "run": 1,
+    "condition": "390px, CPU4x, 150ms latency, 1.6Mbps down, fresh context",
+    "lcpMs": 1380,
+    "cls": 0.00011114049145299144,
+    "clsAfterScrollAndToggle": 0.00011114049145299144,
+    "tbtProxyMs": 104,
+    "eventTiming": [
+      {
+        "name": "pointerdown",
+        "duration": 48
+      },
+      {
+        "name": "pointerup",
+        "duration": 48
+      },
+      {
+        "name": "click",
+        "duration": 48
+      }
+    ],
+    "automationClickRoundTripMs": 89,
+    "fontStatus": "loaded",
+    "scriptTransferredBytes": 625410,
+    "fontEncodedBytes": 102092,
+    "ttfbMs": 5.299999952316284,
+    "serverResponseWaitMs": 4.699999988079071,
+    "navigationDurationMs": 4123.599999964237
+  },
+  {
+    "profile": "mobile-4x",
+    "run": 2,
+    "condition": "390px, CPU4x, 150ms latency, 1.6Mbps down, fresh context",
+    "lcpMs": 1320,
+    "cls": 0.00011245736388097498,
+    "clsAfterScrollAndToggle": 0.00011245736388097498,
+    "tbtProxyMs": 81,
+    "eventTiming": [
+      {
+        "name": "pointerdown",
+        "duration": 40
+      },
+      {
+        "name": "pointerup",
+        "duration": 40
+      },
+      {
+        "name": "click",
+        "duration": 40
+      }
+    ],
+    "automationClickRoundTripMs": 98,
+    "fontStatus": "loaded",
+    "scriptTransferredBytes": 625410,
+    "fontEncodedBytes": 102092,
+    "ttfbMs": 4,
+    "serverResponseWaitMs": 3.5,
+    "navigationDurationMs": 4109
+  },
+  {
+    "profile": "mobile-4x",
+    "run": 3,
+    "condition": "390px, CPU4x, 150ms latency, 1.6Mbps down, fresh context",
+    "lcpMs": 1328,
+    "cls": 0.00011245736388097498,
+    "clsAfterScrollAndToggle": 0.00011245736388097498,
+    "tbtProxyMs": 89,
+    "eventTiming": [
+      {
+        "name": "pointerdown",
+        "duration": 40
+      },
+      {
+        "name": "pointerup",
+        "duration": 40
+      },
+      {
+        "name": "click",
+        "duration": 40
+      }
+    ],
+    "automationClickRoundTripMs": 92,
+    "fontStatus": "loaded",
+    "scriptTransferredBytes": 625410,
+    "fontEncodedBytes": 102092,
+    "ttfbMs": 4.099999964237213,
+    "serverResponseWaitMs": 3.399999976158142,
+    "navigationDurationMs": 4114.5
+  }
+]
