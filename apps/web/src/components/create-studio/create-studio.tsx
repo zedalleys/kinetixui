@@ -4,7 +4,7 @@ import { Button, Input, Label, NativeSelect, Checkbox, Dialog, DialogContent, Di
 import { Undo2, Redo2, Plus, Save, Download, ZoomIn, ZoomOut, Hand, MousePointer2, Layers, Package, ArrowUp, ArrowDown, Trash2, Sun, Moon } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { ADAPTERS, adapterFor, type Props } from "@/lib/create-studio/registry";
-import { assertDocument, findNode, serializeDocument, type Document, type Node } from "@/lib/create-studio/model";
+import { assertDocument, findNode, serializeDocument, walk, type Document, type Node } from "@/lib/create-studio/model";
 import { execute, newHistory, undo, redo, type History, type Command } from "@/lib/create-studio/commands";
 import { decodePreset } from "@kinetixui/create-preset";
 import { resolveCreateTheme, cssVarOverrides, hexToHslChannels } from "@kinetixui/create-theme";
@@ -25,12 +25,31 @@ function download(name: string, text: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 const keyFor = (account: Account, id: string) => `kinetix-studio:${account.accountId}:${id}`;
+type Draft = { key: string; baseRevision: number; doc: Document; updatedAt: number };
+function draftsFor(account: Account, product: Product): Draft[] {
+  const prefix = keyFor(account, product.id);
+  const saved = serializeDocument(product.doc);
+  return Object.keys(localStorage).filter(key => key === prefix || key.startsWith(prefix + ":")).flatMap(key => {
+    try {
+      const draft = JSON.parse(localStorage.getItem(key) ?? "null");
+      assertDocument(draft?.doc);
+      if (draft.doc.id !== product.id || !Number.isSafeInteger(draft.baseRevision) || draft.baseRevision < 1 || serializeDocument(draft.doc) === saved) return [];
+      return [{ key, baseRevision: draft.baseRevision, doc: draft.doc, updatedAt: Number.isFinite(draft.updatedAt) ? draft.updatedAt : 0 }];
+    } catch { return []; }
+  }).sort((a, b) => b.updatedAt - a.updatedAt);
+}
 const nodeLabel = (node: Node) => node.metadata?.name ?? (node.ref === "layout:section" ? String(node.props?.name ?? "Frame") : node.ref ? ADAPTERS[node.ref]?.label ?? node.ref : "Page");
 export function CreateStudio() {
   const [account, setAccount] = React.useState<Account | null>(null);
   const [product, setProduct] = React.useState<Product | null>(null);
   const [history, setHistory] = React.useState<History | null>(null);
   const [saved, setSaved] = React.useState("");
+  const [draftBase, setDraftBase] = React.useState<number | null>(null);
+  const [draftChoices, setDraftChoices] = React.useState<Draft[]>([]);
+  const [draftChoice, setDraftChoice] = React.useState("");
+  // A fresh writer ID per mounted editor, including duplicated tabs. Saving only clears this writer's copy.
+  const draftWriter = React.useRef<string | null>(null);
+  const recoveredCopy = React.useRef<Document | null>(null);
   const [pageId, setPageId] = React.useState("page_home");
   const [productName, setProductName] = React.useState("My first product");
   const dialogReturnFocus = React.useRef<HTMLElement | null>(null);
@@ -63,6 +82,7 @@ export function CreateStudio() {
   const selected = history?.selection.map(id => findNode(history.doc, id)).filter((n): n is Node => !!n) ?? [];
   const current = selected[0];
   const dirty = !!doc && serializeDocument(doc) !== saved;
+  const staleDraft = draftBase !== null && draftBase !== product?.revision;
   const themeStyle = React.useMemo(() => {
     const decoded = decodePreset(doc?.designSystem.preset ?? "KX1_eyJ2IjoxfQ");
     if (!decoded.ok) return {};
@@ -89,10 +109,31 @@ export function CreateStudio() {
     setInspector(true);
   };
   React.useEffect(() => {
-    if (!doc || !account || !product || !dirty) return;
-    try { localStorage.setItem(keyFor(account, product.id), JSON.stringify({ baseRevision: product.revision, doc })); }
+    if (!doc || !account || !product || doc === recoveredCopy.current) return;
+    try {
+      if (!dirty) {
+        if (draftWriter.current) localStorage.removeItem(keyFor(account, product.id) + ":" + draftWriter.current);
+        return;
+      }
+      draftWriter.current ??= crypto.randomUUID();
+      localStorage.setItem(keyFor(account, product.id) + ":" + draftWriter.current, JSON.stringify({ baseRevision: draftBase ?? product.revision, doc, updatedAt: Date.now() }));
+    }
     catch { setNotice("Browser draft storage is unavailable. Save to the local server or download your draft."); }
-  }, [doc, account, product, dirty]);
+  }, [doc, account, product, dirty, draftBase]);
+  const applyHistory = React.useCallback((direction: "undo" | "redo") => {
+    if (!latest.current) return;
+    const next = direction === "undo" ? undo(latest.current) : redo(latest.current);
+    const selectedId = next.selection[0];
+    const containingPage = selectedId && next.doc.pages.find(p => {
+      let found = false;
+      walk(p.root, node => { if (node.id === selectedId) found = true; });
+      return found;
+    });
+    setPageId(id => (containingPage && containingPage.id) || next.doc.pages.find(p => p.id === id)?.id || next.doc.pages[0].id);
+    setFocusIndex(0);
+    setFieldDrafts({});
+    setHistory(next);
+  }, []);
   React.useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => { if (dirty) event.preventDefault(); };
     window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn);
@@ -104,11 +145,11 @@ export function CreateStudio() {
       if (event.key === "Escape") { setPreview(false); setPan(false); drag.current = null; return; }
       if (!(event.metaKey || event.ctrlKey) || !latest.current) return;
       if (event.key.toLowerCase() === "z" && !readOnly && !busy && !preview) {
-        event.preventDefault(); setFieldDrafts({}); setHistory(event.shiftKey ? redo(latest.current) : undo(latest.current));
+        event.preventDefault(); applyHistory(event.shiftKey ? "redo" : "undo");
       }
     };
     window.addEventListener("keydown", handler); return () => window.removeEventListener("keydown", handler);
-  }, [readOnly, busy, preview]);
+  }, [readOnly, busy, preview, applyHistory]);
   async function start() {
     setBusy(true); setError("");
     try { setAccount(await request<Account>({ operation: "session" })); } catch (e) { setError((e as Error).message); }
@@ -120,7 +161,12 @@ export function CreateStudio() {
     try {
       const p = await request<Product>(undefined, id);
       setProduct(p); setHistory(newHistory(p.doc)); setSaved(serializeDocument(p.doc)); setPageId(p.doc.pages[0].id);
-      if (account && localStorage.getItem(keyFor(account, id))) setNotice("A draft from this browser is available. Use Recover draft to review it before saving.");
+      draftWriter.current = null; recoveredCopy.current = null;
+      setDraftBase(null); setDraftChoices([]); setFieldDrafts({});
+      setNotice("");
+      try {
+        if (account && draftsFor(account, p).length) setNotice("A draft from this browser is available. Use Recover draft to review it before saving.");
+      } catch { setNotice("Browser draft storage is unavailable."); }
     } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
   async function create() {
@@ -131,35 +177,43 @@ export function CreateStudio() {
       createKey.current ??= crypto.randomUUID();
       const p = await request<Product>({ operation: "create", name: productName, key: createKey.current });
       setProduct(p); setHistory(newHistory(p.doc)); setSaved(serializeDocument(p.doc)); setPageId(p.doc.pages[0].id);
+      draftWriter.current = null; recoveredCopy.current = null;
+      setDraftBase(null); setDraftChoices([]); setFieldDrafts({});
       createKey.current = null; setAccount(await request<Account>());
       setNotice("Product created. Add a component from the library, then edit it in Properties.");
     } catch (e) { if (e instanceof ApiError && e.code === "PRODUCT_LIMIT_REACHED") { dialogReturnFocus.current = newProductButton.current; setUpgrade(true); } else setError((e as Error).message); }
     finally { setBusy(false); }
   }
   async function save() {
-    if (!history || !product || !account || readOnly || busy || Object.keys(fieldDrafts).length) return;
+    if (!history || !product || !account || readOnly || busy || staleDraft || Object.keys(fieldDrafts).length) return;
     setBusy(true); setError("");
     const payload = history.doc;
     try {
-      const p = await request<Product>({ operation: "save", id: product.id, revision: product.revision, doc: payload });
-      setProduct(p); setSaved(serializeDocument(payload)); setNotice("Saved to this computer's local server.");
-      if (latest.current && serializeDocument(latest.current.doc) === serializeDocument(payload)) localStorage.removeItem(keyFor(account, product.id));
-      setAccount(await request<Account>());
+      const p = await request<Product>({ operation: "save", id: product.id, revision: draftBase ?? product.revision, doc: payload });
+      setProduct(p); setSaved(serializeDocument(payload)); setDraftBase(null); setNotice("Saved to this computer's local server.");
+      try {
+        if (draftWriter.current && latest.current && serializeDocument(latest.current.doc) === serializeDocument(payload)) localStorage.removeItem(keyFor(account, product.id) + ":" + draftWriter.current);
+      } catch { /* The server already confirmed the save. */ }
+      setAccount(current => current && { ...current, products: current.products.map(item => item.id === p.id ? { ...item, name: p.doc.name, revision: p.revision, readOnly: p.readOnly } : item) });
     } catch (e) {
       setError((e as Error).message);
       if (e instanceof ApiError && e.code === "PRODUCT_READ_ONLY") setProduct({ ...product, readOnly: true });
     } finally { setBusy(false); }
   }
-  function recover() {
-    if (!account || !product) return;
+  function recover(draftKey?: string) {
+    if (!account || !product || dirty || busy || Object.keys(fieldDrafts).length) return;
     try {
-      const raw = localStorage.getItem(keyFor(account, product.id));
-      if (!raw) { setNotice("No browser draft is available."); return; }
-      const draft = JSON.parse(raw);
-      // Reuse canonical validation without changing server revision or accepting another product.
-      assertDocument(draft.doc);
-      if (draft.doc.id !== product.id) throw new Error("Draft belongs to another product");
-      setHistory(newHistory(draft.doc)); setNotice(draft.baseRevision === product.revision ? "Browser draft recovered. Review and save." : "Recovered an older-base draft. Download it before resolving the saved revision conflict.");
+      const drafts = draftsFor(account, product);
+      if (!draftKey && drafts.length > 1) { setDraftChoices(drafts); setDraftChoice(drafts[0].key); return; }
+      const draft = draftKey ? drafts.find(item => item.key === draftKey) : drafts[0];
+      setDraftChoices([]);
+      if (!draft) { setNotice("No browser draft is available."); return; }
+      recoveredCopy.current = draft.doc;
+      setDraftBase(draft.baseRevision);
+      setHistory(newHistory(draft.doc));
+      setPageId(id => draft.doc.pages.some(p => p.id === id) ? id : draft.doc.pages[0].id);
+      setNotice("Browser draft recovered.");
+      setError(draft.baseRevision === product.revision ? "" : "This draft is based on a different saved revision. Download it to keep a copy, or reopen the saved version. Save is unavailable for this draft.");
     } catch { setError("This browser draft cannot be recovered. The saved product is unchanged."); }
   }
   function exportFiles() {
@@ -203,14 +257,18 @@ export function CreateStudio() {
       {history && page ? <>
         <div className="studio-toolbar" role="group" aria-label="Document actions">
           <strong className="studio-product-title">{doc!.name}</strong>
-          <Button size="icon" variant="Ghost" aria-label="Undo" title="Undo (⌘/Ctrl Z)" disabled={!history.past.length || readOnly || busy || preview} onClick={() => setHistory(undo(history))}><Undo2 className="size-4" /></Button>
-          <Button size="icon" variant="Ghost" aria-label="Redo" title="Redo (⌘/Ctrl Shift Z)" disabled={!history.future.length || readOnly || busy || preview} onClick={() => setHistory(redo(history))}><Redo2 className="size-4" /></Button>
-          <span className="studio-save-state" role="status">{readOnly ? "Read-only · work preserved" : busy ? "Working…" : Object.keys(fieldDrafts).length ? "Unapplied property draft" : dirty ? "Unsaved changes" : "Saved locally"}</span>
-          <Button variant="Outline" disabled={busy || readOnly || !dirty || !!Object.keys(fieldDrafts).length} onClick={save}><Save className="size-4" />Save</Button>
+          <Button size="icon" variant="Ghost" aria-label="Undo" title="Undo (⌘/Ctrl Z)" disabled={!history.past.length || readOnly || busy || preview} onClick={() => applyHistory("undo")}><Undo2 className="size-4" /></Button>
+          <Button size="icon" variant="Ghost" aria-label="Redo" title="Redo (⌘/Ctrl Shift Z)" disabled={!history.future.length || readOnly || busy || preview} onClick={() => applyHistory("redo")}><Redo2 className="size-4" /></Button>
+          <span className="studio-save-state" role="status">{readOnly ? "Read-only · work preserved" : busy ? "Working…" : staleDraft ? "Draft revision conflict" : Object.keys(fieldDrafts).length ? "Unapplied property draft" : dirty ? "Unsaved changes" : "Saved locally"}</span>
+          <Button variant="Outline" disabled={busy || readOnly || staleDraft || !dirty || !!Object.keys(fieldDrafts).length} onClick={save}><Save className="size-4" />Save</Button>
           <Button variant={preview ? "Primary" : "Outline"} onClick={() => { setPreview(!preview); setPan(false); }}>{preview ? "Back to editing" : "Preview"}</Button>
           <Button disabled={!!Object.keys(fieldDrafts).length} onClick={exportFiles}><Download className="size-4" />Export React</Button>
         </div>
-        {error && <div className="studio-error" role="alert"><p>{error}</p><div><Button variant="Outline" size="sm" onClick={() => download("create-draft.json", serializeDocument(history.doc))}>Download draft</Button><Button variant="Ghost" size="sm" onClick={() => { void openProduct(product!.id, true); }}>Reopen saved (draft stays here)</Button></div></div>}
+        {(error || staleDraft) && <div className="studio-error" role="alert"><p>{error || "This draft is based on a different saved revision. Download it or reopen the saved version."}</p><div><Button variant="Outline" size="sm" onClick={() => download("create-draft.json", serializeDocument(history.doc))}>Download draft</Button><Button variant="Ghost" size="sm" onClick={() => { void openProduct(product!.id, true); }}>Reopen saved (draft stays here)</Button></div></div>}
+        {draftChoices.length > 1 && !dirty && <div className="studio-products">
+          <div className="studio-product-select"><Label htmlFor="studio-draft">Browser draft</Label><NativeSelect id="studio-draft" value={draftChoice} onChange={e => setDraftChoice(e.target.value)}>{draftChoices.map((draft, index) => <option key={draft.key} value={draft.key}>Draft {index + 1} · revision {draft.baseRevision}{draft.updatedAt ? " · " + new Date(draft.updatedAt).toLocaleString() : ""}</option>)}</NativeSelect></div>
+          <Button size="sm" onClick={() => recover(draftChoice)}>Open selected draft</Button><Button size="sm" variant="Ghost" onClick={() => setDraftChoices([])}>Cancel draft recovery</Button>
+        </div>}
         <p className="studio-announcement" role="status">{notice || "Select a component on the canvas or add one from the library."}</p>
         <div className="studio-mobile-tools"><Button variant="Outline" onClick={() => setInspector(!inspector)}>{inspector ? "Hide properties" : "Show properties"}</Button></div>
         <div className="studio-workspace">
@@ -256,7 +314,7 @@ export function CreateStudio() {
                 </div>
               </div>
             </div>
-            <div className="studio-zoom" role="group" aria-label="Canvas camera"><Button size="icon" variant="Ghost" aria-label="Zoom out" onClick={() => setZoom(Math.max(.1, Math.round((zoom - .1) * 10) / 10))}><ZoomOut className="size-4" /></Button><span>{Math.round(zoom * 100)}%</span><Button size="icon" variant="Ghost" aria-label="Zoom in" onClick={() => setZoom(Math.min(4, Math.round((zoom + .1) * 10) / 10))}><ZoomIn className="size-4" /></Button><Button size="sm" variant="Ghost" onClick={() => { setZoom(1); setOffset({ x: 24, y: 24 }); }}>Reset view</Button><Button size="sm" variant="Ghost" onClick={recover}>Recover draft</Button></div>
+            <div className="studio-zoom" role="group" aria-label="Canvas camera"><Button size="icon" variant="Ghost" aria-label="Zoom out" onClick={() => setZoom(Math.max(.1, Math.round((zoom - .1) * 10) / 10))}><ZoomOut className="size-4" /></Button><span>{Math.round(zoom * 100)}%</span><Button size="icon" variant="Ghost" aria-label="Zoom in" onClick={() => setZoom(Math.min(4, Math.round((zoom + .1) * 10) / 10))}><ZoomIn className="size-4" /></Button><Button size="sm" variant="Ghost" onClick={() => { setZoom(1); setOffset({ x: 24, y: 24 }); }}>Reset view</Button><Button size="sm" variant="Ghost" disabled={dirty || busy || !!Object.keys(fieldDrafts).length} onClick={() => recover()}>Recover draft</Button></div>
           </div>
           <aside className={`studio-inspector ${inspector ? "studio-inspector-open" : ""}`} aria-label="Properties inspector">
             <div className="studio-panel-section"><h2>Properties</h2>{current && selectedAdapter ? <>
