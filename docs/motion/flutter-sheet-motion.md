@@ -1,0 +1,13 @@
+# Flutter Sheet/Drawer spatial lifecycle
+
+Keep the existing widget mounted and control `visible`; removing the widget cannot animate an exit. Sheet now slides in on `slow`, slides out on `base`, and uses `standard`, all from the existing spatial role. Drawer delegates to Sheet and has no invented drag API.
+
+The modal barrier and panel share one controller; the barrier remains mounted throughout exit. Opening/closing reverse from the current progress, without a queued animation or endpoint jump. `MediaQuery.disableAnimationsOf` is read live: reduced motion reaches the destination immediately, including simultaneous visibility/preference changes. The target state, not intermediate frames, determines accessibility exposure.
+
+A closed-loop focus scope takes focus after mounting, Escape calls the existing dismiss callback, and the opener receives focus after exit. A real modal barrier blocks pointer input and background semantics; exiting content stops receiving taps and is excluded from semantics. Tickers are disposed and pending focus callbacks are fenced against closure, reopening, or disposal. Native host Back navigation is not introduced by this Stack-based component; callers retain their navigation contract.
+
+Verification: 206 full Flutter widget tests, analyzer clean; ten new spatial/lifecycle tests cover Sheet and Drawer, normal intermediate entry/exit geometry, reduced motion in both directions and at runtime, rapid reversal, RTL, barrier semantics/dismissal, focus loop/return and disposal. Two behavioral controls prove these tests reject the original instant sheet and an ignored motion preference. Static guard tests additionally reject a Dart import without a real helper call and removal of the preference read; five identity controls and clause 6 remain active.
+
+This is headless rendered-widget evidence, not a device screenshot, TalkBack/VoiceOver session, physical keyboard certification or performance measurement on hardware. No complete five-platform parity is claimed. The nine pre-existing preference-gap entries are unchanged; Sheet/Drawer coverage is additional. The spatial role remains observed rather than promoted to proven.
+
+No token values, semantic roles, existing consumer identities, SwiftUI slide deviation, branding or website implementation change. Native packages are not managed by npm changesets; the unpublished Flutter placeholder and package changelog version decision remain intact. No merge, tag, publication or deployment is authorized. Review-branch deployments are disabled in both Vercel targets.

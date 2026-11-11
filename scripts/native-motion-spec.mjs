@@ -116,6 +116,14 @@ export const PLATFORMS = {
     animates: /Animated[A-Z]\w+|AnimationController|Tween|CurvedAnimation/,
     preference: /disableAnimationsOf|disableAnimations|reduceMotionOf|runsOf/,
     families: {
+      slide: {
+        contractRole: "spatial",
+        strict: true,
+        helper: "kinetix_slide_motion.dart",
+        helperSymbol: "KinetixSlideMotion",
+        members: ["sheet.dart"],
+        test: "packages/ui-flutter/test/slide_motion_test.dart",
+      },
       disclosure: {
         contractRole: "disclosure",
         helper: "kinetix_disclosure_motion.dart",

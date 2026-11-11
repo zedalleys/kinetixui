@@ -81,7 +81,7 @@ for (const [name, p] of Object.entries(PLATFORMS)) {
       //     point, so the member must read the platform setting in its own source and actually CALL the
       //     helper (`Helper.`), not just name it in a comment or declare an environment value it ignores.
       if (family.strict) {
-        const helperName = family.helper.replace(p.ext, "");
+        const helperName = family.helperSymbol ?? family.helper.replace(p.ext, "");
         if (!p.preference.test(src) || !new RegExp(`\\b${helperName}[.(]`).test(src)) {
           errors.push(
             `${name}/${member}: in the strict ${familyName} family but ${!p.preference.test(src) ? "never reads the platform preference" : `never calls ${helperName}`}.\n` +

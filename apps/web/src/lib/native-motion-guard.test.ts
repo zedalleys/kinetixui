@@ -25,7 +25,7 @@ const repoRoot = join(process.cwd(), "../..");
 const script = join(repoRoot, "scripts/check-native-motion.mjs");
 const specPath = join(repoRoot, "scripts/native-motion-spec.mjs");
 
-type Family = { helper: string; members: string[]; test: string; directional: boolean; strict: boolean };
+type Family = { helper: string; helperSymbol?: string; members: string[]; test: string; directional: boolean; strict: boolean };
 type Platform = { dir: string; ext: string; families: Record<string, Family> };
 type Spec = { platforms: Record<string, Platform>; gaps: Record<string, string[]> };
 
@@ -47,7 +47,7 @@ const spec: Spec = JSON.parse(
        const platforms = Object.fromEntries(Object.entries(s.PLATFORMS).map(([n, p]) => [n, {
          dir: p.dir, ext: p.ext,
          families: Object.fromEntries(Object.entries(p.families).map(([fn, f]) => [fn, {
-           helper: f.helper, members: f.members, test: f.test, directional: Boolean(f.directions), strict: Boolean(f.strict),
+           helper: f.helper, helperSymbol: f.helperSymbol, members: f.members, test: f.test, directional: Boolean(f.directions), strict: Boolean(f.strict),
          }])),
        }]));
        const gaps = Object.fromEntries(Object.entries(s.KNOWN_GAPS).map(([n, g]) => [n, Object.keys(g)]));
@@ -77,7 +77,7 @@ const ANIMATES: Record<string, string> = {
 
 /** A wired family member: it animates, reaches its helper, and names both directions if asked to. */
 function member(platform: string, p: Platform, family: Family, directions = family.directional) {
-  const helper = family.helper.replace(p.ext, "");
+  const helper = family.helperSymbol ?? family.helper.replace(p.ext, "");
   return (
     ANIMATES[platform] +
     (directions ? "// .expanding / .collapsing chosen from state\n" : "") +
@@ -362,4 +362,25 @@ describe("the ledger cannot go stale", () => {
   // the overlap. It is a defensive clause against a future edit that adds a component to a family and
   // forgets to delete its ledger entry — which is exactly what this slice did for Switch, and is the
   // reason the clause exists at all.
+});
+
+describe("Flutter spatial routing", () => {
+  it("does not mistake a Dart import for an actual helper call", () => {
+    const dir = fixture();
+    const p = spec.platforms.Flutter;
+    const family = p.families.slide;
+    write(dir, join(p.dir, "sheet.dart"), `${ANIMATES.Flutter}${PREFERENCE.Flutter}\nimport '${family.helper}';\n`);
+    const result = run(dir);
+    expect(result.ok).toBe(false);
+    expect(result.output).toContain("never calls KinetixSlideMotion");
+  });
+
+  it("rejects spatial motion that stops reading the platform preference", () => {
+    const dir = fixture();
+    const p = spec.platforms.Flutter;
+    write(dir, join(p.dir, "sheet.dart"), `${ANIMATES.Flutter}KinetixSlideMotion.duration(entering: true, reduceMotion: false);\n`);
+    const result = run(dir);
+    expect(result.ok).toBe(false);
+    expect(result.output).toContain("never reads the platform preference");
+  });
 });
