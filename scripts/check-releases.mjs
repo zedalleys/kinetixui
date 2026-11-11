@@ -55,6 +55,80 @@ for (const entry of allowlist.packages) {
   }
 }
 
+/** Every string inside the `slugs:` arrays of a generated `newComponents` value.
+ *
+ * Scanned character by character rather than matched with a regexp. `version-release-meta.mjs` writes
+ * this file with `JSON.stringify`, so every string keeps JSON escaping and may contain any character
+ * at all — including the `]` and `"` that terminate a pattern, and the text `newComponents:` itself in
+ * a summary. Two defects measured on earlier readers of this value:
+ *   - `\[([\s\S]*?)\]` on `slugs: ["input]", "date-pikcer"]` yielded NO slugs, so two invalid slugs
+ *     went unchecked and the release validated.
+ *   - `indexOf("newComponents:")` on a note whose summary reads "Adds newComponents: groups to
+ *     release notes." began scanning inside that string, lost the string boundaries, and again
+ *     yielded nothing — valid prose disabling the check.
+ * So the key itself is located outside quoted strings, and each array is found by bracket depth. A
+ * single pass does both, because only a scan that already tracks strings can say where a key is.
+ *
+ * Returns the slugs it could read. On input that does not close its brackets the depth never returns
+ * to zero and the scan simply ends at the end of the block, reporting what it saw — such a file does
+ * not typecheck and never reaches `main`, but reading part of it beats reading none of it.
+ */
+function newComponentSlugs(block) {
+  const slugs = [];
+  let started = false; // the bare key `newComponents` has been seen OUTSIDE any string
+  let depth = 0; // bracket/brace depth inside the newComponents value
+  let slugsAt = null; // the depth at which the `slugs:` array currently being read opened
+  let armed = false; // the bare key `slugs` was just read, so its `[` is the next one
+  for (let i = 0; i < block.length; i++) {
+    const c = block[i];
+    if (c === '"') {
+      // Consume the whole string literal, so nothing inside it is ever read as syntax.
+      let j = i + 1;
+      for (; j < block.length; j++) {
+        if (block[j] === "\\") j++;
+        else if (block[j] === '"') break;
+      }
+      if (started && slugsAt !== null) {
+        const raw = block.slice(i, j + 1);
+        let value;
+        try {
+          value = JSON.parse(raw);
+        } catch {
+          value = raw.slice(1, -1);
+        }
+        slugs.push(value);
+      }
+      armed = false;
+      i = j;
+      continue;
+    }
+    if (/[A-Za-z_$]/.test(c)) {
+      let j = i;
+      while (j < block.length && /[A-Za-z0-9_$]/.test(block[j])) j++;
+      const word = block.slice(i, j);
+      if (!started) {
+        if (word === "newComponents") started = true;
+      } else if (word === "slugs") {
+        armed = true;
+      }
+      i = j - 1;
+      continue;
+    }
+    if (!started) continue;
+    if (c === "[" || c === "{") {
+      depth++;
+      if (armed && c === "[") slugsAt = depth;
+      armed = false;
+    } else if (c === "]" || c === "}") {
+      if (slugsAt === depth) slugsAt = null;
+      armed = false;
+      depth--;
+      if (depth <= 0) break; // the end of the newComponents value itself
+    }
+  }
+  return slugs;
+}
+
 // parse the entries out of releases.ts
 const src = read("apps/web/src/lib/releases.ts");
 const body = src.slice(src.indexOf("export const RELEASES"));
@@ -64,7 +138,7 @@ const entries = blocks.map((b) => ({
   date: b.match(/date: "([^"]+)"/)?.[1],
   hasBreaking: /\n    breaking:/.test(b),
   releaseUrl: b.match(/\n    githubReleaseUrl: "([^"]*)"/)?.[1],
-  slugs: [...(b.match(/newComponents:[\s\S]*?\n    \],/)?.[0] ?? "").matchAll(/"([a-z][a-z0-9-]*)"/g)].map((m) => m[1]).filter((s) => s !== "group"),
+  slugs: newComponentSlugs(b),
 }));
 if (entries.length < 5 || entries.some((e) => !e.version || !e.date)) errors.push("could not parse RELEASES in apps/web/src/lib/releases.ts");
 

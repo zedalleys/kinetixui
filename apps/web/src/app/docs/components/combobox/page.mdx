@@ -14,9 +14,10 @@ export const metadata = componentMetadata("combobox");
 
 ## React installation
 
-```bash
-npx @kinetixui/cli add combobox
-```
+There is no `Combobox` export and no `combobox` registry item — it is a documented composition of
+`Command` inside a `Popover`. Add the two pieces it is built from:
+
+<Command op="cli-add" components={["command","popover"]} />
 
 ## React usage
 

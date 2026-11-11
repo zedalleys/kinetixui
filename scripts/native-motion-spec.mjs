@@ -19,6 +19,7 @@ export const PLATFORMS = {
     preference: /accessibilityReduceMotion/,
     families: {
       disclosure: {
+        contractRole: "disclosure",
         helper: "KinetixDisclosureMotion.swift",
         members: ["Accordion.swift", "Collapsible.swift"],
         test: "packages/ui-swiftui/Tests/KinetixUITests/DisclosureMotionTests.swift",
@@ -28,6 +29,7 @@ export const PLATFORMS = {
         directions: [/\.expanding\b/, /\.collapsing\b/],
       },
       selection: {
+        contractRole: "selection-control",
         helper: "KinetixSwitchMotion.swift",
         members: ["Switch.swift"],
         test: "packages/ui-swiftui/Tests/KinetixUITests/SwitchMotionTests.swift",
@@ -37,11 +39,13 @@ export const PLATFORMS = {
       // ToggleGroup.swift is deliberately not a member — it is a pass-through to Toggle and animates
       // nothing of its own, and a member that never animates makes the family's wiring check vacuous.
       selectionState: {
+        contractRole: "selection-state",
         helper: "KinetixSelectionMotion.swift",
         members: ["Toggle.swift", "Checkbox.swift", "RadioGroup.swift"],
         test: "packages/ui-swiftui/Tests/KinetixUITests/SelectionMotionTests.swift",
       },
       slide: {
+        contractRole: "spatial",
         // A panel that slides across the screen is positional movement, which is what Reduce Motion
         // exists to remove. The reduced form is a cross-fade. See the helper's header.
         // `strict`: the member must read the setting itself AND call the helper. A view can name a helper in a
@@ -53,6 +57,7 @@ export const PLATFORMS = {
         test: "packages/ui-swiftui/Tests/KinetixUITests/SlideMotionTests.swift",
       },
       loop: {
+        contractRole: "loop",
         // A loop has no destination to keep, so its reduced form is not a shorter duration but no loop
         // at all plus a static state that says the same thing. See the helper's header.
         strict: true,
@@ -73,11 +78,13 @@ export const PLATFORMS = {
     preference: /ANIMATOR_DURATION_SCALE|rememberReduceMotion/,
     families: {
       disclosure: {
+        contractRole: "disclosure",
         helper: "KinetixDisclosureMotion.kt",
         members: ["Accordion.kt", "Collapsible.kt"],
         test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/DisclosureMotionTest.kt",
       },
       selection: {
+        contractRole: "selection-control",
         helper: "KinetixSwitchMotion.kt",
         members: ["Switch.kt"],
         test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SwitchMotionTest.kt",
@@ -87,11 +94,13 @@ export const PLATFORMS = {
       // ToggleGroup.kt is deliberately not a member — it is a pass-through to Toggle and animates
       // nothing of its own, and a member that never animates makes the family's wiring check vacuous.
       selectionState: {
+        contractRole: "selection-state",
         helper: "KinetixSelectionMotion.kt",
         members: ["Toggle.kt", "Checkbox.kt", "RadioGroup.kt"],
         test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionMotionTest.kt",
       },
       loop: {
+        contractRole: "loop",
         // A loop has no destination to keep, so its reduced form is not a shorter duration but no loop
         // at all plus a static state that says the same thing. See the helper's header.
         strict: true,
@@ -108,11 +117,13 @@ export const PLATFORMS = {
     preference: /disableAnimationsOf|disableAnimations|reduceMotionOf|runsOf/,
     families: {
       disclosure: {
+        contractRole: "disclosure",
         helper: "kinetix_disclosure_motion.dart",
         members: ["accordion.dart", "collapsible.dart"],
         test: "packages/ui-flutter/test/disclosure_motion_test.dart",
       },
       selection: {
+        contractRole: "selection-control",
         helper: "kinetix_switch_motion.dart",
         members: ["switch.dart"],
         test: "packages/ui-flutter/test/switch_motion_test.dart",
@@ -122,11 +133,13 @@ export const PLATFORMS = {
       // toggle_group.dart is deliberately not a member — it is a pass-through to toggle.dart and
       // animates nothing of its own, and a member that never animates makes the wiring check vacuous.
       selectionState: {
+        contractRole: "selection-state",
         helper: "kinetix_selection_motion.dart",
         members: ["toggle.dart", "checkbox.dart", "radio_group.dart"],
         test: "packages/ui-flutter/test/selection_motion_test.dart",
       },
       loop: {
+        contractRole: "loop",
         // A loop has no destination to keep, so its reduced form is not a shorter duration but no loop
         // at all plus a static state that says the same thing. See the helper's header.
         strict: true,

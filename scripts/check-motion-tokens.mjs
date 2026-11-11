@@ -21,11 +21,16 @@
  * 4. The contract (tokens/contracts/motion.json) is held to the source: every tier is described, every
  *    MX1 proposal decision still matches the values, every role names real tokens and a known reduced
  *    form, every "proven" role names evidence that exists and consumers on at least two platforms,
- *    every consumer still contains what the role says it uses, and every recorded deviation still
- *    deviates.
+ *    every consumer still contains what the role says it uses and names at least one thing to look
+ *    for, and every recorded deviation still deviates — either from the role's tokens, or, where it
+ *    says `departs: "reducedForm"`, from the role's reduced form.
  * 5. The set of consumer identities — (role, platform, file) — matches tokens/contracts/motion-consumers.json
  *    exactly, in both directions. Point 4 can only validate the consumers that are present; this is what
  *    notices one that has gone missing, which no other gate in the repository does.
+ * 6. Every native motion family in scripts/native-motion-spec.mjs is mentioned by the contract role it
+ *    says it implements — as a consumer where it uses that role's tokens, as a deviation where it
+ *    reaches the same intent another way — and every native file the contract names is some family's
+ *    helper. Two files declared native coverage and neither could see the other.
  *
  * It is a static check. It does not prove rendered motion (`check:motion`, `check:loop-motion`) or
  * native runtime behaviour (native-*.yml); native mappings here are validated against generated
@@ -36,6 +41,8 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+
+import { PLATFORMS } from "./native-motion-spec.mjs";
 
 const NATIVE_FILES = {
   swift: ["packages/tokens/dist/ios/KinetixMotion.swift", "packages/ui-swiftui/Sources/KinetixUI/KinetixMotion.swift"],
@@ -63,7 +70,21 @@ const REFERENCE_FILES = [{ f: "packages/ui/tailwind.config.ts", kind: "css" }];
 const STATUSES = ["proven", "observed", "proposed"];
 const DECISIONS = ["matches", "kept-name", "kept-value", "outside-proposal"];
 
-export function motionErrors(overrides = {}) {
+/**
+ * `ledgerPlatforms` is a seam, not a setting. The native ledger is a static ESM import, so
+ * `--overrides` — which substitutes file CONTENT — cannot reach it, and clause 6 below would have had
+ * half its claims untestable: the contract side could be mutated and the ledger side could not. The
+ * CLI never passes it. `apps/web/src/lib/motion-tokens-guard.test.ts` does, to watch the ledger-side
+ * clauses fail.
+ *
+ * Its type is deliberately the shape clause 6 reads, not `typeof PLATFORMS`: a control that proves the
+ * missing-`contractRole` diagnosis has to pass a ledger with that key absent, which the exact type of
+ * the real ledger forbids.
+ *
+ * @param {Record<string, string>} [overrides] file content keyed by repo-relative path
+ * @param {Record<string, { dir?: string, families?: Record<string, { contractRole?: string, helper?: string }> }>} [ledgerPlatforms]
+ */
+export function motionErrors(overrides = {}, ledgerPlatforms = PLATFORMS) {
   const read = (p) => (p in overrides ? overrides[p] : readFileSync(join(ROOT, p), "utf8"));
   const exists = (p) => p in overrides || existsSync(join(ROOT, p));
   const errors = [];
@@ -228,7 +249,15 @@ export function motionErrors(overrides = {}) {
     const consumers = role.consumers ?? [];
     if (role.status === "proven") {
       if (!(role.evidence ?? []).length) fail(`${at} is proven but cites no evidence`);
-      if (!isLoop && new Set(consumers.map((c) => c.platform)).size < 2) fail(`${at} is proven but has consumers on fewer than two platforms`);
+      /* The two-platform rule applies to loops as well. It did not, and the exemption was wider than the
+       * reason for it: a loop is exempt from naming a duration/easing PAIRING, because it has no
+       * destination to arrive at, but nothing about that frees it from naming the platforms it runs on.
+       * With the exemption in place `loop` sat at "proven" on zero consumers — a weaker bar than
+       * "observed", which demands at least one — so the role's platform coverage was undeclared, no
+       * `loop|…` identity existed, and the register in point 5 had nothing to hold. Four React
+       * components, one Angular stylesheet and three native helpers were all implemented and tested in
+       * their own suites the whole time; the contract simply did not say so. */
+      if (new Set(consumers.map((c) => c.platform)).size < 2) fail(`${at} is proven but has consumers on fewer than two platforms`);
     }
     if (role.status === "observed" && !consumers.length) fail(`${at} is observed but lists no consumer`);
     if (role.status === "proposed" && consumers.length) fail(`${at} is proposed but lists consumers; promote it to observed`);
@@ -252,6 +281,12 @@ export function motionErrors(overrides = {}) {
         }
       }
       if (!isLoop && (!seenD.size || !seenE.size)) fail(`${cat}: names no role duration or no role easing, so it proves nothing about the pairing`);
+      /* A loop consumer is held to the same shape of claim, in its own vocabulary. It cannot name a
+       * duration/easing pairing — its period is a keyframe, not a tier — but it can name the source
+       * that decides whether the loop runs, which is the whole of its contract. An empty `expects`
+       * would register a platform and check nothing in it, so the identity would survive the file
+       * being rewritten; that is the hole the register exists to close, re-opened from the inside. */
+      if (isLoop && !(c.expects ?? []).length) fail(`${cat}: names nothing to look for, so registering it proves nothing about the reduced form`);
     }
     for (const dv of role.deviations ?? []) {
       const dat = `${at}, ${dv.platform} deviation in ${dv.file}`;
@@ -260,7 +295,23 @@ export function motionErrors(overrides = {}) {
       else if (!read(dv.file).includes(dv.uses)) fail(`${dat}: no longer contains "${dv.uses}"; if it was aligned, remove the deviation`);
       const offRole = [...dv.uses.matchAll(DUR_REF)].some(([, d]) => !(role.duration ?? []).includes(d)) ||
         [...dv.uses.matchAll(EASE_REF)].some(([, e]) => !(role.easing ?? []).includes(e));
-      if (!offRole) fail(`${dat}: "${dv.uses}" uses only the role's own tokens, so it is not a deviation`);
+      /* Two kinds of deviation, and until now the contract could only say one of them.
+       *
+       * A TOKEN deviation reaches for a timing that is not the role's, and the test above is exactly
+       * right for it: if every token in `uses` belongs to the role, nothing departed.
+       *
+       * A REDUCED-FORM deviation departs from what the role does when the reader asks for less motion,
+       * and it can do that without naming a token at all. Angular's spinner is the live case: with
+       * reduce it keeps turning at `animation-duration: 3s` instead of taking this role's `rest`. There
+       * is no token in that declaration for the test above to find — `animation-duration` is not
+       * `--duration-…` — so the only ways to record it were to omit Angular, which would have left the
+       * contract claiming a coverage it does not have, or to file it as a consumer, which would have
+       * claimed it rests when it does not. `departs: "reducedForm"` is the third option, and it is held
+       * to the two things that make it checkable: the source still says it, and a reason says why. */
+      if (dv.departs !== undefined && dv.departs !== "reducedForm") fail(`${dat}: departs "${dv.departs}" is not a kind of deviation; the only named kind is reducedForm`);
+      if (dv.departs === "reducedForm") {
+        if (offRole) fail(`${dat}: is filed as a reduced-form deviation but "${dv.uses}" already reaches for a token outside the role; record it as a token deviation and drop \`departs\``);
+      } else if (!offRole) fail(`${dat}: "${dv.uses}" uses only the role's own tokens, so it is not a deviation`);
     }
   }
 
@@ -298,6 +349,72 @@ export function motionErrors(overrides = {}) {
       fail(
         `contract: the contract lists consumer "${id}", which motion-consumers.json does not hold. ` +
           `Add that exact line to its "identities" so the addition is reviewed.`,
+      );
+    }
+  }
+
+  /* 6. The contract and the native ledger must agree about which platforms implement each role.
+   *
+   * Two files in this repository declare native motion coverage, and until now neither could see the
+   * other. `tokens/contracts/motion.json` says which platforms consume a role's tokens.
+   * `scripts/native-motion-spec.mjs` says which platforms have a motion helper for a family, and
+   * `check:native-motion` holds every member of that family to it. Both are canonical. Both were
+   * believed. They disagreed.
+   *
+   * Measured on `590368dd`: the ledger wired SwiftUI's `KinetixSlideMotion.swift` as a strict family
+   * with three members and its own test suite, while the contract's `spatial` role listed React alone
+   * and did not mention SwiftUI in any form. The identity register could not notice — it compares the
+   * contract to itself, so a platform the contract never knew about was never missing. `loop` was the
+   * same divergence three times over until the commit before this one.
+   *
+   * The rule is a MENTION, deliberately, not a consumer. A platform may implement a role's intent
+   * without consuming its tokens: SwiftUI's slide reaches `.move(edge:)`/`.opacity` and its dismissal
+   * borrows the switch role's duration, so filing it as a consumer would claim a token pairing that is
+   * not there. A `deviations` entry says the true thing instead. Either satisfies this clause; silence
+   * does not.
+   *
+   * It runs in both directions. A native consumer or deviation in the contract whose file is no
+   * family's helper is the mirror image: either the ledger lost the family, or the contract names a
+   * file nothing holds the members of. */
+  const NATIVE_PLATFORMS = { SwiftUI: "swiftui", Compose: "compose", Flutter: "flutter" };
+  const ledger = new Map();
+  for (const [ledgerName, p] of Object.entries(ledgerPlatforms)) {
+    const platform = NATIVE_PLATFORMS[ledgerName];
+    if (!platform) continue;
+    for (const [family, f] of Object.entries(p.families ?? {})) {
+      if (!f.contractRole) {
+        fail(
+          `native ledger: the ${ledgerName} ${family} family names no contractRole, so nothing says which ` +
+            `motion role it implements and the contract cannot be held to it.`,
+        );
+        continue;
+      }
+      ledger.set(`${f.contractRole}|${platform}|${p.dir}/${f.helper}`, `${ledgerName} ${family}`);
+    }
+  }
+  const mentioned = new Set(
+    Object.entries(contract.roles ?? {}).flatMap(([name, role]) =>
+      [...(role.consumers ?? []), ...(role.deviations ?? [])]
+        .filter((e) => Object.values(NATIVE_PLATFORMS).includes(e.platform))
+        .map((e) => `${name}|${e.platform}|${e.file}`),
+    ),
+  );
+  for (const [id, where] of [...ledger].sort(([a], [b]) => (a < b ? -1 : 1))) {
+    if (!mentioned.has(id)) {
+      fail(
+        `contract: the native ledger wires ${where} (${id.split("|")[2]}), which the contract's ` +
+          `"${id.split("|")[0]}" role does not mention on ${id.split("|")[1]}. ` +
+          `Add it as a consumer if it uses the role's tokens, or as a deviation if it implements the ` +
+          `role differently — but the contract cannot stay silent about a platform that has the motion.`,
+      );
+    }
+  }
+  for (const id of [...mentioned].sort()) {
+    if (!ledger.has(id)) {
+      fail(
+        `contract: "${id}" names a native file that is no motion family's helper in ` +
+          `scripts/native-motion-spec.mjs. Either the ledger lost that family, or the contract points ` +
+          `at a file whose members nothing holds to the reader's setting.`,
       );
     }
   }
