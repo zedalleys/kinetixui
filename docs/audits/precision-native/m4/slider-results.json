@@ -1,0 +1,722 @@
+[
+  {
+    "broken": true,
+    "width": 1440,
+    "dir": "ltr",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": true,
+    "width": 1440,
+    "dir": "ltr",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": true,
+    "width": 1440,
+    "dir": "ltr",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": true,
+    "width": 1440,
+    "dir": "ltr",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": true,
+    "width": 1440,
+    "dir": "ltr",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": true,
+    "width": 1440,
+    "dir": "rtl",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 624
+  },
+  {
+    "broken": true,
+    "width": 1440,
+    "dir": "rtl",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 624
+  },
+  {
+    "broken": true,
+    "width": 1440,
+    "dir": "rtl",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 384.015625
+  },
+  {
+    "broken": true,
+    "width": 1440,
+    "dir": "rtl",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 383.984375
+  },
+  {
+    "broken": true,
+    "width": 1440,
+    "dir": "rtl",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 320,
+    "dir": "ltr",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 320,
+    "dir": "ltr",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 320,
+    "dir": "ltr",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 320,
+    "dir": "ltr",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 320,
+    "dir": "ltr",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 320,
+    "dir": "rtl",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 320,
+    "dir": "rtl",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 320,
+    "dir": "rtl",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 320,
+    "dir": "rtl",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 320,
+    "dir": "rtl",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 375,
+    "dir": "ltr",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 375,
+    "dir": "ltr",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 375,
+    "dir": "ltr",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 375,
+    "dir": "ltr",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 375,
+    "dir": "ltr",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 375,
+    "dir": "rtl",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 375,
+    "dir": "rtl",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 375,
+    "dir": "rtl",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 375,
+    "dir": "rtl",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 375,
+    "dir": "rtl",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 390,
+    "dir": "ltr",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 390,
+    "dir": "ltr",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 390,
+    "dir": "ltr",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 390,
+    "dir": "ltr",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 390,
+    "dir": "ltr",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 390,
+    "dir": "rtl",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 390,
+    "dir": "rtl",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 390,
+    "dir": "rtl",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 390,
+    "dir": "rtl",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 390,
+    "dir": "rtl",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 768,
+    "dir": "ltr",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 768,
+    "dir": "ltr",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 768,
+    "dir": "ltr",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 768,
+    "dir": "ltr",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.8125
+  },
+  {
+    "broken": false,
+    "width": 768,
+    "dir": "ltr",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 768,
+    "dir": "rtl",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 768,
+    "dir": "rtl",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 768,
+    "dir": "rtl",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.8125
+  },
+  {
+    "broken": false,
+    "width": 768,
+    "dir": "rtl",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 768,
+    "dir": "rtl",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 1024,
+    "dir": "ltr",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1024,
+    "dir": "ltr",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1024,
+    "dir": "ltr",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 1024,
+    "dir": "ltr",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.8125
+  },
+  {
+    "broken": false,
+    "width": 1024,
+    "dir": "ltr",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 1024,
+    "dir": "rtl",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1024,
+    "dir": "rtl",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1024,
+    "dir": "rtl",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.8125
+  },
+  {
+    "broken": false,
+    "width": 1024,
+    "dir": "rtl",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 1024,
+    "dir": "rtl",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 1280,
+    "dir": "ltr",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1280,
+    "dir": "ltr",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1280,
+    "dir": "ltr",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 1280,
+    "dir": "ltr",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 1280,
+    "dir": "ltr",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 1280,
+    "dir": "rtl",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1280,
+    "dir": "rtl",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1280,
+    "dir": "rtl",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 1280,
+    "dir": "rtl",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 1280,
+    "dir": "rtl",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 1440,
+    "dir": "ltr",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1440,
+    "dir": "ltr",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1440,
+    "dir": "ltr",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 1440,
+    "dir": "ltr",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 1440,
+    "dir": "ltr",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 1440,
+    "dir": "rtl",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1440,
+    "dir": "rtl",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1440,
+    "dir": "rtl",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 1440,
+    "dir": "rtl",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 1440,
+    "dir": "rtl",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 1920,
+    "dir": "ltr",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1920,
+    "dir": "ltr",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1920,
+    "dir": "ltr",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.8125
+  },
+  {
+    "broken": false,
+    "width": 1920,
+    "dir": "ltr",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 1920,
+    "dir": "ltr",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  },
+  {
+    "broken": false,
+    "width": 1920,
+    "dir": "rtl",
+    "value": "0",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1920,
+    "dir": "rtl",
+    "value": "100",
+    "method": "keyboard-endpoint",
+    "delta": 8
+  },
+  {
+    "broken": false,
+    "width": 1920,
+    "dir": "rtl",
+    "value": 80,
+    "method": "pointer-drag",
+    "delta": 4.796875
+  },
+  {
+    "broken": false,
+    "width": 1920,
+    "dir": "rtl",
+    "value": 20,
+    "method": "pointer-drag",
+    "delta": 4.8125
+  },
+  {
+    "broken": false,
+    "width": 1920,
+    "dir": "rtl",
+    "value": 50,
+    "method": "pointer-drag",
+    "delta": 0
+  }
+]

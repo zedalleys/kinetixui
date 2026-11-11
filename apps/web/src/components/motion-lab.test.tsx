@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { MotionLab } from "./motion-lab";
@@ -30,4 +30,22 @@ describe("motion laboratory", () => {
     await user.click(trigger);
     expect(panel).not.toBeVisible();
   });
+
+  it("follows document direction for tab navigation, including live changes", async () => {
+    const user = userEvent.setup();
+    document.documentElement.dir = "rtl";
+    try {
+      render(<MotionLab />);
+      await user.click(screen.getByRole("tab", { name: "Overview" }));
+      await user.keyboard("{ArrowRight}");
+      await waitFor(() => expect(screen.getByRole("tab", { name: "Settings" })).toHaveAttribute("aria-selected", "true"));
+      act(() => { document.documentElement.dir = "ltr"; });
+      await user.click(screen.getByRole("tab", { name: "Overview" }));
+      await user.keyboard("{ArrowRight}");
+      await waitFor(() => expect(screen.getByRole("tab", { name: "Activity" })).toHaveAttribute("aria-selected", "true"));
+    } finally {
+      document.documentElement.dir = "ltr";
+    }
+  });
+
 });

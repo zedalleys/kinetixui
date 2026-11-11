@@ -5,10 +5,12 @@ import Link from "next/link";
 import { ArrowUpRight, Check, ChevronDown } from "lucide-react";
 import { Button, Input, Spinner, Tabs, TabsContent, TabsList, TabsTrigger } from "@kinetixui/ui";
 import { MotionChart, MotionRange, MotionSearch, MotionSpeedDial } from "./motion-patterns";
+import { useDocumentDirection } from "@/lib/use-document-direction";
 import { useAnimatedNumber } from "@/lib/use-animated-number";
 
 /** User-driven state feedback with one bounded chart reveal on mount. No repeating choreography. */
 export function MotionLab() {
+  const dir = useDocumentDirection();
   const [amount, setAmount] = React.useState(64);
   const [expanded, setExpanded] = React.useState(false);
   const [email, setEmail] = React.useState("");
@@ -33,7 +35,7 @@ export function MotionLab() {
         </div>
         <div className="mt-12 grid gap-12 lg-rem:grid-cols-2 lg-rem:gap-20">
           <div className="min-w-0">
-            <Tabs defaultValue="overview">
+            <Tabs dir={dir} defaultValue="overview">
               <TabsList aria-label="Motion example" motion="fluid">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="activity">Activity</TabsTrigger>

@@ -48,9 +48,9 @@ export function MotionSpeedDial({ onSelect }: { onSelect: (action: string) => vo
 /** The bubble uses the slider's value and follows logical direction. Semantics stay on Radix's thumb. */
 export function MotionRange({ value, onValueChange, labelId }: { value: number; onValueChange: (value: number) => void; labelId: string }) {
   const dir = useDocumentDirection();
-  return <div className="relative pb-1 pt-10">
+  return <div className="relative pb-1 pt-5">
     <div aria-hidden="true" className="kx-value-bubble absolute top-0 rounded-md bg-foreground px-2 py-1 text-xs tabular-nums text-background" style={{ insetInlineStart: `clamp(1rem, ${value}%, calc(100% - 1rem))` }}>{value}%</div>
-    <Slider dir={dir} aria-labelledby={labelId} value={[value]} onValueChange={([v]) => onValueChange(v!)} max={100} step={1} />
+    <Slider className="min-h-11" dir={dir} aria-labelledby={labelId} value={[value]} onValueChange={([v]) => onValueChange(v!)} max={100} step={1} />
   </div>;
 }
 

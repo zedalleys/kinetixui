@@ -13,10 +13,10 @@ export function useAnimatedNumber(value: number): number {
     const duration = Number.isFinite(parsed) ? parsed * (css.endsWith("ms") ? 1 : 1000) : 300;
     const from = current.current;
     let frame = 0;
-    let start: number | undefined;
+    // Start at the update, so one-frame retargets still advance the visible value.
+    const start = performance.now();
     const finish = () => { cancelAnimationFrame(frame); current.current = value; setDisplay(value); };
     const tick = (time: number) => {
-      start ??= time;
       const progress = duration > 0 ? Math.min(1, (time - start) / duration) : 1;
       const next = progress === 1 ? value : from * (1 - progress) + value * progress;
       current.current = next;

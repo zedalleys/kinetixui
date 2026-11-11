@@ -11,7 +11,7 @@ await mkdir(out, { recursive: true });
 const browser = await chromium.launch();
 const results = [];
 for (const width of [1440,390,320]) for (const theme of ['light','dark']) for (const scale of (width === 320 ? [1,2] : [1])) {
-  const context = await browser.newContext({viewport:{width,height:900}, reducedMotion:'reduce',colorScheme:theme});
+  const context = await browser.newContext({viewport:{width,height:900}, hasTouch:width<768, reducedMotion:'reduce',colorScheme:theme});
   await context.addInitScript((t) => { localStorage.setItem('theme',t); localStorage.setItem('kx-consent','denied'); },theme);
   const page = await context.newPage();
   const errors=[];page.on('pageerror', e=>errors.push(e.message));
@@ -52,11 +52,22 @@ for (const width of [1440,390,320]) for (const theme of ['light','dark']) for (c
     await page.evaluate(d=>document.documentElement.dir=d,dir);
     await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     // Geometry, not merely overflow: the bubble and thumb must express the same value in either direction.
+    const overview = page.getByRole('tab', {name: 'Overview', exact: true});
+    await overview.click();
+    await overview.press('ArrowRight');
+    await page.waitForFunction(name => [...document.querySelectorAll('#motion [role=tab][aria-selected=true]')].some(el => el.textContent === name), dir === 'rtl' ? 'Settings' : 'Activity');
     const range = page.locator('#motion [role="slider"]');
-    for (const [startKey, stepKey, expected] of [['Home', 'PageUp', '20'], ['End', 'PageDown', '80']]) {
+    const root = range.locator('xpath=ancestor::*[@dir][1]');
+    assert.ok((await root.boundingBox()).height >= 44, 'Motion Lab slider needs a coarse-pointer hit area');
+    if (width < 768) {
+      await range.scrollIntoViewIfNeeded();
+      const box = await root.boundingBox();
+      await page.touchscreen.tap(box.x + box.width * .25, box.y + box.height / 2 + 18);
+      await page.waitForFunction(expected => Math.abs(Number(document.querySelector('#motion [role=slider]').getAttribute('aria-valuenow')) - expected) <= 2, dir === 'rtl' ? 75 : 25);
+    }
+    for (const [startKey, stepKey, expected] of [['Home', null, '0'], ['Home', 'PageUp', '20'], ['Home', 'PageUp', '50'], ['End', 'PageDown', '80'], ['End', null, '100']]) {
       await range.press(startKey);
-      await range.press(stepKey);
-      await range.press(stepKey);
+      if (stepKey) for (let i = 0; i < (expected === '50' ? 5 : 2); i++) await range.press(stepKey);
       assert.equal(await range.getAttribute('aria-valuenow'), expected);
       await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
       const thumb = await range.boundingBox();

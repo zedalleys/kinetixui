@@ -1,0 +1,2654 @@
+[
+  {
+    "width": 320,
+    "theme": "light",
+    "heroGeometry": {
+      "height": 1299.390625,
+      "meshShare": 0.26405296313120075
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 320,
+    "theme": "dark",
+    "heroGeometry": {
+      "height": 1299.390625,
+      "meshShare": 0.26405296313120075
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 375,
+    "theme": "light",
+    "heroGeometry": {
+      "height": 1265.21875,
+      "meshShare": 0.32824061228482454
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 375,
+    "theme": "dark",
+    "heroGeometry": {
+      "height": 1265.21875,
+      "meshShare": 0.32824061228482454
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "heroGeometry": {
+      "height": 1275.671875,
+      "meshShare": 0.3296798443712236
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "heroGeometry": {
+      "height": 1275.671875,
+      "meshShare": 0.3296798443712236
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 768,
+    "theme": "light",
+    "heroGeometry": {
+      "height": 1420.703125,
+      "meshShare": 0.27952581259442744
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "Volume",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 768,
+    "theme": "dark",
+    "heroGeometry": {
+      "height": 1420.703125,
+      "meshShare": 0.27952581259442744
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "Volume",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 1024,
+    "theme": "light",
+    "heroGeometry": {
+      "height": 1009.25,
+      "meshShare": 0.2995045891294675
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "Volume",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 1024,
+    "theme": "dark",
+    "heroGeometry": {
+      "height": 1009.25,
+      "meshShare": 0.2995045891294675
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "Volume",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 1280,
+    "theme": "light",
+    "heroGeometry": {
+      "height": 1004.875,
+      "meshShare": 0.30723603846073627
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "Volume",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 1280,
+    "theme": "dark",
+    "heroGeometry": {
+      "height": 1004.875,
+      "meshShare": 0.30723603846073627
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "Volume",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 1440,
+    "theme": "light",
+    "heroGeometry": {
+      "height": 915.6875,
+      "meshShare": 0.3767877625518979
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "Volume",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "heroGeometry": {
+      "height": 915.6875,
+      "meshShare": 0.3767877625518979
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "Volume",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 1920,
+    "theme": "light",
+    "heroGeometry": {
+      "height": 915.6875,
+      "meshShare": 0.37561744711337947
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "Volume",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  },
+  {
+    "width": 1920,
+    "theme": "dark",
+    "heroGeometry": {
+      "height": 915.6875,
+      "meshShare": 0.37561744711337947
+    },
+    "checkpoints": [
+      {
+        "dir": "ltr",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "ltr",
+        "selector": "footer",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#flagship",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "#motion",
+        "fit": true
+      },
+      {
+        "dir": "rtl",
+        "selector": "footer",
+        "fit": true
+      }
+    ],
+    "axe": [],
+    "headings": [
+      {
+        "level": "H1",
+        "text": "One design language. Five native implementations."
+      },
+      {
+        "level": "H2",
+        "text": "One component. Every platform."
+      },
+      {
+        "level": "H3",
+        "text": "Product updates"
+      },
+      {
+        "level": "H2",
+        "text": "Small details. Complete interfaces."
+      },
+      {
+        "level": "H3",
+        "text": "Notification preferences"
+      },
+      {
+        "level": "H3",
+        "text": "Segmented control"
+      },
+      {
+        "level": "H3",
+        "text": "Slider"
+      },
+      {
+        "level": "H3",
+        "text": "Native select"
+      },
+      {
+        "level": "H2",
+        "text": "Motion with a reason."
+      },
+      {
+        "level": "H3",
+        "text": "Feedback you can follow."
+      },
+      {
+        "level": "H3",
+        "text": "Room for the next action."
+      },
+      {
+        "level": "H4",
+        "text": "Progressive data reveal"
+      },
+      {
+        "level": "H2",
+        "text": "A shared language. Native by design."
+      },
+      {
+        "level": "H3",
+        "text": "Dynamic tokens"
+      },
+      {
+        "level": "H3",
+        "text": "Implemented per platform"
+      },
+      {
+        "level": "H3",
+        "text": "Own your code"
+      },
+      {
+        "level": "H3",
+        "text": "Light & dark, verified"
+      },
+      {
+        "level": "H2",
+        "text": "Generated tokens. Hand-written components."
+      },
+      {
+        "level": "H2",
+        "text": "Claims you can check."
+      },
+      {
+        "level": "H2",
+        "text": "You do not have to replace your design system to use this one."
+      },
+      {
+        "level": "H3",
+        "text": "Keep your components"
+      },
+      {
+        "level": "H3",
+        "text": "Copy what you need"
+      },
+      {
+        "level": "H3",
+        "text": "Whole patterns"
+      },
+      {
+        "level": "H2",
+        "text": "Connected-device products"
+      },
+      {
+        "level": "H2",
+        "text": "Built for teams that ship on more than one platform."
+      }
+    ],
+    "smallTargets": [
+      {
+        "name": "Skip to content",
+        "tag": "A",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "name": "Volume",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      },
+      {
+        "name": "",
+        "tag": "SPAN",
+        "w": 16,
+        "h": 16
+      }
+    ],
+    "rtlTabAfterArrowRightFromOverview": "Settings",
+    "runtimeErrors": [],
+    "externalHttpFailures": [
+      "403 https://api.github.com/repos/zedalleys/kinetixui"
+    ]
+  }
+]
