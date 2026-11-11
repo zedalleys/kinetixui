@@ -26,10 +26,9 @@ export class KxAnimatedNumber {
       const parsed = parseFloat(css);
       const duration = Number.isFinite(parsed) ? parsed * (css.endsWith('ms') ? 1 : 1000) : 300;
       let frame = 0;
-      let start: number | undefined;
+      const start = view.performance.now();
       const finish = () => { view.cancelAnimationFrame(frame); this.current = value; this.display.set(value); };
       const tick = (time: number) => {
-        start ??= time;
         const progress = duration > 0 ? Math.min(1, (time - start) / duration) : 1;
         this.current = progress === 1 ? value : from * (1 - progress) + value * progress;
         this.display.set(this.current);
