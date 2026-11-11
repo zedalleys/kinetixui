@@ -77,6 +77,13 @@ export const PLATFORMS = {
       /animate[A-Z]\w*AsState|AnimatedVisibility|AnimatedContent|updateTransition|rememberInfiniteTransition|animateContentSize|animateScroll[A-Z]\w*|\.animateTo\(/,
     preference: /ANIMATOR_DURATION_SCALE|rememberReduceMotion/,
     families: {
+      carousel: {
+        contractRole: "spatial",
+        strict: true,
+        helper: "KinetixCarouselMotion.kt",
+        members: ["Carousel.kt"],
+        test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/CarouselMotionTest.kt",
+      },
       disclosure: {
         contractRole: "disclosure",
         helper: "KinetixDisclosureMotion.kt",
@@ -172,7 +179,6 @@ export const KNOWN_GAPS = {
   Compose: {
     "CircularProgress.kt": "determinate ring sweep — progress feedback family",
     "Progress.kt": "determinate bar — progress feedback family",
-    "Carousel.kt": "animated page scrolling via PagerState — carousel/pager family, its own slice",
   },
   Flutter: {
     "json_viewer.dart": "disclosure-shaped, but a data-viewer concern; its own slice",
@@ -188,6 +194,7 @@ export const KNOWN_GAPS = {
  * difference between "the word appears somewhere" and "a test says it covers this".
  */
 export const DIRECTION_TERMS = {
+  carousel: { forward: /\bforward/i, reverse: /\bbackward/i },
   // A disclosure opens and closes.
   disclosure: {
     forward: /\b(expand|open|enter|reveal)/i,

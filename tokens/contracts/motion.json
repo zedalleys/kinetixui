@@ -246,6 +246,13 @@
           "uses": "slides(reduceMotion: reduceMotion) ? .move(edge: edge) : .opacity",
           "departs": "reducedForm",
           "reason": "SwiftUI implements this role's intent for Sheet, Sidebar and Toaster, and reaches it two ways that are not the role's. Its reduced form is a cross-fade, not this role's `shorten`: sliding is positional movement, which is what Reduce Motion exists to remove, and a fade carries the same fact without it, which is Apple's own guidance. And its timings are not these tokens — enter and leave are `AnyTransition` values the framework drives, and the library's own dismissal (Toaster's auto-dismiss) borrows `KinetixSwitchMotion.durationSeconds`. So it is recorded here rather than as a consumer: a consumer entry would claim a `slow`/`base` on `standard` pairing that no SwiftUI source contains. `scripts/native-motion-spec.mjs` holds its three members to the helper as a strict family, and SlideMotionTests.swift tests both directions."
+        },
+        {
+          "platform": "compose",
+          "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixCarouselMotion.kt",
+          "uses": "get() = if (reduceMotion.value) 0f else windowScale?.scaleFactor ?: 1f",
+          "departs": "reducedForm",
+          "reason": "Carousel button paging uses the native pager animation and window scale during normal motion. Reduced motion goes directly to the requested page without intermediate travel. If the preference changes during a button scroll, the running animation settles at its own target on the next frame. The scale applies only to programmatic button navigation, leaving native pointer paging in control of its own scroll."
         }
       ]
     },

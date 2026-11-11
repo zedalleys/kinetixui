@@ -9,6 +9,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -53,8 +54,9 @@ fun KinetixCarouselPrevious(
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
+    val reduceMotion = rememberUpdatedState(KinetixDisclosureMotion.rememberReduceMotion())
     KinetixButton(
-        onClick = { scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) } },
+        onClick = { scope.launch { KinetixCarouselMotion.move(pagerState, pagerState.currentPage - 1, reduceMotion) } },
         modifier = modifier.size(32.dp), // size-8, not on the shared scale
         variant = KinetixButtonVariant.Outline,
         corners = KinetixCorners.Pill,
@@ -71,8 +73,9 @@ fun KinetixCarouselNext(
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
+    val reduceMotion = rememberUpdatedState(KinetixDisclosureMotion.rememberReduceMotion())
     KinetixButton(
-        onClick = { scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) } },
+        onClick = { scope.launch { KinetixCarouselMotion.move(pagerState, pagerState.currentPage + 1, reduceMotion) } },
         modifier = modifier.size(32.dp), // size-8, not on the shared scale
         variant = KinetixButtonVariant.Outline,
         corners = KinetixCorners.Pill,
