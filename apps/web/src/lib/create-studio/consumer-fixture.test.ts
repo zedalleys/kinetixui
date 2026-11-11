@@ -21,6 +21,14 @@ it("typechecks and bundles exported source in a clean React consumer directory",
     await link(join(root, "packages/tokens"), "@kinetixui/tokens");
     let history = newHistory(createDocument("proj_consumer01", "Consumer"));
     for (const ref of ["component:Card", "component:Badge", "component:Input", "component:Button", "component:Tabs", "layout:stack", "layout:grid"]) history = execute(history, { type: "insert", parentId: "node_2", ref });
+    const gridId = history.selection[0];
+    const stackId = history.doc.pages[0].root.children![0].children!.find(node => node.ref === "layout:stack")!.id;
+    history = execute(history, { type: "responsive", id: stackId, breakpoint: "tablet", property: "axis", value: "row" });
+    history = execute(history, { type: "responsive", id: stackId, breakpoint: "desktop", property: "gap", value: "spacing.8" });
+    history = execute(history, { type: "responsive", id: gridId, breakpoint: "tablet", property: "columns", value: 3 });
+    history = execute(history, { type: "responsive", id: gridId, breakpoint: "desktop", property: "columns", value: 4 });
+    history = execute(history, { type: "responsive", id: "node_2", breakpoint: "tablet", property: "widthMode", value: "fill" });
+    history = execute(history, { type: "responsive", id: "node_2", breakpoint: "desktop", property: "padding", value: "spacing.8" });
     history = execute(history, { type: "page", name: "Settings" });
     history = execute(history, { type: "insert", parentId: history.doc.pages[1].root.id, ref: "layout:section" });
     const output = exportReact(history.doc);
@@ -39,7 +47,7 @@ it("typechecks and bundles exported source in a clean React consumer directory",
     await writeFile(join(directory, "input.css"), "@tailwind base;\n@tailwind components;\n@tailwind utilities;");
     execFileSync(process.execPath, [require.resolve("tailwindcss/lib/cli.js"), "-c", join(directory, "tailwind.config.cjs"), "-i", join(directory, "input.css"), "-o", join(directory, "utilities.css")], { stdio: "pipe" });
     await copyFile(join(root, "apps/web/src/app/fonts/inter-latin.woff2"), join(directory, "inter-latin.woff2"));
-    await writeFile(join(directory, "index.html"), '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Exported KinetixUI consumer</title><style>@font-face{font-family:Inter;src:url(inter-latin.woff2) format("woff2");font-weight:100 900;}</style><link rel="stylesheet" href="bundle.css"><link rel="stylesheet" href="utilities.css"></head><body><main id="root" style="padding:24px"></main><script type="module" src="bundle.js"></script></body></html>');
+    await writeFile(join(directory, "index.html"), '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Exported KinetixUI consumer</title><style>@font-face{font-family:Inter;src:url(inter-latin.woff2) format("woff2");font-weight:100 900;}</style><link rel="stylesheet" href="bundle.css"><link rel="stylesheet" href="utilities.css"></head><body><div id="root"></div><script type="module" src="bundle.js"></script></body></html>');
     expect(output.source).toContain("Screen2");
     expect(output.source).not.toContain("@/");
   } finally { if (!process.env.KINETIX_CREATE_EXPORT_FIXTURE) await rm(directory, { recursive: true, force: true }); }
