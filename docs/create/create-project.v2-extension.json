@@ -1,0 +1,94 @@
+{
+  "$comment": "Version 2 delta over immutable create-project.schema.json v1. schema.ts composes both sources; never duplicate the v1 definitions.",
+  "layoutRefs": [
+    "layout:stack",
+    "layout:grid",
+    "layout:section"
+  ],
+  "nodeProperties": {
+    "tokenBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "background": {
+          "type": "string",
+          "enum": [
+            "color.background",
+            "color.card",
+            "color.muted",
+            "color.primary"
+          ]
+        },
+        "foreground": {
+          "type": "string",
+          "enum": [
+            "color.foreground",
+            "color.primary-foreground",
+            "color.muted-foreground"
+          ]
+        }
+      }
+    },
+    "motionRef": {
+      "type": "string",
+      "pattern": "^motion:[a-z][a-z0-9-]*$"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 120
+        }
+      }
+    }
+  },
+  "layoutNode": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "kind",
+      "ref"
+    ],
+    "properties": {
+      "id": {
+        "$ref": "#/$defs/nodeId"
+      },
+      "kind": {
+        "const": "layout"
+      },
+      "ref": {
+        "type": "string",
+        "enum": [
+          "layout:stack",
+          "layout:grid",
+          "layout:section"
+        ]
+      },
+      "props": {
+        "$ref": "#/$defs/props"
+      },
+      "children": {
+        "$ref": "#/$defs/children"
+      }
+    }
+  },
+  "metadata": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "createdAt",
+      "updatedAt"
+    ],
+    "properties": {
+      "createdAt": {
+        "$ref": "#/$defs/timestamp"
+      },
+      "updatedAt": {
+        "$ref": "#/$defs/timestamp"
+      }
+    }
+  }
+}
