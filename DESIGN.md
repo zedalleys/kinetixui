@@ -103,6 +103,34 @@ Triangulated facets, narrow links and junctions come from the supplied SVG coord
 
 **The Source Geometry Rule.** 44 facets, 44 link outlines, 26 junctions, 3 light routes. Nothing invents geometry: the generator classifies the supplied shapes by their source tone, measures each junction's centre and measures the route lengths. `scripts/rebrand-browser.mjs` asserts those counts and that no facet's `d` changes — under the breath, under a pointer, or under any key.
 
+## Decorative non-semantic artwork
+
+These rules govern any decorative layer on the site, present or future — an illustration, a mesh, a glow, a
+texture, a plate. A layer is decorative when removing it costs the page no information. Such a layer may
+be as elaborate as the design wants, provided it never becomes part of the interface:
+
+- It is hidden from accessibility APIs wherever it carries no information: `aria-hidden` and
+  `role="presentation"` on the element, or an empty `alt` on an image.
+- It does not intercept pointer input. A press, a drag or a touch anywhere over it reaches whatever is
+  underneath, or scrolls the page.
+- It is not a focus target, and it holds no tab stop.
+- Focus indication is drawn by the interactive control, never by the artwork. A control's focus must stay
+  visible with the decoration removed, suppressed or failed to load.
+- Direction is handled explicitly wherever geometry carries it. A layer whose composition reads
+  left-to-right states what it does under RTL rather than inheriting a mirror by accident.
+- At 200% text the artwork does not obscure, clip or crowd the content. Text wins the space; the
+  decoration yields it.
+- Media preserves its intrinsic ratio, or declares an intentional crop and reserves the box that crop
+  needs, so nothing shifts when it arrives.
+- Its visual weight and contrast stay under the content's. A decoration that makes neighbouring text
+  harder to read is too strong, whatever it looks like alone.
+- It is never the sole carrier of state or meaning. Anything the artwork expresses is also expressed by
+  the text, the control or the markup around it.
+
+The mesh, the hero and the cursor glow under **Components** are the instances of this contract today, each
+with its own measurement and negative controls. A new decorative layer earns the same treatment: the rules
+above are the floor, not the whole of it.
+
 ## Components
 
 - **Hero CTAs:** both are the existing library Button at `size="lg"`, one filled and one Outline. They are part of the composition and are not removed to make room for the artwork.
