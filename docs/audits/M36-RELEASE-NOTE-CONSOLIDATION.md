@@ -35,6 +35,11 @@ No runtime source, package version, changeset, curated note, release workflow, a
 environment or credential changes belong to this candidate. The original PR branches are not
 modified. Existing tests from both implementations are retained rather than reimplemented.
 
+The publication owner checklist in RELEASING.md also follows the latest M3.6 policy: required
+reviewers, prevention of self-review where supported, main-only deployment and an environment-only
+NPM_TOKEN. The earlier solo-maintainer self-review exception is superseded. This is documentation
+of required owner actions; no environment setting, approval logic or credential is changed here.
+
 The current main missing 0.27.1 note remains a real base-branch problem. Passing this tooling-only
 PR through base attribution does not repair that note or make main release-ready. The owner has
 selected the 0.28.0 path, and #545 remains held until its curated note accounts for all changesets

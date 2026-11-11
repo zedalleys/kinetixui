@@ -400,18 +400,18 @@ negative controls, each removing one property and required to fail. What it cann
 Neither half is sufficient alone.
 
 **What this buys, and what it does not.** It converts an automatic consequence into a deliberate,
-logged act. For a solo maintainer the approver and the requester are the same person, so it is not a
-second pair of eyes and it does not stop a wrong-but-deliberate publication: approving a bad version
-publishes a bad version. It is also not a substitute for the gates — `publish` keeps
-`needs: preflight` — but a backstop for the case where one of them is wrong. And it adds a failure
-mode: an unapproved run blocks and looks like a hang, and auto-fails after 30 days.
+logged act. The M3.6 owner policy requires preventing self-review where GitHub supports it. That
+protection lives in the environment settings, not in `approval.mjs`, and needs an eligible reviewer
+other than the run initiator. Publication stays on hold when that arrangement cannot be satisfied.
+Approval is not a substitute for the gates — `publish` keeps `needs: preflight`. An unapproved run
+blocks and auto-fails after 30 days.
 
 **Owner steps (GitHub Settings → Environments), required once.** Until these are done every publish
 run fails at the approval assertion rather than publishing unapproved:
 
-1. Create an environment named exactly `publish-npm`.
-2. Add **Required reviewers**: `zedalleys`. Leave **Prevent self-review** OFF — it is opt-in, and
-   turning it on locks a solo maintainer out of every release.
+1. Create or configure the environment named exactly `publish-npm`.
+2. Configure **Required reviewers** and enable **Prevent self-review** where supported. Choose an
+   approver arrangement that can satisfy that restriction; do not disable it to clear a blocked run.
 3. Restrict deployment branches to `main`.
 4. Add `NPM_TOKEN` as an **environment secret** of `publish-npm`, then **delete the repository-scoped
    `NPM_TOKEN`**. Moving it, not copying it, is the point.
