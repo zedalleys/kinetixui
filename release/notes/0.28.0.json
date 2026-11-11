@@ -46,6 +46,30 @@
       "area": "release",
       "title": "Core moves together on the 0.28.0 release line",
       "body": "@kinetixui/ui and @kinetixui/tokens carry the changes. @kinetixui/cli moves with them because the three packages are one fixed Changesets cohort, even though it has no change of its own in this release. Angular and IoT continue on their independent release lines, at 0.26.3 and 0.6.0."
+    },
+    {
+      "kind": "accessibility",
+      "area": "components",
+      "title": "Field names only the description and message that exist, and announces an error",
+      "body": "Field no longer points aria-describedby at ids that are not in the document, and an inline error is announced once as an alert. The attribute is resolved at render time, so server markup is already correct and hydration does not change it."
+    },
+    {
+      "kind": "fixed",
+      "area": "components",
+      "title": "Carousel leaves arrow keys to the control that owns them",
+      "body": "A text field inside a slide keeps its caret keys, a nested control that handled the arrow keeps it, and Alt+ArrowLeft (browser Back) is no longer cancelled. A plain arrow from a button or the slide still scrolls."
+    },
+    {
+      "kind": "fixed",
+      "area": "components",
+      "title": "SegmentedControl cannot be emptied by pressing the selected segment",
+      "body": "Activating the selected segment again no longer clears the selection, so one segment is always marked. A controlled consumer can still pass value=\"\" to clear it."
+    },
+    {
+      "kind": "accessibility",
+      "area": "components",
+      "title": "Removing a chip or a file row keeps the keyboard",
+      "body": "After Tag, FileUpload or MultiSelect removes an item, focus moves to a surviving neighbour, in either text direction, and never overrides a focus move the consumer made."
     }
   ],
   "limitations": [
@@ -54,5 +78,33 @@
     "Angular remains Preview; this release does not graduate it.",
     "SwiftUI, Jetpack Compose and Flutter remain source-checkout distributions rather than packages published to their platform registries.",
     "The Storybook category rename that accompanied the component taxonomy work changes story titles only; it is not published package API."
+  ],
+  "coverage": [
+    {
+      "cohort": "angular",
+      "version": "0.26.3",
+      "changesets": [
+        "angular-tokens-peer-0-28"
+      ]
+    },
+    {
+      "cohort": "core",
+      "version": "0.28.0",
+      "changesets": [
+        "carousel-arrow-keys-yield",
+        "field-describedby-and-live-region",
+        "removable-chip-keyboard-focus",
+        "segmented-control-keeps-selection",
+        "tokens-kinetic-weave",
+        "ui-tabs-motion-and-reduced-motion-delay"
+      ]
+    },
+    {
+      "cohort": "iot",
+      "version": "0.6.0",
+      "changesets": [
+        "iot-device-ledger"
+      ]
+    }
   ]
 }
