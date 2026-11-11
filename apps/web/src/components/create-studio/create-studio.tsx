@@ -4,12 +4,20 @@ import { Button, Input, Label, NativeSelect, Checkbox, Dialog, DialogContent, Di
 import { Undo2, Redo2, Plus, Save, Download, ZoomIn, ZoomOut, Hand, MousePointer2, Layers, Package, ArrowUp, ArrowDown, Trash2, Sun, Moon } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { ADAPTERS, adapterFor, type Props } from "@/lib/create-studio/registry";
-import { assertDocument, findNode, serializeDocument, walk, type Document, type Node } from "@/lib/create-studio/model";
+import { migrateDocument, findNode, serializeDocument, walk, type Document, type Node } from "@/lib/create-studio/model";
 import { execute, newHistory, undo, redo, type History, type Command } from "@/lib/create-studio/commands";
 import { decodePreset } from "@kinetixui/create-preset";
 import { resolveCreateTheme, cssVarOverrides, hexToHslChannels } from "@kinetixui/create-theme";
 import { exportReact } from "@/lib/create-studio/export";
 import { NodeView } from "./node-view";
+import { ViewportPreview } from "./viewport-preview";
+import { BREAKPOINTS, canOverride, responsiveProps, type Breakpoint } from "@/lib/create-studio/responsive";
+
+const viewportPresets = [
+  { label: "Mobile", width: 390, height: 844 },
+  { label: "Tablet", width: 768, height: 1024 },
+  { label: "Desktop", width: 960, height: 800 },
+];
 type Product = { id: string; revision: number; doc: Document; readOnly: boolean };
 type Account = { accountId: string; workspaceId: string; productLimit: number; products: { id: string; name: string; readOnly: boolean; revision: number }[] };
 class ApiError extends Error { constructor(public code: string, message: string) { super(message); } }
@@ -32,7 +40,7 @@ function draftsFor(account: Account, product: Product): Draft[] {
   return Object.keys(localStorage).filter(key => key === prefix || key.startsWith(prefix + ":")).flatMap(key => {
     try {
       const draft = JSON.parse(localStorage.getItem(key) ?? "null");
-      assertDocument(draft?.doc);
+      draft.doc = migrateDocument(draft.doc);
       if (draft.doc.id !== product.id || !Number.isSafeInteger(draft.baseRevision) || draft.baseRevision < 1 || serializeDocument(draft.doc) === saved) return [];
       return [{ key, baseRevision: draft.baseRevision, doc: draft.doc, updatedAt: Number.isFinite(draft.updatedAt) ? draft.updatedAt : 0 }];
     } catch { return []; }
@@ -64,10 +72,13 @@ export function CreateStudio() {
   const [panel, setPanel] = React.useState<"layers" | "library">("library");
   const [search, setSearch] = React.useState("");
   const [viewport, setViewport] = React.useState(960);
+  const [viewportHeight, setViewportHeight] = React.useState(800);
+  const [breakpoint, setBreakpoint] = React.useState<Breakpoint | "base">("base");
   const [zoom, setZoom] = React.useState(1);
   const [offset, setOffset] = React.useState({ x: 24, y: 24 });
   const [pan, setPan] = React.useState(false);
   const [preview, setPreview] = React.useState(false);
+  const previewToggle = React.useRef<HTMLButtonElement>(null);
   const [dark, setDark] = React.useState(false);
   const [rtl, setRtl] = React.useState(false);
   const [inspector, setInspector] = React.useState(true);
@@ -81,6 +92,8 @@ export function CreateStudio() {
   const page = doc?.pages.find(p => p.id === pageId) ?? doc?.pages[0];
   const selected = history?.selection.map(id => findNode(history.doc, id)).filter((n): n is Node => !!n) ?? [];
   const current = selected[0];
+  const responsiveSelection = selected.length === 1 && current?.kind === "layout";
+  const activeBreakpoint = responsiveSelection ? BREAKPOINTS.find(item => item.id === breakpoint) : undefined;
   const dirty = !!doc && serializeDocument(doc) !== saved;
   const staleDraft = draftBase !== null && draftBase !== product?.revision;
   const themeStyle = React.useMemo(() => {
@@ -97,7 +110,17 @@ export function CreateStudio() {
   }
   const containers = rows.filter(row => row.node.kind === "slot" || (row.node.ref && ADAPTERS[row.node.ref]?.container));
   const selectionKey = history?.selection.join(",") ?? "";
-  React.useEffect(() => { setFieldDrafts({}); }, [selectionKey]);
+  React.useEffect(() => { setFieldDrafts({}); }, [selectionKey, breakpoint]);
+  const chooseViewport = (width: number) => {
+    const preset = viewportPresets.find(item => item.width === width);
+    if (!preset) return;
+    setViewport(preset.width);
+    setViewportHeight(preset.height);
+  };
+  const exitPreview = React.useCallback(() => {
+    setPreview(false);
+    previewToggle.current?.focus();
+  }, []);
   const perform = (command: Command) => {
     if (!history || readOnly || preview || busy) return false;
     try { const next = execute(history, command); setHistory(next); if (command.type === "page") setPageId(next.doc.pages.at(-1)!.id); setError(""); setNotice(command.type === "insert" ? `${adapterFor(command.ref).label} added.` : "Change applied."); return true; }
@@ -261,7 +284,7 @@ export function CreateStudio() {
           <Button size="icon" variant="Ghost" aria-label="Redo" title="Redo (⌘/Ctrl Shift Z)" disabled={!history.future.length || readOnly || busy || preview} onClick={() => applyHistory("redo")}><Redo2 className="size-4" /></Button>
           <span className="studio-save-state" role="status">{readOnly ? "Read-only · work preserved" : busy ? "Working…" : staleDraft ? "Draft revision conflict" : Object.keys(fieldDrafts).length ? "Unapplied property draft" : dirty ? "Unsaved changes" : "Saved locally"}</span>
           <Button variant="Outline" disabled={busy || readOnly || staleDraft || !dirty || !!Object.keys(fieldDrafts).length} onClick={save}><Save className="size-4" />Save</Button>
-          <Button variant={preview ? "Primary" : "Outline"} onClick={() => { setPreview(!preview); setPan(false); }}>{preview ? "Back to editing" : "Preview"}</Button>
+          <Button ref={previewToggle} variant={preview ? "Primary" : "Outline"} onClick={() => { setPreview(!preview); setPan(false); }}>{preview ? "Back to editing" : "Preview"}</Button>
           <Button disabled={!!Object.keys(fieldDrafts).length} onClick={exportFiles}><Download className="size-4" />Export React</Button>
         </div>
         {(error || staleDraft) && <div className="studio-error" role="alert"><p>{error || "This draft is based on a different saved revision. Download it or reopen the saved version."}</p><div><Button variant="Outline" size="sm" onClick={() => download("create-draft.json", serializeDocument(history.doc))}>Download draft</Button><Button variant="Ghost" size="sm" onClick={() => { void openProduct(product!.id, true); }}>Reopen saved (draft stays here)</Button></div></div>}
@@ -297,21 +320,23 @@ export function CreateStudio() {
           </aside>
           <div className="studio-center">
             <div className="studio-canvas-tools">
-              <div className="studio-viewport"><Label htmlFor="studio-viewport-width">Viewport</Label><NativeSelect id="studio-viewport-width" aria-label="Viewport width" value={viewport} onChange={e => setViewport(Number(e.target.value))}><option value={390}>Mobile · 390</option><option value={768}>Tablet · 768</option><option value={960}>Desktop · 960</option></NativeSelect></div>
+              <div className="studio-viewport"><Label htmlFor="studio-viewport-width">Viewport</Label><NativeSelect id="studio-viewport-width" aria-label="Viewport width" value={viewport} onChange={e => chooseViewport(Number(e.target.value))}>{viewportPresets.map(({ label, width, height }) => <option key={width} value={width}>{label} · {width} × {height}</option>)}</NativeSelect></div>
+              {preview && <div className="studio-viewport"><Label htmlFor="studio-viewport-height">Height</Label><NativeSelect id="studio-viewport-height" value={viewportHeight} onChange={e => setViewportHeight(Number(e.target.value))}>{[600, 800, 844, 1024].map(height => <option key={height} value={height}>{height} px</option>)}</NativeSelect></div>}
               <Button variant="Ghost" size="icon" aria-label={dark ? "Light canvas" : "Dark canvas"} onClick={() => setDark(!dark)}>{dark ? <Sun className="size-4" /> : <Moon className="size-4" />}</Button>
               <Button variant="Ghost" size="sm" aria-pressed={rtl} onClick={() => setRtl(!rtl)}>RTL</Button>
-              <Button variant={pan ? "Secondary" : "Ghost"} size="icon" aria-label={pan ? "Use selection tool" : "Use pan tool"} onClick={() => setPan(!pan)}>{pan ? <Hand className="size-4" /> : <MousePointer2 className="size-4" />}</Button>
+              <Button disabled={preview} variant={pan ? "Secondary" : "Ghost"} size="icon" aria-label={pan ? "Use selection tool" : "Use pan tool"} onClick={() => setPan(!pan)}>{pan ? <Hand className="size-4" /> : <MousePointer2 className="size-4" />}</Button>
             </div>
-            <div className={`studio-canvas ${pan ? "studio-panning" : ""}`} tabIndex={0} role="region" aria-label="Design canvas" onKeyDown={event => { if (event.target !== event.currentTarget) return; const delta: Record<string, [number, number]> = { ArrowLeft: [24, 0], ArrowRight: [-24, 0], ArrowUp: [0, 24], ArrowDown: [0, -24] }; if (delta[event.key]) { event.preventDefault(); const [x, y] = delta[event.key]; setOffset(p => ({ x: p.x + x, y: p.y + y })); } if (event.key.toLowerCase() === "h") setPan(true); if (event.key.toLowerCase() === "v") setPan(false); }} onPointerDown={e => {
-              if (!pan && e.button !== 1) return;
+            <div className={`studio-canvas ${pan ? "studio-panning" : ""} ${preview ? "studio-canvas-preview" : ""}`} tabIndex={0} role="region" aria-label="Design canvas" onKeyDown={event => { if (preview || event.target !== event.currentTarget) return; const delta: Record<string, [number, number]> = { ArrowLeft: [24, 0], ArrowRight: [-24, 0], ArrowUp: [0, 24], ArrowDown: [0, -24] }; if (delta[event.key]) { event.preventDefault(); const [x, y] = delta[event.key]; setOffset(p => ({ x: p.x + x, y: p.y + y })); } if (event.key.toLowerCase() === "h") setPan(true); if (event.key.toLowerCase() === "v") setPan(false); }} onPointerDown={e => {
+              if (preview || (!pan && e.button !== 1)) return;
               e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId);
               drag.current = { x: e.clientX, y: e.clientY, startX: offset.x, startY: offset.y };
             }} onPointerMove={e => { if (drag.current) setOffset({ x: drag.current.startX + e.clientX - drag.current.x, y: drag.current.startY + e.clientY - drag.current.y }); }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }}>
               <div className="studio-world" style={{ width: viewport, transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})` }}>
-                <div className="studio-artboard-label"><span>{page.name}</span><span>{viewport}px · {Math.round(zoom * 100)}%</span></div>
-                <div className={`studio-artboard ${dark ? "dark" : "theme-light"}`} dir={rtl ? "rtl" : "ltr"} style={{ ...themeStyle, pointerEvents: pan ? "none" : undefined }}>
-                  {page.root.children?.length ? <NodeView node={page.root} selection={history.selection} onSelect={select} preview={preview} /> : <div className="studio-empty"><h2>A new screen, ready for you.</h2><p>Add a frame, then fill it with components.</p><Button disabled={readOnly || preview} onClick={() => insert("layout:section")}><Plus className="size-4" />Add frame</Button></div>}
-                </div>
+                <div className="studio-artboard-label"><span>{page.name}</span><span>{preview ? `${viewport} × ${viewportHeight}` : `${viewport}px`} · {Math.round(zoom * 100)}%</span></div>
+                {preview ? <ViewportPreview root={page.root} height={viewportHeight} dark={dark} rtl={rtl} theme={themeStyle} onExit={exitPreview} /> :
+                  <div className={`studio-artboard ${dark ? "dark" : "theme-light"}`} dir={rtl ? "rtl" : "ltr"} style={{ ...themeStyle, pointerEvents: pan ? "none" : undefined }}>
+                    {page.root.children?.length ? <NodeView node={page.root} selection={history.selection} onSelect={select} editWidth={viewport} dir={rtl ? "rtl" : "ltr"} /> : <div className="studio-empty"><h2>A new screen, ready for you.</h2><p>Add a frame, then fill it with components.</p><Button disabled={readOnly} onClick={() => insert("layout:section")}><Plus className="size-4" />Add frame</Button></div>}
+                  </div>}
               </div>
             </div>
             <div className="studio-zoom" role="group" aria-label="Canvas camera"><Button size="icon" variant="Ghost" aria-label="Zoom out" onClick={() => setZoom(Math.max(.1, Math.round((zoom - .1) * 10) / 10))}><ZoomOut className="size-4" /></Button><span>{Math.round(zoom * 100)}%</span><Button size="icon" variant="Ghost" aria-label="Zoom in" onClick={() => setZoom(Math.min(4, Math.round((zoom + .1) * 10) / 10))}><ZoomIn className="size-4" /></Button><Button size="sm" variant="Ghost" onClick={() => { setZoom(1); setOffset({ x: 24, y: 24 }); }}>Reset view</Button><Button size="sm" variant="Ghost" disabled={dirty || busy || !!Object.keys(fieldDrafts).length} onClick={() => recover()}>Recover draft</Button></div>
@@ -321,15 +346,42 @@ export function CreateStudio() {
               <p className="studio-selection-label">{selected.length > 1 ? `${selected.length} layers selected` : selectedAdapter.label}</p>
               <p className="studio-muted">{current.ref}</p>
               <fieldset disabled={readOnly || preview || busy} className="studio-fields">
-                {controls.map(([key, control]) => {
-                  const values = selected.map(node => ({ ...adapterFor(node.ref!).defaults, ...node.props })[key]);
+                {responsiveSelection && <div className="studio-field">
+                  <Label htmlFor="studio-breakpoint">Edit at breakpoint</Label>
+                  <NativeSelect id="studio-breakpoint" value={breakpoint} onChange={event => {
+                    const next = BREAKPOINTS.find(item => item.id === event.target.value);
+                    setBreakpoint(next?.id ?? "base");
+                    if (next) chooseViewport(next.minWidth);
+                  }}>
+                    <option value="base">Base · all widths</option>
+                    {BREAKPOINTS.map(item => <option key={item.id} value={item.id}>{item.label} · {item.minWidth}px and up</option>)}
+                  </NativeSelect>
+                </div>}
+                {controls.filter(([key]) => !activeBreakpoint || canOverride(current.ref!, key)).map(([key, control]) => {
+                  const values = selected.map(node => ({
+                    ...adapterFor(node.ref!).defaults,
+                    ...(activeBreakpoint ? responsiveProps(node, activeBreakpoint.minWidth) : node.props),
+                  })[key]);
                   const mixed = values.some(value => value !== values[0]);
                   const value = fieldDrafts[key] ?? (mixed ? "" : String(values[0]));
-                  const apply = (v: Props[string]) => { if (!perform({ type: "props", ids: history.selection, patch: { [key]: v } })) return; setFieldDrafts(d => { const next = { ...d }; delete next[key]; return next; }); };
+                  const overridden = !!activeBreakpoint && Object.hasOwn(current.responsive?.[activeBreakpoint.id] ?? {}, key);
+                  const sourceId = activeBreakpoint ? `studio-source-${key}` : undefined;
+                  const inheritedBreakpoint = activeBreakpoint && [...BREAKPOINTS].reverse().find(item =>
+                    item.minWidth < activeBreakpoint.minWidth && Object.hasOwn(current.responsive?.[item.id] ?? {}, key));
+                  const apply = (v?: Props[string]) => {
+                    if (activeBreakpoint) {
+                      if (!perform({ type: "responsive", id: current.id, breakpoint: activeBreakpoint.id, property: key, value: v })) return;
+                    } else if (v === undefined || !perform({ type: "props", ids: history.selection, patch: { [key]: v } })) return;
+                    setFieldDrafts(d => { const next = { ...d }; delete next[key]; return next; });
+                  };
                   return <div key={key} className="studio-field"><Label htmlFor={`studio-prop-${key}`}>{control.label}{mixed ? " · Mixed" : ""}</Label>
-                    {control.type === "select" ? <NativeSelect id={`studio-prop-${key}`} value={mixed ? "" : String(values[0])} onChange={e => apply(e.target.value)}>{mixed && <option value="">Mixed</option>}{control.values?.map(v => <option key={v}>{v}</option>)}</NativeSelect>
+                    {control.type === "select" ? <NativeSelect id={`studio-prop-${key}`} aria-describedby={sourceId} value={mixed ? "" : String(values[0])} onChange={e => apply(e.target.value)}>{mixed && <option value="">Mixed</option>}{control.values?.map(v => <option key={v}>{v}</option>)}</NativeSelect>
                     : control.type === "boolean" ? <Checkbox id={`studio-prop-${key}`} checked={!mixed && Boolean(values[0])} onCheckedChange={checked => apply(checked === true)} />
-                    : <div className="studio-field-input"><Input id={`studio-prop-${key}`} type={control.type === "number" ? "number" : "text"} min={control.min} max={control.max} value={value} maxLength={1000} placeholder={mixed ? "Mixed values" : undefined} onChange={e => setFieldDrafts(d => ({ ...d, [key]: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); apply(control.type === "number" ? Number(value) : value); } if (e.key === "Escape") setFieldDrafts(d => { const next = { ...d }; delete next[key]; return next; }); }} /><Button size="sm" variant="Ghost" disabled={!Object.hasOwn(fieldDrafts, key)} onClick={() => apply(control.type === "number" ? Number(value) : value)}>Apply</Button></div>}
+                    : <div className="studio-field-input"><Input id={`studio-prop-${key}`} type={control.type === "number" ? "number" : "text"} aria-describedby={sourceId} min={control.min} max={control.max} value={value} maxLength={1000} placeholder={mixed ? "Mixed values" : undefined} onChange={e => setFieldDrafts(d => ({ ...d, [key]: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); apply(control.type === "number" ? Number(value) : value); } if (e.key === "Escape") setFieldDrafts(d => { const next = { ...d }; delete next[key]; return next; }); }} /><Button size="sm" variant="Ghost" disabled={!Object.hasOwn(fieldDrafts, key)} onClick={() => apply(control.type === "number" ? Number(value) : value)}>Apply</Button></div>}
+                    {activeBreakpoint && <>
+                      <p id={sourceId} className="studio-breakpoint-source">{overridden ? `Overridden at ${activeBreakpoint.label}` : `Inherited from ${inheritedBreakpoint?.label ?? "Base"}`}</p>
+                      <Button size="sm" variant="Ghost" aria-label={`${overridden ? "Reset" : "Override"} ${control.label}`} onClick={() => apply(overridden ? undefined : values[0])}>{overridden ? "Reset to inherited" : "Override inherited value"}</Button>
+                    </>}
                   </div>;
                 })}
                 <div className="studio-field"><Label htmlFor="studio-surface">Surface token</Label><NativeSelect id="studio-surface" value={current.tokenBindings?.background ?? ""} onChange={e => perform({ type: "bindings", ids: history.selection, value: e.target.value ? { ...current.tokenBindings, background: e.target.value } : undefined })}><option value="">Inherit component default</option>{["color.background", "color.card", "color.muted", "color.primary"].map(v => <option key={v}>{v}</option>)}</NativeSelect></div>
