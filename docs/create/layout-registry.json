@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "layouts": {
+    "layout:stack": {
+      "element": "div",
+      "children": "flow",
+      "axes": [
+        "column",
+        "row"
+      ]
+    },
+    "layout:grid": {
+      "element": "div",
+      "children": "flow",
+      "columns": {
+        "min": 1,
+        "max": 12
+      }
+    },
+    "layout:section": {
+      "element": "section",
+      "children": "flow",
+      "accessibleName": "required",
+      "width": {
+        "min": 240,
+        "max": 1920
+      }
+    }
+  }
+}

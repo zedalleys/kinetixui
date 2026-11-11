@@ -3,5 +3,11 @@
   "framework": "nextjs",
   "buildCommand": "cd ../.. && pnpm build:tokens && pnpm --filter @kinetixui/ui build && pnpm build:iot && pnpm --filter @kinetixui/web build",
   "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "git": {
+    "deploymentEnabled": {
+      "codex/create-m1-model-20261111": false,
+      "codex/create-m1-editor-20261111": false
+    }
+  }
 }
