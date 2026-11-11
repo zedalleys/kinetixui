@@ -43,7 +43,7 @@ export type SegmentedControlProps = Omit<ToggleGroupPrimitive.ToggleGroupSingleP
 const SegmentedControl = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
   SegmentedControlProps
->(({ className, value, defaultValue, onValueChange, ...props }, ref) => {
+>(({ className, value, defaultValue, onValueChange, onFocus, ...props }, ref) => {
   // Held here rather than left to the primitive, because refusing the empty value is only half the fix:
   // an uncontrolled ToggleGroup clears its own state, so swallowing the callback would still leave the
   // strip blank. A consumer passing `value` stays in charge of it, including an empty one.
@@ -63,11 +63,19 @@ const SegmentedControl = React.forwardRef<
       type="single"
       value={current}
       onValueChange={choose}
+      className={cn("inline-flex min-w-0 max-w-full flex-wrap items-center rounded-lg border border-border/50 bg-surface-grouped p-1 font-sans", className)}
+      {...props}
       // Selection follows focus. The root is a `radiogroup`, and in one of those the ARIA practices have an
       // arrow key move focus AND check what it lands on; Radix's roving focus moves focus alone, so arrowing
       // used to leave the reader on a segment that was not the answer until they pressed Enter as well.
       // React's onFocus is delegated from `focusin`, so this sees the item focus rather than the root's.
       // A pointer press focuses the item it also activates, so the two paths agree rather than fight.
+      //
+      // This handler is written AFTER the spread, and `onFocus` is destructured out of `props` above,
+      // because it was neither: with the handler before `{...props}`, a consumer's own focus listener —
+      // a no-op one included — replaced it wholesale and turned this keyboard contract silently back off
+      // while every one of this file's own tests still passed. Composed here, neither handler can
+      // displace the other whichever order the props arrive in.
       onFocus={(event) => {
         const segment = (event.target as HTMLElement).closest<HTMLElement>("[data-kx-segment]");
         const next = segment?.dataset.kxSegment;
@@ -77,10 +85,8 @@ const SegmentedControl = React.forwardRef<
         const inert =
           !!segment && (segment.hasAttribute("disabled") || segment.getAttribute("aria-disabled") === "true");
         if (next && !inert) choose(next);
-        props.onFocus?.(event);
+        onFocus?.(event);
       }}
-      className={cn("inline-flex min-w-0 max-w-full flex-wrap items-center rounded-lg border border-border/50 bg-surface-grouped p-1 font-sans", className)}
-      {...props}
     />
   );
 });

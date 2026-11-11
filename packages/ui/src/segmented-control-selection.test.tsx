@@ -389,4 +389,41 @@ describe("selection follows focus, as a radiogroup's does", () => {
     expect(focused()).toBe("board");
     expect(marked()).toEqual(["grid"]);
   });
+
+  it("keeps following focus when the consumer supplies its own onFocus", async () => {
+    // `onFocus` was left in `props` with the internal handler written before `{...props}`, so a
+    // consumer's own listener replaced it wholesale and arrowing went back to moving focus alone —
+    // a no-op listener was enough. Every other test in this file passed throughout, because none of
+    // them passed one. Both handlers have to run.
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const onFocus = vi.fn();
+    function WithConsumerFocus() {
+      const [v, setV] = React.useState("grid");
+      return (
+        <SegmentedControl
+          value={v}
+          aria-label="View"
+          onFocus={onFocus}
+          onValueChange={(next) => {
+            setV(next);
+            onChange(next);
+          }}
+        >
+          {FOUR.map((c) => (
+            <SegmentedControlItem key={c} value={c}>
+              {c}
+            </SegmentedControlItem>
+          ))}
+        </SegmentedControl>
+      );
+    }
+    render(<WithConsumerFocus />);
+    screen.getByRole("radio", { name: "grid" }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(focused()).toBe("board");
+    expect(marked()).toEqual(["board"]);
+    expect(onChange.mock.calls.map(([v]) => v)).toEqual(["board"]);
+    expect(onFocus).toHaveBeenCalled();
+  });
 });
