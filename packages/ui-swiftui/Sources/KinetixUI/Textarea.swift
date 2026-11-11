@@ -17,6 +17,7 @@ public struct KinetixTextarea: View {
     @Environment(\.kinetixColors) private var colors
     @Environment(\.kinetixRadii) private var radii
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var focused: Bool
 
     @Binding private var text: String
@@ -56,8 +57,18 @@ public struct KinetixTextarea: View {
             .overlay {
                 RoundedRectangle(cornerRadius: radii.field, style: .continuous)
                     .strokeBorder(borderColor, lineWidth: 1)
+                    .animation(KinetixFocusMotion.animation(reduceMotion: reduceMotion), value: focused)
+                    .transition(.identity)
+                    .id(reduceMotion)
             }
             .opacity(isEnabled ? 1 : 0.5)
-            .animation(.easeInOut(duration: 0.12), value: focused)
+            .overlay {
+                RoundedRectangle(cornerRadius: radii.field, style: .continuous)
+                    .strokeBorder(colors.focus, lineWidth: 2)
+                    .opacity(focused && isEnabled ? 1 : 0)
+                    .animation(nil, value: focused)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
     }
 }

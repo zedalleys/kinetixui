@@ -8,8 +8,9 @@
 // `--spacing-3`, type = Body Medium (14 / 20, +0.25).
 //
 // `corners` mirrors the React CVA's Corners property. The focus-ring
-// shadow token isn't ported — SwiftUI's own focus affordance covers the
-// cue. `trailing` is a single end-aligned slot (the stand-in for the web
+// shadow token isn't ported — a separate semantic focus stroke appears
+// immediately, independently of optional border-colour settling. `trailing`
+// is a single end-aligned slot (the stand-in for the web
 // `InputGroup` addon system) — enough for a future password show/hide
 // control; `isSecure` switches to `SecureField` for the same reason.
 // `keyboardType` is deliberately omitted — it's unavailable on macOS,
@@ -25,6 +26,7 @@ public enum KinetixInputCorners {
 public struct KinetixInput<Trailing: View>: View {
     @Environment(\.kinetixColors) private var colors
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var focused: Bool
 
     @Binding private var text: String
@@ -88,10 +90,20 @@ public struct KinetixInput<Trailing: View>: View {
         .overlay {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .strokeBorder(borderColor, lineWidth: 1)
+                .animation(KinetixFocusMotion.animation(reduceMotion: reduceMotion), value: focused)
+                .transition(.identity)
+                .id(reduceMotion)
         }
         .opacity(isEnabled ? 1 : 0.5)
-        .animation(.easeInOut(duration: 0.12), value: focused)
-        .animation(.easeInOut(duration: 0.12), value: isError)
+        .overlay {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .strokeBorder(colors.focus, lineWidth: 2)
+                .opacity(focused && isEnabled ? 1 : 0)
+                .animation(nil, value: focused)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
+        .animation(nil, value: isError)
     }
 }
 

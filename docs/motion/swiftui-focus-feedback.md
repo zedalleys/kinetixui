@@ -1,0 +1,9 @@
+# SwiftUI focus feedback
+
+The owner approved the bounded focus-feedback role proposed in #563. Input and Textarea previously used a literal 120ms ease-in-out animation without reading Reduce Motion. They now read the live accessibility environment. Only the decorative border may settle on the existing instant (100ms) / standard tokens; a separate semantic focus stroke becomes visible immediately. The animation is scoped to that border, so text, layout and focus ownership do not interpolate. A preference-keyed border replaces only the decoration at its current target, leaving the field and binding intact. Validation changes remain immediate and outside this role.
+
+The role is observed, not proven. Three focused tests verify token resolution, nil animation for reduced focus/blur, and unchanged public field/secure-field construction. The full SwiftUI suite passes 94 tests. Removing the preference guard fails the reduced-motion resolver test, and restoration passes. The 49 contract/native guard tests and five identity negative controls also pass.
+
+This is source/resolver/compile evidence on macOS. It does not establish mounted focus timing, an in-flight rendered border, keyboard focus retention, VoiceOver, iOS hardware behavior, or large-text/RTL rendering. These remain explicit acceptance work; no verification tier is promoted.
+
+The ledger moves only Input.swift and Textarea.swift into the approved family: nine known gaps become seven on this independent branch. Clause 6, its ledger test seam, existing contractRole mappings, original identities and the SwiftUI slide deviation remain. Other motion branches must union their ledger and identity additions and regenerate evidence when integrated. No token values, public APIs, brand assets, release version or package publication change. Both site deployments are suppressed for this draft branch.
