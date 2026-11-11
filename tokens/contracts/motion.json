@@ -228,7 +228,7 @@
       ],
       "reducedForm": "shorten",
       "evidence": [],
-      "note": "Large surfaces: Sheet opens on slow and closes on base. One React consumer and no rendered check, so it is recorded, not promoted.",
+      "note": "Large surfaces: Sheet opens on slow and closes on base. One React consumer and no rendered check, so it is recorded, not promoted. SwiftUI implements the same role with a cross-fade and framework-driven transitions; it is a declared deviation, not a consumer, because no SwiftUI source contains this role's token pairing. Compose and Flutter ship Sheet, Sidebar and Drawer with no slide motion at all, so they are absent here rather than deviating — the next bounded slice for this role.",
       "consumers": [
         {
           "platform": "react",
@@ -239,7 +239,15 @@
           ]
         }
       ],
-      "deviations": []
+      "deviations": [
+        {
+          "platform": "swiftui",
+          "file": "packages/ui-swiftui/Sources/KinetixUI/KinetixSlideMotion.swift",
+          "uses": "slides(reduceMotion: reduceMotion) ? .move(edge: edge) : .opacity",
+          "departs": "reducedForm",
+          "reason": "SwiftUI implements this role's intent for Sheet, Sidebar and Toaster, and reaches it two ways that are not the role's. Its reduced form is a cross-fade, not this role's `shorten`: sliding is positional movement, which is what Reduce Motion exists to remove, and a fade carries the same fact without it, which is Apple's own guidance. And its timings are not these tokens — enter and leave are `AnyTransition` values the framework drives, and the library's own dismissal (Toaster's auto-dismiss) borrows `KinetixSwitchMotion.durationSeconds`. So it is recorded here rather than as a consumer: a consumer entry would claim a `slow`/`base` on `standard` pairing that no SwiftUI source contains. `scripts/native-motion-spec.mjs` holds its three members to the helper as a strict family, and SlideMotionTests.swift tests both directions."
+        }
+      ]
     },
     "selection-indicator": {
       "status": "observed",
