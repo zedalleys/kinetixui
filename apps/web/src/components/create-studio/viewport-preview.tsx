@@ -40,6 +40,18 @@ export function ViewportPreview({
     body.ownerDocument.documentElement.className = dark ? "dark" : "theme-light";
   }, [body, dark, rtl]);
 
+  React.useEffect(() => {
+    if (!body) return;
+    const frameDocument = body.ownerDocument;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      event.preventDefault();
+      onExit();
+    };
+    frameDocument.addEventListener("keydown", handleEscape);
+    return () => frameDocument.removeEventListener("keydown", handleEscape);
+  }, [body, onExit]);
+
   return <>
     <iframe
       title="Screen preview"
@@ -52,13 +64,10 @@ export function ViewportPreview({
     {body && createPortal(<>
       <style>{`html,body{margin:0} .kinetix-product{min-height:100vh;font-family:var(--font-sans);background:hsl(var(--background));color:hsl(var(--foreground))} ${css}`}</style>
       <main className="kinetix-product" style={theme} onKeyDown={event => {
-        event.stopPropagation();
-        if (event.key === "Escape" && !event.defaultPrevented) {
-          event.preventDefault();
-          onExit();
-        }
+        // Escape belongs to the frame document, including when its body is focused.
+        if (event.key !== "Escape") event.stopPropagation();
       }} onPointerDown={event => event.stopPropagation()}>
-        <NodeView node={root} selection={[]} onSelect={noop} preview />
+        <NodeView node={root} selection={[]} onSelect={noop} dir={rtl ? "rtl" : "ltr"} preview />
       </main>
     </>, body)}
   </>;

@@ -117,10 +117,10 @@ export function CreateStudio() {
     setViewport(preset.width);
     setViewportHeight(preset.height);
   };
-  const exitPreview = () => {
+  const exitPreview = React.useCallback(() => {
     setPreview(false);
     previewToggle.current?.focus();
-  };
+  }, []);
   const perform = (command: Command) => {
     if (!history || readOnly || preview || busy) return false;
     try { const next = execute(history, command); setHistory(next); if (command.type === "page") setPageId(next.doc.pages.at(-1)!.id); setError(""); setNotice(command.type === "insert" ? `${adapterFor(command.ref).label} added.` : "Change applied."); return true; }
@@ -335,7 +335,7 @@ export function CreateStudio() {
                 <div className="studio-artboard-label"><span>{page.name}</span><span>{preview ? `${viewport} × ${viewportHeight}` : `${viewport}px`} · {Math.round(zoom * 100)}%</span></div>
                 {preview ? <ViewportPreview root={page.root} height={viewportHeight} dark={dark} rtl={rtl} theme={themeStyle} onExit={exitPreview} /> :
                   <div className={`studio-artboard ${dark ? "dark" : "theme-light"}`} dir={rtl ? "rtl" : "ltr"} style={{ ...themeStyle, pointerEvents: pan ? "none" : undefined }}>
-                    {page.root.children?.length ? <NodeView node={page.root} selection={history.selection} onSelect={select} editWidth={viewport} /> : <div className="studio-empty"><h2>A new screen, ready for you.</h2><p>Add a frame, then fill it with components.</p><Button disabled={readOnly} onClick={() => insert("layout:section")}><Plus className="size-4" />Add frame</Button></div>}
+                    {page.root.children?.length ? <NodeView node={page.root} selection={history.selection} onSelect={select} editWidth={viewport} dir={rtl ? "rtl" : "ltr"} /> : <div className="studio-empty"><h2>A new screen, ready for you.</h2><p>Add a frame, then fill it with components.</p><Button disabled={readOnly} onClick={() => insert("layout:section")}><Plus className="size-4" />Add frame</Button></div>}
                   </div>}
               </div>
             </div>

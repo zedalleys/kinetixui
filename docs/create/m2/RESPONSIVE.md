@@ -16,4 +16,6 @@ Edit uses the selected width to resolve layout directly inside the existing canv
 
 The exporter and the iframe share the same stylesheet lowering. Only nodes with overrides get a generated layout selector. Base values and media rules use the same layout adapter and validated values. No document value can supply arbitrary CSS syntax, event handlers, HTML or imports. Generated React still imports the existing library and emits one tree per screen.
 
+Generated screens accept an optional `dir` prop. Preview and React forward it to the real Tabs component so its keyboard direction matches the visible layout.
+
 The browser suite loads the same saved tree used to build the clean consumer, compares measured layouts at 390, 767, 768, 769, 959, 960, 961 and 1200 CSS px, and verifies actual iframe dimensions. The test also verifies inherited and overridden inspector states, reset, undo/redo, save/reopen, RTL, theme and keyboard focus. The preview models browser CSS dimensions and preferences. Touch hardware, device pixel ratio and other browser-specific device behavior remain outside these presets.

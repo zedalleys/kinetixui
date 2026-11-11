@@ -126,6 +126,11 @@ export async function verifyResponsiveBrowser({ browser, base, fixture, consumer
     await page.emulateMedia({ reducedMotion: "reduce", forcedColors: "none" });
     assert.notEqual(await preview.evaluate(el => getComputedStyle(el).backgroundColor), light);
     assert.equal(await preview.evaluate(el => getComputedStyle(el).fontFamily), await page.evaluate(() => getComputedStyle(document.body).fontFamily));
+    assert.equal(await frame.getByRole("tablist").evaluate(el => getComputedStyle(el).direction), "rtl");
+    const rtlConsumer = new URL(consumer.url());
+    rtlConsumer.searchParams.set("dir", "rtl");
+    await consumer.goto(rtlConsumer.href);
+    assert.equal(await consumer.getByRole("tablist").evaluate(el => getComputedStyle(el).direction), "rtl");
     // The script-free sandbox blocks axe's own timer callbacks. Scan the rendered
     // DOM and styles in a separate tab at the same dimensions and media settings.
     const markup = await iframe.evaluate(element => element.contentDocument.documentElement.outerHTML);
@@ -165,6 +170,13 @@ export async function verifyResponsiveBrowser({ browser, base, fixture, consumer
     await email.press("Escape");
     assert.equal(await button("Preview").evaluate(el => el === document.activeElement), true);
     assert.equal(await gap.inputValue(), "spacing.8");
+    await button("Preview").click();
+    await frame.getByRole("main").waitFor();
+    await iframe.click({ position: { x: 30, y: 570 } });
+    assert.equal(await iframe.evaluate(element => element.contentDocument.activeElement === element.contentDocument.body), true);
+    await page.keyboard.press("Escape");
+    await iframe.waitFor({ state: "detached", timeout: 3000 });
+    assert.equal(await button("Preview").evaluate(el => el === document.activeElement), true, "Escape exits when the iframe body has focus");
     pass("iframe keyboard controls, Escape focus return, RTL, theme and media preferences");
   } finally {
     await context.close();
