@@ -161,9 +161,7 @@ KinetixTheme(light: AcmeTheme.light, dark: AcmeTheme.dark) {
 You can write that pair by hand, or export one from a
 [Create](/create) design:
 
-```bash
-kinetixui preset swiftui KX1_… --name AcmeTheme --output Sources/AcmeTheme.swift
-```
+<Command op="cli-preset-swiftui" symbol="AcmeTheme" output="Sources/AcmeTheme.swift" />
 
 That writes a `public enum` with a `light` and a `dark` `KinetixColors`,
 built from the same resolved theme the workspace exports —
