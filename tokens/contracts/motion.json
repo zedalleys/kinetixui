@@ -528,6 +528,35 @@
           "reason": "The indeterminate circular progress is the spinner's second form and follows the same judgement and the same 3s period; it is recorded separately because it is a different selector in a different reduced-motion block, and a single entry would stop naming one of them."
         }
       ]
+    },
+    "focus-feedback": {
+      "status": "observed",
+      "duration": [
+        "instant"
+      ],
+      "easing": [
+        "standard"
+      ],
+      "properties": [
+        "border-color (optional cosmetic settling); immediate focus-ring visibility"
+      ],
+      "reducedForm": "shorten",
+      "evidence": [
+        "packages/ui-swiftui/Tests/KinetixUITests/FocusMotionTests.swift"
+      ],
+      "note": "Owner approved the proposal scope in #563 on 2026-11-11. Focus and its separate ring are immediate; only cosmetic border colour may settle on instant/standard. Reduce Motion removes that interpolation. Validation/error feedback is not adopted into this role; Input error changes are immediate. Source/resolver/compile evidence only, not mounted focus or assistive-technology certification.",
+      "consumers": [
+        {
+          "platform": "swiftui",
+          "file": "packages/ui-swiftui/Sources/KinetixUI/KinetixFocusMotion.swift",
+          "expects": [
+            "KinetixDuration.instant",
+            "KinetixEasing.standard",
+            "guard !reduceMotion else { return nil }"
+          ]
+        }
+      ],
+      "deviations": []
     }
   },
   "untokenised": {

@@ -65,6 +65,13 @@ export const PLATFORMS = {
         members: ["Spinner.swift", "Skeleton.swift", "Marquee.swift", "MessageBubble.swift"],
         test: "packages/ui-swiftui/Tests/KinetixUITests/LoopMotionTests.swift",
       },
+      focus: {
+        contractRole: "focus-feedback",
+        strict: true,
+        helper: "KinetixFocusMotion.swift",
+        members: ["Input.swift", "Textarea.swift"],
+        test: "packages/ui-swiftui/Tests/KinetixUITests/FocusMotionTests.swift",
+      },
     },
   },
   Compose: {
@@ -165,9 +172,7 @@ export const KNOWN_GAPS = {
   SwiftUI: {
     "CircularProgress.swift": "determinate ring sweep — progress feedback family, not this slice",
     "Dialog.swift": "opacity fade only: positional movement is what Reduce Motion removes, and a fade is the accepted replacement, so there is nothing concrete to fix",
-    "Input.swift": "focus ring transition — feedback family",
     "Progress.swift": "determinate bar — progress feedback family",
-    "Textarea.swift": "focus ring transition — feedback family",
   },
   Compose: {
     "CircularProgress.kt": "determinate ring sweep — progress feedback family",
@@ -188,6 +193,7 @@ export const KNOWN_GAPS = {
  * difference between "the word appears somewhere" and "a test says it covers this".
  */
 export const DIRECTION_TERMS = {
+  focus: { forward: /focus|acquir/i, reverse: /blur|los/i },
   // A disclosure opens and closes.
   disclosure: {
     forward: /\b(expand|open|enter|reveal)/i,

@@ -6,6 +6,7 @@
     "disclosure|flutter|packages/ui-flutter/lib/src/kinetix_disclosure_motion.dart",
     "disclosure|react|packages/ui/tailwind.config.ts",
     "disclosure|swiftui|packages/ui-swiftui/Sources/KinetixUI/KinetixDisclosureMotion.swift",
+    "focus-feedback|swiftui|packages/ui-swiftui/Sources/KinetixUI/KinetixFocusMotion.swift",
     "loop|angular|packages/ui-angular/src/styles.css",
     "loop|compose|packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixLoopMotion.kt",
     "loop|flutter|packages/ui-flutter/lib/src/kinetix_loop_motion.dart",
