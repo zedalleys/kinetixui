@@ -63,8 +63,9 @@ public struct KinetixTextarea: View {
             }
             .opacity(isEnabled ? 1 : 0.5)
             .overlay {
-                RoundedRectangle(cornerRadius: radii.field, style: .continuous)
+                RoundedRectangle(cornerRadius: radii.field + 3, style: .continuous)
                     .strokeBorder(colors.focus, lineWidth: 2)
+                    .padding(-3) // outside validation border; keep both cues visible
                     .opacity(focused && isEnabled ? 1 : 0)
                     .animation(nil, value: focused)
                     .allowsHitTesting(false)
