@@ -83,7 +83,7 @@
       "accessibility": 7,
       "rtl": 58,
       "largeText": 58,
-      "reducedMotion": 8,
+      "reducedMotion": 9,
       "visual": 0,
       "published": 0
     }
@@ -1236,7 +1236,8 @@
         ],
         "components": [
           "accordion",
-          "collapsible"
+          "collapsible",
+          "json-viewer"
         ]
       },
       {
@@ -1383,7 +1384,7 @@
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
         ],
         "reducedMotion": [
-          "packages/ui-flutter/test/disclosure_motion_test.dart:5-291"
+          "packages/ui-flutter/test/disclosure_motion_test.dart:5-405"
         ]
       }
     },
@@ -2496,7 +2497,7 @@
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
         ],
         "reducedMotion": [
-          "packages/ui-flutter/test/disclosure_motion_test.dart:5-291"
+          "packages/ui-flutter/test/disclosure_motion_test.dart:5-405"
         ]
       }
     },
@@ -3880,6 +3881,9 @@
       "Flutter": {
         "build": [
           "packages/ui-flutter (compiled by CI)"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/disclosure_motion_test.dart:5-405"
         ]
       }
     },

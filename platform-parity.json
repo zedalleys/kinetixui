@@ -3121,7 +3121,8 @@
         "build"
       ],
       "Flutter": [
-        "build"
+        "build",
+        "reducedMotion"
       ]
     },
     "kanban-board": {
@@ -4489,7 +4490,7 @@
       "accessibility": 7,
       "rtl": 58,
       "largeText": 58,
-      "reducedMotion": 8,
+      "reducedMotion": 9,
       "visual": 0,
       "published": 0
     }

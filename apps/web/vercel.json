@@ -3,5 +3,10 @@
   "framework": "nextjs",
   "buildCommand": "cd ../.. && pnpm build:tokens && pnpm --filter @kinetixui/ui build && pnpm build:iot && pnpm --filter @kinetixui/web build",
   "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "git": {
+    "deploymentEnabled": {
+      "codex/flutter-json-motion-20261111": false
+    }
+  }
 }

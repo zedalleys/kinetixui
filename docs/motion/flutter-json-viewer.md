@@ -1,0 +1,11 @@
+# Flutter JsonViewer preference gap
+
+The chevron used a literal 100ms rotation and ignored `MediaQuery.disableAnimations`. It now joins the existing disclosure family: `KinetixDisclosureMotion.durationOf(context)`, `fast` (200ms), directional enter/exit curves, and the same imperceptible reduced-motion floor as Accordion and Collapsible. Its quarter-turn and JSON expansion state are preserved.
+
+A live preference change must also stop a running rotation. Flutter does not retime an existing implicit animation when only its duration changes. A preference-keyed `AnimatedRotation` resets only the decorative chevron to the current state; it leaves the disclosure and its content in place. Normal target changes retain the same animation state and support reversal.
+
+Six new widget cases verify normal expansion and collapse through real intermediate angles, both reduced directions within one frame with content intact, live preference interruption, rapid reversal/unmount, and RTL at 200% text. Restoring the original JsonViewer fails the one-frame reduced-motion assertion. Full Flutter suite: 202 passing tests; analyzer clean. The 49 guard tests, five identity negative controls, native/token/registry/contract guards and generated verification/manifest fixed-point checks are also required.
+
+The native ledger moves only `json_viewer.dart` from the known gaps into the existing Flutter disclosure family. No new semantic role or identity is introduced. Nine gaps become eight on this branch: SwiftUI CircularProgress, Dialog, Input, Progress, Textarea; Compose CircularProgress, Progress, Carousel. This is preference coverage, not full accessibility or cross-platform parity. JsonViewer's existing pointer-oriented tree keyboard/focus model and native device screen-reader behavior remain outside this fix and need their own audit.
+
+#560 separately implements Flutter Sheet/Drawer motion. #558 remains with its motion chat, and #557 is unchanged. This branch starts from main and can be reviewed independently. If both native PRs land, regenerate verification/manifest after combining them and retain both branch deployment-suppression entries. Native packages remain a separate, unarmed release cohort; no npm changeset or native version is added.
