@@ -106,6 +106,17 @@ describe("command history and permanent identity retirement", () => {
     expect(undo(h).doc.figmaBinding).toEqual(d.figmaBinding);
     expect(redo(undo(h)).doc.figmaBinding).toEqual(d.figmaBinding);
   });
+  it("allocates an unused page ID and route independently of node IDs", () => {
+    const d = create();
+    d.pages[0].id = "page_3";
+    d.pages[0].route = "/screen-4";
+    expect(validateDocument(d).ok).toBe(true);
+    const h = execute(newHistory(d), { type: "page", name: "Imported successor" });
+    expect(h.doc.pages[1].id).toBe("page_5");
+    expect(h.doc.pages[1].route).toBe("/screen-5");
+    expect(h.doc.pages[1].root.id).toBe("node_3");
+    expect(h.doc.nextNodeId).toBe(4);
+  });
   it("clears redo on a new command and allows multiple pages in the same product", () => {
     let h = execute(newHistory(create()), { type: "page", name: "Second screen" });
     expect(h.doc.pages).toHaveLength(2);

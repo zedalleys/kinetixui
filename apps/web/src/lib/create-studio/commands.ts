@@ -70,7 +70,9 @@ export function execute(history: History, command: Command): History {
     parent.children.splice(Math.min(command.index, parent.children.length), 0, ...nodes); selection = nodes.map(n => n.id);
   } else if (command.type === "page") {
     const n = doc.nextNodeId++;
-    doc.pages.push({ id: `page_${n}`, name: command.name, route: `/screen-${n}`, root: { id: `node_${n}`, kind: "slot", name: "page", children: [] } });
+    let pageNumber = n;
+    while (doc.pages.some(page => page.id === `page_${pageNumber}` || page.route === `/screen-${pageNumber}`)) pageNumber++;
+    doc.pages.push({ id: `page_${pageNumber}`, name: command.name, route: `/screen-${pageNumber}`, root: { id: `node_${n}`, kind: "slot", name: "page", children: [] } });
     selection = [];
   } else if (command.type === "rename") doc.name = command.name;
   assertDocument(doc);
