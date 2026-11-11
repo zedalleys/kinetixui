@@ -25,6 +25,7 @@ type SchemaObject = Record<string, unknown>;
 const schema = structuredClone(base) as unknown as { properties: Record<string, SchemaObject>; $defs: Record<string, SchemaObject> };
 Object.assign(schema, { title: "CreateProject v2", $id: "https://kinetixui.com/schemas/create-project/v2.json" });
 schema.properties.schemaVersion = { const: 2 };
+schema.properties.pages = extension.pages;
 schema.properties.metadata = extension.metadata;
 schema.$defs.node = { oneOf: ["blockNode", "componentNode", "slotNode", "layoutNode"].map(name => ({ $ref: `#/$defs/${name}` })) };
 schema.$defs.layoutNode = structuredClone(extension.layoutNode);
@@ -115,8 +116,7 @@ export function migrateDocument(input: unknown): Document {
   if (!input || typeof input !== "object" || !("schemaVersion" in input)) throw new Error("Missing schema version");
   if (input.schemaVersion !== 1 && input.schemaVersion !== 2) throw new Error("Unsupported schema version; open with a compatible editor");
   const doc = migrate(structuredClone(input), { current: 2, migrations: STUDIO_MIGRATIONS }) as Document;
-  // The only v2 structural addition is layout; existing trees retain every ID and field.
-  // Unsupported old content is rejected explicitly, never discarded or guessed.
+  // Existing trees retain every ID and field. Unsupported old content is rejected explicitly.
   doc.schemaVersion = 2;
   assertDocument(doc);
   return doc;

@@ -1,4 +1,5 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { nodeIdNumber } from "../../../../../scripts/create-schema/node-ids.mjs";
 import { assertDocument, createDocument, serializeDocument, walk, type Document } from "./model";
 export class ServiceError extends Error {
   constructor(public code: string, message: string, public status = 400) { super(message); }
@@ -81,7 +82,15 @@ export class StudioService {
       product.doc.pages.forEach(p => walk(p.root, n => oldLive.add(n.id)));
       input.pages.forEach(p => walk(p.root, n => newLive.add(n.id)));
       const retired = new Set(input.retiredNodeIds);
-      if (input.nextNodeId < product.doc.nextNodeId || [...product.doc.retiredNodeIds ?? []].some(id => !retired.has(id)) || [...oldLive].some(id => !newLive.has(id) && !retired.has(id))) throw new ServiceError("IDENTITY_REWIND", "Saving cannot rewind or reuse allocated identities.", 422);
+      const introducesEarlierId = [...newLive].some(id => !oldLive.has(id) && nodeIdNumber(id) < product.doc.nextNodeId);
+      if (
+        input.nextNodeId < product.doc.nextNodeId ||
+        introducesEarlierId ||
+        (product.doc.retiredNodeIds ?? []).some(id => !retired.has(id)) ||
+        [...oldLive].some(id => !newLive.has(id) && !retired.has(id))
+      ) {
+        throw new ServiceError("IDENTITY_REWIND", "Saving cannot rewind or reuse allocated identities.", 422);
+      }
       if (digest(input) !== digest(product.doc)) { product.doc = structuredClone(input); product.revision++; }
       return this.view(account, product);
     });
