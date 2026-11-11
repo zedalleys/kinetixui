@@ -1,0 +1,72 @@
+name: Create Studio M1
+on:
+  pull_request:
+    paths:
+      - "apps/web/src/lib/create-studio/**"
+      - "apps/web/src/components/create-studio/**"
+      - "apps/web/src/app/create/studio/**"
+      - "apps/web/src/app/api/create-studio/**"
+      - "docs/create/**"
+      - "scripts/create-schema/**"
+      - "scripts/create-studio-browser.mjs"
+      - ".github/workflows/create-studio.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: create-studio-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:tokens
+      - run: pnpm --filter @kinetixui/ui build && pnpm --filter @kinetixui/iot build
+      - name: Legacy canonical schema remains valid
+        run: node scripts/check-create-schema.mjs
+      - name: Registry fixed point
+        run: pnpm check:registry-fixed-point
+      - name: Model, local service and consumer fixture tests
+        run: pnpm --filter @kinetixui/web exec vitest run src/lib/create-studio src/components/create-studio
+        env:
+          KINETIX_CREATE_EXPORT_FIXTURE: /tmp/kinetix-create-export-m1
+      - run: pnpm --filter @kinetixui/web typecheck
+      - name: Production build
+        run: pnpm --filter @kinetixui/web build
+      - name: Browser and accessibility evidence when editor is present
+        shell: bash
+        run: |
+          if [ ! -f scripts/create-studio-browser.mjs ]; then
+            echo "Storage-only slice: editor browser evidence belongs to the dependent PR."
+            exit 0
+          fi
+          pnpm exec playwright install --with-deps chromium
+          KINETIX_CREATE_DEV=1 KINETIX_CREATE_DEV_DIR=/tmp/kinetix-create-ci pnpm --filter @kinetixui/web exec next dev --hostname 127.0.0.1 --port 3137 > /tmp/create-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:3137/create/studio > /dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then cat /tmp/create-server.log; exit 1; fi
+          CREATE_ARTIFACTS=/tmp/create-evidence CREATE_EXPORT_FIXTURE=/tmp/kinetix-create-export-m1 node scripts/create-studio-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: create-studio-evidence
+          path: |
+            /tmp/create-evidence
+            /tmp/create-server.log
+          if-no-files-found: ignore
