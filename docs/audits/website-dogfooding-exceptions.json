@@ -283,6 +283,20 @@
       "maxCount": 1,
       "classification": "D",
       "reason": "Speed-dial Fab example (#386): the travelling discs are measured to land under these action rows, so each row is a local composition of disc and sliding label rather than a library Button, and the root handles Escape for the disclosure. The trigger is the library Fab; keep geometry and motion local."
+    },
+    {
+      "file": "apps/web/src/components/create-studio/create-studio.tsx",
+      "pattern": "div[role=tree]",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "M1 editor-owned multi-selection layer hierarchy: library TreeView has a single selected value and independent checkbox selection, not the command-engine selection set/anchor. Native tree container owns the local focus/selection model; visible rows compose KinetixUI Button. Keyboard/click parity and axe are covered by create-studio-browser.mjs. This is composition, not a replacement library tree component."
+    },
+    {
+      "file": "apps/web/src/components/create-studio/create-studio.tsx",
+      "pattern": "div[role=region]",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "M1 editor camera is an application-specific spatial region: pan/zoom and pointer capture belong to the document editor, with labeled focus entry, keyboard panning and camera controls. No library canvas primitive exists. Components, controls and inspector use KinetixUI; browser tests cover camera and reflow."
     }
   ]
 }

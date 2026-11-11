@@ -8,7 +8,7 @@ Enabled adapters: Button, Input, Card, Badge, Tabs; Stack/Grid/Section are struc
 
 Command history is immutable and bounded to 100 entries. Selection is separate; commands preserve normal IDs. A committed deletion retires IDs permanently. Undo that recreates deleted nodes allocates fresh IDs and restores selection through its explicit mapping; redo and snapshot restoration never rewind the allocation frontier. Figma binding is invalidated on structural identity restoration; synchronization is not implemented. This follows the architecture report's conservative recommendation without weakening the existing retirement invariant.
 
-Validation limits: 1 MB canonical UTF-8, 1000 nodes/product, existing JSON-depth and per-page/child bounds. Serialization sorts keys, preserves child order, and refuses cyclic/shared object graphs, non-JSON values and prototype keys. It is deterministic independent of object insertion order.
+V2 has no separate page-count ceiling. The document limits apply on every plan: 1 MB canonical UTF-8, 1,000 nodes per product, and the existing JSON depth and child bounds. V1 retains its original schema, including its page ceiling. Serialization sorts keys, preserves child order, and refuses cyclic/shared object graphs, non-JSON values and prototype keys. It is deterministic independent of object insertion order.
 
 Verification commands:
 
