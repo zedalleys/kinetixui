@@ -9,6 +9,7 @@ import { LayoutFixture } from './layout';
 import { ListboxesFixture } from './listboxes';
 import { NavigationFixture } from './navigation';
 import { NotificationsFixture } from './notifications';
+import { NumericFixture } from './numeric';
 import { OverlayCompositionsFixture } from './overlay-compositions';
 import { OverlaysFixture } from './overlays';
 import { SelectionMotion } from './selection-motion';
@@ -33,6 +34,7 @@ export const FIXTURES: Record<string, Type<unknown>> = {
   listboxes: ListboxesFixture,
   navigation: NavigationFixture,
   notifications: NotificationsFixture,
+  numeric: NumericFixture,
   overlays: OverlaysFixture,
   'overlay-compositions': OverlayCompositionsFixture,
   selection: SelectionStates,

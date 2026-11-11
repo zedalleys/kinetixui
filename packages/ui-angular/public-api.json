@@ -15,6 +15,7 @@
     "KxAlertTitle",
     "KxAlertVariant",
     "KxAlign",
+    "KxAnimatedNumber",
     "KxAppBar",
     "KxAppBarActions",
     "KxAppBarBrand",
@@ -394,6 +395,19 @@
       "inputs": [],
       "outputs": [],
       "projectsContent": true,
+      "standalone": true,
+      "exported": true
+    },
+    {
+      "name": "KxAnimatedNumber",
+      "kind": "component",
+      "selector": "kx-animated-number",
+      "inputs": [
+        "format",
+        "value"
+      ],
+      "outputs": [],
+      "projectsContent": false,
       "standalone": true,
       "exported": true
     },

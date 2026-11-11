@@ -116,3 +116,5 @@ export 'src/toggle_group.dart';
 export 'src/tooltip.dart';
 export 'src/tree_view.dart';
 export 'src/virtual_list.dart';
+export 'src/animated_number.dart';
+export 'src/kinetix_number_motion.dart';

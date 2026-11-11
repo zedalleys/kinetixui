@@ -3,5 +3,11 @@
   "framework": "storybook",
   "buildCommand": "cd ../.. && pnpm build:tokens && pnpm --filter @kinetixui/docs build-storybook",
   "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile",
-  "outputDirectory": "storybook-static"
+  "outputDirectory": "storybook-static",
+  "git": {
+    "deploymentEnabled": {
+      "codex/precision-native-20261110": false,
+      "codex/value-motion-20261110": false
+    }
+  }
 }

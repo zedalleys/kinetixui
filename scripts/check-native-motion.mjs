@@ -37,7 +37,7 @@ const argRoot = process.argv.slice(2).find((a) => a.startsWith("--root="))?.slic
 const root = argRoot ? resolve(argRoot) : fileURLToPath(new URL("..", import.meta.url));
 const read = (p) => (existsSync(`${root}/${p}`) ? readFileSync(`${root}/${p}`, "utf8") : null);
 
-import { DIRECTION_TERMS, KNOWN_GAPS, PLATFORMS, testNames } from "./native-motion-spec.mjs";
+import { DIRECTION_TERMS, KNOWN_GAPS, PLATFORMS, testNames } from "./native-motion-additions.mjs";
 
 const errors = [];
 const summary = [];
