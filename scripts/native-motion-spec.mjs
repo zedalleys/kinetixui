@@ -77,6 +77,13 @@ export const PLATFORMS = {
       /animate[A-Z]\w*AsState|AnimatedVisibility|AnimatedContent|updateTransition|rememberInfiniteTransition|animateContentSize|animateScroll[A-Z]\w*|\.animateTo\(/,
     preference: /ANIMATOR_DURATION_SCALE|rememberReduceMotion/,
     families: {
+      slide: {
+        contractRole: "spatial",
+        strict: true,
+        helper: "KinetixSheetMotion.kt",
+        members: ["Sheet.kt"],
+        test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SheetMotionTest.kt",
+      },
       disclosure: {
         contractRole: "disclosure",
         helper: "KinetixDisclosureMotion.kt",

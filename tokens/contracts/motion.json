@@ -227,8 +227,10 @@
         "transform (slide)"
       ],
       "reducedForm": "shorten",
-      "evidence": [],
-      "note": "Large surfaces: Sheet opens on slow and closes on base. One React consumer and no rendered check, so it is recorded, not promoted. SwiftUI implements the same role with a cross-fade and framework-driven transitions; it is a declared deviation, not a consumer, because no SwiftUI source contains this role's token pairing. Compose and Flutter ship Sheet, Sidebar and Drawer with no slide motion at all, so they are absent here rather than deviating — the next bounded slice for this role.",
+      "evidence": [
+        "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SheetMotionTest.kt"
+      ],
+      "note": "React Sheet consumes slow/base on standard. SwiftUI retains its documented cross-fade/framework-timing deviation. Compose Sheet/Drawer preserve native Material3 motion and declare their immediate reduced destination as a deviation; no token-timing parity is claimed. Flutter motion is tracked in a separate focused PR.",
       "consumers": [
         {
           "platform": "react",
@@ -246,6 +248,13 @@
           "uses": "slides(reduceMotion: reduceMotion) ? .move(edge: edge) : .opacity",
           "departs": "reducedForm",
           "reason": "SwiftUI implements this role's intent for Sheet, Sidebar and Toaster, and reaches it two ways that are not the role's. Its reduced form is a cross-fade, not this role's `shorten`: sliding is positional movement, which is what Reduce Motion exists to remove, and a fade carries the same fact without it, which is Apple's own guidance. And its timings are not these tokens — enter and leave are `AnyTransition` values the framework drives, and the library's own dismissal (Toaster's auto-dismiss) borrows `KinetixSwitchMotion.durationSeconds`. So it is recorded here rather than as a consumer: a consumer entry would claim a `slow`/`base` on `standard` pairing that no SwiftUI source contains. `scripts/native-motion-spec.mjs` holds its three members to the helper as a strict family, and SlideMotionTests.swift tests both directions."
+        },
+        {
+          "platform": "compose",
+          "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixSheetMotion.kt",
+          "uses": "if (reduceMotion) object : MotionDurationScale { override val scaleFactor = 0f }",
+          "departs": "reducedForm",
+          "reason": "Compose Sheet and its Drawer pass-through retain Material3 1.4 native spatial/effects motion and gesture physics; that version exposes no public timing-spec hook, so claiming slow/base token timing would be false. Reduced motion reaches the destination with no positional travel, rather than a shortened trip. The helper supplies a zero MotionDurationScale to controlled show/hide coroutines while preserving the ambient scale normally. The component observes the real Android preference and retains its modal content until hide completes; headless tests cover normal entry/exit lifetime, retained exit lifetime, rapid reversal, and a live preference change. Device TalkBack/focus/drag behavior still needs device evidence."
         }
       ]
     },
