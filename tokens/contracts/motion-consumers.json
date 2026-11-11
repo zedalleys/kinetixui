@@ -20,6 +20,8 @@
     "press-feedback|react|packages/ui/src/components/checkbox.tsx",
     "press-feedback|react|packages/ui/src/components/radio-group.tsx",
     "press-feedback|react|packages/ui/src/components/toggle.tsx",
+    "progress-feedback|compose|packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixProgressMotion.kt",
+    "progress-feedback|swiftui|packages/ui-swiftui/Sources/KinetixUI/KinetixProgressMotion.swift",
     "selection-control|angular|packages/ui-angular/src/styles.css",
     "selection-control|compose|packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixSwitchMotion.kt",
     "selection-control|flutter|packages/ui-flutter/lib/src/kinetix_switch_motion.dart",

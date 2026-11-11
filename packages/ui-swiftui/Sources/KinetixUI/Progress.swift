@@ -12,6 +12,7 @@ import SwiftUI
 
 public struct KinetixProgress: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// 0…100, same scale as the React `value` prop.
     private let value: Double
@@ -21,17 +22,22 @@ public struct KinetixProgress: View {
     }
 
     public var body: some View {
-        let fraction = CGFloat(max(0, min(1, value / 100)))
+        let fraction = CGFloat(KinetixProgressMotion.fraction(value))
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule().fill(colors.muted)
                 Capsule()
                     .fill(colors.action)
                     .frame(width: geo.size.width * fraction)
+                    .animation(KinetixProgressMotion.animation(reduceMotion: reduceMotion), value: fraction)
+                    .transition(.identity)
+                    .id(reduceMotion)
             }
         }
         .frame(height: 8) // h-2
-        .animation(.default, value: value)
+        .animation(nil, value: reduceMotion)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Progress")
         .accessibilityValue("\(Int(fraction * 100)) percent")
     }
 }

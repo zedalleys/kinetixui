@@ -1,6 +1,5 @@
 package com.kinetixui.ui
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -8,8 +7,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.dimensionResource
 
@@ -28,16 +29,16 @@ fun KinetixProgress(
     modifier: Modifier = Modifier,
 ) {
     val colors = KinetixColorScheme.current
-    val fraction by animateFloatAsState(
-        targetValue = (value / 100f).coerceIn(0f, 1f),
-        label = "KinetixProgressFraction",
-    )
+    val reduceMotion = KinetixDisclosureMotion.rememberReduceMotion()
+    val target = KinetixProgressMotion.fraction(value)
+    val fraction = KinetixProgressMotion.animatedFraction(value, reduceMotion)
     val trackHeight = dimensionResource(R.dimen.spacing_2) // 8dp, matches `h-2`
     val shape = RoundedCornerShape(dimensionResource(R.dimen.radius_full))
 
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .semantics { progressBarRangeInfo = ProgressBarRangeInfo(target, 0f..1f) }
             .height(trackHeight)
             .clip(shape)
             .background(colors.muted),

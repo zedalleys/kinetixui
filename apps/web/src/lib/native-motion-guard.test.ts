@@ -97,7 +97,9 @@ const PREFERENCE: Record<string, string> = {
 /** Test declarations covering both directions in a family's own vocabulary. */
 function suite(platform: string, familyName: string, only?: "forward" | "reverse") {
   const pair =
-    familyName === "selection"
+    familyName === "progress"
+      ? { forward: "increasesProgress", reverse: "decreasesProgress" }
+      : familyName === "selection"
       ? { forward: "offToOnIsSuppressed", reverse: "onToOffIsSuppressed" }
       : familyName === "selectionState"
         ? { forward: "uncheckedToCheckedIsSuppressed", reverse: "checkedToUncheckedIsSuppressed" }
