@@ -2,7 +2,7 @@
  * angular-browser.mjs — @kinetixui/angular, running as a live Angular application in real Chromium.
  *
  *   pnpm build:tokens && node scripts/angular-browser.mjs
- *   node scripts/angular-browser.mjs --only=accessibility     one pass (accessibility | interaction | rtl | largeText | reducedMotion)
+ *   node scripts/angular-browser.mjs --only=accessibility     one pass (accessibility | interaction | rtl | largeText | reducedMotion | numeric)
  *
  * ── Why this exists ──────────────────────────────────────────────────────────
  *
@@ -153,7 +153,7 @@ async function liveAnimations(page) {
   );
 }
 
-const STATE_FIXTURES = ["selection", "entry", "composite", "card", "behaviour", "navigation", "compositions", "overlays", "overlay-compositions", "collections", "listboxes"];
+const STATE_FIXTURES = ["selection", "entry", "composite", "card", "behaviour", "navigation", "compositions", "overlays", "overlay-compositions", "collections", "listboxes", "numeric"];
 
 /**
  * axe findings that are correct for axe and wrong for WCAG, each with the reason — the same mechanism and the
@@ -1821,6 +1821,72 @@ if (runs("reducedMotion")) {
         await context.close();
       }
     }
+  }
+}
+
+// Opt-in numeric utility: live coverage without claiming a new catalogue entry.
+// This intentionally has no kx-verify marker: utility checks do not promote catalogue evidence.
+if (runs("numeric")) {
+  for (const reduced of [false, true]) {
+    const context = await browser.newContext({ reducedMotion: reduced ? "reduce" : "no-preference" });
+    const page = await open(context, "numeric");
+    await page.clock.install();
+    await page.clock.pauseAt(new Date(Date.now() + 100));
+    const clickNumeric = async (name) => {
+      const from = await page.evaluate((label) => {
+        const from = Number(document.querySelector("kx-animated-number [aria-hidden=true]").textContent);
+        [...document.querySelectorAll("button")].find((button) => button.textContent.trim() === label).click();
+        return from;
+      }, name);
+      await page.clock.runFor(32);
+      await settleAngular(page);
+      return from;
+    };
+    const visual = page.locator("kx-animated-number [aria-hidden=true]");
+    const target = page.locator("kx-animated-number .kx-sr-only");
+    check(await visual.textContent() === "20.25", `numeric ${reduced}: initial decimal target`);
+    check(await page.locator("kx-animated-number[aria-live], kx-animated-number [aria-live]").count() === 0, `numeric ${reduced}: no frame-by-frame live region`);
+    await clickNumeric("Increase numeric value");
+    await settleAngular(page);
+    check(await target.textContent() === "100.50", `numeric ${reduced}: exact accessible target`);
+    if (!reduced) {
+      await page.clock.runFor(64);
+      const mid = Number(await visual.textContent());
+      check(mid > 20.25 && mid < 100.5, "numeric normal: increasing renders an intermediate decimal", String(mid));
+      const beforeDecrease = await clickNumeric("Decrease numeric value");
+      await page.clock.runFor(64);
+      const down = Number(await visual.textContent());
+      check(down > -40.25 && down < beforeDecrease, "numeric normal: interrupted decreasing value interpolates", String(down));
+      await page.clock.runFor(400);
+      const samples = [];
+      for (let i = 0; i < 30; i++) {
+        await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Step numeric value").click());
+        await page.clock.runFor(16);
+        samples.push(await visual.textContent());
+      }
+      check(new Set(samples).size > 1, "numeric normal: continuous frame-spaced updates keep advancing", `${samples[0]} -> ${samples.at(-1)}`);
+      await clickNumeric("Increase numeric value");
+      await page.evaluate(() => {
+        window.numericPreferenceChanged = new Promise((resolve) => matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change", resolve, { once: true }));
+      });
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.evaluate(() => window.numericPreferenceChanged);
+      await page.clock.runFor(32);
+      await settleAngular(page);
+      check(await visual.textContent() === "100.50", "numeric normal: live reduced motion settles the target");
+    } else {
+      check(await visual.textContent() === "100.50", "numeric reduced: increased value is immediate");
+      await clickNumeric("Decrease numeric value");
+      await settleAngular(page);
+      check(await visual.textContent() === "-40.25", "numeric reduced: decreased negative decimal is immediate");
+    }
+    await clickNumeric("Nonfinite numeric value");
+    await settleAngular(page);
+    check(await visual.textContent() === "Infinity" && await target.textContent() === "Infinity", `numeric ${reduced}: nonfinite values bypass interpolation`);
+    await clickNumeric("Decrease numeric value");
+    await settleAngular(page);
+    check(await visual.textContent() === "-40.25", `numeric ${reduced}: nonfinite recovery is immediate`);
+    await context.close();
   }
 }
 

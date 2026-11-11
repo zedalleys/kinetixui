@@ -1,6 +1,8 @@
 import * as React from "react";
 import { act, render, renderHook, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderToString } from "react-dom/server";
+import { hydrateRoot } from "react-dom/client";
 import { AnimatedNumber, useAnimatedNumber } from "./lib/animated-number";
 
 afterEach(() => vi.restoreAllMocks());
@@ -22,6 +24,33 @@ function clock() {
   };
 }
 describe("numeric motion", () => {
+  it.each([false, true])("hydrates a negative decimal without an initial tween (reduced=%s)", async (reduced) => {
+    const c = clock();
+    if (reduced) c.reduce();
+    const format = (value: number) => value.toFixed(2);
+    const initial = <AnimatedNumber value={-1.25} format={format} />;
+    const container = document.createElement("div");
+    container.innerHTML = renderToString(initial);
+    document.body.append(container);
+    const recover = vi.fn();
+    let root!: ReturnType<typeof hydrateRoot>;
+    await act(async () => { root = hydrateRoot(container, initial, { onRecoverableError: recover }); });
+    expect(container.querySelector("[aria-hidden]")?.textContent).toBe("-1.25");
+    expect(container.querySelector(".sr-only")?.textContent).toBe("-1.25");
+    expect(recover).not.toHaveBeenCalled();
+    expect(c.pending()).toBe(0);
+    act(() => root.render(<AnimatedNumber value={2.5} format={format} />));
+    if (reduced) {
+      expect(container.querySelector("[aria-hidden]")?.textContent).toBe("2.50");
+    } else {
+      c.step(150);
+      expect(container.querySelector("[aria-hidden]")?.textContent).toBe("0.63");
+    }
+    expect(container.querySelector(".sr-only")?.textContent).toBe("2.50");
+    act(() => root.unmount());
+    expect(c.pending()).toBe(0);
+    container.remove();
+  });
   it("keeps advancing while retargeted every frame", () => {
     const c = clock();
     const { result, rerender, unmount } = renderHook(({ value }) => useAnimatedNumber(value), { initialProps: { value: 0 } });
