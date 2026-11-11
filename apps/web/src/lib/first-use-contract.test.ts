@@ -30,13 +30,13 @@ type Contract = {
 
 const CONTRACT: Record<Platform, Contract> = {
   React: {
-    install: /```bash\nnpm i @kinetixui\/ui @kinetixui\/tokens\n```/,
+    install: /<Command op="install-react" \/>/,
     imports: /^import \{ Button \} from "@kinetixui\/ui";$/m,
     next: /^## Next steps$/m,
     compiledBy: { workflow: ".github/workflows/ci.yml", run: "node scripts/adoption/react-consumer.mjs" },
   },
   Angular: {
-    install: /```bash\nnpm i @kinetixui\/angular @kinetixui\/tokens\n```/,
+    install: /<Command op="install-angular" \/>/,
     imports: /^import \{ KxButton, KxSwitch \} from '@kinetixui\/angular';$/m,
     next: /<FirstUseNextSteps platform="Angular" \/>/,
     // the template is compiled by the package spec, and the page's copy is held equal to it by angular-docs.test.ts
