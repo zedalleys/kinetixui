@@ -74,13 +74,12 @@ const CONTROLS = [
     /kept animating offscreen|kept animating after the preference changed/,
   ],
   // Reduced motion. Each of these keeps one layer animating for a reader who asked for none.
-  // These two run only the `narrow` case (320px, reduced motion). Across the whole
-  // matrix they are caught earlier, by the live preference-change assertion in the
-  // `desktop` case — a real catch, but of a different assertion. Narrowing the run is
-  // what puts the plant in front of the reduced-motion assertions themselves.
+  // Run these only in the `narrow` case (320px, reduced motion). Earlier desktop
+  // interactions and live preference checks can fail before the intended assertion.
+  // The unmutated baseline still runs the full matrix.
   ["reduced-body-animates", "the mesh breath survives prefers-reduced-motion", /the breath survived reduced motion/, { KX_HERO_CASES: "narrow" }],
   ["reduced-facets-animate", "the facet shimmer survives prefers-reduced-motion", /a facet animation survived reduced motion/, { KX_HERO_CASES: "narrow" }],
-  ["reduced-links-animate", "the wireframe draw-on survives prefers-reduced-motion", /the intro draw-on survived reduced motion/],
+  ["reduced-links-animate", "the wireframe draw-on survives prefers-reduced-motion", /the intro draw-on survived reduced motion/, { KX_HERO_CASES: "narrow" }],
   // The hero became decoration on 2026-11-06. What the gate asserts now is
   // ABSENCE — no tab stop, no drag, no keys — and an absence assertion passes
   // just as happily when it is looking in the wrong place as when the feature
@@ -125,6 +124,8 @@ for (const [name, what, expected, extraEnv = {}] of CONTROLS) {
   } else {
     console.log(`  ** NOT CAUGHT **         ${name} — ${what}`);
     console.log(`      exit ${run.status}; the gate did not report this as a failure`);
+    const diagnostic = out.split("\n").find(line => /AssertionError|TimeoutError|Error:/.test(line));
+    if (diagnostic) console.log(`      ${diagnostic.trim()}`);
     failures++;
   }
 }
