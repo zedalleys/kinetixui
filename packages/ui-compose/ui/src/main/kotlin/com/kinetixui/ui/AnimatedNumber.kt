@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -18,13 +19,17 @@ fun KinetixAnimatedNumber(value: Float, format: (Float) -> String, modifier: Mod
 @Composable
 private fun AnimatedFiniteNumber(value: Float, format: (Float) -> String, modifier: Modifier) {
     val reduced = KinetixDisclosureMotion.rememberReduceMotion()
-    val animated by animateFloatAsState(
-        targetValue = value,
-        animationSpec = KinetixNumberMotion.spec(reduced),
-        label = "Kinetix numeric continuity",
-    )
+    // A preference change discards the old interpolation while retaining the Text node.
+    val display = key(reduced) {
+        val animated by animateFloatAsState(
+            targetValue = value,
+            animationSpec = KinetixNumberMotion.spec(reduced),
+            label = "Kinetix numeric continuity",
+        )
+        if (reduced) value else animated
+    }
     Text(
-        text = format(if (reduced) value else animated),
+        text = format(display),
         modifier = modifier.clearAndSetSemantics { contentDescription = format(value) },
         color = KinetixColorScheme.current.foreground,
     )

@@ -9,6 +9,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.test.onNodeWithContentDescription
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -51,5 +52,45 @@ class AnimatedNumberTest {
         } }
         rule.runOnIdle { value.value = 100f }
         rule.onNodeWithContentDescription("100").assertExists()
+    }
+
+    @Test fun restoringNormalMotionDoesNotReplayAnInterruptedNumber() {
+        val resolver = RuntimeEnvironment.getApplication().contentResolver
+        fun setReduced(reduced: Boolean) {
+            Settings.Global.putFloat(
+                resolver,
+                Settings.Global.ANIMATOR_DURATION_SCALE,
+                if (reduced) 0f else 1f,
+            )
+        }
+        setReduced(false)
+        val value = mutableStateOf(20f)
+        val observed = mutableListOf<Float>()
+        rule.mainClock.autoAdvance = false
+        rule.setContent { KinetixTheme(darkTheme = false) {
+            KinetixAnimatedNumber(value.value, { observed.add(it); it.toString() })
+        } }
+        rule.mainClock.advanceTimeByFrame()
+        rule.runOnIdle { value.value = 100f }
+        rule.waitForIdle()
+        rule.mainClock.advanceTimeBy(96)
+        rule.runOnIdle { assertTrue(observed.any { it > 20f && it < 100f }) }
+
+        rule.runOnIdle { setReduced(true) }
+        rule.waitForIdle()
+        rule.mainClock.advanceTimeByFrame()
+        rule.runOnIdle {
+            assertEquals(100f, observed.last(), 0f)
+            observed.clear()
+            setReduced(false)
+        }
+        rule.waitForIdle()
+        rule.mainClock.advanceTimeBy(32)
+        rule.runOnIdle {
+            assertTrue(
+                "Restoring motion replayed stale values: $observed",
+                observed.isNotEmpty() && observed.all { it == 100f },
+            )
+        }
     }
 }
