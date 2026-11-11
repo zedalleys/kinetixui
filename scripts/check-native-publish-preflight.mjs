@@ -157,6 +157,12 @@ const NEGATIVES = {
   // for the ordinary mismatch reason, and the probe would stop proving anything about the type.
   "preflight-accepts-a-malformed-publication-history": { file: "scripts/check-native-publish-preflight.mjs", from: "if (!Array.isArray(line.published)) {\n    refuse(", to: "if (false) {\n    refuse(", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   "malformed-history-fixture-is-repaired": { file: "scripts/publish/fixtures/native-release-lines/malformed-history.json", from: '"published": "0.1.0"', to: '"published": ["9.9.9"]', breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  // The undeclared-cohort refusal had no control of its own: with the guard removed the full preflight
+  // still exited 0 and the fixture below authorized a version whose cohort nothing declares — measured,
+  // and caught only by ci.yml's separate expect_refusal step. The second control keeps the fixture
+  // carrying the defect; repaired to "own" it would authorize, and the probe would prove nothing.
+  "preflight-accepts-an-undeclared-cohort": { file: "scripts/check-native-publish-preflight.mjs", from: 'if (line.cohort !== "own" && line.cohort !== "core") {\n    refuse(', to: "if (false) {\n    refuse(", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "undeclared-cohort-fixture-is-repaired": { file: "scripts/publish/fixtures/native-release-lines/cohort-undeclared.json", from: '"cohort": null', to: '"cohort": "own"', breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   "accepting-fixture-authorizes-nothing": { file: "scripts/publish/fixtures/native-release-lines/authorized.json", from: '"authorizedNext": "0.1.0"', to: '"authorizedNext": null', breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   "preflight-repeated-selector-guard-reports-without-exiting": { file: "scripts/check-native-publish-preflight.mjs", from: "  );\n  process.exit(1);\n}\n\n/*\n * EXACTLY ONE MODE PER RUN", to: "  );\n}\n\n/*\n * EXACTLY ONE MODE PER RUN", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
   // The same two bypasses by position in a publish workflow, one per selector.
@@ -961,6 +967,8 @@ const ACCEPTING = "scripts/publish/fixtures/native-release-lines/authorized.json
 /* The declaration whose publication history carries the wrong TYPE. Read as a committed file so the
  * probe below exercises the same path a real publish would, not a shape built in memory here. */
 const MALFORMED_HISTORY = "scripts/publish/fixtures/native-release-lines/malformed-history.json";
+/* The declaration that authorizes a version whose cohort is not declared. Same reasoning: a committed file. */
+const COHORT_UNDECLARED = "scripts/publish/fixtures/native-release-lines/cohort-undeclared.json";
 /*
  * The accepting fixture's own values, read rather than repeated. Two probes below depend on that
  * fixture really authorizing something for some line — that is what makes their fallthrough exit 0
@@ -987,6 +995,7 @@ const ARGUMENT_REFUSALS = [
    * because this guard, like the two above it, is only worth what it exits with.
    */
   { args: [`--authorize-version=0.1.0`, "--line=ui-compose", `--lines-file=${MALFORMED_HISTORY}`], says: "not an array", why: `a publication history that is a string rather than an array, which skipped the already-published refusal entirely — measured: this exact fixture authorized 0.1.0 and exited 0, while the same line with \`published: ["0.1.0"]\` refused it` },
+  { args: [`--authorize-version=0.1.0`, "--line=ui-compose", `--lines-file=${COHORT_UNDECLARED}`], says: ".cohort is", why: "a version authorized for a line whose cohort is not declared, which has no agreed meaning — measured: with the guard removed this exits 0 and authorizes it" },
 ];
 
 const argumentFailures = [];
@@ -1001,6 +1010,12 @@ const malformedLine = JSON.parse(source(MALFORMED_HISTORY))?.lines?.["ui-compose
 if (Array.isArray(malformedLine?.published) || malformedLine?.authorizedNext !== "0.1.0") {
   argumentFailures.push(
     `${MALFORMED_HISTORY} must declare ui-compose with a NON-array \`published\` and \`authorizedNext: "0.1.0"\`; it declares published ${JSON.stringify(malformedLine?.published)} and authorizedNext ${JSON.stringify(malformedLine?.authorizedNext)}. The type is the whole defect — with a well-formed array the probe below is refused for the ordinary version mismatch and stops being evidence about the shape`,
+  );
+}
+const undeclaredLine = JSON.parse(source(COHORT_UNDECLARED))?.lines?.["ui-compose"];
+if (undeclaredLine?.cohort === "own" || undeclaredLine?.cohort === "core" || undeclaredLine?.authorizedNext !== "0.1.0") {
+  argumentFailures.push(
+    `${COHORT_UNDECLARED} must declare ui-compose with a cohort that is neither "own" nor "core" and \`authorizedNext: "0.1.0"\`; it declares cohort ${JSON.stringify(undeclaredLine?.cohort)} and authorizedNext ${JSON.stringify(undeclaredLine?.authorizedNext)}. A declared cohort would authorize, and the probe would stop proving anything about the cohort refusal.`,
   );
 }
 if (!acceptingLine) {
