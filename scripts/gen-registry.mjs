@@ -59,6 +59,11 @@ const layout = (root) => ({
   root,
   src: `${root}/packages/ui/src/components`,
   out: `${root}/registry/kinetixui/ui`,
+  // `lib/utils.ts` ships with almost every item, so it is a mirror like the components are. It used to
+  // be a hand-kept copy that the generator attached but never wrote, so a new export added to
+  // `packages/ui/src/lib/utils.ts` shipped a component calling a function the delivered `lib/utils.ts`
+  // did not have — a broken install that no gate could see, because the copy happened to be identical.
+  lib: `${root}/packages/ui/src/lib/utils.ts`,
 });
 
 /**
@@ -124,7 +129,7 @@ const NODE = {
 /* exported for scripts/registry-fixed-point-negative-controls.mjs */
 /** Everything the generator would produce, as a pure value: no writes, no order dependence. */
 export function buildRegistry(root = ROOT) {
-  const { src: SRC, out: OUT } = layout(root);
+  const { src: SRC, out: OUT, lib: LIB } = layout(root);
   const items = [
     {
       name: "tokens",
@@ -138,6 +143,7 @@ export function buildRegistry(root = ROOT) {
   const files = readdirSync(SRC).filter((f) => f.endsWith(".tsx")).sort();
   /** repo-relative generated path -> exact bytes the generator would write there */
   const mirrors = new Map();
+  mirrors.set("registry/kinetixui/lib/utils.ts", readFileSync(LIB, "utf8"));
 
   for (const file of files) {
     const name = file.replace(/\.tsx$/, "");
@@ -163,7 +169,10 @@ export function buildRegistry(root = ROOT) {
     const deps = new Set(npmImportsOf(code));
     for (const f of filesArr) {
       if (f.path === `registry/kinetixui/ui/${file}`) continue;
-      for (const pkg of npmImportsOf(readFileSync(`${root}/${f.path}`, "utf8"))) deps.add(pkg);
+      // from `mirrors` when the generator owns the file: what ships is what it is about to write,
+      // not whatever is on disk from the previous run.
+      const delivered = mirrors.get(f.path) ?? readFileSync(`${root}/${f.path}`, "utf8");
+      for (const pkg of npmImportsOf(delivered)) deps.add(pkg);
     }
 
     items.push({
