@@ -4,8 +4,8 @@ import { Button, Input, Label, Card, CardHeader, CardTitle, CardDescription, Car
 import type { Node } from "@/lib/create-studio/model";
 import { adapterFor } from "@/lib/create-studio/registry";
 import { nodeStyle } from "@/lib/create-studio/presentation";
-export function NodeView({ node, selection, onSelect, preview = false, editWidth }: { node: Node; selection: string[]; onSelect: (id: string, additive: boolean) => void; preview?: boolean; editWidth?: number }) {
-  const children = (node.children ?? []).map(child => <NodeView key={child.id} node={child} selection={selection} onSelect={onSelect} preview={preview} editWidth={editWidth} />);
+export function NodeView({ node, selection, onSelect, preview = false, editWidth, dir }: { node: Node; selection: string[]; onSelect: (id: string, additive: boolean) => void; preview?: boolean; editWidth?: number; dir?: "ltr" | "rtl" }) {
+  const children = (node.children ?? []).map(child => <NodeView key={child.id} node={child} selection={selection} onSelect={onSelect} preview={preview} editWidth={editWidth} dir={dir} />);
   if (node.kind === "slot") return <>{children}</>;
   const adapter = adapterFor(node.ref!);
   const p = { ...adapter.defaults, ...node.props };
@@ -19,7 +19,7 @@ export function NodeView({ node, selection, onSelect, preview = false, editWidth
     case "component:Input": content = <div style={style}><Label htmlFor={node.id}>{String(p.label)}</Label><Input id={node.id} placeholder={String(p.placeholder)} disabled={Boolean(p.disabled)} /></div>; break;
     case "component:Badge": content = <Badge variant={p.variant as "default"} style={style}>{String(p.text)}</Badge>; break;
     case "component:Card": content = <Card style={style}><CardHeader><CardTitle>{String(p.title)}</CardTitle><CardDescription>{String(p.description)}</CardDescription></CardHeader><CardContent>{children}</CardContent></Card>; break;
-    case "component:Tabs": content = <Tabs defaultValue="first" style={style}><TabsList aria-label="Content views"><TabsTrigger value="first">{String(p.firstLabel)}</TabsTrigger><TabsTrigger value="second">{String(p.secondLabel)}</TabsTrigger></TabsList><TabsContent value="first">{String(p.firstContent)}</TabsContent><TabsContent value="second">{String(p.secondContent)}</TabsContent></Tabs>; break;
+    case "component:Tabs": content = <Tabs defaultValue="first" style={style} dir={dir}><TabsList aria-label="Content views"><TabsTrigger value="first">{String(p.firstLabel)}</TabsTrigger><TabsTrigger value="second">{String(p.secondLabel)}</TabsTrigger></TabsList><TabsContent value="first">{String(p.firstContent)}</TabsContent><TabsContent value="second">{String(p.secondContent)}</TabsContent></Tabs>; break;
     default: content = <p role="alert">This component cannot be rendered.</p>;
   }
   if (preview) return <div style={{ minWidth: 0 }}><div>{content}</div></div>;
