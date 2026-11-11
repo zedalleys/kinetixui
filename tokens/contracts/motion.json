@@ -227,8 +227,10 @@
         "transform (slide)"
       ],
       "reducedForm": "shorten",
-      "evidence": [],
-      "note": "Large surfaces: Sheet opens on slow and closes on base. One React consumer and no rendered check, so it is recorded, not promoted. SwiftUI implements the same role with a cross-fade and framework-driven transitions; it is a declared deviation, not a consumer, because no SwiftUI source contains this role's token pairing. Compose and Flutter ship Sheet, Sidebar and Drawer with no slide motion at all, so they are absent here rather than deviating — the next bounded slice for this role.",
+      "evidence": [
+        "packages/ui-flutter/test/sheet_motion_test.dart"
+      ],
+      "note": "Large surfaces: Sheet opens on slow and closes on base, on standard easing. React and Flutter consume these tokens. Flutter Sheet/Drawer entry, exit, reversal and reduced-motion geometry are measured by headless widget tests; device assistive-technology behavior remains unverified. This role remains observed rather than claiming equal runtime evidence across platforms. SwiftUI retains its declared slide deviation. Compose uses Material3 ModalBottomSheet, whose framework-driven entry and abrupt controlled exit need a separate lifecycle audit; it is not registered as a token consumer here.",
       "consumers": [
         {
           "platform": "react",
@@ -236,6 +238,15 @@
           "expects": [
             "transition ease-standard",
             "data-[state=closed]:duration-base data-[state=open]:duration-slow"
+          ]
+        },
+        {
+          "platform": "flutter",
+          "file": "packages/ui-flutter/lib/src/kinetix_sheet_motion.dart",
+          "expects": [
+            "KinetixDuration.slow",
+            "KinetixDuration.base",
+            "KinetixEasing.standard"
           ]
         }
       ],

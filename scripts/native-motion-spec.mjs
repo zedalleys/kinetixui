@@ -138,6 +138,14 @@ export const PLATFORMS = {
         members: ["toggle.dart", "checkbox.dart", "radio_group.dart"],
         test: "packages/ui-flutter/test/selection_motion_test.dart",
       },
+      slide: {
+        contractRole: "spatial",
+        strict: true,
+        helper: "kinetix_sheet_motion.dart",
+        // Drawer delegates to Sheet and adds no animation of its own.
+        members: ["sheet.dart"],
+        test: "packages/ui-flutter/test/sheet_motion_test.dart",
+      },
       loop: {
         contractRole: "loop",
         // A loop has no destination to keep, so its reduced form is not a shorter duration but no loop

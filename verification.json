@@ -83,7 +83,7 @@
       "accessibility": 7,
       "rtl": 58,
       "largeText": 58,
-      "reducedMotion": 8,
+      "reducedMotion": 10,
       "visual": 0,
       "published": 0
     }
@@ -1293,6 +1293,17 @@
           "switch",
           "tabs",
           "toggle"
+        ]
+      },
+      {
+        "file": "packages/ui-flutter/test/sheet_motion_test.dart",
+        "environment": "flutter_test",
+        "kinds": [
+          "reducedMotion"
+        ],
+        "components": [
+          "drawer",
+          "sheet"
         ]
       },
       {
@@ -3136,6 +3147,9 @@
         ],
         "largeText": [
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/sheet_motion_test.dart:7-315"
         ]
       }
     },
@@ -5629,6 +5643,9 @@
         ],
         "largeText": [
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/sheet_motion_test.dart:7-315"
         ]
       }
     },
