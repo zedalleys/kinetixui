@@ -127,3 +127,6 @@
 
 .studio-layer-panel [role="treeitem"] { justify-content: flex-start; border-radius: 0; }
 .studio-panel-switch, .studio-reorder { flex-wrap: wrap; }
+.studio-preview-frame { display: block; width: 100%; border: 0; background: hsl(var(--background)); }
+.studio-canvas-preview { overflow: auto; }
+.studio-breakpoint-source { margin: 0; font-size: .75rem; color: hsl(var(--muted-foreground)); }
