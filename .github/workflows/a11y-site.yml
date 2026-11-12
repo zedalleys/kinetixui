@@ -23,6 +23,8 @@ on:
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
+      - "scripts/footer-browser.mjs"
+      - "scripts/footer-negative-controls.mjs"
       - "scripts/rebrand-browser.mjs"
       - "scripts/rebrand-hero-negative-controls.mjs"
       - "scripts/hero-light-browser.mjs"
@@ -66,6 +68,8 @@ on:
       - "scripts/platform-ticker.mjs"
       - "scripts/platform-preference-browser.mjs"
       - "scripts/home-systems-browser.mjs"
+      - "scripts/footer-browser.mjs"
+      - "scripts/footer-negative-controls.mjs"
       - "scripts/rebrand-browser.mjs"
       - "scripts/rebrand-hero-negative-controls.mjs"
       - "scripts/hero-light-browser.mjs"
@@ -204,6 +208,22 @@ jobs:
       # running through an output it does not belong to.
       - name: Homepage systems visuals (tabs, type floor, headline, map, hero decoration)
         run: pnpm check:home-systems
+
+      # The signature footer, which renders on every route, so a layout failure in it is a layout failure
+      # everywhere. 84 geometry cases: seven widths from 320 to 1920, both directions, 100% and 200% text,
+      # on three routes — the intersection `large-text.mjs` (Storybook only) and `a11y-site.mjs` (default
+      # text size) each leave uncovered, and the one where a 144px unbreakable word in a 144px column ran
+      # the document 8px wide. Also asserts the decoration is drawn rather than downloaded, gone under
+      # forced colours and out of the accessibility tree; that the link underline answers the keyboard and
+      # arrives instantly under reduced motion; and that the register names its lists instead of adding
+      # four headings to every page's outline.
+      - name: Signature footer (geometry at 200% text, decoration, interaction, naming)
+        run: pnpm check:footer
+
+      # The controls for the step above. Each restores, at runtime only, one condition that gate exists to
+      # catch — the pre-fix two-column register among them — and fails if the rule does not fire on it.
+      - name: Signature footer negative controls
+        run: pnpm check:footer-negative-controls
 
       # The rebranded hero, against the running production build: the owner-supplied mesh renders unaltered,
       # the light travels its edges, and the hero answers the reader with nothing — it is decoration (owner

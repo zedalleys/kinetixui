@@ -1,0 +1,196 @@
+/*
+  Signature footer — Precision Native.
+
+  Loaded from `layout.tsx` beside `brand-hero.css` rather than `@import`-ed at the top of `globals.css`:
+  the surface-CSS convention points at globals.css line 1, which is exactly the hunk PR #577 adds
+  `precision-native.css` to, and a shared footer has no reason to collide with the homepage surface.
+
+  Everything here is either a pseudo-element Tailwind cannot express or a logical-property rule that has to
+  flip under RTL. No colour literals: every value is a semantic token, so both themes and forced colours
+  follow the contract the rest of the site is held to.
+*/
+
+/* ---------------------------------------------------------------------------------------------------
+   The weave lattice — the only decoration, and it is drawn, not downloaded.
+
+   Its two diagonals are measured off the Kinetic Weave mark in `brand-mark.tsx`, not chosen by eye:
+   the cross stroke runs (22,78) → (78,21), which is 45.5deg, and the leg runs (38,50) → (79,82), which
+   is -38deg. The vertical pitch stands for the stem. Hairlines in `--border` at a low opacity, faded out
+   downward and toward the inline end, so it reads as structure at the seam and is gone by the nav.
+
+   This replaces the two Arabian engraving plates and the paper grain the footer carried on `main`.
+   `DESIGN.md` line 52 excludes Arabian motifs from the Kinetic Weave refresh and line 158 repeats it;
+   the footer was the last surface still shipping them. No raster is fetched here at all.
+--------------------------------------------------------------------------------------------------- */
+.kx-footer {
+  position: relative;
+  isolation: isolate;
+}
+
+.kx-footer-weave {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  /* Tall enough to sit behind the closing statement, short enough never to reach the nav register. */
+  height: clamp(13rem, 26vw, 22rem);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    repeating-linear-gradient(45.5deg, hsl(var(--border)) 0 1px, transparent 1px 56px),
+    repeating-linear-gradient(-38deg, hsl(var(--border)) 0 1px, transparent 1px 72px),
+    repeating-linear-gradient(to right, hsl(var(--border)) 0 1px, transparent 1px 112px);
+  /* Two masks: fade down, and fade toward the inline end so the statement's text never sits on line work. */
+  mask-image: linear-gradient(to bottom, hsl(0 0% 0% / 0.9), transparent 88%),
+    linear-gradient(to right, hsl(0 0% 0%) 0%, transparent 72%);
+  mask-composite: intersect;
+  -webkit-mask-image: linear-gradient(to bottom, hsl(0 0% 0% / 0.9), transparent 88%),
+    linear-gradient(to right, hsl(0 0% 0%) 0%, transparent 72%);
+  -webkit-mask-composite: source-in;
+}
+[dir="rtl"] .kx-footer-weave {
+  /* The lattice is handed: mirror it so the dense corner stays at the reading start. */
+  transform: scaleX(-1);
+}
+@media (forced-colors: active) {
+  /* Decoration only. Forced colours gives the reader a palette they chose; hairline texture is noise in it. */
+  .kx-footer-weave {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------
+   The seam — the footer's top edge, and the one place the brand colour appears as structure.
+
+   A full-width hairline in `--border` carrying two `--primary` ticks. Their widths are the mark's own
+   proportions read as percentages of a 23.5rem run: the stem's 21% from the start edge, then the cross
+   stroke's 56% (26% -> 82%), with a 5% gap between them and the last 18% of the run left bare. The leg
+   is not represented: three ticks read as a dashed rule rather than as a measure. The seam is the
+   lockup's rhythm laid flat, and it is the only place the brand colour appears as structure.
+--------------------------------------------------------------------------------------------------- */
+.kx-footer-seam {
+  height: 1px;
+  background:
+    linear-gradient(to right, hsl(var(--primary)) 0 4.94rem, transparent 4.94rem) 0 0 / 100% 1px no-repeat,
+    linear-gradient(to right, transparent 0 6.11rem, hsl(var(--primary)) 6.11rem 19.27rem, transparent 19.27rem)
+      0 0 / 100% 1px no-repeat,
+    hsl(var(--border));
+}
+[dir="rtl"] .kx-footer-seam {
+  /* Logical flip: the ticks belong at the reading start on both sides. */
+  transform: scaleX(-1);
+}
+@media (forced-colors: active) {
+  .kx-footer-seam {
+    background: CanvasText;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------
+   Navigation links — one underline that grows from the reading start.
+
+   A pseudo-element rather than `text-decoration`, so the growth is a transform and the line's position is
+   stable at any text size. `scaleX` with a logical origin, so it grows from the start edge in both
+   directions. Hover and focus-visible get the same treatment: the footer has to work without a pointer.
+--------------------------------------------------------------------------------------------------- */
+.kx-footer-link {
+  position: relative;
+  display: inline-block;
+}
+.kx-footer-link::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: -0.2em;
+  height: 1px;
+  background: hsl(var(--primary));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--duration-fast, 150ms) var(--easing-enter, ease-out);
+}
+[dir="rtl"] .kx-footer-link::after {
+  transform-origin: right;
+}
+.kx-footer-link:hover::after,
+.kx-footer-link:focus-visible::after {
+  transform: scaleX(1);
+}
+/*
+  No local `prefers-reduced-motion` rule for the underline, deliberately. The `@kinetixui/ui` Tailwind preset
+  already shortens every transition in the app to `0.01ms !important` under that preference (see
+  `packages/ui/tailwind.config.ts` and the contract test in `apps/web/src/lib/motion-contract.test.ts`), and
+  `!important` in a base layer beats anything written here — a `transition: none` of our own would be dead
+  code that reads as the protection. The behaviour is what matters and it is the right one: the underline is
+  the state, not the animation, so it still appears for a reduced-motion reader, it just arrives instantly.
+  `scripts/footer-browser.mjs` asserts the measured duration rather than the presence of a rule.
+*/
+@media (forced-colors: active) {
+  /* `background` is not a forced-colours channel, so the line would vanish. The reader's own underline
+     is authored by the browser on `:hover`; drop ours rather than leave an invisible one behind. */
+  .kx-footer-link::after {
+    display: none;
+  }
+  .kx-footer-link:hover,
+  .kx-footer-link:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------
+   The closing statement.
+
+   `clamp` from phone to ultrawide against the display family. The upper bound is deliberately short of
+   the hero's: this is the page's last word, not a second hero. `balance` keeps the two lines even, and
+   the explicit `max-inline-size` in `ch` stops the measure running past comfortable reading at 1920.
+--------------------------------------------------------------------------------------------------- */
+.kx-footer-statement {
+  font-size: clamp(1.75rem, 1rem + 2.6vw, 3.25rem);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  max-inline-size: 26ch;
+}
+
+/* ---------------------------------------------------------------------------------------------------
+   The navigation register, and the 9rem rule.
+
+   MEASURED DEFECT, fixed here rather than papered over. The register was `grid-cols-2 sm:grid-cols-4`.
+   At 320px with the reader's text at 200% that gives each column 144px, and "Changelog" set at a 32px
+   root is exactly 144px wide and unbreakable, so the column — and with it the page — ran 8px past the
+   viewport on every route. Measured at `/`, `/docs/rtl`, `/components` and `/blocks`: all four reported
+   `documentElement.scrollWidth` 328 against a 320 client width, with five overflowing elements inside
+   the footer. This is the same class of failure the old four-column footer hit at 768, and the fix is
+   the same shape as the `64rem` rule the Precision Native surface already uses: the threshold is a text
+   measure, not a pixel count.
+
+   `minmax(9rem, 1fr)` with `auto-fit`: 9rem is 144px at a 16px root, so 320px still gets two columns;
+   at a 32px root 9rem is 288px, so the register collapses to one and the longest single word always has
+   its own line. It responds whether the reader scales text through the browser's default size (which
+   also scales media-query `rem`) or through a page zoom of the root (which does not), because the track
+   itself is expressed in `rem`.
+
+   The column rules live only above `64rem`, where the register is a guaranteed single row of four, so a
+   hairline can never end up stranded at the start of a wrapped second row. Hairlines BETWEEN columns,
+   never around them — no boxes. `border-inline-start`, so they fall on the correct side under RTL.
+--------------------------------------------------------------------------------------------------- */
+.kx-footer-register {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  column-gap: 1.5rem;
+  row-gap: 2.5rem;
+}
+@media (min-width: 64rem) {
+  .kx-footer-register {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 0;
+  }
+  .kx-footer-group + .kx-footer-group {
+    border-inline-start: 1px solid hsl(var(--border));
+    padding-inline-start: 2rem;
+  }
+}
+@media (forced-colors: active) and (min-width: 64rem) {
+  .kx-footer-group + .kx-footer-group {
+    border-inline-start-color: CanvasText;
+  }
+}

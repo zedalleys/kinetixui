@@ -82,6 +82,8 @@
     "check:iot-monitoring": "node scripts/iot-monitoring.mjs",
     "check:docs-trees": "node scripts/docs-tree-browser.mjs --base http://127.0.0.1:3000",
     "check:platform-preference": "node scripts/platform-preference-browser.mjs --base http://127.0.0.1:3000",
+    "check:footer": "node scripts/footer-browser.mjs --base http://127.0.0.1:3000",
+    "check:footer-negative-controls": "node scripts/footer-negative-controls.mjs --base http://127.0.0.1:3000",
     "check:home-systems": "node scripts/home-systems-browser.mjs --base http://127.0.0.1:3000",
     "check:rebrand-hero": "node scripts/rebrand-browser.mjs",
     "check:rebrand-hero-negative-controls": "node scripts/rebrand-hero-negative-controls.mjs",
