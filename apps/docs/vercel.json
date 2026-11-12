@@ -7,7 +7,8 @@
   "git": {
     "deploymentEnabled": {
       "codex/precision-native-20261110": false,
-      "codex/value-motion-20261110": false
+      "codex/value-motion-20261110": false,
+      "claude/project-thread-9th4aj": false
     }
   }
 }
