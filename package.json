@@ -75,6 +75,8 @@
     "check:tabs-dogfood": "node scripts/tabs-dogfood-browser.mjs",
     "check:tabs-indicator": "node scripts/tabs-indicator.mjs",
     "check:react-overlays": "node scripts/react-overlays.mjs",
+  "check:react-carousel-focus": "node scripts/react-carousel-focus.mjs",
+  "check:react-carousel-focus-negative-controls": "node scripts/react-carousel-focus-negative-controls.mjs",
     "check:a11y-site": "node scripts/a11y-site.mjs --base http://127.0.0.1:3000",
     "check:theme-isolation": "node scripts/theme-isolation.mjs --base http://127.0.0.1:3000",
     "check:iot-state-spatial": "node scripts/iot-state-spatial.mjs --base http://127.0.0.1:3000",
