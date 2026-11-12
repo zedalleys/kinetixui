@@ -35,12 +35,56 @@ function useCarousel() {
   return context;
 }
 
+/**
+ * Whether `el` reads right to left. The nearest `[dir]` decides first, because it is the markup's answer;
+ * only when no ancestor states one does the computed direction, read through the element's OWN window,
+ * decide. A DOM implementation is free not to inherit computed direction, so relying on it alone would make
+ * the behaviour depend on the environment rather than on the page.
+ *
+ * This is `isRtl` from `packages/ui-angular/src/lib/collection.ts`, rule for rule. The two platforms must
+ * answer "which way does this carousel read" the same way or their carousels are not the same component.
+ */
+function isRtl(el: Element): boolean {
+  const explicit = el.closest("[dir]")?.getAttribute("dir")?.toLowerCase();
+  if (explicit === "rtl" || explicit === "ltr") return explicit === "rtl";
+  return el.ownerDocument.defaultView?.getComputedStyle(el).direction === "rtl";
+}
+
+/** Which way an arrow key travels once direction is resolved: `@kinetixui/angular`'s `inlineKey`. */
+function inlineKey(key: string, rtl: boolean): "forward" | "backward" | null {
+  if (key === "ArrowRight") return rtl ? "backward" : "forward";
+  if (key === "ArrowLeft") return rtl ? "forward" : "backward";
+  return null;
+}
+
 const Carousel = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & CarouselProps
 >(({ orientation = "horizontal", opts, setApi, plugins, className, children, onKeyDown, ...props }, ref) => {
+  // The carousel's own direction, resolved from the rendered element rather than assumed. The engine reads
+  // `direction` when it initialises and lays the track out from it, so this cannot be computed during
+  // render: the first client render is LTR and the layout effect below corrects it before paint, which
+  // re-initialises the engine. Horizontal only — a vertical track has no inline direction.
+  const root = React.useRef<HTMLDivElement | null>(null);
+  const [rtl, setRtl] = React.useState(false);
+  const horizontal = orientation === "horizontal";
+
+  React.useLayoutEffect(() => {
+    const el = root.current;
+    if (!el || !horizontal) return void setRtl(false);
+    const resolve = () => setRtl(isRtl(el));
+    resolve();
+    // A page that switches language flips `dir` on an ancestor long after mount. That resizes nothing, so
+    // nothing else would tell the engine to lay the track out the other way; this does.
+    const observer = new MutationObserver(resolve);
+    observer.observe(el.ownerDocument.documentElement, { attributes: true, subtree: true, attributeFilter: ["dir"] });
+    return () => observer.disconnect();
+  }, [horizontal]);
+
   const [carouselRef, api] = useEmblaCarousel(
-    { ...opts, axis: orientation === "horizontal" ? "x" : "y" },
+    // `direction` first, so a consumer who passes their own in `opts` still wins; `axis` last, because it is
+    // the carousel's own `orientation` prop expressed in the engine's terms and is not theirs to contradict.
+    { direction: horizontal && rtl ? "rtl" : "ltr", ...opts, axis: horizontal ? "x" : "y" },
     plugins,
   );
   const [canScrollPrev, setCanScrollPrev] = React.useState(false);
@@ -74,7 +118,11 @@ const Carousel = React.forwardRef<
       value={{ carouselRef, api, opts, orientation, scrollPrev, scrollNext, canScrollPrev, canScrollNext }}
     >
       <div
-        ref={ref}
+        ref={(node) => {
+          root.current = node;
+          if (typeof ref === "function") ref(node);
+          else if (ref) ref.current = node;
+        }}
         onKeyDown={(e) => {
           // Bubble phase, and only for a key nothing inside has claimed: a text field inside a slide keeps
           // its caret keys, a nested control that handled the arrow keeps it, and Alt/Ctrl/Meta+Arrow
@@ -83,12 +131,16 @@ const Carousel = React.forwardRef<
           if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
           const t = e.target as HTMLElement;
           if (t.isContentEditable || t.closest("input:not([type=button]):not([type=checkbox]):not([type=submit]):not([type=reset]), textarea, select")) return;
-          if (e.key === "ArrowLeft") {
+          // Logical, not physical: in a right-to-left carousel the next slide lies to the LEFT, so ArrowLeft
+          // advances and ArrowRight goes back. Direction is read at the press rather than taken from state,
+          // so a key is never mapped by a direction that has already changed.
+          // A vertical carousel keeps the keys it already had: this slice is about direction, and taking
+          // ArrowLeft/ArrowRight away from it would be a behaviour change nobody asked for.
+          const move = inlineKey(e.key, horizontal && isRtl(e.currentTarget));
+          if (move) {
             e.preventDefault();
-            scrollPrev();
-          } else if (e.key === "ArrowRight") {
-            e.preventDefault();
-            scrollNext();
+            if (move === "forward") scrollNext();
+            else scrollPrev();
           }
         }}
         className={cn("relative font-sans", className)}
