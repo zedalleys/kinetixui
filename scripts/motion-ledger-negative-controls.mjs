@@ -44,6 +44,16 @@ const gaps = () => structuredClone(KNOWN_GAPS);
  */
 const ANCHOR = { platform: "SwiftUI", family: "loop", role: "loop", member: "Spinner.swift", gapped: "Dialog.swift" };
 
+/** A family name no platform declares, derived rather than chosen, so a ledger that grows a family of
+ *  that name cannot quietly turn the dead-vocabulary control into a no-op. */
+const DECLARED = new Set(Object.values(PLATFORMS).flatMap((p) => Object.keys(p.families ?? {})));
+const UNCLAIMED = (() => {
+  for (let i = 0; ; i++) {
+    const name = i ? `no-such-family-${i}` : "no-such-family";
+    if (!DECLARED.has(name) && !(name in DIRECTION_TERMS)) return name;
+  }
+})();
+
 const controls = [
   // ── the composition's own coherence ──────────────────────────────────────────────────────────
   {
@@ -72,9 +82,14 @@ const controls = [
     terms: (t) => void delete t.loop,
   },
   {
+    /* The name is COMPUTED, not hardcoded. An earlier version used "carousel", which PR #573 adds as a
+     * real family — so on the integrated tree this control mutated a name that was declared, the clause
+     * correctly stayed quiet, and the control asserted nothing. A control that picks a name the ledger
+     * might later claim is a control that can retire itself in silence. `UNCLAIMED` is derived from the
+     * ledger and asserted to be unclaimed in the preconditions below. */
     name: "direction vocabulary for a family no platform declares",
-    expect: /DIRECTION_TERMS describes a "carousel" family that no platform declares/,
-    terms: (t) => void (t.carousel = { forward: /next/i, reverse: /prev/i }),
+    expect: new RegExp(`DIRECTION_TERMS describes a "${UNCLAIMED}" family that no platform declares`),
+    terms: (t) => void (t[UNCLAIMED] = { forward: /forward/i, reverse: /reverse/i }),
   },
   {
     name: "one file in two families",
@@ -165,6 +180,7 @@ else {
   if (!(ANCHOR.gapped in (KNOWN_GAPS[ANCHOR.platform] ?? {}))) fails.push(`${ANCHOR.gapped} is no longer a declared gap`);
   if (!DIRECTION_TERMS[ANCHOR.family]) fails.push(`the ${ANCHOR.family} family has no direction vocabulary to remove`);
 }
+if (DECLARED.has(UNCLAIMED) || UNCLAIMED in DIRECTION_TERMS) fails.push(`"${UNCLAIMED}" is already a declared family, so the dead-vocabulary control would assert nothing`);
 if (!load(CONTRACT).roles[ANCHOR.role]?.pairingExempt) fails.push(`the "${ANCHOR.role}" role no longer declares pairingExempt`);
 if (!(load(EXEMPTIONS).pairingExempt?.roles ?? []).includes(ANCHOR.role)) fails.push(`the register no longer carries "${ANCHOR.role}"`);
 if (fails.length) {
