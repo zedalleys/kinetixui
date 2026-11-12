@@ -71,17 +71,35 @@ try {
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const offOrigin = [];
-    page.on("request", (r) => {
+    const otherOffOrigin = [];
+    // Only a subresource the `load` event waits for can hold a navigation open, and that is what went wrong
+    // here: an image. A `fetch` to another origin cannot do it — the page asks api.github.com for its own
+    // repository stars, and that request failing does not delay `load` by a millisecond. So the finding is
+    // scoped to the blocking resource types and the rest is printed as a note. That keeps the gate's claim to
+    // the one it can defend, rather than an allowlist of whichever hosts the page happens to call today.
+    const BLOCKING = new Set(["image", "stylesheet", "script", "font", "media"]);
+    const record = (r, suffix = "") => {
       const u = new URL(r.url());
       if (u.protocol === "data:" || u.protocol === "blob:") return;
-      if (u.origin !== origin) offOrigin.push(r.url());
-    });
+      if (u.origin === origin) return;
+      (BLOCKING.has(r.resourceType()) ? offOrigin : otherOffOrigin).push(`${r.url()}${suffix} [${r.resourceType()}]`);
+    };
+    page.on("request", (r) => record(r));
+    // A request that never resolves is the failure mode this gate exists for, and a request that fails fast is
+    // what the same dependency looks like from a machine with no route to the host. Both are recorded: the
+    // finding is the attempt, not its outcome.
+    page.on("requestfailed", (r) => record(r, ` (failed: ${r.failure()?.errorText ?? "unknown"})`));
 
     const started = Date.now();
     await page.goto(`${base}${ROUTE}`, { waitUntil: "load", timeout: 15_000 });
     const elapsed = Date.now() - started;
     ok("the route loads", `${elapsed}ms`);
 
+    // Wait for them rather than reading whatever is in the DOM the instant `load` fires: a gate that reads
+    // once races hydration, and a race that resolves the wrong way reads as a missing-image finding.
+    await page
+      .waitForFunction(() => document.querySelectorAll('main img[src^="/img/"]').length === 3, null, { timeout: 5_000 })
+      .catch(() => {});
     const images = (await readImages(page)).filter((i) => i.src.startsWith("/img/"));
     if (images.length !== 3) fail("the demo's images", `expected 3 local images in <main>, found ${images.length}`);
     for (const img of images) {
@@ -96,8 +114,9 @@ try {
     }
 
     // The structural claim. This, not the timing above, is what the old source could not satisfy.
-    if (offOrigin.length) fail("the route fetched off-origin subresources", offOrigin.join(", "));
-    else ok("no off-origin requests", `every subresource came from ${origin}`);
+    if (offOrigin.length) fail("the route fetched blocking off-origin subresources", [...new Set(offOrigin)].join(", "));
+    else ok("no blocking off-origin subresources", `every image, style, script, font and media file came from ${origin}`);
+    if (otherOffOrigin.length) console.log(`  note non-blocking off-origin requests — ${[...new Set(otherOffOrigin)].join(", ")}`);
 
     await page.close();
   }
@@ -168,11 +187,15 @@ try {
     // A real 404 on a real <img>, so the browser fires a real `error` event and the component's own
     // onError runs. Nothing is mocked: replacing the component's success path with a stub would prove
     // only that the stub works.
-    await page.evaluate(() => {
+    const broke = await page.evaluate(() => {
       const img = document.querySelector('main img[src^="/img/"]');
+      if (!img) return false;
       img.src = "/img/this-asset-does-not-exist.svg";
+      return true;
     });
-    const fellBack = await page
+    const fellBack = !broke
+      ? false
+      : await page
       .waitForFunction(
         () => {
           const frames = Array.from(document.querySelectorAll("main .relative.w-full"));
@@ -184,7 +207,8 @@ try {
       .then(() => true)
       .catch(() => false);
     const left = (await readImages(page)).filter((i) => i.src.startsWith("/img/") && i.naturalWidth > 0).length;
-    if (!fellBack) fail("the error fallback", "a 404 source left the broken <img> in place with no fallback");
+    if (!broke) fail("the error fallback", "could not be checked: the route served no local image to break");
+    else if (!fellBack) fail("the error fallback", "a 404 source left the broken <img> in place with no fallback");
     else if (left !== 2) fail("the error fallback", `it replaced the broken frame but ${left} of the other 2 images are gone`);
     else ok("the error fallback", "the broken frame shows the fallback mark, the other two are untouched");
     await page.close();
