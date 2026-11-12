@@ -228,6 +228,11 @@ const CarouselPrevious = React.forwardRef<HTMLButtonElement, React.ComponentProp
           className,
         )}
         aria-disabled={canScrollPrev ? undefined : true}
+        // `Button` renders a native button, which defaults to `type="submit"`: inside a form, a
+        // navigation control would submit it. The native `disabled` used to stop that at the
+        // endpoints and nothing stopped it anywhere else, so this is the narrower contract, not a
+        // new one. Set before the spread, so a consumer who really wants a submit can still say so.
+        type="button"
         onClick={(e) => {
           onClick?.(e);
           if (e.defaultPrevented || !canScrollPrev) return;
@@ -258,6 +263,11 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
           className,
         )}
         aria-disabled={canScrollNext ? undefined : true}
+        // `Button` renders a native button, which defaults to `type="submit"`: inside a form, a
+        // navigation control would submit it. The native `disabled` used to stop that at the
+        // endpoints and nothing stopped it anywhere else, so this is the narrower contract, not a
+        // new one. Set before the spread, so a consumer who really wants a submit can still say so.
+        type="button"
         onClick={(e) => {
           onClick?.(e);
           if (e.defaultPrevented || !canScrollNext) return;
