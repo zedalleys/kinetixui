@@ -324,7 +324,17 @@ describe("check:motion-tokens", () => {
   it("holds a fourth ledger platform to the contract (zero errors before)", async () => {
     const { motionErrors } = await import("../../../../scripts/check-motion-tokens.mjs");
     const { PLATFORMS } = await import("../../../../scripts/native-motion-spec.mjs");
-    const ledger = structuredClone(PLATFORMS) as Record<string, unknown>;
+    /* Typed as the shape the clause READS, matching the seam's own JSDoc. `Record<string, unknown>`
+     * compiled under vitest and failed `tsc --noEmit` — the suite will not tell you, which is why
+     * `apps/web` typecheck is run after touching a script a test imports. */
+    const ledger = structuredClone(PLATFORMS) as Record<
+      string,
+      {
+        contractPlatform?: string;
+        dir?: string;
+        families?: Record<string, { contractRole?: string | null; roleExemption?: string; helper?: string; members?: string[] }>;
+      }
+    >;
     ledger.ReactNative = {
       contractPlatform: "react-native",
       dir: "packages/ui-react-native/src",
