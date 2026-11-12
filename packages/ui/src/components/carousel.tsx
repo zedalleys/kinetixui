@@ -132,11 +132,22 @@ const Carousel = React.forwardRef<
           const t = e.target as HTMLElement;
           if (t.isContentEditable || t.closest("input:not([type=button]):not([type=checkbox]):not([type=submit]):not([type=reset]), textarea, select")) return;
           // Logical, not physical: in a right-to-left carousel the next slide lies to the LEFT, so ArrowLeft
-          // advances and ArrowRight goes back. Direction is read at the press rather than taken from state,
-          // so a key is never mapped by a direction that has already changed.
+          // advances and ArrowRight goes back.
+          //
+          // The direction the keys follow is the one the ENGINE is running, which is not always the
+          // document's: a consumer's own `opts.direction` wins over the resolved value below, so reading
+          // the document here would reverse the keys against the track they drive. Precedence therefore
+          // mirrors the engine's own, exactly. (`opts.breakpoints` can carry a per-breakpoint direction
+          // that this does not follow; nothing in the library does that, and it would need the engine's
+          // resolved option rather than the passed one.)
+          //
+          // Absent an override, direction is read at the press rather than taken from state, so a key is
+          // never mapped by a direction that has already changed under it.
+          //
           // A vertical carousel keeps the keys it already had: this slice is about direction, and taking
           // ArrowLeft/ArrowRight away from it would be a behaviour change nobody asked for.
-          const move = inlineKey(e.key, horizontal && isRtl(e.currentTarget));
+          const engineRtl = opts?.direction ? opts.direction === "rtl" : isRtl(e.currentTarget);
+          const move = inlineKey(e.key, horizontal && engineRtl);
           if (move) {
             e.preventDefault();
             if (move === "forward") scrollNext();
