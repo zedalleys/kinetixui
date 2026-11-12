@@ -42,6 +42,7 @@ const MOTION = "tokens/primitives/motion.json";
 const CONTRACT = "tokens/contracts/motion.json";
 const ANGULAR = "packages/ui-angular/src/styles.css";
 const REGISTER = "tokens/contracts/motion-consumers.json";
+const EXEMPTIONS = "tokens/contracts/motion-exemptions.json";
 
 describe("check:motion-tokens", () => {
   it("passes on the repository as it is", () => {
@@ -312,6 +313,93 @@ describe("check:motion-tokens", () => {
   it("passes clause 6 on the ledger as it is", async () => {
     const { motionErrors } = await import("../../../../scripts/check-motion-tokens.mjs");
     expect(motionErrors()).toEqual([]);
+  });
+
+  /**
+   * The composed ledger. Both gates read `scripts/native-motion-ledger.mjs` now, because each used to
+   * read a different projection of the declarations and a fact belonging to neither was checked by
+   * nobody. The two cases measured PASSING on `00e2781c` are marked; `scripts/
+   * motion-ledger-negative-controls.mjs` carries the full set and runs in CI without a build.
+   */
+  it("holds a fourth ledger platform to the contract (zero errors before)", async () => {
+    const { motionErrors } = await import("../../../../scripts/check-motion-tokens.mjs");
+    const { PLATFORMS } = await import("../../../../scripts/native-motion-spec.mjs");
+    const ledger = structuredClone(PLATFORMS) as Record<string, unknown>;
+    ledger.ReactNative = {
+      contractPlatform: "react-native",
+      dir: "packages/ui-react-native/src",
+      families: { disclosure: { contractRole: "disclosure", helper: "KinetixDisclosureMotion.tsx", members: [] } },
+    };
+    const errors: string[] = motionErrors({}, ledger);
+    expect(errors.join("\n")).toMatch(
+      /the native ledger wires ReactNative disclosure .*does not mention on react-native/,
+    );
+  });
+
+  it("refuses a platform that does not say which contract platform it is", async () => {
+    const { motionErrors } = await import("../../../../scripts/check-motion-tokens.mjs");
+    const { PLATFORMS } = await import("../../../../scripts/native-motion-spec.mjs");
+    const ledger = structuredClone(PLATFORMS) as Record<string, { contractPlatform?: string }>;
+    delete ledger.SwiftUI.contractPlatform;
+    const errors: string[] = motionErrors({}, ledger);
+    expect(errors.join("\n")).toMatch(/platform SwiftUI declares no contractPlatform/);
+  });
+
+  it("refuses a contractRole naming a role the contract does not define", async () => {
+    const { motionErrors } = await import("../../../../scripts/check-motion-tokens.mjs");
+    const { PLATFORMS } = await import("../../../../scripts/native-motion-spec.mjs");
+    const ledger = structuredClone(PLATFORMS) as Record<
+      string,
+      { families: Record<string, { contractRole?: string | null }> }
+    >;
+    ledger.SwiftUI.families.loop.contractRole = "no-such-role";
+    const errors: string[] = motionErrors({}, ledger);
+    expect(errors.join("\n")).toMatch(/says it implements the "no-such-role" motion role, which .* does not define/);
+  });
+
+  it("refuses a contractRole:null exemption with no reason", async () => {
+    const { motionErrors } = await import("../../../../scripts/check-motion-tokens.mjs");
+    const { PLATFORMS } = await import("../../../../scripts/native-motion-spec.mjs");
+    const ledger = structuredClone(PLATFORMS) as Record<
+      string,
+      { families: Record<string, { contractRole?: string | null }> }
+    >;
+    ledger.SwiftUI.families.loop.contractRole = null;
+    const errors: string[] = motionErrors({}, ledger);
+    expect(errors.join("\n")).toMatch(/declares `contractRole: null` with no `roleExemption`/);
+  });
+
+  /** The pairing exemption, through the CLI, so the whole path including the register read is proven. */
+  it("refuses a role that buys the pairing exemption with reducedForm alone (zero errors before)", () => {
+    const contract = JSON.parse(read(CONTRACT));
+    const register = JSON.parse(read(REGISTER));
+    contract.roles["ambient-glow"] = {
+      status: "observed",
+      reducedForm: "rest",
+      intent: "a fabricated decorative glow",
+      consumers: [{ platform: "react", file: "packages/ui/src/components/button.tsx", expects: ["Button"] }],
+    };
+    register.identities.push("ambient-glow|react|packages/ui/src/components/button.tsx");
+    register.identities.sort();
+    const { code, out } = run({ [CONTRACT]: JSON.stringify(contract), [REGISTER]: JSON.stringify(register) });
+    expect(code).toBe(1);
+    expect(out).toMatch(/role "ambient-glow" is a transition but names no duration or no easing/);
+  });
+
+  it("refuses an exemption the register does not carry", () => {
+    const exemptions = JSON.parse(read(EXEMPTIONS));
+    exemptions.pairingExempt.roles = [];
+    const { code, out } = run({ [EXEMPTIONS]: JSON.stringify(exemptions) });
+    expect(code).toBe(1);
+    expect(out).toMatch(/role "loop" declares `pairingExempt`, which motion-exemptions\.json does not register/);
+  });
+
+  it("refuses a register line whose role gave the exemption up", () => {
+    const contract = JSON.parse(read(CONTRACT));
+    delete contract.roles.loop.pairingExempt;
+    const { code, out } = run({ [CONTRACT]: JSON.stringify(contract) });
+    expect(code).toBe(1);
+    expect(out).toMatch(/registers "loop" as exempt .* but that role does not declare/);
   });
 
   it("refuses a token group the contract still calls untokenised", () => {

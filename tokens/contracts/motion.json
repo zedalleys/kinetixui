@@ -444,6 +444,9 @@
         "transform"
       ],
       "reducedForm": "rest",
+      "pairingExempt": {
+        "reason": "A loop has no destination to arrive at, so there is no duration/easing pairing for it to name: its period is a keyframe and its reduced form is not a shorter transition but no loop at all plus a static state that says the same thing. Registered in tokens/contracts/motion-exemptions.json."
+      },
       "scope": "Spinner, Skeleton, Marquee and the typing indicator, on every platform that ships them",
       "evidence": [
         "scripts/loop-motion.mjs",

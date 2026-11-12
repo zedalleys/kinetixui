@@ -1,5 +1,6 @@
 /**
- * native-motion-spec.mjs — the data `check-native-motion.mjs` enforces.
+ * native-motion-spec.mjs — the data `check-native-motion.mjs` and `check-motion-tokens.mjs` enforce,
+ * composed for both of them by `native-motion-ledger.mjs`.
  *
  * Separated from the gate for the same reason `motion-states.mjs` is separated from `motion.mjs`:
  * the declarations are the interesting part, they want to be read on their own, and a test needs them
@@ -10,9 +11,20 @@
  * The animation primitives that mean "this component moves". Finding one in a file is not a defect —
  * it is the trigger for asking the only question this script asks: does that file, or the helper it
  * delegates to, answer to the reader's setting?
+ *
+ * `contractPlatform` is how a platform here names itself in `tokens/contracts/motion.json`, and it is
+ * required. `check-motion-tokens.mjs` used to carry its own hardcoded map of the three keys below and
+ * silently skip any platform missing from it, so a fourth platform added here — families, helpers,
+ * members, its own test — was held by `check:native-motion` and never checked against the contract at
+ * all. The mapping belongs to the platform that knows its own name; see `native-motion-ledger.mjs`.
+ *
+ * `contractRole` on a family is required too, and may be `null` only with a `roleExemption` reason
+ * saying why that family implements no contract role. Absent is not the same as null: one is silence,
+ * the other is a decision.
  */
 export const PLATFORMS = {
   SwiftUI: {
+    contractPlatform: "swiftui",
     dir: "packages/ui-swiftui/Sources/KinetixUI",
     ext: ".swift",
     animates: /withAnimation|\.animation\(|\.transition\(|AnyTransition|repeatForever|matchedGeometryEffect/,
@@ -68,6 +80,7 @@ export const PLATFORMS = {
     },
   },
   Compose: {
+    contractPlatform: "compose",
     dir: "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui",
     ext: ".kt",
     // `animateScrollToPage` and friends are animations that match none of the composable or
@@ -111,6 +124,7 @@ export const PLATFORMS = {
     },
   },
   Flutter: {
+    contractPlatform: "flutter",
     dir: "packages/ui-flutter/lib/src",
     ext: ".dart",
     animates: /Animated[A-Z]\w+|AnimationController|Tween|CurvedAnimation/,

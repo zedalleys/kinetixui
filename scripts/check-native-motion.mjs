@@ -37,12 +37,19 @@ const argRoot = process.argv.slice(2).find((a) => a.startsWith("--root="))?.slic
 const root = argRoot ? resolve(argRoot) : fileURLToPath(new URL("..", import.meta.url));
 const read = (p) => (existsSync(`${root}/${p}`) ? readFileSync(`${root}/${p}`, "utf8") : null);
 
-import { DIRECTION_TERMS, KNOWN_GAPS, PLATFORMS, testNames } from "./native-motion-spec.mjs";
+import { testNames } from "./native-motion-spec.mjs";
+import { composeLedger } from "./native-motion-ledger.mjs";
 
-const errors = [];
+/* The ledger is composed once, by the module both gates share, and its coherence errors are reported
+ * here as well as by `check:motion-tokens`. Before this, each gate read its own projection of the
+ * declarations — this one never read `contractRole`, the other never read the members, the gaps or
+ * the direction vocabulary — so a ledger could be coherent to one gate and broken for the other, and
+ * a fact belonging to neither projection was checked by nobody. */
+const { platforms: ledger, errors } = composeLedger();
 const summary = [];
 
-for (const [name, p] of Object.entries(PLATFORMS)) {
+for (const p of ledger) {
+  const name = p.name;
   const dir = `${root}/${p.dir}`;
   if (!existsSync(dir)) {
     errors.push(`${name}: source directory ${p.dir} is missing.`);
@@ -51,12 +58,13 @@ for (const [name, p] of Object.entries(PLATFORMS)) {
 
   const files = readdirSync(dir).filter((f) => f.endsWith(p.ext));
   const animated = files.filter((f) => p.animates.test(readFileSync(`${dir}/${f}`, "utf8")));
-  const gaps = KNOWN_GAPS[name] ?? {};
-  const families = Object.entries(p.families);
-  const helpers = families.map(([, f]) => f.helper);
-  const wired = families.flatMap(([, f]) => f.members);
+  const gaps = p.gaps;
+  const families = p.families;
+  const helpers = families.map((f) => f.helper);
+  const wired = families.flatMap((f) => f.members);
 
-  for (const [familyName, family] of families) {
+  for (const family of families) {
+    const familyName = family.name;
     // 1. The helper must exist — it is what the family's members delegate to.
     if (!files.includes(family.helper)) {
       errors.push(`${name}: the ${familyName} motion helper ${family.helper} is missing from ${p.dir}.`);
@@ -117,12 +125,11 @@ for (const [name, p] of Object.entries(PLATFORMS)) {
       errors.push(`${name}: ${family.test} declares no recognisable tests — the direction check has nothing to read.`);
       continue;
     }
-    const terms = DIRECTION_TERMS[familyName];
-    if (!terms) {
-      errors.push(`${name}: the ${familyName} family has no direction vocabulary in DIRECTION_TERMS.`);
-      continue;
-    }
-    for (const [dirName, re] of Object.entries(terms)) {
+    /* The vocabulary is a ledger fact, so the composition reports its absence for the family name
+     * once, rather than this loop reporting it again per platform — and reports it even when the
+     * family's test file is missing, which used to `continue` past this check entirely. */
+    if (!family.terms) continue;
+    for (const [dirName, re] of Object.entries(family.terms)) {
       if (!names.some((n) => re.test(n))) {
         errors.push(
           `${name}: no test in ${family.test} is NAMED for the ${dirName} direction.\n` +
@@ -178,7 +185,7 @@ if (errors.length) {
 const covered = summary.reduce((n, s) => n + s.family, 0);
 const outstanding = summary.reduce((n, s) => n + s.gaps, 0);
 console.log(
-  `\ncheck:native-motion ok — ${covered} component(s) across 3 platforms wired to the reader's setting and ` +
+  `\ncheck:native-motion ok — ${covered} component(s) across ${summary.length} platform(s) wired to the reader's setting and ` +
     `tested in both directions; ${outstanding} animated component(s) remain declared gaps, which is a roadmap and not a failure.\n` +
     `  This is a bookkeeping guard. The behavioural proof is in the platforms' own suites — see the header.`,
 );

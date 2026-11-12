@@ -111,6 +111,16 @@ jobs:
       - name: Motion consumer-identity controls (a dropped platform really fails)
         run: pnpm check:motion-identity-controls
 
+      # check:motion-tokens and check:native-motion both read scripts/native-motion-spec.mjs, and each
+      # used to read a DIFFERENT projection of it: the contract gate never read the members, the gaps or
+      # the direction vocabulary, and the native gate never read contractRole. So a fact belonging to
+      # neither projection was checked by nobody, and the contract gate skipped any ledger platform
+      # missing from a hardcoded three-key allowlist — a fourth platform was held by one gate and never
+      # checked against the contract at all. Both gates now compose the ledger through one module; these
+      # controls prove each clause of that composition still fails, in memory, with no build.
+      - name: Motion ledger controls (a fourth platform really fails)
+        run: pnpm check:motion-ledger-controls
+
       - name: Changelog page is current with the packages
         run: pnpm check:releases
 
