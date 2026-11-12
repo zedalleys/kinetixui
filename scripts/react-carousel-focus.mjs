@@ -220,6 +220,72 @@ export function verdict(which, j) {
   return out;
 }
 
+/**
+ * A carousel inside a form. `Button` renders a native button, which defaults to `type="submit"`, so a
+ * navigation control in a form would submit it — and at the endpoints the native `disabled` used to be
+ * what stopped that, which this PR removes. Found by Codex on this PR; verified here rather than taken
+ * on trust, and gated so it cannot come back.
+ *
+ * The plain `<button>` added alongside is a POSITIVE CONTROL FOR THE HARNESS, and the reason this check
+ * is worth anything: "no submit was observed" would also be the reading if the listener were never
+ * wired, if the form never existed, or if the press never landed. The sentinel is identical except for
+ * the missing `type`, so it must submit. One row proving the detector works, one proving the controls do
+ * not trip it.
+ */
+async function formSubmitCheck(browser, base) {
+  const { ctx, page } = await openStory(browser, base, {});
+  const out = [];
+  try {
+    await page.evaluate(() => {
+      const region = document.querySelector("[role=region][aria-roledescription=carousel]");
+      const form = document.createElement("form");
+      form.id = "kx-form";
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        window.__kxSubmits = (window.__kxSubmits ?? 0) + 1;
+      });
+      region.parentNode.insertBefore(form, region);
+      form.append(region);
+      const sentinel = document.createElement("button");
+      sentinel.id = "kx-submit-sentinel";
+      sentinel.textContent = "a plain button, no type";
+      form.append(sentinel);
+      window.__kxSubmits = 0;
+    });
+
+    // The detector first: a plain button with no `type` is a submit button, so this must count.
+    await page.click("#kx-submit-sentinel");
+    await page.waitForTimeout(80);
+    const sentinelSubmits = await page.evaluate(() => window.__kxSubmits);
+    out.push({
+      ok: sentinelSubmits === 1,
+      label: "form: the submit detector works (plain button with no type submits)",
+      detail: `${sentinelSubmits} submit(s)`,
+    });
+
+    // Then both controls, driven to their endpoint and two presses past it — the refused activations are
+    // where the removed `disabled` used to be the only thing standing between a press and a submit.
+    await page.evaluate(() => { window.__kxSubmits = 0; });
+    for (const which of ["next", "prev"]) {
+      const control = page.getByRole("button", { name: CONTROLS[which].name, includeHidden: true }).first();
+      await control.focus();
+      for (let i = 0; i < MAX_PRESSES + 2; i += 1) {
+        await page.keyboard.press("Enter");
+        await settle(page);
+      }
+    }
+    const submits = await page.evaluate(() => window.__kxSubmits);
+    out.push({
+      ok: submits === 0,
+      label: "form: neither control submits the surrounding form",
+      detail: `${submits} submit(s) over both endpoints and the refused presses past them`,
+    });
+  } finally {
+    await ctx.close();
+  }
+  return out;
+}
+
 const CONDITIONS = [
   { id: "ltr", opts: {} },
   { id: "rtl", opts: { dir: "rtl" } },
@@ -255,6 +321,12 @@ async function main() {
       }
     }
     await ctx.close();
+  }
+
+  console.log("\nin a form");
+  for (const r of await formSubmitCheck(browser, storybook.base)) {
+    console.log(`  ${r.ok ? "ok  " : "FAIL"} ${r.label.padEnd(64)} ${r.detail}`);
+    if (!r.ok) failures.push(`form — ${r.label}: ${r.detail}`);
   }
 
   await browser.close();
