@@ -1,0 +1,2563 @@
+{
+  "base": "http://127.0.0.1:3000",
+  "capturedAt": "2026-11-12T21:58:30.001Z",
+  "engine": "chromium",
+  "cases": [
+    {
+      "id": "desktop-1440-light",
+      "w": 1440,
+      "h": 1200,
+      "theme": "light",
+      "measurements": {
+        "footerHeight": 691,
+        "footerWidth": 1440,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-desktop-1440-light.png"
+    },
+    {
+      "id": "desktop-1440-dark",
+      "w": 1440,
+      "h": 1200,
+      "theme": "dark",
+      "measurements": {
+        "footerHeight": 691,
+        "footerWidth": 1440,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-desktop-1440-dark.png"
+    },
+    {
+      "id": "ultrawide-1920-light",
+      "w": 1920,
+      "h": 1200,
+      "theme": "light",
+      "measurements": {
+        "footerHeight": 691,
+        "footerWidth": 1920,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-ultrawide-1920-light.png"
+    },
+    {
+      "id": "ultrawide-1920-dark",
+      "w": 1920,
+      "h": 1200,
+      "theme": "dark",
+      "measurements": {
+        "footerHeight": 691,
+        "footerWidth": 1920,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-ultrawide-1920-dark.png"
+    },
+    {
+      "id": "tablet-1024-light",
+      "w": 1024,
+      "h": 1000,
+      "theme": "light",
+      "measurements": {
+        "footerHeight": 676,
+        "footerWidth": 1024,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-tablet-1024-light.png"
+    },
+    {
+      "id": "tablet-768-light",
+      "w": 768,
+      "h": 1000,
+      "theme": "light",
+      "measurements": {
+        "footerHeight": 770,
+        "footerWidth": 768,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-tablet-768-light.png"
+    },
+    {
+      "id": "tablet-768-dark",
+      "w": 768,
+      "h": 1000,
+      "theme": "dark",
+      "measurements": {
+        "footerHeight": 770,
+        "footerWidth": 768,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-tablet-768-dark.png"
+    },
+    {
+      "id": "mobile-390-light",
+      "w": 390,
+      "h": 844,
+      "theme": "light",
+      "measurements": {
+        "footerHeight": 1031,
+        "footerWidth": 390,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-mobile-390-light.png"
+    },
+    {
+      "id": "mobile-390-dark",
+      "w": 390,
+      "h": 844,
+      "theme": "dark",
+      "measurements": {
+        "footerHeight": 1031,
+        "footerWidth": 390,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-mobile-390-dark.png"
+    },
+    {
+      "id": "mobile-375-light",
+      "w": 375,
+      "h": 812,
+      "theme": "light",
+      "measurements": {
+        "footerHeight": 1031,
+        "footerWidth": 375,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-mobile-375-light.png"
+    },
+    {
+      "id": "mobile-320-light",
+      "w": 320,
+      "h": 800,
+      "theme": "light",
+      "measurements": {
+        "footerHeight": 1480,
+        "footerWidth": 320,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-mobile-320-light.png"
+    },
+    {
+      "id": "mobile-320-dark",
+      "w": 320,
+      "h": 800,
+      "theme": "dark",
+      "measurements": {
+        "footerHeight": 1480,
+        "footerWidth": 320,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-mobile-320-dark.png"
+    },
+    {
+      "id": "rtl-desktop-1440-light",
+      "w": 1440,
+      "h": 1200,
+      "theme": "light",
+      "dir": "rtl",
+      "measurements": {
+        "footerHeight": 691,
+        "footerWidth": 1440,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-rtl-desktop-1440-light.png"
+    },
+    {
+      "id": "rtl-desktop-1440-dark",
+      "w": 1440,
+      "h": 1200,
+      "theme": "dark",
+      "dir": "rtl",
+      "measurements": {
+        "footerHeight": 691,
+        "footerWidth": 1440,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-rtl-desktop-1440-dark.png"
+    },
+    {
+      "id": "rtl-mobile-390-light",
+      "w": 390,
+      "h": 844,
+      "theme": "light",
+      "dir": "rtl",
+      "measurements": {
+        "footerHeight": 1031,
+        "footerWidth": 390,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-rtl-mobile-390-light.png"
+    },
+    {
+      "id": "reduced-motion-1440-light",
+      "w": 1440,
+      "h": 1200,
+      "theme": "light",
+      "reduce": true,
+      "measurements": {
+        "footerHeight": 691,
+        "footerWidth": 1440,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-reduced-motion-1440-light.png"
+    },
+    {
+      "id": "reduced-motion-390-dark",
+      "w": 390,
+      "h": 844,
+      "theme": "dark",
+      "reduce": true,
+      "measurements": {
+        "footerHeight": 1031,
+        "footerWidth": 390,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-reduced-motion-390-dark.png"
+    },
+    {
+      "id": "text-200-1280-light",
+      "w": 1280,
+      "h": 1024,
+      "theme": "light",
+      "root": 32,
+      "measurements": {
+        "footerHeight": 1498,
+        "footerWidth": 1280,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-text-200-1280-light.png"
+    },
+    {
+      "id": "text-200-390-light",
+      "w": 390,
+      "h": 844,
+      "theme": "light",
+      "root": 32,
+      "measurements": {
+        "footerHeight": 3303,
+        "footerWidth": 390,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-text-200-390-light.png"
+    },
+    {
+      "id": "text-200-390-dark",
+      "w": 390,
+      "h": 844,
+      "theme": "dark",
+      "root": 32,
+      "measurements": {
+        "footerHeight": 3303,
+        "footerWidth": 390,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-text-200-390-dark.png"
+    },
+    {
+      "id": "text-200-320-light",
+      "w": 320,
+      "h": 800,
+      "theme": "light",
+      "root": 32,
+      "measurements": {
+        "footerHeight": 3486,
+        "footerWidth": 320,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-text-200-320-light.png"
+    },
+    {
+      "id": "forced-colors-1440",
+      "w": 1440,
+      "h": 1200,
+      "theme": "light",
+      "forced": true,
+      "measurements": {
+        "footerHeight": 691,
+        "footerWidth": 1440,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "none",
+        "weaveBackgroundImages": 0
+      },
+      "screenshot": "footer-forced-colors-1440.png"
+    },
+    {
+      "id": "forced-colors-390",
+      "w": 390,
+      "h": 844,
+      "theme": "dark",
+      "forced": true,
+      "measurements": {
+        "footerHeight": 1031,
+        "footerWidth": 390,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "none",
+        "weaveBackgroundImages": 0
+      },
+      "screenshot": "footer-forced-colors-390.png"
+    },
+    {
+      "id": "zoom-400-1440-light",
+      "w": 1440,
+      "h": 1200,
+      "theme": "light",
+      "zoom": 4,
+      "measurements": {
+        "footerHeight": 1061,
+        "footerWidth": 360,
+        "documentHorizontalOverflowPx": 0,
+        "linkCount": 20,
+        "linksUnder24pxTall": [
+          {
+            "name": "Introduction",
+            "w": 80,
+            "h": 20
+          },
+          {
+            "name": "Installation",
+            "w": 71,
+            "h": 20
+          },
+          {
+            "name": "Theming",
+            "w": 58,
+            "h": 20
+          },
+          {
+            "name": "Accessibility",
+            "w": 83,
+            "h": 20
+          },
+          {
+            "name": "RTL",
+            "w": 26,
+            "h": 20
+          },
+          {
+            "name": "Coverage",
+            "w": 64,
+            "h": 20
+          },
+          {
+            "name": "Angular",
+            "w": 51,
+            "h": 20
+          },
+          {
+            "name": "SwiftUI",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Compose",
+            "w": 63,
+            "h": 20
+          },
+          {
+            "name": "Flutter",
+            "w": 42,
+            "h": 20
+          },
+          {
+            "name": "Components",
+            "w": 84,
+            "h": 20
+          },
+          {
+            "name": "Blocks",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Charts",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Use cases",
+            "w": 69,
+            "h": 20
+          },
+          {
+            "name": "Create",
+            "w": 44,
+            "h": 20
+          },
+          {
+            "name": "Changelog",
+            "w": 72,
+            "h": 20
+          },
+          {
+            "name": "Source",
+            "w": 47,
+            "h": 20
+          },
+          {
+            "name": "Design source",
+            "w": 95,
+            "h": 20
+          },
+          {
+            "name": "Zed Alleys",
+            "w": 59,
+            "h": 15
+          }
+        ],
+        "navLabels": [
+          "Footer"
+        ],
+        "listLabelledBy": [
+          "footer-docs",
+          "footer-platforms",
+          "footer-explore",
+          "footer-project"
+        ],
+        "imgRequests": 0,
+        "weaveDisplay": "block",
+        "weaveBackgroundImages": 3
+      },
+      "screenshot": "footer-zoom-400-1440-light.png"
+    }
+  ]
+}
