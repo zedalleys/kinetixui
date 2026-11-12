@@ -41,7 +41,9 @@
  *                 continues from where they were
  *
  * Both endpoints are driven (forward to the last slide, then backward to the first), in three conditions:
- * LTR, RTL, and `prefers-reduced-motion: reduce` — reduced motion must still land on the end state.
+ * an LTR document, an RTL document, and `prefers-reduced-motion: reduce` — reduced motion must still
+ * land on the end state. "RTL document" is meant literally and no more than that: `openStory` says what
+ * it does and does not cover, and why the engine's own direction is a separate matter.
  *
  * The sentinel link is injected by this gate, not shipped by the component: the story is the carousel
  * alone, and "Tab continues past the carousel" needs something after it to continue to. It is the only
@@ -92,14 +94,29 @@ export const CONTROLS = {
 export async function openStory(browser, base, { reducedMotion = "no-preference", dir = "ltr" } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1024, height: 768 }, deviceScaleFactor: 1, reducedMotion });
   const page = await ctx.newPage();
-  // Direction is set before the story's own scripts run, not after: the carousel's engine reads the
-  // document direction when it initialises, so a `dir` applied to a mounted carousel would leave it
-  // laid out left-to-right and the condition would be RTL in name only.
-  await page.addInitScript((d) => {
-    document.documentElement.setAttribute("dir", d);
-  }, dir);
   await page.goto(`${base}/iframe.html?id=${STORY}&viewMode=story`, { waitUntil: "load" });
   await page.waitForSelector("[role=region][aria-roledescription=carousel]");
+  // Direction is set AFTER load, by evaluating against the live document, and the result is then read
+  // back from the computed style rather than trusted. `page.addInitScript` was the obvious way to get it
+  // in before the story's own scripts, and it was measured to be a no-op here: Storybook's preview
+  // navigates its own iframe, so nothing the init script wrote to `documentElement` survived to the
+  // document the story actually renders into, and `dir` read back as null. A condition named `rtl` that
+  // was laid out left-to-right would have been worse than no condition at all, so the set is verified.
+  // `scripts/large-text.mjs` sets direction the same way for the same reason.
+  //
+  // What this condition therefore is: an RTL DOCUMENT — the page's computed direction, the mirrored box
+  // layout, the reversed physical meaning of the two controls on screen. What it is NOT is an RTL
+  // CAROUSEL ENGINE: the component passes its engine only `axis`, so the track still travels the
+  // left-to-right way in an RTL document. That is a separate defect of its own, outside this slice, and
+  // it does not touch anything this gate asserts — losing focus to BODY when a native `disabled` lands
+  // on the focused element is a property of the element, not of which way the track moved to get there.
+  await page.evaluate((d) => {
+    document.documentElement.setAttribute("dir", d);
+  }, dir);
+  const computed = await page.evaluate(() => getComputedStyle(document.body).direction);
+  if (computed !== dir) {
+    throw new Error(`react-carousel-focus: asked for dir=${dir}, the document computes ${computed}. The harness is wrong, not the component.`);
+  }
   await page.evaluate(() => {
     const region = document.querySelector("[role=region][aria-roledescription=carousel]");
     const track = region.querySelector(".overflow-hidden > div");
