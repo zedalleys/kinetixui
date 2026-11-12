@@ -113,16 +113,47 @@ const Carousel = React.forwardRef<
     };
   }, [api, onSelect]);
 
+  /**
+   * The root element, kept for the direction lookup, composed with whatever ref the consumer forwarded.
+   *
+   * Two things this has to get right, both of which a bare inline arrow got wrong when this slice replaced
+   * `ref={ref}` with a wrapper:
+   *
+   *   - IDENTITY. An inline callback is a new function on every render, and React detaches a changed
+   *     callback ref before reattaching it — so the consumer's ref was being called with null and the node
+   *     again on every render of a component that re-renders on every `select`. `useCallback` on `ref`
+   *     restores the stability a plain `ref={ref}` had.
+   *   - CLEANUP. React 19 lets a callback ref return a teardown and then does NOT call that ref again with
+   *     null; a wrapper that drops the return value drops the teardown with it, and whatever the consumer
+   *     attached to the node leaks. It is returned CONDITIONALLY: the package's peer range is
+   *     `react: >=18`, and React 18 warns on a callback ref that returns a function. When the consumer
+   *     returns nothing, React's own null call is what tears both refs down, exactly as before.
+   */
+  const setRoot = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      root.current = node;
+      // `ForwardedRef`'s callback arm is still typed `(instance) => void` (@types/react 19.3.0,
+      // index.d.ts:1102) even though `RefCallback` itself now admits a cleanup, so the return value has to
+      // be read as `unknown` — narrowing the declared `void` lands on `never` and the call does not compile.
+      // The value is what React 19 hands back at runtime, not what this signature admits.
+      const cleanup: unknown =
+        typeof ref === "function" ? ref(node) : ref ? ((ref.current = node), undefined) : undefined;
+      if (typeof cleanup === "function") {
+        return () => {
+          root.current = null;
+          (cleanup as () => void)();
+        };
+      }
+    },
+    [ref],
+  );
+
   return (
     <CarouselContext.Provider
       value={{ carouselRef, api, opts, orientation, scrollPrev, scrollNext, canScrollPrev, canScrollNext }}
     >
       <div
-        ref={(node) => {
-          root.current = node;
-          if (typeof ref === "function") ref(node);
-          else if (ref) ref.current = node;
-        }}
+        ref={setRoot}
         onKeyDown={(e) => {
           // Bubble phase, and only for a key nothing inside has claimed: a text field inside a slide keeps
           // its caret keys, a nested control that handled the arrow keeps it, and Alt/Ctrl/Meta+Arrow
