@@ -52,6 +52,11 @@
  *   machine, unthrottled. The very first probe returned 3 three times in a row, which is how a hole like
  *   this survives being written.)
  *
+ *   COVERAGE. The first version of this fix waited in sections 1 to 3 and left section 4, whose own
+ *   "could not be checked" message hid the same race behind different words. CI found it on PR #579, a
+ *   carousel branch, within the hour. The lesson is the obvious one: when the cause is "this read does not
+ *   wait", the fix is every read, not the reads that have failed so far.
+ *
  *   WORDING. "0 of 0 images sit outside the viewport" is a layout sentence reporting a missing-images
  *   result. Pointing `THREE_LOCAL_IMAGES` at a prefix that matches nothing and re-running now gives
  *   `expected 3 local images in <main>, found 0 after waiting for them` — the finding saying what it found,
@@ -231,6 +236,12 @@ try {
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     await page.goto(`${base}${ROUTE}`, { waitUntil: "load", timeout: 15_000 });
+    // This section needs the wait too, and CI proved it rather than the argument did: the first version of
+    // this fix left section 4 alone, and PR #579 — a carousel branch — went red on
+    // `the error fallback: could not be checked: the route served no local image to break`, the same race
+    // wearing a different sentence. Every section that reads this DOM waits for it now, with none left to
+    // be the next one found.
+    await waitForImages(page);
     // A real 404 on a real <img>, so the browser fires a real `error` event and the component's own
     // onError runs. Nothing is mocked: replacing the component's success path with a stub would prove
     // only that the stub works.
