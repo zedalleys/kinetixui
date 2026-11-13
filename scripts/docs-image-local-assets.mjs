@@ -43,12 +43,14 @@
  * images were present a moment later. Two things were wrong, and they are fixed separately because they are
  * separate defects:
  *
- *   TIMING. The read raced the re-render that setting `dir` on `documentElement` causes. Measured here, with
- *   no throttling at all, over 20 runs: the read taken at the flip saw all three images 18 times out of 20;
- *   the read taken after `waitForImages` saw them 20 out of 20. A gate that is right 90% of the time is a
- *   gate that reports a defect the code does not have, roughly once a fortnight, and teaches everyone to
- *   re-run it. (It is not only a slow-runner effect: the first local probe returned 3 three times in a row,
- *   which is how a hole like this survives being written.)
+ *   TIMING. The route is client-rendered, so a read taken the instant `load` fires races hydration.
+ *   Measured here with no throttling, 25 runs of each ordering: no wait at all saw all three images 23/25;
+ *   a wait placed BEFORE the `dir` flip 25/25; a wait placed after it 25/25. The first reading of this was
+ *   that the flip's own re-render was the race — the two orderings disagreeing would have shown that, and
+ *   they do not, so the cause is hydration and the flip is incidental. The wait sits after the flip anyway,
+ *   because it then covers both and costs nothing. (It is not only a slow-runner effect: 23/25 is this
+ *   machine, unthrottled. The very first probe returned 3 three times in a row, which is how a hole like
+ *   this survives being written.)
  *
  *   WORDING. "0 of 0 images sit outside the viewport" is a layout sentence reporting a missing-images
  *   result. Pointing `THREE_LOCAL_IMAGES` at a prefix that matches nothing and re-running now gives
