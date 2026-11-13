@@ -458,6 +458,39 @@ export const KEYBOARD: Record<string, KeyboardBehaviour[]> = {
       ]
     }
   ],
+  "segmented-control": [
+    {
+      "behaviour": "is one tab stop that lands on the chosen segment, and the arrow keys move the selection with focus",
+      "keys": [
+        "Arrow right",
+        "Arrow left",
+        "Tab"
+      ]
+    },
+    {
+      "behaviour": "Home and End move the selection to the first and last segment",
+      "keys": [
+        "Home",
+        "End",
+        "Tab"
+      ]
+    },
+    {
+      "behaviour": "follows the reading direction, so Arrow left is the next segment in a right-to-left strip",
+      "keys": [
+        "Arrow left",
+        "Tab"
+      ]
+    },
+    {
+      "behaviour": "cannot be left with nothing chosen: Enter or Space on the chosen segment keeps it",
+      "keys": [
+        "Enter",
+        "Space",
+        "Tab"
+      ]
+    }
+  ],
   "select": [
     {
       "behaviour": "opens with Enter, walks options with the arrow keys and Home/End, and commits with Enter",
