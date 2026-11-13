@@ -257,7 +257,9 @@ export class KxSlider extends KxValueBase<number> {
 
   protected readonly fill = computed(() => {
     const span = this.max() - this.min();
-    return span <= 0 ? 0 : ((this.value() - this.min()) / span) * 100;
+    if (span <= 0) return 0;
+    const percent = ((this.value() - this.min()) / span) * 100;
+    return Number.isFinite(percent) ? Math.min(100, Math.max(0, percent)) : 0;
   });
 
   protected commit(next: number): void {
