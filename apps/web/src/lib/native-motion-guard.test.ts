@@ -101,6 +101,8 @@ function suite(platform: string, familyName: string, only?: "forward" | "reverse
       ? { forward: "offToOnIsSuppressed", reverse: "onToOffIsSuppressed" }
       : familyName === "selectionState"
         ? { forward: "uncheckedToCheckedIsSuppressed", reverse: "checkedToUncheckedIsSuppressed" }
+        : familyName === "selectionIndicator"
+          ? { forward: "travelsForward", reverse: "retargetsBackward" }
         : familyName === "loop" || familyName === "slide"
         ? { forward: "runsWithNormalMotion", reverse: "stopsWithReducedMotion" }
         : { forward: "expandsTheContent", reverse: "collapsesTheContent" };
