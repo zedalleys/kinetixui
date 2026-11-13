@@ -38,6 +38,12 @@ export const PLATFORMS = {
       // separate by owner decision: a thumb lands on `instant`, a colour settles on `fast`.
       // ToggleGroup.swift is deliberately not a member — it is a pass-through to Toggle and animates
       // nothing of its own, and a member that never animates makes the family's wiring check vacuous.
+      selectionIndicator: {
+        contractRole: "selection-indicator",
+        helper: "KinetixSelectionIndicator.swift",
+        members: ["Tabs.swift", "SegmentedControl.swift"],
+        test: "packages/ui-swiftui/Tests/KinetixUITests/SelectionIndicatorTests.swift",
+      },
       selectionState: {
         contractRole: "selection-state",
         helper: "KinetixSelectionMotion.swift",
@@ -207,6 +213,10 @@ export const DIRECTION_TERMS = {
   selectionState: {
     forward: /(?:unchecked|unselected)\s*(?:\u2192|->|to)\s*(?:checked|selected)/i,
     reverse: /\b(?:checked|selected)\s*(?:\u2192|->|to)\s*(?:unchecked|unselected)/i,
+  },
+  selectionIndicator: {
+    forward: /forward/i,
+    reverse: /backward|reduced.?motion/i,
   },
   // A loop has no two directions; it has two MODES, and both must be named. "normal" is the loop
   // running, "reduced" is it stopped with its information intact. Anchored on the mode words so a test

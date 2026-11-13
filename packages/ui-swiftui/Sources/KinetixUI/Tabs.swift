@@ -22,6 +22,7 @@ public struct KinetixTabsList<Content: View>: View {
 
     public var body: some View {
         HStack(spacing: 0) { content }
+            .modifier(KinetixSelectionIndicator())
             .frame(height: 36) // h-9
             .padding(4)        // p-1
             .background(colors.muted, in: RoundedRectangle(cornerRadius: radii.container, style: .continuous)) // radius/lg
@@ -31,8 +32,6 @@ public struct KinetixTabsList<Content: View>: View {
 
 public struct KinetixTabsTrigger: View {
     @Environment(\.kinetixColors) private var colors
-    @Environment(\.kinetixElevations) private var elevations
-    @Environment(\.kinetixRadii) private var radii
     @Environment(\.isEnabled) private var isEnabled
 
     private let text: String
@@ -53,11 +52,7 @@ public struct KinetixTabsTrigger: View {
                 .padding(.horizontal, 12) // px-3
                 .padding(.vertical, 4)    // py-1
                 .frame(maxHeight: .infinity)
-                .background(
-                    isSelected ? colors.background : .clear,
-                    in: RoundedRectangle(cornerRadius: radii.control, style: .continuous) // radius/md
-                )
-                .kinetixElevation(isSelected ? elevations.sm : .none)
+                .modifier(KinetixSelectionIndicatorItem(selected: isSelected))
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
