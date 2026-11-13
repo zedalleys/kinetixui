@@ -20,7 +20,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.dimensionResource
 import com.kinetixui.tokens.KinetixDuration
@@ -29,6 +29,15 @@ import com.kinetixui.tokens.KinetixEasing
 private class IndicatorTrack {
     val frames = mutableStateMapOf<Any, Rect>()
     val selections = mutableStateMapOf<Any, Boolean>()
+    val itemCoordinates = mutableMapOf<Any, LayoutCoordinates>()
+    var coordinates: LayoutCoordinates? = null
+
+    fun measure(id: Any, item: LayoutCoordinates) {
+        val parent = coordinates ?: return
+        if (parent.isAttached && item.isAttached) {
+            frames[id] = parent.localBoundingBoxOf(item, clipBounds = false)
+        }
+    }
 }
 
 private val LocalIndicatorTrack = compositionLocalOf<IndicatorTrack?> { null }
@@ -40,8 +49,7 @@ internal fun KinetixSelectionIndicator(content: @Composable (Modifier) -> Unit) 
     val radius = dimensionResource(R.dimen.radius_md)
     val direction = LocalLayoutDirection.current
     val reduceMotion = KinetixDisclosureMotion.rememberReduceMotion()
-    var origin by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
-    val targets = track.frames.mapValues { (_, frame) -> frame.translate(-origin) }
+    val targets = track.frames.toMap()
     val selected = targets.filterKeys { track.selections[it] == true }
     val target = selected.values.singleOrNull()
     val presentation = remember { Animatable(Rect.Zero, Rect.VectorConverter) }
@@ -68,7 +76,10 @@ internal fun KinetixSelectionIndicator(content: @Composable (Modifier) -> Unit) 
     CompositionLocalProvider(LocalIndicatorTrack provides track) {
         content(
             Modifier
-                .onGloballyPositioned { origin = it.positionInRoot() }
+                .onGloballyPositioned { coordinates ->
+                    track.coordinates = coordinates
+                    track.itemCoordinates.forEach(track::measure)
+                }
                 .drawBehind {
                     val corner = CornerRadius(radius.toPx())
                     if (target == null) {
@@ -95,11 +106,12 @@ internal fun KinetixSelectionIndicatorItem(selected: Boolean): Pair<Modifier, Bo
     DisposableEffect(track, id) {
         onDispose {
             track.selections.remove(id)
+            track.itemCoordinates.remove(id)
             track.frames.remove(id)
         }
     }
-    return Modifier.onGloballyPositioned {
-        val position = it.positionInRoot()
-        track.frames[id] = Rect(position, androidx.compose.ui.geometry.Size(it.size.width.toFloat(), it.size.height.toFloat()))
+    return Modifier.onGloballyPositioned { coordinates ->
+        track.itemCoordinates[id] = coordinates
+        track.measure(id, coordinates)
     } to false
 }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -36,6 +37,27 @@ class SelectionIndicatorTest {
     @Test fun tabsTravelForwardAndRetargetBackwardDuringLiveReduction() = verifyTravel(tabs = true)
 
     @Test fun segmentsTravelForwardAndRetargetBackwardDuringLiveReduction() = verifyTravel(tabs = false)
+
+    @Test
+    fun scaledTrackPaintsUnderTheSelectedTab() {
+        var surface = 0
+        rule.setContent {
+            KinetixTheme {
+                surface = KinetixColorScheme.current.background.toArgb()
+                KinetixTabsList(Modifier.graphicsLayer { scaleX = 0.65f }.testTag("track")) {
+                    KinetixTabsTrigger("One", false, {}, Modifier.width(80.dp))
+                    KinetixTabsTrigger("Two", true, {}, Modifier.width(90.dp).testTag("selected"))
+                }
+            }
+        }
+        val track = rule.onNodeWithTag("track")
+        val image = track.captureToImage().toPixelMap()
+        val rowBounds = track.fetchSemanticsNode().boundsInRoot
+        val selectedBounds = rule.onNodeWithTag("selected").fetchSemanticsNode().boundsInRoot
+        val expected = (selectedBounds.left - rowBounds.left) / rowBounds.width * image.width
+        val actual = (0 until image.width).first { image[it, image.height / 2].toArgb() == surface }
+        assertTrue("scaled indicator starts at $actual, selected item starts at $expected", abs(actual - expected) <= 3f)
+    }
 
     private fun verifyTravel(tabs: Boolean) {
         val resolver = RuntimeEnvironment.getApplication().contentResolver
@@ -106,6 +128,11 @@ class SelectionIndicatorTest {
             direction.value = LayoutDirection.Rtl
             thirdWidth.value = 125.dp
         }
-        assertTrue(left() > first)
+        val trackLeft = rule.onNodeWithTag("track").fetchSemanticsNode().boundsInRoot.left
+        val selectedLeft = rule.onNodeWithTag("item-0").fetchSemanticsNode().boundsInRoot.left
+        val rtlLeft = left()
+        assertTrue("RTL indicator must align to the selected item: $rtlLeft vs ${selectedLeft - trackLeft}",
+            abs(rtlLeft - (selectedLeft - trackLeft)) <= 3f)
+        assertTrue(rtlLeft > first)
     }
 }
