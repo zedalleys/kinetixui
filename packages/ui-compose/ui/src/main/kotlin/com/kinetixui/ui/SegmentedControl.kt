@@ -35,15 +35,18 @@ fun KinetixSegmentedControl(
     val colors = KinetixColorScheme.current
     val shape = RoundedCornerShape(dimensionResource(R.dimen.radius_lg))
 
-    Row(
-        modifier = modifier
-            .clip(shape)
-            .background(colors.muted, shape)
-            .padding(dimensionResource(R.dimen.spacing_1)),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-        content = content,
-    )
+    KinetixSelectionIndicator { indicator ->
+        Row(
+            modifier = modifier
+                .clip(shape)
+                .background(colors.muted, shape)
+                .padding(dimensionResource(R.dimen.spacing_1))
+                .then(indicator),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            content = content,
+        )
+    }
 }
 
 @Composable
@@ -56,12 +59,14 @@ fun KinetixSegmentedControlItem(
 ) {
     val colors = KinetixColorScheme.current
     val shape = RoundedCornerShape(dimensionResource(R.dimen.radius_md))
-    val containerColor = if (selected) colors.background else Color.Transparent
+    val (indicator, paintLocally) = KinetixSelectionIndicatorItem(selected)
+    val containerColor = if (paintLocally) colors.background else Color.Transparent
     val contentColor = if (selected) colors.foreground else colors.mutedForeground
 
     Box(
         modifier = modifier
             .clip(shape)
+            .then(indicator)
             .background(containerColor, shape)
             .clickable(enabled = enabled, onClick = onClick)
             .padding(
