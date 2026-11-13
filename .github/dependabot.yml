@@ -21,6 +21,19 @@ updates:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
     groups:
+      # First, deliberately. A dependency that matches several groups joins the first one it
+      # matches, and `react`/`react-dom` are devDependencies in packages/ui and packages/iot — so
+      # without this entry above it, `dev-dependencies` would claim them for those manifests.
+      #
+      # react and react-dom refuse to run at different versions: react-dom throws "Incompatible
+      # React versions" while loading, which fails every @kinetixui/ui suite before a single test
+      # runs. One-PR-per-dependency therefore produces two pull requests that are each unmergeable
+      # by construction — #426 (react 19.3.1) has been red on four consecutive heads for exactly
+      # this, and #424 (react-dom 19.3.1) is its mirror image. Grouped, the pair moves together and
+      # every resolution stays matched. Measured: both at 19.3.1 passes 628 @kinetixui/ui tests;
+      # react alone at 19.3.1 fails 22 of 23 suites at import time.
+      react:
+        patterns: ["react", "react-dom"]
       dev-dependencies:
         dependency-type: development
         update-types: [minor, patch]
