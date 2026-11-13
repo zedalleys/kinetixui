@@ -19,6 +19,13 @@ const config: StorybookConfig = {
     name: "@storybook/react-vite",
     options: {},
   },
+  // The demos (and the stories generated from them) reference `/img/...`, which
+  // Next serves from `apps/web/public`. `apps/docs` has no `public/` of its
+  // own, so without this mapping those paths 404 in Storybook — and the axe
+  // sweep in `scripts/a11y-browser.mjs` would read a story with no image. Only
+  // `img` is mapped: `apps/web/public` also holds the registry and the footer
+  // artwork, which Storybook has no use for.
+  staticDirs: [{ from: "../../web/public/img", to: "/img" }],
   core: { disableTelemetry: true },
 };
 
