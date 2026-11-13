@@ -5,10 +5,17 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Image } from "@kinetixui/ui";
 
 const Demo = () => (
+    // Committed placeholders, not a third-party image host. The demo used
+    // picsum.photos, which made this the one page in the site that fetches an
+    // outside image: `scripts/a11y-site.mjs` navigates with `page.goto`, which
+    // waits for `load`, which waits for every subresource, so the host being
+    // slow or unreachable timed the whole page out at every viewport. A reader
+    // with no route to that host saw the same blank frames. The displayed
+    // source below is unchanged, so what the page teaches is unchanged.
     <div className="grid w-full max-w-md grid-cols-3 gap-3">
-      <Image ratio="1:1" src="https://picsum.photos/seed/kx1/400" alt="" />
-      <Image ratio="4:3" src="https://picsum.photos/seed/kx2/400/300" alt="" />
-      <Image ratio="3:4" src="https://picsum.photos/seed/kx3/300/400" alt="" />
+      <Image ratio="1:1" src="/img/placeholder-1-1.svg" alt="" />
+      <Image ratio="4:3" src="/img/placeholder-4-3.svg" alt="" />
+      <Image ratio="3:4" src="/img/placeholder-3-4.svg" alt="" />
     </div>
   );
 
@@ -29,7 +36,7 @@ const meta = {
 export default meta;
 
 export const Playground: StoryObj<typeof meta> = { render: (args) => (
-    <Image {...args} src="https://picsum.photos/seed/kx/400/300" alt="" className="w-56" />
+    <Image {...args} src="/img/placeholder-4-3.svg" alt="" className="w-56" />
   ) };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
