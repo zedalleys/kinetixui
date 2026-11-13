@@ -17,6 +17,10 @@ on:
       - "packages/create-preset/**"
       - "style-dictionary/**"
       - "scripts/a11y-site.mjs"
+      - "scripts/docs-image-local-assets.mjs"
+      - "apps/web/public/img/**"
+      - "apps/web/src/registry/demos.tsx"
+      - "apps/docs/.storybook/main.ts"
       - "scripts/seo-browser.mjs"
       - "scripts/theme-isolation.mjs"
       - "scripts/iot-state-spatial.mjs"
@@ -62,6 +66,10 @@ on:
       - "packages/create-preset/**"
       - "style-dictionary/**"
       - "scripts/a11y-site.mjs"
+      - "scripts/docs-image-local-assets.mjs"
+      - "apps/web/public/img/**"
+      - "apps/web/src/registry/demos.tsx"
+      - "apps/docs/.storybook/main.ts"
       - "scripts/seo-browser.mjs"
       - "scripts/theme-isolation.mjs"
       - "scripts/iot-state-spatial.mjs"
@@ -197,6 +205,14 @@ jobs:
 
       - name: Axe + overflow pass (every page, light + dark, phone / tablet / desktop)
         run: pnpm check:a11y-site
+
+      # The Image documentation route is served entirely from this origin. It used to load three images from
+      # picsum.photos, and because `page.goto` waits for `load`, which waits for every subresource, that host
+      # being slow or unreachable timed the step above out on every viewport with zero axe findings to show for
+      # it — on PR branches that touched nothing near the page. This step fails if the route reaches any origin
+      # other than the site's own, which is the property a longer timeout would not have restored.
+      - name: Image route resolves locally (blocked-host regression, RTL, error fallback)
+        run: pnpm check:docs-image-local
 
       # Colour/theme state stays in its preview, light previews on a dark page stay light, and the keyboard
       # focus ring follows a custom theme's --focus (docs/audits/COLOR-THEMING-MATURITY-AUDIT.md).
