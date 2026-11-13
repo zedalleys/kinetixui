@@ -54,6 +54,7 @@ on:
       - "scripts/angular-collections.mjs"
       - "scripts/angular-layout.mjs"
       - "scripts/angular-selection-motion.mjs"
+      - "scripts/angular-selection-glide.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "scripts/story-id.mjs"
       - "scripts/check-story-ids.mjs"
@@ -102,6 +103,7 @@ on:
       - "scripts/angular-collections.mjs"
       - "scripts/angular-layout.mjs"
       - "scripts/angular-selection-motion.mjs"
+      - "scripts/angular-selection-glide.mjs"
       - "scripts/ui-dist-stamp.mjs"
       - "scripts/story-id.mjs"
       - "scripts/check-story-ids.mjs"
@@ -373,6 +375,8 @@ jobs:
       # motion, and a 32-cell viewport, theme, direction and text matrix.
       - name: Angular selection motion (Switch 100ms, Checkbox/Radio/Toggle 200ms, forced colours, RTL, reduced motion)
         run: pnpm check:angular-selection-motion
+      - name: Angular selection glide
+        run: node scripts/angular-selection-glide.mjs
 
   # The negative controls for the focus-ring assertion in `axe`'s "Navigation and disclosure visual
   # contract" step. They run the real gate four times — once unmutated, then once per injected defect —

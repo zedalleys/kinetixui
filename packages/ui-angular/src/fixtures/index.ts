@@ -12,6 +12,7 @@ import { NotificationsFixture } from './notifications';
 import { OverlayCompositionsFixture } from './overlay-compositions';
 import { OverlaysFixture } from './overlays';
 import { SelectionMotion } from './selection-motion';
+import { SelectionGlide } from './selection-glide';
 import { SelectionStates } from './selection';
 import { UsageExamples } from './usage';
 
@@ -37,5 +38,6 @@ export const FIXTURES: Record<string, Type<unknown>> = {
   'overlay-compositions': OverlayCompositionsFixture,
   selection: SelectionStates,
   'selection-motion': SelectionMotion,
+  'selection-glide': SelectionGlide,
   usage: UsageExamples,
 };

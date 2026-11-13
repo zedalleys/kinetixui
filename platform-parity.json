@@ -3809,6 +3809,7 @@
         "interaction",
         "largeText",
         "published",
+        "reducedMotion",
         "rtl"
       ],
       "SwiftUI": [
@@ -4190,6 +4191,7 @@
         "interaction",
         "largeText",
         "published",
+        "reducedMotion",
         "rtl"
       ],
       "SwiftUI": [
@@ -4459,7 +4461,7 @@
       "accessibility": 80,
       "rtl": 47,
       "largeText": 53,
-      "reducedMotion": 23,
+      "reducedMotion": 25,
       "visual": 0,
       "published": 80
     },

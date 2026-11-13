@@ -438,6 +438,49 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 
 /* ── tabs ───────────────────────────────────────────────────────────────── */
 .kx-tabs { display: block; }
+.kx-tab-list,
+.kx-segmented { position: relative; isolation: isolate; }
+
+.kx-selection-indicator {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--kx-indicator-width);
+  pointer-events: none;
+  transform: translate(var(--kx-indicator-x), var(--kx-indicator-y));
+}
+@media (forced-colors: none) {
+  [data-kx-indicator-ready] > .kx-selection-indicator { display: block; }
+  .kx-tab-list[data-kx-indicator-ready] > .kx-tab[aria-selected='true'] {
+    border-block-end-color: transparent;
+  }
+  .kx-segmented[data-kx-indicator-ready] > .kx-segmented__item[data-kx-selected] > .kx-segmented__label {
+    background-color: transparent;
+  }
+  .kx-segmented[data-kx-indicator-ready] > .kx-segmented__item[data-kx-selected] >
+    .kx-segmented__radio:not(:focus-visible) + .kx-segmented__label { box-shadow: none; }
+}
+@media (prefers-reduced-motion: no-preference) and (forced-colors: none) {
+  .kx-selection-indicator[data-kx-travel] {
+    transition: transform var(--duration-base) var(--easing-emphasized),
+      width var(--duration-base) var(--easing-emphasized),
+      height var(--duration-base) var(--easing-emphasized);
+  }
+}
+.kx-tab-list > .kx-selection-indicator {
+  height: var(--border-width-focus);
+  top: calc(var(--kx-indicator-height) - var(--border-width-focus));
+  background-color: hsl(var(--primary));
+}
+.kx-segmented > .kx-selection-indicator {
+  z-index: -1;
+  height: var(--kx-indicator-height);
+  border-radius: var(--radius-sm);
+  background-color: hsl(var(--card));
+  box-shadow: inset 0 0 0 1px hsl(var(--border) / 0.5), var(--shadow-sm);
+}
+
 .kx-tab-list {
   display: inline-flex;
   /* wraps inside its own width rather than running off a phone at 200% text (React's TabsList does the same) */
@@ -476,6 +519,7 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 .kx-tab[aria-selected='true'] { color: hsl(var(--foreground)); border-block-end-color: hsl(var(--primary)); }
 .kx-tab:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 .kx-tab-panel { display: block; padding-block-start: var(--spacing-4); }
+.kx-tab-panel[hidden] { display: none; }
 .kx-tab-panel:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 
 /* ── utility: visually hidden ───────────────────────────────────────────── */

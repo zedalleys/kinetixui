@@ -53,7 +53,7 @@
       "accessibility": 80,
       "rtl": 47,
       "largeText": 53,
-      "reducedMotion": 23,
+      "reducedMotion": 25,
       "visual": 0,
       "published": 80
     },
@@ -998,6 +998,19 @@
           "sonner",
           "tooltip",
           "tour"
+        ]
+      },
+      {
+        "file": "scripts/angular-selection-glide.mjs",
+        "environment": "chromium",
+        "kinds": [
+          "interaction",
+          "reducedMotion",
+          "rtl"
+        ],
+        "components": [
+          "segmented-control",
+          "tabs"
         ]
       }
     ],
@@ -5404,7 +5417,8 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:339-1069"
+          "scripts/angular-browser.mjs:339-1069",
+          "scripts/angular-selection-glide.mjs:1-146"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
@@ -5412,10 +5426,14 @@
           "scripts/angular-browser.mjs:339-1069"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1330-1707"
+          "scripts/angular-browser.mjs:1330-1707",
+          "scripts/angular-selection-glide.mjs:1-146"
         ],
         "largeText": [
           "scripts/angular-browser.mjs:1070-1329"
+        ],
+        "reducedMotion": [
+          "scripts/angular-selection-glide.mjs:1-146"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -6272,7 +6290,8 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
-          "scripts/angular-browser.mjs:339-1069"
+          "scripts/angular-browser.mjs:339-1069",
+          "scripts/angular-selection-glide.mjs:1-146"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
@@ -6281,10 +6300,14 @@
         ],
         "rtl": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
-          "scripts/angular-browser.mjs:1330-1707"
+          "scripts/angular-browser.mjs:1330-1707",
+          "scripts/angular-selection-glide.mjs:1-146"
         ],
         "largeText": [
           "scripts/angular-browser.mjs:1070-1329"
+        ],
+        "reducedMotion": [
+          "scripts/angular-selection-glide.mjs:1-146"
         ],
         "published": [
           "npm: @kinetixui/angular"
