@@ -62,6 +62,25 @@ const readImages = (page) =>
     })),
   );
 
+/**
+ * Wait for the demo's three frames before measuring them.
+ *
+ * They are client-rendered, so reading the DOM the instant `load` fires races hydration. Measured on
+ * `main` 260901f2 by driving the route four times in a row: three runs saw all three images at `load`,
+ * one saw zero at `load` and three a moment later. A gate that reads once reports that race as a
+ * missing-image finding on a page that is perfectly correct — which is the same class of failure,
+ * attributed to the wrong subject, that this gate was written to end.
+ *
+ * The wait is bounded and its outcome is deliberately discarded: it decides WHEN to measure, never WHAT
+ * the measurement is. If the images never arrive, it times out and the caller's own assertion fails
+ * exactly as it did before, so this cannot turn a genuine defect green. The negative control for that
+ * claim is in the pull request that added this helper.
+ */
+const settled = (page) =>
+  page
+    .waitForFunction(() => document.querySelectorAll('main img[src^="/img/"]').length === 3, null, { timeout: 5_000 })
+    .catch(() => {});
+
 const browser = await chromium.launch({
   executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined,
 });
@@ -95,11 +114,7 @@ try {
     const elapsed = Date.now() - started;
     ok("the route loads", `${elapsed}ms`);
 
-    // Wait for them rather than reading whatever is in the DOM the instant `load` fires: a gate that reads
-    // once races hydration, and a race that resolves the wrong way reads as a missing-image finding.
-    await page
-      .waitForFunction(() => document.querySelectorAll('main img[src^="/img/"]').length === 3, null, { timeout: 5_000 })
-      .catch(() => {});
+    await settled(page);
     const images = (await readImages(page)).filter((i) => i.src.startsWith("/img/"));
     if (images.length !== 3) fail("the demo's images", `expected 3 local images in <main>, found ${images.length}`);
     for (const img of images) {
@@ -132,6 +147,7 @@ try {
     try {
       await page.goto(`${base}${ROUTE}`, { waitUntil: "load", timeout: 20_000 });
       const elapsed = Date.now() - started;
+      await settled(page);
       const images = (await readImages(page)).filter((i) => i.src.startsWith("/img/"));
       if (images.length !== 3 || images.some((i) => i.naturalWidth === 0)) {
         fail("with picsum.photos blocked", "the page loaded but its local images did not decode");
@@ -148,6 +164,7 @@ try {
   {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
     await page.goto(`${base}${ROUTE}`, { waitUntil: "load", timeout: 15_000 });
+    await settled(page);
     await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"));
     // Read the direction back. A gate that sets `dir` and never checks it took hold is an LTR gate with an
     // RTL name — measured on `scripts/react-carousel-focus.mjs`, where `addInitScript` never reached the
@@ -184,6 +201,7 @@ try {
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     await page.goto(`${base}${ROUTE}`, { waitUntil: "load", timeout: 15_000 });
+    await settled(page);
     // A real 404 on a real <img>, so the browser fires a real `error` event and the component's own
     // onError runs. Nothing is mocked: replacing the component's success path with a stub would prove
     // only that the stub works.
