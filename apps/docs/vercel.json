@@ -4,5 +4,9 @@
   "buildCommand": "cd ../.. && pnpm build:tokens && pnpm --filter @kinetixui/docs build-storybook",
   "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile",
   "outputDirectory": "storybook-static",
-  "git": { "deploymentEnabled": { "codex/m6-angular-press-slider": false } }
+  "git": {
+    "deploymentEnabled": {
+      "codex/m6-angular-press-slider": false
+    }
+  }
 }
