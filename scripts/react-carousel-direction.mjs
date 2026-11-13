@@ -55,6 +55,19 @@
  *   FAIL rtl: ArrowLeft agrees with Next           key positive, button negative
  *   FAIL flip: Next reverses with the document     before negative, after negative
  *
+ * The control-placement rows have a control of their own, because they guard a LATER defect: once the
+ * track mirrored, the buttons did not, so Previous stayed on the physical left of a track that now began
+ * on the right. Reverting only the two `className` ternaries and the two glyphs in `CarouselPrevious` /
+ * `CarouselNext`, rebuilding and re-running fails on exactly three rows and no others:
+ *
+ *   FAIL rtl: Previous sits at the start of the track      prev-left (slides run rtl)
+ *   FAIL rtl: the glyphs point the way the track moves     prev=left, next=right
+ *   FAIL flip: the controls swap sides with the document   prev-left, prev glyph left
+ *
+ * Note which rows do NOT move: every travel, key and endpoint row still passes, because that revert
+ * touches nothing the engine reads. A gate that only measured the track would have called this clean,
+ * which is why the controls are read from their laid-out boxes rather than inferred from the direction.
+ *
  * Two of the passing rows are worth reading, because they are why the failing three are worded as they
  * are. `rtl: the slides run right to left` passes unfixed: the LAYOUT was always correct, it was the
  * engine that disagreed with it, so a gate that only looked at the slide boxes would have called the
@@ -115,6 +128,21 @@ export const readState = (page) =>
       slideOrder: slides.length < 2 ? "unknown" : slides[1].getBoundingClientRect().left > slides[0].getBoundingClientRect().left ? "ltr" : "rtl",
       focus: a === next ? "next" : a === document.body || !a ? "BODY" : (a.textContent?.trim() || a.tagName),
       nextAria: next.getAttribute("aria-disabled"),
+      // Where the two controls actually SIT, and which way their glyphs point. Read from laid-out boxes
+      // rather than from class names: the class is what the component chose, the box is what the reader
+      // gets, and only a browser resolves one into the other.
+      controls: (() => {
+        const prev = btn("Previous slide");
+        const glyph = (b) => {
+          const svg = b.querySelector("svg");
+          return svg?.classList.contains("lucide-arrow-left") ? "left" : svg?.classList.contains("lucide-arrow-right") ? "right" : "?";
+        };
+        return {
+          order: prev.getBoundingClientRect().left < next.getBoundingClientRect().left ? "prev-left" : "prev-right",
+          prevGlyph: glyph(prev),
+          nextGlyph: glyph(next),
+        };
+      })(),
     };
   });
 
@@ -186,8 +214,8 @@ async function move(page, how) {
 }
 
 const CASES = [
-  { dir: "ltr", travel: "negative", order: "ltr", advances: "ArrowRight", retreats: "ArrowLeft" },
-  { dir: "rtl", travel: "positive", order: "rtl", advances: "ArrowLeft", retreats: "ArrowRight" },
+  { dir: "ltr", travel: "negative", order: "ltr", advances: "ArrowRight", retreats: "ArrowLeft", controls: "prev-left", prevGlyph: "left", nextGlyph: "right" },
+  { dir: "rtl", travel: "positive", order: "rtl", advances: "ArrowLeft", retreats: "ArrowRight", controls: "prev-right", prevGlyph: "right", nextGlyph: "left" },
 ];
 
 async function main() {
@@ -216,6 +244,13 @@ async function main() {
 
     const start = await readState(page);
     check(start.slideOrder === c.order, `${c.dir}: the slides run ${c.order === "ltr" ? "left to right" : "right to left"}`, `slide 2 is ${c.order === start.slideOrder ? "on the expected side of" : "on the WRONG side of"} slide 1 (order=${start.slideOrder})`);
+
+    // The controls belong to the track, not to the page: once the engine lays the slides out in the
+    // resolved direction, a Previous button pinned to the physical left sits at the END of the track it
+    // rewinds. Asserted together with the slide order above, because the pair is the claim — a control
+    // mirrored without the track, or a track mirrored without the control, fails exactly here.
+    check(start.controls.order === c.controls, `${c.dir}: Previous sits at the start of the track`, `${start.controls.order} (slides run ${start.slideOrder})`);
+    check(start.controls.prevGlyph === c.prevGlyph && start.controls.nextGlyph === c.nextGlyph, `${c.dir}: the glyphs point the way the track moves`, `prev=${start.controls.prevGlyph}, next=${start.controls.nextGlyph}`);
 
     const byButton = await move(page, { button: "Next slide" });
     check(byButton.way === c.travel, `${c.dir}: Next moves the track ${c.travel}`, `${byButton.before.offset} → ${byButton.after.offset} (${byButton.way})`);
@@ -254,6 +289,7 @@ async function main() {
     await setDirection(page, "rtl");
     const flipped = await readState(page);
     check(flipped.slideOrder === "rtl", "flip: the slides re-order right to left", `order=${flipped.slideOrder}`);
+    check(flipped.controls.order === "prev-right", "flip: the controls swap sides with the document", `${flipped.controls.order}, prev glyph ${flipped.controls.prevGlyph}`);
     const after = await move(page, { button: "Next slide" });
     check(before.way === "negative" && after.way === "positive", "flip: Next reverses with the document", `before ${before.way}, after ${after.way}`);
     await ctx.close();
