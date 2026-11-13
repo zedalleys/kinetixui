@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import 'kinetix_disclosure_motion.dart';
 import 'kinetix_motion.dart';
+import 'kinetix_shadow.dart';
 import 'theme.dart';
 
 /// Shares one painted surface across a row of built-in selection items.
@@ -161,12 +162,12 @@ class KinetixSelectionIndicatorRender extends RenderFlex {
         rect.shift(offset),
         const Radius.circular(KinetixRadius.control),
       );
-      context.canvas.drawRRect(
-        shape.shift(const Offset(0, 1)),
-        Paint()
-          ..color = const Color(0x14000000)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.15),
-      );
+      for (final shadow in KinetixShadow.sm) {
+        context.canvas.drawRRect(
+          shape.shift(shadow.offset).inflate(shadow.spreadRadius),
+          shadow.toPaint(),
+        );
+      }
       context.canvas.drawRRect(shape, Paint()..color = _color);
     }
     super.paint(context, offset);
