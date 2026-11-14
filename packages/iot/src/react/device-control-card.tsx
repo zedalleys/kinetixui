@@ -130,8 +130,11 @@ const DeviceControlCard = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.
           unreachable ? "text-muted-foreground" : "text-foreground",
         )}
       >
-        <span>{value}</span>
-        {unit ? <span className={cn("text-muted-on-container", hero ? "text-title-md" : "text-title-sm")}>{unit}</span> : null}
+        {/* One left-to-right run: in an RTL page the unit's letters reorder around the digits otherwise. */}
+        <bdi dir="ltr" className="flex items-baseline gap-1.5">
+          <span>{value}</span>
+          {unit ? <span className={cn("text-muted-on-container", hero ? "text-title-md" : "text-title-sm")}>{unit}</span> : null}
+        </bdi>
       </p>
     ) : null;
 

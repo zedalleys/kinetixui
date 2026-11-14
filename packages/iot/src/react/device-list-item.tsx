@@ -69,7 +69,11 @@ const DeviceListItem = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
             {transitioning ? (
               <span className="text-muted-foreground">—</span>
             ) : (
-              formatTelemetryValue({ value: reading.value ?? Number.NaN, unit: reading.unit }, { precision: reading.precision })
+              /* A value and its unit are one left-to-right run: in an RTL page the unit's letters
+                 ("°C", "kWh", "L/min") reorder around the digits otherwise. */
+              <bdi dir="ltr">
+                {formatTelemetryValue({ value: reading.value ?? Number.NaN, unit: reading.unit }, { precision: reading.precision })}
+              </bdi>
             )}
           </span>
         ) : null}

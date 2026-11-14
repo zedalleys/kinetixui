@@ -134,8 +134,8 @@ async function axe(page, tag, cond) {
   expectThat(tag, violations.length === 0, `axe: ${violations.join(", ")}`);
 }
 
-/** Condition checks for one scenario block. */
-async function blockChecks(page, block, tag, cond) {
+/** Condition checks for one scenario block. `expect` is the case's own `READOUT` declaration. */
+async function blockChecks(page, block, tag, cond, expect) {
   if (cond.scale) {
     const clipped = await block.evaluate((el) =>
       [el, ...el.querySelectorAll("*")]
@@ -149,21 +149,33 @@ async function blockChecks(page, block, tag, cond) {
   }
   if (cond.forcedColors === "active") {
     // Every state glyph is still drawn: a box, and a stroke or fill that is not transparent.
-    const lost = await block.evaluate((el) =>
-      [...el.querySelectorAll("svg[data-glyph]")]
-        .filter((svg) => {
-          const r = svg.getBoundingClientRect();
-          const color = getComputedStyle(svg).color;
-          return r.width === 0 || r.height === 0 || color === "rgba(0, 0, 0, 0)" || color === "transparent";
-        })
-        .map((svg) => svg.getAttribute("data-glyph")),
-    );
+    const { drawn, lost } = await block.evaluate((el) => {
+      const all = [...el.querySelectorAll("svg[data-glyph]")];
+      return {
+        drawn: all.length,
+        lost: all
+          .filter((svg) => {
+            const r = svg.getBoundingClientRect();
+            const color = getComputedStyle(svg).color;
+            return r.width === 0 || r.height === 0 || color === "rgba(0, 0, 0, 0)" || color === "transparent";
+          })
+          .map((svg) => svg.getAttribute("data-glyph")),
+      };
+    });
     expectThat(tag, lost.length === 0, `forced colours lost glyphs: ${lost.join(", ")}`);
+    // Without this, the sweep above passes over a block that drew no glyph at all — the Phase 9
+    // fail-open. Asserted only where the case declares a glyph, so a status-only block that correctly
+    // carries its state in a word is not reddened for it.
+    expectThat(tag, !expect.glyph || drawn > 0, "declares a state glyph but drew none, so the forced-colours sweep measured nothing");
   }
   if (cond.rtl) {
     // A number and its unit are one left-to-right run inside an RTL page.
     const runs = await block.evaluate((el) => [...el.querySelectorAll("bdi")].map((b) => getComputedStyle(b).direction));
     expectThat(tag, runs.every((d) => d === "ltr"), `a value run is not LTR under RTL (${runs.join(",")})`);
+    // Without this, the sweep above passes over a block with no isolated run at all — the other half of
+    // the Phase 9 fail-open. An unisolated reading really does reorder: measured in Chromium, 124 value
+    // runs across 32 IoT stories drew their unit before their digits ("18 °C" as "°C 18").
+    expectThat(tag, !expect.numeric || runs.length > 0, "declares a numeric readout but drew no isolated value run, so the RTL sweep measured nothing");
   }
 }
 
@@ -187,6 +199,90 @@ async function pageChecks(page, tag, cond) {
 const aria = async (locator) => (await locator.ariaSnapshot()).replace(/\s+/g, " ");
 const visible = (locator) => locator.evaluate((el) => el.innerText.replace(/\s+/g, " ").trim());
 const glyphs = (locator) => locator.evaluate((el) => [...el.querySelectorAll("svg[data-glyph]")].map((g) => g.getAttribute("data-glyph")));
+
+/* ------------------------------------------------------------------ what each case declares */
+
+/**
+ * Which cases carry a NUMERIC READOUT, and which are STATUS-ONLY.
+ *
+ * Two assertions below pass over an empty collection — the forced-colours glyph sweep and the RTL
+ * value-run sweep — which M5.5 Phase 9 recorded as a real, open fail-open. It could not be closed with
+ * a blanket count guard: status-only blocks legitimately draw no value run, and guarding them on #595
+ * reddened 16 of them. The missing piece was the component's own call on which cases show a measured
+ * number, which is a product decision rather than something the gate may infer. "Has a digit in it" is
+ * not that decision: `connection-offline` ("last seen 7 minutes ago") and `feedback-timed-out` ("last
+ * reported 20%") both contain digits inside a sentence, and neither is a readout.
+ *
+ * **Owner decision (M5.6 Phase G).** A *measurable* value — temperature, humidity, battery percentage,
+ * signal, voltage, current, power, energy — is shown as a numeric readout. A *categorical* state —
+ * connected, pairing, syncing, firmware, availability, alert severity — is shown as a status indicator,
+ * and never as a number standing in for a state. A case with nothing measured (`unknown`,
+ * `unavailable`, `unsupported`) is status-only by the same rule: the number does not exist, and
+ * inventing a 0 for it is the defect this whole story set exists to prevent.
+ *
+ * `numeric` therefore means "a measured number is on screen here", and the gate requires an isolated
+ * value run for it. The converse is deliberately NOT asserted: a status-only case may still isolate its
+ * `—` placeholder (`battery-unknown`, `telemetry-unknown` and `energy-unknown` each draw one), and
+ * forbidding that would put a false alarm where a silent pass was.
+ *
+ * `glyph` means "at least one state glyph must be drawn", which closes the forced-colours sweep.
+ * Measured at `main@3bb97137` from the built Storybook; the three `false` entries are the cases that
+ * legitimately draw none — a normal battery raises no alarm, an unknown battery carries its state in
+ * the word "Unknown", and `telemetry-range` is rendered `quietWhenNormal`.
+ */
+const READOUT = {
+  // Battery percentage: a measurable value.
+  "battery-normal": { numeric: true, glyph: false },
+  "battery-low": { numeric: true, glyph: true },
+  "battery-critical": { numeric: true, glyph: true },
+  "battery-charging": { numeric: true, glyph: true },
+  "battery-stale": { numeric: true, glyph: true },
+  // Nothing measured: status-only. Never a 0.
+  "battery-unknown": { numeric: false, glyph: false },
+  "battery-unsupported": { numeric: false, glyph: true },
+  // Connectivity: categorical, every one of them.
+  "connection-online": { numeric: false, glyph: true },
+  "connection-offline": { numeric: false, glyph: true },
+  "connection-unreachable": { numeric: false, glyph: true },
+  "connection-stale": { numeric: false, glyph: true },
+  "connection-connecting": { numeric: false, glyph: true },
+  "connection-unknown": { numeric: false, glyph: true },
+  // Telemetry: a measurement wherever there is one.
+  "telemetry-live": { numeric: true, glyph: true },
+  "telemetry-formatted": { numeric: true, glyph: true },
+  "telemetry-delta": { numeric: true, glyph: true },
+  "telemetry-stale": { numeric: true, glyph: true },
+  "telemetry-range": { numeric: true, glyph: false },
+  "telemetry-unknown": { numeric: false, glyph: true },
+  "telemetry-unavailable": { numeric: false, glyph: true },
+  // Command lifecycle: categorical. A value inside a sentence is not a readout.
+  "feedback-requested": { numeric: false, glyph: true },
+  "feedback-acknowledged": { numeric: false, glyph: true },
+  "feedback-retrying": { numeric: false, glyph: true },
+  "feedback-confirmed": { numeric: false, glyph: true },
+  "feedback-failed": { numeric: false, glyph: true },
+  "feedback-timed-out": { numeric: false, glyph: true },
+  "feedback-unreachable": { numeric: false, glyph: true },
+  "feedback-cancelled": { numeric: false, glyph: true },
+  "feedback-script": { numeric: false, glyph: true },
+  // An event log: categorical per row.
+  activity: { numeric: false, glyph: true },
+  "activity-oldest": { numeric: false, glyph: true },
+  // Energy: power and energy are measurable values.
+  "energy-simple": { numeric: true, glyph: true },
+  "energy-stale": { numeric: true, glyph: true },
+  "energy-partial": { numeric: true, glyph: true },
+  "energy-custom": { numeric: true, glyph: true },
+  "energy-unknown": { numeric: false, glyph: true },
+};
+
+/** The declaration for a scenario. A scenario with none fails, rather than skipping both checks. */
+function readoutFor(id) {
+  if (!Object.prototype.hasOwnProperty.call(READOUT, id)) {
+    throw new Error(`no READOUT declaration for "${id}" — say whether it carries a numeric readout`);
+  }
+  return READOUT[id];
+}
 
 /* ------------------------------------------------------------------ expectations */
 
@@ -438,8 +534,9 @@ for (const [story, def] of Object.entries(STORIES)) {
         try {
           const block = page.locator(`[data-scenario="${id}"]`);
           if ((await block.count()) !== 1) throw new Error(`scenario block not found`);
+          const expect = readoutFor(id);
           await def.check(page, block, id, tag, cond);
-          await blockChecks(page, block, tag, cond);
+          await blockChecks(page, block, tag, cond, expect);
         } catch (error) {
           failures.push(`${tag}: ${error.message.split("\n")[0]}`);
         }
