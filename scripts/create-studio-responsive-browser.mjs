@@ -159,10 +159,26 @@ export async function verifyResponsiveBrowser({ browser, base, fixture, consumer
     await page.keyboard.press("Tab");
     const continueButton = frame.getByRole("button", { name: "Continue", exact: true });
     assert.equal(await continueButton.evaluate(el => el === document.activeElement), true);
+    // Tabs activate on focus, so reaching the tablist already changes the panel. The previous
+    // sequence pressed Tab, ArrowRight, Enter and then checked only the panel text — which was
+    // already correct the moment Tab landed, so the two keys after it could never prove anything and
+    // could only break it: ArrowRight moved the selection off the tab the check wanted, and the check
+    // passed only while Enter re-selected the focused one. When that restore did not land, CI read
+    // the first panel and went red. There are two tabs, so either arrow moves to the other one;
+    // what was missing is an assertion of WHICH tab is selected after each key.
+    const selectedTab = () => frame.getByRole("tab", { selected: true }).innerText();
+    const panelText = () => frame.getByRole("tabpanel").innerText();
+    assert.equal(await selectedTab(), "Overview", "the preview opens on the first tab");
+    assert.match(await panelText(), /Start with the big picture/);
     await page.keyboard.press("Tab");
+    assert.equal(await selectedTab(), "Details", "Tab reaches the tablist, which activates on focus");
+    assert.match(await panelText(), /Make room/);
+    await page.keyboard.press("ArrowLeft");
+    assert.equal(await selectedTab(), "Overview", "an arrow key moves the selection to the other tab");
+    assert.match(await panelText(), /Start with the big picture/);
     await page.keyboard.press("ArrowRight");
-    await page.keyboard.press("Enter");
-    assert.match(await frame.getByRole("tabpanel").innerText(), /Make room/);
+    assert.equal(await selectedTab(), "Details", "and back again, with the panel following each time");
+    assert.match(await panelText(), /Make room/);
     await email.focus();
     await email.press("h");
     await email.press("Control+z");
