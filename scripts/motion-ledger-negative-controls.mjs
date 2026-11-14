@@ -47,6 +47,28 @@ const ANCHOR = { platform: "SwiftUI", family: "loop", role: "loop", member: "Spi
 /** A family name no platform declares, derived rather than chosen, so a ledger that grows a family of
  *  that name cannot quietly turn the dead-vocabulary control into a no-op. */
 const DECLARED = new Set(Object.values(PLATFORMS).flatMap((p) => Object.keys(p.families ?? {})));
+
+/** A ledger platform the contract registers as native, derived rather than named, so renaming a
+ *  platform turns this suite red instead of quietly testing nothing. The contract entries that make
+ *  its removal visible are counted too: a platform with no contract consumers would make the control
+ *  pass for the wrong reason. */
+const REMOVABLE = (() => {
+  const c = load(CONTRACT);
+  const native = new Set(
+    Object.entries(c.platforms ?? {}).filter(([, p]) => p.surface === "native").map(([n]) => n),
+  );
+  for (const [ledgerName, p] of Object.entries(PLATFORMS)) {
+    if (!native.has(p.contractPlatform)) continue;
+    const consumers = Object.values(c.roles ?? {}).flatMap((r) =>
+      [...(r.consumers ?? []), ...(r.deviations ?? [])].filter((e) => e.platform === p.contractPlatform),
+    );
+    if (consumers.length) return { ledgerName, contractPlatform: p.contractPlatform, consumers: consumers.length };
+  }
+  throw new Error(
+    "negative controls: no ledger platform is registered native in the contract AND named by its " +
+      "consumers, so the whole-platform-removal control would prove nothing. Fix the suite, not the gate.",
+  );
+})();
 const UNCLAIMED = (() => {
   for (let i = 0; ; i++) {
     const name = i ? `no-such-family-${i}` : "no-such-family";
@@ -122,6 +144,26 @@ const controls = [
     name: "a contractRole naming a role the contract does not define",
     expect: /the SwiftUI loop family says it implements the "no-such-role" motion role, which tokens\/contracts\/motion\.json does not define/,
     ledger: (l) => void (l.SwiftUI.families.loop.contractRole = "no-such-role"),
+  },
+  {
+    /* The mirror of the fourth-platform control, and measured PASSING at `ee38bfa5`: with the native
+     * platform set derived from the ledger, deleting a whole platform removed its contract consumers
+     * from the comparison as well, so both sides lost the same entries and cancelled out. Zero errors
+     * while its helpers stopped being checked by anything. */
+    name: `the whole ${REMOVABLE.ledgerName} platform deleted from the ledger (measured passing before)`,
+    expect: new RegExp(
+      `the contract registers "${REMOVABLE.contractPlatform}" as a native platform, but no platform in ` +
+        `scripts/native-motion-spec\\.mjs claims it`,
+    ),
+    ledger: (l) => void delete l[REMOVABLE.ledgerName],
+  },
+  {
+    /* `surface` is what tells the reverse check which consumers a native ledger answers for, so a
+     * platform that does not declare one must be refused rather than read as not-native. A web
+     * platform is used here so the only error raised is the missing field itself. */
+    name: "a contract platform that does not say whether its surface is native or web",
+    expect: /platform "react" does not say whether its surface is "native" or "web"/,
+    contract: (c) => void delete c.platforms.react.surface,
   },
 
   // ── the pairing exemption ────────────────────────────────────────────────────────────────────
@@ -231,6 +273,7 @@ if (failed) {
 }
 console.log(
   `\nmotion ledger controls — all ${controls.length} fire. The ledger cannot lose a platform's contract ` +
-    `name, name a role that does not exist, declare an exemption without a reason or a register line, ` +
+    `name, lose a whole platform the contract still registers, name a role that does not exist, ` +
+    `declare an exemption without a reason or a register line, ` +
     `or add a platform the contract is never checked against.`,
 );

@@ -454,7 +454,45 @@ export function motionErrors(overrides = {}, ledgerPlatforms = undefined) {
    * platform with a disclosure family, a helper and a declared role produced ZERO errors from this
    * clause while `check:native-motion` held it. The contract was simply never checked against it.
    * A gate that skips what it does not recognise fails open. */
-  const nativePlatforms = composed.platforms.map((p) => p.contractPlatform).filter(Boolean);
+  /* Which platforms are NATIVE is the contract's own declaration, not something derived from the
+   * ledger. Deriving it from the ledger made the reverse direction cancel itself out: a platform
+   * dropped from `PLATFORMS` left the ledger with no entries for it AND removed its contract entries
+   * from `mentioned`, so its consumers were no longer checked by anything. Measured on `ee38bfa5`:
+   * deleting the whole Compose platform produced ZERO errors while four `compose` consumers stayed
+   * declared in the contract, where the hardcoded-allowlist version this clause replaced produced
+   * four. Two independent sources, required to agree, is what makes either side's loss visible. */
+  const nativePlatforms = Object.entries(contract.platforms ?? {})
+    .filter(([, p]) => p.surface === "native")
+    .map(([name]) => name);
+  for (const [name, p] of Object.entries(contract.platforms ?? {})) {
+    if (p.surface !== "native" && p.surface !== "web") {
+      fail(
+        `contract: platform "${name}" does not say whether its surface is "native" or "web". The ` +
+          `reverse native check reads that field to know which of the contract's consumers a native ` +
+          `ledger is answerable for, so a platform with no surface is held to nothing.`,
+      );
+    }
+  }
+  const ledgerPlatformNames = new Set(composed.platforms.map((p) => p.contractPlatform).filter(Boolean));
+  for (const name of nativePlatforms) {
+    if (!ledgerPlatformNames.has(name)) {
+      fail(
+        `native ledger: the contract registers "${name}" as a native platform, but no platform in ` +
+          `scripts/native-motion-spec.mjs claims it. Either the ledger lost that whole platform — in ` +
+          `which case every one of its components silently stopped being checked — or the contract ` +
+          `registers a platform that was never implemented.`,
+      );
+    }
+  }
+  for (const name of ledgerPlatformNames) {
+    if (!nativePlatforms.includes(name)) {
+      fail(
+        `native ledger: a platform in scripts/native-motion-spec.mjs calls itself "${name}", which ` +
+          `tokens/contracts/motion.json does not register with \`"surface": "native"\`. A ledger ` +
+          `platform the contract does not know as native is checked against nothing.`,
+      );
+    }
+  }
   const ledger = new Map();
   for (const p of composed.platforms) {
     if (!p.contractPlatform) continue; // the composition has already failed on this
