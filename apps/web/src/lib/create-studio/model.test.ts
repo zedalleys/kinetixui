@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import minimal from "../../../../../docs/create/fixtures/v1/minimal.json";
 import { createDocument, parseDocument, serializeDocument, validateDocument, migrateDocument, findNode } from "./model";
 import { execute, newHistory, undo, redo } from "./commands";
+import { exportReact } from "./export";
 import { ADAPTERS, catalogueContains } from "./registry";
 const create = () => createDocument("proj_testmodel1", "Test", "2026-11-11T00:00:00Z");
 describe("CreateProject migrations preserve the canonical document", () => {
@@ -105,6 +106,48 @@ describe("command history and permanent identity retirement", () => {
     const h = execute(newHistory(d), { type: "rename", name: "Renamed" });
     expect(undo(h).doc.figmaBinding).toEqual(d.figmaBinding);
     expect(redo(undo(h)).doc.figmaBinding).toEqual(d.figmaBinding);
+  });
+  it("changing one surface keeps every selected node's own foreground", () => {
+    // A Surface token change must patch only `background`. It used to replace each selected node's
+    // whole tokenBindings object with a copy of the PRIMARY node's, so a mixed selection lost its
+    // per-node foreground; and clearing the surface deleted foreground too, even for one node.
+    const doc = create();
+    let h = execute(newHistory(doc), { type: "insert", ref: "component:Button", parentId: "node_2" });
+    const a = h.selection[0];
+    h = execute(h, { type: "insert", ref: "component:Badge", parentId: "node_2" });
+    const b = h.selection[0];
+    findNode(h.doc, a)!.tokenBindings = { background: "color.card", foreground: "color.foreground" };
+    findNode(h.doc, b)!.tokenBindings = { background: "color.card", foreground: "color.muted-foreground" };
+
+    // Mixed selection: both foregrounds survive, and both backgrounds change.
+    h = execute(h, { type: "bindings", ids: [a, b], patch: { background: "color.primary" } });
+    expect(findNode(h.doc, a)?.tokenBindings).toEqual({ background: "color.primary", foreground: "color.foreground" });
+    expect(findNode(h.doc, b)?.tokenBindings).toEqual({ background: "color.primary", foreground: "color.muted-foreground" });
+    expect(validateDocument(h.doc)).toEqual({ ok: true, errors: [] });
+
+    // Undo restores each node's own prior pair; redo reapplies without cross-contamination.
+    expect(findNode(undo(h).doc, b)?.tokenBindings).toEqual({ background: "color.card", foreground: "color.muted-foreground" });
+    expect(findNode(redo(undo(h)).doc, a)?.tokenBindings).toEqual({ background: "color.primary", foreground: "color.foreground" });
+
+    // "Inherit component default" clears only the surface, and leaves no empty object behind.
+    h = execute(h, { type: "bindings", ids: [a], patch: { background: undefined } });
+    expect(findNode(h.doc, a)?.tokenBindings).toEqual({ foreground: "color.foreground" });
+    h = execute(h, { type: "bindings", ids: [a], patch: { foreground: undefined } });
+    expect(Object.hasOwn(findNode(h.doc, a)!, "tokenBindings")).toBe(false);
+
+    // Survives save/reopen byte-stably, and no unsupported field was introduced.
+    const reopened = parseDocument(serializeDocument(h.doc));
+    expect(serializeDocument(reopened)).toBe(serializeDocument(h.doc));
+    expect(findNode(reopened, b)?.tokenBindings).toEqual({ background: "color.primary", foreground: "color.muted-foreground" });
+    expect(h.doc.nextNodeId).toBe(doc.nextNodeId + 2);
+    expect(h.doc.retiredNodeIds ?? []).toEqual([]);
+
+    // Bindings reach the export through nodeStyle, so the overwrite used to ship in generated code.
+    // Each node's own foreground must appear, and the export must be deterministic.
+    const source = exportReact(reopened).source;
+    expect(source).toBe(exportReact(reopened).source);
+    expect(source).toContain("hsl(var(--muted-foreground))");
+    expect(source).toContain("hsl(var(--primary))");
   });
   it("allocates an unused page ID and route independently of node IDs", () => {
     const d = create();
