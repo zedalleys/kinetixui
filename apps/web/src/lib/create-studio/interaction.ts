@@ -17,7 +17,10 @@ export type Interaction =
   | { mode: "pan"; pointerId: number; originX: number; originY: number; startX: number; startY: number }
   // A press that has not yet travelled far enough to be a drag. It may still become a click.
   | { mode: "pending"; pointerId: number; originX: number; originY: number; intent: DragIntent }
-  | { mode: "drag"; pointerId: number; x: number; y: number; intent: DragIntent; target: DropTarget | null; rejected: string | null };
+  | { mode: "drag"; pointerId: number; x: number; y: number; intent: DragIntent; target: DropTarget | null; rejected: string | null }
+  // Resizing has no press-versus-drag ambiguity — the handle does nothing but resize — so it starts
+  // engaged. `width` is the candidate the document would take; nothing is written until release.
+  | { mode: "resize"; pointerId: number; originX: number; nodeId: string; startWidth: number; width: number; guide: string | null };
 
 /** What a drag would do if it were dropped: insert a new node, or move the selected ones. */
 export type DragIntent = { kind: "insert"; ref: string } | { kind: "move"; ids: string[] };
@@ -25,7 +28,8 @@ export type DragIntent = { kind: "insert"; ref: string } | { kind: "move"; ids: 
 export type InteractionEvent =
   | { type: "pan-start"; pointerId: number; x: number; y: number; offsetX: number; offsetY: number }
   | { type: "drag-start"; pointerId: number; x: number; y: number; intent: DragIntent }
-  | { type: "pointer-move"; pointerId: number; x: number; y: number; target?: DropTarget | null; rejected?: string | null }
+  | { type: "resize-start"; pointerId: number; x: number; nodeId: string; width: number }
+  | { type: "pointer-move"; pointerId: number; x: number; y: number; target?: DropTarget | null; rejected?: string | null; width?: number; guide?: string | null }
   | { type: "pointer-up"; pointerId: number }
   | { type: "cancel" };
 
@@ -33,7 +37,8 @@ export type Commit =
   | { kind: "pan"; x: number; y: number }
   | { kind: "press"; intent: DragIntent }
   | { kind: "insert"; ref: string; parentId: string; index: number }
-  | { kind: "move"; ids: string[]; parentId: string; index: number };
+  | { kind: "move"; ids: string[]; parentId: string; index: number }
+  | { kind: "resize"; nodeId: string; width: number };
 
 export const IDLE: Interaction = { mode: "idle" };
 
@@ -54,17 +59,20 @@ const owns = (state: Interaction, pointerId: number): state is Exclude<Interacti
  */
 export function reduce(state: Interaction, event: InteractionEvent): { state: Interaction; commit?: Commit } {
   if (event.type === "cancel") return { state: IDLE };
-  if (event.type === "pan-start" || event.type === "drag-start") {
+  if (event.type === "pan-start" || event.type === "drag-start" || event.type === "resize-start") {
     // One gesture at a time. A press that arrives mid-gesture is dropped rather than interleaved.
     if (state.mode !== "idle") return { state };
-    return event.type === "pan-start"
-      ? { state: { mode: "pan", pointerId: event.pointerId, originX: event.x, originY: event.y, startX: event.offsetX, startY: event.offsetY } }
-      : { state: { mode: "pending", pointerId: event.pointerId, originX: event.x, originY: event.y, intent: event.intent } };
+    if (event.type === "pan-start") return { state: { mode: "pan", pointerId: event.pointerId, originX: event.x, originY: event.y, startX: event.offsetX, startY: event.offsetY } };
+    if (event.type === "resize-start") return { state: { mode: "resize", pointerId: event.pointerId, originX: event.x, nodeId: event.nodeId, startWidth: event.width, width: event.width, guide: null } };
+    return { state: { mode: "pending", pointerId: event.pointerId, originX: event.x, originY: event.y, intent: event.intent } };
   }
   if (!owns(state, event.pointerId)) return { state };
   if (event.type === "pointer-move") {
     if (state.mode === "pan") {
       return { state, commit: { kind: "pan", x: state.startX + event.x - state.originX, y: state.startY + event.y - state.originY } };
+    }
+    if (state.mode === "resize") {
+      return { state: { ...state, width: event.width ?? state.width, guide: event.guide ?? null } };
     }
     if (state.mode === "pending") {
       const travelled = Math.hypot(event.x - state.originX, event.y - state.originY);
@@ -75,6 +83,10 @@ export function reduce(state: Interaction, event: InteractionEvent): { state: In
   }
   // pointer-up
   if (state.mode === "pan") return { state: IDLE };
+  // A handle pressed and released without moving is not a change, so it is not a history step.
+  if (state.mode === "resize") return state.width === state.startWidth
+    ? { state: IDLE }
+    : { state: IDLE, commit: { kind: "resize", nodeId: state.nodeId, width: state.width } };
   if (state.mode === "pending") return { state: IDLE, commit: { kind: "press", intent: state.intent } };
   // A drag released over nothing legal is a cancellation, not a silent insertion somewhere else.
   if (!state.target) return { state: IDLE };
@@ -106,4 +118,30 @@ export function insertionIndex(rects: Rect[], point: { x: number; y: number }, a
     if (before) index += 1;
   }
   return index;
+}
+
+export type Guide = { value: number; label: string };
+
+/**
+ * The width a resize should take: the pointer's own value, clamped to what the layout registry
+ * permits, then pulled to the nearest guide within `tolerance`. Pure, so what snapping chooses can
+ * be read off a test rather than off a screen recording.
+ *
+ * Guides are offered in the order the caller considers meaningful and ties go to the earlier one, so
+ * a caller can rank a breakpoint above an 8px step without the function knowing what either means.
+ */
+export function snapWidth(
+  target: number,
+  guides: readonly Guide[],
+  { min, max, tolerance }: { min: number; max: number; tolerance: number },
+): { width: number; guide: Guide | null } {
+  const clamped = Math.round(Math.min(max, Math.max(min, target)));
+  let best: Guide | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const guide of guides) {
+    if (guide.value < min || guide.value > max) continue;
+    const distance = Math.abs(guide.value - clamped);
+    if (distance <= tolerance && distance < bestDistance) { best = guide; bestDistance = distance; }
+  }
+  return best ? { width: best.value, guide: best } : { width: clamped, guide: null };
 }

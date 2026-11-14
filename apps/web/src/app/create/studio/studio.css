@@ -147,3 +147,17 @@
   .studio-drop-indicator { background: Highlight; forced-color-adjust: none; }
   .studio-drag-preview { background: Canvas; color: CanvasText; border: 1px solid CanvasText; }
 }
+
+/* Resizing a frame: the handle, and the guide the snapped edge lines up against. */
+.studio-resize-handle { position: absolute; inset-block: 0; inset-inline-end: auto; margin-inline-start: -6px; width: 12px; z-index: 1; cursor: ew-resize; background: transparent; border: 0; padding: 0; touch-action: none; }
+.studio-resize-handle::after { content: ""; position: absolute; inset-block: 50% auto; inset-inline-start: 3px; translate: 0 -50%; width: 6px; height: 2.5rem; border-radius: 999px; background: var(--studio-indigo); box-shadow: 0 0 0 1px hsl(var(--background)); }
+.studio-resize-handle:hover::after, .studio-resize-handle:focus-visible::after { height: 3.5rem; }
+.studio-resize-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.studio-resize-overlay > * { position: absolute; }
+.studio-guide { width: 1px; background: color-mix(in srgb, var(--studio-indigo) 45%, transparent); }
+.studio-guide-snapped { width: 2px; background: var(--studio-indigo); }
+.studio-guide-label { padding: .125rem .375rem; border-radius: .25rem; font-size: .6875rem; font-variant-numeric: tabular-nums; background: var(--studio-indigo); color: #fff; white-space: nowrap; }
+@media (forced-colors: active) {
+  .studio-resize-handle::after, .studio-guide, .studio-guide-snapped { background: Highlight; forced-color-adjust: none; }
+  .studio-guide-label { background: Canvas; color: CanvasText; border: 1px solid CanvasText; }
+}

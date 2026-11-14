@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DRAG_THRESHOLD, IDLE, insertionIndex, reduce, type DragIntent, type Interaction } from "./interaction";
+import { DRAG_THRESHOLD, IDLE, insertionIndex, reduce, snapWidth, type DragIntent, type Interaction } from "./interaction";
 
 const insert = { kind: "insert", ref: "component:Button" } as const;
 const move: DragIntent = { kind: "move", ids: ["node_2"] };
@@ -95,5 +95,52 @@ describe("insertionIndex", () => {
     // The same point in a right-to-left document is near the END of the row's first child.
     expect(insertionIndex(row, { x: 10, y: 10 }, "row", "rtl")).toBe(2);
     expect(insertionIndex(row, { x: 190, y: 10 }, "row", "rtl")).toBe(0);
+  });
+});
+
+describe("resizing", () => {
+  const start = { type: "resize-start", pointerId: 1, x: 300, nodeId: "node_2", width: 640 } as const;
+  it("commits one width when the handle is released", () => {
+    const { state, commits } = run([start, { type: "pointer-move", pointerId: 1, x: 380, y: 0, width: 720, guide: null }, { type: "pointer-up", pointerId: 1 }]);
+    expect(state).toEqual(IDLE);
+    expect(commits).toEqual([{ kind: "resize", nodeId: "node_2", width: 720 }]);
+  });
+  it("is not a history step when the handle never moved", () => {
+    expect(run([start, { type: "pointer-up", pointerId: 1 }]).commits).toEqual([]);
+    expect(run([start, { type: "pointer-move", pointerId: 1, x: 300, y: 0, width: 640 }, { type: "pointer-up", pointerId: 1 }]).commits).toEqual([]);
+  });
+  it("commits nothing when cancelled mid-resize", () => {
+    expect(run([start, { type: "pointer-move", pointerId: 1, x: 500, y: 0, width: 900 }, { type: "cancel" }, { type: "pointer-up", pointerId: 1 }]).commits).toEqual([]);
+  });
+  it("cannot begin while another gesture is running, and cannot be steered by another pointer", () => {
+    const dragging = run([press, far()]);
+    expect(reduce(dragging.state, { ...start, pointerId: 2 }).state).toEqual(dragging.state);
+    const resizing = run([start]);
+    expect(reduce(resizing.state, { type: "pointer-move", pointerId: 7, x: 999, y: 0, width: 1800 }).state).toEqual(resizing.state);
+  });
+});
+
+describe("snapWidth", () => {
+  const limits = { min: 240, max: 1920, tolerance: 8 };
+  const guides = [{ value: 960, label: "Viewport" }, { value: 768, label: "Tablet" }];
+  it("keeps the pointer's own width when nothing is near", () => {
+    expect(snapWidth(640.4, guides, limits)).toEqual({ width: 640, guide: null });
+  });
+  it("snaps within the tolerance and not outside it", () => {
+    expect(snapWidth(954, guides, limits)).toEqual({ width: 960, guide: guides[0] });
+    expect(snapWidth(951, guides, limits)).toEqual({ width: 951, guide: null });
+    expect(snapWidth(776, guides, limits)).toEqual({ width: 768, guide: guides[1] });
+  });
+  it("clamps to what the layout registry permits, before snapping", () => {
+    expect(snapWidth(10, guides, limits).width).toBe(240);
+    expect(snapWidth(99_999, guides, limits).width).toBe(1920);
+    // A guide outside the permitted range can never be chosen, however near the pointer gets.
+    expect(snapWidth(2000, [{ value: 2400, label: "Too wide" }], limits)).toEqual({ width: 1920, guide: null });
+  });
+  it("prefers the nearest guide, and the earlier one on a tie", () => {
+    const close = [{ value: 644, label: "First" }, { value: 636, label: "Second" }];
+    expect(snapWidth(642, close, limits).guide?.label).toBe("First");
+    expect(snapWidth(640, close, limits).guide?.label).toBe("First");
+    expect(snapWidth(637, close, limits).guide?.label).toBe("Second");
   });
 });
