@@ -37,6 +37,31 @@
  * An ABORT is not a substitute for the hang. `route.abort()` surfaces as a failed request, which fires `load`
  * normally and does not reproduce the failure at all. The handler below deliberately does neither.
  *
+ * ── A SECOND defect, in this gate, and its own two controls ──
+ * Checks 2 and 3 read the DOM without waiting for it. CI caught it first, on PR #582 — a branch that touches
+ * nothing on this route — with `RTL at 390px: 0 of 0 images sit outside the viewport`, from a page whose
+ * images were present a moment later. Two things were wrong, and they are fixed separately because they are
+ * separate defects:
+ *
+ *   TIMING. The route is client-rendered, so a read taken the instant `load` fires races hydration.
+ *   Measured here with no throttling, 25 runs of each ordering: no wait at all saw all three images 23/25;
+ *   a wait placed BEFORE the `dir` flip 25/25; a wait placed after it 25/25. The first reading of this was
+ *   that the flip's own re-render was the race — the two orderings disagreeing would have shown that, and
+ *   they do not, so the cause is hydration and the flip is incidental. The wait sits after the flip anyway,
+ *   because it then covers both and costs nothing. (It is not only a slow-runner effect: 23/25 is this
+ *   machine, unthrottled. The very first probe returned 3 three times in a row, which is how a hole like
+ *   this survives being written.)
+ *
+ *   COVERAGE. The first version of this fix waited in sections 1 to 3 and left section 4, whose own
+ *   "could not be checked" message hid the same race behind different words. CI found it on PR #579, a
+ *   carousel branch, within the hour. The lesson is the obvious one: when the cause is "this read does not
+ *   wait", the fix is every read, not the reads that have failed so far.
+ *
+ *   WORDING. "0 of 0 images sit outside the viewport" is a layout sentence reporting a missing-images
+ *   result. Pointing `THREE_LOCAL_IMAGES` at a prefix that matches nothing and re-running now gives
+ *   `expected 3 local images in <main>, found 0 after waiting for them` — the finding saying what it found,
+ *   not what it measured. Both messages are reachable; which one appears is the diagnosis.
+ *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium (cloud containers); CI uses `playwright install`.
  */
 import { readFileSync } from "node:fs";
@@ -61,6 +86,27 @@ const readImages = (page) =>
       hasAlt: img.hasAttribute("alt"),
     })),
   );
+
+/**
+ * Wait for the demo's three local images to be in the DOM before reading anything about them.
+ *
+ * `load` is not enough on its own. The route is server-rendered, so the markup arrives with the images in
+ * it, but hydration can replace that subtree, and a `dir` flip on `documentElement` re-renders it again;
+ * a read taken in the middle of either sees a subtree that is briefly empty. Section 1 already waited for
+ * this reason, and sections 2 and 3 only ever passed because they won the race — until CI lost it, on a
+ * runner slower than any local machine: `RTL at 390px: 0 of 0 images sit outside the viewport`, from a
+ * page whose images were present a moment later. Locally the same read returned 3 on every attempt, which
+ * is exactly why a timing hole like this does not show up where it is written.
+ *
+ * Resolving false is not itself the finding — each caller still says what the absence means in its own
+ * terms, because "no images at 390px" and "no images with the host blocked" are different defects.
+ */
+const THREE_LOCAL_IMAGES = 'main img[src^="/img/"]';
+const waitForImages = (page, timeout = 5_000) =>
+  page
+    .waitForFunction((sel) => document.querySelectorAll(sel).length === 3, THREE_LOCAL_IMAGES, { timeout })
+    .then(() => true)
+    .catch(() => false);
 
 const browser = await chromium.launch({
   executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined,
@@ -97,9 +143,7 @@ try {
 
     // Wait for them rather than reading whatever is in the DOM the instant `load` fires: a gate that reads
     // once races hydration, and a race that resolves the wrong way reads as a missing-image finding.
-    await page
-      .waitForFunction(() => document.querySelectorAll('main img[src^="/img/"]').length === 3, null, { timeout: 5_000 })
-      .catch(() => {});
+    await waitForImages(page);
     const images = (await readImages(page)).filter((i) => i.src.startsWith("/img/"));
     if (images.length !== 3) fail("the demo's images", `expected 3 local images in <main>, found ${images.length}`);
     for (const img of images) {
@@ -132,9 +176,10 @@ try {
     try {
       await page.goto(`${base}${ROUTE}`, { waitUntil: "load", timeout: 20_000 });
       const elapsed = Date.now() - started;
+      await waitForImages(page);
       const images = (await readImages(page)).filter((i) => i.src.startsWith("/img/"));
       if (images.length !== 3 || images.some((i) => i.naturalWidth === 0)) {
-        fail("with picsum.photos blocked", "the page loaded but its local images did not decode");
+        fail("with picsum.photos blocked", `the page loaded but ${images.length} of 3 local images are present and decoded`);
       } else {
         ok("with picsum.photos blocked, the route still loads", `${elapsed}ms, 3 images decoded`);
       }
@@ -156,6 +201,8 @@ try {
     if (computed !== "rtl") {
       fail("the RTL check", `asked for dir=rtl, the document computes ${computed}; the gate is wrong, not the page`);
     } else {
+      // After the flip, not before it: the flip is what re-renders the subtree being measured.
+      const present = await waitForImages(page);
       const overflow = await page.evaluate(() => {
         const el = document.documentElement;
         const imgs = Array.from(document.querySelectorAll('main img[src^="/img/"]'));
@@ -171,7 +218,12 @@ try {
       });
       if (overflow.scrollWidth > overflow.clientWidth) {
         fail("RTL at 390px", `the page scrolls sideways: ${overflow.scrollWidth} > ${overflow.clientWidth}`);
-      } else if (overflow.count !== 3 || overflow.outside) {
+      } else if (!present || overflow.count !== 3) {
+        // Said separately, because it is a different claim. "0 of 0 images sit outside the viewport" reads
+        // as a layout result and is really a missing-images result — the gate reporting that it found
+        // nothing to measure in the voice of a measurement.
+        fail("RTL at 390px", `expected 3 local images in <main>, found ${overflow.count} after waiting for them`);
+      } else if (overflow.outside) {
         fail("RTL at 390px", `${overflow.outside} of ${overflow.count} images sit outside the viewport`);
       } else {
         ok("RTL at 390px", "3 images, inside the viewport, no sideways scroll");
@@ -184,6 +236,12 @@ try {
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     await page.goto(`${base}${ROUTE}`, { waitUntil: "load", timeout: 15_000 });
+    // This section needs the wait too, and CI proved it rather than the argument did: the first version of
+    // this fix left section 4 alone, and PR #579 — a carousel branch — went red on
+    // `the error fallback: could not be checked: the route served no local image to break`, the same race
+    // wearing a different sentence. Every section that reads this DOM waits for it now, with none left to
+    // be the next one found.
+    await waitForImages(page);
     // A real 404 on a real <img>, so the browser fires a real `error` event and the component's own
     // onError runs. Nothing is mocked: replacing the component's success path with a stub would prove
     // only that the stub works.
