@@ -40,6 +40,36 @@ export function ViewportPreview({
     body.ownerDocument.documentElement.className = dark ? "dark" : "theme-light";
   }, [body, dark, rtl]);
 
+  // The tree is portalled into the frame from THIS document, so the components run in this realm and
+  // every ambient `document` they read is the host's — while the nodes they focus live in the frame.
+  // Radix's roving focus depends on that reading: it records `document.activeElement`, focuses its
+  // candidates in turn and stops as soon as the value changes. Here the value is the <iframe> element
+  // and focusing a candidate inside the frame leaves it as the same iframe, so the walk never stops,
+  // runs to its last candidate, and reaching a tablist focused the final tab rather than the selected
+  // one. It affects every roving-focus group in the preview, not only Tabs, and it is a property of
+  // portalling into a frame rather than a defect in @kinetixui/ui.
+  //
+  // So answer the question truthfully for the duration of the preview: while the host's active element
+  // is this frame, the element that actually has focus is the frame's own active element. The shim is
+  // an own property on the host document and deleting it restores the platform getter.
+  React.useEffect(() => {
+    if (!body) return;
+    const frameDocument = body.ownerDocument;
+    const platform = Object.getOwnPropertyDescriptor(Document.prototype, "activeElement");
+    const host = document as Document & { activeElement: Element | null };
+    if (!platform?.get) return;
+    Object.defineProperty(host, "activeElement", {
+      configurable: true,
+      get() {
+        const active = platform.get!.call(this);
+        return active === frameDocument.defaultView?.frameElement ? frameDocument.activeElement : active;
+      },
+    });
+    return () => {
+      delete (host as unknown as Record<string, unknown>).activeElement;
+    };
+  }, [body]);
+
   React.useEffect(() => {
     if (!body) return;
     const frameDocument = body.ownerDocument;
