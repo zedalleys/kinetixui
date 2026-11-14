@@ -184,8 +184,11 @@ const DeviceLevelControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React
                   shown === null ? "text-muted-foreground" : "text-foreground",
                 )}
               >
-                {shown === null ? "—" : format ? format.value(shown) : shown}
-                {shown === null || format ? null : <span className="ms-0.5 text-title-md text-muted-foreground">{unit}</span>}
+                {/* One left-to-right run: in an RTL page the unit's letters reorder around the digits otherwise. */}
+                <bdi dir="ltr">
+                  {shown === null ? "—" : format ? format.value(shown) : shown}
+                  {shown === null || format ? null : <span className="ms-0.5 text-title-md text-muted-foreground">{unit}</span>}
+                </bdi>
               </span>
               {marked ? <RequestChip requested={requested!} confirmed={confirmed} write={written} leadsWithRequest={shown !== confirmed} motion={pendingMotion(control?.availability)} /> : null}
             </span>

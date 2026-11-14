@@ -179,7 +179,11 @@ function DataTable({
                   <time dateTime={new Date(at).toISOString()}>{fmtTime(at)}</time>
                 </td>
                 <td className="py-1 pe-3 align-top tabular-nums">
-                  {formatTelemetryValue({ value: point.value, unit: point.unit ?? unit, quality }, { precision, unknownLabel: "No reading" })}
+                  {/* A value and its unit are one left-to-right run: in an RTL page the unit's letters
+                      ("°C", "kWh", "L/min") otherwise reorder around the digits and "18 °C" renders as "°C 18". */}
+                  <bdi dir="ltr">
+                    {formatTelemetryValue({ value: point.value, unit: point.unit ?? unit, quality }, { precision, unknownLabel: "No reading" })}
+                  </bdi>
                 </td>
                 <td className="py-1 pe-3 align-top">{describeTelemetryQuality(quality)}</td>
                 {withStatus ? (
@@ -238,6 +242,13 @@ const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
 
     const print = (value: number | null) =>
       formatTelemetryValue({ value: value ?? Number.NaN, unit }, { precision, unknownLabel: emptyLabel ?? "Unknown" });
+    /**
+     * The same text, isolated for display. A value and its unit are one left-to-right run: in an RTL
+     * page the unit's letters ("°C", "kWh", "L/min") otherwise reorder around the digits and "18 °C"
+     * renders as "°C 18". `print` stays the string form, because the accessible sentence is read, not
+     * laid out.
+     */
+    const printed = (value: number | null) => <bdi dir="ltr">{print(value)}</bdi>;
 
     /**
      * Map a point into the view box.
@@ -449,7 +460,7 @@ const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
                   <line x1={0} x2={20} y1={3} y2={3} stroke="currentColor" strokeWidth={1.5} strokeDasharray={DASH[b.level]} />
                 </svg>
                 <span>
-                  {b.level === "critical" ? "Critical" : "Warning"} {b.side === "high" ? "at or above" : "at or below"} {print(b.value)}
+                  {b.level === "critical" ? "Critical" : "Warning"} {b.side === "high" ? "at or above" : "at or below"} {printed(b.value)}
                 </span>
               </li>
             ))}
@@ -475,7 +486,7 @@ const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
             ).map(([name, v]) => (
               <div key={name} className="flex gap-1.5">
                 <dt className="text-muted-foreground">{name}</dt>
-                <dd className="tabular-nums text-foreground">{print(v)}</dd>
+                <dd className="tabular-nums text-foreground">{printed(v)}</dd>
               </div>
             ))}
           </dl>
@@ -488,13 +499,15 @@ const TelemetryTrend = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
             ) : (
               <span className="inline-flex flex-wrap items-baseline gap-x-1.5">
                 <span>Range</span>
-                <span className="tabular-nums text-foreground">{`${print(extent.min)} – ${print(extent.max)}`}</span>
+                <span className="tabular-nums text-foreground">
+                  <bdi dir="ltr">{`${print(extent.min)} – ${print(extent.max)}`}</bdi>
+                </span>
               </span>
             )}
             {!empty && latestRun ? (
               <span data-latest="" className="inline-flex items-baseline gap-1.5">
                 <span>Latest</span>
-                <span className="tabular-nums text-foreground">{print(latestRun.value)}</span>
+                <span className="tabular-nums text-foreground">{printed(latestRun.value)}</span>
               </span>
             ) : null}
             {/* Stated, not implied by a shorter line: a gap the reader cannot count is a gap they will not notice. */}
