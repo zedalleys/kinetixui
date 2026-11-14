@@ -23,7 +23,13 @@
  *     data-grid). Any other catalogue entry is "unclassified" on both: a missing roadmap classification is not
  *     evidence of a layer or a target, so it never becomes "L1 core primitive" by default. `unclassified` is carried in
  *     the index only; it has no label, so the site neither shows it nor offers it as a filter.
- *   - "Builds toward" for a component is the planned rows whose `dependsOn` names it.
+ *   - "Builds toward" for a component is the planned rows whose `dependsOn` names it. `dependsOn` therefore
+ *     crosses namespaces by design: an entry may name another capability row (or one of its " / "
+ *     alternatives), one of a row's `parts`, a catalogue component, or a block. Every entry must resolve to
+ *     one of those four, because an entry that resolves to nothing is a dependency the roadmap states and the
+ *     site silently drops — it produces no "builds toward" edge and nothing complained. One that cannot be
+ *     resolved yet is named in `discovery.unresolvedDependencies` with a reason, the same way an unclassified
+ *     block is, so the gap is a decision someone wrote down rather than one nobody noticed.
  *   - A block's capabilities, domains and workflows come only from the shipping rows that cite `block:<slug>`, by the
  *     same rule as a component's. Every published block is either cited or listed in `discovery.unclassifiedBlocks`
  *     with a reason; one in neither place, or in both, is an error.
@@ -130,6 +136,53 @@ export function buildDiscovery(data, manifest, blocks) {
     if (!entry.reason?.trim()) errors.push(`discovery.unclassifiedBlocks / ${entry.block}: a reason is required`);
     unclassifiedBlocks.set(entry.block, entry.reason);
   }
+  /*
+   * Every `dependsOn` entry resolves to something. It was never checked, so the roadmap could state a
+   * dependency on a name nothing has: `buildsToward` below matches `dependsOn` against catalogue slugs, so an
+   * entry that matches nothing produces no edge, silently, and the stated dependency reaches no reader.
+   *
+   * Resolution is deliberately wide, because the field legitimately crosses namespaces (see the header): a
+   * capability row name or one of its " / " alternatives, a row's `parts` entry, a component, or a block. It is
+   * matched through `kebab`, the same rule `buildsToward` uses, so this check cannot drift from the behaviour
+   * it protects.
+   */
+  const resolvable = new Set([
+    ...Object.keys(manifest).map(kebab),
+    ...Object.keys(blocks).map(kebab),
+    ...[...rows.values()].flatMap((r) => alternatives(r.name).map(kebab)),
+    ...[...rows.values()].flatMap((r) => (r.parts ?? []).map(kebab)),
+  ]);
+
+  const unresolvedDeps = new Map();
+  for (const entry of disc.unresolvedDependencies ?? []) {
+    if (unresolvedDeps.has(entry.dependency)) errors.push(`discovery.unresolvedDependencies: duplicate "${entry.dependency}"`);
+    if (!entry.reason?.trim()) errors.push(`discovery.unresolvedDependencies / ${entry.dependency}: a reason is required`);
+    // A ratchet: once a name resolves, its waiver has to go, or the register preserves a gap that closed.
+    if (resolvable.has(kebab(entry.dependency))) {
+      errors.push(
+        `discovery.unresolvedDependencies: "${entry.dependency}" now resolves — remove it from the register rather than keeping a waiver for a gap that has closed`,
+      );
+    }
+    unresolvedDeps.set(entry.dependency, entry.reason);
+  }
+
+  const citedDeps = new Set([...rows.values()].flatMap((r) => r.dependsOn ?? []));
+  for (const dependency of unresolvedDeps.keys()) {
+    if (!citedDeps.has(dependency)) {
+      errors.push(`discovery.unresolvedDependencies: "${dependency}" is cited by no row's dependsOn — remove it`);
+    }
+  }
+
+  for (const r of rows.values()) {
+    for (const dependency of r.dependsOn ?? []) {
+      if (resolvable.has(kebab(dependency)) || unresolvedDeps.has(dependency)) continue;
+      errors.push(
+        `${r.name}: dependsOn "${dependency}" resolves to no capability row, row part, component or block — ` +
+          `add the row or component it names, correct it, or declare it in discovery.unresolvedDependencies with a reason`,
+      );
+    }
+  }
+
   if (errors.length) return { index: null, errors };
 
   /* ---------------------------------------------------------------------------------------------- rows */
