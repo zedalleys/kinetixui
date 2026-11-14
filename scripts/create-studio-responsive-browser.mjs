@@ -159,26 +159,32 @@ export async function verifyResponsiveBrowser({ browser, base, fixture, consumer
     await page.keyboard.press("Tab");
     const continueButton = frame.getByRole("button", { name: "Continue", exact: true });
     assert.equal(await continueButton.evaluate(el => el === document.activeElement), true);
-    // Tabs activate on focus, so reaching the tablist already changes the panel. The previous
-    // sequence pressed Tab, ArrowRight, Enter and then checked only the panel text — which was
+    // Tabs activate on focus, so reaching the tablist already changes the panel. The sequence this
+    // replaces pressed Tab, ArrowRight, Enter and then checked only the panel text — which was
     // already correct the moment Tab landed, so the two keys after it could never prove anything and
-    // could only break it: ArrowRight moved the selection off the tab the check wanted, and the check
+    // could only break it: the arrow moved the selection off the tab the check wanted, and the check
     // passed only while Enter re-selected the focused one. When that restore did not land, CI read
-    // the first panel and went red. There are two tabs, so either arrow moves to the other one;
-    // what was missing is an assertion of WHICH tab is selected after each key.
-    const selectedTab = () => frame.getByRole("tab", { selected: true }).innerText();
+    // the first panel and went red. What was missing is an assertion of WHICH tab is selected after
+    // each key — and of which tab has FOCUS, because the two disagreed: the roving-focus group could
+    // not see focus move inside the frame, walked past the selected tab and left focus on the last
+    // one. Both are asserted here so neither can regress unnoticed.
+    const tabState = () => iframe.evaluate(element => {
+      const active = element.contentDocument.activeElement;
+      const selected = element.contentDocument.querySelector('[role="tab"][aria-selected="true"]');
+      return { focused: active ? active.textContent : null, selected: selected ? selected.textContent : null };
+    });
     const panelText = () => frame.getByRole("tabpanel").innerText();
-    assert.equal(await selectedTab(), "Overview", "the preview opens on the first tab");
+    assert.deepEqual(await tabState(), { focused: "Continue", selected: "Overview" }, "the preview opens on the first tab, with focus still outside the tablist");
     assert.match(await panelText(), /Start with the big picture/);
     await page.keyboard.press("Tab");
-    assert.equal(await selectedTab(), "Details", "Tab reaches the tablist, which activates on focus");
-    assert.match(await panelText(), /Make room/);
-    await page.keyboard.press("ArrowLeft");
-    assert.equal(await selectedTab(), "Overview", "an arrow key moves the selection to the other tab");
+    assert.deepEqual(await tabState(), { focused: "Overview", selected: "Overview" }, "Tab reaches the tablist and focuses the tab that is selected");
     assert.match(await panelText(), /Start with the big picture/);
     await page.keyboard.press("ArrowRight");
-    assert.equal(await selectedTab(), "Details", "and back again, with the panel following each time");
+    assert.deepEqual(await tabState(), { focused: "Details", selected: "Details" }, "an arrow key moves selection and focus together");
     assert.match(await panelText(), /Make room/);
+    await page.keyboard.press("ArrowLeft");
+    assert.deepEqual(await tabState(), { focused: "Overview", selected: "Overview" }, "and back again, with the panel following each time");
+    assert.match(await panelText(), /Start with the big picture/);
     await email.focus();
     await email.press("h");
     await email.press("Control+z");
@@ -188,6 +194,13 @@ export async function verifyResponsiveBrowser({ browser, base, fixture, consumer
     assert.equal(await gap.inputValue(), "spacing.8");
     await button("Preview").click();
     await frame.getByRole("main").waitFor();
+    // The shim that makes focus readable across the frame boundary is installed per preview, so
+    // assert it again on a freshly reopened one: a cleanup that did not reinstall would leave the
+    // group walking past the selected tab, exactly as before the fix.
+    await frame.getByLabel("Email address").focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
+    assert.deepEqual(await tabState(), { focused: "Overview", selected: "Overview" }, "a reopened preview still focuses the selected tab");
     await iframe.click({ position: { x: 30, y: 570 } });
     assert.equal(await iframe.evaluate(element => element.contentDocument.activeElement === element.contentDocument.body), true);
     await page.keyboard.press("Escape");
