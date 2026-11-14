@@ -45,7 +45,7 @@ public enum KinetixSlideMotion {
     /// A panel enters from and exits toward the same edge. SwiftUI resolves horizontal
     /// `.leading` and `.trailing` edges from the view's layout direction.
     public static func transition(from edge: Edge, reduceMotion: Bool) -> AnyTransition {
-        transition(insertingFrom: edge, removingTo: edge, reduceMotion: reduceMotion)
+        slides(reduceMotion: reduceMotion) ? .move(edge: edge) : .opacity
     }
 
     /// Edges describe where a view starts on insertion and where it ends on removal.
@@ -57,8 +57,8 @@ public enum KinetixSlideMotion {
         removingTo removalEdge: Edge,
         reduceMotion: Bool
     ) -> AnyTransition {
+        if insertionEdge == removalEdge { return transition(from: insertionEdge, reduceMotion: reduceMotion) }
         guard slides(reduceMotion: reduceMotion) else { return .opacity }
-        if insertionEdge == removalEdge { return .move(edge: insertionEdge) }
         return .asymmetric(insertion: .move(edge: insertionEdge), removal: .move(edge: removalEdge))
     }
 
