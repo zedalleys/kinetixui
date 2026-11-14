@@ -9,6 +9,18 @@ import SwiftUI
 /// inspection, so nothing here renders a panel and no test can watch one slide. It proves the resolver all
 /// three route through, and `scripts/check-native-motion.mjs` checks the wiring structurally.
 final class SlideMotionTests: XCTestCase {
+    func testForwardInsertsFromTrailingAndRemovesToLeading() {
+        let edges = KinetixSlideMotion.NavigationDirection.forward.edges
+        XCTAssertEqual(edges.insertion, .trailing)
+        XCTAssertEqual(edges.removal, .leading)
+    }
+
+    func testBackwardInsertsFromLeadingAndRemovesToTrailing() {
+        let edges = KinetixSlideMotion.NavigationDirection.backward.edges
+        XCTAssertEqual(edges.insertion, .leading)
+        XCTAssertEqual(edges.removal, .trailing)
+    }
+
     // MARK: normal motion
 
     func testPanelsSlideInFromTheirEdgeWithNormalMotion() {

@@ -6053,7 +6053,7 @@
           "packages/ui-swiftui (compiled by CI)"
         ],
         "reducedMotion": [
-          "packages/ui-swiftui/Tests/KinetixUITests/SlideMotionTests.swift:5-38",
+          "packages/ui-swiftui/Tests/KinetixUITests/SlideMotionTests.swift:5-50",
           "packages/ui-swiftui/Tests/KinetixUITests/SwitchMotionTests.swift:5-108"
         ]
       },

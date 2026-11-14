@@ -154,3 +154,18 @@ public.
 
 - A tagged SPM release — needs repo/signing decisions; consume via
   `.package(path:)` for now.
+
+
+### Motion direction
+
+Pass SwiftUI's logical `.leading` and `.trailing` edges to
+`KinetixSlideMotion.transition(from:reduceMotion:)` for a panel that enters and
+exits on the same side. For a content replacement, pass `.forward` or
+`.backward` to `transition(navigating:reduceMotion:)`. Forward inserts from
+trailing and removes toward leading. Backward reverses the edges. SwiftUI
+mirrors those edges in right-to-left layouts. Pass the current
+`accessibilityReduceMotion` environment value to switch travel to opacity.
+
+`KinetixResizablePanels` measures dragging in physical screen coordinates and
+converts the displacement into the size of the leading pane. The divider
+follows the pointer in either layout direction within the configured bounds.
