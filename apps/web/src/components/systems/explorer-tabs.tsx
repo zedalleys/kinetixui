@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@kinetixui/ui";
+import { Switch, Button, Tabs, TabsList, TabsTrigger, TabsContent } from "@kinetixui/ui";
 import { ExplorerPanel, type PanelData } from "./explorer-panel";
 import { PlatformMark } from "./platform-marks";
 import { analytics } from "@/lib/analytics";
@@ -56,6 +56,8 @@ export function ExplorerTabs({
   reserve: { tab: CodeTab; panel: React.ReactNode };
   footer: React.ReactNode;
 }) {
+  const [enabled, setEnabled] = React.useState(true);
+  const [disabled, setDisabled] = React.useState(false);
   const dir = useDocumentDirection();
   const preferred = codeTabFor(usePreferredPlatform());
   const value: CodeTab = tabs.some((t) => t.tab === preferred) ? preferred : tabs[0]!.tab;
@@ -78,7 +80,7 @@ export function ExplorerTabs({
       onValueChange={onChange}
       dir={dir}
       data-implementation-explorer=""
-      className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/10"
+      className="kx-playground overflow-hidden rounded-2xl border border-border bg-card"
     >
       <TabsList aria-label="Implementation platform" className="px-2 sm:px-3">
         {tabs.map((t) => (
@@ -89,6 +91,27 @@ export function ExplorerTabs({
           </TabsTrigger>
         ))}
       </TabsList>
+      <div className="kx-playground-canvas">
+        <div className="kx-playground-specimen">
+          <div>
+            <h3 className="font-display text-xl font-semibold">Product updates</h3>
+            <p className="mt-2 max-w-xs text-sm text-muted-foreground">Choose what you hear about.</p>
+          </div>
+          <Switch aria-label="Playground product updates" checked={enabled} onCheckedChange={setEnabled} disabled={disabled} />
+        </div>
+        <p className="mt-6 text-sm text-muted-foreground" data-playground-state="">
+          {enabled ? "Updates enabled" : "Updates paused"} · {disabled ? "Control disabled" : "Ready to interact"}
+        </p>
+      </div>
+      <div className="kx-playground-tools flex flex-wrap items-center justify-between gap-3 border-y border-border px-4 py-3">
+        <p className="max-w-md text-sm text-muted-foreground">
+          Interactive React preview. Selected platform source below.
+          Native views run in their own toolkit.
+        </p>
+        <Button size="md" variant="Outline" aria-pressed={disabled} onClick={() => setDisabled((v) => !v)}>
+          {disabled ? "Enable control" : "Try disabled state"}
+        </Button>
+      </div>
       {/*
         One cell: the open panel and the reserve are laid over each other, so the cell takes the taller of the
         two. The column is `minmax(0,1fr)` and the items `min-w-0` rather than the implicit `auto`, which would
@@ -96,7 +119,7 @@ export function ExplorerTabs({
         card's `overflow-hidden`. The excerpt scrolls sideways inside `.kx-code-scroll`; the panel itself does
         not grow to it.
       */}
-      <div className="grid grid-cols-[minmax(0,1fr)] [&>*]:[grid-area:1/1] [&>*]:min-w-0">
+      <div className="kx-playground-source grid grid-cols-[minmax(0,1fr)] [&>*]:[grid-area:1/1] [&>*]:min-w-0">
         {tabs.map((t) => (
           <TabsContent key={t.tab} value={t.tab} >
             {t.tab === tabs[0]!.tab ? initial : <ExplorerPanel component={component} data={later[t.tab]!} />}

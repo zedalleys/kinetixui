@@ -1,0 +1,238 @@
+[
+  {
+    "width": 320,
+    "theme": "light",
+    "textScale": 2,
+    "directions": [
+      "ltr",
+      "rtl"
+    ],
+    "initialAxeFindings": [],
+    "visibilityChecks": [],
+    "finalAxeViolations": 0,
+    "overflow": false
+  },
+  {
+    "width": 320,
+    "theme": "dark",
+    "textScale": 2,
+    "directions": [
+      "ltr",
+      "rtl"
+    ],
+    "initialAxeFindings": [],
+    "visibilityChecks": [],
+    "finalAxeViolations": 0,
+    "overflow": false
+  },
+  {
+    "width": 375,
+    "theme": "light",
+    "textScale": 2,
+    "directions": [
+      "ltr",
+      "rtl"
+    ],
+    "initialAxeFindings": [],
+    "visibilityChecks": [],
+    "finalAxeViolations": 0,
+    "overflow": false
+  },
+  {
+    "width": 375,
+    "theme": "dark",
+    "textScale": 2,
+    "directions": [
+      "ltr",
+      "rtl"
+    ],
+    "initialAxeFindings": [],
+    "visibilityChecks": [],
+    "finalAxeViolations": 0,
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "textScale": 2,
+    "directions": [
+      "ltr",
+      "rtl"
+    ],
+    "initialAxeFindings": [
+      {
+        "id": "target-size",
+        "nodes": [
+          {
+            "target": [
+              ".focus-visible\\:ring-offset-accent.text-foreground\\/70[href$=\"docs\"]"
+            ],
+            "summary": "Fix any of the following:\n  Target has insufficient size because it is partially obscured (smallest space is 159.1px by 16.6px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 17.6px instead of at least 24px."
+          }
+        ]
+      }
+    ],
+    "visibilityChecks": [
+      {
+        "target": [
+          ".focus-visible\\:ring-offset-accent.text-foreground\\/70[href$=\"docs\"]"
+        ],
+        "before": {
+          "x": 198.9375,
+          "y": 142.5625,
+          "width": 159.0625,
+          "height": 34
+        },
+        "visible": {
+          "x": 198.9375,
+          "y": 771.5625,
+          "width": 159.0625,
+          "height": 34
+        }
+      }
+    ],
+    "finalAxeViolations": 0,
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "textScale": 2,
+    "directions": [
+      "ltr",
+      "rtl"
+    ],
+    "initialAxeFindings": [
+      {
+        "id": "target-size",
+        "nodes": [
+          {
+            "target": [
+              ".focus-visible\\:ring-offset-accent.text-foreground\\/70[href$=\"docs\"]"
+            ],
+            "summary": "Fix any of the following:\n  Target has insufficient size because it is partially obscured (smallest space is 159.1px by 16.6px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 17.6px instead of at least 24px."
+          }
+        ]
+      }
+    ],
+    "visibilityChecks": [
+      {
+        "target": [
+          ".focus-visible\\:ring-offset-accent.text-foreground\\/70[href$=\"docs\"]"
+        ],
+        "before": {
+          "x": 198.9375,
+          "y": 142.5625,
+          "width": 159.0625,
+          "height": 34
+        },
+        "visible": {
+          "x": 198.9375,
+          "y": 771.5625,
+          "width": 159.0625,
+          "height": 34
+        }
+      }
+    ],
+    "finalAxeViolations": 0,
+    "overflow": false
+  },
+  {
+    "width": 768,
+    "theme": "light",
+    "textScale": 2,
+    "directions": [
+      "ltr",
+      "rtl"
+    ],
+    "initialAxeFindings": [],
+    "visibilityChecks": [],
+    "finalAxeViolations": 0,
+    "overflow": false
+  },
+  {
+    "width": 768,
+    "theme": "dark",
+    "textScale": 2,
+    "directions": [
+      "ltr",
+      "rtl"
+    ],
+    "initialAxeFindings": [],
+    "visibilityChecks": [],
+    "finalAxeViolations": 0,
+    "overflow": false
+  },
+  {
+    "width": 1024,
+    "theme": "light",
+    "textScale": 2,
+    "directions": [
+      "ltr",
+      "rtl"
+    ],
+    "initialAxeFindings": [],
+    "visibilityChecks": [],
+    "finalAxeViolations": 0,
+    "overflow": false
+  },
+  {
+    "width": 1024,
+    "theme": "dark",
+    "textScale": 2,
+    "directions": [
+      "ltr",
+      "rtl"
+    ],
+    "initialAxeFindings": [],
+    "visibilityChecks": [],
+    "finalAxeViolations": 0,
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "theme": "light",
+    "textScale": 2,
+    "directions": [
+      "ltr",
+      "rtl"
+    ],
+    "initialAxeFindings": [],
+    "visibilityChecks": [],
+    "finalAxeViolations": 0,
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "textScale": 2,
+    "directions": [
+      "ltr",
+      "rtl"
+    ],
+    "initialAxeFindings": [],
+    "visibilityChecks": [],
+    "finalAxeViolations": 0,
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "dir": "ltr",
+    "synthesizedTouch": true,
+    "rootHeight": 44,
+    "offsetTap": true,
+    "dragCancelRecovery": true,
+    "normalNumericMidpoint": 25,
+    "liveReducedMotionSnap": true
+  },
+  {
+    "width": 390,
+    "dir": "rtl",
+    "synthesizedTouch": true,
+    "rootHeight": 44,
+    "offsetTap": true,
+    "dragCancelRecovery": true,
+    "normalNumericMidpoint": 25,
+    "liveReducedMotionSnap": true
+  }
+]
