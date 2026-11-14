@@ -6,15 +6,17 @@ import blocks from "../../../../../blocks.manifest.json";
 import { migrate } from "../../../../../scripts/create-schema/migrate.mjs";
 import { validateCreateProject } from "../../../../../scripts/create-schema/validate-core.mjs";
 import { ADAPTERS, LAYOUT_REFS, MOTION_REFS, validateProps, type Props } from "./registry";
+import { BREAKPOINTS, canOverride, type ResponsiveValues } from "./responsive";
 
 export type Node = {
   id: string; kind: "component" | "block" | "slot" | "layout"; ref?: string; name?: string;
   props?: Props; children?: Node[]; tokenBindings?: { background?: string; foreground?: string };
   motionRef?: string; metadata?: { name?: string };
+  responsive?: ResponsiveValues;
 };
 export type Page = { id: string; name: string; route: string; root: Node };
 export type Document = {
-  schemaVersion: 2; id: string; name: string; domain: string;
+  schemaVersion: 3; id: string; name: string; domain: string;
   designSystem: { preset: string; overrides?: { tokens?: Record<string, string>; typography?: Record<string, string> } };
   pages: Page[]; nextNodeId: number; retiredNodeIds?: string[];
   metadata?: { createdAt: string; updatedAt: string };
@@ -38,7 +40,17 @@ const registries = { spaces: {
   component: { source: "components.manifest", ids: new Set(Object.keys(components.components)), normalise: kebab },
   block: { source: "blocks.manifest", ids: new Set(Object.keys(blocks.blocks)) },
 } };
-export const V2_SCHEMA = schema;
+export const V2_SCHEMA = structuredClone(schema);
+Object.assign(schema, { title: "CreateProject v3", $id: "https://kinetixui.com/schemas/create-project/v3.json" });
+schema.properties.schemaVersion = { const: 3 };
+schema.$defs.layoutNode.properties = {
+  ...(schema.$defs.layoutNode.properties as SchemaObject),
+  responsive: {
+    type: "object",
+    additionalProperties: false,
+    properties: Object.fromEntries(BREAKPOINTS.map(({ id }) => [id, { $ref: "#/$defs/props" }])),
+  },
+};
 export const MAX_DOCUMENT_BYTES = 1_000_000;
 export function serializeDocument(doc: unknown): string {
   const seen = new WeakSet<object>();
@@ -82,7 +94,14 @@ export function validateDocument(input: unknown): { ok: boolean; errors: string[
         errors.push(...validateProps(node.ref, node.props ?? {}).map(e => `${node.id}: ${e}`));
         if (node.kind === "layout" && !Object.hasOwn(LAYOUT_REFS, node.ref)) errors.push("Unregistered layout reference");
         if (node.children?.length && ADAPTERS[node.ref] && !ADAPTERS[node.ref].container) errors.push(`${node.id}: this component has no editable child slot`);
-
+        if (node.responsive && !Object.keys(node.responsive).length) errors.push(`${node.id}: empty responsive overrides`);
+        for (const patch of Object.values(node.responsive ?? {})) {
+          if (!Object.keys(patch).length) errors.push(`${node.id}: empty breakpoint override`);
+          for (const key of Object.keys(patch)) {
+            if (!canOverride(node.ref, key)) errors.push(`${node.id}: unsupported responsive property ${key}`);
+          }
+          errors.push(...validateProps(node.ref, patch).map(e => `${node.id}: ${e}`));
+        }
       }
     });
     if (count > 1000) errors.push("M1 supports at most 1000 nodes per product");
@@ -103,21 +122,24 @@ export function findNode(doc: Document, id: string): Node | undefined {
   return found;
 }
 export function createDocument(id: string, name: string, now = new Date().toISOString()): Document {
-  const doc: Document = { schemaVersion: 2, id, name, domain: "domain:commerce", designSystem: { preset: "KX1_eyJ2IjoxfQ" }, pages: [{ id: "page_home", name: "Home", route: "/", root: { id: "node_1", kind: "slot", name: "page", children: [{ id: "node_2", kind: "layout", ref: "layout:section", props: { ...ADAPTERS["layout:section"].defaults, name: "Home" }, children: [] }] } }], nextNodeId: 3, retiredNodeIds: [], metadata: { createdAt: now, updatedAt: now } };
+  const doc: Document = { schemaVersion: 3, id, name, domain: "domain:commerce", designSystem: { preset: "KX1_eyJ2IjoxfQ" }, pages: [{ id: "page_home", name: "Home", route: "/", root: { id: "node_1", kind: "slot", name: "page", children: [{ id: "node_2", kind: "layout", ref: "layout:section", props: { ...ADAPTERS["layout:section"].defaults, name: "Home" }, children: [] }] } }], nextNodeId: 3, retiredNodeIds: [], metadata: { createdAt: now, updatedAt: now } };
   assertDocument(doc); return doc;
 }
 export const STUDIO_MIGRATIONS = { 1: (input: object) => {
   const result = validateCreateProject(input, { schema: base, registries });
   if (!result.ok) throw new Error("Invalid v1 document: " + result.errors.map((e: { message: string }) => e.message).join("; "));
   return { ...structuredClone(input), schemaVersion: 2 };
+}, 2: (input: object) => {
+  const result = validateCreateProject(input, { schema: V2_SCHEMA, registries });
+  if (!result.ok) throw new Error("Invalid v2 document: " + result.errors.map((e: { message: string }) => e.message).join("; "));
+  return { ...input, schemaVersion: 3 };
 } };
 export function migrateDocument(input: unknown): Document {
   serializeDocument(input);
   if (!input || typeof input !== "object" || !("schemaVersion" in input)) throw new Error("Missing schema version");
-  if (input.schemaVersion !== 1 && input.schemaVersion !== 2) throw new Error("Unsupported schema version; open with a compatible editor");
-  const doc = migrate(structuredClone(input), { current: 2, migrations: STUDIO_MIGRATIONS }) as Document;
+  if (input.schemaVersion !== 1 && input.schemaVersion !== 2 && input.schemaVersion !== 3) throw new Error("Unsupported schema version; open with a compatible editor");
+  const doc = migrate(structuredClone(input), { current: 3, migrations: STUDIO_MIGRATIONS }) as Document;
   // Existing trees retain every ID and field. Unsupported old content is rejected explicitly.
-  doc.schemaVersion = 2;
   assertDocument(doc);
   return doc;
 }

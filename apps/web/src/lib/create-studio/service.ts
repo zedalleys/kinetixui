@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { nodeIdNumber } from "../../../../../scripts/create-schema/node-ids.mjs";
-import { assertDocument, createDocument, serializeDocument, walk, type Document } from "./model";
+import { assertDocument, createDocument, migrateDocument, serializeDocument, walk, type Document } from "./model";
 export class ServiceError extends Error {
   constructor(public code: string, message: string, public status = 400) { super(message); }
 }
@@ -19,8 +19,12 @@ export class StudioService {
     return account;
   }
   private limit(account: Account): number { return account.paid && account.paid.expiresAt > this.now() ? account.paid.productLimit : 1; }
+  private isReadOnly(account: Account, product: Product): boolean {
+    return this.limit(account) === 1 && product.id !== account.freeProductId;
+  }
   private view(account: Account, product: Product) {
-    return { ...product, readOnly: this.limit(account) === 1 && product.id !== account.freeProductId };
+    const doc = product.doc.schemaVersion === 3 ? product.doc : migrateDocument(product.doc);
+    return { ...product, doc, readOnly: this.isReadOnly(account, product) };
   }
   async start() {
     const token = randomBytes(32).toString("hex");
@@ -31,7 +35,7 @@ export class StudioService {
   async list(token: string) {
     return this.store.transaction(state => {
       const account = this.account(state, token);
-      return { accountId: account.id, workspaceId: account.workspaceId, productLimit: this.limit(account), products: state.products.filter(p => p.accountId === account.id).map(p => ({ id: p.id, name: p.doc.name, revision: p.revision, readOnly: this.view(account, p).readOnly })) };
+      return { accountId: account.id, workspaceId: account.workspaceId, productLimit: this.limit(account), products: state.products.filter(p => p.accountId === account.id).map(p => ({ id: p.id, name: p.doc.name, revision: p.revision, readOnly: this.isReadOnly(account, p) })) };
     });
   }
   async create(token: string, name: string, key: string) {
@@ -61,8 +65,9 @@ export class StudioService {
       const account = this.account(state, token);
       const product = state.products.find(p => p.id === id && p.accountId === account.id && p.workspaceId === account.workspaceId);
       if (!product) throw new ServiceError("NOT_FOUND", "Product not found.", 404);
-      assertDocument(product.doc);
-      return this.view(account, product);
+      const view = this.view(account, product);
+      assertDocument(view.doc);
+      return view;
     });
   }
   async save(token: string, id: string, revision: number, input: unknown) {
@@ -71,11 +76,12 @@ export class StudioService {
       const account = this.account(state, token);
       const product = state.products.find(p => p.id === id && p.accountId === account.id && p.workspaceId === account.workspaceId);
       if (!product) throw new ServiceError("NOT_FOUND", "Product not found.", 404);
-      if (this.view(account, product).readOnly) throw new ServiceError("PRODUCT_READ_ONLY", "This product is read-only after your subscription ended. Your work is preserved.", 403);
+      const current = this.view(account, product);
+      if (current.readOnly) throw new ServiceError("PRODUCT_READ_ONLY", "This product is read-only after your subscription ended. Your work is preserved.", 403);
       if (input.id !== product.id) throw new ServiceError("INVALID_DOCUMENT", "A saved document must retain its product identity.", 422);
       if (!Number.isInteger(revision) || revision < 1) throw new ServiceError("INVALID_REQUEST", "Missing saved revision.");
       if (revision !== product.revision) {
-        if (revision === product.revision - 1 && digest(input) === digest(product.doc)) return this.view(account, product);
+        if (revision === product.revision - 1 && digest(input) === digest(current.doc)) return current;
         throw new ServiceError("REVISION_CONFLICT", "A newer revision exists. Download your draft, then reopen the saved product.", 409);
       }
       const oldLive = new Set<string>(); const newLive = new Set<string>();
@@ -91,7 +97,7 @@ export class StudioService {
       ) {
         throw new ServiceError("IDENTITY_REWIND", "Saving cannot rewind or reuse allocated identities.", 422);
       }
-      if (digest(input) !== digest(product.doc)) { product.doc = structuredClone(input); product.revision++; }
+      if (digest(input) !== digest(current.doc)) { product.doc = structuredClone(input); product.revision++; }
       return this.view(account, product);
     });
   }
