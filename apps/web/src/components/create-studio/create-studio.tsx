@@ -12,6 +12,8 @@ import { exportReact } from "@/lib/create-studio/export";
 import { NodeView } from "./node-view";
 import { ViewportPreview } from "./viewport-preview";
 import { BREAKPOINTS, canOverride, responsiveProps, type Breakpoint } from "@/lib/create-studio/responsive";
+import { reduce, IDLE, type Interaction, type InteractionEvent, type DragIntent, type Rect } from "@/lib/create-studio/interaction";
+import { resolveDrop, subtreeIds } from "./canvas-drop";
 
 const viewportPresets = [
   { label: "Mobile", width: 390, height: 844 },
@@ -47,6 +49,17 @@ function draftsFor(account: Account, product: Product): Draft[] {
   }).sort((a, b) => b.updatedAt - a.updatedAt);
 }
 const nodeLabel = (node: Node) => node.metadata?.name ?? (node.ref === "layout:section" ? String(node.props?.name ?? "Frame") : node.ref ? ADAPTERS[node.ref]?.label ?? node.ref : "Page");
+function DropOverlay({ canvas, hint, label, x, y }: { canvas: HTMLElement | null; hint: { rect: Rect | null; indicator: Rect | null; rejected: string | null } | null; label: string; x: number; y: number }) {
+  const frame = canvas?.getBoundingClientRect();
+  if (!frame) return null;
+  const place = (rect: Rect) => ({ insetBlockStart: rect.top - frame.top, insetInlineStart: rect.left - frame.left, width: rect.right - rect.left, height: rect.bottom - rect.top });
+  // Decoration only: it is announced through the canvas status line, and never takes the pointer.
+  return <div className="studio-drop-overlay" aria-hidden="true">
+    {hint?.rect && <div className="studio-drop-container" style={place(hint.rect)} />}
+    {hint?.indicator && <div className="studio-drop-indicator" style={place(hint.indicator)} />}
+    <div className={`studio-drag-preview ${hint?.rejected ? "studio-drag-rejected" : ""}`} style={{ insetBlockStart: y - frame.top + 12, insetInlineStart: x - frame.left + 12 }}>{label}</div>
+  </div>;
+}
 export function CreateStudio() {
   const [account, setAccount] = React.useState<Account | null>(null);
   const [product, setProduct] = React.useState<Product | null>(null);
@@ -85,7 +98,13 @@ export function CreateStudio() {
   const [focusIndex, setFocusIndex] = React.useState(0);
   const [fieldDrafts, setFieldDrafts] = React.useState<Record<string, string>>({});
   const [moveTarget, setMoveTarget] = React.useState("");
-  const drag = React.useRef<{ x: number; y: number; startX: number; startY: number } | null>(null);
+  const [interaction, setInteraction] = React.useState<Interaction>(IDLE);
+  const [dropHint, setDropHint] = React.useState<{ rect: Rect | null; indicator: Rect | null; rejected: string | null; parentId: string | null } | null>(null);
+  const canvasRef = React.useRef<HTMLDivElement>(null);
+  // A drag that travelled past the threshold must not also fire the library item's click handler,
+  // which would insert the component a second time at the default position.
+  const dragged = React.useRef(false);
+  const interactionRef = React.useRef<Interaction>(IDLE);
   const treeRef = React.useRef<HTMLDivElement>(null);
   const latest = React.useRef(history); latest.current = history;
   const doc = history?.doc;
@@ -143,6 +162,69 @@ export function CreateStudio() {
     }
     catch { setNotice("Browser draft storage is unavailable. Save to the local server or download your draft."); }
   }, [doc, account, product, dirty, draftBase]);
+  // One gesture at a time, and one place that decides what a gesture meant. `dispatch` advances the
+  // pure machine; only a `commit` it returns changes the document, so an interrupted drag — Escape,
+  // a cancelled pointer, a window that lost focus — leaves the document exactly as it was.
+  const dispatch = (event: InteractionEvent) => {
+    const { state, commit } = reduce(interactionRef.current, event);
+    interactionRef.current = state;
+    setInteraction(state);
+    if (state.mode !== "drag") setDropHint(null);
+    if (!commit) return;
+    if (commit.kind === "pan") { setOffset({ x: commit.x, y: commit.y }); return; }
+    // A press is NOT acted on here. The element's own `click` is the authority for a press — the
+    // library item's onClick inserts, and a node's onClickCapture selects — so inserting here too
+    // would add the component twice for one click. The machine still reports it, which is what tells
+    // those handlers a drag did not happen.
+    if (commit.kind === "press") return;
+    dragged.current = true;
+    if (commit.kind === "insert") perform({ type: "insert", parentId: commit.parentId, ref: commit.ref, index: commit.index });
+    else perform({ type: "move", ids: commit.ids, parentId: commit.parentId, index: commit.index });
+  };
+  // Cancellation still goes through the machine — there is one definition of what cancelling does —
+  // but with a stable identity, so the keyboard handler does not re-register on every render.
+  const cancelGesture = React.useCallback(() => {
+    const { state } = reduce(interactionRef.current, { type: "cancel" });
+    interactionRef.current = state;
+    setInteraction(state);
+    setDropHint(null);
+  }, []);
+  const beginDrag = (event: React.PointerEvent, intent: DragIntent) => {
+    if (readOnly || preview || busy || pan) return;
+    dragged.current = false;
+    dispatch({ type: "drag-start", pointerId: event.pointerId, x: event.clientX, y: event.clientY, intent });
+  };
+  React.useEffect(() => {
+    if (interaction.mode === "idle") return;
+    const resolve = (x: number, y: number) => {
+      const state = interactionRef.current;
+      const root = canvasRef.current;
+      if (!root || !doc || (state.mode !== "drag" && state.mode !== "pending")) return undefined;
+      const intent = state.intent;
+      const resolution = resolveDrop(root, doc, x, y, {
+        excluded: intent.kind === "move" ? subtreeIds(doc, intent.ids) : undefined,
+        dir: rtl ? "rtl" : "ltr",
+      });
+      setDropHint({ rect: resolution.rect, indicator: resolution.indicator, rejected: resolution.rejected, parentId: resolution.target?.parentId ?? null });
+      return resolution;
+    };
+    const move = (event: PointerEvent) => {
+      const resolution = resolve(event.clientX, event.clientY);
+      dispatch({ type: "pointer-move", pointerId: event.pointerId, x: event.clientX, y: event.clientY, target: resolution?.target ?? null, rejected: resolution?.rejected ?? null });
+    };
+    const up = (event: PointerEvent) => dispatch({ type: "pointer-up", pointerId: event.pointerId });
+    const cancel = () => cancelGesture();
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", cancel);
+    window.addEventListener("blur", cancel);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", cancel);
+      window.removeEventListener("blur", cancel);
+    };
+  });
   const applyHistory = React.useCallback((direction: "undo" | "redo") => {
     if (!latest.current) return;
     const next = direction === "undo" ? undo(latest.current) : redo(latest.current);
@@ -165,14 +247,14 @@ export function CreateStudio() {
     const handler = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
       if (target.closest('input,textarea,select,[contenteditable="true"],[role="dialog"]')) return;
-      if (event.key === "Escape") { setPreview(false); setPan(false); drag.current = null; return; }
+      if (event.key === "Escape") { setPreview(false); setPan(false); cancelGesture(); return; }
       if (!(event.metaKey || event.ctrlKey) || !latest.current) return;
       if (event.key.toLowerCase() === "z" && !readOnly && !busy && !preview) {
         event.preventDefault(); applyHistory(event.shiftKey ? "redo" : "undo");
       }
     };
     window.addEventListener("keydown", handler); return () => window.removeEventListener("keydown", handler);
-  }, [readOnly, busy, preview, applyHistory]);
+  }, [readOnly, busy, preview, applyHistory, cancelGesture]);
   async function start() {
     setBusy(true); setError("");
     try { setAccount(await request<Account>({ operation: "session" })); } catch (e) { setError((e as Error).message); }
@@ -304,7 +386,7 @@ export function CreateStudio() {
             <div className="studio-panel-switch" aria-label="Navigation panel"><Button size="sm" variant={panel === "layers" ? "Secondary" : "Ghost"} aria-pressed={panel === "layers"} onClick={() => setPanel("layers")}><Layers className="size-4" />Layers</Button><Button size="sm" variant={panel === "library" ? "Secondary" : "Ghost"} aria-pressed={panel === "library"} onClick={() => setPanel("library")}><Package className="size-4" />Library</Button></div>
             {panel === "library" ? <div className="studio-panel-section">
               <Label htmlFor="studio-search">Find a component</Label><Input id="studio-search" placeholder="Search library…" value={search} onChange={e => setSearch(e.target.value)} />
-              <div className="studio-library">{Object.entries(ADAPTERS).filter(([, a]) => a.label.toLowerCase().includes(search.toLowerCase())).map(([ref, a]) => <Button variant="Ghost" key={ref} disabled={readOnly || busy || preview} onClick={() => insert(ref)} aria-label={`Add ${a.label}`}><span className="studio-library-icon">{ref.startsWith("layout:") ? <Layers className="size-4" /> : <Package className="size-4" />}</span><span><strong>{a.label}</strong><small>{ref.startsWith("layout:") ? "Structure" : "KinetixUI component"}</small></span><Plus className="size-4" /></Button>)}</div>
+              <div className="studio-library">{Object.entries(ADAPTERS).filter(([, a]) => a.label.toLowerCase().includes(search.toLowerCase())).map(([ref, a]) => <Button variant="Ghost" key={ref} disabled={readOnly || busy || preview} data-studio-library={ref} onPointerDown={event => { if (event.button === 0) beginDrag(event, { kind: "insert", ref }); }} onClick={() => { if (dragged.current) { dragged.current = false; return; } insert(ref); }} aria-label={`Add ${a.label}`}><span className="studio-library-icon">{ref.startsWith("layout:") ? <Layers className="size-4" /> : <Package className="size-4" />}</span><span><strong>{a.label}</strong><small>{ref.startsWith("layout:") ? "Structure" : "KinetixUI component"}</small></span><Plus className="size-4" /></Button>)}</div>
               {!Object.values(ADAPTERS).some(a => a.label.toLowerCase().includes(search.toLowerCase())) && <p>No supported components match this search.</p>}
               <p className="studio-muted">A verified subset of the library. Other components are not editable yet.</p>
             </div> : <div className="studio-layer-panel">
@@ -326,19 +408,21 @@ export function CreateStudio() {
               <Button variant="Ghost" size="sm" aria-pressed={rtl} onClick={() => setRtl(!rtl)}>RTL</Button>
               <Button disabled={preview} variant={pan ? "Secondary" : "Ghost"} size="icon" aria-label={pan ? "Use selection tool" : "Use pan tool"} onClick={() => setPan(!pan)}>{pan ? <Hand className="size-4" /> : <MousePointer2 className="size-4" />}</Button>
             </div>
-            <div className={`studio-canvas ${pan ? "studio-panning" : ""} ${preview ? "studio-canvas-preview" : ""}`} tabIndex={0} role="region" aria-label="Design canvas" onKeyDown={event => { if (preview || event.target !== event.currentTarget) return; const delta: Record<string, [number, number]> = { ArrowLeft: [24, 0], ArrowRight: [-24, 0], ArrowUp: [0, 24], ArrowDown: [0, -24] }; if (delta[event.key]) { event.preventDefault(); const [x, y] = delta[event.key]; setOffset(p => ({ x: p.x + x, y: p.y + y })); } if (event.key.toLowerCase() === "h") setPan(true); if (event.key.toLowerCase() === "v") setPan(false); }} onPointerDown={e => {
+            <div ref={canvasRef} className={`studio-canvas ${pan ? "studio-panning" : ""} ${preview ? "studio-canvas-preview" : ""} ${interaction.mode === "drag" ? "studio-canvas-dragging" : ""}`} tabIndex={0} role="region" aria-label="Design canvas" onKeyDown={event => { if (preview || event.target !== event.currentTarget) return; const delta: Record<string, [number, number]> = { ArrowLeft: [24, 0], ArrowRight: [-24, 0], ArrowUp: [0, 24], ArrowDown: [0, -24] }; if (delta[event.key]) { event.preventDefault(); const [x, y] = delta[event.key]; setOffset(p => ({ x: p.x + x, y: p.y + y })); } if (event.key.toLowerCase() === "h") setPan(true); if (event.key.toLowerCase() === "v") setPan(false); }} onPointerDown={e => {
               if (preview || (!pan && e.button !== 1)) return;
-              e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId);
-              drag.current = { x: e.clientX, y: e.clientY, startX: offset.x, startY: offset.y };
-            }} onPointerMove={e => { if (drag.current) setOffset({ x: drag.current.startX + e.clientX - drag.current.x, y: drag.current.startY + e.clientY - drag.current.y }); }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }}>
+              e.preventDefault();
+              dispatch({ type: "pan-start", pointerId: e.pointerId, x: e.clientX, y: e.clientY, offsetX: offset.x, offsetY: offset.y });
+            }}>
               <div className="studio-world" style={{ width: viewport, transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})` }}>
                 <div className="studio-artboard-label"><span>{page.name}</span><span>{preview ? `${viewport} × ${viewportHeight}` : `${viewport}px`} · {Math.round(zoom * 100)}%</span></div>
                 {preview ? <ViewportPreview root={page.root} height={viewportHeight} dark={dark} rtl={rtl} theme={themeStyle} onExit={exitPreview} /> :
-                  <div className={`studio-artboard ${dark ? "dark" : "theme-light"}`} dir={rtl ? "rtl" : "ltr"} style={{ ...themeStyle, pointerEvents: pan ? "none" : undefined }}>
-                    {page.root.children?.length ? <NodeView node={page.root} selection={history.selection} onSelect={select} editWidth={viewport} dir={rtl ? "rtl" : "ltr"} /> : <div className="studio-empty"><h2>A new screen, ready for you.</h2><p>Add a frame, then fill it with components.</p><Button disabled={readOnly} onClick={() => insert("layout:section")}><Plus className="size-4" />Add frame</Button></div>}
+                  <div data-studio-drop={page.root.id} className={`studio-artboard ${dark ? "dark" : "theme-light"} ${dropHint?.parentId === page.root.id ? "studio-node-drop" : ""}`} dir={rtl ? "rtl" : "ltr"} style={{ ...themeStyle, pointerEvents: pan ? "none" : undefined }}>
+                    {page.root.children?.length ? <NodeView node={page.root} selection={history.selection} onSelect={select} onNodePointerDown={(id, event) => { if (event.button === 0) beginDrag(event, { kind: "move", ids: history.selection.includes(id) ? history.selection : [id] }); }} dropParentId={dropHint?.parentId ?? null} editWidth={viewport} dir={rtl ? "rtl" : "ltr"} /> : <div className="studio-empty"><h2>A new screen, ready for you.</h2><p>Add a frame, then fill it with components.</p><Button disabled={readOnly} onClick={() => insert("layout:section")}><Plus className="size-4" />Add frame</Button></div>}
                   </div>}
               </div>
+              {interaction.mode === "drag" && <DropOverlay canvas={canvasRef.current} hint={dropHint} label={interaction.intent.kind === "insert" ? adapterFor(interaction.intent.ref).label : `${interaction.intent.ids.length} layer${interaction.intent.ids.length > 1 ? "s" : ""}`} x={interaction.x} y={interaction.y} />}
             </div>
+            <p className="studio-announcement" role="status">{interaction.mode === "drag" ? (dropHint?.rejected ?? "Release to place it here.") : ""}</p>
             <div className="studio-zoom" role="group" aria-label="Canvas camera"><Button size="icon" variant="Ghost" aria-label="Zoom out" onClick={() => setZoom(Math.max(.1, Math.round((zoom - .1) * 10) / 10))}><ZoomOut className="size-4" /></Button><span>{Math.round(zoom * 100)}%</span><Button size="icon" variant="Ghost" aria-label="Zoom in" onClick={() => setZoom(Math.min(4, Math.round((zoom + .1) * 10) / 10))}><ZoomIn className="size-4" /></Button><Button size="sm" variant="Ghost" onClick={() => { setZoom(1); setOffset({ x: 24, y: 24 }); }}>Reset view</Button><Button size="sm" variant="Ghost" disabled={dirty || busy || !!Object.keys(fieldDrafts).length} onClick={() => recover()}>Recover draft</Button></div>
           </div>
           <aside className={`studio-inspector ${inspector ? "studio-inspector-open" : ""}`} aria-label="Properties inspector">
