@@ -70,6 +70,12 @@
       "area": "components",
       "title": "Removing a chip or a file row keeps the keyboard",
       "body": "After Tag, FileUpload or MultiSelect removes an item, focus moves to a surviving neighbour, in either text direction, and never overrides a focus move the consumer made."
+    },
+    {
+      "kind": "fixed",
+      "area": "components",
+      "title": "The Image demo's artwork ships with the package",
+      "body": "The Image story's demo artwork is served from the repository instead of picsum.photos. The published story carried a third-party image URL, so it rendered three blank frames wherever that host was unreachable. The artwork is now three committed SVGs drawn with KinetixUI primitive token colours; the component's API, the demo's layout and its alt semantics are unchanged."
     }
   ],
   "limitations": [
@@ -93,6 +99,7 @@
       "changesets": [
         "carousel-arrow-keys-yield",
         "field-describedby-and-live-region",
+        "image-demo-local-artwork",
         "removable-chip-keyboard-focus",
         "segmented-control-keeps-selection",
         "tokens-kinetic-weave",
