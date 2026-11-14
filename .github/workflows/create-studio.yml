@@ -9,6 +9,7 @@ on:
       - "docs/create/**"
       - "scripts/create-schema/**"
       - "scripts/create-studio-browser.mjs"
+      - "scripts/create-studio-canvas-browser.mjs"
       - ".github/workflows/create-studio.yml"
   workflow_dispatch:
 permissions:
@@ -63,6 +64,9 @@ jobs:
           done
           if [ "$ready" -ne 1 ]; then cat /tmp/create-server.log; exit 1; fi
           CREATE_ARTIFACTS=/tmp/create-evidence CREATE_EXPORT_FIXTURE=/tmp/kinetix-create-export-m1 node scripts/create-studio-browser.mjs
+          if [ -f scripts/create-studio-canvas-browser.mjs ]; then
+            CREATE_ARTIFACTS=/tmp/create-evidence/canvas node scripts/create-studio-canvas-browser.mjs
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:

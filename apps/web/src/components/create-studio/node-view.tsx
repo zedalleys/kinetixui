@@ -4,8 +4,8 @@ import { Button, Input, Label, Card, CardHeader, CardTitle, CardDescription, Car
 import type { Node } from "@/lib/create-studio/model";
 import { adapterFor } from "@/lib/create-studio/registry";
 import { nodeStyle } from "@/lib/create-studio/presentation";
-export function NodeView({ node, selection, onSelect, preview = false, editWidth, dir }: { node: Node; selection: string[]; onSelect: (id: string, additive: boolean) => void; preview?: boolean; editWidth?: number; dir?: "ltr" | "rtl" }) {
-  const children = (node.children ?? []).map(child => <NodeView key={child.id} node={child} selection={selection} onSelect={onSelect} preview={preview} editWidth={editWidth} dir={dir} />);
+export function NodeView({ node, selection, onSelect, onNodePointerDown, dropParentId, preview = false, editWidth, dir }: { node: Node; selection: string[]; onSelect: (id: string, additive: boolean) => void; onNodePointerDown?: (id: string, event: React.PointerEvent) => void; dropParentId?: string | null; preview?: boolean; editWidth?: number; dir?: "ltr" | "rtl" }) {
+  const children = (node.children ?? []).map(child => <NodeView key={child.id} node={child} selection={selection} onSelect={onSelect} onNodePointerDown={onNodePointerDown} dropParentId={dropParentId} preview={preview} editWidth={editWidth} dir={dir} />);
   if (node.kind === "slot") return <>{children}</>;
   const adapter = adapterFor(node.ref!);
   const p = { ...adapter.defaults, ...node.props };
@@ -23,7 +23,13 @@ export function NodeView({ node, selection, onSelect, preview = false, editWidth
     default: content = <p role="alert">This component cannot be rendered.</p>;
   }
   if (preview) return <div style={{ minWidth: 0 }}><div>{content}</div></div>;
-  return <div data-studio-node={node.id} className={`studio-node ${selection.includes(node.id) && !preview ? "studio-node-selected" : ""}`} onPointerDownCapture={preview ? undefined : event => { event.preventDefault(); }} onClickCapture={preview ? undefined : event => {
+  return <div data-studio-node={node.id} data-studio-drop={adapter.container ? node.id : undefined} className={`studio-node ${selection.includes(node.id) && !preview ? "studio-node-selected" : ""} ${dropParentId === node.id ? "studio-node-drop" : ""}`} onPointerDownCapture={preview ? undefined : event => {
+    // The canvas owns the press: library controls inside the artboard must not take it, and a press
+    // that becomes a drag must not also start a text selection.
+    event.preventDefault();
+    const nearest = (event.target as HTMLElement).closest("[data-studio-node]");
+    if (nearest?.getAttribute("data-studio-node") === node.id) onNodePointerDown?.(node.id, event);
+  }} onClickCapture={preview ? undefined : event => {
     // Stop at the deepest editor-owned wrapper, including disabled library controls.
     const nearest = (event.target as HTMLElement).closest("[data-studio-node]");
     if (nearest?.getAttribute("data-studio-node") !== node.id) return;
