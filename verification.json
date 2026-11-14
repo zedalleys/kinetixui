@@ -1321,7 +1321,7 @@
           "scripts/a11y-browser.mjs:35-416"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-334"
+          "scripts/motion.mjs:24-338"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2248,7 +2248,7 @@
           "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-334"
+          "scripts/motion.mjs:24-338"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -2437,7 +2437,7 @@
           "scripts/a11y-browser.mjs:35-416"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-334"
+          "scripts/motion.mjs:24-338"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -5100,7 +5100,7 @@
           "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-334"
+          "scripts/motion.mjs:24-338"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6016,7 +6016,7 @@
           "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-334"
+          "scripts/motion.mjs:24-338"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6260,7 +6260,7 @@
           "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-334"
+          "scripts/motion.mjs:24-338"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6548,7 +6548,7 @@
           "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-334"
+          "scripts/motion.mjs:24-338"
         ],
         "published": [
           "npm: @kinetixui/ui"
@@ -6632,7 +6632,7 @@
           "scripts/large-text.mjs:99-739"
         ],
         "reducedMotion": [
-          "scripts/motion.mjs:24-334"
+          "scripts/motion.mjs:24-338"
         ],
         "published": [
           "npm: @kinetixui/ui"
