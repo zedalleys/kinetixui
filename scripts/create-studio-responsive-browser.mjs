@@ -160,8 +160,19 @@ export async function verifyResponsiveBrowser({ browser, base, fixture, consumer
     const continueButton = frame.getByRole("button", { name: "Continue", exact: true });
     assert.equal(await continueButton.evaluate(el => el === document.activeElement), true);
     await page.keyboard.press("Tab");
+    const __who = async (label) => {
+      const d = await frame.locator(":root").evaluate(() => {
+        const a = document.activeElement;
+        return a ? [a.tagName, a.getAttribute("role"), (a.getAttribute("aria-label") || a.textContent || "").trim().slice(0, 40), a.getAttribute("aria-selected")].join(" | ") : "NONE";
+      });
+      console.log("FOCUS " + label + ": " + d);
+    };
+    await __who("after second Tab");
     await page.keyboard.press("ArrowRight");
+    await __who("after ArrowRight");
     await page.keyboard.press("Enter");
+    await __who("after Enter");
+    console.log("TABS " + await frame.locator('[role="tab"]').evaluateAll(els => els.map(e => (e.textContent||"").trim() + "=" + e.getAttribute("aria-selected")).join(", ")));
     // Wait for the activation to land before reading. `innerText()` waits only for SOME tabpanel to
     // exist, and the Overview panel already satisfies that, so a one-shot read here could observe the
     // outgoing panel on a slow runner and report `Start with the big picture.` against /Make room/.
