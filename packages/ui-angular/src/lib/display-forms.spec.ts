@@ -1,4 +1,4 @@
-import { Component, provideZonelessChangeDetection } from '@angular/core';
+import { Component, provideZonelessChangeDetection, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
@@ -314,6 +314,28 @@ describe('KxSlider', () => {
   it('drives the fill custom property from the real value, not from a second copy of it', () => {
     const { el } = host('<kx-slider [value]="25" [max]="100" />', [KxSlider]);
     expect((el.querySelector('kx-slider') as HTMLElement).style.getPropertyValue('--kx-slider-fill')).toBe('25%');
+  });
+
+  it('clamps the visual fill when the range changes around a controlled value', () => {
+    @Component({
+      imports: [KxSlider],
+      template: '<kx-slider [value]="value()" [min]="-5" [max]="max()" />',
+    })
+    class RangeHost {
+      readonly value = signal(6.25);
+      readonly max = signal(10);
+    }
+    const fixture = mount(RangeHost);
+    const track = fixture.nativeElement.querySelector('kx-slider') as HTMLElement;
+    fixture.componentInstance.max.set(2);
+    fixture.detectChanges();
+    expect(track.style.getPropertyValue('--kx-slider-fill')).toBe('100%');
+    fixture.componentInstance.value.set(-8);
+    fixture.detectChanges();
+    expect(track.style.getPropertyValue('--kx-slider-fill')).toBe('0%');
+    fixture.componentInstance.value.set(0);
+    fixture.detectChanges();
+    expect(Number.parseFloat(track.style.getPropertyValue('--kx-slider-fill'))).toBeCloseTo(71.42857);
   });
 
   it('writes the user value back through the model', () => {
