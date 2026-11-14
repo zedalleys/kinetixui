@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'app_text.dart';
+import 'kinetix_selection_indicator.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/segmented-control.tsx`: an
@@ -17,11 +18,25 @@ class KinetixSegmentedControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
+    final selected = <int>[];
+    final builtIn =
+        children.every((child) => child is KinetixSegmentedControlItem);
+    if (builtIn) {
+      for (var index = 0; index < children.length; index++) {
+        if ((children[index] as KinetixSegmentedControlItem).selected) {
+          selected.add(index);
+        }
+      }
+    }
+    final sharesSurface = builtIn && selected.length < 2;
     return Container(
       padding: const EdgeInsets.all(4), // spacing/1
-      decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(12)), // radius/lg
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      decoration: BoxDecoration(
+          color: c.muted, borderRadius: BorderRadius.circular(12)), // radius/lg
+      child: KinetixSelectionIndicator(
+        selectedIndex:
+            sharesSurface && selected.isNotEmpty ? selected.single : -1,
+        sharesSurface: sharesSurface,
         children: [for (final child in children) Expanded(child: child)],
       ),
     );
@@ -29,7 +44,8 @@ class KinetixSegmentedControl extends StatelessWidget {
 }
 
 class KinetixSegmentedControlItem extends StatelessWidget {
-  const KinetixSegmentedControlItem(this.text, {super.key, required this.selected, required this.onTap});
+  const KinetixSegmentedControlItem(this.text,
+      {super.key, required this.selected, required this.onTap});
 
   final String text;
   final bool selected;
@@ -38,23 +54,32 @@ class KinetixSegmentedControlItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
+    final paintSelection =
+        selected && !KinetixSelectionSurfaceScope.of(context);
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), // px-3 py-1
+        padding: const EdgeInsets.symmetric(
+            horizontal: 12, vertical: 4), // px-3 py-1
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? c.background : const Color(0x00000000),
+          color: paintSelection ? c.background : const Color(0x00000000),
           borderRadius: BorderRadius.circular(8), // radius/md
-          boxShadow: selected
-              ? const [BoxShadow(color: Color(0x14000000), blurRadius: 2, offset: Offset(0, 1))]
+          boxShadow: paintSelection
+              ? const [
+                  BoxShadow(
+                      color: Color(0x14000000),
+                      blurRadius: 2,
+                      offset: Offset(0, 1))
+                ]
               : null,
         ),
         child: Text(
           text,
           textAlign: TextAlign.center,
-          style: AppText.labelMd.copyWith(color: selected ? c.foreground : c.mutedForeground),
+          style: AppText.labelMd
+              .copyWith(color: selected ? c.foreground : c.mutedForeground),
         ),
       ),
     );
