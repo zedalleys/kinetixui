@@ -162,6 +162,13 @@ export async function verifyResponsiveBrowser({ browser, base, fixture, consumer
     await page.keyboard.press("Tab");
     await page.keyboard.press("ArrowRight");
     await page.keyboard.press("Enter");
+    // Wait for the activation to land before reading. `innerText()` waits only for SOME tabpanel to
+    // exist, and the Overview panel already satisfies that, so a one-shot read here could observe the
+    // outgoing panel on a slow runner and report `Start with the big picture.` against /Make room/.
+    // The assertion below is unchanged: if the panel never becomes Details, this wait times out and
+    // the gate still fails.
+    await frame.locator('[role="tab"][aria-selected="true"]').filter({ hasText: "Details" }).waitFor();
+    await frame.getByRole("tabpanel").filter({ hasText: "Make room" }).waitFor();
     assert.match(await frame.getByRole("tabpanel").innerText(), /Make room/);
     await email.focus();
     await email.press("h");
