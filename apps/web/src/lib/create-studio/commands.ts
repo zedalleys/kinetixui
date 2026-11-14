@@ -4,7 +4,9 @@ import { BREAKPOINTS, canOverride, type Breakpoint } from "./responsive";
 
 type TokenBindings = NonNullable<Node["tokenBindings"]>;
 export type Command =
-  | { type: "insert"; parentId: string; ref: string }
+  // `index` is the position among the destination's existing children; omitted it appends, which is
+  // what every pre-M3 call site expects. Validated exactly like `move`'s index.
+  | { type: "insert"; parentId: string; ref: string; index?: number }
   | { type: "props"; ids: string[]; patch: Props }
   // A per-property patch, not a whole object: `undefined` for a property clears just that property,
   // so changing one node's surface cannot disturb another's foreground. Mirrors `props` above.
@@ -49,8 +51,10 @@ export function execute(history: History, command: Command): History {
     const parent = findNode(doc, command.parentId);
     if (!parent || (parent.kind !== "slot" && !ADAPTERS[parent.ref!]?.container)) throw new Error("Choose a legal container");
     if (doc.nextNodeId >= 10_000_000_000) throw new Error("Node identity space exhausted");
+    const siblings = parent.children ?? [];
+    if (command.index !== undefined && (!Number.isInteger(command.index) || command.index < 0 || command.index > siblings.length)) throw new Error("Invalid destination index");
     const node: Node = { id: `node_${doc.nextNodeId++}`, kind: command.ref.startsWith("layout:") ? "layout" : "component", ref: command.ref, props: { ...adapter.defaults }, ...(adapter.container ? { children: [] } : {}) };
-    parent.children = [...(parent.children ?? []), node]; selection = [node.id];
+    parent.children = [...siblings.slice(0, command.index ?? siblings.length), node, ...siblings.slice(command.index ?? siblings.length)]; selection = [node.id];
   } else if (command.type === "responsive") {
     const node = findNode(doc, command.id);
     if (!node?.ref || !canOverride(node.ref, command.property) || !BREAKPOINTS.some(({ id }) => id === command.breakpoint)) {

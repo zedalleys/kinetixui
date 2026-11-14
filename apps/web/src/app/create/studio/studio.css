@@ -130,3 +130,20 @@
 .studio-preview-frame { display: block; width: 100%; border: 0; background: hsl(var(--background)); }
 .studio-canvas-preview { overflow: auto; }
 .studio-breakpoint-source { margin: 0; font-size: .75rem; color: hsl(var(--muted-foreground)); }
+
+/* Direct manipulation: drop feedback. Decoration only — the pointer passes straight through it, and
+   what it shows is announced in the canvas status line for anyone not watching the cursor. */
+.studio-canvas-dragging { cursor: copy; }
+.studio-canvas-dragging .studio-node { cursor: grabbing; }
+.studio-drop-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.studio-drop-overlay > * { position: absolute; }
+.studio-drop-container { border: 1px solid var(--studio-indigo); border-radius: .25rem; background: color-mix(in srgb, var(--studio-indigo) 6%, transparent); }
+.studio-drop-indicator { background: var(--studio-indigo); border-radius: 999px; box-shadow: 0 0 0 1px hsl(var(--background)); min-width: 2px; min-height: 2px; }
+.studio-drag-preview { padding: .25rem .5rem; border-radius: .375rem; font-size: .75rem; font-weight: 550; background: var(--studio-indigo); color: #fff; white-space: nowrap; }
+.studio-drag-rejected { background: hsl(var(--destructive)); }
+.studio-node-drop { outline: 1px dashed var(--studio-indigo); outline-offset: 2px; }
+@media (forced-colors: active) {
+  .studio-drop-container, .studio-node-drop { outline: 2px solid Highlight; border-color: Highlight; }
+  .studio-drop-indicator { background: Highlight; forced-color-adjust: none; }
+  .studio-drag-preview { background: Canvas; color: CanvasText; border: 1px solid CanvasText; }
+}
