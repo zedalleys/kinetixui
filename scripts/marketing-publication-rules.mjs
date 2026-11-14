@@ -293,3 +293,77 @@ export function m1Status(asset, rows = []) {
   if (asset.status === "drafted") return "DRAFTED";
   return "PLANNED";
 }
+
+/**
+ * An asset the copy checks have passed has somewhere to be logged when it goes out.
+ *
+ * The companion to the rule in check-distribution.mjs that runs the other way: that one catches a content
+ * register claiming `published` with no row to evidence it. This one catches the gap one step earlier, and
+ * it is the gap that actually existed — on 2026-10-31, SEVEN assets sat at `ready` with no row in the
+ * distribution log at all (LI-006, LI-009, X-006, X-007, X-009, X-010, X-011), two of them scheduled by
+ * name in execution-calendar.md. Nothing complained, because the gate only ever validated the rows that
+ * were there.
+ *
+ * Why that matters rather than being untidy: the distribution register is the project's ONLY per-publication
+ * log. Publishing an asset with no row means the act is recorded nowhere, and the row is also where the
+ * tracked link's placement and the metric to watch are decided BEFORE the post exists — afterwards is too
+ * late, because a published post cannot be edited.
+ *
+ * `ready` is the trigger and not `drafted`, because `drafted` copy has no publication plan yet; and the row
+ * must be on the asset's own channel, so a half-migrated asset cannot be covered by a row for somewhere
+ * else. The devto/hashnode pair is one channel for this purpose, as it is in the row loop.
+ */
+export function publicationSlotProblems(assets = [], rows = []) {
+  const problems = [];
+  const sameChannel = (rowChannel, assetChannel) =>
+    rowChannel === assetChannel || (rowChannel === "hashnode" && assetChannel === "devto");
+
+  for (const asset of assets) {
+    if (asset.status !== "ready" && asset.status !== "published") continue;
+    const own = rows.filter((r) => r.asset === asset.id);
+    if (own.length === 0) {
+      problems.push(
+        `${asset.id}: the content register says "${asset.status}" but the distribution log has no row for it — ` +
+          `add the row (status "planned", date null) so the act of publishing has somewhere to be recorded, ` +
+          `and so its link placement and metricToWatch are decided before the post exists`,
+      );
+      continue;
+    }
+    if (!own.some((r) => sameChannel(r.channel, asset.channel))) {
+      problems.push(
+        `${asset.id}: every distribution row for it is on another channel (${[...new Set(own.map((r) => r.channel))].join(", ")}), ` +
+          `but the content register says it publishes on "${asset.channel}" — a row for somewhere else is not this channel's slot`,
+      );
+    }
+  }
+  return problems;
+}
+
+/**
+ * Every id in the content register's `visuals` list is a real visual brief OR a produced asset.
+ *
+ * `visuals` is the authority for whether an asset's `visual` field names something that exists, and it
+ * validated nothing about itself: `VIS-999` passed. But the obvious fix — require a produced asset — is
+ * WRONG, and so is its mirror. The list deliberately holds two different kinds of thing:
+ *
+ *   - VIS-004 is BRIEF-ONLY ON PURPOSE. visual-briefs.md records it as deferred because it needs a real
+ *     code excerpt, and execution-calendar.md says LI-006 ships without it rather than late.
+ *   - SOCIAL-PREVIEW, VIS-008 and VIS-009 are PRODUCED WITH NO BRIEF — they were added straight to the
+ *     generator.
+ *
+ * So 3 of the 10 entries fail whichever single-sided rule you pick. This rule keeps the two kinds separate
+ * instead of collapsing them: an id must be one or the other, and an id that is neither is a typo.
+ *
+ * `briefs` and `produced` are passed in rather than read here, so the rule stays pure for its tests.
+ */
+export function visualIdProblems(visuals = [], briefs = [], produced = []) {
+  const briefed = new Set(briefs);
+  const made = new Set(produced);
+  return visuals
+    .filter((id) => !briefed.has(id) && !made.has(id))
+    .map(
+      (id) =>
+        `visuals: "${id}" is neither a brief in marketing/content/visual-briefs.md nor a produced asset in ` +
+        `marketing/content/visuals/manifest.json — an id that is neither cannot be referenced by an asset`,
+    );
+}
