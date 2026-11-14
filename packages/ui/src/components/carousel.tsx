@@ -135,8 +135,34 @@ const CarouselItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
 );
 CarouselItem.displayName = "CarouselItem";
 
+/**
+ * At a non-looping end the control that reached it is `aria-disabled`, not `disabled`, and its activation
+ * is refused by the handler instead of by the browser.
+ *
+ * A natively disabled element cannot hold focus. The press that exhausted the track therefore disabled the
+ * very button under the reader's focus, and Chromium moved focus to `BODY` — the following Tab started from
+ * the document's position, not the reader's, so stepping to the last slide cost them their place in the
+ * page. Measured in Chromium at both endpoints, in LTR, RTL and reduced motion, by
+ * `scripts/react-carousel-focus.mjs`; jsdom cannot see it, which is why no unit test guards it.
+ *
+ * `packages/ui-angular/src/lib/carousel.ts` had already taken this decision and written it into its
+ * docstring ("Focus is never lost…"); React was the platform that contradicted it. `NumberInput`'s step
+ * buttons use the same shape for the same reason — at the minimum or maximum they are `aria-disabled` with
+ * the step refused, not inert.
+ *
+ * The cost is one extra Tab stop at each end, which is the point: the control stays reachable and still
+ * announces that it is unavailable, instead of silently leaving the tab order.
+ *
+ * The consumer's own `onClick` is composed rather than overwritten, and runs first: with the handler
+ * written before `{...props}` a consumer who passed `onClick` would have replaced the guard along with the
+ * navigation, and the guard is not theirs to drop. `disabled` passed by a consumer still reaches the
+ * button through the spread and still means natively disabled — this changes what the carousel does on its
+ * own, not what the Button contract offers.
+ */
+const UNAVAILABLE = "aria-disabled:cursor-not-allowed aria-disabled:opacity-disabled aria-disabled:hover:border-input aria-disabled:hover:bg-transparent";
+
 const CarouselPrevious = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(
-  ({ className, variant = "Outline", ...props }, ref) => {
+  ({ className, variant = "Outline", onClick, ...props }, ref) => {
     const { orientation, scrollPrev, canScrollPrev } = useCarousel();
     return (
       <Button
@@ -146,10 +172,20 @@ const CarouselPrevious = React.forwardRef<HTMLButtonElement, React.ComponentProp
         className={cn(
           "absolute size-8 rounded-full",
           orientation === "horizontal" ? "-left-12 top-1/2 -translate-y-1/2" : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
+          UNAVAILABLE,
           className,
         )}
-        disabled={!canScrollPrev}
-        onClick={scrollPrev}
+        aria-disabled={canScrollPrev ? undefined : true}
+        // `Button` renders a native button, which defaults to `type="submit"`: inside a form, a
+        // navigation control would submit it. The native `disabled` used to stop that at the
+        // endpoints and nothing stopped it anywhere else, so this is the narrower contract, not a
+        // new one. Set before the spread, so a consumer who really wants a submit can still say so.
+        type="button"
+        onClick={(e) => {
+          onClick?.(e);
+          if (e.defaultPrevented || !canScrollPrev) return;
+          scrollPrev();
+        }}
         {...props}
       >
         <ArrowLeft className="size-4" />
@@ -161,7 +197,7 @@ const CarouselPrevious = React.forwardRef<HTMLButtonElement, React.ComponentProp
 CarouselPrevious.displayName = "CarouselPrevious";
 
 const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(
-  ({ className, variant = "Outline", ...props }, ref) => {
+  ({ className, variant = "Outline", onClick, ...props }, ref) => {
     const { orientation, scrollNext, canScrollNext } = useCarousel();
     return (
       <Button
@@ -171,10 +207,20 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
         className={cn(
           "absolute size-8 rounded-full",
           orientation === "horizontal" ? "-right-12 top-1/2 -translate-y-1/2" : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
+          UNAVAILABLE,
           className,
         )}
-        disabled={!canScrollNext}
-        onClick={scrollNext}
+        aria-disabled={canScrollNext ? undefined : true}
+        // `Button` renders a native button, which defaults to `type="submit"`: inside a form, a
+        // navigation control would submit it. The native `disabled` used to stop that at the
+        // endpoints and nothing stopped it anywhere else, so this is the narrower contract, not a
+        // new one. Set before the spread, so a consumer who really wants a submit can still say so.
+        type="button"
+        onClick={(e) => {
+          onClick?.(e);
+          if (e.defaultPrevented || !canScrollNext) return;
+          scrollNext();
+        }}
         {...props}
       >
         <ArrowRight className="size-4" />
