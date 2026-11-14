@@ -64,6 +64,11 @@ jobs:
       - name: Publish allowlist and package metadata
         run: pnpm release:check
 
+      # Evaluate the merge checkout: #538 cohort coverage plus #465 presence/schema safeguards.
+      # Keep one CI entry point; neither check duplicates the other.
+      - name: Curated release notes validate and cover the planned cohorts
+        run: pnpm check:release-notes
+
       - name: Website component dogfooding (reviewed native-pattern ratchet)
         run: pnpm check:web-dogfooding
 
