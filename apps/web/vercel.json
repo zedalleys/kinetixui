@@ -8,7 +8,8 @@
     "deploymentEnabled": {
       "codex/create-m1-model-20261111": false,
       "codex/create-m1-editor-20261111": false,
-      "codex/m63-flutter-selection": false
+      "codex/m63-flutter-selection": false,
+      "codex/m64-flutter-selection-accessibility": false
     }
   }
 }

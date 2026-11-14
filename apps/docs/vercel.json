@@ -6,7 +6,8 @@
   "outputDirectory": "storybook-static",
   "git": {
     "deploymentEnabled": {
-      "codex/m63-flutter-selection": false
+      "codex/m63-flutter-selection": false,
+      "codex/m64-flutter-selection-accessibility": false
     }
   }
 }
