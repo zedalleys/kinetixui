@@ -63,6 +63,19 @@ const input = (page) => dialog(page).getByRole("combobox");
 const selected = (page) => dialog(page).locator('[cmdk-item][data-selected="true"]');
 const firstTitle = async (page) => (await selected(page).locator(":scope > span > span").first().textContent().catch(() => null)) ?? (await selected(page).textContent());
 async function openMenu(page, how = "Control+k") {
+  // A dialog closed by running a result stays in the DOM while Radix plays its exit animation, and a
+  // client navigation does not remove it. `dialog(page)` is a role-and-name locator, and a closing
+  // dialog is still a dialog with that name, so it binds the dying node and resolves at once — then
+  // every read and keystroke below lands in the wrong one. That is why one race read out as three
+  // symptoms: no "Blocks" group (the old node is still filtered), nothing selected, or the menu never
+  // opening. Measured: the node is present here on an idle machine too, gone ~35ms later, so the
+  // settle below usually hid it; under load it did not, and this step failed 4 times in 18 runs.
+  //
+  // So require a clean slate first. The wait is bounded and asserts nothing — a menu that never
+  // reopens still fails on the two waits that follow. `check:global-search-reopen-control` holds the
+  // evidence and fails if this line goes. (The component's own keydown guard, which ignores a press
+  // made over a dialog with data-state="open", is NOT the path: the state here is "closed".)
+  await dialog(page).waitFor({ state: "detached", timeout: 10_000 });
   await page.keyboard.press(how);
   await dialog(page).waitFor();
   // the projection arrives on first open; wait for its groups so results are complete
@@ -164,6 +177,7 @@ const projection = await (await fetch(`${base}/search-index.json`)).json();
   if ((await firstTitle(page)) !== "Commerce") fail(`"commerce": first result ${await firstTitle(page)}`);
   await page.keyboard.press("Enter");
   await page.waitForURL(`${base}/use-cases/commerce`);
+  await dialog(page).waitFor({ state: "detached" });
   await ready(page);
   if ((await page.locator("h1").textContent()) !== "Commerce") fail("use case: wrong page");
   else ok("reopens after a navigation; Enter on a use case goes to /use-cases/commerce");
