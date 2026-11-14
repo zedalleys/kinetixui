@@ -25,7 +25,7 @@ const meta = {
   argTypes: { value: { control: { type: "range", min: 0, max: 100 } } },
   parameters: {
     layout: "padded",
-    docs: { source: { code: "<Progress value={files} max={4} aria-label=\"Upload progress\" />", language: "tsx" } },
+    docs: { source: { code: "<Progress value={1} max={4} aria-label=\"Upload progress\" />", language: "tsx" } },
   },
 } satisfies Meta;
 
