@@ -158,7 +158,7 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 
 <!-- BEGIN GENERATED: capability tables (pnpm gen:capabilities) -->
 
-169 capabilities in 30 families. Existing 46, partial 28, planned 86, Pro candidate 8, not planned 1.
+168 capabilities in 30 families. Existing 46, partial 28, planned 86, Pro candidate 7, not planned 1.
 
 ### Summary by phase
 
@@ -173,7 +173,7 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 | 7 | Map controls, MapMarker / MapMarkerCard / MapCluster, RouteSummary, FleetVehicleCard / VehicleStatus, ShipmentCard / ShipmentStatus / ShipmentTimeline / TrackingTimeline / DeliveryStatus, SpatialDeviceMarker, DeviceMaintenance |
 | 8 | TimelineChart, CalendarWeek / CalendarDay / CalendarEvent / CalendarResource, Scheduler / AvailabilityGrid / TimelinePlanner, PipelineBoard, KanbanBoard, TaskCard / Milestone |
 | 9 | MessageBubble / Conversation / Thread, CommentComposer / CommentThread, MentionInput, PresenceIndicator / ReactionPicker, CodeEditorShell, LogViewer, EnvironmentBadge / DeploymentStatus / DeploymentStep, StatusCard / StatusIndicator, HealthCheckList, IncidentTimeline, AlertRuleBuilder, PromptInput, ChatMessage / AssistantResponse / StreamingText, ToolCall / Citation / SourcesPanel, AgentTask |
-| 10 | DataGrid advanced, PivotTable, GanttChart, Advanced workflow tooling (visual designer, simulation), GeofenceEditor, Gantt, DependencyGraph, Pro motion |
+| 10 | DataGrid advanced, PivotTable, GanttChart / Gantt, Advanced workflow tooling (visual designer, simulation), GeofenceEditor, DependencyGraph, Pro motion |
 | — | DataTable, Wallet export (Apple Wallet / Google Wallet), OTPInput, WorkflowStepper, FileUploader, IoT controls, IoT monitoring, IoT summaries & cards, RequestedState / ReportedState / PendingDeviceState / CommandStatus, DeviceAlert, ZoneSummary, DeviceActivityTimeline, DeviceProvisioningStepper, DeviceFirmwareStatus, Calendar, DiffViewer, JSONViewer, IncidentBanner, AppShell / Sidebar / Header, PageHeader / ContextBar, SplitPane / ResizablePanels, StatusBanner / InlineStatus, Core motion |
 
 ### A. Data & analytics
@@ -198,7 +198,7 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 | Advanced chart types | WaterfallChart, FunnelChart, Heatmap, Treemap, RadarChart, CandlestickChart, BoxPlot | L1 Core primitive | Core | Web-first Enterprise | recipe | `charts-content.tsx` | Chart infrastructure | 3 | All seven ship as React recipes on /charts (plus Sankey, bullet, bump, dumbbell). Web-first; no native recipes. |
 | RangeChart | — | L1 Core primitive | Core | Web-first Enterprise | planned (recipe) | — | Chart infrastructure | 3 | Min/max band over time (forecast ranges, vital ranges). A recipe on the existing infrastructure. |
 | TimelineChart | — | L1 Core primitive | Core | Web-first Enterprise | planned (recipe) | — | Chart infrastructure | 8 | Events on a time axis; overlaps Scheduling's TimelinePlanner — build once. |
-| GanttChart | — | L2 Enterprise | Pro | Pro candidate | Pro candidate | — | TimelinePlanner, DataGrid | 10 | Dependency-aware planning is advanced organisational tooling. |
+| GanttChart / Gantt | — | L2 Enterprise | Pro | Pro candidate | Pro candidate | — | TimelinePlanner, DataGrid | 10 | Dependency-aware planning is advanced organisational tooling. Folded family T's duplicate `Gantt` row into this one (2026-11-09, owner decision D-12a): they were one capability under two names, identical in tier, status, phase and target. Which family owns it is still open — Data visualization holds it because the chart renders here; Scheduling is the arguable alternative. |
 
 ### C. Transactional experience
 
@@ -403,7 +403,6 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 | Calendar | CalendarMonth | L1 Core primitive | Core | Cross-platform Core | existing | ui:calendar | — | — | Month calendar with single and range modes (react-day-picker on React). Angular planned. |
 | CalendarWeek / CalendarDay / CalendarEvent / CalendarResource | — | L2 Enterprise | Core | Web-first Enterprise | planned | — | Calendar | 8 | A time-grid view; keyboard model and event density at 200% text are the hard part. |
 | Scheduler / AvailabilityGrid / TimelinePlanner | — | L2 Enterprise | Core | Web-first Enterprise | planned | — | CalendarWeek, DataGrid | 8 |  |
-| Gantt | — | L2 Enterprise | Pro | Pro candidate | Pro candidate | — | TimelinePlanner | 10 | Pro candidate. |
 
 ### U. CRM & sales
 
