@@ -5,7 +5,7 @@ import { execute, newHistory, undo, redo } from "./commands";
 import { exportReact } from "./export";
 import { ADAPTERS, catalogueContains } from "./registry";
 const create = () => createDocument("proj_testmodel1", "Test", "2026-11-11T00:00:00Z");
-describe("CreateProject v2 is a canonical v1 extension", () => {
+describe("CreateProject migrations preserve the canonical document", () => {
   it("creates and byte-stably round-trips a document", () => {
     const doc = create();
     expect(validateDocument(doc)).toEqual({ ok: true, errors: [] });
@@ -14,7 +14,7 @@ describe("CreateProject v2 is a canonical v1 extension", () => {
   });
   it("migrates a real stored v1 fixture without changing its identities/frontier", () => {
     const migrated = migrateDocument(minimal);
-    expect(migrated.schemaVersion).toBe(2);
+    expect(migrated.schemaVersion).toBe(3);
     expect(migrated.pages).toEqual(minimal.pages);
     expect(migrated.nextNodeId).toBe(minimal.nextNodeId);
     expect(migrateDocument(migrated)).toEqual(migrated);
