@@ -1,0 +1,7 @@
+{
+  "$description": "Motion roles excused from a rule in check:motion-tokens, one per rule, sorted. A role that declares an exemption in tokens/contracts/motion.json must also be named here, and a name here must have the matching declaration: the gate holds the two together in both directions, so an exemption cannot be taken without the line showing up in a diff for review. This is the same device as motion-consumers.json, for the same reason — a claim no static check can verify is written down where a person reviews it rather than being inferred from a field the claimant also writes.",
+  "pairingExempt": {
+    "$description": "Roles excused from naming a duration and an easing. A transition has to name the pairing it animates with; a LOOP cannot, because it has no destination to arrive at — its period is a keyframe, not a tier — so the rule is wrong for it rather than inconvenient. The exemption used to be derived from `reducedForm === \"rest\"`, which is a field the contract author writes, so any role could opt out of the pairing requirement by declaring itself a loop: measured on 00e2781c, a fabricated `ambient-glow` role with reducedForm \"rest\", no duration, no easing and one consumer naming no token passed the gate with zero errors. Naming the role here cannot make the claim true, and does not pretend to; it makes the claim reviewed.",
+    "roles": ["loop"]
+  }
+}
