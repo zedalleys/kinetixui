@@ -7,7 +7,9 @@
   "git": {
     "deploymentEnabled": {
       "codex/create-m1-model-20261111": false,
-      "codex/create-m1-editor-20261111": false
+      "codex/create-m1-editor-20261111": false,
+      "codex/create-m1-storage-20261111": false,
+      "codex/create-m1-storage-restacked-20261111": false
     }
   }
 }
