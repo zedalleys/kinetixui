@@ -25,6 +25,13 @@ type CarouselContextProps = {
   scrollNext: () => void;
   canScrollPrev: boolean;
   canScrollNext: boolean;
+  /**
+   * Whether the ENGINE is laying the horizontal track out right to left — `false` for a vertical carousel,
+   * which has no inline direction. The controls mirror on this and not on the document, for the reason the
+   * key handler does: a consumer's own `opts.direction` drives the track, so a control resolved from the
+   * document would point away from the slides it moves.
+   */
+  rtl: boolean;
 } & CarouselProps;
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null);
@@ -35,12 +42,56 @@ function useCarousel() {
   return context;
 }
 
+/**
+ * Whether `el` reads right to left. The nearest `[dir]` decides first, because it is the markup's answer;
+ * only when no ancestor states one does the computed direction, read through the element's OWN window,
+ * decide. A DOM implementation is free not to inherit computed direction, so relying on it alone would make
+ * the behaviour depend on the environment rather than on the page.
+ *
+ * This is `isRtl` from `packages/ui-angular/src/lib/collection.ts`, rule for rule. The two platforms must
+ * answer "which way does this carousel read" the same way or their carousels are not the same component.
+ */
+function isRtl(el: Element): boolean {
+  const explicit = el.closest("[dir]")?.getAttribute("dir")?.toLowerCase();
+  if (explicit === "rtl" || explicit === "ltr") return explicit === "rtl";
+  return el.ownerDocument.defaultView?.getComputedStyle(el).direction === "rtl";
+}
+
+/** Which way an arrow key travels once direction is resolved: `@kinetixui/angular`'s `inlineKey`. */
+function inlineKey(key: string, rtl: boolean): "forward" | "backward" | null {
+  if (key === "ArrowRight") return rtl ? "backward" : "forward";
+  if (key === "ArrowLeft") return rtl ? "forward" : "backward";
+  return null;
+}
+
 const Carousel = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & CarouselProps
 >(({ orientation = "horizontal", opts, setApi, plugins, className, children, onKeyDown, ...props }, ref) => {
+  // The carousel's own direction, resolved from the rendered element rather than assumed. The engine reads
+  // `direction` when it initialises and lays the track out from it, so this cannot be computed during
+  // render: the first client render is LTR and the layout effect below corrects it before paint, which
+  // re-initialises the engine. Horizontal only — a vertical track has no inline direction.
+  const root = React.useRef<HTMLDivElement | null>(null);
+  const [rtl, setRtl] = React.useState(false);
+  const horizontal = orientation === "horizontal";
+
+  React.useLayoutEffect(() => {
+    const el = root.current;
+    if (!el || !horizontal) return void setRtl(false);
+    const resolve = () => setRtl(isRtl(el));
+    resolve();
+    // A page that switches language flips `dir` on an ancestor long after mount. That resizes nothing, so
+    // nothing else would tell the engine to lay the track out the other way; this does.
+    const observer = new MutationObserver(resolve);
+    observer.observe(el.ownerDocument.documentElement, { attributes: true, subtree: true, attributeFilter: ["dir"] });
+    return () => observer.disconnect();
+  }, [horizontal]);
+
   const [carouselRef, api] = useEmblaCarousel(
-    { ...opts, axis: orientation === "horizontal" ? "x" : "y" },
+    // `direction` first, so a consumer who passes their own in `opts` still wins; `axis` last, because it is
+    // the carousel's own `orientation` prop expressed in the engine's terms and is not theirs to contradict.
+    { direction: horizontal && rtl ? "rtl" : "ltr", ...opts, axis: horizontal ? "x" : "y" },
     plugins,
   );
   const [canScrollPrev, setCanScrollPrev] = React.useState(false);
@@ -51,6 +102,14 @@ const Carousel = React.forwardRef<
     setCanScrollPrev(a.canScrollPrev());
     setCanScrollNext(a.canScrollNext());
   }, []);
+
+  /**
+   * The direction the engine is actually running, with the consumer's override taking precedence exactly as
+   * it does in the `useEmblaCarousel` call above. The controls read this; the key handler resolves the same
+   * expression at the press instead, so that a `dir` flipped between renders cannot map a key by a stale
+   * direction.
+   */
+  const engineRtl = horizontal && (opts?.direction ? opts.direction === "rtl" : rtl);
 
   const scrollPrev = React.useCallback(() => api?.scrollPrev(), [api]);
   const scrollNext = React.useCallback(() => api?.scrollNext(), [api]);
@@ -69,12 +128,47 @@ const Carousel = React.forwardRef<
     };
   }, [api, onSelect]);
 
+  /**
+   * The root element, kept for the direction lookup, composed with whatever ref the consumer forwarded.
+   *
+   * Two things this has to get right, both of which a bare inline arrow got wrong when this slice replaced
+   * `ref={ref}` with a wrapper:
+   *
+   *   - IDENTITY. An inline callback is a new function on every render, and React detaches a changed
+   *     callback ref before reattaching it — so the consumer's ref was being called with null and the node
+   *     again on every render of a component that re-renders on every `select`. `useCallback` on `ref`
+   *     restores the stability a plain `ref={ref}` had.
+   *   - CLEANUP. React 19 lets a callback ref return a teardown and then does NOT call that ref again with
+   *     null; a wrapper that drops the return value drops the teardown with it, and whatever the consumer
+   *     attached to the node leaks. It is returned CONDITIONALLY: the package's peer range is
+   *     `react: >=18`, and React 18 warns on a callback ref that returns a function. When the consumer
+   *     returns nothing, React's own null call is what tears both refs down, exactly as before.
+   */
+  const setRoot = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      root.current = node;
+      // `ForwardedRef`'s callback arm is still typed `(instance) => void` (@types/react 19.3.0,
+      // index.d.ts:1102) even though `RefCallback` itself now admits a cleanup, so the return value has to
+      // be read as `unknown` — narrowing the declared `void` lands on `never` and the call does not compile.
+      // The value is what React 19 hands back at runtime, not what this signature admits.
+      const cleanup: unknown =
+        typeof ref === "function" ? ref(node) : ref ? ((ref.current = node), undefined) : undefined;
+      if (typeof cleanup === "function") {
+        return () => {
+          root.current = null;
+          (cleanup as () => void)();
+        };
+      }
+    },
+    [ref],
+  );
+
   return (
     <CarouselContext.Provider
-      value={{ carouselRef, api, opts, orientation, scrollPrev, scrollNext, canScrollPrev, canScrollNext }}
+      value={{ carouselRef, api, opts, orientation, scrollPrev, scrollNext, canScrollPrev, canScrollNext, rtl: engineRtl }}
     >
       <div
-        ref={ref}
+        ref={setRoot}
         onKeyDown={(e) => {
           // Bubble phase, and only for a key nothing inside has claimed: a text field inside a slide keeps
           // its caret keys, a nested control that handled the arrow keeps it, and Alt/Ctrl/Meta+Arrow
@@ -83,12 +177,27 @@ const Carousel = React.forwardRef<
           if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
           const t = e.target as HTMLElement;
           if (t.isContentEditable || t.closest("input:not([type=button]):not([type=checkbox]):not([type=submit]):not([type=reset]), textarea, select")) return;
-          if (e.key === "ArrowLeft") {
+          // Logical, not physical: in a right-to-left carousel the next slide lies to the LEFT, so ArrowLeft
+          // advances and ArrowRight goes back.
+          //
+          // The direction the keys follow is the one the ENGINE is running, which is not always the
+          // document's: a consumer's own `opts.direction` wins over the resolved value below, so reading
+          // the document here would reverse the keys against the track they drive. Precedence therefore
+          // mirrors the engine's own, exactly. (`opts.breakpoints` can carry a per-breakpoint direction
+          // that this does not follow; nothing in the library does that, and it would need the engine's
+          // resolved option rather than the passed one.)
+          //
+          // Absent an override, direction is read at the press rather than taken from state, so a key is
+          // never mapped by a direction that has already changed under it.
+          //
+          // A vertical carousel keeps the keys it already had: this slice is about direction, and taking
+          // ArrowLeft/ArrowRight away from it would be a behaviour change nobody asked for.
+          const engineRtl = opts?.direction ? opts.direction === "rtl" : isRtl(e.currentTarget);
+          const move = inlineKey(e.key, horizontal && engineRtl);
+          if (move) {
             e.preventDefault();
-            scrollPrev();
-          } else if (e.key === "ArrowRight") {
-            e.preventDefault();
-            scrollNext();
+            if (move === "forward") scrollNext();
+            else scrollPrev();
           }
         }}
         className={cn("relative font-sans", className)}
@@ -161,9 +270,24 @@ CarouselItem.displayName = "CarouselItem";
  */
 const UNAVAILABLE = "aria-disabled:cursor-not-allowed aria-disabled:opacity-disabled aria-disabled:hover:border-input aria-disabled:hover:bg-transparent";
 
+/**
+ * A control's side and glyph follow the track, not the page. The engine lays a horizontal track out in the
+ * resolved direction, so in a right-to-left carousel the FIRST slide is on the right and "Previous" is
+ * toward the right: a Previous button pinned to the physical left, pointing left, would sit at the end of
+ * the track it rewinds and point away from the slide it shows. Tailwind's `-left-*` / `-right-*` are
+ * physical, so the side has to be chosen here; `-start-*` / `-end-*` would mirror on the DOCUMENT, which is
+ * not always the engine's direction (`opts.direction` overrides it).
+ *
+ * `packages/ui-angular/src/lib/carousel.ts` gets both for free and had already taken this decision: its
+ * controls are grid columns 1 and 3, which follow the writing direction, and its glyphs are the
+ * bidi-mirrored `‹ ›`. Its docstring names React as the platform whose "keys and glyphs are physical"; the
+ * keys were fixed earlier in this slice and these are the glyphs.
+ *
+ * A vertical carousel is untouched: it has no inline direction, and its controls stay above and below.
+ */
 const CarouselPrevious = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(
   ({ className, variant = "Outline", onClick, ...props }, ref) => {
-    const { orientation, scrollPrev, canScrollPrev } = useCarousel();
+    const { orientation, scrollPrev, canScrollPrev, rtl } = useCarousel();
     return (
       <Button
         ref={ref}
@@ -171,7 +295,11 @@ const CarouselPrevious = React.forwardRef<HTMLButtonElement, React.ComponentProp
         size="icon"
         className={cn(
           "absolute size-8 rounded-full",
-          orientation === "horizontal" ? "-left-12 top-1/2 -translate-y-1/2" : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
+          orientation === "horizontal"
+            ? rtl
+              ? "-right-12 top-1/2 -translate-y-1/2"
+              : "-left-12 top-1/2 -translate-y-1/2"
+            : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
           UNAVAILABLE,
           className,
         )}
@@ -188,7 +316,7 @@ const CarouselPrevious = React.forwardRef<HTMLButtonElement, React.ComponentProp
         }}
         {...props}
       >
-        <ArrowLeft className="size-4" />
+        {rtl ? <ArrowRight className="size-4" /> : <ArrowLeft className="size-4" />}
         <span className="sr-only">Previous slide</span>
       </Button>
     );
@@ -198,7 +326,7 @@ CarouselPrevious.displayName = "CarouselPrevious";
 
 const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(
   ({ className, variant = "Outline", onClick, ...props }, ref) => {
-    const { orientation, scrollNext, canScrollNext } = useCarousel();
+    const { orientation, scrollNext, canScrollNext, rtl } = useCarousel();
     return (
       <Button
         ref={ref}
@@ -206,7 +334,11 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
         size="icon"
         className={cn(
           "absolute size-8 rounded-full",
-          orientation === "horizontal" ? "-right-12 top-1/2 -translate-y-1/2" : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
+          orientation === "horizontal"
+            ? rtl
+              ? "-left-12 top-1/2 -translate-y-1/2"
+              : "-right-12 top-1/2 -translate-y-1/2"
+            : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
           UNAVAILABLE,
           className,
         )}
@@ -223,7 +355,7 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
         }}
         {...props}
       >
-        <ArrowRight className="size-4" />
+        {rtl ? <ArrowLeft className="size-4" /> : <ArrowRight className="size-4" />}
         <span className="sr-only">Next slide</span>
       </Button>
     );

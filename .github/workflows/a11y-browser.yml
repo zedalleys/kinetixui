@@ -33,6 +33,7 @@ on:
       - "scripts/tabs-indicator.mjs"
       - "scripts/react-overlays.mjs"
       - "scripts/react-carousel-focus.mjs"
+      - "scripts/react-carousel-direction.mjs"
       - "scripts/react-carousel-focus-negative-controls.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
@@ -83,6 +84,7 @@ on:
       - "scripts/tabs-indicator.mjs"
       - "scripts/react-overlays.mjs"
       - "scripts/react-carousel-focus.mjs"
+      - "scripts/react-carousel-direction.mjs"
       - "scripts/react-carousel-focus-negative-controls.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
@@ -256,6 +258,14 @@ jobs:
 
       - name: React Carousel endpoints — negative controls
         run: pnpm check:react-carousel-focus-negative-controls
+
+      # Which way a carousel's track travels is a layout question, and the engine answers it from the
+      # writing mode of real boxes. jsdom performs no layout, so a unit test can confirm that an option was
+      # passed and nothing about the direction the slides then run. This drives the track in both
+      # directions, reads which side slide 1 lands on, proves the arrow that advances moves it the same way
+      # Next does, and flips `dir` after mount the way a language switcher does.
+      - name: React Carousel direction (track travel, slide order, logical arrow keys, runtime dir flip)
+        run: pnpm check:react-carousel-direction
 
       # Loops are the case the pass above cannot express: nothing to click, no destination to seek to.
       # This reads whether each loop is really running normally and really stopped under reduced motion
