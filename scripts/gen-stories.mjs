@@ -250,7 +250,7 @@ const CONTROLS = {
     rounded: { control: "boolean" },
   }`,
     render: `(args) => (
-    <Image {...args} src="https://picsum.photos/seed/kx/400/300" alt="" className="w-56" />
+    <Image {...args} src="/img/placeholder-4-3.svg" alt="" className="w-56" />
   )`,
   },
   "aspect-ratio": {
