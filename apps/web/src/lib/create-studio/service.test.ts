@@ -45,6 +45,19 @@ describe("local development service: server-side account/ownership/quota boundar
     await expect(restarted.save(token, p.id, 1, { ...edited, name: "Stale" })).rejects.toMatchObject({ code: "REVISION_CONFLICT" });
     expect((await restarted.save(token, p.id, 1, edited)).revision).toBe(2); // lost ACK replay
   }));
+  it("saves and reopens a 201-page free product without increasing its product count", async () => fixture(async (service, directory) => {
+    const token = await service.start();
+    const product = await service.create(token, "Many screens", "request_one");
+    let history = newHistory(product.doc);
+    for (let i = 2; i <= 201; i++) {
+      history = execute(history, { type: "page", name: "Screen " + i });
+    }
+    await service.save(token, product.id, product.revision, history.doc);
+    const restarted = new StudioService(new FileStore(directory));
+    expect((await restarted.load(token, product.id)).doc.pages).toEqual(history.doc.pages);
+    expect((await restarted.list(token)).products).toHaveLength(1);
+    await expect(restarted.create(token, "Second product", "request_two")).rejects.toMatchObject({ code: "PRODUCT_LIMIT_REACHED" });
+  }));
   it("preserves paid excess products read-only at expiry, without relying on a webhook", async () => fixture(async (_service, directory) => {
     let now = 1000;
     const service = new StudioService(new FileStore(directory), () => now);
@@ -74,5 +87,16 @@ describe("local development service: server-side account/ownership/quota boundar
     const removed = structuredClone(p.doc);
     removed.pages[0].root.children = [];
     await expect(service.save(token, p.id, 1, removed)).rejects.toMatchObject({ code: "IDENTITY_REWIND" });
+  }));
+  it("rejects a newly live ID below the saved frontier and accepts the next allocation", async () => fixture(async service => {
+    const token = await service.start();
+    const product = await service.create(token, "Frontier", "request_one");
+    const saved = await service.save(token, product.id, product.revision, { ...product.doc, nextNodeId: 8 });
+    const next = execute(newHistory(saved.doc), { type: "insert", parentId: "node_2", ref: "component:Button" }).doc;
+    const earlier = structuredClone(next);
+    earlier.pages[0].root.children![0].children![0].id = "node_7";
+    await expect(service.save(token, product.id, saved.revision, earlier)).rejects.toMatchObject({ code: "IDENTITY_REWIND" });
+    expect((await service.load(token, product.id)).revision).toBe(saved.revision);
+    expect((await service.save(token, product.id, saved.revision, next)).doc).toEqual(next);
   }));
 });
