@@ -14,6 +14,8 @@ import SwiftUI
 
 public struct KinetixResizablePanels<First: View, Second: View>: View {
     @Environment(\.kinetixColors) private var colors
+    @Environment(\.layoutDirection) private var layoutDirection
+    @Namespace private var resizeSpace
 
     @State private var fraction: CGFloat
     @State private var dragStart: CGFloat?
@@ -57,18 +59,39 @@ public struct KinetixResizablePanels<First: View, Second: View>: View {
                 .frame(width: handleWidth)
                 .contentShape(Rectangle())
                 .gesture(
-                    DragGesture()
+                    DragGesture(coordinateSpace: .named(resizeSpace))
                         .onChanged { value in
                             let start = dragStart ?? fraction
                             if dragStart == nil { dragStart = fraction }
-                            let delta = value.translation.width / available
-                            fraction = min(max(start + delta, minFraction), maxFraction)
+                            fraction = Self.resizedFraction(
+                                start: start,
+                                physicalTranslation: value.translation.width,
+                                available: available,
+                                layoutDirection: layoutDirection,
+                                minFraction: minFraction,
+                                maxFraction: maxFraction
+                            )
                         }
                         .onEnded { _ in dragStart = nil }
                 )
 
                 second.frame(width: max(0, available - firstWidth))
             }
+            .coordinateSpace(name: resizeSpace)
         }
+    }
+
+    // The drag stays in the container's physical coordinates while the first panel
+    // occupies the logical leading side. The handle itself moves during the drag.
+    static func resizedFraction(
+        start: CGFloat,
+        physicalTranslation: CGFloat,
+        available: CGFloat,
+        layoutDirection: LayoutDirection,
+        minFraction: CGFloat,
+        maxFraction: CGFloat
+    ) -> CGFloat {
+        let growth = layoutDirection == .rightToLeft ? -physicalTranslation : physicalTranslation
+        return min(max(start + growth / available, minFraction), maxFraction)
     }
 }

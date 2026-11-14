@@ -24,10 +24,42 @@
 import SwiftUI
 
 public enum KinetixSlideMotion {
-    /// The transition a panel uses to enter and leave from `edge`: a slide normally, a fade when Reduce
-    /// Motion is on.
+    public enum NavigationDirection: Sendable {
+        case forward
+        case backward
+
+        var edges: (insertion: Edge, removal: Edge) {
+            switch self {
+            case .forward: return (.trailing, .leading)
+            case .backward: return (.leading, .trailing)
+            }
+        }
+    }
+
+    /// A navigation transition with edges relative to the view's layout direction.
+    public static func transition(navigating direction: NavigationDirection, reduceMotion: Bool) -> AnyTransition {
+        let edges = direction.edges
+        return transition(insertingFrom: edges.insertion, removingTo: edges.removal, reduceMotion: reduceMotion)
+    }
+
+    /// A panel enters from and exits toward the same edge. SwiftUI resolves horizontal
+    /// `.leading` and `.trailing` edges from the view's layout direction.
     public static func transition(from edge: Edge, reduceMotion: Bool) -> AnyTransition {
-        slides(reduceMotion: reduceMotion) ? .move(edge: edge) : .opacity
+        transition(insertingFrom: edge, removingTo: edge, reduceMotion: reduceMotion)
+    }
+
+    /// Edges describe where a view starts on insertion and where it ends on removal.
+    /// For forward navigation, insert from trailing and remove toward leading. For
+    /// backward navigation, insert from leading and remove toward trailing.
+    /// Pass logical edges directly so SwiftUI can mirror them in RTL.
+    public static func transition(
+        insertingFrom insertionEdge: Edge,
+        removingTo removalEdge: Edge,
+        reduceMotion: Bool
+    ) -> AnyTransition {
+        guard slides(reduceMotion: reduceMotion) else { return .opacity }
+        if insertionEdge == removalEdge { return .move(edge: insertionEdge) }
+        return .asymmetric(insertion: .move(edge: insertionEdge), removal: .move(edge: removalEdge))
     }
 
     /// Whether panels travel across the screen. Split out of `transition` because `AnyTransition` is not
