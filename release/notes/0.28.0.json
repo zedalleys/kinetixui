@@ -1,0 +1,117 @@
+{
+  "version": "0.28.0",
+  "summary": "KinetixUI 0.28.0 gives Tabs a selectable indicator motion, makes the reduced-motion floor cap delays as well as durations, and adds the Kinetic Weave colour ramps to the generated tokens. The fixed core cohort moves @kinetixui/ui, @kinetixui/tokens and @kinetixui/cli together on the 0.28.0 line. @kinetixui/angular publishes 0.26.3 on its own line, widening its tokens peer range to >=0.24.0 <0.29.0 so it supports tokens 0.28.x; it remains Preview. @kinetixui/iot publishes 0.6.0 with the device-ledger surface.",
+  "breaking": [],
+  "changes": [
+    {
+      "kind": "new",
+      "area": "components",
+      "title": "Tabs takes a selectable indicator motion",
+      "body": "Tabs can now choose how its selected indicator moves: classic, fluid, or none. The choice is exported as TABS_MOTION with a TabsMotion type, and TabsListProps becomes public. Nothing is removed and the default behaviour is unchanged, so an existing Tabs renders and animates exactly as before.",
+      "href": "/docs/components/tabs"
+    },
+    {
+      "kind": "accessibility",
+      "area": [
+        "components",
+        "tokens"
+      ],
+      "title": "Reduced motion caps the delays, not only the durations",
+      "body": "The shared Tailwind preset carries the only library-wide reduced-motion guarantee, and under prefers-reduced-motion: reduce it capped animation-duration and transition-duration while saying nothing about the delays. That inverted the setting: a reader who asked for less motion still waited out the full delay for content everyone else saw at once. Measured in Chromium, an animation with a 700ms delay fired animationend at 719ms; with the delays zeroed it fires at 13ms. The floor now sets animation-delay and transition-delay to 0ms alongside the duration caps. Normal-motion behaviour is untouched, and no call site needed changing — the audit found every existing delay either already gated behind motion-safe, already zeroed, or on decoration already set to animation: none.",
+      "href": "/docs/accessibility"
+    },
+    {
+      "kind": "new",
+      "area": "tokens",
+      "title": "Kinetic Weave colour ramps",
+      "body": "The generated tokens gain the navy ramp (50 through 950), indigo (50 through 900), cyan (100, 400, 700) and violet (100, 400, 600), plus a blue-75 step: 25 new CSS custom properties and 5 new keys on the token object, emitted across the web, iOS, Android and Flutter outputs. Nothing is renamed and nothing is removed, so every token that existed keeps its name and its value semantics. The addition is why this is a minor rather than a patch.",
+      "href": "/docs/tokens"
+    },
+    {
+      "kind": "fixed",
+      "area": "platforms",
+      "title": "Angular supports tokens 0.28.x",
+      "body": "@kinetixui/angular 0.26.3 widens its @kinetixui/tokens peer range from >=0.24.0 <0.28.0 to >=0.24.0 <0.29.0. The ceiling moves by one token minor and the 0.24.0 floor is held, so consumers on tokens 0.24 through 0.28 are all still supported rather than the lower bound being dragged forward with the upper one. The bound stays closed rather than open-ended: tokens 0.28.0 is additive, which is evidence for 0.28 and not a warrant for 0.29. No Angular source, selector or public class name changed in this release, and Angular remains Preview.",
+      "href": "/docs/angular"
+    },
+    {
+      "kind": "new",
+      "area": "components",
+      "title": "IoT publishes the device-ledger surface",
+      "body": "@kinetixui/iot 0.6.0 adds thirteen function exports and eight type exports for the device ledger — creating a ledger, requesting a device change, deriving device state, expiring commands, applying signals and selecting connectivity or capability lifecycle. The change is additive: no export was renamed or removed, and the React entry point's export set is unchanged. IoT remains a React-only module on its own release line.",
+      "href": "/docs/iot"
+    },
+    {
+      "kind": "improved",
+      "area": "release",
+      "title": "Core moves together on the 0.28.0 release line",
+      "body": "@kinetixui/ui and @kinetixui/tokens carry the changes. @kinetixui/cli moves with them because the three packages are one fixed Changesets cohort, even though it has no change of its own in this release. Angular and IoT continue on their independent release lines, at 0.26.3 and 0.6.0."
+    },
+    {
+      "kind": "accessibility",
+      "area": "components",
+      "title": "Field names only the description and message that exist, and announces an error",
+      "body": "Field no longer points aria-describedby at ids that are not in the document, and an inline error is announced once as an alert. The attribute is resolved at render time, so server markup is already correct and hydration does not change it."
+    },
+    {
+      "kind": "fixed",
+      "area": "components",
+      "title": "Carousel leaves arrow keys to the control that owns them",
+      "body": "A text field inside a slide keeps its caret keys, a nested control that handled the arrow keeps it, and Alt+ArrowLeft (browser Back) is no longer cancelled. A plain arrow from a button or the slide still scrolls."
+    },
+    {
+      "kind": "fixed",
+      "area": "components",
+      "title": "SegmentedControl cannot be emptied by pressing the selected segment",
+      "body": "Activating the selected segment again no longer clears the selection, so one segment is always marked. A controlled consumer can still pass value=\"\" to clear it."
+    },
+    {
+      "kind": "accessibility",
+      "area": "components",
+      "title": "Removing a chip or a file row keeps the keyboard",
+      "body": "After Tag, FileUpload or MultiSelect removes an item, focus moves to a surviving neighbour, in either text direction, and never overrides a focus move the consumer made."
+    },
+    {
+      "kind": "fixed",
+      "area": "components",
+      "title": "The Image demo's artwork ships with the package",
+      "body": "The Image story's demo artwork is served from the repository instead of picsum.photos. The published story carried a third-party image URL, so it rendered three blank frames wherever that host was unreachable. The artwork is now three committed SVGs drawn with KinetixUI primitive token colours; the component's API, the demo's layout and its alt semantics are unchanged."
+    }
+  ],
+  "limitations": [
+    "The reduced-motion delay fix is proven in Chromium against the compiled preset; it is not verified in WebKit or Gecko.",
+    "Angular's tokens 0.28.x support is a range widening justified by the token change being additive. No rendered Angular measurement against tokens 0.28.0 was taken, and the ceiling must be re-evidenced before it moves again.",
+    "Angular remains Preview; this release does not graduate it.",
+    "SwiftUI, Jetpack Compose and Flutter remain source-checkout distributions rather than packages published to their platform registries.",
+    "The Storybook category rename that accompanied the component taxonomy work changes story titles only; it is not published package API."
+  ],
+  "coverage": [
+    {
+      "cohort": "angular",
+      "version": "0.26.3",
+      "changesets": [
+        "angular-tokens-peer-0-28"
+      ]
+    },
+    {
+      "cohort": "core",
+      "version": "0.28.0",
+      "changesets": [
+        "carousel-arrow-keys-yield",
+        "field-describedby-and-live-region",
+        "image-demo-local-artwork",
+        "removable-chip-keyboard-focus",
+        "segmented-control-keeps-selection",
+        "tokens-kinetic-weave",
+        "ui-tabs-motion-and-reduced-motion-delay"
+      ]
+    },
+    {
+      "cohort": "iot",
+      "version": "0.6.0",
+      "changesets": [
+        "iot-device-ledger"
+      ]
+    }
+  ]
+}
