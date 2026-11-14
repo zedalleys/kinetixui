@@ -1,0 +1,6 @@
+{
+  "$comment": "Fixture — a fully authorized line. Proves the gate can PASS, which is what makes the refusals below evidence rather than a gate that refuses everything. Not read by any publish workflow.",
+  "lines": {
+    "ui-compose": { "coordinate": "com.kinetixui:ui-compose", "channel": "Maven Central", "cohort": "own", "published": [], "authorizedNext": "0.1.0" }
+  }
+}

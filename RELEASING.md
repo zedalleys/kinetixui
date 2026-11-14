@@ -865,3 +865,228 @@ point instead. If it cannot, set `KINETIXUI_PNPM` to a pnpm executable or its `.
 ```bash
 KINETIXUI_PNPM=/path/to/pnpm/bin/pnpm.mjs pnpm release:preflight
 ```
+
+---
+
+## Native release lines (Compose, Flutter, SwiftUI)
+
+Everything above is about npm. The three native packages do not go through Changesets and are not
+in `release/publish-packages.json`; their versions are declared in
+**`release/native-release-lines.json`**, and that file is the only thing that authorizes a native
+publish.
+
+Each line declares its `coordinate`, its `channel`, its `cohort` (`own` = its own version line,
+`core` = lockstep with the `@kinetixui/{tokens,ui,cli}` cohort), the versions it has `published`,
+and the single `authorizedNext` version the next real publish may carry.
+
+`.github/workflows/publish-{compose,flutter,swiftui}.yml` each run
+
+```bash
+node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=<line>
+```
+
+in a step carrying `if: ${{ inputs.dry_run == false }}`. So the dispatch `version` input is a
+**confirmation** of what the file declares, never the source of it, and the number that reaches an
+irreversible registry has been through a reviewed diff. There is no fallback version and nothing is
+inferred from another package's number: an unknown line, an undeclared cohort, a null
+`authorizedNext`, a mismatch, an already-published version and an unreadable file are all refusals.
+
+### Owner decisions, 2026-11-09
+
+**`cohort` is `own` on all three lines.** The native libraries declare no dependency on the npm core
+cohort — they consume generated token output rather than depending on `@kinetixui/tokens` — and
+Maven Central, pub.dev and SwiftPM each have their own release mechanics and their own kind of
+immutability. A shared number would assert a compatibility guarantee nothing enforces, so each
+native line versions independently. Precedent: `@kinetixui/angular` is already its own release
+group.
+
+**The approved first public version of each line is `0.1.0`** — Compose, Flutter and SwiftUI alike.
+That is a release *plan*. It is deliberately **not** written into `authorizedNext`, because
+planning a number and authorizing its publication are different decisions and only the second one
+opens the door.
+
+**No native publish is authorized today.** `authorizedNext` is `null` on all three lines, so a real
+native publish fails closed at the authorization step. A later dedicated release-authorization pull
+request sets `authorizedNext` per line, one line at a time, and only once that line's registry
+prerequisites are verified:
+
+| Line | Outstanding registry prerequisites |
+| --- | --- |
+| `ui-compose` | A Central Portal namespace for `com.kinetixui` verified, a published GPG key, and the four signing and credential secrets present in the publish environment. |
+| `ui-flutter` | The pub.dev **verified publisher for `kinetixui.com` actually created**, its domain verification succeeding, the intended Google account owning and managing it, and `kinetix_ui` associated with that publisher as part of the first publish. None of those facts is established today and none may be assumed. |
+| `ui-swiftui` | The mirror repository existing and writable by the publish workflow. This is the only one of the three whose first publish can be undone, so it is the one to rehearse on. |
+
+See the file's own `$comment` for the sequence, including moving the number into `published`
+afterwards.
+
+**`published` must be an array, and the gate asserts its type before reading it.** Found by review
+and measured: a line declaring `published: "0.1.0"` — the shape a hand-edit of a one-element array
+produces — skipped the already-published refusal entirely and authorized a republication, while the
+same line with `published: ["0.1.0"]` refused it. The two invocations differed only in that type.
+Nothing validates this file's schema, so the shape is checked where the decision is made, and an
+absent `published` is refused too: "no history was found" must never read as "there is none". The
+fixture `malformed-history.json` carries that shape, `ci.yml` requires it to be refused, and two
+controls hold it in place — one restoring the bypass, one repairing the fixture, because a fixture
+quietly fixed would leave the probe green while proving nothing about the type.
+
+**A dry run is deliberately not gated on this file.** Rehearsing the full release path under any
+shape-valid version is how a defect in that path is found before it is irreversible, so the
+authorization step carries the publication's own condition and nothing else depends on the
+declaration.
+
+Two gates stand behind this. `VI-VERSION-AUTHORIZED` requires each publish workflow to run the
+authorization, for its own line, with that exact condition, **and to authorize the version the
+publication will actually carry** — `--authorize-version="$VERSION"` with `VERSION` bound to
+`${{ inputs.version }}`. That last part was added after review: without it, a literal in either the
+`env` or the command line authorized one version while the publish steps, which read the dispatch
+input independently, uploaded another — and both spellings left the whole preflight green. `VI-COMPOSE-VERSION-BOUND-TO-INPUT`
+requires every Gradle publish step to bind `VERSION_NAME: ${{ inputs.version }}` exactly — measured
+before it existed, a hard-coded `9.9.9` in the real publish step left the entire preflight green
+while the dry run rehearsed the dispatched number, so the upload and its rehearsal were asking for
+different versions. `ci.yml` additionally runs the authorization against the fixtures in
+`scripts/publish/fixtures/native-release-lines/`: one that authorizes and five that must refuse,
+because a gate that refuses everything proves nothing.
+
+**A publish workflow may not pass `--version=` on the authorization step either.** Every mode of
+the preflight exits on its own, so an invocation carrying two of them is decided by whichever is
+handled first — and `--version=` is a semver *shape* check. Measured in review:
+`--authorize-version=9.9.9 --line=ui-compose --version=9.9.9` exited 0 while the declaration
+authorized nothing, printing `PASS: "9.9.9" is a publishable version` into the job log, which would
+read as authorization at a glance. The script now refuses two modes in one invocation outright,
+which covers every caller including a local run (`VI-PREFLIGHT-MODES-ARE-EXCLUSIVE`), and
+`VI-VERSION-AUTHORIZED` additionally keeps the combination out of the three publish workflows by
+position. Validating the shape stays a separate, earlier step, which is how these workflows are
+already written.
+
+**And no selector may be passed twice.** Each of `--version=`, `--authorize-version=`, `--line=`,
+`--lines-file=` and `--negative=` carries a single value and is read with the first matching
+argument, so a second occurrence is discarded in silence while still satisfying any check that only
+asks whether the right spelling is present. Review measured both halves of that: once a line
+authorizes a version, `--authorize-version=0.1.0 --authorize-version="$VERSION" --line=ui-compose`
+passes every structural check — the second argument really is bound to the dispatch input — and
+authorizes `0.1.0` for a `9.9.9` dispatch; `--line=ui-compose --line=ui-swiftui` satisfies a check
+looking for the SwiftUI line while reading Compose's authorization. The mode guard does not cover
+this, because it counts distinct modes rather than occurrences. The script now refuses a repeated
+selector before reading any of them, and `VI-VERSION-AUTHORIZED` rejects the repetition in a
+publish workflow by position.
+
+**Both guards are proved by running them, not by reading them.** `VI-PREFLIGHT-MODES-ARE-EXCLUSIVE`
+asserts the source, and review showed what that is worth alone: delete the `process.exit(1)` under
+the conflict condition and the assertion still passes, because the condition, the message and the
+mode list are all still there — the script then prints its own refusal and carries on into the
+shape check, which exits 0. A diagnostic is not a refusal. So
+`VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO` writes the script as the checks see it to a throwaway
+module and invokes it: five conflicting or repeated invocations must exit 1 *with the guard's own
+wording*, and two things must still succeed — a single mode, and a read of a repo-relative file —
+because otherwise a script broken in any way at all would satisfy every refusal.
+
+That second asymmetry is there because the check failed open once, in exactly this way. The copy
+first lived one directory too deep, so it resolved everything it read against
+`<repo>/node_modules/` rather than the repository. With the exit removed from the repeated-selector
+guard, the copy printed the guard's diagnostic, fell through into the authorization, and exited 1
+on a missing file — a nonzero exit carrying the guard's own wording, which the predicate read as
+enforcement. **A probe is only evidence that a guard refused if the same invocation would have
+passed without it.** So the copy is now a direct child of the repository root, like `scripts/` is;
+the probes that fall through into the authorization are aimed at the accepting fixture with the
+authorized version first, so their fallthrough necessarily exits 0; and the repo-relative read is
+asserted, which is what would have caught the misplacement.
+
+The probes read the fixture's authorized line and version out of the file rather than repeating
+them, and a fixture that authorizes nothing is reported rather than assumed
+(`accepting-fixture-authorizes-nothing`): a hardcoded version would stop being true the day the
+fixture was edited, and the probes would go on passing while proving less.
+
+**An authorization must stop the job, and must run before the upload.** Two more ways the gate read
+as present and decided nothing, both measured as a green preflight before review found them:
+
+- `continue-on-error: true` on the authorization step. The refusal still prints and the step still
+  shows red, but a failing step only ends its job without that key — so the publication ran anyway.
+  `VI-VERSION-AUTHORIZED` now rejects any `continue-on-error` other than `false` on an authorizing
+  step.
+- the authorization step moved *after* the publish step, or into a job that `needs:` the publishing
+  one. The check looked for an authorizing step anywhere in the workflow and never asked where. An
+  authorization that runs after the upload refuses a coordinate that is already permanent. Every job
+  carrying a live publication must now also carry an authorization at a **lower step index in the
+  same job**, because a failing step ending its own job's remaining steps is the entire mechanism
+  and nothing weaker than that stops an upload.
+- the publication **delegated somewhere the check does not read**. The ordering above found a
+  publication by a contiguous command token, which is a discovery mechanism: the Compose upload body
+  moved into a local composite action (a `uses:` step has no `run:` at all) or into
+  `bash ./publish.sh` carries no token, so nothing was found and nothing was ordered — with the
+  publishing step's name, condition and env all kept. The ordering is therefore required of the step
+  `PUBLISH_CONTRACT` **names**, and, fail-closed, that step's own `run:` must carry a recognised
+  live publication. A publishing step that delegates its body is refused rather than scanned,
+  because "no publication was found" must never read as "there is none".
+- the command **swallowing its own failure** inside `run:`. Appending `|| true` to the
+  authorization left the whole preflight green: the refusal printed, the shell exited 0 and the
+  publication ran. A step-level failure only exists if the command's exit status reaches the step,
+  and `||`, `;`, a pipe, `set +e` and an `if` wrapper all end that. So the command is **pinned**:
+  the authorization step must run exactly
+  `node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=<line>`
+  and nothing else — one spelling, for the same reason the step condition has one.
+- the **interpreter and the directory** the pinned command runs under. The pin fixes the command's
+  text and says nothing about what executes it. A custom `shell:` is a wrapper around the whole
+  script, so `shell: bash -c 'bash {0}; exit 0'` left the pinned string byte-identical, left every
+  predicate above green, and reported success when the authorization refused; the wrapper was
+  measured separately exiting 0 on a script that exits 1. `working-directory:` is the same trick on
+  the other axis: the command is intact and resolves against another directory, where
+  `scripts/check-native-publish-preflight.mjs` is a missing file rather than a gate. Both are
+  inherited through `defaults.run` on the job and on the workflow, so the **effective** value is
+  what is checked, not the step's own key — the Flutter control proves the inherited case, where the
+  job's `defaults.run` carries only a working directory and the shell comes from the workflow. The
+  authorization must therefore carry **no `shell:`** (the runner default ends the job on a non-zero
+  exit) and a working directory that is the repository root, which the repo-relative command needs.
+
+The same property — **a refusal must end the job** — has now been found lost in four distinct
+places: `continue-on-error`, the step's position, the command's own text, and the interpreter that
+runs it. That is why the command is pinned rather than described clause by clause, and why each new
+clause names what its own spelling costs.
+
+That fixture seam is `--lines-file=`, and **a publish workflow may not pass it** — also part of
+`VI-VERSION-AUTHORIZED`, and also added after review. Pointed at the accepting fixture, a publish
+step authorized `0.1.0` while the canonical declaration authorized nothing, and every other check
+in the block still passed. A publish reads `release/native-release-lines.json` and has no say in
+the matter; as a second layer, a run that uses the override labels its own output as a fixture run
+that authorizes no publication, so such a log can never be mistaken later for a real
+authorization.
+
+### The Flutter changelog must carry a real release heading
+
+`scripts/publish/stage-flutter-package.mjs` refuses to stage a version unless
+`packages/ui-flutter/CHANGELOG.md` contains an exact level-2 release heading for it:
+
+```markdown
+## 0.1.0
+```
+
+A date or title after the version is fine (`## 0.1.0 - 2026-11-09`), and so is a trailing comment.
+The requirement, precisely: a **heading node at depth 2 among the document's top-level children**,
+**written as ATX** (the line it starts on begins with `##`), whose text **begins with exactly this
+version**, ended by whitespace or the end of the text.
+
+**A CommonMark parser answers that question, not a regex over the text.** The check runs
+`mdast-util-from-markdown` over the changelog, so fenced blocks, fence info strings, raw HTML
+blocks, HTML comments, indented code and blockquotes are the parser's problem rather than this
+repository's. That is the same move `check-native-publish-preflight.mjs` made when it replaced a
+hand-written workflow reader with `js-yaml`, and for the same reason: **three hand-written versions
+of this check were defeated in review, each by a different piece of the spec, and every single
+failure counted a heading that renders as code or as literal HTML.** They all fail *open* — the
+publish proceeds and the version is permanent. The defeated versions, in order:
+
+| Attempt | Defeated by |
+| --- | --- |
+| `changelog.includes(version)` | the version appearing in a sentence — which is what the committed changelog contains |
+| toggle fence state on any ``` | a four-backtick block containing a three-backtick line |
+| strip comments, then scan lines | deleted fence boundaries; `#<!-- x -->#  0.1.0` joined into a `##` that was never parsed; a stripped comment opening a phantom fence; `` ```foo` `` read as an opener although a backtick fence's info string may not contain backticks; and `<pre>` around a heading, which none of them modelled at all |
+
+Two deliberate refusals, both failing closed: a **setext** heading (`0.1.0` underlined with `-----`)
+is depth 2 to the parser but is not the `## X.Y.Z` spelling this document defines, and a heading
+**inside a blockquote or list item** is not a top-level release section.
+
+`VI-FLUTTER-CHANGELOG-GATES-VERSION` and `VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS` pin the contract
+in source, but the source checks are not what caught the defect: the old one passed for as long as
+the unsound test was there, because it asserted that a gate *existed*. What proves the behaviour is
+`scripts/publish/flutter-changelog-heading-controls.mjs`, which runs the real staging script against
+four changelogs it must accept and eighteen that only look like a release heading — every defeated
+attempt above is a standing case. `ci.yml` runs it on every pull request and
+`VI-FLUTTER-CHANGELOG-CONTROLS-RUN` asserts that it does.

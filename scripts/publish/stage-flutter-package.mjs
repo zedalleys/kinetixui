@@ -20,6 +20,8 @@
  * every pull request instead of only when someone dispatches a publish.
  */
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { fromMarkdown } from "mdast-util-from-markdown";
+import { toString as mdastToString } from "mdast-util-to-string";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -103,13 +105,79 @@ if (!existsSync(join(packageDir, "LICENSE"))) {
  * changelog never mentions it is a package page that cannot say what the release contained — and
  * the entry cannot be added afterwards, because the version is immutable. So the warning becomes a
  * refusal here, before anything is uploaded, rather than a surprise mid-publish.
+ *
+ * WHAT IS REQUIRED IS A RELEASE HEADING, NOT A MENTION. This check used to be
+ * `changelog.includes(version)`, a substring test, and it was measurably wrong: the committed
+ * CHANGELOG.md had no release section at all — its only heading was `## Unreleased` — and said in
+ * prose that the first version was undecided. Because that sentence contained the characters
+ * `0.1.0`, staging 0.1.0 passed. The most likely first release would have published with no
+ * changelog entry, permanently, which is exactly the outcome this check exists to prevent.
+ *
+ * So the contract is an exact level-2 heading whose version is the one being published:
+ *
+ *   PASS  ## 0.1.0                     a release section for this version
+ *   PASS  ## 0.1.0 - 2026-11-09        a title or date after it, separated from the version
+ *   FAIL  Preparing for 0.1.0          prose; renders as a paragraph, not a section
+ *   FAIL  ### 0.1.0                    a subsection of some other release, not this release
+ *   FAIL  ## 0.1.0-beta.1              a different version that merely starts with this one
+ *   FAIL  <!-- ## 0.1.0 -->            commented out, so pub.dev renders nothing
+ *   FAIL  ## 0.1.0 inside a code fence an example of a heading, not a heading
+ *
+ * Comments and fences are stripped and skipped rather than matched, because both are text that
+ * looks like a heading and renders as something else — which is the whole class of defect here.
  */
 const changelogPath = join(packageDir, "CHANGELOG.md");
 if (!existsSync(changelogPath)) {
   die(`${changelogPath} does not exist. pub.dev renders it as the Changelog tab and scores its absence.`);
 }
-if (!readFileSync(changelogPath, "utf8").includes(version)) {
-  die(`${changelogPath} does not mention ${version}. \`pub publish\` warns about this and exits non-zero, and the entry cannot be added after the version is published. Add the section for ${version} first.`);
+
+/*
+ * WHAT COUNTS AS A HEADING IS A MARKDOWN QUESTION, SO A MARKDOWN PARSER ANSWERS IT.
+ *
+ * Three hand-written versions of this check were defeated in review, each by a different piece of
+ * CommonMark, and every failure was in the same direction — a heading that renders as code or as
+ * literal HTML was counted, so a permanent publish would have gone out with no changelog entry:
+ *
+ *   - a substring test accepted the version appearing in a sentence;
+ *   - toggling fence state on any ``` ignored the delimiter's character and length, so a heading
+ *     still inside a four-backtick block counted;
+ *   - stripping `<!-- … -->` and scanning what was left deleted fence boundaries, manufactured a
+ *     `##` prefix out of two fragments (`#<!-- x -->#  0.1.0`), opened phantom fences, and read a
+ *     `` ```foo` `` line as an opener although a backtick fence's info string may not contain
+ *     backticks;
+ *   - and none of them knew about raw HTML blocks, so `<pre>` around a heading counted too.
+ *
+ * `js-yaml` replaced a hand-written workflow reader in check-native-publish-preflight.mjs for
+ * exactly this reason. The same answer applies here: `mdast-util-from-markdown` is the CommonMark
+ * reference block parser, so fences, info strings, HTML blocks, comments, indented code and
+ * blockquotes are its problem rather than this file's.
+ *
+ * The contract, which RELEASING.md documents:
+ *
+ *   - a heading node, at depth 2, among the document's TOP-LEVEL children. A heading inside a
+ *     blockquote or a list item is not a release section.
+ *   - written as ATX — the line it starts on begins with `##`. A setext heading (`0.1.0` over
+ *     `-----`) is depth 2 to the parser but is not the `## X.Y.Z` spelling the release process
+ *     documents, so it is refused. That is deliberate and it fails closed.
+ *   - whose text begins with exactly this version, ended by whitespace or the end of the text, so
+ *     `## 0.1.0-beta.1` cannot satisfy a publish of 0.1.0 while `## 0.1.0 - 2026-11-09` can.
+ */
+const changelogSource = readFileSync(changelogPath, "utf8");
+const changelogLines = changelogSource.split(/\r?\n/);
+const versionHeading = new RegExp(
+  String.raw`^${version.replace(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`)}(?=\s|$)`,
+  "u",
+);
+const hasVersionHeading = fromMarkdown(changelogSource).children.some(
+  (node) =>
+    node.type === "heading" &&
+    node.depth === 2 &&
+    /^ {0,3}##[ \t]/u.test(changelogLines[node.position.start.line - 1] ?? "") &&
+    versionHeading.test(mdastToString(node)),
+);
+
+if (!hasVersionHeading) {
+  die(`${changelogPath} has no \`## ${version}\` release heading. A mention of ${version} in prose, a \`### ${version}\` subsection, a longer version that starts with it, a commented-out heading and an example inside a code fence all read like an entry and render as nothing, so none of them counts. \`pub publish\` warns when the changelog does not cover the version and exits non-zero, and the entry cannot be added after the version is published. Add a \`## ${version}\` section first.`);
 }
 
-console.log(`PASS: ${packageDir} staged for publish as ${version} (publish_to removed, LICENSE copied, CHANGELOG mentions the version).`);
+console.log(`PASS: ${packageDir} staged for publish as ${version} (publish_to removed, LICENSE copied, CHANGELOG carries a \`## ${version}\` release heading).`);

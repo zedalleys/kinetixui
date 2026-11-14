@@ -1,0 +1,6 @@
+{
+  "$comment": "Fixture — the authorized version is one the line has already published. Must refuse: a Maven Central coordinate and a pub.dev version cannot be republished, and a moved SwiftPM tag changes what existing consumers resolve.",
+  "lines": {
+    "ui-compose": { "coordinate": "com.kinetixui:ui-compose", "channel": "Maven Central", "cohort": "own", "published": ["0.1.0"], "authorizedNext": "0.1.0" }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "$comment": "Fixture — the current real state: a declared cohort and no authorized version. Must refuse, because absence is never permission.",
+  "lines": {
+    "ui-compose": { "coordinate": "com.kinetixui:ui-compose", "channel": "Maven Central", "cohort": "own", "published": [], "authorizedNext": null }
+  }
+}

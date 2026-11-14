@@ -87,6 +87,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # stage-flutter-package.mjs asks a CommonMark parser what a changelog heading is, rather than
+      # scanning the text itself, because five hand-written versions of that question were defeated
+      # in review. So this job can no longer run on a bare checkout: the parser has to be installed
+      # first, exactly as publish-flutter.yml installs it before the same script runs there.
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install (the staging script's parser)
+        run: pnpm install --frozen-lockfile
+
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
@@ -103,10 +115,11 @@ jobs:
           set -euo pipefail
           STAGED="$RUNNER_TEMP/kinetix_ui"
           cp -r packages/ui-flutter "$STAGED"
-          # Staging refuses a version the changelog does not mention, because `pub publish` warns
-          # about it and a warning alone makes it exit non-zero. The probe version is invented for
-          # this run, so the throwaway copy gets an entry for it. The committed CHANGELOG is
-          # untouched; a real publish needs a real entry, which is the point of the refusal.
+          # Staging refuses a version with no `## <version>` release heading in the changelog,
+          # because `pub publish` warns when the changelog does not cover the version and a warning
+          # alone makes it exit non-zero. The probe version is invented for this run, so the
+          # throwaway copy gets a real heading for it. The committed CHANGELOG is untouched; a real
+          # publish needs a real entry, which is the point of the refusal.
           printf '## %s\n\nProbe entry written by native-flutter.yml. Not a release.\n\n' \
             9.9.9-dry-run | cat - "$STAGED/CHANGELOG.md" > "$RUNNER_TEMP/changelog" \
             && mv "$RUNNER_TEMP/changelog" "$STAGED/CHANGELOG.md"
@@ -115,18 +128,25 @@ jobs:
           flutter pub get
           flutter pub publish --dry-run
 
-      - name: Staging refuses a version the changelog does not mention
+      # The grep is on the refusal's own wording, so that a staging failure for some other reason
+      # (the pubspec rewrite and the name assertion both run before this gate) cannot pass as proof.
+      # That is why this control broke when the gate changed from a substring test to a heading
+      # test, and why the message is matched rather than the exit code alone.
+      - name: Staging refuses a version with no release heading in the changelog
         run: |
           set -uo pipefail
           UNLOGGED="$RUNNER_TEMP/kinetix_ui_unlogged"
           cp -r packages/ui-flutter "$UNLOGGED"
           if node scripts/publish/stage-flutter-package.mjs 9.9.9-unlogged --package-dir="$UNLOGGED" > "$RUNNER_TEMP/unlogged.log" 2>&1; then
-            echo "::error::Staging accepted a version with no changelog entry. pub would warn and exit non-zero mid-publish, and the entry cannot be added once the version is permanent."
+            echo "::error::Staging accepted a version with no \`## <version>\` release heading. pub would warn and exit non-zero mid-publish, and the entry cannot be added once the version is permanent."
             exit 1
           fi
-          grep -q "does not mention 9.9.9-unlogged" "$RUNNER_TEMP/unlogged.log" \
+          # The backticks the refusal puts around the heading are matched with `.` rather than
+          # written literally: inside double quotes a backtick is command substitution, and inside
+          # single quotes shellcheck reports SC2016. Same device as the name control below.
+          grep -qE 'has no .## 9.9.9-unlogged. release heading' "$RUNNER_TEMP/unlogged.log" \
             || { echo '::error::Staging failed for some other reason, so this control proves nothing.'; cat "$RUNNER_TEMP/unlogged.log"; exit 1; }
-          echo "::notice::Staging refused a version the changelog does not mention."
+          echo "::notice::Staging refused a version with no release heading in the changelog."
 
       - name: Staging refuses a pubspec that is not the published package
         run: |
