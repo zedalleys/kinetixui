@@ -297,6 +297,13 @@
       "maxCount": 1,
       "classification": "D",
       "reason": "M1 editor camera is an application-specific spatial region: pan/zoom and pointer capture belong to the document editor, with labeled focus entry, keyboard panning and camera controls. No library canvas primitive exists. Components, controls and inspector use KinetixUI; browser tests cover camera and reflow."
+    },
+    {
+      "file": "apps/web/src/components/create-studio/viewport-preview.tsx",
+      "pattern": "main",
+      "maxCount": 1,
+      "classification": "D",
+      "reason": "The independent preview document needs its own main landmark. This semantic container mounts the same KinetixUI component tree used by React export. Browser checks cover keyboard behavior in the frame and scoped axe on the rendered preview DOM."
     }
   ]
 }

@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
+import { verifyResponsiveBrowser } from "./create-studio-responsive-browser.mjs";
 const require = createRequire(import.meta.url);
 const base = process.env.CREATE_BASE ?? "http://127.0.0.1:3137";
 assert.ok(["127.0.0.1", "localhost"].includes(new URL(base).hostname), "Local verification only");
@@ -17,6 +18,7 @@ const errors = [], results = [], a11y = [];
 page.on("pageerror", error => errors.push(error.message));
 const pass = name => { results.push(name); console.log("PASS " + name); };
 const studio = page.locator(".create-studio");
+const previewFrame = page.frameLocator('iframe[title="Screen preview"]');
 const inspector = studio.getByRole("complementary", { name: "Properties inspector" });
 async function save() {
   await studio.getByRole("button", { name: "Save", exact: true }).click();
@@ -116,7 +118,7 @@ try {
   const longLabel = "Continue to the next step in this product configuration workflow";
   await changeText(longLabel);
   await studio.getByRole("button", { name: "Preview", exact: true }).click();
-  const narrowButton = studio.locator(".studio-artboard").getByRole("button", { name: longLabel, exact: true });
+  const narrowButton = previewFrame.getByRole("button", { name: longLabel, exact: true });
   assert.equal(await narrowButton.evaluate(el => getComputedStyle(el).whiteSpace), "nowrap");
   assert.equal(await narrowButton.evaluate(el => getComputedStyle(el).maxWidth), "none");
   await studio.getByRole("button", { name: "Back to editing", exact: true }).click();
@@ -125,11 +127,11 @@ try {
   await studio.getByLabel("Viewport width").selectOption("960");
   pass("zoom, keyboard pan, pointer pan and intrinsic preview widths");
   await studio.getByRole("button", { name: "Preview", exact: true }).click();
-  const details = studio.locator(".studio-artboard").getByRole("tab", { name: "Details", exact: true });
+  const details = previewFrame.getByRole("tab", { name: "Details", exact: true });
   await details.click();
-  assert.match(await studio.locator(".studio-artboard").getByRole("tabpanel").innerText(), /Make room/);
-  await studio.locator(".studio-artboard").getByLabel("Email address").focus();
-  assert.equal(await studio.locator(".studio-artboard").getByLabel("Email address").evaluate(el => el === document.activeElement), true);
+  assert.match(await previewFrame.getByRole("tabpanel").innerText(), /Make room/);
+  await previewFrame.getByLabel("Email address").focus();
+  assert.equal(await previewFrame.getByLabel("Email address").evaluate(el => el === document.activeElement), true);
   await studio.getByRole("button", { name: "Back to editing", exact: true }).click();
   pass("preview restores real Tabs and input focus behavior");
   await studio.getByRole("button", { name: "Export React", exact: true }).click();
@@ -310,11 +312,12 @@ try {
     await consumer.getByRole("tab", { name: "Details", exact: true }).click();
     assert.match(await consumer.getByRole("tabpanel").innerText(), /Make room/);
     await consumer.screenshot({ path: resolve(out, "export-consumer.png"), fullPage: true });
+    await verifyResponsiveBrowser({ browser, base, fixture, consumer, out, errors, a11y, pass });
     await consumer.close(); await new Promise(resolve => server.close(resolve));
     pass("clean consumer bundle renders and Tabs operate in a real browser");
   }
   assert.deepEqual(errors, []);
-  const report = { results, runtimeErrors: errors, accessibility: a11y, limitations: ["Chromium only; no manual assistive-technology certification", "Local adapter only; no production auth/billing or hosted verification", "Intrinsic-width preview; viewport media-query emulation is deferred", "200% overflow/axe measured using CDP font preferences; screenshots preserve 32px root text with CSS because Playwright resets CDP fonts during capture"] };
+  const report = { results, runtimeErrors: errors, accessibility: a11y, limitations: ["Chromium only; no manual assistive-technology certification", "Local adapter only; no production auth/billing or hosted verification", "Edit canvas uses intrinsic sizing; Preview uses an independent CSS viewport", "200% overflow/axe measured using CDP font preferences; screenshots preserve 32px root text with CSS because Playwright resets CDP fonts during capture"] };
   await writeFile(resolve(out, "browser-results.json"), JSON.stringify(report, null, 2));
   const violations = a11y.flatMap(x => x.violations);
   assert.equal(violations.length, 0, JSON.stringify(a11y, null, 2));

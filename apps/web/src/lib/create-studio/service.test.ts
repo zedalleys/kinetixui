@@ -99,4 +99,21 @@ describe("local development service: server-side account/ownership/quota boundar
     expect((await service.load(token, product.id)).revision).toBe(saved.revision);
     expect((await service.save(token, product.id, saved.revision, next)).doc).toEqual(next);
   }));
+  it("opens a saved v2 revision and persists v3 responsive values on the next edit", async () => fixture(async (service, directory) => {
+    const token = await service.start();
+    const product = await service.create(token, "Legacy", "request_one");
+    const path = join(directory, "studio.json");
+    const data = JSON.parse(await readFile(path, "utf8"));
+    data.products[0].doc.schemaVersion = 2;
+    delete data.products[0].doc.pages[0].root.children[0].props.widthMode;
+    await writeFile(path, JSON.stringify(data));
+    const loaded = await service.load(token, product.id);
+    expect(loaded.doc).toEqual({ ...data.products[0].doc, schemaVersion: 3 });
+    expect(loaded.revision).toBe(product.revision);
+    expect((await service.save(token, product.id, loaded.revision, loaded.doc)).revision).toBe(loaded.revision);
+    const edited = execute(newHistory(loaded.doc), { type: "responsive", id: "node_2", breakpoint: "tablet", property: "widthMode", value: "fill" }).doc;
+    await service.save(token, product.id, loaded.revision, edited);
+    const restarted = new StudioService(new FileStore(directory));
+    expect((await restarted.load(token, product.id)).doc).toEqual(edited);
+  }));
 });
