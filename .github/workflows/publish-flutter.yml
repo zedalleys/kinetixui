@@ -60,6 +60,13 @@ jobs:
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
+          # Pinned. `channel: stable` alone floats: on 2026-11-12 stable moved
+          # 3.47.9 -> 3.50.0, whose analyzer deprecates `package:flutter/material.dart`
+          # and emitted 94 `deprecated_member_use` infos, reddening `Analyze`
+          # repo-wide on diffs that touch no Dart. 3.47.9 is the last version this
+          # workflow was green on (run #432, 2026-11-11). Bump deliberately, together
+          # with the material_ui/cupertino_ui migration -- never with --no-fatal-infos.
+          flutter-version: 3.47.9
 
       - run: flutter pub get
 

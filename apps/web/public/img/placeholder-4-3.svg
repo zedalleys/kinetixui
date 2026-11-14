@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <title>KinetixUI woven ribbons, landscape</title>
+  <defs>
+    <linearGradient id="ground" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a" />
+      <stop offset="1" stop-color="#102432" />
+    </linearGradient>
+    <linearGradient id="warm" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#7850c6" />
+      <stop offset="1" stop-color="#a78bfa" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#ground)" />
+  <g fill="none" stroke-linecap="round">
+    <path d="M-40 230 C 110 240, 160 70, 320 50 S 430 100, 460 40" stroke="url(#warm)" stroke-width="46" stroke-opacity="0.9" />
+    <path d="M-40 90 C 130 110, 150 250, 330 265 S 430 230, 460 262" stroke="#60a5fa" stroke-width="32" stroke-opacity="0.5" />
+    <path d="M-20 150 C 120 130, 190 140, 420 100" stroke="#eee5ff" stroke-width="3" stroke-opacity="0.8" />
+    <path d="M-20 176 C 120 158, 190 168, 420 128" stroke="#a78bfa" stroke-width="2" stroke-opacity="0.6" />
+    <path d="M-20 124 C 120 104, 190 114, 420 74" stroke="#d2c1b6" stroke-width="2" stroke-opacity="0.38" />
+  </g>
+</svg>
