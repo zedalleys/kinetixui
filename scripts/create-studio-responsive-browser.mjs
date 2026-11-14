@@ -202,6 +202,24 @@ export async function verifyResponsiveBrowser({ browser, base, fixture, consumer
     await details.press("Enter");
     await shown.waitFor();
     assert.match(await shown.innerText(), /Make room/);
+    // Why that step has to press each key on the element it belongs to: the preview portals its tree
+    // into the frame from THIS document, so a roving-focus group reads an `activeElement` that cannot
+    // see focus move inside the frame. Its candidate walk never stopped, ran to the last candidate,
+    // and left focus on the last tab while another tab was selected. Assert that focus and selection
+    // now agree — a panel-text read cannot see this, because automatic activation makes the panel
+    // follow whichever tab focus ended on.
+    const tabState = () => iframe.evaluate(element => {
+      const active = element.contentDocument.activeElement;
+      const chosen = element.contentDocument.querySelector('[role="tab"][aria-selected="true"]');
+      return {
+        focused: active ? (active.textContent || "").trim() : null,
+        selected: chosen ? (chosen.textContent || "").trim() : null,
+      };
+    });
+    // Measured: this position is satisfied by the old behaviour too — there are two tabs, so the walk
+    // from Overview has one candidate and ends on it either way. Kept as the invariant it states, not
+    // as the regression gate; the re-entry below is what tells the two behaviours apart.
+    assert.deepEqual(await tabState(), { focused: "Details", selected: "Details" }, "focus follows the selection the arrow key moved");
     await email.focus();
     await email.press("h");
     await email.press("Control+z");
@@ -211,6 +229,13 @@ export async function verifyResponsiveBrowser({ browser, base, fixture, consumer
     assert.equal(await gap.inputValue(), "spacing.8");
     await button("Preview").click();
     await frame.getByRole("main").waitFor();
+    // A reopened preview chooses its first tab again, so the tab to land on is NOT the last one in
+    // the group: entering the tablist here tells a group that stops at its chosen candidate apart
+    // from one that walks past it. It also proves the boundary shim is reinstalled per preview.
+    await frame.getByLabel("Email address").focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
+    assert.deepEqual(await tabState(), { focused: "Overview", selected: "Overview" }, "entry focus lands on the selected tab, not the last tab in the group");
     await iframe.click({ position: { x: 30, y: 570 } });
     assert.equal(await iframe.evaluate(element => element.contentDocument.activeElement === element.contentDocument.body), true);
     await page.keyboard.press("Escape");
