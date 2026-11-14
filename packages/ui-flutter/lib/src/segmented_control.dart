@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import 'app_text.dart';
 import 'kinetix_selection_indicator.dart';
+import 'kinetix_selection_item.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/segmented-control.tsx`: an
@@ -56,9 +57,9 @@ class KinetixSegmentedControlItem extends StatelessWidget {
     final c = KinetixTheme.of(context);
     final paintSelection =
         selected && !KinetixSelectionSurfaceScope.of(context);
-    return GestureDetector(
+    return KinetixSelectionItem(
+      selected: selected,
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(
             horizontal: 12, vertical: 4), // px-3 py-1
