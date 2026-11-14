@@ -275,6 +275,189 @@ try {
   await studio.getByRole("button", { name: "Move layer up" }).click();
   pass("every drag-only affordance keeps a keyboard equivalent (library Enter, Move up/down, Move into container)");
 
+  // ================================================================ M3-B: resize, guides, snapping
+  // The frame is the page root's only child, so it is the second row of the layers tree. Selecting
+  // it there rather than by pressing the canvas avoids depending on where its children happen to sit.
+  await studio.getByRole("button", { name: "Layers", exact: true }).click();
+  await tree.getByRole("treeitem").nth(1).click();
+  assert.equal(await tree.getByRole("treeitem").nth(1).getAttribute("aria-level"), "2");
+  await studio.getByRole("button", { name: "Library", exact: true }).click();
+  const widthField = inspector.getByLabel("Width", { exact: true });
+  const modelWidth = async () => Number(await widthField.inputValue());
+  const renderedWidth = () => page.locator(`[data-studio-node="${frameId}"] > div > section`).evaluate(el => Math.round(el.getBoundingClientRect().width / (el.closest(".studio-world")?.getBoundingClientRect().width / el.closest(".studio-world")?.offsetWidth || 1)));
+  /** A frame carries `max-width:100%`, so what renders is the model width capped by the artboard. */
+  const artboardContent = () => page.locator(".studio-artboard").evaluate(el => {
+    const style = getComputedStyle(el);
+    return Math.round(el.offsetWidth - parseFloat(style.paddingInlineStart) - parseFloat(style.paddingInlineEnd));
+  });
+  const handle = studio.getByRole("slider", { name: /frame width/ });
+  await handle.waitFor();
+  const setWidth = async width => {
+    await widthField.fill(String(width));
+    // Enter applies the field's own draft; the row's Apply button is one of several in the panel.
+    await widthField.press("Enter");
+    // The handle's own value, not the rendered rect: `max-width:100%` can cap what renders.
+    await page.waitForFunction(w => document.querySelector("[data-studio-resize]")?.getAttribute("aria-valuenow") === String(w), width);
+  };
+  /**
+   * The press point for the handle — and a check that it really lands on the handle. The canvas
+   * clips, so a frame wider than the visible canvas puts its handle under the inspector, where a
+   * press would silently do nothing. Asserting what is under the point turns that into a failure.
+   */
+  const handlePoint = async () => {
+    const box = await handle.boundingBox();
+    const y = box.y + box.height / 2;
+    const candidates = [0.5, 0.75, 0.9, 0.25, 0.1].map(fraction => box.x + box.width * fraction);
+    for (const x of candidates) {
+      const hit = await page.evaluate(([px, py]) => document.elementFromPoint(px, py)?.closest("[data-studio-resize]")?.getAttribute("data-studio-resize") ?? null, [x, y]);
+      if (hit === frameId) return { x, y };
+    }
+    await page.screenshot({ path: resolve(out, "handle-unreachable.png"), fullPage: true });
+    const geometry = await page.evaluate(() => ({
+      canvas: document.querySelector(".studio-canvas")?.getBoundingClientRect(),
+      world: document.querySelector(".studio-world")?.getAttribute("style"),
+      section: document.querySelector("[data-studio-resize]")?.parentElement?.querySelector("section")?.getBoundingClientRect(),
+      valuenow: document.querySelector("[data-studio-resize]")?.getAttribute("aria-valuenow"),
+      hit: (() => { const el = document.elementFromPoint(0, 0); return el?.tagName; })(),
+    }));
+    assert.fail(`the resize handle is not reachable by a pointer anywhere across its own box ${JSON.stringify(box)} ${JSON.stringify(geometry)}`);
+  };
+  // A 390 viewport keeps the frame and its handle inside the visible canvas at 100%.
+  await studio.getByLabel("Viewport width").selectOption("390");
+  await studio.getByRole("button", { name: "Reset view", exact: true }).click();
+  await setWidth(300);
+  assert.equal(await handle.getAttribute("aria-valuemin"), "240");
+  assert.equal(await handle.getAttribute("aria-valuemax"), "1920");
+  assert.equal(await handle.getAttribute("aria-valuenow"), "300");
+  assert.equal(await handle.getAttribute("aria-valuetext"), "300 pixels");
+  // The handle must sit ON the frame's own edge. Its wrapper is a full-width block, so a handle
+  // anchored to the wrapper floats far right of a narrow frame — which is what it did, measured, and
+  // put it outside the clipped canvas entirely once the camera moved.
+  const edgeOffset = await page.evaluate(id => {
+    const handleEl = document.querySelector(`[data-studio-resize="${id}"]`);
+    const section = document.querySelector(`[data-studio-node="${id}"]`).querySelector("section");
+    const h = handleEl.getBoundingClientRect(), f = section.getBoundingClientRect();
+    return Math.round(h.left + h.width / 2 - f.right);
+  }, frameId);
+  measurements.handleEdgeOffset = edgeOffset;
+  assert.ok(Math.abs(edgeOffset) <= 3, `the handle must sit on the frame's own right edge, not its wrapper's (off by ${edgeOffset}px)`);
+  measurements.resizeStart = { model: await modelWidth(), rendered: await renderedWidth() };
+  pass("a selected frame carries a resize handle with real slider semantics, sitting on its own edge");
+
+  // ---------------------------------------------------------------- drag the edge
+  let point = await handlePoint();
+  await dragFromTo(point, { x: point.x + 60, y: point.y });
+  const grown = await modelWidth();
+  assert.ok(grown > 300, `dragging the edge outwards must widen the frame (300 → ${grown})`);
+  assert.ok(Math.abs(grown - 360) <= 6, `and by about the pointer's travel (got ${grown})`);
+  measurements.renderCap = { model: grown, rendered: await renderedWidth(), artboardContent: await artboardContent() };
+  assert.equal(await renderedWidth(), Math.min(grown, await artboardContent()), "the rendered frame must be the document's width, capped by the frame's own max-width:100%");
+  await studio.getByRole("button", { name: "Undo", exact: true }).click();
+  assert.equal(await modelWidth(), 300, "one undo must restore the width — a resize is one history step");
+  measurements.resizeDrag = { from: 300, to: grown };
+  pass("dragging a frame's edge resizes it, and the whole drag is one undo");
+
+  // ---------------------------------------------------------------- snapping to a guide
+  // The viewport is 390, so an edge released a few pixels short of it must take exactly 390.
+  await setWidth(360);
+  point = await handlePoint();
+  await dragFromTo(point, { x: point.x + 22, y: point.y }, { release: false });
+  assert.equal(await studio.locator(".studio-guide-snapped").count(), 1, "a snapped edge must be drawn differently from a free one");
+  const snapAnnouncement = (await studio.locator(".studio-announcement").last().innerText()).trim();
+  assert.match(snapAnnouncement, /snapped to Viewport · 390px/, "snapping must be announced, not only drawn");
+  await page.screenshot({ path: resolve(out, "resize-snapped.png") });
+  await page.mouse.up();
+  assert.equal(await modelWidth(), 390, `a release inside the tolerance must take the guide's exact width, not the pointer's (got ${await modelWidth()})`);
+  measurements.snap = { released: 382, committed: await modelWidth(), announcement: snapAnnouncement };
+  pass("an edge released near a guide snaps to its exact width, and the snap is announced");
+
+  // ---------------------------------------------------------------- outside the tolerance
+  await setWidth(300);
+  point = await handlePoint();
+  await dragFromTo(point, { x: point.x + 60, y: point.y });
+  const unsnapped = await modelWidth();
+  assert.notEqual(unsnapped, 390, "a release well outside the tolerance must keep the pointer's own width");
+  assert.ok(Math.abs(unsnapped - 360) <= 6, `and that width must be where the pointer was (got ${unsnapped})`);
+  assert.equal(await studio.locator(".studio-guide-snapped").count(), 0);
+  measurements.noSnap = unsnapped;
+  pass("an edge released outside the tolerance is not pulled to the guide");
+
+  // ---------------------------------------------------------------- the registry's limits hold
+  await setWidth(300);
+  point = await handlePoint();
+  const canvasFrame = await studio.getByRole("region", { name: "Design canvas" }).boundingBox();
+  await dragFromTo(point, { x: canvasFrame.x + 2, y: point.y });
+  assert.equal(await modelWidth(), 240, "the layout registry's minimum must hold however far the pointer travels inwards");
+  pass("a pointer resize is clamped to the layout registry's minimum");
+
+  // ---------------------------------------------------------------- Escape mid-resize
+  // Focus is deliberately left in the Width field by setWidth: a pointer gesture is global, so
+  // Escape must abandon it even when the keyboard is somewhere else. It did not, before this slice.
+  await setWidth(320);
+  point = await handlePoint();
+  await dragFromTo(point, { x: point.x + 80, y: point.y }, { release: false });
+  assert.equal(await studio.locator(".studio-guide").count(), 1);
+  const previewed = await renderedWidth();
+  assert.ok(previewed > 320 || previewed === await artboardContent(), `the frame must preview the new width while the pointer is down (got ${previewed})`);
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  assert.equal(await page.evaluate(() => document.activeElement?.id), "studio-prop-width", "this check is only meaningful with focus still in the field");
+  assert.equal(await modelWidth(), 320, "a cancelled resize must leave the width exactly as it was");
+  assert.equal(await renderedWidth(), Math.min(320, await artboardContent()), "and must not leave its preview width behind either");
+  pass("Escape during a resize abandons it, in the document and on the screen");
+
+  // ---------------------------------------------------------------- the keyboard equivalent
+  await handle.focus();
+  await page.keyboard.press("ArrowRight");
+  assert.equal(await modelWidth(), 321);
+  await page.keyboard.press("Shift+ArrowRight");
+  assert.equal(await modelWidth(), 331);
+  await page.keyboard.press("ArrowLeft");
+  assert.equal(await modelWidth(), 330);
+  await page.keyboard.press("End");
+  assert.equal(await modelWidth(), 1920, "End must take the frame to the registry's maximum");
+  await page.keyboard.press("Home");
+  assert.equal(await modelWidth(), 240, "Home must take it to the minimum");
+  assert.equal(await handle.getAttribute("aria-valuenow"), "240");
+  measurements.keyboardResize = [321, 331, 330, 1920, 240];
+  pass("the handle resizes from the keyboard alone, through the same width-setting path");
+
+  // ---------------------------------------------------------------- responsive geometry
+  await setWidth(320);
+  await inspector.getByLabel("Edit at breakpoint").selectOption("desktop");
+  await handle.focus();
+  await page.keyboard.press("Shift+ArrowRight");
+  const atDesktop = await modelWidth();
+  assert.equal(atDesktop, 330, "resizing while a breakpoint is selected must change that breakpoint's width");
+  assert.match(await inspector.innerText(), /Overridden at Desktop/, "and must be recorded as an override, not as the base width");
+  await inspector.getByLabel("Edit at breakpoint").selectOption("base");
+  assert.equal(await modelWidth(), 320, "the base width must be untouched by a breakpoint resize");
+  measurements.responsiveResize = { base: 320, desktop: atDesktop };
+  pass("resizing at a breakpoint writes a breakpoint override and leaves the base width alone");
+
+  // ---------------------------------------------------------------- resize under the camera
+  // A narrower frame first: the canvas clips, and at 120% a 320px frame puts its own edge past the
+  // visible canvas. That is a real reachability limit of the handle, recorded under limitations.
+  // Selecting a breakpoint also moves the viewport, so the camera is put back first.
+  await studio.getByLabel("Viewport width").selectOption("390");
+  await studio.getByRole("button", { name: "Reset view", exact: true }).click();
+  await setWidth(260);
+  await studio.getByRole("button", { name: "Zoom in", exact: true }).click();
+  await studio.getByRole("button", { name: "Zoom in", exact: true }).click();
+  assert.match(await studio.locator(".studio-world").getAttribute("style"), /scale\(1\.2\)/);
+  point = await handlePoint();
+  // 120 screen pixels at 120% is 100 document pixels. A resize that ignored the camera would record
+  // 120 — the same gesture would mean a different width at every zoom level.
+  await dragFromTo(point, { x: point.x + 120, y: point.y });
+  const zoomed = await modelWidth();
+  measurements.zoomedResize = { scale: 1.2, screenPixels: 120, documentPixels: zoomed - 260 };
+  assert.ok(Math.abs(zoomed - 360) <= 6, `120 screen pixels at 120% zoom must record about 100 document pixels (got ${zoomed - 260})`);
+  assert.ok(Math.abs(zoomed - 380) > 6, "and must not record the raw screen travel — that is the camera-blind defect");
+  await studio.getByRole("button", { name: "Reset view", exact: true }).click();
+  pass("a resize measures document pixels at any zoom, not screen pixels");
+
+  await scan("resize-handle-visible");
+
   assert.deepEqual(errors, []);
   const violations = a11y.flatMap(x => x.violations);
   const report = {
@@ -284,6 +467,9 @@ try {
       "Mouse pointer only: touch and trackpad use the same pointer events but are not driven here",
       "Keyboard parity is the existing library/Move controls; there is no keyboard equivalent of choosing a drop POSITION yet",
       "No auto-scroll while dragging near a canvas edge",
+      "Resize covers layout:section width only — the registry declares no other resizable geometry",
+      "The canvas clips, so a frame whose edge sits outside the visible canvas puts its handle out of pointer reach; the camera must be panned or zoomed out first, and the keyboard path is unaffected",
+      "Each keyboard resize step is its own history entry, unlike a pointer drag which is one",
       "Local adapter only; no production auth/billing or hosted verification",
     ],
   };
