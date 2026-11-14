@@ -423,11 +423,14 @@ async function composite(context, platform, kind, theme) {
     const fillStep = contrast(fill, editable);
     await hoverCentre(p, ro);
     const moved = (await frame(p, ro)).changed(fr);
-    const steppersOff = A.steppers ? await p.locator(A.steppers("readonly")).evaluateAll((els) => els.every((e) => e.disabled)) : true;
+    // `A.steppers` is set only where the read-only field really has steppers, so a zero match means the
+    // selector has gone stale — and `[].every(...)` would report them "disabled" having read none.
+    const stepperCount = A.steppers ? await p.locator(A.steppers("readonly")).count() : 0;
+    const steppersOff = A.steppers ? stepperCount > 0 && (await p.locator(A.steppers("readonly")).evaluateAll((els) => els.every((e) => e.disabled))) : true;
     check(
       fillStep >= 1.03 && moved === 0 && steppersOff,
       `${name} read-only is distinct and cannot change`,
-      `fill ${r2(fillStep)}:1 against an editable field, ${moved} pixel(s) changed on hover${A.steppers ? `, steppers ${steppersOff ? "disabled" : "STILL ENABLED"}` : ""}`,
+      `fill ${r2(fillStep)}:1 against an editable field, ${moved} pixel(s) changed on hover${A.steppers ? `, ${stepperCount} stepper(s), ${steppersOff ? "disabled" : stepperCount === 0 ? "NONE MATCHED" : "STILL ENABLED"}` : ""}`,
     );
     await p.close();
   } else skip(`${name} read-only`, "no read-only state on this component");
