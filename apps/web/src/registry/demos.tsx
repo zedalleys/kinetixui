@@ -415,14 +415,19 @@ add(
 add(
   "progress-demo",
   () => {
-    const [v, setV] = React.useState(13);
-    React.useEffect(() => {
-      const t = setTimeout(() => setV(66), 600);
-      return () => clearTimeout(t);
-    }, []);
-    return <Progress value={v} aria-label="Upload progress" className="w-[60%]" />;
+    const [files, setFiles] = React.useState<number | null>(1);
+    return (
+      <div className="w-full max-w-sm space-y-3">
+        <Progress value={files} max={4} aria-label="Upload progress" />
+        <div className="flex flex-wrap gap-2">
+          <Button variant="Outline" onClick={() => setFiles(1)}>1 file uploaded</Button>
+          <Button variant="Outline" onClick={() => setFiles(3)}>3 files uploaded</Button>
+          <Button variant="Ghost" onClick={() => setFiles(null)}>Unknown progress</Button>
+        </div>
+      </div>
+    );
   },
-  `const [value, setValue] = React.useState(13)\n// ...\n<Progress value={value} aria-label=\"Upload progress\" />`,
+  `<Progress value={files} max={4} aria-label="Upload progress" />`,
 );
 add(
   "radio-group-demo",
