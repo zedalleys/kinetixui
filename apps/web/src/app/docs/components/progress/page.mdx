@@ -20,11 +20,13 @@ Displays an indicator showing the completion progress of a task.
 import { Progress } from "@kinetixui/ui";
 ```
 
-Styled entirely from the KinetixUI token contract — `bg-action`,
-`text-muted-foreground`, `border-input`, `ring-ring`. Works in light and dark
-with no extra config. Keyboard and ARIA behaviour is inherited from Radix where the
-component is built on a primitive; the hand-built widgets (DataGrid, TreeView,
-ColorPicker, MultiSelect, Tour, KanbanBoard) have their own documented interaction
-models — see [Accessibility](/docs/accessibility).
+`value` and `max` are in the same units. The fill grows from inline start,
+including in RTL. The progressbar exposes the current value as soon as it changes.
+Set `value={null}` when the amount is unknown. The fill clears and the progressbar
+omits its current value.
+
+The fill transitions over the `base` duration with `standard` easing and
+retargets when a new value arrives. With reduced motion the fill updates immediately.
+Progress is read-only and adds no keyboard stop.
 
 <ComponentApi slug="progress" />
