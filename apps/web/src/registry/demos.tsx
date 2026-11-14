@@ -427,7 +427,7 @@ add(
       </div>
     );
   },
-  `<Progress value={files} max={4} aria-label="Upload progress" />`,
+  `<Progress value={1} max={4} aria-label="Upload progress" />`,
 );
 add(
   "radio-group-demo",
