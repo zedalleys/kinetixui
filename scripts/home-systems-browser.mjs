@@ -336,6 +336,10 @@ for (const blockStyles of [false, true]) {
     // late font or a lazily decoded image
     assert.ok(later - settled < 500, `page grew from ${settled}px to ${later}px over 3s while idle`);
     assert.ok(later < 60_000, `page is ${later}px tall`);
+    // Both checks below count offenders, so no overlay reads the same as no bad overlay. `TRACES` is a
+    // class-shaped selector, which is what a refactor renames: prove the population before judging it.
+    const traces = await page.locator(TRACES).count();
+    assert.ok(traces > 0, `no trace overlay matched ${TRACES}, so the overlay checks would pass over nothing`);
     const measured = await page
       .locator(TRACES)
       .evaluateAll((svgs) => svgs.filter((s) => s.hasAttribute('width') || s.hasAttribute('height')).length);
