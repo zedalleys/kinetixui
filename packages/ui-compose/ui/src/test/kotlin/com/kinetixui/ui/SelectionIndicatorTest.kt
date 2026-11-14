@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -109,7 +110,8 @@ class SelectionIndicatorTest {
         rule.mainClock.advanceTimeBy(48)
         val midway = left()
         assertEquals(2, selected.value)
-        if (tabs) rule.onNodeWithTag("item-2").assertIsSelected()
+        rule.onNodeWithTag("item-2").assertIsSelected()
+        rule.onNodeWithTag("item-0").assertIsNotSelected()
         assertTrue("indicator must have a visible intermediate position", midway > first)
 
         rule.onNodeWithTag("item-0").performClick()
