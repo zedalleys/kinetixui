@@ -11,7 +11,10 @@ Design direction: **Precision Native**, as recorded in `docs/audits/precision-na
 
 The footer on `main` is a *print surface*. It renders an engraved Arabian landscape — two 5760×1920 WebP
 plates, one per theme, with five srcset steps each — over an `accent` panel textured with a 384px
-paper-grain tile. Thirteen rasters in `apps/web/public/footer/` serve it.
+paper-grain tile. **Eleven** rasters in `apps/web/public/footer/` serve it: ten `arabian-landscape*`
+files and one `paper-grain.webp`, 2,793,558 bytes in all, counted with `ls` and `du -sb` on that
+directory. An earlier revision of this record said thirteen. That figure was never measured and was
+wrong; this one is.
 
 `DESIGN.md` has excluded that artwork since the Kinetic Weave refresh, twice and explicitly:
 
@@ -143,4 +146,12 @@ requires it to stay clean, which is what attributes the failure to the column ru
   `aria-labelledby` on each list, and the gate asserts the footer contributes no heading at all.
 - Do not restore a raster to this footer. The decoration is drawn; the gate asserts zero `<img>` and zero
   `url()` background in the footer subtree.
+- If the eleven retired rasters are ever deleted, read `scripts/footer-negative-controls.mjs` first.
+  The ten `arabian-landscape*` files are referenced by nothing, but control 3 restores
+  `url(/footer/paper-grain.webp)` on a footer layer and `site-footer.test.tsx` names both patterns in a
+  negative assertion. Neither breaks if the file goes — the control measures the computed
+  `background-image` string, not whether the image loads — so deleting it would leave a control quietly
+  pointing at a file that is not there. Delete all eleven and give control 3 a `data:` URI, or keep the
+  tile. Deciding this by reading the two references beats discovering it from a green run that proves
+  less than it used to.
 - Do not give the footer ambient motion. It is the end of the page, not a second hero.
