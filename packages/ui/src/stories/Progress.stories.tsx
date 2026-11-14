@@ -2,15 +2,20 @@
    Source of truth: apps/web/src/registry/demos.tsx · controls: scripts/gen-stories.mjs CONTROLS */
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Progress } from "@kinetixui/ui";
+import { Button, Progress } from "@kinetixui/ui";
 
 const Demo = () => {
-    const [v, setV] = React.useState(13);
-    React.useEffect(() => {
-      const t = setTimeout(() => setV(66), 600);
-      return () => clearTimeout(t);
-    }, []);
-    return <Progress value={v} aria-label="Upload progress" className="w-[60%]" />;
+    const [files, setFiles] = React.useState<number | null>(1);
+    return (
+      <div className="w-full max-w-sm space-y-3">
+        <Progress value={files} max={4} aria-label="Upload progress" />
+        <div className="flex flex-wrap gap-2">
+          <Button variant="Outline" onClick={() => setFiles(1)}>1 file uploaded</Button>
+          <Button variant="Outline" onClick={() => setFiles(3)}>3 files uploaded</Button>
+          <Button variant="Ghost" onClick={() => setFiles(null)}>Unknown progress</Button>
+        </div>
+      </div>
+    );
   };
 
 const meta = {
@@ -20,7 +25,7 @@ const meta = {
   argTypes: { value: { control: { type: "range", min: 0, max: 100 } } },
   parameters: {
     layout: "padded",
-    docs: { source: { code: "const [value, setValue] = React.useState(13)\\n// ...\\n<Progress value={value} aria-label=\\\"Upload progress\\\" />", language: "tsx" } },
+    docs: { source: { code: "<Progress value={1} max={4} aria-label=\"Upload progress\" />", language: "tsx" } },
   },
 } satisfies Meta;
 
