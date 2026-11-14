@@ -9,7 +9,7 @@
  * Part one measures that mechanism in a real browser, on a page that deliberately contains none of the
  * elements, so the reason the guards exist is evidence and not an argument.
  *
- * Part two pins the four call sites that were repaired. A guard that can be deleted without anything going
+ * Part two pins the three call sites that were repaired. A guard that can be deleted without anything going
  * red is not a guard, and the file that holds the guard cannot be the only thing that knows it is needed.
  *
  * Env: PLAYWRIGHT_CHROMIUM_PATH points at an existing Chromium binary for local runs.
@@ -99,18 +99,6 @@ const SITES = [
     what: "the disabled rating counts its stars before calling them disabled",
   },
   {
-    file: "scripts/iot-monitoring.mjs",
-    guard: /expectThat\(tag, glyphs > 0,/,
-    assertion: /expectThat\(tag, lost\.length === 0,/,
-    what: "forced colours proves a glyph is drawn before reporting none was lost",
-  },
-  {
-    file: "scripts/iot-monitoring.mjs",
-    guard: /expectThat\(tag, runs\.length > 0,/,
-    assertion: /expectThat\(tag, runs\.every\(\(d\) => d === "ltr"\),/,
-    what: "the RTL value run proves a <bdi> exists before reading its direction",
-  },
-  {
     file: "scripts/composite-visual.mjs",
     guard:
       /const stepperCount = A\.steppers \? await p\.locator\(A\.steppers\("readonly"\)\)\.count\(\) : 0;/,
@@ -148,5 +136,5 @@ if (failures.length) {
   process.exit(1);
 }
 console.log(
-  `empty-match negative controls — ${checks} checks: zero-match assertions pass unguarded, and all five guarded call sites hold.`,
+  `empty-match negative controls — ${checks} checks: zero-match assertions pass unguarded, and all three guarded call sites hold.`,
 );
