@@ -236,6 +236,13 @@ export async function verifyResponsiveBrowser({ browser, base, fixture, consumer
     await page.keyboard.press("Tab");
     await page.keyboard.press("Tab");
     assert.deepEqual(await tabState(), { focused: "Overview", selected: "Overview" }, "entry focus lands on the selected tab, not the last tab in the group");
+    // Leaving the group is the other half of the same read. Radix's roving focus puts `tabindex="-1"`
+    // on every tab but the selected one, so Shift+Tab out of the tablist is the browser's own
+    // sequential walk and must land back on the control before it. Pressed here rather than earlier
+    // because this is the one point in the gate where entry focus is known to be the selected tab;
+    // measured in RTL, dark and reduced motion, which this section already runs under.
+    await page.keyboard.press("Shift+Tab");
+    assert.deepEqual(await tabState(), { focused: "Continue", selected: "Overview" }, "Shift+Tab leaves the tablist for the control before it, without moving the selection");
     await iframe.click({ position: { x: 30, y: 570 } });
     assert.equal(await iframe.evaluate(element => element.contentDocument.activeElement === element.contentDocument.body), true);
     await page.keyboard.press("Escape");
