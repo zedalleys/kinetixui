@@ -8,9 +8,11 @@ const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
 >(({ className, value, max, ...props }, ref) => {
-  // Radix accepts positive infinity as a maximum, but it cannot describe
-  // a finite completion range or produce a valid ARIA maximum.
-  const primitiveMax = max === Infinity ? undefined : max;
+  // A non-finite maximum cannot describe a completion range or produce a
+  // valid ARIA maximum, so withhold it and let the primitive's own default
+  // apply. Finite-but-invalid maxima (<= 0) stay, so the primitive still
+  // reports them to the developer.
+  const primitiveMax = Number.isFinite(max) ? max : undefined;
   // Use the same default and valid range as the primitive so paint and ARIA agree.
   const limit = typeof primitiveMax === "number" && primitiveMax > 0 ? primitiveMax : 100;
   const fraction = typeof value === "number" && value >= 0 && value <= limit && Number.isFinite(value)

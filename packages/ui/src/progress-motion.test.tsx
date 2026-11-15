@@ -47,6 +47,36 @@ describe("Progress motion", () => {
     }
   });
 
+  it("withholds every non-finite maximum from the accessible range", () => {
+    // Infinity is not the only non-finite bound a caller can pass, and NaN and
+    // -Infinity are the two the primitive accepts without warning. An identity
+    // test against Infinity leaves the component relying on the primitive's own
+    // fallback happening to match its paint fallback; a finiteness test does not.
+    for (const max of [Infinity, -Infinity, NaN] as number[]) {
+      const { container, unmount } = render(<Progress aria-label="Upload" value={50} max={max} />);
+      const bar = container.querySelector("[role='progressbar']")!;
+      const announced = bar.getAttribute("aria-valuemax");
+      expect(Number.isFinite(Number(announced))).toBe(true);
+      expect(announced).toBe("100");
+      expect(bar.getAttribute("aria-valuenow")).toBe("50");
+      expect(bar.getAttribute("aria-valuetext")).not.toMatch(/NaN|Infinity/);
+      expect(bar.firstElementChild).toHaveStyle({ transform: "scaleX(0.5)" });
+      unmount();
+    }
+  });
+
+  it("refuses a non-finite measurement rather than announcing one", () => {
+    for (const value of [Infinity, -Infinity, NaN] as number[]) {
+      const { container, unmount } = render(<Progress aria-label="Upload" value={value} max={100} />);
+      const bar = container.querySelector("[role='progressbar']")!;
+      expect(bar).not.toHaveAttribute("aria-valuenow");
+      expect(bar).not.toHaveAttribute("aria-valuetext");
+      expect(bar.firstElementChild).toHaveAttribute("data-state", "indeterminate");
+      expect(bar.firstElementChild).toHaveStyle({ transform: "scaleX(0)" });
+      unmount();
+    }
+  });
+
   it("keeps non-finite bounds and measurements out of the accessible range", () => {
     const { rerender } = render(<Progress aria-label="Upload" value={25} max={Infinity} />);
     const bar = screen.getByRole("progressbar", { name: "Upload" });
