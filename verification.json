@@ -53,7 +53,7 @@
       "accessibility": 80,
       "rtl": 47,
       "largeText": 53,
-      "reducedMotion": 23,
+      "reducedMotion": 28,
       "visual": 0,
       "published": 80
     },
@@ -999,6 +999,32 @@
           "tooltip",
           "tour"
         ]
+      },
+      {
+        "file": "scripts/angular-press-slider.mjs",
+        "environment": "chromium",
+        "kinds": [
+          "interaction",
+          "reducedMotion"
+        ],
+        "components": [
+          "button",
+          "fab",
+          "slider"
+        ]
+      },
+      {
+        "file": "scripts/angular-selection-glide.mjs",
+        "environment": "chromium",
+        "kinds": [
+          "interaction",
+          "reducedMotion",
+          "rtl"
+        ],
+        "components": [
+          "segmented-control",
+          "tabs"
+        ]
       }
     ],
     "SwiftUI": [
@@ -1631,10 +1657,10 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484"
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338"
         ],
         "published": [
@@ -1716,10 +1742,10 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484"
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338"
         ],
         "published": [
@@ -1766,10 +1792,10 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484"
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338"
         ],
         "published": [
@@ -1956,7 +1982,8 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
-          "scripts/angular-browser.mjs:339-1069"
+          "scripts/angular-browser.mjs:339-1069",
+          "scripts/angular-press-slider.mjs:1-111"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
@@ -1965,6 +1992,9 @@
         ],
         "largeText": [
           "scripts/angular-browser.mjs:1070-1329"
+        ],
+        "reducedMotion": [
+          "scripts/angular-press-slider.mjs:1-111"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3223,10 +3253,10 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484"
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338"
         ],
         "published": [
@@ -3268,12 +3298,16 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
-          "scripts/angular-browser.mjs:339-1069"
+          "scripts/angular-browser.mjs:339-1069",
+          "scripts/angular-press-slider.mjs:1-111"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/content.spec.ts:57-568",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
+        ],
+        "reducedMotion": [
+          "scripts/angular-press-slider.mjs:1-111"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -3319,11 +3353,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -3915,10 +3949,10 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484"
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338"
         ],
         "published": [
@@ -4263,10 +4297,10 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484"
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338"
         ],
         "published": [
@@ -4448,11 +4482,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -4640,12 +4674,12 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "packages/ui-angular/src/lib/inputs.spec.ts:31-178",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "packages/ui-angular/src/lib/inputs.spec.ts:31-178",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
@@ -4823,11 +4857,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -5044,10 +5078,10 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484"
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338"
         ],
         "published": [
@@ -5111,11 +5145,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -5403,19 +5437,24 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:339-1069"
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
+          "scripts/angular-browser.mjs:339-1069",
+          "scripts/angular-selection-glide.mjs:1-167"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "rtl": [
-          "scripts/angular-browser.mjs:1330-1707"
+          "scripts/angular-browser.mjs:1330-1707",
+          "scripts/angular-selection-glide.mjs:1-167"
         ],
         "largeText": [
           "scripts/angular-browser.mjs:1070-1329"
+        ],
+        "reducedMotion": [
+          "scripts/angular-selection-glide.mjs:1-167"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5709,10 +5748,10 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484"
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338"
         ],
         "published": [
@@ -5778,11 +5817,12 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
-          "scripts/angular-browser.mjs:339-1069"
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
+          "scripts/angular-browser.mjs:339-1069",
+          "scripts/angular-press-slider.mjs:1-111"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -5791,6 +5831,9 @@
         ],
         "largeText": [
           "scripts/angular-browser.mjs:1070-1329"
+        ],
+        "reducedMotion": [
+          "scripts/angular-press-slider.mjs:1-111"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -5895,10 +5938,10 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484"
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338"
         ],
         "published": [
@@ -6272,7 +6315,8 @@
         ],
         "interaction": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
-          "scripts/angular-browser.mjs:339-1069"
+          "scripts/angular-browser.mjs:339-1069",
+          "scripts/angular-selection-glide.mjs:1-167"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
@@ -6281,10 +6325,14 @@
         ],
         "rtl": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
-          "scripts/angular-browser.mjs:1330-1707"
+          "scripts/angular-browser.mjs:1330-1707",
+          "scripts/angular-selection-glide.mjs:1-167"
         ],
         "largeText": [
           "scripts/angular-browser.mjs:1070-1329"
+        ],
+        "reducedMotion": [
+          "scripts/angular-selection-glide.mjs:1-167"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -6348,11 +6396,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -6411,11 +6459,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -6559,11 +6607,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -6643,11 +6691,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/display-forms.spec.ts:76-484",
+          "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],

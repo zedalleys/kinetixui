@@ -2256,7 +2256,8 @@
         "build",
         "interaction",
         "largeText",
-        "published"
+        "published",
+        "reducedMotion"
       ],
       "SwiftUI": [
         "build"
@@ -2847,7 +2848,8 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "published",
+        "reducedMotion"
       ],
       "SwiftUI": [
         "build"
@@ -3809,6 +3811,7 @@
         "interaction",
         "largeText",
         "published",
+        "reducedMotion",
         "rtl"
       ],
       "SwiftUI": [
@@ -3974,6 +3977,7 @@
         "interaction",
         "largeText",
         "published",
+        "reducedMotion",
         "rtl"
       ],
       "SwiftUI": [
@@ -4190,6 +4194,7 @@
         "interaction",
         "largeText",
         "published",
+        "reducedMotion",
         "rtl"
       ],
       "SwiftUI": [
@@ -4459,7 +4464,7 @@
       "accessibility": 80,
       "rtl": 47,
       "largeText": 53,
-      "reducedMotion": 23,
+      "reducedMotion": 28,
       "visual": 0,
       "published": 80
     },
