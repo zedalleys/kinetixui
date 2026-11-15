@@ -105,7 +105,7 @@ try {
   // finite one.
   const page = await browser.newPage();
   try {
-    await page.goto(`${server.base}/iframe.html?id=${storyId("progress", "NonFiniteBounds")}&viewMode=story`);
+    await page.goto(`${server.base}/iframe.html?id=${storyId("progress", "Non Finite Bounds")}&viewMode=story`);
     const EXPECTED = [
       { name: "Infinite maximum", valuenow: "50", fraction: 0.5 },
       { name: "Not-a-number maximum", valuenow: "50", fraction: 0.5 },
