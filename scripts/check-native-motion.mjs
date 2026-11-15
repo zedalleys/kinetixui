@@ -37,10 +37,24 @@ const argRoot = process.argv.slice(2).find((a) => a.startsWith("--root="))?.slic
 const root = argRoot ? resolve(argRoot) : fileURLToPath(new URL("..", import.meta.url));
 const read = (p) => (existsSync(`${root}/${p}`) ? readFileSync(`${root}/${p}`, "utf8") : null);
 
-import { DIRECTION_TERMS, KNOWN_GAPS, PLATFORMS, testNames } from "./native-motion-spec.mjs";
+import {
+  DIRECTION_TERMS,
+  KNOWN_GAPS,
+  PLATFORMS,
+  directionCoverage,
+  directionTermDefects,
+  testNames,
+} from "./native-motion-spec.mjs";
 
 const errors = [];
 const summary = [];
+
+// 0. The direction vocabulary must itself be sound, before any suite is measured against it. A
+//    family whose two terms can be satisfied by one phrase cannot be rescued by a well-named suite,
+//    and the failure would then surface once per platform instead of once at its cause.
+for (const [familyName, terms] of Object.entries(DIRECTION_TERMS)) {
+  errors.push(...directionTermDefects(familyName, terms));
+}
 
 for (const [name, p] of Object.entries(PLATFORMS)) {
   const dir = `${root}/${p.dir}`;
@@ -122,12 +136,25 @@ for (const [name, p] of Object.entries(PLATFORMS)) {
       errors.push(`${name}: the ${familyName} family has no direction vocabulary in DIRECTION_TERMS.`);
       continue;
     }
-    for (const [dirName, re] of Object.entries(terms)) {
-      if (!names.some((n) => re.test(n))) {
+    const found = `Found: ${names.slice(0, 6).map((n) => `"${n}"`).join(", ")}${names.length > 6 ? ", …" : ""}`;
+    const coverage = directionCoverage(terms, names);
+    for (const [dirName, { matched, distinct }] of Object.entries(coverage)) {
+      const other = dirName === "forward" ? "reverse" : "forward";
+      if (matched.length === 0) {
         errors.push(
           `${name}: no test in ${family.test} is NAMED for the ${dirName} direction.\n` +
             `      The two directions are separate transitions, so proving one says nothing about the\n` +
-            `      other. Found: ${names.slice(0, 6).map((n) => `"${n}"`).join(", ")}${names.length > 6 ? ", …" : ""}`,
+            `      other. ${found}`,
+        );
+      } else if (distinct.length === 0) {
+        // The hole this clause was blind to until M5.9. Testing each direction against the whole
+        // list with `some()` let ONE name matching both regexes satisfy both ends of the pair — which
+        // is precisely the case the message above describes and could not detect.
+        errors.push(
+          `${name}: every test in ${family.test} naming the ${dirName} direction also names the\n` +
+            `      ${other} direction, so no test covers ${dirName} on its own.\n` +
+            `      One test proving one transition is not two directions proven. Split it, or add a test\n` +
+            `      named for ${dirName} alone. Both-ways names: ${matched.map((n) => `"${n}"`).join(", ")}`,
         );
       }
     }
