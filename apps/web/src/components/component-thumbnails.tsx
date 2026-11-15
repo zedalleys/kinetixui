@@ -48,9 +48,16 @@ const Panel = ({
  *  - AlertDialog no close affordance at all — it must be answered — and a destructive confirm.
  */
 
-/** The dimmed page behind an overlay. A frame, not a component: it says "this one covers the page". */
+/** The dimmed page behind an overlay. A frame, not a component: it says "this one covers the page".
+ *
+ * `safe center` rather than plain centring, for the same reason the gallery's thumbnail body uses it: this
+ * scrim is `h-full`, so at 200% text the card it holds grows taller than the scrim and a centred overflow
+ * escapes UPWARD, past the thumbnail frame's top edge and under the slug chip. With `safe center` the
+ * overflow falls to the trailing edge instead, and the three dialog mocks that fit are unaffected. */
 const Scrim = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex h-full w-full items-center justify-center rounded-md bg-muted/40 p-2">{children}</div>
+  <div className="flex h-full w-full items-center justify-center rounded-md bg-muted/40 p-2 supports-[align-items:safe_center]:[align-items:safe_center] supports-[justify-content:safe_center]:[justify-content:safe_center]">
+    {children}
+  </div>
 );
 
 /** The × of a close affordance, drawn rather than imported: a mock carries no icon semantics. */

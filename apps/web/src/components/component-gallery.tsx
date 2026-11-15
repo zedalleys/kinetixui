@@ -119,13 +119,22 @@ function Thumbnail({ item }: { item: Item }) {
   return (
     <div
       data-gallery-thumbnail={Mock ? "mock" : Demo ? "demo" : "label"}
-      className="relative h-[184px] overflow-hidden border-b border-border/60 bg-muted/20 bg-[radial-gradient(hsl(var(--border)/0.45)_1px,transparent_1px)] [background-size:16px_16px]"
+      // The frame is a `rem` track, not 184px: at 200% text the preview inside it reflows into a column
+      // three times taller, and a pixel frame cannot grow to meet it (CAT-BUG-017/018). `--thumb-gutter`
+      // reserves the slug chip's own band — the chip's bottom edge sits 1.875rem below the frame's top at
+      // every text scale (`top-2.5` + its line box), so content aligned to the padding box can never print
+      // under it.
+      className="relative h-[11.5rem] overflow-hidden border-b border-border/60 bg-muted/20 bg-[radial-gradient(hsl(var(--border)/0.45)_1px,transparent_1px)] [background-size:16px_16px] [--thumb-gutter:2.125rem]"
     >
       {Mock ? (
         <div
           aria-hidden
           data-gallery-thumbnail-body
-          className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 transition-transform duration-300 motion-safe:group-hover:scale-[1.04]"
+          // `safe center` centres a preview that fits and falls back to START when it does not, so an
+          // overflowing preview is cropped at its trailing edge instead of losing its first line to the
+          // frame's top edge. The vertical padding is symmetric, so every preview that fits still renders
+          // in exactly the position it did before.
+          className="pointer-events-none absolute inset-0 flex items-center justify-center px-4 py-[var(--thumb-gutter)] transition-transform duration-300 supports-[align-items:safe_center]:[align-items:safe_center] supports-[justify-content:safe_center]:[justify-content:safe_center] motion-safe:group-hover:scale-[1.04]"
         >
           <Mock />
         </div>
@@ -140,7 +149,10 @@ function Thumbnail({ item }: { item: Item }) {
           }}
           aria-hidden
           data-gallery-thumbnail-body
-          className="pointer-events-none absolute inset-0 flex origin-center scale-[0.72] items-center justify-center px-4 transition-transform duration-300 motion-safe:group-hover:scale-[0.76]"
+          // see the mock body above for `safe center`; `origin-center` is kept deliberately, because
+          // scaling a start-aligned overflow about the frame's centre moves its top edge further inside
+          // the frame rather than out of it.
+          className="pointer-events-none absolute inset-0 flex origin-center scale-[0.72] items-center justify-center px-4 py-[var(--thumb-gutter)] transition-transform duration-300 supports-[align-items:safe_center]:[align-items:safe_center] supports-[justify-content:safe_center]:[justify-content:safe_center] motion-safe:group-hover:scale-[0.76]"
         >
           <Demo />
         </div>
@@ -625,7 +637,11 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
           </Button>
         </div>
       ) : grouped ? (
-        <div className="mt-6 space-y-12">
+        // `data-gallery-total` is the catalogue's own size, derived in lib/platform-support from the
+        // registry rather than from this render. `check:catalogue-thumbnails` asserts the number of cards
+        // it can actually measure against it, so a gallery that silently renders a subset — or nothing —
+        // fails the gate instead of passing it with no thumbnails to look at.
+        <div className="mt-6 space-y-12" data-gallery-total={componentTotal}>
           {CATEGORY_ORDER.map((cat, i) => {
             const rows = filtered.filter((it) => it.category === cat);
             if (rows.length === 0) return null;
@@ -645,7 +661,7 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
           })}
         </div>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-gallery-total={componentTotal}>
           {filtered.map((item) => (
             <Card key={item.href} item={item} />
           ))}
