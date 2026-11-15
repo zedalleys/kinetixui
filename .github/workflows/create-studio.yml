@@ -9,6 +9,7 @@ on:
       - "docs/create/**"
       - "scripts/create-schema/**"
       - "scripts/create-studio-browser.mjs"
+      - "scripts/create-studio-responsive-browser.mjs"
       - ".github/workflows/create-studio.yml"
   workflow_dispatch:
 permissions:
