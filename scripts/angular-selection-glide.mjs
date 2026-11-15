@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, rmSync } from 'node:fs';
 import { chromium } from 'playwright';
-import { buildAngularHarness, serveStatic, settleAngular, waitForAngular } from './visual-harness.mjs';
+import { buildAngularHarness, contrast, serveStatic, settleAngular, waitForAngular } from './visual-harness.mjs';
 
 const dir = buildAngularHarness('angular-selection-glide');
 const server = await serveStatic(dir);
@@ -140,7 +140,11 @@ try {
   assert.equal(await bars.first().isVisible(), false);
   assert.equal(await bars.last().isVisible(), false);
   const selected = page.locator('.kx-segmented__radio:checked + label');
-  assert.notEqual(await selected.evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)');
+  const forcedColors = await selected.evaluate(el => {
+    const { backgroundColor, color } = getComputedStyle(el);
+    return [backgroundColor, color].map(value => value.match(/\d+/g).slice(0, 3).map(Number));
+  });
+  assert(contrast(...forcedColors) >= 4.5, `forced-colors selected label contrast: ${forcedColors}`);
   await page.emulateMedia({ forcedColors: 'none', reducedMotion: 'no-preference' });
   const bar = bars.first();
   await clickWithoutWaiting(page.getByText('Year', { exact: true }));

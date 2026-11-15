@@ -5439,7 +5439,7 @@
         "interaction": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
           "scripts/angular-browser.mjs:339-1069",
-          "scripts/angular-selection-glide.mjs:1-167"
+          "scripts/angular-selection-glide.mjs:1-171"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/display-forms.spec.ts:76-506",
@@ -5448,13 +5448,13 @@
         ],
         "rtl": [
           "scripts/angular-browser.mjs:1330-1707",
-          "scripts/angular-selection-glide.mjs:1-167"
+          "scripts/angular-selection-glide.mjs:1-171"
         ],
         "largeText": [
           "scripts/angular-browser.mjs:1070-1329"
         ],
         "reducedMotion": [
-          "scripts/angular-selection-glide.mjs:1-167"
+          "scripts/angular-selection-glide.mjs:1-171"
         ],
         "published": [
           "npm: @kinetixui/angular"
@@ -6316,7 +6316,7 @@
         "interaction": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
           "scripts/angular-browser.mjs:339-1069",
-          "scripts/angular-selection-glide.mjs:1-167"
+          "scripts/angular-selection-glide.mjs:1-171"
         ],
         "accessibility": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
@@ -6326,13 +6326,13 @@
         "rtl": [
           "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
           "scripts/angular-browser.mjs:1330-1707",
-          "scripts/angular-selection-glide.mjs:1-167"
+          "scripts/angular-selection-glide.mjs:1-171"
         ],
         "largeText": [
           "scripts/angular-browser.mjs:1070-1329"
         ],
         "reducedMotion": [
-          "scripts/angular-selection-glide.mjs:1-167"
+          "scripts/angular-selection-glide.mjs:1-171"
         ],
         "published": [
           "npm: @kinetixui/angular"
