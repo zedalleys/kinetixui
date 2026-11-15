@@ -28,6 +28,8 @@ class KinetixToaster extends StatefulWidget {
     this.duration = const Duration(seconds: 3),
   });
 
+  /// A new instance starts a new presentation, even when its text matches.
+  /// Retain the same instance across unrelated rebuilds.
   final KinetixToast? toast;
   final VoidCallback onDismiss;
   final Duration duration;
@@ -72,7 +74,7 @@ class _KinetixToasterState extends State<KinetixToaster> with SingleTickerProvid
   void didUpdateWidget(covariant KinetixToaster oldWidget) {
     super.didUpdateWidget(oldWidget);
     final toast = widget.toast;
-    final changed = toast?.message != oldWidget.toast?.message || toast?.intent != oldWidget.toast?.intent;
+    final changed = !identical(toast, oldWidget.toast);
     if (changed || widget.duration != oldWidget.duration) {
       _scheduleDismissal();
     }
