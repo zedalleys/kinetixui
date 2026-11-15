@@ -8,7 +8,8 @@
     "deploymentEnabled": {
       "codex/m62-flutter-toast-feedback": false,
       "codex/m63-flutter-toast-semantics-20261115": false,
-      "ZedX/m66-flutter-toast-expiry": false
+      "ZedX/m66-flutter-toast-expiry": false,
+      "ZedX/m66-flutter-toast-speech": false
     }
   }
 }
