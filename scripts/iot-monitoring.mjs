@@ -226,9 +226,12 @@ const glyphs = (locator) => locator.evaluate((el) => [...el.querySelectorAll("sv
  * forbidding that would put a false alarm where a silent pass was.
  *
  * `glyph` means "at least one state glyph must be drawn", which closes the forced-colours sweep.
- * Measured at `main@3bb97137` from the built Storybook; the three `false` entries are the cases that
- * legitimately draw none — a normal battery raises no alarm, an unknown battery carries its state in
- * the word "Unknown", and `telemetry-range` is rendered `quietWhenNormal`.
+ * Measured from the built Storybook; the two `false` entries are the cases that legitimately draw
+ * none — a normal battery raises no alarm, and `telemetry-range` is rendered `quietWhenNormal`.
+ * `battery-unknown` used to be a third: it drew no glyph while every other unknown reading in the
+ * family drew `dash`, which was an omission in `DeviceBattery` rather than a property of the case.
+ * The component now draws the dash and this entry is `true`, so the exception is gone rather than
+ * carried.
  */
 const READOUT = {
   // Battery percentage: a measurable value.
@@ -238,7 +241,7 @@ const READOUT = {
   "battery-charging": { numeric: true, glyph: true },
   "battery-stale": { numeric: true, glyph: true },
   // Nothing measured: status-only. Never a 0.
-  "battery-unknown": { numeric: false, glyph: false },
+  "battery-unknown": { numeric: false, glyph: true },
   "battery-unsupported": { numeric: false, glyph: true },
   // Connectivity: categorical, every one of them.
   "connection-online": { numeric: false, glyph: true },
