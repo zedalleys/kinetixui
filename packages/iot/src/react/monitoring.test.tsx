@@ -78,6 +78,20 @@ describe("DeviceBattery", () => {
     expect(container.textContent).not.toMatch(/offline/i);
   });
 
+  it("marks an unknown reading with the same dash glyph the rest of the family draws", () => {
+    // Measured from the built Storybook before this fix: `telemetry-unknown`, `telemetry-unavailable`,
+    // `energy-unknown` and `connection-unknown` each rendered one svg[data-glyph="dash"], and
+    // `battery-unknown` rendered none — while the `loading` note beside it rendered `circle-dot`.
+    // The browser gate asserts this through its forced-colours sweep; this is the cheap guard that
+    // fails in jsdom before a Storybook build is needed.
+    const { container } = render(<DeviceBattery value={null} charging={null} />);
+    const note = container.querySelector('[data-battery-note="unknown"]')!;
+    expect(note).toHaveTextContent("Unknown");
+    expect(note.querySelector("svg")).toHaveAttribute("data-glyph", "dash");
+    // The number is still never invented.
+    expect(container.textContent).not.toMatch(/\b0%/);
+  });
+
   it("marks critical with a glyph and a word, not colour alone", () => {
     const { container } = render(<DeviceBattery value={6} />);
     const note = container.querySelector('[data-battery-note="critical"]')!;

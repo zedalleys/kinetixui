@@ -144,8 +144,17 @@ const DeviceBattery = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forw
                 <span>Loading</span>
               </span>
             ) : !known ? (
-              <span aria-hidden="true" data-battery-note="unknown" className="text-label-md text-muted-foreground">
-                Unknown
+              // Paired with `dash`, the glyph every other unknown reading in this family draws.
+              // Measured at this branch's head from the built Storybook: `telemetry-unknown`,
+              // `telemetry-unavailable`, `energy-unknown` and `connection-unknown` each render one
+              // `svg[data-glyph="dash"]`, `battery-unsupported` renders `slash`, and the `loading`
+              // note directly above renders `circle-dot` — `battery-unknown` alone rendered none.
+              // The word is not the reason: `telemetry-unknown` shows "Unknown" too and still draws
+              // the dash. So this was an omission, which is why the gate had to carry an exception
+              // for it, and the exception goes with it.
+              <span aria-hidden="true" data-battery-note="unknown" className="inline-flex items-center gap-1 text-label-md text-muted-foreground">
+                <Glyph name="dash" size={12} />
+                <span>Unknown</span>
               </span>
             ) : null}
             {alarm ? (
