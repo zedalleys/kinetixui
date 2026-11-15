@@ -42,12 +42,19 @@ class KinetixTabsList extends StatelessWidget {
 }
 
 class KinetixTabsTrigger extends StatelessWidget {
-  const KinetixTabsTrigger(this.text,
-      {super.key, required this.selected, required this.onTap});
+  const KinetixTabsTrigger(this.text, {
+    super.key,
+    required this.selected,
+    required this.onTap,
+    this.enabled = true,
+  });
 
   final String text;
   final bool selected;
   final VoidCallback onTap;
+
+  /// Whether this item can receive keyboard focus and be activated.
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +64,7 @@ class KinetixTabsTrigger extends StatelessWidget {
     return KinetixSelectionItem(
       selected: selected,
       onTap: onTap,
+      enabled: enabled,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         alignment: Alignment.center,
