@@ -46,4 +46,17 @@ describe("Progress motion", () => {
       errors.mockRestore();
     }
   });
+
+  it("keeps non-finite bounds and measurements out of the accessible range", () => {
+    const { rerender } = render(<Progress aria-label="Upload" value={25} max={Infinity} />);
+    const bar = screen.getByRole("progressbar", { name: "Upload" });
+    expect(bar).toHaveAttribute("aria-valuemax", "100");
+    expect(bar).toHaveAttribute("aria-valuenow", "25");
+    expect(bar.firstElementChild).toHaveStyle({ transform: "scaleX(0.25)" });
+
+    rerender(<Progress aria-label="Upload" value={Infinity} max={Infinity} />);
+    expect(bar).not.toHaveAttribute("aria-valuenow");
+    expect(bar).not.toHaveAttribute("aria-valuetext");
+    expect(bar.firstElementChild).toHaveStyle({ transform: "scaleX(0)" });
+  });
 });
