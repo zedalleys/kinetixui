@@ -30,7 +30,16 @@
  * 6. Every native motion family in scripts/native-motion-spec.mjs is mentioned by the contract role it
  *    says it implements — as a consumer where it uses that role's tokens, as a deviation where it
  *    reaches the same intent another way — and every native file the contract names is some family's
- *    helper. Two files declared native coverage and neither could see the other.
+ *    helper. Two files declared native coverage and neither could see the other. The ledger is read
+ *    through scripts/native-motion-ledger.mjs, which check:native-motion reads too, so both gates are
+ *    held to ONE effective ledger: each used to read a different projection of those declarations, and
+ *    the platform mapping this clause needed was a hardcoded allowlist here that skipped in silence
+ *    anything missing from it.
+ * 7. An exemption is declared and registered, not derived. A role excused from naming a duration and
+ *    an easing must say so with `pairingExempt` and a reason, and be named in
+ *    tokens/contracts/motion-exemptions.json — held in both directions, like the identity register in
+ *    point 5. It was keyed on `reducedForm === "rest"`, which the contract author writes, so any role
+ *    could excuse itself.
  *
  * It is a static check. It does not prove rendered motion (`check:motion`, `check:loop-motion`) or
  * native runtime behaviour (native-*.yml); native mappings here are validated against generated
@@ -42,7 +51,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
-import { PLATFORMS } from "./native-motion-spec.mjs";
+import { composeLedger } from "./native-motion-ledger.mjs";
 
 const NATIVE_FILES = {
   swift: ["packages/tokens/dist/ios/KinetixMotion.swift", "packages/ui-swiftui/Sources/KinetixUI/KinetixMotion.swift"],
@@ -81,10 +90,13 @@ const DECISIONS = ["matches", "kept-name", "kept-value", "outside-proposal"];
  * missing-`contractRole` diagnosis has to pass a ledger with that key absent, which the exact type of
  * the real ledger forbids.
  *
+ * It is passed through to `composeLedger`, which is also what `check:native-motion` reads, so the two
+ * gates are held to ONE effective ledger rather than to a projection each.
+ *
  * @param {Record<string, string>} [overrides] file content keyed by repo-relative path
- * @param {Record<string, { dir?: string, families?: Record<string, { contractRole?: string, helper?: string }> }>} [ledgerPlatforms]
+ * @param {Record<string, { contractPlatform?: string, dir?: string, families?: Record<string, { contractRole?: string | null, roleExemption?: string, helper?: string }> }>} [ledgerPlatforms]
  */
-export function motionErrors(overrides = {}, ledgerPlatforms = PLATFORMS) {
+export function motionErrors(overrides = {}, ledgerPlatforms = undefined) {
   const read = (p) => (p in overrides ? overrides[p] : readFileSync(join(ROOT, p), "utf8"));
   const exists = (p) => p in overrides || existsSync(join(ROOT, p));
   const errors = [];
@@ -234,6 +246,46 @@ export function motionErrors(overrides = {}, ledgerPlatforms = PLATFORMS) {
     }
   }
 
+  /* An exemption is a declared, reviewed debt, not a derived property.
+   *
+   * The pairing rule — a role must name a duration and an easing — is wrong for a loop rather than
+   * merely inconvenient: a loop has no destination to arrive at, so there is no pairing to name. The
+   * exemption was therefore right, but it was keyed on `reducedForm === "rest"`, a field the contract
+   * author writes, which made it self-service. Measured on `00e2781c`: a fabricated `ambient-glow`
+   * role with `reducedForm: "rest"`, no duration, no easing and one consumer whose `expects` named no
+   * token at all passed this gate with ZERO errors.
+   *
+   * No static check can tell whether a role really loops, so this does not pretend to. It does what
+   * the identity register in point 5 already does for consumers: the claim is written down in
+   * tokens/contracts/motion-exemptions.json and held to the contract in BOTH directions, so taking
+   * the exemption puts a line in a diff for a person to review, and dropping the register line while
+   * keeping the exemption fails. */
+  const exemptions = JSON.parse(read("tokens/contracts/motion-exemptions.json"));
+  const registeredExempt = new Set(exemptions.pairingExempt?.roles ?? []);
+  const declaredExempt = new Set(
+    Object.entries(contract.roles ?? {})
+      .filter(([, r]) => r.pairingExempt !== undefined)
+      .map(([n]) => n),
+  );
+  for (const name of [...registeredExempt].sort()) {
+    if (!declaredExempt.has(name)) {
+      fail(
+        `contract: motion-exemptions.json registers "${name}" as exempt from naming a duration/easing ` +
+          `pairing, but that role does not declare \`pairingExempt\`. If the exemption was given up, ` +
+          `delete the line from the register in the same commit.`,
+      );
+    }
+  }
+  for (const name of [...declaredExempt].sort()) {
+    if (!registeredExempt.has(name)) {
+      fail(
+        `contract: role "${name}" declares \`pairingExempt\`, which motion-exemptions.json does not ` +
+          `register. Add "${name}" to its pairingExempt.roles so the exemption is reviewed — a role ` +
+          `cannot excuse itself from a rule.`,
+      );
+    }
+  }
+
   const forms = Object.keys(contract.reducedForms ?? {});
   const DUR_REF = /(?:--duration-|(?<![\w-])duration-|KinetixDuration\.)([a-z]+)/g;
   const EASE_REF = /(?:--easing-|(?<![\w-])ease-|KinetixEasing\.)([a-z]+)/g;
@@ -243,7 +295,16 @@ export function motionErrors(overrides = {}, ledgerPlatforms = PLATFORMS) {
     if (!forms.includes(role.reducedForm)) fail(`${at} reducedForm "${role.reducedForm}" is not a declared reduced form`);
     for (const d of role.duration ?? []) if (!(d in durations)) fail(`${at} names duration "${d}", which is not a token`);
     for (const e of role.easing ?? []) if (!(e in easings)) fail(`${at} names easing "${e}", which is not a token`);
-    const isLoop = role.reducedForm === "rest";
+    /* Exempt from the pairing only if the role declares the exemption AND the register carries it;
+     * the two loops above fail when either half is missing, so a role that declares it without the
+     * register line is already red and gets no benefit from it here. `reducedForm` no longer decides
+     * this — it describes what happens under reduce, which is a different question from whether
+     * there is a pairing to name. */
+    const pairingExempt = registeredExempt.has(name) && role.pairingExempt !== undefined;
+    if (pairingExempt && !role.pairingExempt.reason) {
+      fail(`${at} declares \`pairingExempt\` with no reason; an exemption without a reason is indistinguishable from an oversight`);
+    }
+    const isLoop = pairingExempt;
     if (!isLoop && (!(role.duration ?? []).length || !(role.easing ?? []).length)) fail(`${at} is a transition but names no duration or no easing`);
     for (const ev of role.evidence ?? []) if (!exists(ev)) fail(`${at} cites evidence ${ev}, which does not exist`);
     const consumers = role.consumers ?? [];
@@ -375,27 +436,91 @@ export function motionErrors(overrides = {}, ledgerPlatforms = PLATFORMS) {
    *
    * It runs in both directions. A native consumer or deviation in the contract whose file is no
    * family's helper is the mirror image: either the ledger lost the family, or the contract names a
-   * file nothing holds the members of. */
-  const NATIVE_PLATFORMS = { SwiftUI: "swiftui", Compose: "compose", Flutter: "flutter" };
+   * file nothing holds the members of.
+   *
+   * The ledger reaches this clause through `composeLedger`, which `check:native-motion` also reads, so
+   * the two gates can no longer be green on two different readings of the same declarations. Which
+   * contract platform a ledger platform is now comes from the platform itself rather than from a map
+   * kept here, because a map kept here could only name the platforms it had been taught about. */
+  /* The composition is shared with `check:native-motion`, so a ledger that does not agree with itself
+   * is red in both gates. Its errors are surfaced here rather than thrown: this gate reports every
+   * problem it finds in one run, and a ledger fault should not hide a contract fault. */
+  const composed = composeLedger(ledgerPlatforms ? { platforms: ledgerPlatforms } : undefined);
+  for (const e of composed.errors) fail(e);
+
+  /* The platform mapping comes from the ledger, which now names itself. It used to be a hardcoded
+   * `{ SwiftUI, Compose, Flutter }` allowlist here, with `if (!platform) continue;` — so a platform
+   * the allowlist had not been taught about was skipped in silence. Measured on `00e2781c`: a fourth
+   * platform with a disclosure family, a helper and a declared role produced ZERO errors from this
+   * clause while `check:native-motion` held it. The contract was simply never checked against it.
+   * A gate that skips what it does not recognise fails open. */
+  /* Which platforms are NATIVE is the contract's own declaration, not something derived from the
+   * ledger. Deriving it from the ledger made the reverse direction cancel itself out: a platform
+   * dropped from `PLATFORMS` left the ledger with no entries for it AND removed its contract entries
+   * from `mentioned`, so its consumers were no longer checked by anything. Measured on `ee38bfa5`:
+   * deleting the whole Compose platform produced ZERO errors while four `compose` consumers stayed
+   * declared in the contract, where the hardcoded-allowlist version this clause replaced produced
+   * four. Two independent sources, required to agree, is what makes either side's loss visible. */
+  const nativePlatforms = Object.entries(contract.platforms ?? {})
+    .filter(([, p]) => p.surface === "native")
+    .map(([name]) => name);
+  for (const [name, p] of Object.entries(contract.platforms ?? {})) {
+    if (p.surface !== "native" && p.surface !== "web") {
+      fail(
+        `contract: platform "${name}" does not say whether its surface is "native" or "web". The ` +
+          `reverse native check reads that field to know which of the contract's consumers a native ` +
+          `ledger is answerable for, so a platform with no surface is held to nothing.`,
+      );
+    }
+  }
+  const ledgerPlatformNames = new Set(composed.platforms.map((p) => p.contractPlatform).filter(Boolean));
+  for (const name of nativePlatforms) {
+    if (!ledgerPlatformNames.has(name)) {
+      fail(
+        `native ledger: the contract registers "${name}" as a native platform, but no platform in ` +
+          `scripts/native-motion-spec.mjs claims it. Either the ledger lost that whole platform — in ` +
+          `which case every one of its components silently stopped being checked — or the contract ` +
+          `registers a platform that was never implemented.`,
+      );
+    }
+  }
+  for (const name of ledgerPlatformNames) {
+    if (!nativePlatforms.includes(name)) {
+      fail(
+        `native ledger: a platform in scripts/native-motion-spec.mjs calls itself "${name}", which ` +
+          `tokens/contracts/motion.json does not register with \`"surface": "native"\`. A ledger ` +
+          `platform the contract does not know as native is checked against nothing.`,
+      );
+    }
+  }
   const ledger = new Map();
-  for (const [ledgerName, p] of Object.entries(ledgerPlatforms)) {
-    const platform = NATIVE_PLATFORMS[ledgerName];
-    if (!platform) continue;
-    for (const [family, f] of Object.entries(p.families ?? {})) {
-      if (!f.contractRole) {
+  for (const p of composed.platforms) {
+    if (!p.contractPlatform) continue; // the composition has already failed on this
+    for (const f of p.families) {
+      /* An exempt family — `contractRole: null` with a reason — implements no role, so there is
+       * nothing for the contract to mention and nothing for this clause to require. The reason is
+       * what makes that a decision rather than a hole; the composition refuses the `null` without
+       * one. */
+      if (f.contractRole === null) continue;
+      /* A contractRole that names no role in the contract used to be reported as the contract
+       * failing to mention it — advice to add a consumer to a role that does not exist. Say what is
+       * actually wrong instead. */
+      if (!(f.contractRole in (contract.roles ?? {}))) {
         fail(
-          `native ledger: the ${ledgerName} ${family} family names no contractRole, so nothing says which ` +
-            `motion role it implements and the contract cannot be held to it.`,
+          `native ledger: the ${p.name} ${f.name} family says it implements the "${f.contractRole}" ` +
+            `motion role, which tokens/contracts/motion.json does not define. Either the role was ` +
+            `renamed and the ledger still names the old one, or this is a typo — in both cases the ` +
+            `family is held to nothing.`,
         );
         continue;
       }
-      ledger.set(`${f.contractRole}|${platform}|${p.dir}/${f.helper}`, `${ledgerName} ${family}`);
+      ledger.set(`${f.contractRole}|${p.contractPlatform}|${f.helperPath}`, `${p.name} ${f.name}`);
     }
   }
   const mentioned = new Set(
     Object.entries(contract.roles ?? {}).flatMap(([name, role]) =>
       [...(role.consumers ?? []), ...(role.deviations ?? [])]
-        .filter((e) => Object.values(NATIVE_PLATFORMS).includes(e.platform))
+        .filter((e) => nativePlatforms.includes(e.platform))
         .map((e) => `${name}|${e.platform}|${e.file}`),
     ),
   );

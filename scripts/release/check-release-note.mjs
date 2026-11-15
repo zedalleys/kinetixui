@@ -1,0 +1,539 @@
+/** Fail a pull request whose merge would publish a core version that has no curated note yet.
+ *
+ * `scripts/version-release-meta.mjs` refuses to finish `changeset version` unless
+ * `release/notes/<core-version>.json` exists and describes that exact version. That check runs only
+ * on push to `main`, inside the Release workflow, so it is invisible to every pull request and fires
+ * after the merge — at which point `main` is red on every subsequent push and no Version PR can be
+ * generated until someone authors the note. That has now happened twice in one day: #442 for 0.26.0
+ * and #455 for 0.26.1.
+ *
+ * This asks the same question one step earlier, from the changesets the merge would actually carry.
+ * It is an early warning, not a replacement: the post-merge throw stays exactly as it is.
+ *
+ *   - It does not require a note for a release-inert change. No pending changeset moves
+ *     `@kinetixui/ui`, no note is wanted, and the check passes.
+ * It also validates the schema of *every* curated note in `release/notes/`, not only the one the
+ * projection asks for. A note is authored in its own pull request, usually one carrying no
+ * changeset at all, so at the moment it is written nothing moves `@kinetixui/ui` and the projection
+ * half has nothing to look at. That is how the 0.27.0 note reached `main` classifying three changes
+ * outside the `ChangeArea` union: inert JSON on `main`, so `main` stayed green, and a TypeScript
+ * error in `releases.ts` the moment `version-release-meta.mjs` activated it into the Version PR.
+ * The sweep is unconditional because a note is only ever wrong in one direction — it either
+ * typechecks once injected or it does not, whatever is pending when it is written.
+ *
+ * Two things it deliberately does not do:
+ *
+ *   - It does not fail a pull request for a breakage that is already on the base branch. If `main`
+ *     itself projects a core version whose note is missing, every open pull request inherits that
+ *     through the merge commit, and failing all of them would say nothing about any of them. The
+ *     check reports it and passes, naming the base as the cause. Only a pull request that *changes*
+ *     the projected version to one lacking a note fails.
+ */
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
+import { plannedVersions, parseChangeset } from "./peers.mjs";
+import { offSite } from "./links.mjs";
+
+const root = fileURLToPath(new URL("../../", import.meta.url));
+const read = (p) => JSON.parse(readFileSync(p, "utf8"));
+const CORE = "@kinetixui/ui";
+
+/** The vocabulary `apps/web/src/lib/releases.ts` declares. Kept in step with the `ChangeKind` and
+ *  `ChangeArea` unions there: a note that fails to typecheck once injected is a note that breaks the
+ *  Version PR, which is the failure this file exists to move earlier. */
+const KINDS = ["new", "improved", "fixed", "security", "accessibility", "breaking", "deprecated"];
+const AREAS = ["components", "tokens", "cli", "platforms", "release"];
+const RELEASE_URL = "https://github.com/zedalleys/kinetixui/releases/tag/";
+
+/** Reads a path either from the working tree or from a git ref, so the same planner runs on both. */
+const readTree = (p) => (existsSync(path.join(root, p)) ? readFileSync(path.join(root, p), "utf8") : null);
+const listTree = (dir) => (existsSync(path.join(root, dir)) ? readdirSync(path.join(root, dir)) : []);
+
+function fromRef(ref) {
+  const show = (p) => {
+    const r = spawnSync("git", ["show", `${ref}:${p}`], { cwd: root, encoding: "utf8" });
+    return r.status === 0 ? r.stdout : null;
+  };
+  const list = (dir) => {
+    const r = spawnSync("git", ["ls-tree", "--name-only", `${ref}:${dir}`], { cwd: root, encoding: "utf8" });
+    return r.status === 0 ? r.stdout.split("\n").filter(Boolean).map((s) => s.replace(/\/$/, "")) : [];
+  };
+  return { show, list };
+}
+
+/** The core version a tree's pending changesets would publish, or undefined for a release-inert tree. */
+export function projectedCore({ show, list }) {
+  const config = JSON.parse(show(".changeset/config.json") ?? "{}");
+  const changesets = [];
+  for (const name of list(".changeset")) {
+    if (!name.endsWith(".md") || name.toLowerCase() === "readme.md") continue;
+    const text = show(`.changeset/${name}`);
+    if (text === null) continue;
+    const releases = parseChangeset(text);
+    if (releases.length) changesets.push({ id: name.replace(/\.md$/, ""), releases });
+  }
+  const packages = [];
+  for (const base of ["packages", "apps"]) {
+    for (const name of list(base)) {
+      const text = show(`${base}/${name}/package.json`);
+      if (text !== null) packages.push(JSON.parse(text));
+    }
+  }
+  const planned = plannedVersions({
+    packages,
+    changesets,
+    fixed: config.fixed ?? [],
+    linked: config.linked ?? [],
+    ignore: config.ignore ?? [],
+  });
+  return planned.get(CORE);
+}
+
+/** The component slugs `components.manifest.json` declares, or null when it cannot be read.
+ *
+ *  `check-releases.mjs` rule 6 rejects a `newComponents` slug that is not in the manifest, and
+ *  `version-release-meta.mjs:27` runs that script immediately after generating `releases.ts` — so a
+ *  misspelled slug fails Version PR *generation*, after the merge, which is the class of failure
+ *  this file exists to move earlier. Neither PR-side gate sees it today: `check:releases` reads the
+ *  already-activated history, where a pending note does not appear, and `check:release-links` looks
+ *  at link destinations. Measured on a notes-only tree carrying `slugs: ["date-pikcer"]` — both
+ *  reported ok. */
+export function manifestSlugs(read = readTree) {
+  const text = read("components.manifest.json");
+  if (text === null) return null;
+  try {
+    const components = JSON.parse(text).components;
+    return components && typeof components === "object" ? new Set(Object.keys(components)) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Everything wrong with a curated note, as a list. Empty means it is fit to be injected.
+ *
+ *  `known` is the manifest's slug set, injected so this stays a pure function. `null` is reported
+ *  rather than skipped: a gate that cannot reach its input has to fail, not pass. */
+export function noteErrors(note, version, rel, known = manifestSlugs()) {
+  const e = [];
+  const at = (what) => `${rel}: ${what}`;
+  if (note.version !== version) e.push(at(`describes version "${note.version}", not ${version} — version-release-meta.mjs asserts these match and throws after the merge`));
+  // `version` must be the note's FIRST key, and this is not a style rule.
+  // version-release-meta.mjs serializes the note with JSON.stringify, which preserves its key
+  // order, and check-releases.mjs discovers entries by splitting releases.ts on the literal
+  // `\n  {\n    version: "`. A note whose first key is anything else produces an entry that
+  // discovery cannot see, so check:releases reports the PREVIOUS version as the top entry and
+  // Version PR generation fails — after the merge. Measured end to end on the real scripts: the
+  // same note with `summary` first gives
+  //   ✗ top RELEASES entry is 0.26.1, but the packages are at 0.27.0
+  // where version-first gives `check:releases ok — 44 entries, latest 0.27.0`.
+  // All five notes on main already put `version` first; this records that invariant rather than
+  // inventing one. The brittleness is check-releases.mjs's regex discovery, which is not this
+  // file's to fix — see the note on the pull request.
+  if (Object.keys(note)[0] !== "version") {
+    e.push(at(`\`version\` must be the first key (it is "${Object.keys(note)[0]}") — version-release-meta.mjs preserves this file's key order, and check-releases.mjs only finds an entry whose first property is \`version\`, so Version PR generation would not see this release at all`));
+  }
+  if (typeof note.summary !== "string" || note.summary.trim() === "") e.push(at("`summary` is required and must be a non-empty string"));
+  if (!Array.isArray(note.breaking)) e.push(at("`breaking` is required — use [] to state \"none, and I checked\""));
+  if (!Array.isArray(note.changes) || note.changes.length === 0) e.push(at("`changes` is required and must list at least one change"));
+  if ("date" in note) e.push(at("remove `date` — version-release-meta.mjs stamps it with the UTC day of the run that versions the packages, and a date written here is either overwritten or misleading"));
+
+  for (const [i, c] of (Array.isArray(note.changes) ? note.changes : []).entries()) {
+    const where = `${rel}: changes[${i}]`;
+    // Report a non-object element rather than throwing on it: `"body" in 42` is a TypeError, and a
+    // gate that dies with a stack trace naming its own source tells the author nothing about theirs.
+    if (c === null || typeof c !== "object" || Array.isArray(c)) {
+      e.push(`${where}: must be an object, not ${Array.isArray(c) ? "an array" : JSON.stringify(c)}`);
+      continue;
+    }
+    if (typeof c?.title !== "string" || c.title.trim() === "") e.push(`${where}: \`title\` is required`);
+    if ("body" in c && typeof c.body !== "string") e.push(`${where}: \`body\` must be a string`);
+    if ("kind" in c && !KINDS.includes(c.kind)) e.push(`${where}: kind "${c.kind}" is not one of ${KINDS.join(", ")}`);
+    for (const a of [c?.area].flat().filter((x) => x !== undefined)) {
+      if (!AREAS.includes(a)) e.push(`${where}: area "${a}" is not one of ${AREAS.join(", ")}`);
+    }
+    if ("href" in c) e.push(...linkErrors(c.href, `${where}: href`));
+  }
+  // `Release` in apps/web/src/lib/releases.ts types these as `string[]` and
+  // `{ group: string; slugs: string[] }[]`, and version-release-meta.mjs copies them verbatim, so a
+  // malformed *element* fails the generated TypeScript exactly as a malformed `area` does. Measured:
+  // `breaking: [42]`, `limitations: [{}]` and `newComponents: [{ group: "Forms" }]` each produce
+  // their own `error TS` in releases.ts under the site's own tsconfig.
+  for (const key of ["breaking", "limitations"]) {
+    if (!(key in note) || !Array.isArray(note[key])) continue;
+    for (const [i, v] of note[key].entries()) {
+      if (typeof v !== "string") e.push(at(`\`${key}[${i}]\` must be a string, not ${JSON.stringify(v)} — releases.ts types ${key} as string[]`));
+    }
+  }
+  if ("newComponents" in note) {
+    if (!Array.isArray(note.newComponents)) {
+      e.push(at("`newComponents`, when present, must be an array"));
+    } else {
+      for (const [i, g] of note.newComponents.entries()) {
+        const where = `\`newComponents[${i}]\``;
+        if (g === null || typeof g !== "object" || Array.isArray(g)) {
+          e.push(at(`${where} must be an object with \`group\` and \`slugs\``));
+          continue;
+        }
+        if (typeof g.group !== "string" || g.group.trim() === "") e.push(at(`${where}.group must be a non-empty string`));
+        if (!Array.isArray(g.slugs)) {
+          e.push(at(`${where}.slugs is required and must be an array of strings`));
+          continue;
+        }
+        for (const [j, slug] of g.slugs.entries()) {
+          if (typeof slug !== "string") {
+            e.push(at(`${where}.slugs[${j}] must be a string, not ${JSON.stringify(slug)}`));
+            continue;
+          }
+          if (known === null) {
+            e.push(at(`${where}.slugs[${j}]: components.manifest.json could not be read, so "${slug}" cannot be checked against it`));
+          } else if (!known.has(slug)) {
+            e.push(at(`${where}.slugs[${j}]: "${slug}" is not in components.manifest.json — check-releases.mjs rejects it, and version-release-meta.mjs runs that during Version PR generation`));
+          }
+        }
+      }
+    }
+  }
+  if ("limitations" in note && !Array.isArray(note.limitations)) e.push(at("`limitations`, when present, must be an array"));
+  if ("migration" in note && typeof note.migration !== "string") e.push(at("`migration`, when present, must be a string"));
+  if ("githubReleaseUrl" in note) {
+    const url = note.githubReleaseUrl;
+    if (typeof url !== "string" || !url.startsWith(RELEASE_URL) || !url.includes(version)) {
+      e.push(at(`githubReleaseUrl must start with ${RELEASE_URL} and name ${version} (got ${JSON.stringify(url)})`));
+    } else {
+      // `githubReleaseUrl` is a URL like any `href`, and until now it was held to none of the same
+      // discipline — prefix and version only. It has a reader of its own that no href has:
+      // `check-releases.mjs:66` extracts it from the GENERATED TypeScript with a quote-delimited
+      // regex, `githubReleaseUrl: "([^"]*)"`. `JSON.stringify` escapes an embedded quote as `\"`, so
+      // that regex truncates the value at the quote. Measured end to end on the real scripts, in a
+      // tree with the packages at 0.28.0:
+      //
+      //   .../releases/tag/v0.28.0        -> check:releases ok
+      //   .../releases/tag/release-"0.28.0 -> accepted by this gate, then Version PR generation
+      //                                       fails: `githubReleaseUrl must ... name the version`
+      //
+      // So the same character rules apply here. The quote is not in the allowed set, which is what
+      // settles this case; the rest of `linkErrors` costs nothing and keeps one policy for both
+      // fields, rather than two that have to be remembered separately.
+      //
+      // NOT fixed here: `check-releases.mjs`'s extraction is itself the defect, and it is the file
+      // #507 rewrites for the same class of bug. Changing it in this PR would collide with that one.
+      e.push(...linkErrors(url, at("githubReleaseUrl")));
+    }
+  }
+  return e;
+}
+
+/** A link is either a site-absolute docs route or a destination that names no route on this site.
+ *
+ *  The second half is `offSite` from `links.mjs`, the same predicate `check:release-links` uses, and
+ *  it is imported rather than restated. An earlier version of this function allowed only `http(s):`,
+ *  which rejected `mailto:` and `tel:` — destinations `changelog-view.tsx` renders straight into an
+ *  anchor and `check:release-links` deliberately leaves alone, with coverage in
+ *  `release-links.test.mjs`. A note that passes one of the two gates and fails the other is the
+ *  failure mode worth most guarding against here, so the policy lives in one place.
+ *
+ *  What is still rejected is a *relative* href — `./docs/motion`, `docs/motion`, a padded value.
+ *  The browser resolves those against whatever page the reader is on, so they are a 404 in a
+ *  different spelling, and root-relative is the required spelling for a route on this site.
+ *
+ *  Nothing here resolves a route to a page: that is `check:release-links`, which needs a built site. */
+/** The schemes a curated release note may carry off-site. An allowlist, not a denylist: an unknown
+ *  scheme is refused, so a destination nobody considered cannot arrive by default.
+ *
+ *  Measured against the real contract before narrowing to this, across all 43 entries of
+ *  `apps/web/src/lib/releases.ts` and all five notes in `release/notes/`: every link is either a
+ *  site-absolute route (26 distinct, some with a `#anchor`) or an `https://github.com/zedalleys/...`
+ *  URL (3). Nothing uses `mailto:`, `tel:`, `http:`, `//host`, a bare `#anchor`, or any other scheme.
+ *  So this refuses nothing the project has ever shipped. It is the compatibility assessment, not an
+ *  assumption. */
+const ALLOWED_SCHEMES = new Set(["https:"]);
+
+/** Resolution base for site-absolute routes. Only its origin is compared, never emitted as a link. */
+const SITE_ORIGIN = "https://release-note-gate.invalid";
+
+/**
+ * An href has a reader that is not a URL parser at all. `release-notes.mjs:124` interpolates the
+ * destination into a Markdown link, `([docs](<dest>))`, for the GitHub Release body, and a Markdown
+ * link destination has its own grammar: it ends at whitespace, and its parentheses must balance.
+ *
+ * Measured through a real CommonMark parser, with the rendered destination resolved against a
+ * release page — every one of these passes URL parsing and lands somewhere else:
+ *
+ *   /docs/a(b    -> reader lands on /docs/a(b)   (the link's own ")" is absorbed)
+ *   /docs/a)b    -> reader lands on /docs/a      (the destination ends early)
+ *   /docs/a(b(c  -> no link is rendered at all
+ *
+ * Balanced parentheses are fine — `/docs/a(b)` renders correctly — so this bans unbalanced ones
+ * rather than parentheses. BOTH branches of `linkErrors` go through it, because the defect is in the
+ * consumer and so does not care which spelling the note used. The canonical-form rule below does not
+ * cover this: `https://x.test/a(b` is already canonical.
+ *
+ * Three rules, in the order they were learned, each from a counterexample that survived the one
+ * before: an allowlist of URL characters, balanced parentheses, and no HTML character reference. The
+ * allowlist is deliberately first and deliberately broad, because the lesson of those three rounds is
+ * that enumerating Markdown's significant characters one review at a time does not converge.
+ */
+function markdownDestinationErrors(dest, href, where) {
+  // Rule 1, and the one that matters most: an allowlist of the characters RFC 3986 permits in a URL.
+  // Three rounds of review here each found one more Markdown-significant character, so enumerating
+  // them is the losing move. Anything outside this set is refused instead, which covers whitespace,
+  // control characters, `<`, `>`, a backtick, a quote and a backslash in one rule, and covers
+  // whatever else Markdown treats as syntax that I have not thought of.
+  const offending = [...dest].find((c) => !/[A-Za-z0-9\-._~:/?#[\]@!$&'()*+,;=%]/.test(c));
+  if (offending !== undefined) {
+    return [`${where}: "${href}" contains ${JSON.stringify(offending)}, which is not a character a URL may carry unencoded. This href is also rendered into a Markdown link destination for the GitHub Release, where whitespace, "<", a backtick and a quote each change where the reader goes — percent-encode it.`];
+  }
+  // Rule 3 (rule 2, balanced parentheses, is below). `&` and `;` are both legal URL characters and
+  // both needed — `?a=1&b=2` is ordinary — but together they can form an HTML character reference,
+  // which CommonMark DECODES inside a link destination. Measured through a real CommonMark parser:
+  //
+  //   https://x.test/?a=1&copy;=2    -> reader gets .../?a=1%C2%A9=2
+  //   https://x.test/?a=1&#65;=2     -> reader gets .../?a=1A=2
+  //   /docs/forms#input&copy;        -> reader gets .../docs/forms#input%C2%A9
+  //
+  // `?a=1&b=2` is untouched, because it has no `;`. This refuses the SHAPE rather than consulting
+  // the HTML5 named-reference list, so `&notareference;` is refused too: being conservative here
+  // costs an author one percent-encoding and costs a reader nothing.
+  const reference = /&(?:[A-Za-z][A-Za-z0-9]{0,31}|#[0-9]{1,7}|#[xX][0-9A-Fa-f]{1,6});/.exec(dest);
+  if (reference !== null) {
+    return [`${where}: "${href}" contains ${JSON.stringify(reference[0])}, which CommonMark decodes as a character reference when this note is rendered into the GitHub Release body, so the reader's URL is not the one written here. Percent-encode the "&" as "%26".`];
+  }
+  // Rule 4. `%` is in the allowlist above because every percent-escape needs it, and I had reasoned
+  // that a malformed escape would be caught by canonical form on one branch and pathname equality on
+  // the other. That reasoning was wrong, and measuring it is what showed it: `/docs/a%b` and
+  // `/docs/a%` both survive those rules, and the renderer emits `%25b` and `%25`, so the reader gets
+  // a different path. So a `%` must introduce a well-formed escape.
+  //
+  // `%zz` and `%2z` happen to survive the renderer today, and are refused anyway: a malformed escape
+  // is a defect in the URL whatever this one consumer does with it, and "it renders correctly by
+  // accident" is not a property to build on.
+  const escape = /%(?![0-9A-Fa-f]{2})/.exec(dest);
+  if (escape !== null) {
+    return [`${where}: "${href}" has a "%" at position ${escape.index} that does not begin a valid percent-escape. Write "%25" for a literal percent sign: otherwise the Markdown renderer rewrites it and the reader gets a different URL.`];
+  }
+  let depth = 0;
+  for (const c of dest) {
+    if (c === "(") depth++;
+    else if (c === ")" && --depth < 0) break;
+  }
+  if (depth !== 0) {
+    return [`${where}: "${href}" has unbalanced parentheses. This href is rendered into a Markdown link destination for the GitHub Release, where the parentheses must balance or the reader is sent somewhere else — percent-encode them as "%28" and "%29".`];
+  }
+  return [];
+}
+
+export function linkErrors(href, where) {
+  if (typeof href !== "string" || href.trim() === "") return [`${where} must be a non-empty string`];
+  if (href !== href.trim()) return [`${where}: "${href}" has leading or trailing whitespace`];
+
+  // `//host/path` begins with "/" but is NOT a route here — it is another origin, inheriting the
+  // page's scheme. Tested before this check for exactly that reason: a plain startsWith("/") read it
+  // as a site-absolute route, so a cross-origin destination was classified as local and `offSite`
+  // was never consulted. Measured on the previous policy: `//evil.test/x` was accepted.
+  if (href.startsWith("//")) {
+    return [`${where}: "${href}" is a protocol-relative URL, which points at another origin rather than a route on this site. Write the full https:// URL if that is what you mean.`];
+  }
+  if (href.startsWith("/")) {
+    // A leading "/" does not by itself mean a route on this site. A browser reads "\\" as "/" and
+    // deletes embedded tab, LF and CR characters BEFORE resolving, so several spellings that begin
+    // with a single "/" reach another origin and so slip past the protocol-relative check above.
+    // Measured against `new URL(href, "https://kinetixui.com/docs/changelog")`, every one of
+    // "/\\evil.test/x", "/\\/evil.test/x", "/<tab>/evil.test/x", "/<LF>/evil.test/x" and
+    // "/<CR>/evil.test/x" resolves to https://evil.test/x, and changelog-view.tsx renders the
+    // destination straight into an <a href>. `check:release-links` meanwhile looks for the literal
+    // text as a route and finds none, so the two gates would disagree about what was accepted.
+    //
+    // So decide on the destination the browser actually reaches, and require it to be both this
+    // origin and spelled the way it will be read: two readers of the same bytes must answer alike.
+    let resolved;
+    try {
+      resolved = new URL(href, `${SITE_ORIGIN}/docs/changelog`);
+    } catch {
+      return [`${where}: "${href}" begins with "/" but is not a parseable route`];
+    }
+    const normalised = `${resolved.pathname}${resolved.search}${resolved.hash}`;
+    if (resolved.origin !== SITE_ORIGIN) {
+      return [`${where}: "${href}" begins with "/" but a browser resolves it to ${JSON.stringify(resolved.href.replace(SITE_ORIGIN, "<this site>"))} — on another origin, because "\\" is read as "/" and embedded tabs and newlines are deleted first. Write the full https:// URL if you mean another site.`];
+    }
+    if (normalised !== href) {
+      return [`${where}: "${href}" is read by a browser as ${JSON.stringify(normalised)}, so the note does not say where the link goes. Write the route exactly as it resolves.`];
+    }
+    // The renderer makes a route absolute against the site (`absolute()` at release-notes.mjs:76)
+    // before putting it in the Markdown destination, so check the string it will actually emit.
+    return markdownDestinationErrors(`https://kinetixui.com${href}`, href, where);
+  }
+
+  // `offSite` stays the single source of truth for "does this name a route here?" — the question
+  // `check:release-links` asks. This gate then asks a SECOND, different question of the destinations
+  // it says are off-site: is this one permitted in a curated note? Two questions, not two answers to
+  // the same one, so the divergence that made this gate reject a legitimate `mailto:` cannot recur.
+  if (!offSite(href)) {
+    return [`${where}: "${href}" is a relative href, which resolves against the reader's page rather than the site root. Write it as a site-absolute route ("/docs/...").`];
+  }
+
+  const scheme = /^[a-z][a-z0-9+.-]*:/i.exec(href)?.[0].toLowerCase();
+  if (scheme === undefined) {
+    return [`${where}: "${href}" names no scheme and no route. A curated note takes a site-absolute route ("/docs/...") or an ${[...ALLOWED_SCHEMES].join(", ")} URL.`];
+  }
+  if (!ALLOWED_SCHEMES.has(scheme)) {
+    return [`${where}: "${href}" uses the scheme "${scheme}", which a release note may not carry. changelog-view.tsx renders this straight into an <a href>, so "javascript:" and "data:" are executable there and "http:" is not encrypted. Permitted: a site-absolute route ("/docs/...") or ${[...ALLOWED_SCHEMES].join(", ")}.`];
+  }
+  // An allowed scheme still has to be a URL with a host: "https:///x" and "https://" are neither a
+  // route nor a reachable destination.
+  let url;
+  try { url = new URL(href); } catch { return [`${where}: "${href}" is not a parseable URL`]; }
+  if (url.host === "") return [`${where}: "${href}" has no host`];
+  // A scheme and a host still are not enough, because `new URL(href)` on its own is not how a
+  // browser reads an href. For a special scheme the WHATWG parser takes what follows "https:" as an
+  // AUTHORITY when the URL is parsed alone, but as a relative PATH when it is resolved against a
+  // base page of the same scheme. Measured against `https://kinetixui.com/docs/changelog`:
+  //
+  //   https:github.com/zedalleys/kinetixui   alone -> https://github.com/zedalleys/kinetixui
+  //                                      in a page -> https://kinetixui.com/docs/github.com/...
+  //   https:/github.com/zedalleys/kinetixui  alone -> https://github.com/zedalleys/kinetixui
+  //                                      in a page -> https://kinetixui.com/github.com/...
+  //
+  // So this gate read a GitHub link where the reader gets a local route that does not exist — and
+  // `offSite` calls the same text off-site, so `check:release-links` never looks for that route
+  // either. Neither gate catches it and the link is broken for every reader.
+  //
+  // And a note's href has a THIRD reader, which settles what the rule has to be. `release-notes.mjs`
+  // renders the GitHub Release body, and `absolute()` at line 76 passes a non-"/" href through
+  // verbatim into a Markdown link destination, `([docs](<href>))`. A Markdown destination is not a
+  // URL: it has its own escaping. Measured through a real CommonMark parser, with the rendered
+  // destination then resolved against a release page:
+  //
+  //   note href                  rendered destination     the reader actually lands on
+  //   https:\\github.com/x   ->  https:%5Cgithub.com/x -> github.com/zedalleys/kinetixui/releases/tag/%5Cgithub.com/x
+  //   https:/\github.com/x   ->  https:/%5Cgithub.com/x-> github.com/%5Cgithub.com/x
+  //   https://x.test/a b     ->  (destination ends at the space)
+  //
+  // Those first two are exactly the spellings the two BROWSER readings agree on, so an agreement
+  // check between them is not enough: it accepted an href that this consumer silently redirects.
+  //
+  // So require the canonical serialization. That settles every spelling above, and it subsumes the
+  // resolve-in-a-page check too, because a canonical URL always begins `scheme://` and so reads the
+  // same alone and in a page.
+  //
+  // It is NOT on its own enough for the Markdown reader, which is the correction to an earlier
+  // version of this comment: `https://x.test/a(b` is already canonical and still sends the reader to
+  // `https://x.test/a(b)`. Parentheses are the gap, because they are the one Markdown-significant
+  // character a URL parser leaves alone. `markdownDestinationErrors` covers that for both branches.
+  //
+  // It refuses a few spellings that would in fact work — `https://github.com` without the trailing
+  // slash, an uppercase host — and that is the right trade here, because the message names the exact
+  // text to write instead. All 3 absolute URLs across the five curated notes and the whole activated
+  // history are already canonical, so this refuses nothing the project has shipped.
+  if (href !== url.href) {
+    return [`${where}: "${href}" is not the canonical form of the URL it names, which is "${url.href}". Write that instead: this href is also rendered verbatim into a Markdown link destination for the GitHub Release, where a backslash, space or tab changes where the reader goes.`];
+  }
+  return markdownDestinationErrors(href, href, where);
+}
+
+// ---------------------------------------------------------------------------------------------
+
+/** The check itself. Returns the exit code rather than taking it, so a test can call it. */
+/** Every schema error across `release/notes/`, keyed on each file's own version. Independent of what
+ *  is pending: see the header for why the projection half cannot cover this. */
+export function allNoteErrors(list, readFile) {
+  const errors = [];
+  for (const name of list("release/notes").filter((n) => n.endsWith(".json")).sort()) {
+    const rel = `release/notes/${name}`;
+    const text = readFile(rel);
+    if (text === null) continue;
+    let note;
+    try {
+      note = JSON.parse(text);
+    } catch (err) {
+      errors.push(`${rel}: is not valid JSON — ${err.message}`);
+      continue;
+    }
+    errors.push(...noteErrors(note, name.replace(/\.json$/, ""), rel));
+  }
+  return errors;
+}
+
+export function main() {
+  // Validate every note first, whatever this pull request is otherwise doing. A note-only pull
+  // request carries no changeset, so the projection below would pass it unread.
+  const schema = allNoteErrors(listTree, readTree);
+  if (schema.length) {
+    console.error(`check:release-note — FAIL
+
+    A curated note is copied verbatim into apps/web/src/lib/releases.ts by
+    scripts/version-release-meta.mjs. These values do not satisfy the unions declared there, so the
+    Version PR generated from them would fail to typecheck and build:
+
+${schema.map((e) => `  ✗ ${e}`).join("\n")}
+`);
+    return 1;
+  }
+
+  const core = projectedCore({ show: readTree, list: listTree });
+
+  if (!core) {
+    console.log("check:release-note — ok, no pending changeset moves @kinetixui/ui; no curated note is wanted.");
+    return 0;
+  }
+
+  // version-release-meta.mjs reads the note only when releases.ts does not already carry an entry
+  // for that version. Mirror that condition exactly, or this gate fails a pull request the real
+  // step would wave through — a version already written into the changelog needs no note file.
+  // This condition comes from #463, which found it independently.
+  const releases = readTree("apps/web/src/lib/releases.ts") ?? "";
+  if (releases.includes(`version: "${core}"`)) {
+    console.log(`check:release-note — ok, apps/web/src/lib/releases.ts already carries ${core}; version-release-meta.mjs needs no curated note for it.`);
+    return 0;
+  }
+
+  const rel = `release/notes/${core}.json`;
+  const abs = path.join(root, rel);
+
+  if (!existsSync(abs)) {
+    // Is this the pull request's doing, or is the base branch already in this state?
+    const baseRef = process.env.RELEASE_NOTE_BASE_REF || (process.env.GITHUB_BASE_REF ? `origin/${process.env.GITHUB_BASE_REF}` : "origin/main");
+    const resolved = spawnSync("git", ["rev-parse", "--verify", `${baseRef}^{commit}`], { cwd: root, encoding: "utf8" });
+    if (resolved.status === 0) {
+      const baseCore = projectedCore(fromRef(baseRef));
+      const baseHasNote = baseCore
+        ? spawnSync("git", ["cat-file", "-e", `${baseRef}:release/notes/${baseCore}.json`], { cwd: root }).status === 0
+        : true;
+      if (baseCore === core && !baseHasNote) {
+        console.log(`check:release-note — ${baseRef} already projects ${CORE} ${core} with no ${rel}.
+
+    This pull request inherits that through the merge, it did not cause it, and failing here would say
+    nothing about this change. ${baseRef} is red on every push until that note is authored.
+
+    Passing.`);
+        return 0;
+      }
+    } else {
+      console.log(`check:release-note — note: ${baseRef} could not be resolved, so this result is not attributed to a base. Checking strictly.`);
+    }
+
+    console.error(`check:release-note — FAIL
+
+    Merging this would publish ${CORE} ${core}, and ${rel} does not exist.
+
+    scripts/version-release-meta.mjs throws "Missing curated release notes" on the first push to main
+    after the merge. No Version PR can be generated, and main stays red until the note is authored.
+
+    Author ${rel} and have its public copy approved before merging this.
+    release/notes/0.26.0.json is the shape to follow; omit \`date\`.`);
+    return 1;
+  }
+
+  const errors = noteErrors(read(abs), core, rel);
+  if (errors.length) {
+    console.error(`check:release-note — FAIL\n\n${errors.map((e) => `  ✗ ${e}`).join("\n")}\n`);
+    return 1;
+  }
+
+  console.log(`check:release-note — ok, ${rel} is present and describes ${core}.`);
+  return 0;
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) process.exit(main());
