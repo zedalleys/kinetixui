@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'app_text.dart';
@@ -123,6 +124,10 @@ class _KinetixToasterState extends State<KinetixToaster> with SingleTickerProvid
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Semantics(
+            // Android's bridge only sends a live update when the node's label
+            // changes. Use a fresh node for each presentation, even if its
+            // label matches the previous toast.
+            key: !kIsWeb && defaultTargetPlatform == TargetPlatform.android ? ObjectKey(toast) : null,
             liveRegion: true,
             child: _buildToast(toast, c, color),
           ),

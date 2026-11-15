@@ -62,6 +62,25 @@ void main() {
     expect(dismissals, 1);
   });
 
+  testWidgets('a repeated message creates a fresh Android live region',
+      (tester) async {
+    void dismiss() {}
+    await tester.pumpWidget(_host(toast: saved, onDismiss: dismiss));
+    final initial = tester.getSemantics(find.text(saved.message));
+    final initialId = initial.id;
+    expect(initial.getSemanticsData().flagsCollection.isLiveRegion, isTrue);
+
+    await tester.pumpWidget(_host(toast: saved, onDismiss: dismiss));
+    expect(tester.getSemantics(find.text(saved.message)).id, initialId);
+
+    final replacement = KinetixToast(saved.message, intent: saved.intent);
+    await tester.pumpWidget(_host(toast: replacement, onDismiss: dismiss));
+    final liveRegion = tester.getSemantics(find.text(saved.message));
+    expect(liveRegion.id, isNot(initialId));
+    expect(liveRegion.getSemanticsData().flagsCollection.isLiveRegion, isTrue);
+    expect(find.text(saved.message), findsOneWidget);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
   testWidgets('clearing, replacing and unmounting cancel stale dismissals', (tester) async {
     var dismissals = 0;
     void dismiss() => dismissals++;
