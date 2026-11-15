@@ -17,6 +17,7 @@ public struct KinetixToast {
 
     public let message: String
     public let intent: Intent
+    let presentationID = UUID()
 
     public init(_ message: String, intent: Intent = .normal) {
         self.message = message
@@ -70,8 +71,9 @@ public struct KinetixToaster: View {
                 .kinetixElevation(elevations.lg)
                 .padding(16)
                 .transition(KinetixSlideMotion.transition(from: .bottom, reduceMotion: reduceMotion).combined(with: .opacity))
-                .task(id: toast.message) {
+                .task(id: toast.presentationID) {
                     await Self.dismissAfterDelay(duration) {
+                        guard self.toast?.presentationID == toast.presentationID else { return }
                         withAnimation(KinetixSlideMotion.dismissAnimation(reduceMotion: reduceMotion)) { self.toast = nil }
                     }
                 }
