@@ -18,7 +18,7 @@ public struct KinetixResizablePanels<First: View, Second: View>: View {
     @Namespace private var resizeSpace
 
     @State private var fraction: CGFloat
-    @State private var dragStart: CGFloat?
+    @GestureState private var dragTranslation: CGFloat?
     private let minFraction: CGFloat
     private let maxFraction: CGFloat
     private let first: First
@@ -42,7 +42,8 @@ public struct KinetixResizablePanels<First: View, Second: View>: View {
         GeometryReader { geo in
             let handleWidth: CGFloat = 12
             let available = max(1, geo.size.width - handleWidth)
-            let firstWidth = max(0, available * fraction)
+            let displayedFraction = dragTranslation.map { resizedFraction(by: $0, available: available) } ?? fraction
+            let firstWidth = max(0, available * displayedFraction)
 
             HStack(spacing: 0) {
                 first.frame(width: firstWidth)
@@ -60,25 +61,29 @@ public struct KinetixResizablePanels<First: View, Second: View>: View {
                 .contentShape(Rectangle())
                 .gesture(
                     DragGesture(coordinateSpace: .named(resizeSpace))
-                        .onChanged { value in
-                            let start = dragStart ?? fraction
-                            if dragStart == nil { dragStart = fraction }
-                            fraction = Self.resizedFraction(
-                                start: start,
-                                physicalTranslation: value.translation.width,
-                                available: available,
-                                layoutDirection: layoutDirection,
-                                minFraction: minFraction,
-                                maxFraction: maxFraction
-                            )
+                        .updating($dragTranslation) { value, translation, _ in
+                            translation = value.translation.width
                         }
-                        .onEnded { _ in dragStart = nil }
+                        .onEnded { value in
+                            fraction = resizedFraction(by: value.translation.width, available: available)
+                        }
                 )
 
                 second.frame(width: max(0, available - firstWidth))
             }
             .coordinateSpace(name: resizeSpace)
         }
+    }
+
+    private func resizedFraction(by physicalTranslation: CGFloat, available: CGFloat) -> CGFloat {
+        Self.resizedFraction(
+            start: fraction,
+            physicalTranslation: physicalTranslation,
+            available: available,
+            layoutDirection: layoutDirection,
+            minFraction: minFraction,
+            maxFraction: maxFraction
+        )
     }
 
     // The drag stays in the container's physical coordinates while the first panel
