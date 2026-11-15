@@ -195,7 +195,7 @@
       "evidence": [
         "apps/web/src/lib/motion-contract.test.ts"
       ],
-      "note": "Open on fast + enter, close on instant + exit: the exit is shorter because a dismissed surface should not linger. Repeated on React Dialog and Sheet's scrim; the motion-contract test proves each animate-in/out names a token duration, not that this pairing holds.",
+      "note": "Open on fast + enter, close on instant + exit when the surface has an exit animation. Flutter toast uses the entrance pairing and clears immediately. The React motion-contract test checks token use in animate-in/out.",
       "consumers": [
         {
           "platform": "react",
@@ -209,6 +209,14 @@
           "file": "packages/ui-angular/src/styles.css",
           "expects": [
             "transition-duration: var(--duration-fast); transition-timing-function: var(--easing-enter);"
+          ]
+        },
+        {
+          "platform": "flutter",
+          "file": "packages/ui-flutter/lib/src/kinetix_toast_motion.dart",
+          "expects": [
+            "KinetixDuration.fast",
+            "KinetixEasing.enter"
           ]
         }
       ],

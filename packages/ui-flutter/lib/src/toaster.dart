@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'app_text.dart';
-import 'kinetix_disclosure_motion.dart';
 import 'kinetix_motion.dart';
+import 'kinetix_toast_motion.dart';
 import 'theme.dart';
 
 enum KinetixToastIntent { normal, success, error }
@@ -42,7 +42,7 @@ class _KinetixToasterState extends State<KinetixToaster> with SingleTickerProvid
   late final AnimationController _entrance;
   late final _opacity = _entrance.drive(
     Tween(begin: KinetixOpacity.muted, end: KinetixOpacity.visible)
-        .chain(CurveTween(curve: KinetixEasing.enter)),
+        .chain(CurveTween(curve: KinetixToastMotion.easing)),
   );
 
   @override
@@ -50,7 +50,7 @@ class _KinetixToasterState extends State<KinetixToaster> with SingleTickerProvid
     super.initState();
     _entrance = AnimationController(
       vsync: this,
-      duration: KinetixDuration.instant,
+      duration: KinetixToastMotion.duration,
       value: 1,
     );
     _scheduleDismissal();
@@ -59,7 +59,7 @@ class _KinetixToasterState extends State<KinetixToaster> with SingleTickerProvid
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final reduceMotion = KinetixDisclosureMotion.reduceMotionOf(context);
+    final reduceMotion = KinetixToastMotion.reduceMotionOf(context);
     if (reduceMotion) {
       _entrance.value = 1;
     } else if (_reduceMotion == null && widget.toast != null) {
@@ -77,7 +77,7 @@ class _KinetixToasterState extends State<KinetixToaster> with SingleTickerProvid
       _scheduleDismissal();
     }
     if (changed) {
-      if (toast != null && !KinetixDisclosureMotion.reduceMotionOf(context)) {
+      if (toast != null && !KinetixToastMotion.reduceMotionOf(context)) {
         _entrance.forward(from: 0);
       } else {
         _entrance.value = 1;

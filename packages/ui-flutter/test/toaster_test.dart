@@ -71,7 +71,8 @@ void main() {
     expect(dismissals, 1);
   });
 
-  testWidgets('the toast is announced during its fade and live Reduce Motion settles it', (tester) async {
+  testWidgets('the toast is announced during its entrance fade and live Reduce Motion settles it',
+      (tester) async {
     void dismiss() {}
     final toaster = find.byType(KinetixToaster);
     final fade = find.descendant(of: toaster, matching: find.byType(FadeTransition));

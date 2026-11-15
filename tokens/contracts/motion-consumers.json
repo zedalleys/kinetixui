@@ -15,6 +15,7 @@
     "loop|react|packages/ui/src/components/spinner.tsx",
     "loop|swiftui|packages/ui-swiftui/Sources/KinetixUI/KinetixLoopMotion.swift",
     "overlay|angular|packages/ui-angular/src/styles.css",
+    "overlay|flutter|packages/ui-flutter/lib/src/kinetix_toast_motion.dart",
     "overlay|react|packages/ui/src/components/dialog.tsx",
     "press-feedback|angular|packages/ui-angular/src/styles.css",
     "press-feedback|react|packages/ui/src/components/checkbox.tsx",
