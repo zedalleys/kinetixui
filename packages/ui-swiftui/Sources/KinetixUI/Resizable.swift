@@ -11,6 +11,11 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 public struct KinetixResizablePanels<First: View, Second: View>: View {
     @Environment(\.kinetixColors) private var colors
@@ -20,10 +25,23 @@ public struct KinetixResizablePanels<First: View, Second: View>: View {
 
     @State private var fraction: CGFloat
     @GestureState private var dragTranslation: CGFloat?
+    @State private var appIsActive = true
     private let minFraction: CGFloat
     private let maxFraction: CGFloat
     private let first: First
     private let second: Second
+
+    #if canImport(UIKit)
+    private var resignActive: Notification.Name { UIApplication.willResignActiveNotification }
+    private var becomeActive: Notification.Name { UIApplication.didBecomeActiveNotification }
+    #elseif canImport(AppKit)
+    private var resignActive: Notification.Name { NSApplication.willResignActiveNotification }
+    private var becomeActive: Notification.Name { NSApplication.didBecomeActiveNotification }
+    #endif
+
+    // A UIKit or AppKit hosting view can report the default background phase
+    // while its app is active. App notifications also cover those hosts.
+    private var canResize: Bool { appIsActive && scenePhase != .inactive }
 
     public init(
         initialFraction: CGFloat = 0.5,
@@ -66,16 +84,18 @@ public struct KinetixResizablePanels<First: View, Second: View>: View {
                             translation = value.translation.width
                         }
                         .onEnded { value in
-                            guard scenePhase == .active else { return }
+                            guard canResize else { return }
                             fraction = resizedFraction(by: value.translation.width, available: available)
                         },
-                    including: scenePhase == .active ? .all : .none
+                    including: canResize ? .all : .none
                 )
 
                 second.frame(width: max(0, available - firstWidth))
             }
             .coordinateSpace(name: resizeSpace)
         }
+        .onReceive(NotificationCenter.default.publisher(for: resignActive)) { _ in appIsActive = false }
+        .onReceive(NotificationCenter.default.publisher(for: becomeActive)) { _ in appIsActive = true }
     }
 
     private func resizedFraction(by physicalTranslation: CGFloat, available: CGFloat) -> CGFloat {
