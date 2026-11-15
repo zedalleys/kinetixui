@@ -3,6 +3,15 @@ import XCTest
 
 @MainActor
 final class ToasterCancellationTests: XCTestCase {
+    func testSameMessageNewToastHasDistinctPresentationIdentity() {
+        let original = KinetixToast("Saved", intent: .success)
+        let copiedValue = original
+        let replacement = KinetixToast("Saved", intent: .success)
+
+        XCTAssertEqual(original.presentationID, copiedValue.presentationID)
+        XCTAssertNotEqual(original.presentationID, replacement.presentationID)
+    }
+
     func testCancelledDismissalPreservesReplacement() async {
         var currentMessage: String? = "Original"
         let (started, signal) = AsyncStream<Void>.makeStream()
