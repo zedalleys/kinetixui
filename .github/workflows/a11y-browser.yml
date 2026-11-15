@@ -42,6 +42,12 @@ on:
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
       - "scripts/navigation-visual-negative-controls.mjs"
+      - "scripts/empty-match-negative-controls.mjs"
+      # `check:empty-match-controls` pins the count guard inside this script as well as the two
+      # above it, and this is the only workflow that runs those controls — so a change to it alone
+      # must trigger this workflow, or the guard it protects would be unprotected exactly when it
+      # was edited. It is otherwise run by `a11y-site.yml`, which does not host the controls.
+      - "scripts/home-systems-browser.mjs"
       - "scripts/overlay-visual.mjs"
       - "scripts/menu-visual.mjs"
       - "scripts/layout-visual.mjs"
@@ -90,6 +96,12 @@ on:
       - "scripts/composite-visual.mjs"
       - "scripts/navigation-visual.mjs"
       - "scripts/navigation-visual-negative-controls.mjs"
+      - "scripts/empty-match-negative-controls.mjs"
+      # `check:empty-match-controls` pins the count guard inside this script as well as the two
+      # above it, and this is the only workflow that runs those controls — so a change to it alone
+      # must trigger this workflow, or the guard it protects would be unprotected exactly when it
+      # was edited. It is otherwise run by `a11y-site.yml`, which does not host the controls.
+      - "scripts/home-systems-browser.mjs"
       - "scripts/overlay-visual.mjs"
       - "scripts/menu-visual.mjs"
       - "scripts/layout-visual.mjs"
@@ -424,3 +436,12 @@ jobs:
       # browser launch, so splitting it would pay for the launch twice to assert the same thing.
       - name: Reduced motion caps delays as well as durations (with negative controls)
         run: pnpm check:reduced-motion-delay
+
+      # A Playwright locator that matches nothing resolves `[]`, and `[].every(...)` is `true`, so a
+      # check shaped as "count the offenders, expect zero" passes loudest when the elements it judges
+      # have disappeared. Three gates were repaired for that; this proves the mechanism in a real
+      # browser and then pins each repaired call site, so a guard cannot be deleted while CI stays
+      # green. Hosted here rather than in `axe`: it needs Chromium but no Storybook build, and `axe`
+      # already runs within about six minutes of its 45-minute cap.
+      - name: Empty-match negative controls (zero-match assertions, and the three guards hold)
+        run: pnpm check:empty-match-controls
