@@ -34,3 +34,11 @@ export default meta;
 export const Playground: StoryObj<typeof meta> = { render: (args) => <Progress aria-label="Upload progress" {...args} className="w-60" /> };
 
 export const Default: StoryObj<typeof meta> = { render: () => <Demo /> };
+
+export const NonFiniteBounds: StoryObj<typeof meta> = { render: () => (
+    <div className="grid w-full max-w-sm gap-4">
+      <Progress aria-label="Infinite maximum" value={50} max={Infinity} />
+      <Progress aria-label="Not-a-number maximum" value={50} max={NaN} />
+      <Progress aria-label="Infinite measurement" value={Infinity} max={Infinity} />
+    </div>
+  ) };

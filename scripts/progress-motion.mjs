@@ -95,6 +95,56 @@ try {
       }
     }
   }
+
+  // A non-finite `max` must never reach ARIA. The determinate loop above cannot
+  // see this: its subject passes `max={4}`, so deleting the guard in
+  // `progress.tsx` leaves every assertion above passing. This block is the one
+  // that fails when the guard goes — it reads the live `aria-valuemax` the
+  // browser computed, and checks the painted fraction still agrees with the
+  // announced value, so a bar cannot report an infinite range while painting a
+  // finite one.
+  const page = await browser.newPage();
+  try {
+    await page.goto(`${server.base}/iframe.html?id=${storyId("progress", "NonFiniteBounds")}&viewMode=story`);
+    const EXPECTED = [
+      { name: "Infinite maximum", valuenow: "50", fraction: 0.5 },
+      { name: "Not-a-number maximum", valuenow: "50", fraction: 0.5 },
+      { name: "Infinite measurement", valuenow: null, fraction: 0 },
+    ];
+    for (const expected of EXPECTED) {
+      const bar = page.getByRole("progressbar", { name: expected.name });
+      await bar.waitFor();
+      const max = await bar.getAttribute("aria-valuemax");
+      assert.ok(
+        max !== null && Number.isFinite(Number(max)),
+        `${expected.name}: aria-valuemax must be a finite number, got ${JSON.stringify(max)}`,
+      );
+      const valuenow = await bar.getAttribute("aria-valuenow");
+      assert.equal(valuenow, expected.valuenow, `${expected.name}: aria-valuenow`);
+      assert.ok(
+        valuenow === null || Number.isFinite(Number(valuenow)),
+        `${expected.name}: aria-valuenow must be a finite number, got ${JSON.stringify(valuenow)}`,
+      );
+      const valuetext = await bar.getAttribute("aria-valuetext");
+      assert.ok(
+        !/NaN|Infinity/.test(valuetext ?? ""),
+        `${expected.name}: aria-valuetext must not read out a non-finite value, got ${JSON.stringify(valuetext)}`,
+      );
+      // Paint must agree with what was announced, measured from the browser's own geometry.
+      const painted = await bar.evaluate((el) => {
+        const track = el.getBoundingClientRect();
+        const fill = el.firstElementChild.firstElementChild.getBoundingClientRect();
+        return fill.width / track.width;
+      });
+      assert.ok(
+        Math.abs(painted - expected.fraction) < 0.001,
+        `${expected.name}: painted ${painted}, announced fraction ${expected.fraction}`,
+      );
+      console.log("non-finite", expected.name, { max, valuenow, valuetext, painted });
+    }
+  } finally {
+    await page.close();
+  }
 } finally {
   await browser?.close();
   server.close();
