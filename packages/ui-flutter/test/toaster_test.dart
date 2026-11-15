@@ -43,6 +43,25 @@ void main() {
     expect(dismissals, 1);
   });
 
+  testWidgets('a fresh toast with the same message and intent gets its own lifetime',
+      (tester) async {
+    var dismissals = 0;
+    void dismiss() => dismissals++;
+
+    await tester.pumpWidget(_host(toast: saved, onDismiss: dismiss));
+    await tester.pump(const Duration(milliseconds: 500));
+    final replacement = KinetixToast(saved.message, intent: saved.intent);
+    await tester.pumpWidget(_host(toast: replacement, onDismiss: dismiss));
+
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(dismissals, 0);
+    expect(find.text('Saved'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(dismissals, 1);
+    await tester.pump(const Duration(seconds: 1));
+    expect(dismissals, 1);
+  });
+
   testWidgets('clearing, replacing and unmounting cancel stale dismissals', (tester) async {
     var dismissals = 0;
     void dismiss() => dismissals++;
