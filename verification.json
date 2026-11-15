@@ -69,11 +69,11 @@
     },
     "Compose": {
       "build": 90,
-      "interaction": 9,
+      "interaction": 10,
       "accessibility": 10,
-      "rtl": 1,
+      "rtl": 2,
       "largeText": 0,
-      "reducedMotion": 7,
+      "reducedMotion": 9,
       "visual": 0,
       "published": 0
     },
@@ -1105,6 +1105,19 @@
           "message-bubble",
           "skeleton",
           "spinner"
+        ]
+      },
+      {
+        "file": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionIndicatorTest.kt",
+        "environment": "robolectric",
+        "kinds": [
+          "interaction",
+          "reducedMotion",
+          "rtl"
+        ],
+        "components": [
+          "segmented-control",
+          "tabs"
         ]
       },
       {
@@ -5429,6 +5442,15 @@
       "Compose": {
         "build": [
           "packages/ui-compose (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionIndicatorTest.kt:1-159"
+        ],
+        "rtl": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionIndicatorTest.kt:1-159"
+        ],
+        "reducedMotion": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionIndicatorTest.kt:1-159"
         ]
       },
       "Flutter": {
@@ -6300,13 +6322,18 @@
           "packages/ui-compose (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/InteractionTest.kt:27-127",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionIndicatorTest.kt:1-159"
         ],
         "accessibility": [
           "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SemanticsTest.kt:40-150"
         ],
         "rtl": [
-          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/AdaptivityTest.kt:24-61"
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/AdaptivityTest.kt:24-61",
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionIndicatorTest.kt:1-159"
+        ],
+        "reducedMotion": [
+          "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionIndicatorTest.kt:1-159"
         ]
       },
       "Flutter": {
@@ -9248,7 +9275,10 @@
         "level": "build"
       },
       "Compose": {
-        "level": "build"
+        "level": "build",
+        "interaction": [
+          "robolectric"
+        ]
       },
       "Flutter": {
         "level": "build"

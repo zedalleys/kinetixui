@@ -25,6 +25,7 @@
     "selection-control|flutter|packages/ui-flutter/lib/src/kinetix_switch_motion.dart",
     "selection-control|react|packages/ui/src/components/switch.tsx",
     "selection-control|swiftui|packages/ui-swiftui/Sources/KinetixUI/KinetixSwitchMotion.swift",
+    "selection-indicator|compose|packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixSelectionIndicator.kt",
     "selection-indicator|react|packages/ui/src/components/tabs.tsx",
     "selection-state|angular|packages/ui-angular/src/styles.css",
     "selection-state|compose|packages/ui-compose/ui/src/main/kotlin/com/kinetixui/ui/KinetixSelectionMotion.kt",
