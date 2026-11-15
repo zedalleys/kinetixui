@@ -11,18 +11,37 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 public struct KinetixResizablePanels<First: View, Second: View>: View {
     @Environment(\.kinetixColors) private var colors
     @Environment(\.layoutDirection) private var layoutDirection
+    @Environment(\.scenePhase) private var scenePhase
     @Namespace private var resizeSpace
 
     @State private var fraction: CGFloat
-    @State private var dragStart: CGFloat?
+    @GestureState private var dragTranslation: CGFloat?
+    @State private var appIsActive = true
     private let minFraction: CGFloat
     private let maxFraction: CGFloat
     private let first: First
     private let second: Second
+
+    #if canImport(UIKit)
+    private var resignActive: Notification.Name { UIApplication.willResignActiveNotification }
+    private var becomeActive: Notification.Name { UIApplication.didBecomeActiveNotification }
+    #elseif canImport(AppKit)
+    private var resignActive: Notification.Name { NSApplication.willResignActiveNotification }
+    private var becomeActive: Notification.Name { NSApplication.didBecomeActiveNotification }
+    #endif
+
+    // A UIKit or AppKit hosting view can report the default background phase
+    // while its app is active. App notifications also cover those hosts.
+    private var canResize: Bool { appIsActive && scenePhase != .inactive }
 
     public init(
         initialFraction: CGFloat = 0.5,
@@ -42,7 +61,8 @@ public struct KinetixResizablePanels<First: View, Second: View>: View {
         GeometryReader { geo in
             let handleWidth: CGFloat = 12
             let available = max(1, geo.size.width - handleWidth)
-            let firstWidth = max(0, available * fraction)
+            let displayedFraction = dragTranslation.map { resizedFraction(by: $0, available: available) } ?? fraction
+            let firstWidth = max(0, available * displayedFraction)
 
             HStack(spacing: 0) {
                 first.frame(width: firstWidth)
@@ -60,25 +80,33 @@ public struct KinetixResizablePanels<First: View, Second: View>: View {
                 .contentShape(Rectangle())
                 .gesture(
                     DragGesture(coordinateSpace: .named(resizeSpace))
-                        .onChanged { value in
-                            let start = dragStart ?? fraction
-                            if dragStart == nil { dragStart = fraction }
-                            fraction = Self.resizedFraction(
-                                start: start,
-                                physicalTranslation: value.translation.width,
-                                available: available,
-                                layoutDirection: layoutDirection,
-                                minFraction: minFraction,
-                                maxFraction: maxFraction
-                            )
+                        .updating($dragTranslation) { value, translation, _ in
+                            translation = value.translation.width
                         }
-                        .onEnded { _ in dragStart = nil }
+                        .onEnded { value in
+                            guard canResize else { return }
+                            fraction = resizedFraction(by: value.translation.width, available: available)
+                        },
+                    including: canResize ? .all : .none
                 )
 
                 second.frame(width: max(0, available - firstWidth))
             }
             .coordinateSpace(name: resizeSpace)
         }
+        .onReceive(NotificationCenter.default.publisher(for: resignActive)) { _ in appIsActive = false }
+        .onReceive(NotificationCenter.default.publisher(for: becomeActive)) { _ in appIsActive = true }
+    }
+
+    private func resizedFraction(by physicalTranslation: CGFloat, available: CGFloat) -> CGFloat {
+        Self.resizedFraction(
+            start: fraction,
+            physicalTranslation: physicalTranslation,
+            available: available,
+            layoutDirection: layoutDirection,
+            minFraction: minFraction,
+            maxFraction: maxFraction
+        )
     }
 
     // The drag stays in the container's physical coordinates while the first panel
