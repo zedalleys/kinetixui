@@ -4,8 +4,8 @@ import 'package:kinetix_ui/kinetix_ui.dart';
 import 'package:kinetix_ui/src/kinetix_selection_indicator.dart';
 
 /// The state the harness below hands each test, so every test drives the same widget tree.
-class _Harness {
-  _Harness(this.selected, this.reduced, this.rtl, this.label);
+class Harness {
+  Harness(this.selected, this.reduced, this.rtl, this.label);
 
   final ValueNotifier<int> selected;
   final ValueNotifier<bool> reduced;
@@ -20,7 +20,7 @@ class _Harness {
 /// different one. The split itself is the point: a single test named for both directions satisfied
 /// `check:native-motion`'s two-direction clause twice over, which is the fail-open this branch
 /// exists to close. Each direction now has a test of its own, named for that direction alone.
-Future<_Harness> pumpList(WidgetTester tester, {required bool tabs}) async {
+Future<Harness> pumpList(WidgetTester tester, {required bool tabs}) async {
   final selected = ValueNotifier(0);
   final reduced = ValueNotifier(false);
   final rtl = ValueNotifier(false);
@@ -63,7 +63,7 @@ Future<_Harness> pumpList(WidgetTester tester, {required bool tabs}) async {
     ),
   ));
 
-  return _Harness(selected, reduced, rtl, label);
+  return Harness(selected, reduced, rtl, label);
 }
 
 /// Where the indicator is actually painted, not where it has been asked to go.
