@@ -15,6 +15,7 @@ import SwiftUI
 public struct KinetixResizablePanels<First: View, Second: View>: View {
     @Environment(\.kinetixColors) private var colors
     @Environment(\.layoutDirection) private var layoutDirection
+    @Environment(\.scenePhase) private var scenePhase
     @Namespace private var resizeSpace
 
     @State private var fraction: CGFloat
@@ -65,8 +66,10 @@ public struct KinetixResizablePanels<First: View, Second: View>: View {
                             translation = value.translation.width
                         }
                         .onEnded { value in
+                            guard scenePhase == .active else { return }
                             fraction = resizedFraction(by: value.translation.width, available: available)
-                        }
+                        },
+                    including: scenePhase == .active ? .all : .none
                 )
 
                 second.frame(width: max(0, available - firstWidth))
