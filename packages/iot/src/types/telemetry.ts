@@ -47,24 +47,39 @@ export type KinetixMetricThresholds = {
 };
 
 /**
- * How to treat one reading. `stale` and `unavailable` are states in their own right rather than
- * flavours of `normal`, so a value that cannot be trusted never renders as fine.
+ * How to treat one reading. `stale`, `unavailable` and `loading` are states in their own right rather
+ * than flavours of `normal`, so a value that cannot be trusted never renders as fine.
+ *
+ * `loading` is the one that is about **us**, not the device. The other four answer "what did the
+ * device say?"; `loading` answers "have we been told yet?". A surface awaiting its first reading is
+ * not `unavailable` — that claims the device was asked and had nothing to give — and it is certainly
+ * not a measured `0`. Keeping them apart is why this member exists.
  */
-export type KinetixReadingState = "normal" | "warning" | "critical" | "stale" | "unavailable";
+export type KinetixReadingState = "normal" | "warning" | "critical" | "stale" | "unavailable" | "loading";
 
+/**
+ * Every reading state, attention first.
+ *
+ * The first five are ordered by how much they should pull the eye, so a surface reducing several
+ * readings to one worst case can compare positions. `loading` is **last and deliberately outside that
+ * ordering**: it is not a verdict about a value, so it cannot be more or less severe than one. Last is
+ * the safe place for it — an `indexOf` comparison written for the five ranks it least severe, which
+ * never promotes a pending reading over a real alarm.
+ */
 export const KINETIX_READING_STATES: readonly KinetixReadingState[] = [
   "critical",
   "warning",
   "stale",
   "unavailable",
   "normal",
+  "loading",
 ] as const;
 
 /**
  * A semantic glyph key for a reading state, so a UI can pair every state with a shape as well as a
  * colour. Keys, not icons: the product maps them to whatever icon set it has.
  */
-export type KinetixReadingGlyph = "check" | "triangle" | "octagon" | "clock" | "dash";
+export type KinetixReadingGlyph = "check" | "triangle" | "octagon" | "clock" | "dash" | "circle-dot";
 
 /** A metric this package knows how to label and format. Defaults only — a product overrides any of it. */
 export type KinetixMetricDefinition = {

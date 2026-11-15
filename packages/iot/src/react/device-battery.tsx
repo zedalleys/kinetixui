@@ -9,6 +9,7 @@ import { formatLastSeen } from "../functions/last-seen";
 import { describeReadingAge } from "../functions/reading";
 import { parseTimestamp } from "../functions/time";
 import { Glyph } from "./glyph";
+import { ReadingPlaceholder } from "./reading-placeholder";
 import { cn } from "./cn";
 import { resolveLabel } from "./label";
 import { withDisplayName } from "./display-name";
@@ -30,6 +31,12 @@ import { withDisplayName } from "./display-name";
  *   reading's age; it never says "offline".
  * - **Support.** `unsupported` (`resolveCapabilitySupport`) renders "No battery" — a different answer
  *   from "unknown". `read-only` is normal for a battery and changes nothing.
+ *
+ * - **Loading.** `loading` says a reading has been asked for and has not arrived: a placeholder where
+ *   the percentage goes, the word "Loading", and `aria-busy`. Deliberately **not** "Unknown", which is
+ *   this component's answer for a device that was asked and reported nothing — the two send a person to
+ *   two different places. With a percentage already in hand `loading` is a refresh: the cell, the
+ *   number and the band stay exactly as they are and only `aria-busy` is set.
  *
  * One accessible sentence carries all of it ("Battery 18 percent, low, stale reading"); every visual
  * part is hidden from assistive technology, so the percentage is never read twice. Not a live region:
@@ -56,19 +63,30 @@ export interface DeviceBatteryProps extends Omit<React.HTMLAttributes<HTMLSpanEl
   now?: string | Date | number | null;
   /** Replace the accessible sentence, e.g. for translation. Blank falls back to the generated one. */
   label?: string;
+  /**
+   * A reading has been asked for and has not arrived yet. A placeholder and "Loading" where there is no
+   * percentage; a refresh that changes nothing but `aria-busy` where there is one.
+   *
+   * `support="unsupported"` wins: a device with no battery is not waiting for one.
+   */
+  loading?: boolean;
 }
 
 const DeviceBattery = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLSpanElement, DeviceBatteryProps>(
-  ({ value, charging, updatedAt, staleAfterMs, freshness, thresholds, support, showAge = false, now, label, className, ...props }, ref) => {
+  ({ value, charging, updatedAt, staleAfterMs, freshness, thresholds, support, showAge = false, now, label, loading = false, className, ...props }, ref) => {
     const unsupported = support === "unsupported";
     const status = resolveBatteryState({ percent: value ?? null, charging }, { thresholds });
     const fresh = resolveFreshness({ observedAt: updatedAt, staleAfterMs, now, freshness });
     const stale = !unsupported && fresh === "stale";
     const known = !unsupported && status.available;
+    // A device with no battery is not loading one, and a percentage already in hand is not replaced.
+    const asked = loading && !unsupported;
+    const pending = asked && !known;
     const alarm = known && status.low;
     const percent = known ? formatBatteryPercent(value as number) : null;
-    const age = showAge && !unsupported && parseTimestamp(updatedAt ?? null) ? formatLastSeen(updatedAt, { now }) : null;
-    const generated = describeDeviceBattery({ value, charging, freshness: fresh, support, thresholds });
+    // Not while pending: an age dates a reading, and there is not one yet.
+    const age = showAge && !unsupported && !pending && parseTimestamp(updatedAt ?? null) ? formatLastSeen(updatedAt, { now }) : null;
+    const generated = describeDeviceBattery({ value, charging, freshness: fresh, support, thresholds, loading: pending });
     const sentence = resolveLabel(label, age ? `${generated}, ${describeReadingAge(updatedAt, { now, verb: "reported" })}` : generated);
 
     return (
@@ -77,6 +95,8 @@ const DeviceBattery = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forw
         data-battery-level={unsupported ? "unsupported" : status.level}
         data-charging={unsupported ? undefined : String(status.charging)}
         data-freshness={unsupported ? undefined : fresh}
+        aria-busy={asked || undefined}
+        data-loading={pending ? "pending" : asked ? "refreshing" : undefined}
         className={cn("inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 font-sans text-body-sm text-foreground", className)}
         {...props}
       >
@@ -100,6 +120,7 @@ const DeviceBattery = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forw
                     known ? "border-foreground/60" : "border-dashed border-muted-foreground",
                     stale && "border-dashed",
                   )}
+                  data-battery-pending={pending ? "" : undefined}
                 >
                   {known ? (
                     <span
@@ -111,11 +132,18 @@ const DeviceBattery = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forw
                 </span>
                 <span className="ms-px h-1.5 w-0.5 rounded-e-sm bg-foreground/60" />
               </span>
-              <span className={cn("tabular-nums", known && !stale ? "text-foreground" : "text-muted-foreground")}>
-                <bdi dir="ltr">{percent !== null ? `${percent}%` : "—"}</bdi>
+              <span data-battery-value="" className={cn("tabular-nums", known && !stale ? "text-foreground" : "text-muted-foreground")}>
+                {/* A pending percentage holds its slot. "—" is the word for a device that reported
+                    nothing, so it is not borrowed for a reading still on its way. */}
+                {pending ? <ReadingPlaceholder width={3} /> : <bdi dir="ltr">{percent !== null ? `${percent}%` : "—"}</bdi>}
               </span>
             </span>
-            {!known ? (
+            {pending ? (
+              <span aria-hidden="true" data-battery-note="loading" className="inline-flex items-center gap-1 text-label-md text-muted-foreground">
+                <Glyph name="circle-dot" size={12} />
+                <span>Loading</span>
+              </span>
+            ) : !known ? (
               <span aria-hidden="true" data-battery-note="unknown" className="text-label-md text-muted-foreground">
                 Unknown
               </span>

@@ -6,6 +6,7 @@ import { describeMetric, getMetricDefinition } from "../functions/metrics";
 import { describeReadingAge, describeTelemetryReading, resolveReadingDelta } from "../functions/reading";
 import { describeReadingState, evaluateReading, formatTelemetryValue } from "../functions/telemetry";
 import { LastSync } from "./last-sync";
+import { ReadingPlaceholder } from "./reading-placeholder";
 import { MetricStatus } from "./metric-status";
 import { Glyph } from "./glyph";
 import { cn } from "./cn";
@@ -29,9 +30,15 @@ import { withDisplayName } from "./display-name";
  * **M3: generic readings.** `metric` is optional: a product with a reading the registry has never heard
  * of (glucose, RPM, a pump's line pressure) passes `label`, `value` and `unit` and gets the same rules.
  *
- * - **Four kinds of "no number".** `unknown` (no value reported: "Unknown"), `unavailable` (quality
- *   `missing`/`error`, or `unavailable`: "Unavailable"), `unsupported` (`support="unsupported"`: "Not
- *   supported by this device") and a value that is there but stale. None of them renders a 0.
+ * - **Five kinds of "no number".** `loading` (asked for, nothing back yet: a placeholder and
+ *   "Loading"), `unknown` (no value reported: "Unknown"), `unavailable` (quality `missing`/`error`, or
+ *   `unavailable`: "Unavailable"), `unsupported` (`support="unsupported"`: "Not supported by this
+ *   device") and a value that is there but stale. None of them renders a 0.
+ * - **Loading is about us, not the device.** `loading` says a reading has been asked for and no answer
+ *   has arrived. It is never inferred from an absent value, because an absent value cannot tell the
+ *   two apart, and "Unknown" sends somebody to inspect hardware that is fine. With a value already in
+ *   hand `loading` is a **refresh**: the number stays, `aria-busy` goes on, and nothing is blanked —
+ *   destroying a real measurement to describe a request is a worse answer than showing it.
  * - **Delta only with evidence.** `previous` draws "+0.4 °C vs previous reading" only when both readings
  *   are numbers and the current one is current; one sample has no change, and none is invented.
  * - **No interpretation.** A reference range (`range`) is printed, never judged; status comes from
@@ -75,6 +82,26 @@ export interface TelemetryMetricProps extends Omit<React.HTMLAttributes<HTMLDivE
   support?: KinetixCapabilitySupport;
   /** The source says it cannot give a value right now (sensor fault, out of range). */
   unavailable?: boolean;
+  /**
+   * A reading has been asked for and has not arrived yet.
+   *
+   * With no usable value this is the `loading` state: a placeholder in the value's slot, the word
+   * "Loading", and `aria-busy="true"` on the tile. With a usable value it is a **refresh**: the value
+   * and its status are kept exactly as they are and only `aria-busy` is set, so a poll never blanks a
+   * number that is on screen and true.
+   *
+   * `support="unsupported"` wins over it — a device that does not measure this is not loading it.
+   */
+  loading?: boolean;
+  /**
+   * Announce the reading politely as it changes, for a tile whose arrival a person is waiting on.
+   *
+   * **Off by default, and that is the right default.** The accessible sentence is always present and is
+   * read when a screen reader reaches the tile; a live region is for the one reading somebody is
+   * waiting for. A dashboard of thirty tiles that all announce is a dashboard nobody can use, so this
+   * is opt-in per tile rather than a package-wide behaviour.
+   */
+  announce?: boolean;
   /** Direction of change, from `summarizeSeries`. Shown as an arrow and a word, only for a current reading. */
   trend?: "rising" | "falling" | "steady" | "unknown";
   /** Reference instant. Pass a fixed value for deterministic rendering. */
@@ -121,6 +148,8 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
       range,
       support,
       unavailable: unavailableProp = false,
+      loading: loadingProp = false,
+      announce = false,
       trend,
       now,
       quietWhenNormal = false,
@@ -135,6 +164,9 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
     const shownUnit = unit ?? definition?.unit;
     const digits = precision ?? definition?.decimals;
     const unsupported = support === "unsupported";
+    // A device that does not measure this is not waiting for it. `unsupported` is the device's answer
+    // and it is final, so it wins over a request still in flight.
+    const asked = loadingProp && !unsupported;
     // An explicit freshness answer replaces the age check; `fresh` and `unknown` skip it.
     const evaluation = evaluateReading({
       value: unsupported || unavailableProp ? null : value,
@@ -144,18 +176,26 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
       thresholds,
       now,
       staleAfterMs: freshness === undefined ? staleAfterMs : undefined,
+      loading: asked,
     });
     let state: KinetixReadingState = evaluation.state;
-    if (state !== "unavailable" && freshness === "stale") state = "stale";
-    if (state !== "unavailable" && state !== "stale" && severity) state = severity;
-    const noValue = state === "unavailable";
+    // Neither a freshness policy nor the product's severity applies to a reading that is not here yet:
+    // there is no value to call old, and nothing to judge.
+    const pending = state === "loading";
+    if (!pending && state !== "unavailable" && freshness === "stale") state = "stale";
+    if (!pending && state !== "unavailable" && state !== "stale" && severity) state = severity;
+    const noValue = pending || state === "unavailable";
+    // A refresh over a value that is already here: `aria-busy`, and nothing else changes.
+    const refreshing = asked && !pending;
     const availability = unsupported
       ? "unsupported"
-      : !noValue
-        ? "known"
-        : unavailableProp || quality === "missing" || quality === "error"
-          ? "unavailable"
-          : "unknown";
+      : pending
+        ? "loading"
+        : !noValue
+          ? "known"
+          : unavailableProp || quality === "missing" || quality === "error"
+            ? "unavailable"
+            : "unknown";
     const stale = state === "stale";
     const numberText = (v: number) => (formatValue ? formatValue(v) : formatTelemetryValue({ value: v }, { precision: digits }));
     const valueText = !noValue && finite(value) ? numberText(value) : null;
@@ -179,8 +219,17 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
         : rangeMin !== null
           ? `at least ${rangeMin}`
           : `at most ${rangeMax}`;
-    const statusWord =
-      availability === "unknown" ? "Unknown" : availability === "unsupported" ? "Not supported" : state === "stale" || noValue ? undefined : statusLabel;
+    const statusWord = pending
+      ? "Loading"
+      : availability === "unknown"
+        ? "Unknown"
+        : availability === "unsupported"
+          ? "Not supported"
+          : state === "stale" || noValue
+            ? undefined
+            : statusLabel;
+    // A pending reading always says so: `quietWhenNormal` suppresses the status of a reading that is
+    // fine, and one that has not arrived is not a reading that is fine.
     const hideStatus = quietWhenNormal && state === "normal" && !statusLabel;
     const hasTimestamp = timestamp !== undefined && timestamp !== null;
 
@@ -207,10 +256,23 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
         ref={ref}
         data-reading-state={state}
         data-value-state={availability}
+        // `aria-busy` for both shapes of waiting — the first reading and a refresh over one already
+        // here. It tells assistive technology the content is in flux without interrupting anyone, which
+        // is why it is here unconditionally while `announce` is not.
+        aria-busy={asked || undefined}
+        data-loading={pending ? "pending" : refreshing ? "refreshing" : undefined}
         className={cn("flex min-w-0 flex-col font-sans", size === "md" ? "gap-1" : "gap-2", className)}
         {...props}
       >
-        <span className="sr-only" data-reading-sentence="">
+        <span
+          className="sr-only"
+          data-reading-sentence=""
+          // Opt-in, and polite. The sentence already changes from "loading, no reading yet" to the
+          // value as it lands, so a tile somebody is waiting on announces the arrival; the rest stay
+          // silent and are read when a screen reader reaches them.
+          role={announce ? "status" : undefined}
+          aria-live={announce ? "polite" : undefined}
+        >
           {sentence}
         </span>
         <span aria-hidden="true" className={cn("break-words text-muted-foreground", size === "md" ? "text-label-lg" : "text-body-md")}>
@@ -223,6 +285,9 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
         ) : (
           <span
             aria-hidden="true"
+            // The gate seam for the layout-stability measurement: the slot has to be findable so its
+            // height can be compared pending against loaded.
+            data-reading-value=""
             className={cn(
               "break-words tabular-nums",
               VALUE_SIZE[size],
@@ -230,8 +295,15 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
               noValue || stale ? "text-muted-foreground" : "text-foreground",
             )}
           >
-            {/* A measurement is a number and its unit as one left-to-right run: in an RTL page the unit's neutral
-                characters ("°C", "%", "L/min") would otherwise reorder around the digits. */}
+            {/* A reading that has not arrived holds its slot rather than standing in as "—": the dash is
+                this package's word for "the device gave nothing", and a bar is not a claim about the
+                device at all. Sized in `ch`/`em`, so the slot is as tall and nearly as wide as the
+                value that will replace it and the tile does not jump when it lands. */}
+            {pending ? (
+              <ReadingPlaceholder width={size === "md" ? 4 : 5} />
+            ) : (
+            /* A measurement is a number and its unit as one left-to-right run: in an RTL page the unit's neutral
+               characters ("°C", "%", "L/min") would otherwise reorder around the digits. */
             <bdi dir="ltr">
               {heroUnit !== undefined ? (
                 <>
@@ -242,6 +314,7 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
                 shown
               )}
             </bdi>
+            )}
           </span>
         )}
         {stale ? (
@@ -265,9 +338,12 @@ const TelemetryMetric = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.fo
               <span>vs {previousLabel}</span>
             </span>
           ) : null}
-          {hasTimestamp && !unsupported ? <LastSync value={timestamp} now={now} className="text-label-md" /> : null}
+          {/* Not while pending: a freshness stamp dates a reading, and there is not one yet. The spoken
+              sentence drops it for the same reason, so the two stay in step. */}
+          {hasTimestamp && !unsupported && !pending ? <LastSync value={timestamp} now={now} className="text-label-md" /> : null}
         </span>
-        {rangeText && !unsupported ? (
+        {/* Also withheld while pending, so the tile shows exactly what the sentence says. */}
+        {rangeText && !unsupported && !pending ? (
           <span aria-hidden="true" data-range="" className="text-label-md text-muted-foreground">
             <bdi dir="ltr">{rangeText}</bdi>
           </span>

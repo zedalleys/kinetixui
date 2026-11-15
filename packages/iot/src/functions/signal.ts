@@ -73,9 +73,17 @@ function clampBars(filled: number, total: number): number {
   return Math.min(total, Math.max(1, filled));
 }
 
-/** The full accessible label: `"Signal 84%, excellent"`. */
-export function describeSignal(value: number | null | undefined): string {
+/**
+ * The full accessible label: `"Signal 84%, excellent"`.
+ *
+ * `options.loading` says a reading has been asked for and has not arrived — `"Signal loading, no
+ * reading yet"` rather than `"Signal strength unknown"`, which claims the radio was asked and had
+ * nothing to report. It only applies where there is no value: a refresh over a real reading is still
+ * that reading, and `"No signal"` is a reported zero, not an absence.
+ */
+export function describeSignal(value: number | null | undefined, options: { loading?: boolean } = {}): string {
   const level = classifySignalStrength(value);
+  if (level === "unknown" && options.loading === true) return "Signal loading, no reading yet";
   if (level === "unknown") return "Signal strength unknown";
   if (level === "none") return "No signal";
   return `Signal ${formatSignalPercent(value as number)}%, ${level}`;

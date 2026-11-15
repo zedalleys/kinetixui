@@ -274,6 +274,24 @@ const READOUT = {
   "energy-partial": { numeric: true, glyph: true },
   "energy-custom": { numeric: true, glyph: true },
   "energy-unknown": { numeric: false, glyph: true },
+  // Loading. A pending case has nothing measured, so by the rule above it is status-only — and its
+  // value slot holds a placeholder rather than an isolated run, which is the same statement from the
+  // other side. Each pending case is paired with the settled one it is measured against, and those do
+  // carry a readout.
+  "loading-telemetry": { numeric: false, glyph: true },
+  "loading-telemetry-settled": { numeric: true, glyph: true },
+  "loading-telemetry-refreshing": { numeric: true, glyph: true },
+  "loading-telemetry-announced": { numeric: false, glyph: true },
+  "loading-zero": { numeric: true, glyph: true },
+  "loading-battery": { numeric: false, glyph: true },
+  // A battery at 72% raises no alarm, so it draws no glyph — as `battery-normal` does not.
+  "loading-battery-settled": { numeric: true, glyph: false },
+  // `SensorReading` and `SignalStrength` draw no state glyphs at all; their words and their bar counts
+  // carry the state.
+  "loading-sensor": { numeric: false, glyph: false },
+  "loading-sensor-settled": { numeric: true, glyph: false },
+  "loading-signal": { numeric: false, glyph: false },
+  "loading-signal-settled": { numeric: false, glyph: false },
 };
 
 /** The declaration for a scenario. A scenario with none fails, rather than skipping both checks. */
@@ -362,7 +380,197 @@ const ENERGY = {
 
 /* ------------------------------------------------------------------ stories */
 
+/**
+ * The loading scenarios, and what each one must show.
+ *
+ * `pairedWith` is the point of the story. A placeholder's job is to hold the slot its value will take,
+ * and a bar pinned in pixels looks right at 100% text and wrong at 200% — so each pending case names
+ * the settled case it is measured against, and the gate requires the two value slots to be the same
+ * height **in every condition**, including the 390px/200%-text one.
+ *
+ * `forbids` is the conflation guard: a pending reading must not draw "Unknown" (which says the device
+ * answered with nothing) or "—" (this package's mark for the same thing). Those send a person to
+ * inspect hardware that is fine, which is the whole reason this state exists.
+ */
+const LOADING = {
+  "loading-telemetry": {
+    busy: true,
+    loading: "pending",
+    placeholder: true,
+    slot: "[data-reading-value]",
+    pairedWith: "loading-telemetry-settled",
+    sentence: "Line pressure loading, no reading yet",
+    shows: ["Loading"],
+    forbids: ["Unknown", "—", "Unavailable"],
+    glyph: "circle-dot",
+  },
+  "loading-telemetry-settled": { busy: false, placeholder: false, slot: "[data-reading-value]", sentence: "Line pressure 2.4 bar, normal", shows: ["2.4 bar"], forbids: ["Loading"] },
+  "loading-telemetry-refreshing": {
+    busy: true,
+    loading: "refreshing",
+    placeholder: false,
+    sentence: "Soil moisture 31 %, normal",
+    shows: ["31 %"],
+    // A refresh keeps the number it already has. Blanking it to describe a request destroys a fact.
+    forbids: ["Loading", "Unknown", "—"],
+  },
+  "loading-telemetry-announced": { busy: true, loading: "pending", placeholder: true, sentence: "Vat temperature loading, no reading yet", shows: ["Loading"], live: "polite" },
+  // The case the vocabulary exists for: 0 is a measurement and survives an open request.
+  "loading-zero": { busy: true, loading: "refreshing", placeholder: false, sentence: "Flow 0 L/min, normal", shows: ["0 L/min"], forbids: ["Loading", "Unknown", "—"] },
+  "loading-battery": {
+    busy: true,
+    loading: "pending",
+    placeholder: true,
+    slot: "[data-battery-value]",
+    pairedWith: "loading-battery-settled",
+    sentence: "Battery loading, no reading yet",
+    shows: ["Loading"],
+    forbids: ["Unknown", "—"],
+    glyph: "circle-dot",
+    // No fill while pending: a bar drawn to any width is a level, and there is no level.
+    noFill: true,
+  },
+  "loading-battery-settled": { busy: false, placeholder: false, slot: "[data-battery-value]", sentence: "Battery 72 percent", shows: ["72%"], forbids: ["Loading"] },
+  "loading-sensor": { busy: true, loading: "pending", placeholder: true, slot: "[data-reading-value]", pairedWith: "loading-sensor-settled", shows: ["Loading", "Temperature"], forbids: ["Unknown", "—"] },
+  "loading-sensor-settled": { busy: false, placeholder: false, slot: "[data-reading-value]", shows: ["23.4 °C"], forbids: ["Loading"] },
+  "loading-signal": { busy: true, loading: "pending", placeholder: true, slot: "[data-signal-value]", pairedWith: "loading-signal-settled", sentence: "Signal loading, no reading yet", forbids: ["—"], noFill: true },
+  "loading-signal-settled": { busy: false, placeholder: false, slot: "[data-signal-value]", sentence: "Signal 84%, excellent", forbids: ["Loading"] },
+};
+
+/**
+ * The placeholder's width as a multiple of the font size it stands in, per scenario, from the first
+ * condition that measured it.
+ *
+ * This is the assertion that the slot **scales with the type**, and it exists because the obvious test
+ * does not. Comparing the pending slot's height to the settled slot's height was tried first and
+ * measured: a placeholder pinned at `14px` passed it at 200% text, because a line box is established by
+ * its parent's own font strut and a bar only moves it by being *taller* than that. The height
+ * comparison is kept below — it caught the same injection on the battery and signal slots, whose text
+ * is small enough for 14px to exceed — but it is not evidence about scaling, so this is measured too.
+ *
+ * `width / fontSize` is scale-invariant for a bar sized in `ch`: double the text and both double. For a
+ * bar sized in pixels it halves, so the `large` condition (390px at 200% text) catches it against the
+ * reference taken at 100%.
+ */
+const PLACEHOLDER_SCALE = new Map();
+
 const STORIES = {
+  loading: {
+    scenarios: Object.keys(LOADING),
+    passive: true,
+    // Exactly one: `loading-telemetry-announced`. Every other tile here must stay silent, which the
+    // per-scenario check below asserts from the other direction.
+    liveRegions: 1,
+    check: async (page, block, id, tag, cond) => {
+      const want = LOADING[id];
+      // `aria-busy` is the non-interrupting signal that content is in flux, and it is the one thing
+      // every waiting state here must carry.
+      const busy = await block.locator("[aria-busy]").count();
+      expectThat(tag, want.busy === busy > 0, `aria-busy ${busy > 0}, expected ${want.busy}`);
+      if (want.loading) {
+        const got = await block.locator("[data-loading]").first().getAttribute("data-loading");
+        expectThat(tag, got === want.loading, `data-loading "${got}", expected "${want.loading}"`);
+      }
+
+      const bars = block.locator("[data-reading-placeholder]");
+      const count = await bars.count();
+      expectThat(tag, want.placeholder === count > 0, `${count} placeholders, expected ${want.placeholder ? "one" : "none"}`);
+      if (want.placeholder) {
+        // Drawn, not merely present. A zero-size or transparent bar is an empty slot, which reads as a
+        // reading that is simply missing — and under forced colours a background-only bar is exactly
+        // that, which is why the border is asserted there.
+        const box = await bars.first().evaluate((el) => {
+          const r = el.getBoundingClientRect();
+          const cs = getComputedStyle(el);
+          // `borderTopWidth` is 0 when `border-style` is `none`, whatever the width says, so this is the
+          // drawn border rather than the declared one.
+          const border = cs.borderTopStyle === "none" ? 0 : parseFloat(cs.borderTopWidth) || 0;
+          // The background's ALPHA, not its string. `rgba(255, 255, 255, 0)` is as invisible as
+          // `rgba(0, 0, 0, 0)` and a string comparison against the latter misses it — which is exactly
+          // how a bar with `forced-colors:bg-transparent` and no border passed this check.
+          const bg = cs.backgroundColor;
+          const parts = /^rgba?\(/.test(bg) ? bg.replace(/^rgba?\(|\)$/g, "").split(",").map((n) => parseFloat(n)) : [];
+          const alpha = bg === "transparent" ? 0 : parts.length >= 4 ? parts[3] : 1;
+          return { w: r.width, h: r.height, border, bg, alpha, visibility: cs.visibility, opacity: cs.opacity };
+        });
+        expectThat(tag, box.w > 1 && box.h > 1, `placeholder is ${box.w}×${box.h}, so the slot is empty`);
+        expectThat(tag, box.visibility !== "hidden" && Number(box.opacity) > 0, `placeholder is not visible (${box.visibility}, opacity ${box.opacity})`);
+        const painted = box.border > 0 || box.alpha > 0;
+        expectThat(tag, painted, `placeholder has neither a border nor a visible background, so nothing is drawn (${box.bg})`);
+        if (cond.forcedColors === "active") {
+          // The border, specifically, and not `painted` above. Forced-colors mode *substitutes* the
+          // background rather than removing it, so `getComputedStyle` reports an opaque Canvas colour
+          // and `painted` can never be false here — a bar with no border passed this check while being
+          // the same colour as the page behind it. Measured: dropping `forced-colors:border` left the
+          // gate green until this line existed.
+          expectThat(
+            tag,
+            box.border > 0,
+            `no border under forced colours, where the bar's background resolves to Canvas — the page's own colour — so there is nothing to see (background ${box.bg})`,
+          );
+          const pageBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+          expectThat(tag, box.border > 0 || box.bg !== pageBg, `the bar is the page's own colour under forced colours (${box.bg})`);
+        }
+        const ratio = await bars.first().evaluate((el) => {
+          const r = el.getBoundingClientRect();
+          return r.width / parseFloat(getComputedStyle(el.parentElement ?? el).fontSize);
+        });
+        const reference = PLACEHOLDER_SCALE.get(id);
+        if (reference === undefined) PLACEHOLDER_SCALE.set(id, ratio);
+        else
+          expectThat(
+            tag,
+            Math.abs(ratio - reference) <= 0.05 * Math.max(ratio, reference),
+            `the placeholder does not scale with the text: ${ratio.toFixed(2)}× the font size here against ${reference.toFixed(2)}× at the reference size, so the slot is pinned rather than typographic`,
+          );
+        if (cond.reducedMotion === "reduce") {
+          // The reduced-motion claim in full: the pulse is gone (asserted globally by `pageChecks`) and
+          // what remains is the correct final state rather than a frame that never arrives.
+          expectThat(tag, box.w > 1 && box.h > 1 && painted, "placeholder is not drawn under reduced motion");
+        }
+      }
+
+      // The pending slot does not grow the line: its height matches the settled slot's, in this
+      // condition's text size and width. Note what this does and does not prove — a line box comes from
+      // its parent's font strut, so this catches a placeholder that is too *tall* for its line and says
+      // nothing about one that fails to scale. `PLACEHOLDER_SCALE` above is the scaling assertion.
+      if (want.pairedWith) {
+        const settled = LOADING[want.pairedWith];
+        const heightOf = (scenario, selector) =>
+          page.locator(`[data-scenario="${scenario}"] ${selector}`).first().evaluate((el) => el.getBoundingClientRect().height);
+        const pending = await heightOf(id, want.slot);
+        const landed = await heightOf(want.pairedWith, settled.slot);
+        expectThat(tag, pending > 0 && landed > 0, `a paired slot has no height (${pending} / ${landed})`);
+        expectThat(
+          tag,
+          Math.abs(pending - landed) <= 1,
+          `the slot moves when the value lands: ${pending.toFixed(1)}px pending vs ${landed.toFixed(1)}px loaded`,
+        );
+      }
+
+      const text = await visible(block);
+      for (const word of want.shows ?? []) expectThat(tag, text.includes(word), `"${word}" not drawn ("${text}")`);
+      for (const word of want.forbids ?? []) expectThat(tag, !text.includes(word), `"${word}" is drawn, which says something the state does not ("${text}")`);
+      if (want.sentence) {
+        const tree = await aria(block);
+        expectThat(tag, tree.includes(want.sentence), `accessible text "${tree}", expected "${want.sentence}"`);
+      }
+      if (want.glyph) expectThat(tag, (await glyphs(block)).includes(want.glyph), `no ${want.glyph} glyph (${(await glyphs(block)).join(",")})`);
+      if (want.noFill) {
+        expectThat(tag, (await block.locator("[data-battery-fill]").count()) === 0, "a level is drawn for a reading that has not arrived");
+        const lit = await block.evaluate((el) => [...el.querySelectorAll("span")].filter((b) => b.className.includes("bg-secondary-foreground")).length);
+        expectThat(tag, lit === 0, `${lit} signal bars are filled for a reading that has not arrived`);
+      }
+      if (want.live) {
+        const region = block.locator("[data-reading-sentence]");
+        expectThat(tag, (await region.getAttribute("aria-live")) === want.live, `aria-live "${await region.getAttribute("aria-live")}", expected "${want.live}"`);
+      } else if (want.placeholder) {
+        // Opt-in: a dashboard whose every tile announces is a dashboard nobody can use.
+        const region = block.locator("[data-reading-sentence]");
+        if ((await region.count()) > 0) expectThat(tag, (await region.getAttribute("aria-live")) === null, "a tile announces without being asked to");
+      }
+    },
+  },
   battery: {
     scenarios: Object.keys(BATTERY),
     passive: true,
@@ -525,8 +733,13 @@ for (const [story, def] of Object.entries(STORIES)) {
       if (def.passive && cond.keyboard) {
         const stops = await page.evaluate(() => [...document.querySelectorAll("#storybook-root a[href],#storybook-root button,#storybook-root [tabindex]")].filter((n) => n.tabIndex >= 0).length);
         expectThat(`${story} [keyboard]`, stops === 0, `passive story has ${stops} tab stops`);
+        // Declared, not blanket. A monitoring surface is not a live region by default, and that is the
+        // rule worth keeping — so a story that legitimately has one says how many, and an undeclared
+        // region still fails. Only the `loading` story declares any (one `announce` tile), which is a
+        // narrower allowance than dropping the check would be.
         const live = await page.locator('#storybook-root [role="status"], #storybook-root [aria-live], #storybook-root [role="alert"]').count();
-        expectThat(`${story} [keyboard]`, live === 0, `passive story has ${live} live regions`);
+        const allowed = def.liveRegions ?? 0;
+        expectThat(`${story} [keyboard]`, live === allowed, `passive story has ${live} live regions, expected ${allowed}`);
       }
       for (const id of scenarios) {
         const tag = `${id} [${cond.name}]`;

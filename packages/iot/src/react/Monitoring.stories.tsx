@@ -5,6 +5,8 @@ import { DeviceActivity } from "./device-activity";
 import { DeviceBattery } from "./device-battery";
 import { DeviceConnection } from "./device-connection";
 import { EnergySummary } from "./energy-summary";
+import { SensorReading } from "./sensor-reading";
+import { SignalStrength } from "./signal-strength";
 import { TelemetryMetric } from "./telemetry-metric";
 import {
   KINETIX_CONNECTIVITY_STATES,
@@ -133,6 +135,57 @@ export const Telemetry: Story = {
           now={NOW}
           quietWhenNormal
         />
+      </Scenario>
+    </>
+  ),
+};
+
+/**
+ * A reading that has been asked for and has not arrived.
+ *
+ * The pending scenarios are **paired** with the same tile holding a real value, because the claim this
+ * story set exists to prove is that the slot does not move when the value lands: the gate measures the
+ * two value slots and requires the same height. A placeholder pinned in pixels passes at 100% text and
+ * fails at 200%, which is why the pair is checked in every condition rather than once.
+ *
+ * `loading-zero` is the case the whole state vocabulary exists for: a measured 0 with a refresh open is
+ * still 0, not a placeholder and not "Unknown".
+ */
+export const Loading: Story = {
+  render: () => (
+    <>
+      <Scenario id="loading-telemetry" title="Telemetry · first reading pending">
+        <TelemetryMetric label="Line pressure" value={null} unit="bar" loading now={NOW} />
+      </Scenario>
+      <Scenario id="loading-telemetry-settled" title="Telemetry · the same tile, value landed">
+        <TelemetryMetric label="Line pressure" value={2.4} unit="bar" timestamp={ago(MIN)} now={NOW} />
+      </Scenario>
+      <Scenario id="loading-telemetry-refreshing" title="Telemetry · refreshing a value already shown">
+        <TelemetryMetric label="Soil moisture" value={31} unit="%" timestamp={ago(MIN)} loading now={NOW} />
+      </Scenario>
+      <Scenario id="loading-telemetry-announced" title="Telemetry · pending, announced politely">
+        <TelemetryMetric label="Vat temperature" value={null} unit="°C" loading announce now={NOW} />
+      </Scenario>
+      <Scenario id="loading-zero" title="Telemetry · a measured zero, refresh open">
+        <TelemetryMetric label="Flow" value={0} unit="L/min" timestamp={ago(MIN)} loading now={NOW} />
+      </Scenario>
+      <Scenario id="loading-battery" title="Battery · first reading pending">
+        <DeviceBattery value={null} loading now={NOW} />
+      </Scenario>
+      <Scenario id="loading-battery-settled" title="Battery · the same cell, value landed">
+        <DeviceBattery value={72} now={NOW} />
+      </Scenario>
+      <Scenario id="loading-sensor" title="SensorReading · first reading pending">
+        <SensorReading metric="Temperature" value={null} unit="°C" loading />
+      </Scenario>
+      <Scenario id="loading-sensor-settled" title="SensorReading · the same reading, landed">
+        <SensorReading metric="Temperature" value={23.4} unit="°C" precision={1} />
+      </Scenario>
+      <Scenario id="loading-signal" title="Signal · first reading pending">
+        <SignalStrength value={null} loading />
+      </Scenario>
+      <Scenario id="loading-signal-settled" title="Signal · the same meter, value landed">
+        <SignalStrength value={84} />
       </Scenario>
     </>
   ),

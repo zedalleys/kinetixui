@@ -22,10 +22,15 @@ export function resolveReadingDelta(current: number | null | undefined, previous
 export type DescribeTelemetryReadingInput = {
   label: string;
   /**
-   * What the value is: `known` (a number), `unknown` (nothing reported), `unavailable` (the source
-   * says it cannot give one now) or `unsupported` (the device does not measure this).
+   * What the value is: `known` (a number), `loading` (asked for, nothing back yet), `unknown` (nothing
+   * reported), `unavailable` (the source says it cannot give one now) or `unsupported` (the device does
+   * not measure this).
+   *
+   * `loading` and `unknown` are different facts and are said differently. "Unknown" tells a listener
+   * the device was asked and had no answer, which is a reason to check the device; "loading" tells them
+   * to wait. Collapsing the two sends people to look at hardware that is fine.
    */
-  availability: "known" | "unknown" | "unavailable" | "unsupported";
+  availability: "known" | "loading" | "unknown" | "unavailable" | "unsupported";
   /** The value as displayed, e.g. `"21.4"` or a product formatter's `"1 234,5"`. */
   valueText?: string;
   /** The unit as spoken. A product may pass "degrees Celsius" for `°C`. */
@@ -44,9 +49,9 @@ export type DescribeTelemetryReadingInput = {
 /**
  * One phrase a screen reader hears for a reading: "Temperature 21.4 °C, normal, measured 1 minute ago",
  * "Soil moisture 31 percent, stale reading, last known value", "Heart rate unknown, no reading",
- * "Glucose not supported by this device".
+ * "Pressure loading, no reading yet", "Glucose not supported by this device".
  *
- * Unknown and unavailable say so in words and never contain a number; stale is always named.
+ * Loading, unknown and unavailable say so in words and never contain a number; stale is always named.
  */
 export function describeTelemetryReading(input: DescribeTelemetryReadingInput): string {
   const { label } = input;
@@ -57,6 +62,8 @@ export function describeTelemetryReading(input: DescribeTelemetryReadingInput): 
       return `${label} unavailable, no reading`;
     case "unknown":
       return `${label} unknown, no reading`;
+    case "loading":
+      return `${label} loading, no reading yet`;
     case "known":
       break;
   }
