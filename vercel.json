@@ -7,7 +7,8 @@
       "codex/create-m1-storage-20261111": false,
       "codex/create-m1-storage-restacked-20261111": false,
       "codex/m62-swiftui-toast-cancellation": false,
-      "codex/m63-swiftui-toast-identity": false
+      "codex/m63-swiftui-toast-identity": false,
+      "ZedX/m66-ios-toast-passive": false
     }
   }
 }
