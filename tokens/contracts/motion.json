@@ -444,6 +444,9 @@
         "transform"
       ],
       "reducedForm": "rest",
+      "pairingExempt": {
+        "reason": "A loop has no destination to arrive at, so there is no duration/easing pairing for it to name: its period is a keyframe and its reduced form is not a shorter transition but no loop at all plus a static state that says the same thing. Registered in tokens/contracts/motion-exemptions.json."
+      },
       "scope": "Spinner, Skeleton, Marquee and the typing indicator, on every platform that ships them",
       "evidence": [
         "scripts/loop-motion.mjs",
@@ -554,6 +557,7 @@
   },
   "platforms": {
     "web-css": {
+      "surface": "web",
       "symbols": "--duration-<tier>, --easing-<name>",
       "file": "packages/tokens/dist/web/globals.css",
       "duration": "exact",
@@ -561,6 +565,7 @@
       "reducedMotion": "@media (prefers-reduced-motion: reduce)"
     },
     "react": {
+      "surface": "web",
       "symbols": "duration-<tier>, ease-<name> (Tailwind preset)",
       "file": "packages/ui/tailwind.config.ts",
       "duration": "exact (reads the CSS variables)",
@@ -568,6 +573,7 @@
       "reducedMotion": "Preset floor shortens every duration to 0.01ms; loops add motion-reduce:animate-none. Registry installs do not get the floor."
     },
     "angular": {
+      "surface": "web",
       "symbols": "var(--duration-<tier>), var(--easing-<name>)",
       "file": "packages/ui-angular/src/styles.css",
       "duration": "exact (reads the CSS variables)",
@@ -575,6 +581,7 @@
       "reducedMotion": "Per-component @media (prefers-reduced-motion: reduce) blocks; no global floor yet."
     },
     "swiftui": {
+      "surface": "native",
       "symbols": "KinetixDuration.<tier> (Duration), KinetixEasing.<name> (control points)",
       "file": "packages/ui-swiftui/Sources/KinetixUI/KinetixMotion.swift",
       "duration": "exact",
@@ -582,6 +589,7 @@
       "reducedMotion": "@Environment(\\.accessibilityReduceMotion) through family helpers"
     },
     "compose": {
+      "surface": "native",
       "symbols": "KinetixDuration.<tier> (Int ms), KinetixEasing.<name> (CubicBezierEasing)",
       "file": "packages/ui-compose/ui/src/main/kotlin/com/kinetixui/tokens/KinetixMotion.kt",
       "duration": "exact",
@@ -589,6 +597,7 @@
       "reducedMotion": "System animator duration scale (ANIMATOR_DURATION_SCALE == 0) through family helpers"
     },
     "flutter": {
+      "surface": "native",
       "symbols": "KinetixDuration.<tier> (Duration), KinetixEasing.<name> (Cubic)",
       "file": "packages/ui-flutter/lib/src/kinetix_motion.dart",
       "duration": "exact",
