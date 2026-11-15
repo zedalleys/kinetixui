@@ -9,6 +9,10 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import Accessibility
+import UIKit
+#endif
 
 public struct KinetixToast {
     public enum Intent {
@@ -72,6 +76,11 @@ public struct KinetixToaster: View {
                 .padding(16)
                 .transition(KinetixSlideMotion.transition(from: .bottom, reduceMotion: reduceMotion).combined(with: .opacity))
                 .task(id: toast.presentationID) {
+                    #if os(iOS)
+                    if !Task.isCancelled, self.toast?.presentationID == toast.presentationID {
+                        Self.announce(toast.message)
+                    }
+                    #endif
                     await Self.dismissAfterDelay(duration) {
                         guard self.toast?.presentationID == toast.presentationID else { return }
                         withAnimation(KinetixSlideMotion.dismissAnimation(reduceMotion: reduceMotion)) { self.toast = nil }
@@ -80,6 +89,24 @@ public struct KinetixToaster: View {
             }
         }
     }
+
+    #if os(iOS)
+    @MainActor
+    private static func announce(_ message: String) {
+        guard UIAccessibility.isVoiceOverRunning else { return }
+        if #available(iOS 17, *) {
+            var announcement = AttributedString(message)
+            announcement.accessibilitySpeechAnnouncementPriority = .low
+            AccessibilityNotification.Announcement(announcement).post()
+        } else {
+            let announcement = NSAttributedString(
+                string: message,
+                attributes: [.accessibilitySpeechQueueAnnouncement: true]
+            )
+            UIAccessibility.post(notification: .announcement, argument: announcement)
+        }
+    }
+    #endif
 
     static func dismissAfterDelay(_ duration: Double, dismiss: () -> Void) async {
         do {
