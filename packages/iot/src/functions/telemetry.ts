@@ -236,6 +236,8 @@ export function describeReadingState(state: KinetixReadingState): string {
       return "Stale";
     case "unavailable":
       return "Unavailable";
+    case "loading":
+      return "Loading";
   }
 }
 
@@ -252,6 +254,10 @@ export function readingStateGlyph(state: KinetixReadingState): KinetixReadingGly
       return "clock";
     case "unavailable":
       return "dash";
+    // A ring with a dot in it: the same silhouette this package already uses for "requested, not yet
+    // answered" in the command lifecycle, which is exactly what a reading still on its way is.
+    case "loading":
+      return "circle-dot";
   }
 }
 
@@ -283,6 +289,18 @@ export type EvaluateReadingInput = {
   now?: string | Date | number | null;
   /** When given, an older (or undated) reading is `stale`. Omit to skip the age check. */
   staleAfterMs?: number;
+  /**
+   * A reading has been asked for and no answer has arrived yet.
+   *
+   * **Only ever an explicit claim by the caller.** It is never inferred from a missing value, because
+   * an absent value does not say which of the two happened: the device may have been asked and had
+   * nothing to give (`unavailable`), or it may not have been asked yet (`loading`). Only the code
+   * doing the asking knows, so only it may say.
+   *
+   * It has no effect on a reading that is already here: see the precedence note on
+   * {@link evaluateReading}.
+   */
+  loading?: boolean;
 };
 
 export type KinetixReadingEvaluation = {
@@ -297,9 +315,15 @@ export type KinetixReadingEvaluation = {
 /**
  * Judge one reading.
  *
- * Precedence: `unavailable` (no usable value) beats `stale` (old) beats the threshold result. A stale
- * reading is not called `normal` however in-range it is, because an old number is not evidence of a
- * current condition. `level` still reports what the number alone would have been.
+ * Precedence: `loading` (asked, nothing back yet) beats `unavailable` (no usable value) beats `stale`
+ * (old) beats the threshold result. A stale reading is not called `normal` however in-range it is,
+ * because an old number is not evidence of a current condition. `level` still reports what the number
+ * alone would have been.
+ *
+ * **`loading` only replaces an absence, never a value.** With a usable number in hand the reading is
+ * judged as it always was, even while a refresh is in flight: the number on screen is a real
+ * measurement and blanking it would destroy a fact in order to describe a request. A caller refreshing
+ * a known value wants `aria-busy` beside the value it already has, which is what the components do.
  */
 export function evaluateReading(input: EvaluateReadingInput): KinetixReadingEvaluation {
   const { value, quality } = input;
@@ -309,7 +333,8 @@ export function evaluateReading(input: EvaluateReadingInput): KinetixReadingEval
   const judged = usable ? classifyAgainstThresholds(value, thresholds) : null;
 
   let state: KinetixReadingState;
-  if (!usable) state = "unavailable";
+  if (!usable && input.loading === true) state = "loading";
+  else if (!usable) state = "unavailable";
   else if (input.staleAfterMs !== undefined && detectStaleReading(input.timestamp, input.staleAfterMs, input.now)) state = "stale";
   else state = judged!.level;
 

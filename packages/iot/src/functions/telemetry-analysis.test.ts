@@ -65,8 +65,17 @@ describe("reading states", () => {
   it("has a word and a distinct glyph for every state, so colour is never alone", () => {
     const glyphs = KINETIX_READING_STATES.map(readingStateGlyph);
     expect(new Set(glyphs).size).toBe(KINETIX_READING_STATES.length);
-    expect(glyphs.sort()).toEqual(["check", "clock", "dash", "octagon", "triangle"]);
-    expect(KINETIX_READING_STATES.map(describeReadingState)).toEqual(["Critical", "Warning", "Stale", "Unavailable", "Normal"]);
+    expect(glyphs.sort()).toEqual(["check", "circle-dot", "clock", "dash", "octagon", "triangle"]);
+    expect(KINETIX_READING_STATES.map(describeReadingState)).toEqual(["Critical", "Warning", "Stale", "Unavailable", "Normal", "Loading"]);
+  });
+
+  it("orders the five verdicts attention-first and leaves `loading` outside that order", () => {
+    // The first five rank by how much they should pull the eye. `loading` is not a verdict about a
+    // value, so it has no place in that ranking; last is the safe place for it, because a reducer
+    // comparing positions then ranks a pending reading below every real one instead of above a
+    // critical alarm.
+    expect(KINETIX_READING_STATES.slice(0, 5)).toEqual(["critical", "warning", "stale", "unavailable", "normal"]);
+    expect(KINETIX_READING_STATES.indexOf("loading")).toBe(KINETIX_READING_STATES.length - 1);
   });
 });
 

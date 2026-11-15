@@ -115,14 +115,22 @@ export type DescribeDeviceBatteryInput = {
   freshness?: KinetixFreshness;
   support?: KinetixCapabilitySupport;
   thresholds?: KinetixBatteryThresholds | null;
+  /**
+   * A reading has been asked for and has not arrived. Said as "Battery loading" and never as "Battery
+   * level unknown", which claims the device was asked and had nothing to give.
+   *
+   * Only an explicit claim by the caller: an absent value cannot tell the two apart. Ignored when a
+   * level is in hand — a refresh over a real percentage is still that percentage.
+   */
+  loading?: boolean;
 };
 
 /**
  * One accessible sentence for a battery, with nothing implied that was not reported:
  * "Battery 42 percent", "Battery 42 percent, charging", "Battery 18 percent, low, stale reading",
- * "Battery level unknown", "Battery not supported by this device".
+ * "Battery level unknown", "Battery loading", "Battery not supported by this device".
  *
- * - An unknown level is never 0 %.
+ * - An unknown level is never 0 %, and a level that has not arrived yet is never "unknown".
  * - Charging is only mentioned when it was reported; `false` is "not charging", `null` (the device says
  *   it cannot tell) is "charging state unknown", and a full battery says nothing about a charger.
  * - `stale` is about the reading's age, so it never says "offline".
@@ -132,6 +140,7 @@ export function describeDeviceBattery(input: DescribeDeviceBatteryInput): string
   if (input.support === "unsupported") return "Battery not supported by this device";
   const status = resolveBatteryState({ percent: input.value ?? null, charging: input.charging ?? null }, { thresholds: input.thresholds });
   const parts: string[] = [];
+  if (!status.available && input.loading === true) return "Battery loading, no reading yet";
   parts.push(status.available ? `Battery ${formatBatteryPercent(input.value as number)} percent` : "Battery level unknown");
   if (status.critical) parts.push("critical");
   else if (status.low) parts.push("low");

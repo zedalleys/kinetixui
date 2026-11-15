@@ -3,6 +3,7 @@
 import * as React from "react";
 import { classifySignalStrength, describeSignal, formatSignalPercent, signalBars } from "../functions/signal";
 import { cn } from "./cn";
+import { ReadingPlaceholder } from "./reading-placeholder";
 import { resolveLabel } from "./label";
 import { withDisplayName } from "./display-name";
 
@@ -15,6 +16,13 @@ import { withDisplayName } from "./display-name";
  *
  * `value` is a normalised quality, **not dBm** — see `classifySignalStrength` for why this module
  * refuses to guess the radio.
+ *
+ * `loading` is the one answer that is not about the radio: a reading has been asked for and has not
+ * arrived. The meter keeps its empty bars (there is no reading to draw, and an invented fill would be a
+ * measurement), the percentage slot holds a placeholder rather than "—", and `aria-busy` is set. It is
+ * distinct from both "Signal strength unknown" (asked, nothing reported) and "No signal" (a reported
+ * zero, which is a measurement). With a value in hand it is a refresh and changes nothing but
+ * `aria-busy`.
  */
 export interface SignalStrengthProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, "children" | "aria-label"> {
   /** Normalised 0–100. `null`/`undefined`/non-finite renders as unknown. */
@@ -28,19 +36,30 @@ export interface SignalStrengthProps extends Omit<React.HTMLAttributes<HTMLSpanE
    * to the generated sentence rather than leaving the element without an accessible name.
    */
   label?: string;
+  /**
+   * A reading has been asked for and has not arrived yet. A placeholder where the percentage goes and
+   * "Signal loading, no reading yet" as the accessible label; with a value, a refresh that only sets
+   * `aria-busy`.
+   */
+  loading?: boolean;
 }
 
 const SignalStrength = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forwardRef<HTMLSpanElement, SignalStrengthProps>(
-  ({ value, bars = 4, hideValue = false, label, className, ...props }, ref) => {
+  ({ value, bars = 4, hideValue = false, label, loading = false, className, ...props }, ref) => {
     const total = Number.isInteger(bars) && bars > 0 ? bars : 4;
     const level = classifySignalStrength(value);
     const filled = signalBars(value, total);
+    // A reported value is never replaced by a placeholder; `unknown` is the only level with nothing to
+    // show. `none` is a measured zero and stays a measurement.
+    const pending = loading && level === "unknown";
     return (
       <span
         ref={ref}
         role="img"
-        aria-label={resolveLabel(label, describeSignal(value))}
+        aria-label={resolveLabel(label, describeSignal(value, { loading: pending }))}
+        aria-busy={loading || undefined}
         data-level={level}
+        data-loading={pending ? "pending" : loading ? "refreshing" : undefined}
         className={cn("inline-flex items-center gap-2 font-sans text-body-sm tabular-nums text-foreground", className)}
         {...props}
       >
@@ -58,7 +77,11 @@ const SignalStrength = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.for
           ))}
         </span>
         {hideValue ? null : (
-          <span aria-hidden="true">{level === "unknown" ? "—" : `${formatSignalPercent(value as number)}%`}</span>
+          <span aria-hidden="true" data-signal-value="">
+            {/* "—" is the word for a radio that reported nothing; a reading on its way holds its slot
+                instead, so the meter's width does not change when the value lands. */}
+            {pending ? <ReadingPlaceholder width={3} /> : level === "unknown" ? "—" : `${formatSignalPercent(value as number)}%`}
+          </span>
         )}
       </span>
     );
