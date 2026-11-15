@@ -572,7 +572,11 @@ const BEHAVIOUR = [
       t((await out(page, "stars")) === "1", "Home chooses the lowest", `model ${await out(page, "stars")}`);
       await press(page, "Tab");
       t(!(await page.evaluate(() => document.activeElement?.closest("kx-rating")?.getAttribute("aria-label") === "Rate this article")), "one tab stop for the whole rating");
-      t((await page.getByRole("radiogroup", { name: "Rate the venue" }).getByRole("radio").evaluateAll((rs) => rs.every((r) => r.disabled))), "a disabled rating's stars are disabled");
+      // Count first: `evaluateAll` over a locator that matches nothing resolves `[]`, and `[].every(...)` is
+      // true, so a renamed group or a star that stopped being a radio would pass this having checked no star.
+      const venueStars = page.getByRole("radiogroup", { name: "Rate the venue" }).getByRole("radio");
+      const venueCount = await venueStars.count();
+      t(venueCount === 5 && (await venueStars.evaluateAll((rs) => rs.every((r) => r.disabled))), "a disabled rating's stars are disabled", `${venueCount} star(s) exposed as radios`);
       const shown = () => group.locator(".kx-rating__star--on").count();
       await group.locator("label").nth(2).click();
       await settle(page);
