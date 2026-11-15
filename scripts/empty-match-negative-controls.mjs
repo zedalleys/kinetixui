@@ -89,7 +89,7 @@ try {
   await browser.close();
 }
 
-/* ── part two: the four repaired call sites still carry their guard ──────── */
+/* ── part two: the three repaired call sites still carry their guard ─────── */
 
 const SITES = [
   {
