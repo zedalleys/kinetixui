@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import 'app_text.dart';
 import 'kinetix_selection_indicator.dart';
+import 'kinetix_selection_item.dart';
 import 'theme.dart';
 
 /// Mirrors `packages/ui/src/components/tabs.tsx`. No root — the caller
@@ -41,31 +42,29 @@ class KinetixTabsList extends StatelessWidget {
 }
 
 class KinetixTabsTrigger extends StatelessWidget {
-  const KinetixTabsTrigger(this.text,
-      {super.key, required this.selected, required this.onTap});
+  const KinetixTabsTrigger(this.text, {
+    super.key,
+    required this.selected,
+    required this.onTap,
+    this.enabled = true,
+  });
 
   final String text;
   final bool selected;
   final VoidCallback onTap;
 
+  /// Whether this item can receive keyboard focus and be activated.
+  final bool enabled;
+
   @override
   Widget build(BuildContext context) {
-    // announce which tab is selected
-    return Semantics(
-      container: true,
-      button: true,
-      selected: selected,
-      child: _buildControl(context),
-    );
-  }
-
-  Widget _buildControl(BuildContext context) {
     final c = KinetixTheme.of(context);
     final paintSelection =
         selected && !KinetixSelectionSurfaceScope.of(context);
-    return GestureDetector(
+    return KinetixSelectionItem(
+      selected: selected,
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
+      enabled: enabled,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         alignment: Alignment.center,

@@ -1771,7 +1771,7 @@
       "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
-      "Flutter": "experimental"
+      "Flutter": "beta"
     },
     "select": {
       "React": "beta",
@@ -1947,8 +1947,8 @@
       "beta": 10
     },
     "Flutter": {
-      "experimental": 83,
-      "beta": 7
+      "experimental": 82,
+      "beta": 8
     }
   },
   "catalogueVerification": {
@@ -3818,7 +3818,11 @@
         "build"
       ],
       "Flutter": [
-        "build"
+        "accessibility",
+        "build",
+        "interaction",
+        "reducedMotion",
+        "rtl"
       ]
     },
     "select": {
@@ -4206,6 +4210,7 @@
         "build",
         "interaction",
         "largeText",
+        "reducedMotion",
         "rtl"
       ]
     },
@@ -4485,11 +4490,11 @@
     },
     "Flutter": {
       "build": 90,
-      "interaction": 7,
-      "accessibility": 7,
-      "rtl": 58,
+      "interaction": 8,
+      "accessibility": 8,
+      "rtl": 59,
       "largeText": 58,
-      "reducedMotion": 8,
+      "reducedMotion": 10,
       "visual": 0,
       "published": 0
     }
