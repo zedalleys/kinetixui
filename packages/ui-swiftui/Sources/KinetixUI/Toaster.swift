@@ -71,10 +71,21 @@ public struct KinetixToaster: View {
                 .padding(16)
                 .transition(KinetixSlideMotion.transition(from: .bottom, reduceMotion: reduceMotion).combined(with: .opacity))
                 .task(id: toast.message) {
-                    try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
-                    withAnimation(KinetixSlideMotion.dismissAnimation(reduceMotion: reduceMotion)) { self.toast = nil }
+                    await Self.dismissAfterDelay(duration) {
+                        withAnimation(KinetixSlideMotion.dismissAnimation(reduceMotion: reduceMotion)) { self.toast = nil }
+                    }
                 }
             }
         }
+    }
+
+    static func dismissAfterDelay(_ duration: Double, dismiss: () -> Void) async {
+        do {
+            try await Task.sleep(for: .seconds(duration))
+        } catch {
+            return
+        }
+        guard !Task.isCancelled else { return }
+        dismiss()
     }
 }
