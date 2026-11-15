@@ -81,7 +81,10 @@ void main() {
     await tester.pumpWidget(_host(toast: saved, onDismiss: dismiss));
     final bounds = tester.getRect(find.text('Saved'));
     expect(opacity(), closeTo(0.7, 0.001));
-    expect(tester.getSemantics(find.text('Saved')).getSemanticsData().flagsCollection.isLiveRegion, isTrue);
+    final liveRegion = tester.getSemantics(find.text('Saved'));
+    expect(liveRegion.getSemanticsData().flagsCollection.isLiveRegion, isTrue);
+    final card = find.descendant(of: toaster, matching: find.byType(Material));
+    expect(liveRegion.rect.size, tester.getSize(card));
     await tester.pump(const Duration(milliseconds: 35));
     expect(opacity(), allOf(greaterThan(0.7), lessThan(1.0)));
     expect(tester.getRect(find.text('Saved')), bounds);

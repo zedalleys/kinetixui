@@ -116,46 +116,46 @@ class _KinetixToasterState extends State<KinetixToaster> with SingleTickerProvid
     return FadeTransition(
       opacity: _opacity,
       alwaysIncludeSemantics: true,
-      child: Semantics(
-        liveRegion: true,
-        child: _buildToast(toast, c, color),
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Semantics(
+            liveRegion: true,
+            child: _buildToast(toast, c, color),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildToast(KinetixToast toast, KinetixColors c, Color color) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Material(
-          color: c.popover,
+    return Material(
+      color: c.popover,
+      borderRadius: BorderRadius.circular(8),
+      elevation: 6,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          elevation: 6,
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 400),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: c.border, width: 1),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (toast.intent != KinetixToastIntent.normal) ...[
-                  Icon(
-                    toast.intent == KinetixToastIntent.success
-                        ? Icons.check_circle_outline
-                        : Icons.error_outline,
-                    size: 16,
-                    color: color,
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Flexible(child: Text(toast.message, style: AppText.bodyMd.copyWith(color: color))),
-              ],
-            ),
-          ),
+          border: Border.all(color: c.border, width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (toast.intent != KinetixToastIntent.normal) ...[
+              Icon(
+                toast.intent == KinetixToastIntent.success
+                    ? Icons.check_circle_outline
+                    : Icons.error_outline,
+                size: 16,
+                color: color,
+              ),
+              const SizedBox(width: 8),
+            ],
+            Flexible(child: Text(toast.message, style: AppText.bodyMd.copyWith(color: color))),
+          ],
         ),
       ),
     );
