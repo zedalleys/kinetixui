@@ -8,8 +8,11 @@ const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
 >(({ className, value, max, ...props }, ref) => {
+  // Radix accepts positive infinity as a maximum, but it cannot describe
+  // a finite completion range or produce a valid ARIA maximum.
+  const primitiveMax = max === Infinity ? undefined : max;
   // Use the same default and valid range as the primitive so paint and ARIA agree.
-  const limit = typeof max === "number" && max > 0 ? max : 100;
+  const limit = typeof primitiveMax === "number" && primitiveMax > 0 ? primitiveMax : 100;
   const fraction = typeof value === "number" && value >= 0 && value <= limit && Number.isFinite(value)
     ? value / limit
     : 0;
@@ -19,7 +22,7 @@ const Progress = React.forwardRef<
       ref={ref}
       className={cn("relative h-2 w-full overflow-hidden rounded-full bg-muted", className)}
       value={value}
-      max={max}
+      max={primitiveMax}
       {...props}
     >
       {/* The midpoint of the double-width indicator sits on the track's
