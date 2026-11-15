@@ -64,6 +64,20 @@ jobs:
       - name: Publish allowlist and package metadata
         run: pnpm release:check
 
+      # A curated release note can exist, validate and typecheck while describing three of the five
+      # changesets the release carries; the other two then publish with no curated description. This
+      # compares declared coverage metadata against the changesets each release cohort actually
+      # consumes, cohort by cohort — core and Angular are separate release lines whose numbers
+      # collide, so a version number alone cannot say which one a note is about.
+      #
+      # It needs the MERGE checkout, which is `actions/checkout`'s default for `pull_request`. On a
+      # raw head checkout a branch carrying changesets already consumed on `main` plans a published
+      # version, and this would compare a historical note against a release that already happened.
+      # Adding `ref: ${{ github.event.pull_request.head.sha }}` above is the one way to break it
+      # quietly.
+      - name: Curated release note covers every changeset the release consumes
+        run: pnpm check:release-note-coverage
+
       - name: Website component dogfooding (reviewed native-pattern ratchet)
         run: pnpm check:web-dogfooding
 
