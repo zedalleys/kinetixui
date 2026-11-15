@@ -100,6 +100,7 @@ const PREFERENCE: Record<string, string> = {
  * while the clause tested each term against the whole list with `some()`.
  */
 const DUAL: Record<string, string> = {
+  selectionIndicator: "previousToNextAndNextToPreviousGlide",
   selection: "offToOnAndOnToOffAreSuppressed",
   selectionState: "uncheckedToCheckedAndCheckedToUncheckedAreSuppressed",
   loop: "runsWithNormalMotionAndStopsWithReducedMotion",
@@ -121,7 +122,9 @@ function suite(
   shape?: "dual" | "dual+pair",
 ) {
   const pair =
-    familyName === "selection"
+    familyName === "selectionIndicator"
+      ? { forward: "previousToNextGlides", reverse: "nextToPreviousRetargets" }
+      : familyName === "selection"
       ? { forward: "offToOnIsSuppressed", reverse: "onToOffIsSuppressed" }
       : familyName === "selectionState"
         ? { forward: "uncheckedToCheckedIsSuppressed", reverse: "checkedToUncheckedIsSuppressed" }
