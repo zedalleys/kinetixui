@@ -235,7 +235,6 @@ const UNTOKENISED_TRANSITIONS: Record<string, number> = {
   "ui/navigation-menu.tsx": 1,
   "ui/number-input.tsx": 2,
   "ui/password-input.tsx": 1,
-  "ui/progress.tsx": 1,
   "ui/rating.tsx": 1,
   "ui/scroll-area.tsx": 1,
   "ui/sheet.tsx": 1,

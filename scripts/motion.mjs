@@ -331,3 +331,7 @@ console.log(
   `motion ok — ${required} motion-required interaction(s): each rendered a midpoint over at least ${PERCEPTIBLE_MS}ms, ` +
     `and under prefers-reduced-motion each collapsed to ≤${SUPPRESSED_MS}ms while landing on the same end state.`,
 );
+
+// Progress measures two CSS endpoints and the current ARIA value from one
+// interaction. Reuse the same built Storybook and Chromium installation.
+await import("./progress-motion.mjs");

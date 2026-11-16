@@ -431,6 +431,19 @@ const CONTROLS = {
  * assembled to make a rule fire. `imports` names identifiers the render needs beyond the demo's own.
  */
 const EXTRA = {
+  // The public Progress demo only ever passes a finite `max={4}`, so nothing rendered
+  // exercises the non-finite bound that `progress.tsx` withholds from the primitive.
+  // Without this subject the browser gate cannot fail for the regression it names:
+  // a non-finite `max` reaching ARIA as `aria-valuemax="Infinity"`, which a screen
+  // reader reads out as an infinite range beside a bar painted at a finite fraction.
+  // Both axe passes and `check:progress-motion` take their subjects from this directory.
+  progress: [{ name: "NonFiniteBounds", render: `() => (
+    <div className="grid w-full max-w-sm gap-4">
+      <Progress aria-label="Infinite maximum" value={50} max={Infinity} />
+      <Progress aria-label="Not-a-number maximum" value={50} max={NaN} />
+      <Progress aria-label="Infinite measurement" value={Infinity} max={Infinity} />
+    </div>
+  )` }],
   // Business capability roadmap, Phase 2: every timeline status (and the alternating layout, which is where
   // text alignment has to mirror), so both axe passes and the large-text pass see the status markers.
   timeline: [{ name: "Statuses", render: `() => (
