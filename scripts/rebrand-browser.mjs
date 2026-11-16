@@ -76,6 +76,14 @@ const NEGATIVE_CONTROLS = {
  * requires the gate to notice. None of them can be expressed in CSS, because
  * each is a listener or an attribute rather than a style.
  */
+/**
+ * How many hero CTAs the reachability probe measures. The hero renders more links than
+ * this inside `[data-hero-copy]`; the probe takes the leading `PROBED` of them, and the
+ * gate asserts it found at least that many so that a selector which stops matching is a
+ * failure rather than a silent empty loop.
+ */
+const PROBED = 3;
+
 const NEGATIVE_CONTROL_SCRIPTS = {
   // A reader-facing pause comes back, bound to Space and Escape, holding its own
   // state the way such a control would have to. This is the control the pause
@@ -97,6 +105,18 @@ const NEGATIVE_CONTROL_SCRIPTS = {
         root.setAttribute('data-running', 'false');
       }
     }).observe(root, { attributes: true, attributeFilter: ['data-running'] });
+  },
+  // The hero's copy container loses the attribute the CTA probe selects on, and
+  // nothing else changes. The CTAs are still there, still reachable, and still
+  // covered by nothing — so a gate that measures them must stay green, and a gate
+  // that merely iterates whatever the selector happened to match reports a pass
+  // having asserted nothing at all. This control exists because the second is
+  // what the gate did: `[...document.querySelectorAll('[data-hero-copy] a')]`
+  // with no assertion that it matched anything.
+  'cta-selector-misses': () => {
+    const copy = document.querySelector('[data-hero-copy]');
+    copy.removeAttribute('data-hero-copy');
+    copy.setAttribute('data-hero-copy-renamed', '');
   },
   // The hero takes focus again, and nothing else changes: the control adds the
   // tab stop and leaves `aria-hidden` alone, so the assertion under test is the
@@ -283,8 +303,9 @@ try {
     //    the scroll this reports "covered" for a CTA that is merely further down
     //    the page — which is exactly what it did at 320px with 200% text, where
     //    the buttons sit at y≈1241 in a 960px viewport.
-    const ctas = await page.evaluate(() => {
-      const links = [...document.querySelectorAll('[data-hero-copy] a')].slice(0, 3);
+    const ctas = await page.evaluate((probed) => {
+      const matched = [...document.querySelectorAll('[data-hero-copy] a')];
+      const links = matched.slice(0, probed);
       return links.map((link) => {
         link.scrollIntoView({ block: 'center', behavior: 'instant' });
         const r = link.getBoundingClientRect();
@@ -298,7 +319,18 @@ try {
           reachable: !!hit && (hit === link || link.contains(hit)),
         };
       });
-    });
+    }, PROBED);
+    // The probe is only evidence if it found the CTAs. `querySelectorAll` answers an
+    // empty list for a selector that matches nothing, and a loop over an empty list
+    // makes no assertion and fails nothing — so a hero that stopped carrying
+    // `data-hero-copy` would have reported every CTA reachable while measuring none.
+    // Proved by the `cta-selector-misses` negative control, which removes the
+    // attribute and leaves the CTAs themselves alone.
+    assert.ok(
+      ctas.length >= PROBED,
+      `${name}: the CTA probe matched ${ctas.length} link(s) under [data-hero-copy], not the ${PROBED} it measures — ` +
+        'the hero markup changed under the gate and the reachability checks below would assert nothing',
+    );
     for (const cta of ctas) {
       assert.ok(cta.inView, `${name}: "${cta.text}" could not be scrolled into view`);
       assert.ok(cta.reachable, `${name}: "${cta.text}" is covered — the point hits ${cta.hit}`);

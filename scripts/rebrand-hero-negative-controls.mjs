@@ -84,6 +84,13 @@ const CONTROLS = [
   // ABSENCE — no tab stop, no drag, no keys — and an absence assertion passes
   // just as happily when it is looking in the wrong place as when the feature
   // is really gone. Each of these puts one removed control back.
+  // The CTA reachability probe selects on `[data-hero-copy]`. An empty node list is a
+  // loop that asserts nothing, so before 2026-11-13 the gate reported every CTA
+  // reachable when it had measured none. This control removes the attribute and
+  // changes nothing else: the CTAs are still present, still uncovered, still
+  // reachable — so the only thing that can turn the gate red is the population
+  // assertion itself.
+  ["cta-selector-misses", "the CTA probe's selector matches nothing", /the CTA probe matched 0 link\(s\)/],
   ["tab-stop-returns", "the illustration takes focus again", /Tab reached the hero|holds a focus stop/],
   ["drag-returns", "a drag on a facet turns the network again", /a 180px drag moved the artwork/],
   ["keys-return", "the arrow keys turn the network again", /the arrow keys moved the artwork/],
@@ -116,7 +123,7 @@ for (const [name, what, expected, extraEnv = {}] of CONTROLS) {
   const caught = run.status !== 0 && expected.test(out);
   const line = out
     .split("\n")
-    .filter((l) => /kept animating|kept travelling|survived reduced motion|moved the artwork|Tab reached the hero|holds a focus stop/.test(l))
+    .filter((l) => /kept animating|kept travelling|survived reduced motion|moved the artwork|Tab reached the hero|holds a focus stop|CTA probe matched/.test(l))
     .map((l) => l.trim())[0];
   if (caught) {
     console.log(`  gate fails, as it must   ${name} — ${what}`);
