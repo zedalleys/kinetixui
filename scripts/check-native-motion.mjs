@@ -37,7 +37,7 @@ const argRoot = process.argv.slice(2).find((a) => a.startsWith("--root="))?.slic
 const root = argRoot ? resolve(argRoot) : fileURLToPath(new URL("..", import.meta.url));
 const read = (p) => (existsSync(`${root}/${p}`) ? readFileSync(`${root}/${p}`, "utf8") : null);
 
-import { testNames } from "./native-motion-spec.mjs";
+import { directionCoverage, testNames } from "./native-motion-spec.mjs";
 import { composeLedger } from "./native-motion-ledger.mjs";
 
 /* The ledger is composed once, by the module both gates share, and its coherence errors are reported
@@ -129,12 +129,27 @@ for (const p of ledger) {
      * once, rather than this loop reporting it again per platform — and reports it even when the
      * family's test file is missing, which used to `continue` past this check entirely. */
     if (!family.terms) continue;
-    for (const [dirName, re] of Object.entries(family.terms)) {
-      if (!names.some((n) => re.test(n))) {
+    /* Each direction needs a test of its OWN. This loop used to test each direction against the whole
+     * name list with `names.some(...)`, so ONE name matching both regexes satisfied both ends of the
+     * pair — precisely the case the message below describes, and the one case it could not see. The
+     * gate then printed "tested in both directions" over a suite that had proven one transition.
+     * `directionCoverage` also fixes the keys this read: `family.terms` carries `kind` alongside the
+     * two regexes, and iterating its entries would have called `.test` on a string. */
+    const found = `Found: ${names.slice(0, 6).map((n) => `"${n}"`).join(", ")}${names.length > 6 ? ", …" : ""}`;
+    for (const [dirName, { matched, distinct }] of Object.entries(directionCoverage(family.terms, names))) {
+      const other = dirName === "forward" ? "reverse" : "forward";
+      if (matched.length === 0) {
         errors.push(
           `${name}: no test in ${family.test} is NAMED for the ${dirName} direction.\n` +
             `      The two directions are separate transitions, so proving one says nothing about the\n` +
-            `      other. Found: ${names.slice(0, 6).map((n) => `"${n}"`).join(", ")}${names.length > 6 ? ", …" : ""}`,
+            `      other. ${found}`,
+        );
+      } else if (distinct.length === 0) {
+        errors.push(
+          `${name}: every test in ${family.test} naming the ${dirName} direction also names the\n` +
+            `      ${other} direction, so no test covers ${dirName} on its own.\n` +
+            `      One test proving one transition is not two directions proven. Split it, or add a test\n` +
+            `      named for ${dirName} alone. Both-ways names: ${matched.map((n) => `"${n}"`).join(", ")}`,
         );
       }
     }
