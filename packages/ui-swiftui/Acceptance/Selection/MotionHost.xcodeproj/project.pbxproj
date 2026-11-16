@@ -1,0 +1,177 @@
+// !$*UTF8*$!
+{
+  "archiveVersion" = 1;
+  "objectVersion" = 60;
+  "objects" = {
+    "000000000000000000000001" = {
+      "isa" = "PBXFileReference";
+      "path" = "MotionHost.swift";
+      "lastKnownFileType" = "sourcecode.swift";
+      "sourceTree" = "<group>";
+    };
+    "000000000000000000000002" = {
+      "isa" = "PBXFileReference";
+      "path" = "MotionHostTests.swift";
+      "lastKnownFileType" = "sourcecode.swift";
+      "sourceTree" = "<group>";
+    };
+    "000000000000000000000003" = {
+      "isa" = "PBXFileReference";
+      "explicitFileType" = "wrapper.application";
+      "path" = "MotionHost.app";
+      "sourceTree" = "BUILT_PRODUCTS_DIR";
+    };
+    "000000000000000000000004" = {
+      "isa" = "PBXFileReference";
+      "explicitFileType" = "wrapper.cfbundle";
+      "path" = "MotionHostTests.xctest";
+      "sourceTree" = "BUILT_PRODUCTS_DIR";
+    };
+    "000000000000000000000005" = {
+      "isa" = "PBXGroup";
+      "children" = ("000000000000000000000003", "000000000000000000000004");
+      "sourceTree" = "<group>";
+    };
+    "000000000000000000000006" = {
+      "isa" = "PBXGroup";
+      "children" = ("000000000000000000000001", "000000000000000000000002", "000000000000000000000005");
+      "sourceTree" = "<group>";
+    };
+    "000000000000000000000007" = {
+      "isa" = "XCLocalSwiftPackageReference";
+      "relativePath" = "../..";
+    };
+    "000000000000000000000008" = {
+      "isa" = "XCSwiftPackageProductDependency";
+      "productName" = "KinetixUI";
+    };
+    "000000000000000000000009" = {
+      "isa" = "PBXBuildFile";
+      "fileRef" = "000000000000000000000001";
+    };
+    "00000000000000000000000A" = {
+      "isa" = "PBXSourcesBuildPhase";
+      "buildActionMask" = 2147483647;
+      "files" = ("000000000000000000000009");
+      "runOnlyForDeploymentPostprocessing" = 0;
+    };
+    "00000000000000000000000B" = {
+      "isa" = "PBXBuildFile";
+      "productRef" = "000000000000000000000008";
+    };
+    "00000000000000000000000C" = {
+      "isa" = "PBXFrameworksBuildPhase";
+      "buildActionMask" = 2147483647;
+      "files" = ("00000000000000000000000B");
+      "runOnlyForDeploymentPostprocessing" = 0;
+    };
+    "00000000000000000000000D" = {
+      "isa" = "XCBuildConfiguration";
+      "buildSettings" = {
+        "PRODUCT_BUNDLE_IDENTIFIER" = "dev.kinetixui.m682selection";
+        "INFOPLIST_KEY_UILaunchScreen_Generation" = "YES";
+        "INFOPLIST_KEY_UIApplicationSceneManifest_Generation" = "YES";
+      };
+      "name" = "Debug";
+    };
+    "00000000000000000000000E" = {
+      "isa" = "XCConfigurationList";
+      "buildConfigurations" = ("00000000000000000000000D");
+      "defaultConfigurationIsVisible" = 0;
+      "defaultConfigurationName" = "Debug";
+    };
+    "00000000000000000000000F" = {
+      "isa" = "PBXNativeTarget";
+      "name" = "MotionHost";
+      "productName" = "MotionHost";
+      "productReference" = "000000000000000000000003";
+      "productType" = "com.apple.product-type.application";
+      "buildConfigurationList" = "00000000000000000000000E";
+      "buildPhases" = ("00000000000000000000000A", "00000000000000000000000C");
+      "buildRules" = ();
+      "dependencies" = ();
+      "packageProductDependencies" = ("000000000000000000000008");
+    };
+    "000000000000000000000010" = {
+      "isa" = "PBXTargetDependency";
+      "target" = "00000000000000000000000F";
+    };
+    "000000000000000000000011" = {
+      "isa" = "PBXBuildFile";
+      "fileRef" = "000000000000000000000002";
+    };
+    "000000000000000000000012" = {
+      "isa" = "PBXSourcesBuildPhase";
+      "buildActionMask" = 2147483647;
+      "files" = ("000000000000000000000011");
+      "runOnlyForDeploymentPostprocessing" = 0;
+    };
+    "000000000000000000000013" = {
+      "isa" = "XCBuildConfiguration";
+      "buildSettings" = {
+        "PRODUCT_BUNDLE_IDENTIFIER" = "dev.kinetixui.m682selection.tests";
+        "TEST_TARGET_NAME" = "MotionHost";
+      };
+      "name" = "Debug";
+    };
+    "000000000000000000000014" = {
+      "isa" = "XCConfigurationList";
+      "buildConfigurations" = ("000000000000000000000013");
+      "defaultConfigurationIsVisible" = 0;
+      "defaultConfigurationName" = "Debug";
+    };
+    "000000000000000000000015" = {
+      "isa" = "PBXNativeTarget";
+      "name" = "MotionHostTests";
+      "productName" = "MotionHostTests";
+      "productReference" = "000000000000000000000004";
+      "productType" = "com.apple.product-type.bundle.ui-testing";
+      "buildConfigurationList" = "000000000000000000000014";
+      "buildPhases" = ("000000000000000000000012");
+      "buildRules" = ();
+      "dependencies" = ("000000000000000000000010");
+    };
+    "000000000000000000000016" = {
+      "isa" = "XCBuildConfiguration";
+      "buildSettings" = {
+        "SWIFT_VERSION" = "5.0";
+        "SDKROOT" = "iphoneos";
+        "IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
+        "GENERATE_INFOPLIST_FILE" = "YES";
+        "CODE_SIGNING_ALLOWED" = "NO";
+        "ONLY_ACTIVE_ARCH" = "YES";
+        "PRODUCT_NAME" = "$(TARGET_NAME)";
+        "ALWAYS_SEARCH_USER_PATHS" = "NO";
+        "TARGETED_DEVICE_FAMILY" = "1,2";
+      };
+      "name" = "Debug";
+    };
+    "000000000000000000000017" = {
+      "isa" = "XCConfigurationList";
+      "buildConfigurations" = ("000000000000000000000016");
+      "defaultConfigurationIsVisible" = 0;
+      "defaultConfigurationName" = "Debug";
+    };
+    "000000000000000000000018" = {
+      "isa" = "PBXProject";
+      "mainGroup" = "000000000000000000000006";
+      "productRefGroup" = "000000000000000000000005";
+      "projectDirPath" = "";
+      "projectRoot" = "";
+      "compatibilityVersion" = "Xcode 15.0";
+      "developmentRegion" = "en";
+      "knownRegions" = ("en", "Base");
+      "packageReferences" = ("000000000000000000000007");
+      "targets" = ("00000000000000000000000F", "000000000000000000000015");
+      "attributes" = {
+        "TargetAttributes" = {
+          "000000000000000000000015" = {
+            "TestTargetID" = "00000000000000000000000F";
+          };
+        };
+      };
+      "buildConfigurationList" = "000000000000000000000017";
+    };
+  };
+  "rootObject" = "000000000000000000000018";
+}
