@@ -36,6 +36,8 @@ on:
       - "apps/web/src/components/hero-mesh-source.json"
       - "scripts/gen-hero-mesh.mjs"
       - "scripts/web-quality-browser.mjs"
+      - "scripts/catalogue-thumbnails.mjs"
+      - "apps/web/src/components/component-thumbnails.tsx"
       - "scripts/blocks-discovery-browser.mjs"
       - "scripts/blocks-runtime-browser.mjs"
       # Its classifier: a change to how a failure is attributed must re-run the browser pass, or the
@@ -84,6 +86,8 @@ on:
       - "apps/web/src/components/hero-mesh-source.json"
       - "scripts/gen-hero-mesh.mjs"
       - "scripts/web-quality-browser.mjs"
+      - "scripts/catalogue-thumbnails.mjs"
+      - "apps/web/src/components/component-thumbnails.tsx"
       - "scripts/blocks-discovery-browser.mjs"
       - "scripts/blocks-runtime-browser.mjs"
       # Its classifier: a change to how a failure is attributed must re-run the browser pass, or the
@@ -273,6 +277,16 @@ jobs:
       # gallery thumbnails that stay decorative and in their frame in LTR and RTL (check:typography covers source).
       - name: Web type floor, contrast, touch targets and thumbnails
         run: pnpm check:web-quality
+
+      # The catalogue's thumbnail framing at 200% text, which the step above cannot see: `check:web-quality`
+      # asserts the thumbnails' semantics and the INLINE overflow of `mock` thumbnails at 1280px and 100%
+      # text, so vertical framing, every live `demo` and every text scale above 100% were outside it by
+      # construction — and 49 of 109 thumbnails cut their first line of text at 200% with this board green
+      # (CAT-BUG-017/018). Run with --self-test: seven negative controls restore the defect, remove the
+      # thumbnails the gate measures, shrink the population, break the register's ceiling and force sideways
+      # scroll, and the gate must fail on each and be clean again afterwards.
+      - name: Catalogue thumbnail framing at 200% text (+ negative controls)
+        run: pnpm check:catalogue-thumbnails
 
       # /blocks discovery filters against the built site: direct links, reload, replace-not-push, debounced search,
       # Back/Forward, unknown values, empty state, keyboard order and focus, and no sideways scroll at 390/768/1280,
