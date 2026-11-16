@@ -501,6 +501,18 @@ jobs:
       - name: SEO gate (built HTML, sitemap, robots)
         run: pnpm check:seo
 
+      # Proves the gate above can fail. 22 controls, each breaking one thing in the HTML the build
+      # just wrote, running check:seo, expecting the rule that owns it, then restoring the file and
+      # verifying its SHA-256 against the original — so nothing in the tree is left mutated.
+      #
+      # It existed and ran NOWHERE: no pnpm alias, imported by nothing, in no workflow. A gate in CI
+      # whose instrument-failure proof never executes leaves exactly the hole the proof describes,
+      # and `check:seo` is the shape most exposed to it — "count the offenders, expect zero" passes
+      # most loudly when the pages it judges have stopped being built at all. It belongs here rather
+      # than in a browser workflow because it needs this job's `build:web` output and nothing more.
+      - name: "SEO gate: negative controls (the instrument can fail)"
+        run: pnpm check:seo-controls
+
       # The editorial layer on top: component intros and guides, typed counts on platform pages, one owner per
       # search intent, near-duplicate titles/descriptions. Rules and negative controls: scripts/check-editorial.mjs,
       # scripts/editorial-negative-controls.mjs.
