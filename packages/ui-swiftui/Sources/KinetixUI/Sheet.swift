@@ -58,7 +58,7 @@ public struct KinetixSheet<Content: View>: View {
                         .strokeBorder(colors.border, lineWidth: 1)
                 }
                 .kinetixElevation(elevations.xl.flippedVertically)
-                .ignoresSafeArea(edges: .bottom)
+                .ignoresSafeArea(.container, edges: .bottom)
                 .transition(KinetixSlideMotion.transition(from: .bottom, reduceMotion: reduceMotion))
             }
         }
