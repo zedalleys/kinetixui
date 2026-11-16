@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { storyId } from "./story-id.mjs";
 
 const surfaceSelector = '[role="dialog"][aria-label="Details"]';
 
@@ -43,7 +44,7 @@ export async function checkPopoverReopen(browser, base, check) {
     try {
       const url = new URL("/iframe.html", base);
       url.search = new URLSearchParams({
-        id: "popover-reopen-fixture--lifecycle",
+        id: storyId("popover", "Reopen"),
         viewMode: "story",
         dir: scenario.dir ?? "ltr",
         fixture: scenario.fixture ?? "",
