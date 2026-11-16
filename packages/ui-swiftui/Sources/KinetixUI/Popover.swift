@@ -19,6 +19,7 @@ public struct KinetixPopover<Anchor: View, Content: View>: View {
     @Environment(\.kinetixColors) private var colors
 
     @Binding private var isPresented: Bool
+    @State private var presentation: Presentation = .idle
     private let anchor: Anchor
     private let popoverContent: Content
 
@@ -34,11 +35,55 @@ public struct KinetixPopover<Anchor: View, Content: View>: View {
 
     public var body: some View {
         anchor
-            .popover(isPresented: $isPresented) {
+            .popover(isPresented: systemPresentation) {
                 popoverContent
                     .padding(16) // spacing/4
                     .frame(minWidth: 288, alignment: .leading) // w-72
                     .background(colors.popover)
+                    .onAppear {
+                        if presentation == .requested { presentation = .visible }
+                    }
+                    .onDisappear(perform: contentDisappeared)
             }
+            .onAppear { updatePresentation(isPresented) }
+            .onChange(of: isPresented, perform: updatePresentation)
+    }
+
+    private enum Presentation {
+        case idle, requested, visible, dismissing
+
+        var isOpen: Bool { self == .requested || self == .visible }
+    }
+
+    private var systemPresentation: Binding<Bool> {
+        Binding(get: { presentation.isOpen }, set: { open, transaction in
+            guard !open, presentation.isOpen else { return }
+            presentation = presentation == .visible ? .dismissing : .idle
+            if isPresented { $isPresented.transaction(transaction).wrappedValue = false }
+        })
+    }
+
+    private func updatePresentation(_ open: Bool) {
+        switch (open, presentation) {
+        case (true, .idle): presentation = .requested
+        case (false, .requested): presentation = .idle
+        case (false, .visible): presentation = .dismissing
+        default: break
+        }
+    }
+
+    private func contentDisappeared() {
+        if presentation == .visible {
+            // Some native dismissals remove the content before clearing the binding.
+            presentation = .requested
+        }
+        guard presentation == .dismissing else { return }
+        // SwiftUI can clear its native binding as a dismissal finishes. Wait
+        // until that presentation is gone before applying a queued reopen.
+        DispatchQueue.main.async {
+            guard presentation == .dismissing else { return }
+            presentation = .idle
+            updatePresentation(isPresented)
+        }
     }
 }
