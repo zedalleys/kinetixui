@@ -170,8 +170,8 @@ export class KxSeparator {
  *   <kx-progress [value]="62" />
  *   <kx-progress [value]="null" />   <!-- indeterminate -->
  *
- * A real `progressbar`. `value` is null for indeterminate, which drops `aria-valuenow` — the correct way to
- * say "in progress, amount unknown", rather than reporting a fake 0.
+ * A real `progressbar`. A null or non-finite value is indeterminate. A non-positive or
+ * non-finite maximum uses the default range of 0 to 100.
  */
 @Component({
   selector: 'kx-progress',
@@ -180,9 +180,9 @@ export class KxSeparator {
   host: {
     class: 'kx-progress',
     role: 'progressbar',
-    '[attr.aria-valuenow]': 'value()',
+    '[attr.aria-valuenow]': 'boundedValue()',
     '[attr.aria-valuemin]': '0',
-    '[attr.aria-valuemax]': 'max()',
+    '[attr.aria-valuemax]': 'limit()',
     '[attr.aria-valuetext]': 'valueText()',
   },
 })
@@ -192,10 +192,20 @@ export class KxProgress {
   /** Announced instead of the raw percentage when the number alone would not mean anything ("3 of 7 files"). */
   readonly valueText = input<string | null>(null);
 
+  protected readonly limit = computed(() => {
+    const max = this.max();
+    return Number.isFinite(max) && max > 0 ? max : 100;
+  });
+
+  protected readonly boundedValue = computed(() => {
+    const value = this.value();
+    if (value === null || !Number.isFinite(value)) return null;
+    return Math.max(0, Math.min(value, this.limit()));
+  });
+
   protected readonly percent = computed(() => {
-    const v = this.value();
-    if (v === null) return 100; // indeterminate: a full track, animated by CSS rather than a fake number
-    return Math.max(0, Math.min(100, (v / this.max()) * 100));
+    const value = this.boundedValue();
+    return value === null ? 100 : (value / this.limit()) * 100;
   });
 }
 

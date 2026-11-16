@@ -121,6 +121,43 @@ describe('KxProgress', () => {
     const fill = el.querySelector('.kx-progress__bar') as HTMLElement;
     expect(fill.style.inlineSize).toBe('100%');
   });
+
+  it('keeps the painted fraction and accessibility range synchronized during updates', () => {
+    const currentValue = signal<number | null>(1);
+    const currentMax = signal(4);
+    const currentText = signal<string | null>('1 of 4 files');
+    const { fixture, el } = host(
+      '<kx-progress [value]="currentValue()" [max]="currentMax()" [valueText]="currentText()" />',
+      [KxProgress],
+      { currentValue, currentMax, currentText },
+    );
+    const bar = el.querySelector('kx-progress')!;
+    const fill = el.querySelector<HTMLElement>('.kx-progress__bar')!;
+    expect(bar.getAttribute('aria-valuetext')).toBe('1 of 4 files');
+    expect(fill.style.inlineSize).toBe('25%');
+    for (const [value, max, now, limit, width] of [
+      [0, 4, '0', '4', '0%'],
+      [4, 4, '4', '4', '100%'],
+      [9, 4, '4', '4', '100%'],
+      [-1, 4, '0', '4', '0%'],
+      [25, 0, '25', '100', '25%'],
+      [25, -4, '25', '100', '25%'],
+      [25, Infinity, '25', '100', '25%'],
+      [25, NaN, '25', '100', '25%'],
+      [Infinity, 4, null, '4', '100%'],
+      [NaN, 4, null, '4', '100%'],
+      [null, 4, null, '4', '100%'],
+      [3, 4, '3', '4', '75%'],
+    ] as const) {
+      currentValue.set(value);
+      currentMax.set(max);
+      currentText.set(null);
+      fixture.detectChanges();
+      expect(bar.getAttribute('aria-valuenow'), `value=${value}, max=${max}`).toBe(now);
+      expect(bar.getAttribute('aria-valuemax')).toBe(limit);
+      expect(fill.style.inlineSize).toBe(width);
+    }
+  });
 });
 
 describe('KxAlert', () => {

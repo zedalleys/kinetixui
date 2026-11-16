@@ -1428,10 +1428,10 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:182-338"
         ],
         "published": [
@@ -1798,10 +1798,10 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:182-338"
         ],
         "published": [
@@ -1955,11 +1955,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -2100,11 +2100,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -2259,11 +2259,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -3675,11 +3675,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -3966,11 +3966,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -4994,10 +4994,10 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:182-338"
         ],
         "published": [
@@ -5527,10 +5527,10 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306"
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:182-338"
         ],
         "published": [
@@ -6027,11 +6027,11 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-306",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:41-343",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
@@ -6271,16 +6271,16 @@
           "packages/ui-angular (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:344-424",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "accessibility": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:344-424",
           "scripts/angular-browser.mjs:182-338",
           "scripts/angular-browser.mjs:339-1069"
         ],
         "rtl": [
-          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:307-387",
+          "packages/ui-angular/src/lib/kinetix-angular.spec.ts:344-424",
           "scripts/angular-browser.mjs:1330-1707"
         ],
         "largeText": [
