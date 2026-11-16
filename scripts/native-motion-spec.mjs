@@ -152,6 +152,13 @@ export const PLATFORMS = {
         members: ["toggle.dart", "checkbox.dart", "radio_group.dart"],
         test: "packages/ui-flutter/test/selection_motion_test.dart",
       },
+      overlay: {
+        contractRole: "overlay",
+        strict: true,
+        helper: "kinetix_toast_motion.dart",
+        members: ["toaster.dart"],
+        test: "packages/ui-flutter/test/toaster_test.dart",
+      },
       loop: {
         contractRole: "loop",
         // A loop has no destination to keep, so its reduced form is not a shorter duration but no loop
@@ -229,6 +236,10 @@ export const DIRECTION_TERMS = {
   slide: {
     forward: /normal motion|slides/i,
     reverse: /reduced motion|fades/i,
+  },
+  overlay: {
+    forward: /\bentrance\b/i,
+    reverse: /\bclear(?:ing)?\b/i,
   },
   loop: {
     forward: /normal motion|runs|rotates|pulses|moves|translates/i,

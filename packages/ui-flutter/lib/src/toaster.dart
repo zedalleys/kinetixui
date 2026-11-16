@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'app_text.dart';
+import 'kinetix_motion.dart';
+import 'kinetix_toast_motion.dart';
 import 'theme.dart';
 
 enum KinetixToastIntent { normal, success, error }
@@ -34,22 +36,69 @@ class KinetixToaster extends StatefulWidget {
   State<KinetixToaster> createState() => _KinetixToasterState();
 }
 
-class _KinetixToasterState extends State<KinetixToaster> {
+class _KinetixToasterState extends State<KinetixToaster> with SingleTickerProviderStateMixin {
   Timer? _timer;
+  bool? _reduceMotion;
+  late final AnimationController _entrance;
+  late final _opacity = _entrance.drive(
+    Tween(begin: KinetixOpacity.muted, end: KinetixOpacity.visible)
+        .chain(CurveTween(curve: KinetixToastMotion.easing)),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _entrance = AnimationController(
+      vsync: this,
+      duration: KinetixToastMotion.duration,
+      value: 1,
+    );
+    _scheduleDismissal();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion = KinetixToastMotion.reduceMotionOf(context);
+    if (reduceMotion) {
+      _entrance.value = 1;
+    } else if (_reduceMotion == null && widget.toast != null) {
+      _entrance.forward(from: 0);
+    }
+    _reduceMotion = reduceMotion;
+  }
 
   @override
   void didUpdateWidget(covariant KinetixToaster oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final message = widget.toast?.message;
-    if (message != null && message != oldWidget.toast?.message) {
-      _timer?.cancel();
-      _timer = Timer(widget.duration, widget.onDismiss);
+    final toast = widget.toast;
+    final changed = toast?.message != oldWidget.toast?.message || toast?.intent != oldWidget.toast?.intent;
+    if (changed || widget.duration != oldWidget.duration) {
+      _scheduleDismissal();
     }
+    if (changed) {
+      if (toast != null && !KinetixToastMotion.reduceMotionOf(context)) {
+        _entrance.forward(from: 0);
+      } else {
+        _entrance.value = 1;
+      }
+    }
+  }
+
+  void _scheduleDismissal() {
+    _timer?.cancel();
+    _timer = widget.toast == null
+        ? null
+        : Timer(widget.duration, () {
+            _timer = null;
+            widget.onDismiss();
+          });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _entrance.dispose();
     super.dispose();
   }
 
@@ -64,6 +113,17 @@ class _KinetixToasterState extends State<KinetixToaster> {
       KinetixToastIntent.normal => c.popoverForeground,
     };
 
+    return FadeTransition(
+      opacity: _opacity,
+      alwaysIncludeSemantics: true,
+      child: Semantics(
+        liveRegion: true,
+        child: _buildToast(toast, c, color),
+      ),
+    );
+  }
+
+  Widget _buildToast(KinetixToast toast, KinetixColors c, Color color) {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(

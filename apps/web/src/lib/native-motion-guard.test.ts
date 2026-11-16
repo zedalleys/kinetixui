@@ -103,6 +103,8 @@ function suite(platform: string, familyName: string, only?: "forward" | "reverse
         ? { forward: "uncheckedToCheckedIsSuppressed", reverse: "checkedToUncheckedIsSuppressed" }
         : familyName === "loop" || familyName === "slide"
         ? { forward: "runsWithNormalMotion", reverse: "stopsWithReducedMotion" }
+        : familyName === "overlay"
+        ? { forward: "entranceSettlesWithReducedMotion", reverse: "clearingRemovesTheToast" }
         : { forward: "expandsTheContent", reverse: "collapsesTheContent" };
   const names = only ? [pair[only]] : [pair.forward, pair.reverse];
   if (platform === "SwiftUI") return names.map((n) => `func test${n[0].toUpperCase()}${n.slice(1)}() { }\n`).join("");
@@ -217,6 +219,16 @@ describe("a family member must reach the reader's setting", () => {
 });
 
 describe("both directions must be named, in the family's own vocabulary", () => {
+  it("requires Flutter overlay clearing coverage alongside entrance coverage", () => {
+    const dir = fixture();
+    const family = spec.platforms.Flutter.families.overlay;
+    write(dir, family.test, suite("Flutter", "overlay", "forward"));
+    const { ok, output } = run(dir);
+    expect(ok).toBe(false);
+    expect(output).toContain(`no test in ${family.test} is NAMED for the reverse direction`);
+    expect(output).not.toContain(`no test in ${family.test} is NAMED for the forward direction`);
+  });
+
   it("fails when a suite names only the forward direction", () => {
     const dir = fixture();
     const [name, , familyName, family] = directionalFamily();
