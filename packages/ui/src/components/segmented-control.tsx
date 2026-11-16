@@ -108,8 +108,8 @@ const SegmentedControlItem = React.forwardRef<
       "enabled:active:data-[state=off]:bg-foreground/[0.14] enabled:active:data-[state=off]:text-foreground",
       "[@media(hover:hover)]:enabled:active:data-[state=off]:bg-foreground/[0.14] [@media(hover:hover)]:enabled:active:data-[state=off]:text-foreground",
       "data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm",
-      // Forced colours repaint every fill to Canvas, which would leave the chosen segment marked by nothing.
-      "forced-colors:data-[state=on]:[forced-color-adjust:none] forced-colors:data-[state=on]:bg-[SelectedItem] forced-colors:data-[state=on]:text-[SelectedItemText]",
+      // Invert the system canvas pair so the selected fill stands apart from its neighbours.
+      "forced-colors:data-[state=on]:[forced-color-adjust:none] forced-colors:data-[state=on]:bg-[CanvasText] forced-colors:data-[state=on]:text-[Canvas]",
       "outline-none focus-visible:!ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-surface-grouped forced-colors:focus-visible:[outline:2px_solid_Highlight] forced-colors:focus-visible:outline-offset-[-2px]",
       "disabled:pointer-events-none disabled:opacity-disabled",
       className,
