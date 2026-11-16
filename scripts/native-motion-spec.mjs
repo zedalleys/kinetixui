@@ -146,6 +146,12 @@ export const PLATFORMS = {
       // separate by owner decision: a thumb lands on `instant`, a colour settles on `fast`.
       // toggle_group.dart is deliberately not a member — it is a pass-through to toggle.dart and
       // animates nothing of its own, and a member that never animates makes the wiring check vacuous.
+      selectionIndicator: {
+        contractRole: "selection-indicator",
+        helper: "kinetix_selection_indicator.dart",
+        members: ["tabs.dart", "segmented_control.dart"],
+        test: "packages/ui-flutter/test/selection_indicator_test.dart",
+      },
       selectionState: {
         contractRole: "selection-state",
         helper: "kinetix_selection_motion.dart",
@@ -242,6 +248,21 @@ export const DIRECTION_TERMS = {
     kind: "direction",
     forward: /(?:unchecked|unselected)\s*(?:\u2192|->|to)\s*(?:checked|selected)/i,
     reverse: /\b(?:checked|selected)\s*(?:\u2192|->|to)\s*(?:unchecked|unselected)/i,
+  },
+  // A selection indicator travels between items, so its two directions are named for the two ways
+  // the selection can move through the list: to a later item, and back to an earlier one. Named as
+  // an arrow-joined PAIR for exactly the reason given above for `selection` and `selectionState` —
+  // one name cannot plausibly carry the arrow both ways.
+  //
+  // What this vocabulary deliberately does NOT contain is the reader's preference. The first version
+  // of this family declared `reverse: /backward|reduced.?motion/i`, which did both things the rule
+  // above forbids at once: a single test named "forward retargets backward" satisfied both
+  // directions, and a reduced-motion test could stand in for a direction of travel.
+  // `directionTermDefects` now refuses that shape outright, so it cannot come back.
+  selectionIndicator: {
+    kind: "direction",
+    forward: /(?:earlier|previous)\s*(?:\u2192|->|to)\s*(?:later|next)/i,
+    reverse: /(?:later|next)\s*(?:\u2192|->|to)\s*(?:earlier|previous)/i,
   },
   // A loop has no two directions; it has two MODES, and both must be named. "normal" is the loop
   // running, "reduced" is it stopped with its information intact. Anchored on the mode words so a test

@@ -79,11 +79,11 @@
     },
     "Flutter": {
       "build": 90,
-      "interaction": 7,
-      "accessibility": 7,
-      "rtl": 58,
+      "interaction": 8,
+      "accessibility": 8,
+      "rtl": 59,
       "largeText": 58,
-      "reducedMotion": 8,
+      "reducedMotion": 10,
       "visual": 0,
       "published": 0
     }
@@ -120,8 +120,8 @@
     "Flutter": {
       "not-implemented": 19,
       "source": 0,
-      "build": 84,
-      "headless": 6,
+      "build": 83,
+      "headless": 7,
       "runtime": 0
     }
   },
@@ -1265,6 +1265,31 @@
           "message-bubble",
           "skeleton",
           "spinner"
+        ]
+      },
+      {
+        "file": "packages/ui-flutter/test/selection_accessibility_test.dart",
+        "environment": "flutter_test",
+        "kinds": [
+          "accessibility",
+          "interaction"
+        ],
+        "components": [
+          "segmented-control",
+          "tabs"
+        ]
+      },
+      {
+        "file": "packages/ui-flutter/test/selection_indicator_test.dart",
+        "environment": "flutter_test",
+        "kinds": [
+          "interaction",
+          "reducedMotion",
+          "rtl"
+        ],
+        "components": [
+          "segmented-control",
+          "tabs"
         ]
       },
       {
@@ -5434,6 +5459,19 @@
       "Flutter": {
         "build": [
           "packages/ui-flutter (compiled by CI)"
+        ],
+        "interaction": [
+          "packages/ui-flutter/test/selection_accessibility_test.dart:1-211",
+          "packages/ui-flutter/test/selection_indicator_test.dart:1-174"
+        ],
+        "accessibility": [
+          "packages/ui-flutter/test/selection_accessibility_test.dart:1-211"
+        ],
+        "rtl": [
+          "packages/ui-flutter/test/selection_indicator_test.dart:1-174"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/selection_indicator_test.dart:1-174"
         ]
       }
     },
@@ -6314,16 +6352,23 @@
           "packages/ui-flutter (compiled by CI)"
         ],
         "interaction": [
-          "packages/ui-flutter/test/interaction_test.dart:18-111"
+          "packages/ui-flutter/test/interaction_test.dart:18-111",
+          "packages/ui-flutter/test/selection_accessibility_test.dart:1-211",
+          "packages/ui-flutter/test/selection_indicator_test.dart:1-174"
         ],
         "accessibility": [
+          "packages/ui-flutter/test/selection_accessibility_test.dart:1-211",
           "packages/ui-flutter/test/semantics_test.dart:30-116"
         ],
         "rtl": [
-          "packages/ui-flutter/test/adaptivity_test.dart:32-68"
+          "packages/ui-flutter/test/adaptivity_test.dart:32-68",
+          "packages/ui-flutter/test/selection_indicator_test.dart:1-174"
         ],
         "largeText": [
           "packages/ui-flutter/test/adaptivity_test.dart:69-92"
+        ],
+        "reducedMotion": [
+          "packages/ui-flutter/test/selection_indicator_test.dart:1-174"
         ]
       }
     },
@@ -9251,7 +9296,13 @@
         "level": "build"
       },
       "Flutter": {
-        "level": "build"
+        "level": "headless",
+        "interaction": [
+          "flutter_test"
+        ],
+        "accessibility": [
+          "flutter_test"
+        ]
       }
     },
     "select": {
