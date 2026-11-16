@@ -35,6 +35,7 @@ public struct KinetixSheet<Content: View>: View {
                 colors.scrim
                     .ignoresSafeArea()
                     .onTapGesture { isPresented = false }
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 16) {
                     Capsule()
@@ -43,6 +44,9 @@ public struct KinetixSheet<Content: View>: View {
                         .frame(maxWidth: .infinity) // grabber
                     content
                 }
+                .accessibilityElement(children: .contain)
+                .accessibilityAddTraits(.isModal)
+                .accessibilityAction(.escape) { isPresented = false }
                 .padding(24) // p-6
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
