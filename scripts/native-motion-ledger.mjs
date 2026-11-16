@@ -30,7 +30,7 @@
  * is the native gate's question, and whether a role mentions a platform is the contract gate's.
  * This is only the ledger agreeing with itself.
  */
-import { DIRECTION_TERMS, KNOWN_GAPS, PLATFORMS } from "./native-motion-spec.mjs";
+import { DIRECTION_TERMS, KNOWN_GAPS, PLATFORMS, directionTermDefects } from "./native-motion-spec.mjs";
 
 /**
  * Compose the ledger into the shape both gates iterate, with the coherence errors found on the way.
@@ -159,7 +159,13 @@ export function composeLedger({ platforms = PLATFORMS, directionTerms = DIRECTIO
     composed.push({ name, ...p, families, gaps });
   }
 
-  for (const family of Object.keys(directionTerms)) {
+  for (const [family, terms] of Object.entries(directionTerms)) {
+    /* Whether the vocabulary is SOUND is a property of the vocabulary itself, so it is checked here
+     * once per family name rather than once per platform that declares it. A direction family whose
+     * terms the reader's reduced-motion preference can satisfy on its own lets a suite prove a
+     * direction it never travels — and catching that in the declaration catches it before any
+     * platform's suite is read. See `directionTermDefects`. */
+    for (const defect of directionTermDefects(family, terms)) fail(`native ledger: ${defect}`);
     if (!declaredFamilies.has(family)) {
       fail(
         `native ledger: DIRECTION_TERMS describes a "${family}" family that no platform declares. ` +
