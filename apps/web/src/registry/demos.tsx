@@ -1195,14 +1195,22 @@ add(
 );
 
 /* ---- batch 3 — additional gap-fill components ------------------------ */
-const SAMPLE_AUDIO = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+/* The demo clip is served from this repository rather than from a third-party host.
+   The published demo pointed at `soundhelix.com`, which made the AudioPlayer page the only
+   surface still fetching an outside media subresource — and the site's own Content Security
+   Policy is `default-src 'self'` with no `media-src`, so the browser refused the load outright:
+   both players reported MEDIA_ERR_SRC_NOT_SUPPORTED, `networkState` 3 and a null duration, and
+   pressing Play did nothing. A visitor met a player that could not play. The clip is now an
+   eight-second tone figure synthesised for this repository, so it carries no third-party rights
+   and no outside host. Same remedy as the Image story's artwork. */
+const SAMPLE_AUDIO = "/audio/kinetixui-demo-tone.mp3";
 
 add(
   "audio-player-demo",
   () => (
     <div className="flex w-full max-w-[380px] flex-col gap-6">
-      <AudioPlayer src={SAMPLE_AUDIO} title="SoundHelix Song 1" artist="T. Schürger" />
-      <AudioPlayer variant="mini" src={SAMPLE_AUDIO} title="SoundHelix Song 1" artist="T. Schürger" />
+      <AudioPlayer src={SAMPLE_AUDIO} title="Ascent (demo tone)" artist="KinetixUI" />
+      <AudioPlayer variant="mini" src={SAMPLE_AUDIO} title="Ascent (demo tone)" artist="KinetixUI" />
     </div>
   ),
   `<AudioPlayer src="/audio/song.mp3" title="Song 1" artist="Artist" />\n\n<AudioPlayer variant="mini" src="/audio/song.mp3" title="Song 1" artist="Artist" />`,

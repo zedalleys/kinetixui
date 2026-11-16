@@ -4,12 +4,12 @@ import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AudioPlayer } from "@kinetixui/ui";
 
-const SAMPLE_AUDIO = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+const SAMPLE_AUDIO = "/audio/kinetixui-demo-tone.mp3";
 
 const Demo = () => (
     <div className="flex w-full max-w-[380px] flex-col gap-6">
-      <AudioPlayer src={SAMPLE_AUDIO} title="SoundHelix Song 1" artist="T. Schürger" />
-      <AudioPlayer variant="mini" src={SAMPLE_AUDIO} title="SoundHelix Song 1" artist="T. Schürger" />
+      <AudioPlayer src={SAMPLE_AUDIO} title="Ascent (demo tone)" artist="KinetixUI" />
+      <AudioPlayer variant="mini" src={SAMPLE_AUDIO} title="Ascent (demo tone)" artist="KinetixUI" />
     </div>
   );
 

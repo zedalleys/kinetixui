@@ -25,7 +25,13 @@ const config: StorybookConfig = {
   // sweep in `scripts/a11y-browser.mjs` would read a story with no image. Only
   // `img` is mapped: `apps/web/public` also holds the registry and the footer
   // artwork, which Storybook has no use for.
-  staticDirs: [{ from: "../../web/public/img", to: "/img" }],
+  // Demo assets live in the website's public directory and are served to Storybook from there, so
+  // one copy backs both surfaces. `/audio` joined `/img` when the AudioPlayer demo stopped pointing
+  // at a third-party host.
+  staticDirs: [
+    { from: "../../web/public/img", to: "/img" },
+    { from: "../../web/public/audio", to: "/audio" },
+  ],
   core: { disableTelemetry: true },
 };
 
