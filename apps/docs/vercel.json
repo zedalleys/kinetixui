@@ -6,6 +6,7 @@
   "outputDirectory": "storybook-static",
   "git": {
     "deploymentEnabled": {
+      "codex/m68-angular-motion": false,
       "codex/m68-compose-selection": false,
       "codex/m68-flutter-selection-accessibility": false
     }

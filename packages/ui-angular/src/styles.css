@@ -53,11 +53,12 @@
   cursor: pointer;
   text-decoration: none;
   transition:
-    background-color var(--duration-fast) var(--easing-standard),
+    background-color var(--duration-instant) var(--easing-standard),
     color var(--duration-fast) var(--easing-standard),
     border-color var(--duration-fast) var(--easing-standard),
     box-shadow var(--duration-fast) var(--easing-standard);
 }
+@media (prefers-reduced-motion: reduce) { .kx-btn { transition: none; } }
 .kx-btn:focus-visible {
   outline: none;
   box-shadow: var(--shadow-focus);
@@ -438,6 +439,49 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 
 /* ── tabs ───────────────────────────────────────────────────────────────── */
 .kx-tabs { display: block; }
+.kx-tab-list,
+.kx-segmented { position: relative; isolation: isolate; }
+
+.kx-selection-indicator {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--kx-indicator-width);
+  pointer-events: none;
+  transform: translate(var(--kx-indicator-x), var(--kx-indicator-y));
+}
+@media (forced-colors: none) {
+  [data-kx-indicator-ready] > .kx-selection-indicator { display: block; }
+  .kx-tab-list[data-kx-indicator-ready] > .kx-tab[aria-selected='true'] {
+    border-block-end-color: transparent;
+  }
+  .kx-segmented[data-kx-indicator-ready] > .kx-segmented__item[data-kx-selected] > .kx-segmented__label {
+    background-color: transparent;
+  }
+  .kx-segmented[data-kx-indicator-ready] > .kx-segmented__item[data-kx-selected] >
+    .kx-segmented__radio:not(:focus-visible) + .kx-segmented__label { box-shadow: none; }
+}
+@media (prefers-reduced-motion: no-preference) and (forced-colors: none) {
+  .kx-selection-indicator[data-kx-travel] {
+    transition: transform var(--duration-base) var(--easing-emphasized),
+      width var(--duration-base) var(--easing-emphasized),
+      height var(--duration-base) var(--easing-emphasized);
+  }
+}
+.kx-tab-list > .kx-selection-indicator {
+  height: var(--border-width-focus);
+  top: calc(var(--kx-indicator-height) - var(--border-width-focus));
+  background-color: hsl(var(--primary));
+}
+.kx-segmented > .kx-selection-indicator {
+  z-index: -1;
+  height: var(--kx-indicator-height);
+  border-radius: var(--radius-sm);
+  background-color: hsl(var(--card));
+  box-shadow: inset 0 0 0 1px hsl(var(--border) / 0.5), var(--shadow-sm);
+}
+
 .kx-tab-list {
   display: inline-flex;
   /* wraps inside its own width rather than running off a phone at 200% text (React's TabsList does the same) */
@@ -476,6 +520,7 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 .kx-tab[aria-selected='true'] { color: hsl(var(--foreground)); border-block-end-color: hsl(var(--primary)); }
 .kx-tab:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 .kx-tab-panel { display: block; padding-block-start: var(--spacing-4); }
+.kx-tab-panel[hidden] { display: none; }
 .kx-tab-panel:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 
 /* ── utility: visually hidden ───────────────────────────────────────────── */
@@ -794,12 +839,13 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 .kx-radio__control:has(.kx-radio__input:disabled) + .kx-radio__label { opacity: var(--opacity-disabled); cursor: not-allowed; }
 
 /* ── slider ─────────────────────────────────────────────────────────────── */
-.kx-slider { position: relative; display: block; inline-size: 100%; }
+.kx-slider { position: relative; display: block; inline-size: 100%; --kx-slider-thumb-size: 1.25rem; }
 /* The visible track and fill sit behind a transparent native track. They are placed with logical properties,
    so the fill grows from the inline start of the slider's own direction (see KxSlider). */
 .kx-slider__track {
   position: absolute;
-  inset-inline: 0;
+  /* The range thumb's centre travels between its half-width insets. */
+  inset-inline: min(50%, calc(var(--kx-slider-thumb-size) / 2));
   inset-block-start: 50%;
   block-size: 0.5rem;
   margin-block-start: -0.25rem;
@@ -840,21 +886,30 @@ button.kx-card:disabled { pointer-events: none; opacity: var(--opacity-disabled)
 .kx-slider__input::-webkit-slider-thumb {
   appearance: none;
   margin-block-start: -0.375rem;
-  inline-size: 1.25rem;
-  block-size: 1.25rem;
+  inline-size: var(--kx-slider-thumb-size);
+  block-size: var(--kx-slider-thumb-size);
   border: var(--border-width-default) solid hsl(var(--primary));
   border-radius: var(--radius-full);
   background-color: hsl(var(--background));
+  transition: background-color var(--duration-instant) var(--easing-standard);
 }
 .kx-slider__input::-moz-range-thumb {
-  inline-size: 1.25rem;
-  block-size: 1.25rem;
+  inline-size: var(--kx-slider-thumb-size);
+  block-size: var(--kx-slider-thumb-size);
   border: var(--border-width-default) solid hsl(var(--primary));
   border-radius: var(--radius-full);
   background-color: hsl(var(--background));
+  transition: background-color var(--duration-instant) var(--easing-standard);
 }
 .kx-slider__input:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-full); }
 .kx-slider__input:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+
+.kx-slider__input:enabled:active::-webkit-slider-thumb { background-color: hsl(var(--accent)); }
+.kx-slider__input:enabled:active::-moz-range-thumb { background-color: hsl(var(--accent)); }
+@media (prefers-reduced-motion: reduce) {
+  .kx-slider__input::-webkit-slider-thumb { transition: none; }
+  .kx-slider__input::-moz-range-thumb { transition: none; }
+}
 
 /* ── composite fields: number input, password input ─────────────────────── */
 /* The text-entry state contract (TOKENS.md, "Composite fields"), shared with React's NumberInput and
@@ -1515,7 +1570,7 @@ label.kx-rating__item { cursor: pointer; }
   font-family: var(--font-family-sans);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--easing-standard);
+  transition: background-color var(--duration-instant) var(--easing-standard);
 }
 .kx-fab:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kx-fab:disabled { pointer-events: none; opacity: var(--opacity-disabled); }
@@ -1526,6 +1581,8 @@ label.kx-rating__item { cursor: pointer; }
 .kx-fab--Primary:hover { background-color: hsl(var(--action) / 0.9); }
 .kx-fab--Secondary { background-color: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
 .kx-fab--Secondary:hover { background-color: hsl(var(--secondary) / 0.85); }
+.kx-fab--Primary:enabled:active { background-color: hsl(var(--action) / 0.85); }
+.kx-fab--Secondary:enabled:active { background-color: hsl(var(--secondary) / 0.75); }
 @media (prefers-reduced-motion: reduce) { .kx-fab { transition: none; } }
 
 /* ── image ──────────────────────────────────────────────────────────────── */
@@ -3698,12 +3755,11 @@ a.kx-app-bar__brand:focus-visible { outline: none; box-shadow: var(--shadow-focu
   .kx-carousel__control:focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
   .kx-scroll-area__viewport:focus-visible,
   .kx-carousel__item:focus-visible { outline-color: Highlight; }
-  /* the chosen segment is a raised surface and a shadow, both flattened to the same Canvas as its neighbours
-     (check:angular-browser, 1.00:1): it keeps the system's own selected pair, which the mode guarantees to
-     contrast with Canvas and with each other. The focus outline above stays outside it, in Highlight. */
+  /* The raised surface and shadow flatten to Canvas. Invert the user's canvas colors
+     to keep selection distinct from adjacent items and from the Highlight focus ring. */
   .kx-segmented__radio:checked + .kx-segmented__label {
     forced-color-adjust: none;
-    background-color: SelectedItem;
-    color: SelectedItemText;
+    background-color: CanvasText;
+    color: Canvas;
   }
 }

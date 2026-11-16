@@ -1,3 +1,4 @@
+import { attachSelectionIndicator } from './selection-indicator';
 import { ChangeDetectionStrategy, Component, Directive, booleanAttribute, computed, forwardRef, input, linkedSignal, model, output, signal } from '@angular/core';
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 import { NgTemplateOutlet } from '@angular/common';
@@ -339,10 +340,17 @@ export class KxToggleGroupItem {
 @Component({
   selector: 'kx-segmented-control',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: '<ng-content />',
+  template: '<ng-content /><span class="kx-selection-indicator" aria-hidden="true"></span>',
   host: { class: 'kx-segmented', role: 'radiogroup' },
 })
 export class KxSegmentedControl {
+  constructor() {
+    attachSelectionIndicator(
+      ':scope > .kx-segmented__item > .kx-segmented__label',
+      ':scope > .kx-segmented__item[data-kx-selected] > .kx-segmented__label',
+    );
+  }
+
   readonly value = model<string | null>(null);
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly name = input(`kx-segmented-${uid()}`);
@@ -371,7 +379,10 @@ export class KxSegmentedControl {
     />
     <label class="kx-segmented__label" [for]="id()"><ng-content /></label>
   `,
-  host: { class: 'kx-segmented__item' },
+  host: {
+    class: 'kx-segmented__item',
+    '[attr.data-kx-selected]': 'control.value() === value() && !disabled() && !control.disabled() ? "" : null',
+  },
 })
 export class KxSegment {
   readonly value = input.required<string>();
