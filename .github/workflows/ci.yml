@@ -126,6 +126,24 @@ jobs:
       - name: Motion ledger controls (a fourth platform really fails)
         run: pnpm check:motion-ledger-controls
 
+      # `proven` is an architecture decision, and nothing held anyone to it: on the four-platform
+      # selection-indicator candidate, changing that role's status from `observed` to `proven` left
+      # check:motion-tokens, check:native-motion and both control suites above exiting 0, and so did
+      # deleting the note sentence that recorded the decision as open. The decision now lives in
+      # tokens/contracts/motion-promotions.json — a file whose only purpose is authorisation — and
+      # this holds the two files to each other: a role two platforms consume needs a decision, and
+      # `proven` needs that decision to be `approved` with a named authority and a checkable basis.
+      - name: Motion promotion register agrees with the contract
+        run: pnpm check:motion-promotion
+
+      # The register is only worth having if its refusals are real. Twelve refusals and six
+      # allowances, mutated in memory: an unauthorised promotion, a deleted decision, a dropped and
+      # an added consumer, an unreferenceable evidence file and an approval with no authority each
+      # fail; an unchanged `observed` role, a reworded note, a legitimately approved promotion and
+      # unrelated roles each pass.
+      - name: Motion promotion controls (a silent promotion really fails)
+        run: pnpm check:motion-promotion-controls
+
       - name: Changelog page is current with the packages
         run: pnpm check:releases
 

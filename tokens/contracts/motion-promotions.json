@@ -1,0 +1,75 @@
+{
+  "$description": "Promotion decisions for the motion contract's roles. tokens/contracts/motion.json records what a role IS and who consumes it; this file records whether anyone has decided that its `status` may read `proven`. The two are separate on purpose: the first is a description a branch may change as it adds a consumer, the second is an architecture decision that a branch must not take on its own. scripts/check-motion-promotion.mjs holds them to each other. This is not a token source and Style Dictionary does not read it.",
+  "$rule": "motion.json's selection-indicator note states the rule this file enforces: a role is promoted to proven once a SECOND platform consumes it. So every role consumed by two or more platforms needs a decision here, and `proven` requires that decision to be `approved`. A role consumed by one platform needs no entry — there is nothing yet to decide.",
+  "$states": {
+    "pending": "The rule has been triggered and the decision is deliberately open. The role's status must stay `observed` (or `proposed`). `review` says what the decision is waiting on.",
+    "approved": "A promotion to `proven` is authorised. `approval.authority` says WHO authorised it, and `approval.basis` says on what — a reference a reviewer can check, not a restatement of the status."
+  },
+  "decisions": {
+    "selection-control": {
+      "state": "approved",
+      "platforms": ["angular", "compose", "flutter", "react", "swiftui"],
+      "approval": {
+        "authority": "pre-existing-on-main",
+        "recordedAt": "2026-11-16",
+        "basis": "Already `proven` on main before this register existed, with five platform consumers and five evidence files. Recorded here so the gate has the decision it requires; this entry documents a status that shipped, and is not a new authorisation."
+      }
+    },
+    "disclosure": {
+      "state": "approved",
+      "platforms": ["angular", "compose", "flutter", "react", "swiftui"],
+      "approval": {
+        "authority": "pre-existing-on-main",
+        "recordedAt": "2026-11-16",
+        "basis": "Already `proven` on main before this register existed, with five platform consumers. Recorded, not newly authorised."
+      }
+    },
+    "selection-state": {
+      "state": "approved",
+      "platforms": ["angular", "compose", "flutter", "react", "swiftui"],
+      "approval": {
+        "authority": "pre-existing-on-main",
+        "recordedAt": "2026-11-16",
+        "basis": "Already `proven` on main before this register existed, with five platform consumers and seven evidence files. Recorded, not newly authorised."
+      }
+    },
+    "press-feedback": {
+      "state": "approved",
+      "platforms": ["angular", "react"],
+      "approval": {
+        "authority": "pre-existing-on-main",
+        "recordedAt": "2026-11-16",
+        "basis": "Already `proven` on main before this register existed, on two platform consumers — the rule's minimum. Recorded, not newly authorised."
+      }
+    },
+    "loop": {
+      "state": "approved",
+      "platforms": ["angular", "compose", "flutter", "react", "swiftui"],
+      "approval": {
+        "authority": "pre-existing-on-main",
+        "recordedAt": "2026-11-16",
+        "basis": "Already `proven` on main before this register existed, with five platform consumers. Recorded, not newly authorised."
+      }
+    },
+    "selection-indicator": {
+      "state": "pending",
+      "platforms": ["angular", "compose", "flutter", "react"],
+      "triggeredBy": {
+        "platform": "flutter",
+        "reference": "packages/ui-flutter/lib/src/kinetix_selection_indicator.dart",
+        "note": "Flutter was the second platform to consume this role, which is what triggers the rule. Compose and Angular followed; SwiftUI is NOT a consumer — its indicator is recorded as a declared gap in scripts/native-motion-spec.mjs because no CI-readable test is named for either travel direction."
+      },
+      "review": "Open. The owner has not approved promotion to `proven`. What is still owed: a decision on whether `proven` requires a named forward/reverse test pair on every consuming platform, which SwiftUI does not currently have, or whether painted-rect evidence on four platforms is sufficient. Until that is decided this stays `pending` and the role's status stays `observed`."
+    },
+    "overlay": {
+      "state": "pending",
+      "platforms": ["angular", "react"],
+      "triggeredBy": {
+        "platform": "angular",
+        "reference": "packages/ui-angular/src/styles.css",
+        "note": "Surfaced by this register rather than by a branch: `overlay` has had two platform consumers and `status: observed` with no recorded decision, so the rule was already triggered and nothing said so. No promotion is proposed here."
+      },
+      "review": "Open and previously unrecorded. Its single evidence file covers React only; Angular's side has no evidence entry. Decide whether to add Angular evidence and promote, or to state why `observed` is the right resting status for this role."
+    }
+  }
+}

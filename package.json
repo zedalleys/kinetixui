@@ -30,6 +30,8 @@
     "check:motion-tokens": "node scripts/check-motion-tokens.mjs",
     "check:motion-identity-controls": "node scripts/motion-identity-negative-controls.mjs",
     "check:motion-ledger-controls": "node scripts/motion-ledger-negative-controls.mjs",
+    "check:motion-promotion": "node scripts/check-motion-promotion.mjs",
+    "check:motion-promotion-controls": "node scripts/motion-promotion-negative-controls.mjs",
     "check:reduced-motion-delay": "node scripts/reduced-motion-delay.mjs",
     "gen:release-meta": "node scripts/gen-release-meta.mjs",
     "check:releases": "node scripts/check-releases.mjs",
