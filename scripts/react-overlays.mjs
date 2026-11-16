@@ -62,6 +62,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { assertUiDistMatchesSource } from "./ui-dist-stamp.mjs";
 import { storyId } from "./story-id.mjs";
+import { checkPopoverReopen } from "./react-popover-reopen.mjs";
 import { serveStatic } from "./visual-harness.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -360,7 +361,7 @@ async function keyboard(c) {
   await ctx.close();
 }
 
-for (const c of CASES) {
+for (const c of process.argv.includes("--popover-only") ? [] : CASES) {
   report.push(`\n${c.slug}`);
   await lifecycle(c);
   await pressing(c);
@@ -369,6 +370,7 @@ for (const c of CASES) {
   if (c.keys) await keyboard(c);
 }
 
+await checkPopoverReopen(browser, storybook.base, check);
 await browser.close();
 storybook.close();
 console.log(report.join("\n"));

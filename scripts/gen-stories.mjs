@@ -431,6 +431,56 @@ const CONTROLS = {
  * assembled to make a rule fire. `imports` names identifiers the render needs beyond the demo's own.
  */
 const EXTRA = {
+  popover: [{
+    name: "Reopen",
+    imports: "KinetixDirectionProvider",
+    render: `function ReopenFixture() {
+  const settings = new URLSearchParams(window.location.search);
+  const dir = settings.get("dir") === "rtl" ? "rtl" : "ltr";
+  const mode = settings.get("fixture");
+  const [open, setOpen] = React.useState(false);
+  const [triggerVisible, setTriggerVisible] = React.useState(true);
+  const [events, setEvents] = React.useState<string[]>([]);
+  const fallback = React.useRef<HTMLButtonElement>(null);
+  const record = (event: string) => setEvents((previous) => [...previous, event]);
+
+  return (
+    <KinetixDirectionProvider dir={dir}>
+      <main dir={dir}>
+        <button ref={fallback} type="button">Outside focus target</button>
+        <Popover
+          open={mode === "uncontrolled" ? undefined : open}
+          onOpenChange={(next) => {
+            record(next ? "open" : "close");
+            setOpen(next);
+            if (!next && mode === "removed-trigger") setTriggerVisible(false);
+          }}
+        >
+          {triggerVisible && <PopoverTrigger disabled={mode === "disabled"}>Open details</PopoverTrigger>}
+          <PopoverContent
+            aria-label="Details"
+            onOpenAutoFocus={(event) => {
+              record("entry");
+              if (mode === "keep-trigger") event.preventDefault();
+            }}
+            onCloseAutoFocus={(event) => {
+              record("return");
+              if (mode === "removed-trigger") {
+                event.preventDefault();
+                fallback.current?.focus();
+              }
+            }}
+          >
+            <p>Details for the current item.</p>
+            {mode !== "text" && <label>First field <input /></label>}
+          </PopoverContent>
+        </Popover>
+        <output aria-hidden="true" data-popover-events>{events.join(" ")}</output>
+      </main>
+    </KinetixDirectionProvider>
+  );
+}`,
+  }],
   // The public Progress demo only ever passes a finite `max={4}`, so nothing rendered
   // exercises the non-finite bound that `progress.tsx` withholds from the primitive.
   // Without this subject the browser gate cannot fail for the regression it names:
