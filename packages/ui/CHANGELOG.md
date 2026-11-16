@@ -1,5 +1,50 @@
 # @kinetixui/ui
 
+## 0.28.0
+
+### Minor Changes
+
+- ac51106: Selectable indicator motion on Tabs, and reduced motion now caps delays as well as durations.
+  
+  `Tabs` gains a motion choice — classic, fluid or none — exported as `TABS_MOTION` and the `TabsMotion` type, with `TabsListProps` now public. Nothing is removed and the default behaviour is unchanged.
+  
+  The shared Tailwind preset's `prefers-reduced-motion: reduce` floor capped `animation-duration` and `transition-duration` but said nothing about the delays, so a reader who asked for less motion waited the full delay for content others saw immediately — an animation with a 700ms delay still fired `animationend` at 719ms. The floor now zeroes `animation-delay` and `transition-delay` too, which brings that case down to 13ms. Normal-motion behaviour is untouched.
+
+### Patch Changes
+
+- cee2fd0: `Carousel` no longer takes an arrow key that something inside a slide owns.
+  
+  The carousel listened for ArrowLeft and ArrowRight in the capture phase and cancelled them unconditionally, before the focused element saw the key. A text field, textarea or select inside a slide lost caret and option movement, a nested control (a slider, a radio group) that had already handled the arrow was overridden, and Alt+ArrowLeft, the browser's Back shortcut, was cancelled. The carousel now handles the key in the bubble phase, only when nothing inside has claimed it, the target is not an editing control, and no Alt, Ctrl, Meta or Shift modifier is held. A plain arrow from a button or a slide still scrolls, and a consumer's own `onKeyDown` still runs first.
+  
+  **No API change.**
+- e44dedf: `Field` names only the description and message that exist, and an inline error is now announced.
+  
+  `FieldControl` set `aria-describedby="<id>-description <id>-message"` unconditionally, while both parts are optional and usually conditional (`{error && <FieldMessage/>}`). A field with neither named two ids that were not in the document, which is the resting state of every `AddressFields` row without a description. The attribute now lists an id only when its element is rendered: resolved at render time from `Field`'s own children (so server markup is already correct and hydration does not change it), and by registration after mount for a part rendered deeper than a direct child. A `FieldMessage` with nothing to say renders nothing and is not named.
+  
+  `FieldControl` also used to overwrite a consumer's own `aria-describedby`. It now merges: yours first, the field's parts appended.
+  
+  `FieldMessage` had no role, so an error that appears on blur, on submit or after an async check was announced to nobody. An `error` or `warning` is now `role="alert"` and a `success` or `info` is `role="status"`. Either can be overridden with the `role` prop.
+  
+  **No API change.** What a consumer may notice: a test that asserted the old fixed `aria-describedby` value, or that a `FieldMessage` had no role, will now see the corrected values.
+- 260901f: The Image story's demo artwork is served from the repository instead of picsum.photos. The published story carried
+  a third-party image URL, so the story rendered three blank frames wherever that host was unreachable — and in the
+  docs site the same references made the Image page the only one fetching an outside subresource, which timed the
+  accessibility gate's navigation out whenever the host was slow. The artwork is now three committed SVGs drawn with
+  KinetixUI primitive token colours; the component's API, the demo's layout and its alt semantics are unchanged.
+- 6b1c990: Progress announces the value it paints. The component destructured `value` out of its props and never passed it to the underlying primitive, so every determinate bar painted a fill while the primitive stayed indeterminate and emitted no `aria-valuenow`: a sighted reader saw progress, a screen-reader user was told there was none. The value and the maximum now reach the primitive, the painted fraction is computed from `value / max` rather than from `value` alone, and a non-finite maximum is withheld so it cannot be announced as an infinite range.
+- d61228e: Removing a `Tag` chip or a `FileUpload` row keeps the keyboard, and a `MultiSelect` chip can be removed by keyboard at all.
+  
+  A remove button inside a chip or a row unmounts with it, so nothing held focus and the browser dropped it on `<body>`: the next Tab restarted from the top of the page, once per removal. Focus now moves to the next chip's (or row's) remove button, or the previous one when the last goes; `FileUpload` falls back to its Browse button, and `MultiSelect` back to its field. Focus moves only when the removal actually happened and left the keyboard stranded, so a handler that removes nothing, or that restores focus to an input of its own, keeps the focus it chose. Order follows the document, so it is the same in right-to-left layouts.
+  
+  In `MultiSelect`, Enter or Space on a chip's remove button bubbled to the field, which opened the listbox and never removed the chip, so a chip could not be removed by keyboard at all. The field now acts only on keys pressed on itself; opening with Enter, Space or the arrows is unchanged.
+  
+  Also: `lib/utils.ts`, which the CLI installs alongside almost every component, is now generated with the rest of the registry rather than kept by hand.
+  
+  **No API change.** `Tag` and the `FileUpload` rows gain `data-slot` / `data-kx-remove` attributes, which a consumer's selectors can ignore.
+- 99d51ef: Keep SegmentedControl selected when its chosen segment is activated again, in controlled and uncontrolled use. Repeat activation no longer calls onValueChange with an empty string; controlled consumers can still explicitly pass value="". Public props are unchanged. Covers the behavior merged in #555; arrow-key selection work in #559 is separate.
+- Updated dependencies [ac51106]
+  - @kinetixui/tokens@0.28.0
+
 ## 0.27.0
 
 ### Minor Changes
