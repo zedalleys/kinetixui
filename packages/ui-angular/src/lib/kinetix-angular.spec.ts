@@ -136,6 +136,8 @@ describe('KxProgress', () => {
     expect(bar.getAttribute('aria-valuetext')).toBe('1 of 4 files');
     expect(fill.style.inlineSize).toBe('25%');
     for (const [value, max, now, limit, width] of [
+      [0, 4, '0', '4', '0%'],
+      [4, 4, '4', '4', '100%'],
       [9, 4, '4', '4', '100%'],
       [-1, 4, '0', '4', '0%'],
       [25, 0, '25', '100', '25%'],
