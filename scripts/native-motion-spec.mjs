@@ -106,6 +106,12 @@ export const PLATFORMS = {
       // separate by owner decision: a thumb lands on `instant`, a colour settles on `fast`.
       // ToggleGroup.kt is deliberately not a member — it is a pass-through to Toggle and animates
       // nothing of its own, and a member that never animates makes the family's wiring check vacuous.
+      selectionIndicator: {
+        contractRole: "selection-indicator",
+        helper: "KinetixSelectionIndicator.kt",
+        members: ["Tabs.kt", "SegmentedControl.kt"],
+        test: "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionIndicatorTest.kt",
+      },
       selectionState: {
         contractRole: "selection-state",
         helper: "KinetixSelectionMotion.kt",
