@@ -26,6 +26,12 @@ import { cn } from "@/lib/utils";
  * items: a second activation of the chosen segment is a no-op, and `onValueChange` is never called with
  * `""`. A consumer that genuinely wants nothing chosen can still pass `value=""` itself.
  *
+ * Selection follows focus, as it does in any radiogroup: an arrow key moves focus to the next segment
+ * AND chooses it, so `onValueChange` fires on an arrow press rather than waiting for Enter. Home, End,
+ * wrapping and the reading direction all come from the primitive's roving focus; the answer simply goes
+ * wherever that puts focus, which is why there is no direction branch here. A disabled segment is
+ * stepped over rather than chosen.
+ *
  * States (TOKENS.md, "Selection controls"): an unchosen segment has `--muted-foreground` text and answers the
  * pointer with the same `--foreground` state layer the other selection controls use (8% hover, 14% pressed);
  * chosen is the inverse fill, a change of luminance far past 3:1, so it is never hue alone, and under forced
@@ -37,27 +43,50 @@ export type SegmentedControlProps = Omit<ToggleGroupPrimitive.ToggleGroupSingleP
 const SegmentedControl = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
   SegmentedControlProps
->(({ className, value, defaultValue, onValueChange, ...props }, ref) => {
+>(({ className, value, defaultValue, onValueChange, onFocus, ...props }, ref) => {
   // Held here rather than left to the primitive, because refusing the empty value is only half the fix:
   // an uncontrolled ToggleGroup clears its own state, so swallowing the callback would still leave the
   // strip blank. A consumer passing `value` stays in charge of it, including an empty one.
   const controlled = value !== undefined;
   const [own, setOwn] = React.useState(defaultValue ?? "");
   const current = controlled ? value : own;
+  const choose = (next: string) => {
+    // The chosen segment was activated again. A segmented control answers one question, so the answer
+    // it already has stands; it is not a toggle that can be switched off.
+    if (next === "" || next === current) return;
+    if (!controlled) setOwn(next);
+    onValueChange?.(next);
+  };
   return (
     <ToggleGroupPrimitive.Root
       ref={ref}
       type="single"
       value={current}
-      onValueChange={(next) => {
-        // The chosen segment was activated again. A segmented control answers one question, so the answer
-        // it already has stands; it is not a toggle that can be switched off.
-        if (next === "") return;
-        if (!controlled) setOwn(next);
-        onValueChange?.(next);
-      }}
+      onValueChange={choose}
       className={cn("inline-flex min-w-0 max-w-full flex-wrap items-center rounded-lg border border-border/50 bg-surface-grouped p-1 font-sans", className)}
       {...props}
+      // Selection follows focus. The root is a `radiogroup`, and in one of those the ARIA practices have an
+      // arrow key move focus AND check what it lands on; Radix's roving focus moves focus alone, so arrowing
+      // used to leave the reader on a segment that was not the answer until they pressed Enter as well.
+      // React's onFocus is delegated from `focusin`, so this sees the item focus rather than the root's.
+      // A pointer press focuses the item it also activates, so the two paths agree rather than fight.
+      //
+      // This handler is written AFTER the spread, and `onFocus` is destructured out of `props` above,
+      // because it was neither: with the handler before `{...props}`, a consumer's own focus listener —
+      // a no-op one included — replaced it wholesale and turned this keyboard contract silently back off
+      // while every one of this file's own tests still passed. Composed here, neither handler can
+      // displace the other whichever order the props arrive in.
+      onFocus={(event) => {
+        const segment = (event.target as HTMLElement).closest<HTMLElement>("[data-kx-segment]");
+        const next = segment?.dataset.kxSegment;
+        // A disabled segment is not an answer this control can give. Roving focus steps over one, but
+        // a script can still call focus() on it — jsdom allows exactly that — and landing there must
+        // not change the answer the control already has.
+        const inert =
+          !!segment && (segment.hasAttribute("disabled") || segment.getAttribute("aria-disabled") === "true");
+        if (next && !inert) choose(next);
+        onFocus?.(event);
+      }}
     />
   );
 });
@@ -69,6 +98,7 @@ const SegmentedControlItem = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToggleGroupPrimitive.Item
     ref={ref}
+    data-kx-segment={props.value}
     className={cn(
       "inline-flex coarse:min-h-11 flex-1 items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-label-md font-medium text-muted-foreground",
       "transition-[color,background-color,box-shadow] duration-fast ease-standard motion-reduce:transition-none",
