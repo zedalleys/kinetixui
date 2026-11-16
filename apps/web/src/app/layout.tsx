@@ -11,6 +11,7 @@ import { VercelAnalytics } from "@/components/vercel-analytics";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 import "./brand-hero.css";
+import "./site-footer.css";
 
 /**
  * Fonts are served from this repository, not fetched from Google at build time.
