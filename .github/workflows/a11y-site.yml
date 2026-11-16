@@ -18,7 +18,9 @@ on:
       - "style-dictionary/**"
       - "scripts/a11y-site.mjs"
       - "scripts/docs-image-local-assets.mjs"
+      - "scripts/docs-media-local-assets.mjs"
       - "apps/web/public/img/**"
+      - "apps/web/public/audio/**"
       - "apps/web/src/registry/demos.tsx"
       - "apps/docs/.storybook/main.ts"
       - "scripts/seo-browser.mjs"
@@ -66,7 +68,9 @@ on:
       - "style-dictionary/**"
       - "scripts/a11y-site.mjs"
       - "scripts/docs-image-local-assets.mjs"
+      - "scripts/docs-media-local-assets.mjs"
       - "apps/web/public/img/**"
+      - "apps/web/public/audio/**"
       - "apps/web/src/registry/demos.tsx"
       - "apps/docs/.storybook/main.ts"
       - "scripts/seo-browser.mjs"
@@ -188,6 +192,19 @@ jobs:
       # other than the site's own, which is the property a longer timeout would not have restored.
       - name: Image route resolves locally (blocked-host regression, RTL, error fallback)
         run: pnpm check:docs-image-local
+
+      # The documented players ship their clip. The AudioPlayer demo pointed both of its players at an MP3 on
+      # soundhelix.com, and this site's CSP is `default-src 'self'` with no `media-src`, so the browser refused
+      # the load outright: readyState 0, MEDIA error 4, null duration, and Play did nothing. Unlike a blocked
+      # image, blocked media hangs nothing — `load` fires and the page looks finished — so the step above could
+      # not see it. This one reads the media element's own readiness.
+      - name: Documented players load a same-origin clip that plays
+        run: pnpm check:docs-media-local
+
+      # And the control, because the three checks above are only worth running if a foreign source makes all
+      # three of them fail. It rewrites the served body, not the repository: no defect is committed.
+      - name: Media gate controls (a cross-origin clip must fail all three checks)
+        run: pnpm check:docs-media-local-controls
 
       # Colour/theme state stays in its preview, light previews on a dark page stay light, and the keyboard
       # focus ring follows a custom theme's --focus (docs/audits/COLOR-THEMING-MATURITY-AUDIT.md).
