@@ -23,9 +23,21 @@ public struct KinetixSheet<Content: View>: View {
 
     @Binding private var isPresented: Bool
     private let content: Content
+    private let onDismiss: (() -> Void)?
 
     public init(isPresented: Binding<Bool>, @ViewBuilder content: () -> Content) {
+        self.init(isPresented: isPresented, onDismiss: nil, content: content)
+    }
+
+    /// Run caller-owned dismissal work when the presented surface disappears.
+    /// Choose an accessibility focus target from the controls still mounted at that point.
+    public init(
+        isPresented: Binding<Bool>,
+        onDismiss: (() -> Void)?,
+        @ViewBuilder content: () -> Content
+    ) {
         self._isPresented = isPresented
+        self.onDismiss = onDismiss
         self.content = content()
     }
 
@@ -58,8 +70,12 @@ public struct KinetixSheet<Content: View>: View {
                         .strokeBorder(colors.border, lineWidth: 1)
                 }
                 .kinetixElevation(elevations.xl.flippedVertically)
-                .ignoresSafeArea(edges: .bottom)
+                .ignoresSafeArea(.container, edges: .bottom)
                 .transition(KinetixSlideMotion.transition(from: .bottom, reduceMotion: reduceMotion))
+            }
+            .onDisappear {
+                guard !isPresented else { return }
+                onDismiss?()
             }
         }
     }
