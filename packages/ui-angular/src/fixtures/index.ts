@@ -10,8 +10,10 @@ import { ListboxesFixture } from './listboxes';
 import { NavigationFixture } from './navigation';
 import { NotificationsFixture } from './notifications';
 import { OverlayCompositionsFixture } from './overlay-compositions';
+import { PressSlider } from './press-slider';
 import { OverlaysFixture } from './overlays';
 import { SelectionMotion } from './selection-motion';
+import { SelectionGlide } from './selection-glide';
 import { SelectionStates } from './selection';
 import { UsageExamples } from './usage';
 
@@ -34,8 +36,10 @@ export const FIXTURES: Record<string, Type<unknown>> = {
   navigation: NavigationFixture,
   notifications: NotificationsFixture,
   overlays: OverlaysFixture,
+  'press-slider': PressSlider,
   'overlay-compositions': OverlayCompositionsFixture,
   selection: SelectionStates,
   'selection-motion': SelectionMotion,
+  'selection-glide': SelectionGlide,
   usage: UsageExamples,
 };
