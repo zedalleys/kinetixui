@@ -1,3 +1,6 @@
+// kx-verify: interaction, reducedMotion, rtl
+// kx-verify-only: segmented-control, tabs
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kinetix_ui/kinetix_ui.dart';
@@ -90,7 +93,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 65));
       final intermediate = painted(tester);
       expect(intermediate.left, greaterThan(first.left));
-      expect(intermediate.width, greaterThan(0));
+      await tester.pumpAndSettle();
+      expect(intermediate.left, lessThan(painted(tester).left));
     });
 
     testWidgets(
@@ -106,14 +110,17 @@ void main() {
       final intermediate = painted(tester);
       expect(intermediate.left, greaterThan(first.left));
 
-      await tester.tap(find.text('Second'));
+      await tester.tap(find.text('One'));
       await tester.pump();
       // The reverse travel begins from where the bar is PAINTED, not from the target it was
       // heading for. A retarget that snapped to the old target first would read as a stutter.
       expect(painted(tester), intermediate);
 
       await tester.pump(const Duration(milliseconds: 45));
-      expect(painted(tester), isNot(intermediate));
+      expect(painted(tester).left, lessThan(intermediate.left));
+      expect(painted(tester).left, greaterThan(first.left));
+      await tester.pumpAndSettle();
+      expect(painted(tester), first);
     });
 
     testWidgets('$name reaches the selected item with animations off',
@@ -123,9 +130,16 @@ void main() {
       final h = await pumpList(tester, tabs: tabs);
       final first = painted(tester);
 
+      h.selected.value = 2;
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 65));
+      final intermediate = painted(tester);
+      expect(intermediate.left, greaterThan(first.left));
+
       h.reduced.value = true;
       await tester.pump();
       final settled = painted(tester);
+      expect(settled.left, greaterThan(intermediate.left));
       await tester.pump(const Duration(milliseconds: 400));
       expect(painted(tester), settled);
 
