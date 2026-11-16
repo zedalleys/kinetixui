@@ -78,6 +78,13 @@
       "body": "The Image story's demo artwork is served from the repository instead of picsum.photos. The published story carried a third-party image URL, so it rendered three blank frames wherever that host was unreachable. The artwork is now three committed SVGs drawn with KinetixUI primitive token colours; the component's API, the demo's layout and its alt semantics are unchanged."
     },
     {
+      "kind": "fixed",
+      "area": "components",
+      "title": "The documented audio player ships the clip it plays",
+      "body": "The AudioPlayer demo, and the Storybook story generated from it, pointed both players at an MP3 on a third-party host. The website serves itself under `default-src 'self'` with no `media-src`, so the browser did not fetch that clip slowly — it refused the load: both players reported MEDIA error 4, `networkState` 3 and a null duration, and pressing Play did nothing. The documented player could not play. The clip is now an eight-second tone figure synthesised for this repository and served alongside the site, so it reaches no outside host and carries no third-party rights. The component's API, props and markup are unchanged — only the demo's source and its title. A consumer who copied the demo's `src` verbatim should point it at their own audio.",
+      "href": "/docs/components/audio-player"
+    },
+    {
       "kind": "accessibility",
       "area": "components",
       "title": "Progress announces the value it paints",
@@ -104,6 +111,7 @@
       "cohort": "core",
       "version": "0.28.0",
       "changesets": [
+        "audio-demo-ships-its-clip",
         "carousel-arrow-keys-yield",
         "field-describedby-and-live-region",
         "image-demo-local-artwork",
