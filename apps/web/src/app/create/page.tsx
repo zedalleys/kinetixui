@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { Button } from "@kinetixui/ui";
 import { routeMetadata } from "@/lib/route-seo";
 import { CreateWorkspace } from "@/components/create/create-workspace";
 
@@ -16,5 +18,8 @@ import { CreateWorkspace } from "@/components/create/create-workspace";
 export const metadata: Metadata = routeMetadata("/create");
 
 export default function CreatePage() {
-  return <CreateWorkspace />;
+  return <>
+    {process.env.NODE_ENV === "development" && process.env.KINETIX_CREATE_DEV === "1" && <div className="mx-auto max-w-[96rem] px-4 pt-6 sm:px-6 lg:px-8"><Button asChild variant="Outline"><Link href="/create/studio">Open Create Studio · local development</Link></Button></div>}
+    <CreateWorkspace />
+  </>;
 }

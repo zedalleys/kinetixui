@@ -1,0 +1,46 @@
+// @vitest-environment node
+import { expect, it } from "vitest";
+import { mkdtemp, mkdir, writeFile, symlink, rm, copyFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { createRequire } from "node:module";
+import { execFileSync } from "node:child_process";
+import { createDocument } from "./model";
+import { execute, newHistory } from "./commands";
+import { exportReact } from "./export";
+const require = createRequire(import.meta.url);
+it("typechecks and bundles exported source in a clean React consumer directory", async () => {
+  const root = resolve(process.cwd(), "../..");
+  const directory = process.env.KINETIX_CREATE_EXPORT_FIXTURE ?? await mkdtemp(join(tmpdir(), "kinetix-export-consumer-"));
+  await mkdir(join(directory, "node_modules/@kinetixui"), { recursive: true });
+  await mkdir(join(directory, "node_modules/@types"), { recursive: true });
+  const link = async (target: string, name: string) => { try { await symlink(target, join(directory, "node_modules", name)); } catch (e) { if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e; } };
+  try {
+    for (const name of ["react", "react-dom", "@types/react", "@types/react-dom"]) await link(dirname(require.resolve(name + "/package.json")), name);
+    await link(join(root, "packages/ui"), "@kinetixui/ui");
+    await link(join(root, "packages/tokens"), "@kinetixui/tokens");
+    let history = newHistory(createDocument("proj_consumer01", "Consumer"));
+    for (const ref of ["component:Card", "component:Badge", "component:Input", "component:Button", "component:Tabs", "layout:stack", "layout:grid"]) history = execute(history, { type: "insert", parentId: "node_2", ref });
+    history = execute(history, { type: "page", name: "Settings" });
+    history = execute(history, { type: "insert", parentId: history.doc.pages[1].root.id, ref: "layout:section" });
+    const output = exportReact(history.doc);
+    await writeFile(join(directory, "design.tsx"), output.source);
+    await writeFile(join(directory, "theme.css"), output.theme);
+    await writeFile(join(directory, "README.md"), output.readme);
+    await writeFile(join(directory, "source-document.json"), JSON.stringify(history.doc, null, 2));
+    await writeFile(join(directory, "package.json"), JSON.stringify({ name: "kinetix-studio-export-consumer", private: true, type: "module" }));
+    await writeFile(join(directory, "tsconfig.json"), JSON.stringify({ compilerOptions: { strict: true, target: "ES2022", module: "ESNext", moduleResolution: "Bundler", jsx: "react-jsx", skipLibCheck: true, noEmit: true, esModuleInterop: true }, files: ["design.tsx"] }));
+    execFileSync(process.execPath, [require.resolve("typescript/bin/tsc"), "--project", join(directory, "tsconfig.json")], { stdio: "pipe" });
+    await writeFile(join(directory, "main.tsx"), 'import React from "react"; import { createRoot } from "react-dom/client"; import { Screen1, Screen2 } from "./design"; import "@kinetixui/tokens/css"; import "@kinetixui/tokens/css/dark"; import "@kinetixui/tokens/css/extras"; createRoot(document.getElementById("root")!).render(<><Screen1 /><Screen2 /></>);');
+    const viteRequire = createRequire(require.resolve("vite/package.json"));
+    const esbuild = viteRequire("esbuild") as { build: (options: object) => Promise<unknown> };
+    await esbuild.build({ entryPoints: [join(directory, "main.tsx")], bundle: true, outfile: join(directory, "bundle.js"), platform: "browser", format: "esm", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' } });
+    await writeFile(join(directory, "tailwind.config.cjs"), `module.exports={presets:[require(${JSON.stringify(join(root, "packages/ui/tailwind.config.ts"))}).default],content:[${JSON.stringify(join(root, "packages/ui/dist/**/*.js"))},${JSON.stringify(join(directory, "*.tsx"))}]};`);
+    await writeFile(join(directory, "input.css"), "@tailwind base;\n@tailwind components;\n@tailwind utilities;");
+    execFileSync(process.execPath, [require.resolve("tailwindcss/lib/cli.js"), "-c", join(directory, "tailwind.config.cjs"), "-i", join(directory, "input.css"), "-o", join(directory, "utilities.css")], { stdio: "pipe" });
+    await copyFile(join(root, "apps/web/src/app/fonts/inter-latin.woff2"), join(directory, "inter-latin.woff2"));
+    await writeFile(join(directory, "index.html"), '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Exported KinetixUI consumer</title><style>@font-face{font-family:Inter;src:url(inter-latin.woff2) format("woff2");font-weight:100 900;}</style><link rel="stylesheet" href="bundle.css"><link rel="stylesheet" href="utilities.css"></head><body><main id="root" style="padding:24px"></main><script type="module" src="bundle.js"></script></body></html>');
+    expect(output.source).toContain("Screen2");
+    expect(output.source).not.toContain("@/");
+  } finally { if (!process.env.KINETIX_CREATE_EXPORT_FIXTURE) await rm(directory, { recursive: true, force: true }); }
+}, 60_000);
