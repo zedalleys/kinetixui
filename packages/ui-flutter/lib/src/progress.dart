@@ -15,26 +15,32 @@ class KinetixProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = KinetixTheme.of(context);
-    final double fraction = (value / 100).clamp(0.0, 1.0);
+    final progress = value.isFinite ? value.clamp(0.0, 100.0) : null;
+    final fraction = (progress ?? 0) / 100;
+    final percent =
+        progress == null ? null : '${progress == progress.truncate() ? progress.truncate() : progress}%';
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(9999),
-      child: SizedBox(
-        height: 8, // h-2
-        child: Stack(
-          children: [
-            Positioned.fill(child: ColoredBox(color: c.muted)),
-            Positioned.fill(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: FractionallySizedBox(
-                  widthFactor: fraction,
-                  heightFactor: 1,
-                  child: ColoredBox(color: c.action),
+    return Semantics(
+      value: percent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(9999),
+        child: SizedBox(
+          height: 8, // h-2
+          child: Stack(
+            children: [
+              Positioned.fill(child: ColoredBox(color: c.muted)),
+              Positioned.fill(
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: FractionallySizedBox(
+                    widthFactor: fraction,
+                    heightFactor: 1,
+                    child: ColoredBox(color: c.action),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
