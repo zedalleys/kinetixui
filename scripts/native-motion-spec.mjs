@@ -189,6 +189,16 @@ export const PLATFORMS = {
  */
 export const KNOWN_GAPS = {
   SwiftUI: {
+    // #636 recovers the travelling selection indicator and wires it to the reader's setting
+    // (`@Environment(\.accessibilityReduceMotion)` → `animation(reduceMotion:stableGeometry:)`
+    // returns nil), so the behaviour is NOT missing. What is missing is evidence this check can
+    // read. The family's two directions must be proven by two distinctly NAMED tests, and the only
+    // CI-readable SwiftUI tests assert a direction-AGNOSTIC policy function, so no name can honestly
+    // carry "earlier → later" or "later → earlier". The real forward/reverse evidence is a mounted
+    // simulator recording measured by `Acceptance/Selection/measure-selection.py` — run by hand,
+    // per that directory's README, and invisible to this gate. Recorded as outstanding rather than
+    // registered, because registering it would claim direction coverage the suite does not have.
+    "KinetixSelectionIndicator.swift": "travelling selection indicator — wired to the reader's setting, but its forward/reverse evidence is a hand-run mounted recording (Acceptance/Selection), not a CI-readable named test pair; register it once two direction-named XCTests exist",
     "CircularProgress.swift": "determinate ring sweep — progress feedback family, not this slice",
     "Dialog.swift": "opacity fade only: positional movement is what Reduce Motion removes, and a fade is the accepted replacement, so there is nothing concrete to fix",
     "Input.swift": "focus ring transition — feedback family",
