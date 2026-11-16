@@ -169,7 +169,8 @@
     "check:blocks-runtime": "node scripts/blocks-runtime-browser.mjs --base http://127.0.0.1:3000",
     "check:release-note": "node scripts/release/check-release-note.mjs",
     "check:release-note-coverage": "node scripts/check-release-note-coverage.mjs",
-    "check:release-notes": "pnpm check:release-note && pnpm check:release-note-coverage"
+    "check:release-note-sync": "node scripts/check-release-note-sync.mjs",
+    "check:release-notes": "pnpm check:release-note && pnpm check:release-note-coverage && pnpm check:release-note-sync"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",
