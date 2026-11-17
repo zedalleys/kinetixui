@@ -32,6 +32,8 @@ on:
       - "scripts/switch-motion.mjs"
       - "scripts/tabs-indicator.mjs"
       - "scripts/react-overlays.mjs"
+      - "scripts/react-carousel-focus.mjs"
+      - "scripts/react-carousel-focus-negative-controls.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
       - "scripts/iot-monitoring.mjs"
@@ -80,6 +82,8 @@ on:
       - "scripts/switch-motion.mjs"
       - "scripts/tabs-indicator.mjs"
       - "scripts/react-overlays.mjs"
+      - "scripts/react-carousel-focus.mjs"
+      - "scripts/react-carousel-focus-negative-controls.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
       - "scripts/iot-monitoring.mjs"
@@ -240,6 +244,18 @@ jobs:
       # script, so a removed step fails generation rather than quietly dropping the claim.
       - name: React overlay interaction (focus entry and order, Escape and restore, hit-tested dismissal, clipping, reduced motion)
         run: pnpm check:react-overlays
+
+      # The Carousel's endpoint contract. A natively disabled control cannot hold focus, so the press that
+      # exhausted the track used to disable the button under the reader's focus and Chromium moved focus to
+      # BODY — the reader's place in the page, gone, at the end of every carousel. jsdom keeps focus on a
+      # disabled button, so the same assertion written as a unit test would pass against the defect; it has
+      # to be measured here. Both endpoints, LTR, RTL and reduced motion, plus the control that proves this
+      # gate would notice the defect coming back.
+      - name: React Carousel endpoints (focus kept, activation refused, Tab order, RTL, reduced motion)
+        run: pnpm check:react-carousel-focus
+
+      - name: React Carousel endpoints — negative controls
+        run: pnpm check:react-carousel-focus-negative-controls
 
       # Loops are the case the pass above cannot express: nothing to click, no destination to seek to.
       # This reads whether each loop is really running normally and really stopped under reduced motion
