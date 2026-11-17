@@ -131,6 +131,16 @@ const EnergyBreakdown = /* @__PURE__ */ React.forwardRef<HTMLDivElement, Breakdo
     const digits = Number.isFinite(precision) ? Math.min(20, Math.max(0, Math.trunc(precision))) : 1;
     const fmt = (n: number) => n.toFixed(digits);
     const unit = summary.unit;
+    /**
+     * A value and its unit as one left-to-right run. In an RTL page the unit's letters ("kWh", "kW",
+     * "MJ") otherwise reorder around the digits and "14.5 kWh" renders as "kWh 14.5". `fmt` stays the
+     * string form: the accessible summaries below are read, not laid out.
+     */
+    const amount = (n: number, u: string = unit) => (
+      <bdi dir="ltr">
+        {fmt(n)} {u}
+      </bdi>
+    );
     const high = summary.flags.includes("high-consumption");
     const usableDays = Array.isArray(days) ? days : [];
     const trend = usableDays.length > 0 ? energyTrend(usableDays) : null;
@@ -193,8 +203,8 @@ const EnergyBreakdown = /* @__PURE__ */ React.forwardRef<HTMLDivElement, Breakdo
             {usableDays.map((v, i) => (
               <tr key={i} className="border-b border-border/60 text-foreground">
                 <th scope="row" className="py-1 pe-3 text-start font-normal">{label(i)}</th>
-                <td className="py-1 pe-3 tabular-nums">{usable(v) ? `${fmt(v)} ${unit}` : "No data"}</td>
-                {comparison ? <td className="py-1 tabular-nums">{usable(other[i]) ? `${fmt(other[i] as number)} ${unit}` : "No data"}</td> : null}
+                <td className="py-1 pe-3 tabular-nums">{usable(v) ? amount(v) : "No data"}</td>
+                {comparison ? <td className="py-1 tabular-nums">{usable(other[i]) ? amount(other[i] as number) : "No data"}</td> : null}
               </tr>
             ))}
           </tbody>
@@ -233,8 +243,10 @@ const EnergyBreakdown = /* @__PURE__ */ React.forwardRef<HTMLDivElement, Breakdo
               <>
                 <span className="text-label-lg text-muted-foreground">{heroValue.label}</span>
                 <span data-today={today !== undefined ? "" : undefined} data-current={today === undefined ? "" : undefined} className="text-display-sm tabular-nums leading-none text-foreground">
-                  {heroValue.text}
-                  <span className="text-title-md text-muted-foreground"> {heroValue.unit}</span>
+                  <bdi dir="ltr">
+                    {heroValue.text}
+                    <span className="text-title-md text-muted-foreground"> {heroValue.unit}</span>
+                  </bdi>
                 </span>
               </>
             ) : null}
@@ -289,7 +301,7 @@ const EnergyBreakdown = /* @__PURE__ */ React.forwardRef<HTMLDivElement, Breakdo
                         top: `${(sy(lastMeasured.v) / SPARK_H) * 100}%`,
                       }}
                     >
-                      {fmt(lastMeasured.v)} {unit}
+                      {amount(lastMeasured.v)}
                     </span>
                   </>
                 ) : null}
@@ -316,8 +328,10 @@ const EnergyBreakdown = /* @__PURE__ */ React.forwardRef<HTMLDivElement, Breakdo
               <div data-current="" className="flex flex-col gap-1">
                 <dt className="text-label-lg text-muted-foreground">Now</dt>
                 <dd className={cn("m-0 tabular-nums leading-none text-foreground", hero === "current" ? "text-display-sm" : "text-headline-sm")}>
-                  {fmt(current.value)}
-                  <span className="text-title-md text-muted-foreground"> {current.unit}</span>
+                  <bdi dir="ltr">
+                    {fmt(current.value)}
+                    <span className="text-title-md text-muted-foreground"> {current.unit}</span>
+                  </bdi>
                 </dd>
               </div>
             ) : null}
@@ -325,8 +339,10 @@ const EnergyBreakdown = /* @__PURE__ */ React.forwardRef<HTMLDivElement, Breakdo
               <div data-today="" className="flex flex-col gap-1">
                 <dt className="text-label-lg text-muted-foreground">Today</dt>
                 <dd className="m-0 text-display-sm tabular-nums leading-none text-foreground">
-                  {fmt(today)}
-                  <span className="text-title-md text-muted-foreground"> {unit}</span>
+                  <bdi dir="ltr">
+                    {fmt(today)}
+                    <span className="text-title-md text-muted-foreground"> {unit}</span>
+                  </bdi>
                 </dd>
               </div>
             ) : null}
@@ -429,7 +445,7 @@ const EnergyBreakdown = /* @__PURE__ */ React.forwardRef<HTMLDivElement, Breakdo
               {baseline !== null ? (
                 <span className="inline-flex items-center gap-1.5">
                   <span className="h-0 w-4 border-t-2 border-dashed border-foreground/50" />
-                  {dailyBaselineLabel ?? "Typical day"} {fmt(baseline)} {unit}
+                  {dailyBaselineLabel ?? "Typical day"} {amount(baseline)}
                 </span>
               ) : null}
               <span className="inline-flex items-center gap-1.5">
@@ -457,7 +473,7 @@ const EnergyBreakdown = /* @__PURE__ */ React.forwardRef<HTMLDivElement, Breakdo
                   <span className="flex items-baseline justify-between gap-3 text-body-md text-foreground">
                     <span className="min-w-0 break-words">{item.label}</span>
                     <span className="shrink-0 tabular-nums">
-                      {Math.round(item.share * 100)}% <span className="text-label-md text-muted-foreground">· {fmt(item.value)} {unit}</span>
+                      {Math.round(item.share * 100)}% <span className="text-label-md text-muted-foreground">· {amount(item.value)}</span>
                     </span>
                   </span>
                   <span aria-hidden="true" className="block h-1.5 w-full overflow-hidden rounded-full bg-muted">

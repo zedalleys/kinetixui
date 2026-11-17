@@ -168,8 +168,11 @@ const DeviceSetpointControl = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ Re
           data-value-source={lead === confirmed ? "reported" : "requested"}
           className={cn("tabular-nums leading-none text-display-sm", lead === null ? "text-muted-foreground" : "text-foreground")}
             >
-          {lead === null ? "—" : lead}
-          {lead === null ? null : <span className="ms-0.5 align-top text-title-md text-muted-foreground">{unit}</span>}
+          {/* One left-to-right run: in an RTL page the unit's letters reorder around the digits otherwise. */}
+          <bdi dir="ltr">
+            {lead === null ? "—" : lead}
+            {lead === null ? null : <span className="ms-0.5 align-top text-title-md text-muted-foreground">{unit}</span>}
+          </bdi>
             </span>
             {marked ? (
           <span

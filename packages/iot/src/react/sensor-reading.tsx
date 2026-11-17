@@ -64,14 +64,19 @@ const SensorReading = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ React.forw
             !measured && resolved !== "good" && size !== "md" && "text-muted-foreground",
           )}
         >
-          {measured ? (
-            <>
-              {formatTelemetryValue({ value: value as number, quality }, { precision })}
-              <span className="text-title-md text-muted-foreground"> {unit}</span>
-            </>
-          ) : (
-            formatTelemetryValue(point, { precision, unknownLabel })
-          )}
+          {/* A measurement is a number and its unit as one left-to-right run: in an RTL page the unit's
+              letters and neutral characters ("°C", "kWh", "L/min") otherwise reorder around the digits,
+              so "23.4 °C" renders as "°C 23.4". The unknown label is isolated for the same reason. */}
+          <bdi dir="ltr">
+            {measured ? (
+              <>
+                {formatTelemetryValue({ value: value as number, quality }, { precision })}
+                <span className="text-title-md text-muted-foreground"> {unit}</span>
+              </>
+            ) : (
+              formatTelemetryValue(point, { precision, unknownLabel })
+            )}
+          </bdi>
         </span>
         {/* A qualifier only when there is something to qualify — "good" needs no annotation. */}
         {note ? <span className="text-label-md text-muted-foreground">{note}</span> : null}
