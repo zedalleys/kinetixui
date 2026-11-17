@@ -197,6 +197,9 @@ const SidebarTrigger = React.forwardRef<React.ElementRef<typeof Button>, React.C
     return (
       <Button
         ref={ref}
+        // A native button with no `type` is a submit button, and this one is inside whatever the consumer
+        // wrapped the shell in. Set before the spread, so a consumer who wants another type can still pass it.
+        type="button"
         variant="Ghost"
         size="icon"
         className={cn("size-7", className)}

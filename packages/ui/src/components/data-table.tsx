@@ -94,10 +94,13 @@ export function DataTable<TData extends RowData>({
         </Table>
       </div>
       <div className="flex items-center justify-end gap-2">
-        <Button variant="Outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+        {/* `type="button"` on both: `Button` renders a native button, which defaults to `type="submit"`,
+            so inside a form — a bulk-edit table with its rows as fields is the ordinary case — paging
+            submitted it. Measured at one submit per press. */}
+        <Button type="button" variant="Outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
           Previous
         </Button>
-        <Button variant="Outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+        <Button type="button" variant="Outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
           Next
         </Button>
       </div>
