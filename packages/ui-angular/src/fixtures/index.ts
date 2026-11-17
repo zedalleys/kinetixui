@@ -11,6 +11,7 @@ import { NavigationFixture } from './navigation';
 import { NotificationsFixture } from './notifications';
 import { OverlayCompositionsFixture } from './overlay-compositions';
 import { OverlaysFixture } from './overlays';
+import { ProgressFixture } from './progress';
 import { SelectionMotion } from './selection-motion';
 import { SelectionStates } from './selection';
 import { UsageExamples } from './usage';
@@ -35,6 +36,7 @@ export const FIXTURES: Record<string, Type<unknown>> = {
   notifications: NotificationsFixture,
   overlays: OverlaysFixture,
   'overlay-compositions': OverlayCompositionsFixture,
+  progress: ProgressFixture,
   selection: SelectionStates,
   'selection-motion': SelectionMotion,
   usage: UsageExamples,

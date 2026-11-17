@@ -50,6 +50,7 @@ on:
       - "packages/ui-angular/src/**"
       - "packages/ui-angular/browser/**"
       - "scripts/angular-browser.mjs"
+      - "scripts/angular-progress-forced-colors.mjs"
       - "scripts/angular-overlays.mjs"
       - "scripts/angular-collections.mjs"
       - "scripts/angular-layout.mjs"
@@ -98,6 +99,7 @@ on:
       - "packages/ui-angular/src/**"
       - "packages/ui-angular/browser/**"
       - "scripts/angular-browser.mjs"
+      - "scripts/angular-progress-forced-colors.mjs"
       - "scripts/angular-overlays.mjs"
       - "scripts/angular-collections.mjs"
       - "scripts/angular-layout.mjs"
@@ -337,6 +339,9 @@ jobs:
       # publishes Angular's browser evidence off this script, so it runs wherever the Angular sources change.
       - name: Angular in the browser (axe, keyboard, RTL, 200% text, reduced motion)
         run: pnpm check:angular-browser
+
+      - name: Angular Progress forced colors (rendered pixels, range and accessible value)
+        run: node scripts/angular-progress-forced-colors.mjs
 
       # The overlay family as a live Angular application: each overlay driven alone and nested (dialog →
       # popover → tooltip, dialog → dialog, sheet → popover) by keyboard and pointer — Escape one layer at a

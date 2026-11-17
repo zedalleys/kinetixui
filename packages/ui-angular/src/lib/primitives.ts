@@ -177,6 +177,17 @@ export class KxSeparator {
   selector: 'kx-progress',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<div class="kx-progress__bar" [style.inline-size.%]="percent()"></div>',
+  styles: `
+    @media (forced-colors: active) {
+      /* Keep the empty track visible without changing the bar geometry. */
+      :host {
+        background-color: Canvas;
+        outline: 1px solid CanvasText;
+        outline-offset: -1px;
+      }
+      .kx-progress__bar { background-color: CanvasText; }
+    }
+  `,
   host: {
     class: 'kx-progress',
     role: 'progressbar',
