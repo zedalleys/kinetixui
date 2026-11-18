@@ -395,7 +395,11 @@ export function motionErrors(overrides = {}, ledgerPlatforms = undefined) {
    *
    * So the identities are written down too, and the two must agree in both directions. */
   const register = JSON.parse(read("tokens/contracts/motion-consumers.json"));
-  const held = new Set(register.identities ?? []);
+  const held = new Set();
+  for (const id of register.identities ?? []) {
+    if (held.has(id)) fail(`contract: motion-consumers.json repeats consumer identity "${id}"`);
+    held.add(id);
+  }
   const actual = new Set(
     Object.entries(contract.roles ?? {}).flatMap(([name, role]) =>
       (role.consumers ?? []).map((c) => `${name}|${c.platform}|${c.file}`),

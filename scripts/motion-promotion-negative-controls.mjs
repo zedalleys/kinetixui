@@ -163,6 +163,9 @@ const identitiesPath = "tokens/contracts/motion-consumers.json";
 const indicator = "selection-indicator";
 const otherPlatform = "fabricated-platform";
 const identityCases = [
+  ["a consumer identity appears twice in the contract", ({ consumers }) => {
+    consumers.push({ ...consumers[0] });
+  }, "duplicates a consumer identity"],
   ["fabricated platform copies the React source and token references", ({ consumers }) => {
     consumers.push({ ...consumers.find((c) => c.platform === "react"), platform: otherPlatform });
   }, "uses an unknown implementation platform"],
