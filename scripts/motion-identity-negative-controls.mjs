@@ -13,19 +13,8 @@
  * `docs-column-negative-controls.mjs` there is no restore to get wrong and no build to pay for: the whole
  * script is a few milliseconds and safe to run over a dirty tree.
  *
- * Two of the controls assert something stronger than "the gate failed". A retyped platform and a dropped
- * consumer both leave the named file untouched, so every OTHER assertion in the gate still passes on the
- * mutated contract — they are asserted to produce register errors and nothing else. That is the proof the
- * register is load-bearing rather than redundant with a check that already existed.
- *
- * Those two run on a REACT identity, and that is deliberate. They used to run on SwiftUI's
- * `selection-control`, and the ledger cross-check (clause 6 of the gate) now notices a dropped or
- * retyped NATIVE consumer as well, which is the cross-check working: two independent guards see the
- * same loss. But it means a native identity can no longer isolate the register, and relaxing the
- * isolation assertion to tolerate the second error would have thrown away the thing these two prove.
- * React is where the register is genuinely alone — the ledger describes native platforms only and has
- * nothing to say about a web consumer — so that is where the isolating pair belongs. The native
- * identity still carries the three controls that do not claim isolation.
+ * Dropping one React consumer isolates the register because other React consumers still
+ * satisfy the role. A platform rename must now fail both the register and platform ownership checks.
  *
  *   node scripts/motion-identity-negative-controls.mjs
  */
@@ -49,7 +38,7 @@ const isRegisterError = (e) => e.includes("motion-consumers.json");
 const ROLE = "selection-control";
 const PLATFORM = "swiftui";
 
-/** The identity the two ISOLATING controls mutate. React, for the reason in the header: the ledger
+/** The identity the first two controls mutate. React, for the reason in the header: the ledger
  *  cross-check covers native platforms, so only a web consumer leaves the register on its own. Real,
  *  on a proven role with five platforms and three React consumers, so dropping one keeps that role
  *  legal under every other rule. `packages/ui/src/components/toggle.tsx` is also a `press-feedback`
@@ -70,7 +59,7 @@ const controls = [
   {
     name: "a retyped platform",
     expect: /the contract lists consumer "selection-state\|preact\|[^"]+", which motion-consumers\.json does not hold/,
-    only: true,
+    also: /uses an unknown implementation platform/,
     mutate: (contract) => {
       contract.roles[ISO_ROLE].consumers.find((c) => c.file === ISO_FILE).platform = "preact";
     },
@@ -114,7 +103,7 @@ if (!base.roles[ROLE]?.consumers?.some((c) => c.platform === PLATFORM)) {
 if (!base.roles[ISO_ROLE]?.consumers?.some((c) => c.platform === ISO_PLATFORM && c.file === ISO_FILE)) {
   console.error(
     `motion identity controls — the contract no longer carries ${ISO_ROLE}|${ISO_PLATFORM}|${ISO_FILE}, ` +
-      `so the two isolating controls would mutate nothing. Point them at an identity that exists.`,
+      `so the first two controls would mutate nothing. Point them at an identity that exists.`,
   );
   process.exit(1);
 }
@@ -139,6 +128,9 @@ for (const control of controls) {
   if (!caught.length) {
     failed += 1;
     console.error(`  ✗ ${control.name}: not caught. ${errors.length} error(s): ${errors.join(" | ") || "none"}`);
+  } else if (control.also && !strays.some((error) => control.also.test(error))) {
+    failed += 1;
+    console.error(`  ✗ ${control.name}: no platform ownership diagnostic`);
   } else if (control.only && strays.length) {
     failed += 1;
     console.error(
