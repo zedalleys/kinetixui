@@ -21,6 +21,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { isRepoFile } from "./motion-platform-identity.mjs";
+import { motionErrors } from "./check-motion-tokens.mjs";
 import { CONTRACT, REGISTER, promotionErrors } from "./check-motion-promotion.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -144,17 +146,101 @@ control(`${ANCHOR.pending} is promoted legitimately — decision approved in the
 });
 
 control(`an unrelated single-platform role is added`, "pass", ({ contract: c }) => {
-  c.roles["zzz-unrelated"] = { status: "observed", consumers: [{ platform: "react", file: "packages/ui/src/x.tsx", expects: [] }], evidence: [] };
+  c.roles["zzz-unrelated"] = { status: "observed", consumers: [c.roles[ANCHOR.pending].consumers.find((x) => x.platform === "react")], evidence: [] };
 });
 
 control(`an unrelated role is added with two platforms AND its decision`, "pass", ({ contract: c, register: r }) => {
   c.roles["zzz-unrelated-pair"] = {
     status: "observed",
-    consumers: [{ platform: "react", file: "a", expects: [] }, { platform: "angular", file: "b", expects: [] }],
+    consumers: c.roles[ANCHOR.pending].consumers.filter((x) => ["react", "angular"].includes(x.platform)),
     evidence: [],
   };
   r.decisions["zzz-unrelated-pair"] = { state: "pending", platforms: ["angular", "react"], review: "Newly triggered; nothing decided." };
 });
+
+// Keep the consumer and promotion registers in sync, so they cannot mask an ownership failure.
+const identitiesPath = "tokens/contracts/motion-consumers.json";
+const indicator = "selection-indicator";
+const otherPlatform = "fabricated-platform";
+const identityCases = [
+  ["fabricated platform copies the React source and token references", ({ consumers }) => {
+    consumers.push({ ...consumers.find((c) => c.platform === "react"), platform: otherPlatform });
+  }, "uses an unknown implementation platform"],
+  ["fabricated platform claims a separate file with copied React tokens", ({ consumers }, files) => {
+    const react = consumers.find((c) => c.platform === "react");
+    const file = "packages/ui-fabricated/src/indicator.tsx";
+    consumers.push({ ...react, platform: otherPlatform, file });
+    files[file] = readFileSync(join(ROOT, react.file), "utf8");
+  }, "uses an unknown implementation platform"],
+  ["Angular claims React's implementation alongside React", ({ consumers }) => {
+    consumers.push({ ...consumers.find((c) => c.platform === "react"), platform: "angular" });
+  }, "is outside that platform's implementation sources"],
+  ["known platform declares a missing source", ({ consumers }) => {
+    consumers.find((c) => c.platform === "react").file = "packages/ui/src/components/missing-indicator.tsx";
+  }, "implementation file does not exist"],
+  ["role cites an existing but unrelated React probe", (role) => {
+    role.evidence.push("scripts/switch-motion.mjs");
+  }, "is not registered for this role on a consuming platform"],
+  ["another platform claims React's test evidence", ({ consumers }, files) => {
+    const file = "packages/ui-angular/src/indicator-control.css";
+    const expects = ["var(--duration-base)", "var(--easing-emphasized)"];
+    files[file] = ".probe { transition: transform var(--duration-base) var(--easing-emphasized); }";
+    consumers.push({ platform: "angular", file, expects, evidence: ["scripts/motion.mjs"] });
+  }, "is not registered for this role on this platform"],
+  ["actual implementation is removed", ({ consumers }, files) => {
+    files[consumers.find((c) => c.platform === "react").file] = "";
+  }, "is missing declared implementation markers"],
+  ["real platform is renamed in both registrations", ({ consumers }) => {
+    consumers.find((c) => c.platform === "react").platform = otherPlatform;
+  }, "uses an unknown implementation platform"],
+];
+
+for (const [name, mutate, diagnostic] of identityCases) {
+  const c = contract();
+  const r = register();
+  const role = c.roles[indicator];
+  const files = {};
+  mutate(role, files);
+  const platforms = [...new Set(role.consumers.map((consumer) => consumer.platform))].sort();
+  if (platforms.length >= 2) {
+    r.decisions[indicator] = { state: "pending", platforms, review: "Synthetic ownership control." };
+  } else {
+    delete r.decisions[indicator];
+  }
+  const identities = load(identitiesPath);
+  identities.identities = [
+    ...identities.identities.filter((id) => !id.startsWith(`${indicator}|`)),
+    ...role.consumers.map(({ platform, file }) => `${indicator}|${platform}|${file}`),
+  ].sort();
+
+  const ownsFile = (file) => Object.hasOwn(files, file);
+  const errors = {
+    promotion: promotionErrors({
+      contract: c,
+      register: r,
+      isFile: (file) => ownsFile(file) || isRepoFile(ROOT, file),
+      readSource: (file) => ownsFile(file) ? files[file] : readFileSync(join(ROOT, file), "utf8"),
+    }).errors,
+    tokens: motionErrors({
+      [CONTRACT]: JSON.stringify(c),
+      [identitiesPath]: JSON.stringify(identities),
+      ...files,
+    }),
+  };
+  const matched = Object.values(errors).every((messages) =>
+    messages.some((message) => message.startsWith(`${indicator}:`) && message.includes(diagnostic)),
+  );
+  results.push({ name, expect: "fail", got: matched ? "fail" : "pass",
+    first: matched ? `Both gates: ${diagnostic}` : JSON.stringify(errors) });
+}
+
+const five = ["angular", "compose", "flutter", "react", "swiftui"];
+const base = contract();
+const registered = new Set(Object.values(base.roles).flatMap((role) => role.consumers.map((c) => c.platform)));
+const clean = five.every((platform) => registered.has(platform)) &&
+  promotionErrors().errors.length === 0 && motionErrors().length === 0;
+results.push({ name: "all five legitimate platforms pass both gates after the controls",
+  expect: "pass", got: clean ? "pass" : "fail", first: "" });
 
 // ─── report ───────────────────────────────────────────────────────────────────────────────────────
 
