@@ -24,7 +24,7 @@
  *   3. a decision that is `pending` requires the status to be `observed` or `proposed`
  *   4. the decision's `platforms` must be exactly the platforms motion.json registers, so dropping a
  *      consumer or adding one without revisiting the decision fails
- *   5. every `evidence` path a role names must exist
+ *   5. counted consumers and evidence must resolve to their registered implementations and probes
  *   6. a decision for a role motion.json does not have, or for a role only one platform consumes,
  *      fails as a contradiction rather than being ignored
  *
@@ -43,8 +43,10 @@
  * promotion is now a visible edit to a file whose only purpose is authorisation, carrying a named
  * authority and a checkable basis, in a diff a reviewer reads as what it is.
  */
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+
+import { consumerIdentityErrors, isRepoFile } from "./motion-platform-identity.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const read = (p) => JSON.parse(readFileSync(`${root}/${p}`, "utf8"));
@@ -55,29 +57,22 @@ const PROMOTED = "proven";
 const OPEN_STATUSES = new Set(["proposed", "observed"]);
 
 /**
- * The errors this gate finds, as a pure function of its two inputs, so the negative controls can
- * mutate a deep copy in memory instead of writing to the tree. `exists` is injected for the same
- * reason: the invalid-evidence control must not have to create and delete a file to be run.
+ * The errors this gate finds, with injectable contract and file inputs, so the negative controls can
+ * mutate a deep copy in memory instead of writing to the tree. The file inputs let controls model a missing or modified implementation.
  */
-export function promotionErrors({ contract = read(CONTRACT), register = read(REGISTER), exists = (p) => existsSync(`${root}/${p}`) } = {}) {
+export function promotionErrors({ contract = read(CONTRACT), register = read(REGISTER), isFile = (p) => isRepoFile(root, p), readSource = (p) => readFileSync(`${root}/${p}`, "utf8") } = {}) {
 const errors = [];
 const roles = contract.roles ?? {};
 const decisions = register.decisions ?? {};
 
 if (Object.keys(roles).length === 0) errors.push(`${CONTRACT} declares no roles, so this check would pass by having nothing to hold`);
 
-/** The distinct platforms registered against a role. The rule is about platforms: `selection-state`
- * lists three React files, and three files on one platform are not a second platform. */
-const platformsOf = (role) => [...new Set((role.consumers ?? []).map((c) => c.platform))].sort();
-
 const triggered = [];
 for (const [name, role] of Object.entries(roles)) {
-  const platforms = platformsOf(role);
+  const identity = consumerIdentityErrors(name, role, { isFile, read: readSource });
+  errors.push(...identity.errors);
+  const { platforms } = identity;
   const status = role.status;
-
-  for (const path of role.evidence ?? []) {
-    if (!exists(path)) errors.push(`${name}: evidence "${path}" does not exist — a role cannot cite a file that is not there`);
-  }
 
   if (platforms.length >= 2) triggered.push(name);
   const decision = decisions[name];
@@ -108,9 +103,10 @@ for (const [name, role] of Object.entries(roles)) {
     continue;
   }
 
-  if (!Array.isArray(recorded) || recorded.join("\u0000") !== platforms.join("\u0000")) {
+  if (!Array.isArray(recorded) || recorded.length !== platforms.length ||
+      platforms.some((platform, index) => recorded[index] !== platform)) {
     errors.push(
-      `${name}: the decision records platforms [${(recorded ?? []).join(", ")}] but ${CONTRACT} registers [${platforms.join(", ")}].\n` +
+      `${name}: the decision records platforms [${Array.isArray(recorded) ? recorded.join(", ") : String(recorded)}] but ${CONTRACT} registers [${platforms.join(", ")}].\n` +
         `      A consumer was added or dropped without revisiting the decision. If the change is intended, update the\n` +
         `      decision in the same commit so the diff shows that the promotion question was looked at again.`,
     );

@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, claude/m512-motion-promotion-register]
 
 permissions:
   contents: read
