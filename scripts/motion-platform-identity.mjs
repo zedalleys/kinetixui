@@ -80,7 +80,7 @@ export function consumerIdentityErrors(name, role, { isFile, read }) {
   }
   for (const path of role.evidence ?? []) {
     if (!isFile(path)) {
-      errors.push(`${name}: evidence "${path}" does not exist`);
+      errors.push(`role "${name}" cites evidence ${path}, which does not exist`);
     } else if (![...validPlatforms].some((platform) => evidence.get(path)?.[platform]?.includes(name))) {
       errors.push(`${name}: evidence "${path}" is not registered for this role on a consuming platform`);
     }
