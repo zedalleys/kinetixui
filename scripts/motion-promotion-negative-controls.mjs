@@ -166,6 +166,20 @@ const identityCases = [
   ["a consumer identity appears twice in the contract", ({ consumers }) => {
     consumers.push({ ...consumers[0] });
   }, "duplicates a consumer identity"],
+  ["a duplicate changes the evidence claimed for the same implementation", ({ consumers }) => {
+    consumers.push({ ...consumers[0], evidence: ["scripts/motion.mjs"] });
+  }, "duplicates a consumer identity"],
+  ["a duplicate makes a conflicting marker claim for the same source", ({ consumers }) => {
+    consumers.push({ ...consumers[0], expects: ["nonexistent-marker"] });
+  }, "duplicates a consumer identity"],
+  ["a consumer is repeated under a platform case alias", ({ consumers }) => {
+    consumers.push({ ...consumers[0], platform: "React" });
+  }, "uses an unknown implementation platform"],
+  ["a consumer is repeated under a source path alias", ({ consumers }) => {
+    const original = consumers[0];
+    const file = original.file.replace("/components/", "/./components/");
+    consumers.push({ ...original, file });
+  }, "is outside that platform's implementation sources"],
   ["fabricated platform copies the React source and token references", ({ consumers }) => {
     consumers.push({ ...consumers.find((c) => c.platform === "react"), platform: otherPlatform });
   }, "uses an unknown implementation platform"],
