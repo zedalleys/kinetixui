@@ -50,8 +50,15 @@ export function isRepoFile(root, path) {
 export function consumerIdentityErrors(name, role, { isFile, read }) {
   const errors = [];
   const validPlatforms = new Set();
+  const seen = new Set();
   for (const { platform, file, expects, evidence: claimed } of role.consumers ?? []) {
     const label = `${name}: ${platform} consumer "${file}"`;
+    const identity = JSON.stringify([platform, file]);
+    if (seen.has(identity)) {
+      errors.push(`${label} duplicates a consumer identity`);
+      continue;
+    }
+    seen.add(identity);
     if (!sources.has(platform)) {
       errors.push(`${label} uses an unknown implementation platform`);
       continue;
