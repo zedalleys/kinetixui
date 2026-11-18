@@ -49,6 +49,13 @@ const ISO_FILE = "packages/ui/src/components/toggle.tsx";
 
 const controls = [
   {
+    name: "a duplicate register line",
+    expect: /motion-consumers\.json repeats consumer identity/,
+    mutateRegister: (register) => {
+      register.identities.push(register.identities[0]);
+    },
+  },
+  {
     name: "a dropped consumer",
     expect: /motion-consumers\.json holds "selection-state\|react\|packages\/ui\/src\/components\/toggle\.tsx", which the contract no longer lists/,
     only: true,
