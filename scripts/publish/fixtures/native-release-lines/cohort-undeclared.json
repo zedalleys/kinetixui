@@ -1,0 +1,6 @@
+{
+  "$comment": "Fixture — a number is authorized but the cohort it belongs to is not declared, so the number has no agreed meaning. Must refuse.",
+  "lines": {
+    "ui-compose": { "coordinate": "com.kinetixui:ui-compose", "channel": "Maven Central", "cohort": null, "published": [], "authorizedNext": "0.1.0" }
+  }
+}

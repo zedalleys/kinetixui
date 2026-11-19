@@ -1,0 +1,15 @@
+{
+  "$comment": "Fixture \u2014 the publication history contains the same version twice. A version is published once, so a repeat means a hand-merged or corrupted file. Must refuse: every entry is part of the history the already-published check reads, and one this gate cannot read makes the whole history unknown, which authorizes nothing. Measured before per-entry validation: this exact file authorized 0.1.0 and exited 0.",
+  "lines": {
+    "ui-compose": {
+      "coordinate": "com.kinetixui:ui-compose",
+      "channel": "Maven Central",
+      "cohort": "own",
+      "published": [
+        "0.0.9",
+        "0.0.9"
+      ],
+      "authorizedNext": "0.1.0"
+    }
+  }
+}

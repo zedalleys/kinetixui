@@ -31,7 +31,8 @@
  * Every check is named, and the name is what the negative control uses. A check that stops being
  * true is either a defect to fix or a decision to record — not a line to delete here.
  */
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
 
@@ -57,9 +58,9 @@ const NEGATIVES = {
   "swiftui-publish-if-negated": { file: ".github/workflows/publish-swiftui.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          MIRROR:", to: "        if: ${{ inputs.dry_run != true }}\n        env:\n          MIRROR:", breaks: "WF-PUBLISH-STEP-CONDITION" },
   "swiftui-condition-moved-into-the-run-block": { file: ".github/workflows/publish-swiftui.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          MIRROR:", to: "        env:\n          MIRROR:", also: { file: ".github/workflows/publish-swiftui.yml", from: '          if [ "${DRY_RUN:-}" != "false" ]; then\n            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — nothing pushed."', to: '          # if: ${{ inputs.dry_run == false }}\n          if [ "${DRY_RUN:-}" != "false" ]; then\n            echo "::notice::Not a live publish (dry_run=${DRY_RUN:-<unset>}) — nothing pushed."' }, breaks: "WF-PUBLISH-STEP-CONDITION" },
   "compose-publish-if-removed": { file: ".github/workflows/publish-compose.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION_NAME:", to: "        env:\n          VERSION_NAME:", breaks: "WF-PUBLISH-STEP-CONDITION" },
-  "compose-publish-if-negated": { file: ".github/workflows/publish-compose.yml", from: "if: ${{ inputs.dry_run == false }}", to: "if: ${{ inputs.dry_run != true }}", breaks: "WF-PUBLISH-STEP-CONDITION" },
+  "compose-publish-if-negated": { file: ".github/workflows/publish-compose.yml", from: "if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION_NAME:", to: "if: ${{ inputs.dry_run != true }}\n        env:\n          VERSION_NAME:", breaks: "WF-PUBLISH-STEP-CONDITION" },
   "flutter-publish-if-removed": { file: ".github/workflows/publish-flutter.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          PUB_DEV_CREDENTIALS:", to: "        env:\n          PUB_DEV_CREDENTIALS:", breaks: "WF-PUBLISH-STEP-CONDITION" },
-  "flutter-publish-if-negated": { file: ".github/workflows/publish-flutter.yml", from: "if: ${{ inputs.dry_run == false }}", to: "if: ${{ inputs.dry_run != true }}", breaks: "WF-PUBLISH-STEP-CONDITION" },
+  "flutter-publish-if-negated": { file: ".github/workflows/publish-flutter.yml", from: "if: ${{ inputs.dry_run == false }}\n        env:\n          PUB_DEV_CREDENTIALS:", to: "if: ${{ inputs.dry_run != true }}\n        env:\n          PUB_DEV_CREDENTIALS:", breaks: "WF-PUBLISH-STEP-CONDITION" },
   "swiftui-publish-step-renamed": { file: ".github/workflows/publish-swiftui.yml", from: "      - name: Push to mirror", to: "      - name: Push to the mirror", breaks: "WF-PUBLISH-STEP-CONDITION" },
 
   // A side effect that moves out of the one gated step is a publication nothing decides.
@@ -117,6 +118,84 @@ const NEGATIVES = {
   "swiftui-publish-always-live": { file: ".github/workflows/publish-swiftui.yml", from: /^      dry_run:\n(?:        .*\n)+/m, to: "", breaks: "WF-DRY-RUN-DEFAULT" },
   "compose-publish-unserialised": { file: ".github/workflows/publish-compose.yml", from: /^concurrency:\n(?:  .*\n)+/m, to: "", breaks: "WF-CONCURRENCY" },
   "flutter-publish-skips-tests": { file: ".github/workflows/publish-flutter.yml", from: "flutter test", to: "flutter --version" , breaks: "WF-TESTS-BEFORE-PUBLISH" },
+  // Version authorization and the version binding. The first of these is the measured defect:
+  // with a literal here the whole preflight stayed green while the dry run rehearsed one number
+  // and the upload would have carried another, permanently.
+  "compose-publish-step-version-is-a-literal": { file: ".github/workflows/publish-compose.yml", from: "        if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION_NAME: ${{ inputs.version }}", to: "        if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION_NAME: 9.9.9", breaks: "VI-COMPOSE-VERSION-BOUND-TO-INPUT" },
+  "compose-rehearsal-version-is-a-literal": { file: ".github/workflows/publish-compose.yml", from: "      - name: Dry run — build + publishToMavenLocal (unsigned)\n        env:\n          VERSION_NAME: ${{ inputs.version }}", to: "      - name: Dry run — build + publishToMavenLocal (unsigned)\n        env:\n          VERSION_NAME: 9.9.9", breaks: "VI-COMPOSE-VERSION-BOUND-TO-INPUT" },
+  "compose-authorization-removed": { file: ".github/workflows/publish-compose.yml", from: /^      - name: Authorize the version\n(?:        .*\n)+/m, to: "", breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-ungated": { file: ".github/workflows/publish-flutter.yml", from: "      - name: Authorize the version\n        if: ${{ inputs.dry_run == false }}\n", to: "      - name: Authorize the version\n", breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-gated-another-way": { file: ".github/workflows/publish-flutter.yml", from: "        if: ${{ inputs.dry_run == false }}\n        working-directory: .\n        env:\n          VERSION: ${{ inputs.version }}", to: "        if: ${{ inputs.dry_run != true }}\n        working-directory: .\n        env:\n          VERSION: ${{ inputs.version }}", breaks: "VI-VERSION-AUTHORIZED" },
+  // The two spellings review found on the commit that added this gate. Either one authorizes a
+  // version the publication does not carry, and both left the whole preflight green.
+  "compose-authorization-version-is-a-literal-env": { file: ".github/workflows/publish-compose.yml", from: "        env:\n          VERSION: ${{ inputs.version }}\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version=\"$VERSION\" --line=ui-compose", to: "        env:\n          VERSION: 0.1.0\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version=\"$VERSION\" --line=ui-compose", breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-version-is-a-literal-argument": { file: ".github/workflows/publish-flutter.yml", from: '--authorize-version="$VERSION" --line=ui-flutter', to: "--authorize-version=0.1.0 --line=ui-flutter", breaks: "VI-VERSION-AUTHORIZED" },
+  // The test seam reachable from the publish path. Measured: with this in place the step authorized
+  // 0.1.0 out of a committed fixture while the canonical declaration authorized nothing, and every
+  // other check in the block still passed.
+  "compose-authorization-reads-a-fixture": { file: ".github/workflows/publish-compose.yml", from: '--authorize-version="$VERSION" --line=ui-compose', to: '--authorize-version="$VERSION" --line=ui-compose --lines-file=scripts/publish/fixtures/native-release-lines/authorized.json', breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-authorization-reads-a-fixture": { file: ".github/workflows/publish-swiftui.yml", from: '--authorize-version="$VERSION" --line=ui-swiftui', to: '--authorize-version="$VERSION" --line=ui-swiftui --lines-file=/tmp/anything.json', breaks: "VI-VERSION-AUTHORIZED" },
+  // The mode-conflict bypass, by position in a publish workflow and in the script itself. Both
+  // layers matter: the first covers the three workflows, the second covers every caller.
+  "compose-authorization-also-asks-for-the-shape": { file: ".github/workflows/publish-compose.yml", from: '--authorize-version="$VERSION" --line=ui-compose', to: '--authorize-version="$VERSION" --line=ui-compose --version="$VERSION"', breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-also-asks-for-the-shape": { file: ".github/workflows/publish-flutter.yml", from: '--authorize-version="$VERSION" --line=ui-flutter', to: '--version="$VERSION" --authorize-version="$VERSION" --line=ui-flutter', breaks: "VI-VERSION-AUTHORIZED" },
+  "preflight-allows-two-modes-at-once": { file: "scripts/check-native-publish-preflight.mjs", from: "if (requestedModes.length > 1) {\n  console.error(", to: "if (false) {\n  console.error(", breaks: "VI-PREFLIGHT-MODES-ARE-EXCLUSIVE" },
+  // A diagnostic is not a refusal. Each of these keeps the guard's condition and its message and
+  // removes only the exit, which is exactly what a source-text assertion cannot see.
+  "preflight-mode-guard-reports-without-exiting": { file: "scripts/check-native-publish-preflight.mjs", from: "  );\n  process.exit(1);\n}\n\nif (process.argv.includes(\"--list-negatives\"))", to: "  );\n}\n\nif (process.argv.includes(\"--list-negatives\"))", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "preflight-allows-a-repeated-selector": { file: "scripts/check-native-publish-preflight.mjs", from: "if (repeatedFlags.length > 0) {\n  console.error(", to: "if (false) {\n  console.error(", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  // The mutation that made this check fail open once: the repeated-selector guard keeps its
+  // condition and its message and loses only the exit. Aimed at a copy one directory too deep, the
+  // fallthrough then failed on ENOENT and the predicate read a nonzero exit plus the guard's own
+  // wording as enforcement. Registered separately from the mode guard's because the two guards fall
+  // through to different places, and that is the whole difficulty.
+  // The two authorization probes depend on the accepting fixture really authorizing something. If it
+  // stops, their fallthrough fails there instead of passing and they quietly stop being evidence.
+  // The malformed-history bypass, found by review at 951692f8 and measured there: with the type
+  // guard removed the probe's own invocation exits 0 and authorizes a republication. The second
+  // control keeps the fixture carrying the defect — repaired to a well-formed array it would refuse
+  // for the ordinary mismatch reason, and the probe would stop proving anything about the type.
+  "preflight-accepts-a-malformed-publication-history": { file: "scripts/check-native-publish-preflight.mjs", from: "if (!Array.isArray(line.published)) {\n    refuse(", to: "if (false) {\n    refuse(", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "malformed-history-fixture-is-repaired": { file: "scripts/publish/fixtures/native-release-lines/malformed-history.json", from: '"published": "0.1.0"', to: '"published": ["9.9.9"]', breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  // The undeclared-cohort refusal had no control of its own: with the guard removed the full preflight
+  // still exited 0 and the fixture below authorized a version whose cohort nothing declares — measured,
+  // and caught only by ci.yml's separate expect_refusal step. The second control keeps the fixture
+  // carrying the defect; repaired to "own" it would authorize, and the probe would prove nothing.
+  "preflight-accepts-an-undeclared-cohort": { file: "scripts/check-native-publish-preflight.mjs", from: 'if (line.cohort !== "own" && line.cohort !== "core") {\n    refuse(', to: "if (false) {\n    refuse(", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "undeclared-cohort-fixture-is-repaired": { file: "scripts/publish/fixtures/native-release-lines/cohort-undeclared.json", from: '"cohort": null', to: '"cohort": "own"', breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "preflight-accepts-a-malformed-history-entry": { file: "scripts/check-native-publish-preflight.mjs", from: 'line.published.forEach((entry, index) => {\n    if (typeof entry !== "string" || !SEMVER.test(entry)) {', to: "line.published.forEach((entry, index) => {\n    if (false) {", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "history-entry-checked-by-regex-alone": { file: "scripts/check-native-publish-preflight.mjs", from: 'line.published.forEach((entry, index) => {\n    if (typeof entry !== "string" || !SEMVER.test(entry)) {', to: "line.published.forEach((entry, index) => {\n    if (!SEMVER.test(entry)) {", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "preflight-accepts-a-duplicate-history-entry": { file: "scripts/check-native-publish-preflight.mjs", from: "}\n    if (seenHistory.has(entry)) {", to: "}\n    if (false) {", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "history-null-entry-fixture-is-repaired": { file: "scripts/publish/fixtures/native-release-lines/history-null-entry.json", from: '"published": [\n        null\n      ]', to: '"published": []', breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "accepting-fixture-authorizes-nothing": { file: "scripts/publish/fixtures/native-release-lines/authorized.json", from: '"authorizedNext": "0.1.0"', to: '"authorizedNext": null', breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  "preflight-repeated-selector-guard-reports-without-exiting": { file: "scripts/check-native-publish-preflight.mjs", from: "  );\n  process.exit(1);\n}\n\n/*\n * EXACTLY ONE MODE PER RUN", to: "  );\n}\n\n/*\n * EXACTLY ONE MODE PER RUN", breaks: "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO" },
+  // The same two bypasses by position in a publish workflow, one per selector.
+  "compose-authorization-repeats-the-version-selector": { file: ".github/workflows/publish-compose.yml", from: '--authorize-version="$VERSION" --line=ui-compose', to: '--authorize-version=0.1.0 --authorize-version="$VERSION" --line=ui-compose', breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-authorization-repeats-the-line-selector": { file: ".github/workflows/publish-swiftui.yml", from: '--authorize-version="$VERSION" --line=ui-swiftui', to: '--authorize-version="$VERSION" --line=ui-swiftui --line=ui-compose', breaks: "VI-VERSION-AUTHORIZED" },
+  // A gate that does not stop the job is not a gate, and a gate that runs after the upload decides
+  // nothing. Both measured as passing before these clauses existed.
+  // The same property lost a third way: inside `run:`. Measured green before the command was pinned.
+  "compose-authorization-swallows-its-failure": { file: ".github/workflows/publish-compose.yml", from: '--authorize-version="$VERSION" --line=ui-compose', to: '--authorize-version="$VERSION" --line=ui-compose || true', breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-authorization-is-wrapped-in-a-conditional": { file: ".github/workflows/publish-swiftui.yml", from: 'run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-swiftui', to: 'run: |\n          if node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-swiftui; then echo authorized; fi', breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-disables-errexit-first": { file: ".github/workflows/publish-flutter.yml", from: 'run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-flutter', to: 'run: |\n          set +e\n          node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-flutter', breaks: "VI-VERSION-AUTHORIZED" },
+  "compose-authorization-continues-on-error": { file: ".github/workflows/publish-compose.yml", from: "      - name: Authorize the version\n", to: "      - name: Authorize the version\n        continue-on-error: true\n", breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-continues-on-error": { file: ".github/workflows/publish-flutter.yml", from: "      - name: Authorize the version\n", to: "      - name: Authorize the version\n        continue-on-error: 'true'\n", breaks: "VI-VERSION-AUTHORIZED" },
+  // A publication delegated somewhere this file does not read. Both measured passing on 11d9c9b,
+  // with the publishing step's name, condition and env all kept: the token sweep found nothing, so
+  // the ordering check had nothing to order.
+  "compose-publication-delegated-to-a-local-action": { file: ".github/workflows/publish-compose.yml", from: /        run: \|\n          if \[ -z "\$MAVEN_CENTRAL_USERNAME"[\s\S]*?Deployments\."\n/, to: "        uses: ./.github/actions/publish-compose\n", breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-publication-delegated-to-a-script-file": { file: ".github/workflows/publish-flutter.yml", from: "          flutter pub publish --force", to: "          bash ./publish.sh", breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-publishing-step-renamed-away-from-the-contract": { file: ".github/workflows/publish-swiftui.yml", from: "      - name: Push to mirror\n", to: "      - name: Push to the mirror repository\n", breaks: "VI-VERSION-AUTHORIZED" },
+  "compose-publishes-before-it-authorizes": { file: ".github/workflows/publish-compose.yml", from: /^      - name: Authorize the version\n(?:        .*\n)+\n/m, to: "", also: { file: ".github/workflows/publish-compose.yml", from: '          echo "::notice::Uploaded. Release the deployment at https://central.sonatype.com -> Deployments."', to: '          echo "::notice::Uploaded. Release the deployment at https://central.sonatype.com -> Deployments."\n\n      - name: Authorize the version\n        if: ${{ inputs.dry_run == false }}\n        working-directory: .\n        env:\n          VERSION: ${{ inputs.version }}\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-compose' }, breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-authorization-moved-into-a-later-job": { file: ".github/workflows/publish-swiftui.yml", from: /^      - name: Authorize the version\n(?:        .*\n)+\n/m, to: "", also: { file: ".github/workflows/publish-swiftui.yml", from: '          echo "Published. Consumers: .package(url: \\"<mirror-url>\\", from: \\"$VERSION\\")"', to: '          echo "Published. Consumers: .package(url: \\"<mirror-url>\\", from: \\"$VERSION\\")"\n\n  authorize_afterwards:\n    needs: publish\n    runs-on: ubuntu-latest\n    steps:\n      - name: Authorize the version\n        if: ${{ inputs.dry_run == false }}\n        env:\n          VERSION: ${{ inputs.version }}\n        run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-swiftui' }, breaks: "VI-VERSION-AUTHORIZED" },
+  // The interpreter and the directory, which decide what the pinned command means. All three
+  // measured passing on 2c61302 with the pinned `run:` string byte-identical. The flutter one is
+  // inherited: the job's own `defaults.run` carries only a working directory, so the shell comes
+  // from the workflow, which a check reading the step alone would call absent.
+  "compose-authorization-runs-under-a-shell-that-masks-refusal": { file: ".github/workflows/publish-compose.yml", from: "      - name: Authorize the version\n", to: "      - name: Authorize the version\n        shell: bash -c 'bash {0}; exit 0'\n", breaks: "VI-VERSION-AUTHORIZED" },
+  "flutter-authorization-inherits-a-masking-shell-from-workflow-defaults": { file: ".github/workflows/publish-flutter.yml", from: "\njobs:\n", to: "\ndefaults:\n  run:\n    shell: bash -c 'bash {0}; exit 0'\n\njobs:\n", breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-authorization-runs-in-another-directory": { file: ".github/workflows/publish-swiftui.yml", from: "      - name: Authorize the version\n", to: "      - name: Authorize the version\n        working-directory: packages/ui-swiftui\n", breaks: "VI-VERSION-AUTHORIZED" },
+  "swiftui-authorization-reads-another-line": { file: ".github/workflows/publish-swiftui.yml", from: "--line=ui-swiftui", to: "--line=ui-compose", breaks: "VI-VERSION-AUTHORIZED" },
   "swiftui-publish-unvalidated-version": { file: ".github/workflows/publish-swiftui.yml", from: "--version=", to: "--ignored-version=", breaks: "WF-VERSION-VALIDATED" },
   // A vendored copy drifting from its canonical source, which is what a publish from an
   // arbitrary ref can ship and ci.yml's pull-request-only drift step would never see.
@@ -148,10 +227,81 @@ const NEGATIVES = {
   "compose-integrity-gate-removed": { file: ".github/workflows/native-compose.yml", from: "VERSION_NAME is not set", to: "the build failed", breaks: "VI-COMPOSE-INTEGRITY-GATE" },
   "swiftui-tag-not-from-input": { file: ".github/workflows/publish-swiftui.yml", from: 'git push "$MIRROR" "$SHA:refs/tags/$VERSION"', to: 'git push "$MIRROR" "$SHA:refs/tags/$(date +%Y.%m.%d)"', breaks: "VI-SWIFTUI-TAG-FROM-VALIDATED-INPUT" },
   "flutter-version-not-asserted": { file: "scripts/publish/stage-flutter-package.mjs", from: "if (!lines.includes(`version: ${version}`)) {", to: "if (false) {", breaks: "VI-FLUTTER-VERSION-ASSERTED" },
-  "flutter-changelog-ungated": { file: "scripts/publish/stage-flutter-package.mjs", from: "does not mention ${version}", to: "has no entry", breaks: "VI-FLUTTER-CHANGELOG-GATES-VERSION" },
+  // The changelog gate, three ways to loosen it. It was `changelog.includes(version)` until
+  // 2026-11-09 and that substring test accepted the version appearing in a sentence, so each of
+  // these is a route back to a permanent publish whose changelog does not document it.
+  "flutter-changelog-matches-a-substring": { file: "scripts/publish/stage-flutter-package.mjs", from: "String.raw`^${version", to: "String.raw`${version", breaks: "VI-FLUTTER-CHANGELOG-GATES-VERSION" },
+  "flutter-changelog-accepts-any-boundary": { file: "scripts/publish/stage-flutter-package.mjs", from: "(?=\\s|$)`", to: "`", breaks: "VI-FLUTTER-CHANGELOG-GATES-VERSION" },
+  // Three ways to stop asking Markdown what a heading is. Every hand-written answer tried here was
+  // defeated in review, and always in the fail-OPEN direction.
+  "flutter-changelog-does-not-parse-markdown": { file: "scripts/publish/stage-flutter-package.mjs", from: "fromMarkdown(changelogSource).children.some(", to: "changelogLines.map((line) => ({ type: \"heading\", depth: 2, children: [{ type: \"text\", value: line }], position: { start: { line: 1 } } })).some(", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
+  "flutter-changelog-accepts-any-heading-depth": { file: "scripts/publish/stage-flutter-package.mjs", from: "node.depth === 2 &&", to: "node.depth >= 2 &&", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
+  "flutter-changelog-accepts-a-setext-heading": { file: "scripts/publish/stage-flutter-package.mjs", from: '/^ {0,3}##[ \\t]/u.test(changelogLines[node.position.start.line - 1] ?? "") &&', to: "", breaks: "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS" },
+  "flutter-staging-run-without-its-dependencies": { file: ".github/workflows/native-flutter.yml", from: "      - name: Install (the staging script's parser)\n        run: pnpm install --frozen-lockfile\n", to: "", breaks: "VI-FLUTTER-STAGING-HAS-ITS-DEPENDENCIES" },
+  // Presence is not the property; order is. This moves the install to a step AFTER the one that
+  // runs the script, which is an install the script never sees because it died at the import.
+  "flutter-staging-installs-after-the-script-runs": { file: ".github/workflows/native-flutter.yml", from: "      - name: Install (the staging script's parser)\n        run: pnpm install --frozen-lockfile\n\n", to: "", also: { file: ".github/workflows/native-flutter.yml", from: "      - name: Staging refuses a version with no release heading in the changelog", to: "      - name: Install (after the script has already run)\n        run: pnpm install --frozen-lockfile\n\n      - name: Staging refuses a version with no release heading in the changelog" }, breaks: "VI-FLUTTER-STAGING-HAS-ITS-DEPENDENCIES" },
+  "flutter-changelog-controls-not-run": { file: ".github/workflows/ci.yml", from: "node scripts/publish/flutter-changelog-heading-controls.mjs", to: "echo skipped", breaks: "VI-FLUTTER-CHANGELOG-CONTROLS-RUN" },
+  // The one that actually bit: the refusal's wording changed and native-flutter.yml's control still
+  // grepped the old sentence, so it failed with "proves nothing" after the push rather than before.
+  "flutter-changelog-refusal-reworded": { file: "scripts/publish/stage-flutter-package.mjs", from: "has no \\`## ${version}\\` release heading", to: "has no entry for ${version}", breaks: "VI-FLUTTER-CHANGELOG-CONTROL-ASSERTS-THE-REFUSAL" },
+  "flutter-changelog-control-probes-an-unstaged-version": { file: ".github/workflows/native-flutter.yml", from: "has no .## 9.9.9-unlogged. release heading", to: "has no .## 9.9.9-never-staged. release heading", breaks: "VI-FLUTTER-CHANGELOG-CONTROL-ASSERTS-THE-REFUSAL" },
   "swiftui-version-interpolated": { file: ".github/workflows/publish-swiftui.yml", from: '--version="$VERSION"', to: "--version='${{ inputs.version }}'", breaks: "WF-VERSION-NOT-INTERPOLATED" },
   "swiftui-version-interpolated-in-block": { file: ".github/workflows/publish-swiftui.yml", from: "          SHA=$(git rev-parse swiftui-dist)", to: "          SHA=$(git rev-parse swiftui-dist) # ${{ inputs.version }}", breaks: "WF-VERSION-NOT-INTERPOLATED" },
 };
+
+/*
+ * ONE VALUE PER SELECTOR, COUNTED BEFORE ANY OF THEM IS READ.
+ *
+ * Every selector below is read with `process.argv.find(...)`, which takes the FIRST occurrence and
+ * ignores the rest — and that was a bypass, found in review. Once a line legitimately authorizes a
+ * version, `--authorize-version=0.1.0 --authorize-version="$VERSION" --line=ui-compose` satisfies
+ * every structural check in VI-VERSION-AUTHORIZED, because the second argument really is bound to
+ * the dispatch input; the parser then authorizes 0.1.0 and exits 0 for a 9.9.9 dispatch. Repeating
+ * `--line=` does the same to the other half: `--line=ui-compose --line=ui-swiftui` satisfies a
+ * check looking for the SwiftUI line while reading Compose's authorization.
+ *
+ * The mode guard below does not cover this — it counts distinct modes, not occurrences. So the
+ * count is the gate: a selector that carries one value may be passed at most once, and anything
+ * else is an error rather than an argument discarded in silence.
+ */
+const SINGLE_VALUE_FLAGS = ["--version=", "--authorize-version=", "--line=", "--lines-file=", "--negative="];
+const repeatedFlags = SINGLE_VALUE_FLAGS.filter(
+  (flag) => process.argv.filter((arg) => arg.startsWith(flag)).length > 1,
+);
+if (repeatedFlags.length > 0) {
+  console.error(
+    `::error::${repeatedFlags.join(" and ")} was passed more than once. Each of these selectors carries a single value and is read with the first matching argument, so a later occurrence is discarded in silence — which is how a second, correctly bound argument comes to satisfy a structural check while the first one decides the outcome.`,
+  );
+  process.exit(1);
+}
+
+/*
+ * EXACTLY ONE MODE PER RUN, DECIDED BEFORE ANY OF THEM RUNS.
+ *
+ * Each mode below exits early, so whichever is handled first in this file wins — and that was a
+ * bypass of the authorization gate, found in review. `--authorize-version=9.9.9 --line=ui-compose
+ * --version=9.9.9` exited 0 while the canonical declaration authorized nothing: the `--version=`
+ * branch comes first, is a shape check, and exits successfully before the authorization is ever
+ * reached. Its log line even reads "is a publishable version", which in a publish job's output
+ * would pass for authorization at a glance.
+ *
+ * VI-VERSION-AUTHORIZED also rejects `--version=` on an authorizing step by position, but that
+ * only covers the three publish workflows. This covers every caller, including a human at a
+ * terminal, and it is the layer that cannot be routed around by adding a fourth workflow.
+ */
+const MODES = ["--list-negatives", "--version=", "--authorize-version=", "--negative="];
+const requestedModes = MODES.filter((mode) =>
+  mode.endsWith("=")
+    ? process.argv.some((arg) => arg.startsWith(mode))
+    : process.argv.includes(mode),
+);
+if (requestedModes.length > 1) {
+  console.error(
+    `::error::${requestedModes.join(" and ")} were passed together, and each of them ends the run on its own. One mode per invocation: whichever is handled first would decide the exit code, and a shape check standing in for an authorization is how a publish gets approved by the wrong question.`,
+  );
+  process.exit(1);
+}
 
 if (process.argv.includes("--list-negatives")) {
   console.log(Object.keys(NEGATIVES).join("\n"));
@@ -173,6 +323,109 @@ if (versionArg !== undefined) {
     process.exit(1);
   }
   console.log(`PASS: "${versionArg}" is a publishable version.`);
+  process.exit(0);
+}
+
+/**
+ * --authorize-version=<v> --line=<key> [--lines-file=<path>]
+ *
+ * The shape check above asks whether a string *could* be a version. This asks the question that
+ * actually decides a publication: whether this particular version is the one the repository
+ * authorizes for this particular release line. Until this existed, the answer came from a
+ * `workflow_dispatch` text box — the only release decision in the project that no reviewed file
+ * recorded, on the three packages whose versions are the three that cannot be corrected.
+ *
+ * It fails closed in every direction. An unknown line, an undeclared cohort, `authorizedNext: null`,
+ * a version that is not the authorized one, and a version already in `published` are all refusals.
+ * There is no fallback and nothing is inferred from another package's number.
+ *
+ * Exits before any check below runs, like `--version=`, because it answers about one dispatch
+ * rather than about the tree. `--lines-file=` exists so CI can run this mode against fixture
+ * declarations and prove each refusal really fires — see ci.yml's "Native version authorization:
+ * negative controls". The publish workflows never pass it.
+ */
+const authorizeArg = process.argv.find((arg) => arg.startsWith("--authorize-version="))?.slice("--authorize-version=".length);
+if (authorizeArg !== undefined) {
+  const lineKey = process.argv.find((arg) => arg.startsWith("--line="))?.slice("--line=".length);
+  const linesFile = process.argv.find((arg) => arg.startsWith("--lines-file="))?.slice("--lines-file=".length) ?? "release/native-release-lines.json";
+  const refuse = (message) => {
+    console.error(`::error::${message}`);
+    process.exit(1);
+  };
+
+  if (!lineKey) refuse("--authorize-version= requires --line=<key>, naming the release line in release/native-release-lines.json this publish is for. Without it nothing says which package's authorization is being read.");
+  if (!SEMVER.test(authorizeArg)) refuse(`"${authorizeArg}" is not a publishable version. Expected MAJOR.MINOR.PATCH with an optional -prerelease, no leading "v" and no +build metadata (e.g. 0.1.0, 0.1.0-preview.1).`);
+
+  let declaration;
+  try {
+    declaration = JSON.parse(linesFile.startsWith("/") ? readFileSync(linesFile, "utf8") : read(linesFile));
+  } catch (error) {
+    refuse(`${linesFile} could not be read as JSON (${error.message}). That file is the only thing that authorizes a native publish, so an unreadable one authorizes nothing.`);
+  }
+
+  const line = declaration?.lines?.[lineKey];
+  if (!line) {
+    refuse(`${linesFile} declares no release line "${lineKey}". Known lines: ${Object.keys(declaration?.lines ?? {}).join(", ") || "none at all"}. A publish is authorized by a line that exists, never by the absence of one.`);
+  }
+  if (line.cohort !== "own" && line.cohort !== "core") {
+    refuse(`${linesFile} → ${lineKey}.cohort is ${JSON.stringify(line.cohort)}. It must be declared as "own" (its own version line) or "core" (lockstep with the @kinetixui/{tokens,ui,cli} cohort) before ${line.coordinate ?? lineKey} publishes anything. The cohort is what a version number *means*, and npm 0.27.0 and a native 0.27.0 are the same string and two unrelated promises — so it is declared, never inferred.`);
+  }
+  /*
+   * The publication history decides whether this version may be published at all, so its SHAPE is
+   * part of the decision, not a detail. `Array.isArray(...) && ...includes(...)` read as a safe
+   * guard and was one: a declaration carrying `published: "0.1.0"` skipped the refusal entirely and
+   * authorized a republication. Measured — the same invocation against the same line exits 1 with
+   * `published: ["0.1.0"]` and exited 0 with `published: "0.1.0"`, differing only in that type.
+   * Nothing validates this file's schema, and a string is exactly what a hand-edit of a one-element
+   * array produces, so the type is asserted here, where the decision is made. An absent `published`
+   * is refused too: "no history was found" must never read as "there is none".
+   */
+  if (!Array.isArray(line.published)) {
+    refuse(`${linesFile} → ${lineKey}.published is ${JSON.stringify(line.published)}, not an array. That field is the publication history this gate checks a version against, and a non-array one is not read as empty — it is read as unknown, which authorizes nothing. Declare it as an array, \`[]\` when the line has published nothing.`);
+  }
+  /*
+   * The array's SHAPE was asserted above; its ENTRIES are the history. `includes(authorizeArg)` only
+   * ever answers "is this exact string present", so an entry that is not a version string can never
+   * match — and is silently skipped, which reads as "that version is not recorded". Measured on the
+   * authorized fixture: `[null]`, `[1]`, `["bad"]`, `[""]`, `[" 0.1.0"]`, `["v0.0.9"]`, `[["0.0.9"]]`
+   * and `[{}]` all authorized 0.1.0 and exited 0. A history with one unreadable entry is a history
+   * this gate cannot read, so it is read as unknown and authorizes nothing — the same rule the type
+   * check above applies to the whole field. Each entry must pass the same SEMVER test a dispatched
+   * version passes, with no coercion (a number is not "1.0.0"; padding is not trimmed). A duplicate
+   * is refused too: a version cannot have been published twice, so one means the file was hand-merged
+   * or corrupted, and it is not worth guessing which copy was right.
+   */
+  const seenHistory = new Set();
+  line.published.forEach((entry, index) => {
+    if (typeof entry !== "string" || !SEMVER.test(entry)) {
+      refuse(`${linesFile} → ${lineKey}.published[${index}] is ${JSON.stringify(entry)}, not a version. Every entry in the publication history must be a MAJOR.MINOR.PATCH string with an optional -prerelease, exactly as it was published (no leading "v", no +build metadata, no surrounding whitespace). An entry this gate cannot read makes the whole history unknown, and an unknown history authorizes nothing.`);
+    }
+    if (seenHistory.has(entry)) {
+      refuse(`${linesFile} → ${lineKey}.published lists ${entry} more than once (second at index ${index}). A version can be published once, so a repeated entry means the history was edited by hand or merged badly, and which copy is true is not something this gate guesses. Remove the duplicate.`);
+    }
+    seenHistory.add(entry);
+  });
+  if (line.published.includes(authorizeArg)) {
+    refuse(`${linesFile} records ${authorizeArg} as already published on ${line.coordinate ?? lineKey}. A ${line.channel ?? "registry"} version cannot be republished or corrected; publish a superseding version instead.`);
+  }
+  if (line.authorizedNext === null || line.authorizedNext === undefined) {
+    refuse(`${linesFile} → ${lineKey}.authorizedNext is null, so no version of ${line.coordinate ?? lineKey} is authorized to publish. This is the declared state, not an oversight: the version a native package first publishes under is a release decision, and it is made by committing the number to that file in a reviewed pull request — not by typing it into a dispatch box.`);
+  }
+  if (line.authorizedNext !== authorizeArg) {
+    refuse(`This dispatch asked to publish ${line.coordinate ?? lineKey} as ${authorizeArg}, but ${linesFile} authorizes ${JSON.stringify(line.authorizedNext)}. The dispatch input confirms what the repository declares; it does not override it. If ${authorizeArg} is the intended version, change it there first.`);
+  }
+
+  /*
+   * Defense in depth, not the proof. VI-VERSION-AUTHORIZED is what keeps `--lines-file=` out of a
+   * publish workflow; this is so that a log of a fixture run can never be read, later and out of
+   * context, as evidence that a real publication was authorized.
+   */
+  const isOverride = linesFile !== "release/native-release-lines.json";
+  console.log(
+    isOverride
+      ? `PASS (FIXTURE RUN — authorizes no publication): ${line.coordinate} ${authorizeArg} is the version ${linesFile} authorizes for the "${lineKey}" line (cohort: ${line.cohort}). This is not the canonical release/native-release-lines.json.`
+      : `PASS: ${line.coordinate} ${authorizeArg} is the version ${linesFile} authorizes for the "${lineKey}" line (cohort: ${line.cohort}).`,
+  );
   process.exit(0);
 }
 
@@ -605,10 +858,306 @@ check(
   "publish-flutter.yml must stage through scripts/publish/stage-flutter-package.mjs, and that script must read pubspec.yaml back off disk and assert it carries exactly `version: <the requested version>`. Without the read-back, a rewrite that quietly did nothing publishes the committed placeholder under the requested version — permanently, because a pub.dev version cannot be reused.",
 );
 
+/*
+ * The changelog gate, and the reason it is three checks rather than one.
+ *
+ * VI-FLUTTER-CHANGELOG-GATES-VERSION used to read `/does not mention \$\{version\}/` — it asserted
+ * that staging HAS a changelog gate, and it passed for as long as that gate was
+ * `changelog.includes(version)`. Measured on 2026-11-07: the committed CHANGELOG.md had no release
+ * section at all, only `## Unreleased`, and said in prose that the first version was undecided;
+ * because that sentence contained `0.1.0`, staging 0.1.0 passed. A check that a mechanism exists
+ * cannot tell a sound test from an unsound one. So the contract is named here, what renders is
+ * distinguished from what merely looks like a heading, and the behaviour itself is proved by
+ * ci.yml running scripts/publish/flutter-changelog-heading-controls.mjs — which is the only one of
+ * the three that would have caught the original defect, and is therefore asserted to run.
+ */
 check(
   "VI-FLUTTER-CHANGELOG-GATES-VERSION",
-  /does not mention \$\{version\}/.test(flutterStaging),
-  "scripts/publish/stage-flutter-package.mjs must refuse a version packages/ui-flutter/CHANGELOG.md does not mention. `pub publish` only warns, and a warning is enough to abort the publish mid-run; worse, a published version whose changelog never mentions it cannot be corrected, because the version is immutable.",
+  /node scripts\/publish\/stage-flutter-package\.mjs/.test(flutterWorkflow) &&
+    flutterStaging.includes("String.raw`^${version") &&
+    flutterStaging.includes("(?=\\s|$)`"),
+  "scripts/publish/stage-flutter-package.mjs must require an exact `## <version>` release heading in packages/ui-flutter/CHANGELOG.md — the version anchored to the start of the heading's text, and ended by whitespace or the end of it so that `## 0.1.0-beta.1` cannot satisfy a publish of 0.1.0 while `## 0.1.0 - 2026-11-09` can. A substring test is not enough: it accepts the number appearing in a sentence, and a published version whose changelog does not document it cannot be corrected, because the version is immutable.",
+);
+
+check(
+  "VI-FLUTTER-CHANGELOG-READS-WHAT-RENDERS",
+  flutterStaging.includes("fromMarkdown(changelogSource).children.some(") &&
+    flutterStaging.includes("node.depth === 2 &&") &&
+    flutterStaging.includes('/^ {0,3}##[ \\t]/u.test(changelogLines[node.position.start.line - 1] ?? "") &&'),
+  "scripts/publish/stage-flutter-package.mjs must ask a CommonMark parser what a heading is — `fromMarkdown`, a depth-2 heading among the document's top-level children, written as ATX — rather than scanning the text itself. Three hand-written versions were defeated in review, each by a different piece of the spec (fence delimiter lengths, info strings that may not contain backticks, comment fragments joined into a `##` that was never parsed, raw HTML blocks), and every failure counted a heading that renders as code or literal HTML. All of them FAIL OPEN, which is a permanent publish whose changelog does not document it. This is the same move check-native-publish-preflight.mjs itself made when it replaced a hand-written workflow reader with js-yaml.",
+);
+
+/*
+ * The refusal's wording is a contract between two files, and it broke once. native-flutter.yml's
+ * control greps the refusal's own sentence so that a staging failure for some other reason — the
+ * pubspec rewrite and the name assertion both run earlier — cannot pass as proof that the changelog
+ * gate fired. When this gate changed from a substring test to a heading test, the gate was right
+ * and the control still grepped the old sentence, so CI failed with "proves nothing", which is the
+ * control doing its job and the cheapest possible way to find out. This keeps the two in step, and
+ * also checks the probe version the control greps for is the one it actually stages.
+ */
+const nativeFlutterWorkflow = source(".github/workflows/native-flutter.yml");
+/* The workflow matches the refusal's backticks with `.` rather than writing them, because a
+ * backtick inside double quotes is command substitution and inside single quotes shellcheck
+ * reports SC2016 — so this accepts any single character where the backticks are. */
+const changelogRefusalProbes = [
+  ...nativeFlutterWorkflow.matchAll(/has no .## ([^ ]+). release heading/g),
+].map((match) => match[1]);
+check(
+  "VI-FLUTTER-CHANGELOG-CONTROL-ASSERTS-THE-REFUSAL",
+  changelogRefusalProbes.length > 0 &&
+    flutterStaging.includes("has no \\`## ${version}\\` release heading") &&
+    changelogRefusalProbes.every((probe) =>
+      nativeFlutterWorkflow.includes(`stage-flutter-package.mjs ${probe} `),
+    ),
+  `native-flutter.yml must prove the changelog refusal fires by matching the refusal's own wording, and scripts/publish/stage-flutter-package.mjs must still produce it: the refusal says \`has no \\\`## <version>\\\` release heading\`, and each version the workflow greps for must be one it stages. Measured: ${changelogRefusalProbes.length === 0 ? "the workflow greps for no such refusal at all" : `the workflow probes ${changelogRefusalProbes.join(", ")}`}. Without this, changing the refusal's wording leaves the control grepping a sentence that no longer exists — it then fails with "proves nothing", which is loud, but only after a push.`,
+);
+
+/*
+ * This script checks itself here, which is unusual and deliberate. Every mode exits early, so the
+ * order they are handled in is load-bearing, and in review that order was a bypass: an authorizing
+ * command that also carried `--version=` was decided by the shape check and exited 0 while the
+ * canonical declaration authorized nothing. VI-VERSION-AUTHORIZED keeps that combination out of
+ * the three publish workflows by position, but a fourth workflow, a local run or a script would
+ * not pass through it. The refusal in the mode handling is what covers those, so it is worth a
+ * check of its own rather than being the one guard with no control behind it.
+ */
+const selfSource = source("scripts/check-native-publish-preflight.mjs");
+check(
+  "VI-PREFLIGHT-MODES-ARE-EXCLUSIVE",
+  selfSource.includes("if (requestedModes.length > 1) {\n  console.error(") &&
+    ["--list-negatives", "--version=", "--authorize-version=", "--negative="].every((mode) =>
+      new RegExp(`const MODES = \\[[^\\]]*"${mode.replace(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`)}"`, "u").test(selfSource),
+    ),
+  "scripts/check-native-publish-preflight.mjs must refuse two modes in one invocation before any of them runs, and MODES must list every mode that exits early. Each mode ends the run on its own, so whichever is handled first decides the exit code. Measured in review: `--authorize-version=9.9.9 --line=ui-compose --version=9.9.9` exited 0 — the shape check answered for the authorization — while release/native-release-lines.json authorized nothing, and the log read \"is a publishable version\".",
+);
+
+/*
+ * AND THE SAME TWO GUARDS, PROVED BY RUNNING THEM.
+ *
+ * The check above reads source text, and review showed what that is worth on its own: delete the
+ * `process.exit(1)` under the conflict condition and the assertion still passes, because the
+ * condition, the diagnostic and the mode list are all still there. The script then prints the
+ * conflict and carries on into the shape check, which exits 0 — the very bypass the guard exists
+ * to close, with its own refusal in the log above it.
+ *
+ * A diagnostic is not a refusal. So the guards are also run: this writes the source as the checks
+ * see it — mutated, when a negative control is in force — to a throwaway module and invokes it.
+ * Each conflicting or repeated invocation must exit NONZERO, and the refusal must be the guard's
+ * own wording, so an unrelated failure cannot pass as proof. A single mode must still exit 0, or a
+ * script broken in any way at all would satisfy every refusal here.
+ *
+ * None of these invocations reaches the checks below: each one exits in the argument handling, so
+ * there is no recursion.
+ */
+const runSelfCopy = (args) => {
+  /*
+   * WHERE THE COPY LIVES IS PART OF THE PROOF, and getting it wrong made this check fail open
+   * once. The script resolves everything it reads against `new URL("..", import.meta.url)`, so a
+   * copy one directory too deep reads `<repo>/node_modules/release/native-release-lines.json`,
+   * which does not exist. Measured: with the exit removed from the repeated-selector guard, the
+   * copy printed the guard's diagnostic, fell through into the authorization, and exited 1 on
+   * ENOENT — so the predicate below saw a nonzero exit and the guard's own wording, and called a
+   * lost refusal enforcement.
+   *
+   * So the copy is a direct child of the repository root, exactly like scripts/ is, which makes its
+   * `..` the repository. node_modules is used because the script's bare `js-yaml` import runs
+   * before any argument is read, and that is where it resolves from. REPO-RELATIVE-READS below is
+   * what keeps this honest: it requires the copy to successfully read a file by repo-relative path.
+   */
+  const file = `${root}node_modules/.preflight-arg-control-${process.pid}-${Math.random().toString(36).slice(2)}.mjs`;
+  try {
+    writeFileSync(file, selfSource);
+  } catch (error) {
+    return { status: null, output: `the throwaway copy could not be written beside node_modules (${error.message}), so the argument guards were not exercised` };
+  }
+  try {
+    const run = spawnSync(process.execPath, [file, ...args], { cwd: root, encoding: "utf8" });
+    return { status: run.status, output: `${run.stdout ?? ""}${run.stderr ?? ""}` };
+  } finally {
+    rmSync(file, { force: true });
+  }
+};
+
+/*
+ * EVERY PROBE'S FALLTHROUGH MUST NECESSARILY SUCCEED.
+ *
+ * A probe is only evidence that the guard *refused* if the same invocation would have *passed*
+ * without it. Two of these fall through to the semver shape check or to --list-negatives, which
+ * exit 0 on their own. The two repeated selectors fall through into the authorization, so they are
+ * aimed at the ACCEPTING fixture and the first of the two values is the one it authorizes — a
+ * fallthrough there exits 0 and prints a PASS, and nothing else about the invocation can fail.
+ * Without that, a lost refusal looks identical to any unrelated failure.
+ */
+const ACCEPTING = "scripts/publish/fixtures/native-release-lines/authorized.json";
+/* The declaration whose publication history carries the wrong TYPE. Read as a committed file so the
+ * probe below exercises the same path a real publish would, not a shape built in memory here. */
+const MALFORMED_HISTORY = "scripts/publish/fixtures/native-release-lines/malformed-history.json";
+/* The declaration that authorizes a version whose cohort is not declared. Same reasoning: a committed file. */
+const COHORT_UNDECLARED = "scripts/publish/fixtures/native-release-lines/cohort-undeclared.json";
+/*
+ * The accepting fixture's own values, read rather than repeated. Two probes below depend on that
+ * fixture really authorizing something for some line — that is what makes their fallthrough exit 0
+ * — and a hardcoded `0.1.0` would quietly stop being true if the fixture were edited, leaving the
+ * probes weak and still green. So the line and the version come from the file, and a fixture that
+ * authorizes nothing is reported instead of assumed.
+ */
+const acceptingFixture = JSON.parse(source(ACCEPTING));
+const acceptingLine = Object.keys(acceptingFixture?.lines ?? {}).find(
+  (key) => typeof acceptingFixture.lines[key]?.authorizedNext === "string",
+);
+const acceptingVersion = acceptingLine ? acceptingFixture.lines[acceptingLine].authorizedNext : undefined;
+const otherLine = Object.keys(acceptingFixture?.lines ?? {}).find((key) => key !== acceptingLine) ?? "ui-swiftui";
+
+/*
+ * One fixture per way a history ENTRY can be unreadable inside a well-formed array. `says` is the
+ * guard's own wording, so a refusal for some other reason (a version mismatch, a missing file) does
+ * not pass for evidence. `unreadable` is what the in-process shape check below asserts the file still
+ * contains: a `--negative=` repair lives in this process's memory and the probe reads the file off
+ * disk, so a fixture quietly repaired to a clean history would leave the probe refusing for the
+ * ordinary version mismatch and proving nothing.
+ */
+const HISTORY_FIXTURE_DIR = "scripts/publish/fixtures/native-release-lines/";
+const HISTORY_ENTRY_FIXTURES = [
+  { file: `${HISTORY_FIXTURE_DIR}history-null-entry.json`, says: "published[0] is null", why: "a null history entry, skipped by includes() so the history read as empty", unreadable: (h) => h.some((e) => e === null) },
+  { file: `${HISTORY_FIXTURE_DIR}history-number-entry.json`, says: "published[0] is 1", why: "a numeric history entry, not coerced to a version and never equal to one", unreadable: (h) => h.some((e) => typeof e === "number") },
+  { file: `${HISTORY_FIXTURE_DIR}history-unparseable-entry.json`, says: 'published[0] is "bad"', why: "a history entry that is not a version string", unreadable: (h) => h.some((e) => typeof e === "string" && !SEMVER.test(e)) },
+  { file: `${HISTORY_FIXTURE_DIR}history-nested-entry.json`, says: "published[0] is [", why: "a history entry that is itself an array, which a regex test alone would coerce to a valid-looking string", unreadable: (h) => h.some((e) => Array.isArray(e)) },
+  { file: `${HISTORY_FIXTURE_DIR}history-duplicate-entry.json`, says: "lists 0.0.9 more than once", why: "a version listed twice in the history", unreadable: (h) => new Set(h).size !== h.length },
+];
+
+const ARGUMENT_REFUSALS = [
+  { args: ["--version=0.1.0", "--list-negatives"], says: "were passed together", why: "two modes in one invocation, which would fall through to --list-negatives and exit 0" },
+  { args: ["--authorize-version=9.9.9", "--line=ui-compose", "--version=9.9.9"], says: "were passed together", why: "the measured bypass: an authorization that would fall through to the shape check and exit 0 while nothing is authorized" },
+  { args: ["--version=0.1.0", "--version=9.9.9"], says: "was passed more than once", why: "a repeated --version=, which would fall through to the shape check on the first value and exit 0" },
+  { args: [`--authorize-version=${acceptingVersion}`, "--authorize-version=9.9.9", `--line=${acceptingLine}`, `--lines-file=${ACCEPTING}`], says: "was passed more than once", why: `a repeated --authorize-version=, which would fall through and authorize the first value (${acceptingVersion}, which ${ACCEPTING} authorizes) exiting 0 for a 9.9.9 dispatch` },
+  { args: [`--line=${acceptingLine}`, `--line=${otherLine}`, `--authorize-version=${acceptingVersion}`, `--lines-file=${ACCEPTING}`], says: "was passed more than once", why: `a repeated --line=, which would fall through and read ${acceptingLine}'s authorization while naming ${otherLine}, exiting 0` },
+  /*
+   * Not an argument at all, but the same failure shape one layer in: the question is well formed and
+   * the DECLARATION's own shape decides the answer. Probed here rather than asserted off the source
+   * because this guard, like the two above it, is only worth what it exits with.
+   */
+  { args: [`--authorize-version=0.1.0`, "--line=ui-compose", `--lines-file=${MALFORMED_HISTORY}`], says: "not an array", why: `a publication history that is a string rather than an array, which skipped the already-published refusal entirely — measured: this exact fixture authorized 0.1.0 and exited 0, while the same line with \`published: ["0.1.0"]\` refused it` },
+  { args: [`--authorize-version=0.1.0`, "--line=ui-compose", `--lines-file=${COHORT_UNDECLARED}`], says: ".cohort is", why: "a version authorized for a line whose cohort is not declared, which has no agreed meaning — measured: with the guard removed this exits 0 and authorizes it" },
+  /* Entries of the history, not its shape: each of these is an ARRAY whose element is unreadable, and each authorized 0.1.0 before per-entry validation. */
+  ...HISTORY_ENTRY_FIXTURES.map(({ file, says, why }) => ({ args: [`--authorize-version=0.1.0`, "--line=ui-compose", `--lines-file=${file}`], says, why: `${why} — measured: this exact fixture authorized 0.1.0 and exited 0` })),
+];
+
+const argumentFailures = [];
+/*
+ * The malformed fixture has to keep carrying the wrong TYPE, and that is checked here rather than
+ * through the probe: a `--negative=` mutation lives in this process's memory, while the probe runs a
+ * spawned copy that reads the fixture off disk, so a repaired fixture is invisible to it. Repaired
+ * to a well-formed array the file would still refuse — for the ordinary mismatch — and the probe
+ * would stay green while proving nothing about the type at all.
+ */
+const malformedLine = JSON.parse(source(MALFORMED_HISTORY))?.lines?.["ui-compose"];
+if (Array.isArray(malformedLine?.published) || malformedLine?.authorizedNext !== "0.1.0") {
+  argumentFailures.push(
+    `${MALFORMED_HISTORY} must declare ui-compose with a NON-array \`published\` and \`authorizedNext: "0.1.0"\`; it declares published ${JSON.stringify(malformedLine?.published)} and authorizedNext ${JSON.stringify(malformedLine?.authorizedNext)}. The type is the whole defect — with a well-formed array the probe below is refused for the ordinary version mismatch and stops being evidence about the shape`,
+  );
+}
+const undeclaredLine = JSON.parse(source(COHORT_UNDECLARED))?.lines?.["ui-compose"];
+if (undeclaredLine?.cohort === "own" || undeclaredLine?.cohort === "core" || undeclaredLine?.authorizedNext !== "0.1.0") {
+  argumentFailures.push(
+    `${COHORT_UNDECLARED} must declare ui-compose with a cohort that is neither "own" nor "core" and \`authorizedNext: "0.1.0"\`; it declares cohort ${JSON.stringify(undeclaredLine?.cohort)} and authorizedNext ${JSON.stringify(undeclaredLine?.authorizedNext)}. A declared cohort would authorize, and the probe would stop proving anything about the cohort refusal.`,
+  );
+}
+for (const { file, unreadable } of HISTORY_ENTRY_FIXTURES) {
+  const history = JSON.parse(source(file))?.lines?.["ui-compose"];
+  if (!Array.isArray(history?.published) || !unreadable(history.published) || history.authorizedNext !== "0.1.0") {
+    argumentFailures.push(`${file} must declare ui-compose with an ARRAY \`published\` holding the unreadable entry its name describes, and \`authorizedNext: "0.1.0"\`; it declares published ${JSON.stringify(history?.published)} and authorizedNext ${JSON.stringify(history?.authorizedNext)}. A clean history would still be refused here for the ordinary version mismatch, and the probe would stop being evidence about the entry.`);
+  }
+}
+if (!acceptingLine) {
+  argumentFailures.push(`${ACCEPTING} authorizes no version for any line, so the two probes that fall through into the authorization would fail there for that reason rather than passing, and they stop being evidence that the guard refused. Keep one accepting line in that fixture — ci.yml's authorization matrix needs it for the same reason`);
+}
+for (const { args, says, why } of ARGUMENT_REFUSALS) {
+  const { status, output } = runSelfCopy(args);
+  if (status !== 1) {
+    argumentFailures.push(`\`${args.join(" ")}\` exited ${status === null ? "without a status" : status} rather than 1 — ${why} — and the output was ${JSON.stringify(output.trim().slice(0, 240))}`);
+  } else if (!output.includes(says)) {
+    argumentFailures.push(`\`${args.join(" ")}\` exited 1, but not with the guard's own refusal (expected it to say "${says}"); it said ${JSON.stringify(output.trim().slice(0, 240))}, so this proves nothing about ${why}`);
+  }
+}
+
+/*
+ * The two asymmetries, without which every refusal above is satisfied by a broken script.
+ *
+ *   a single mode must still pass        — or the script cannot run at all
+ *   a repo-relative read must still work — or the copy is in the wrong place, and the refusals
+ *                                          above are ENOENT wearing the guard's diagnostic
+ */
+const singleMode = runSelfCopy(["--version=0.1.0"]);
+if (singleMode.status !== 0) {
+  argumentFailures.push(`\`--version=0.1.0\` alone exited ${singleMode.status}, so the refusals above are not evidence: a script that cannot run at all refuses everything. It said ${JSON.stringify(singleMode.output.trim().slice(0, 240))}`);
+}
+const repoRelative = runSelfCopy([`--authorize-version=${acceptingVersion}`, `--line=${acceptingLine}`, `--lines-file=${ACCEPTING}`]);
+if (repoRelative.status !== 0 || !repoRelative.output.includes("FIXTURE RUN")) {
+  argumentFailures.push(`the throwaway copy could not authorize ${acceptingVersion} out of ${ACCEPTING}, exiting ${repoRelative.status} and saying ${JSON.stringify(repoRelative.output.trim().slice(0, 240))}. It must resolve repo-relative paths exactly as the real script does, or a probe that falls through fails on a missing file and the refusals above measure nothing`);
+}
+
+check(
+  "VI-PREFLIGHT-ARGUMENT-REFUSALS-EXIT-NONZERO",
+  argumentFailures.length === 0,
+  `${argumentFailures.join("; ")}. Conflicting modes and a repeated single-value selector must END the run, not merely be reported: each of these invocations is a route to a publish authorized by the wrong question, and all of them exit 0 if the guard loses its \`process.exit(1)\` while keeping its diagnostic.`,
+);
+
+/*
+ * The staging script now has a dependency, and that is a new way for a publish to fail late. It
+ * imports `mdast-util-from-markdown` — see the comment above the changelog gate for why — so any
+ * job that runs it on a bare checkout dies at the import rather than at a gate. `publish-flutter.yml`
+ * already installs for the preflight's YAML parser, so the real publish path was fine; this was
+ * measured on native-flutter.yml's `publish-dry-run` job, which had no install step and went red
+ * the moment the dependency landed. Gated here in the same commit that fixes it, because the next
+ * job someone adds that runs this script will have the same hole and a red rehearsal is the good
+ * outcome, not the guaranteed one.
+ */
+const stagingWithoutInstall = [];
+for (const path of readdirSync(`${root}.github/workflows`).filter((name) => /\.ya?ml$/u.test(name))) {
+  const text = source(`.github/workflows/${path}`);
+  if (!text.includes("stage-flutter-package.mjs")) continue;
+  let document;
+  try {
+    document = yaml.load(text);
+  } catch {
+    stagingWithoutInstall.push(`.github/workflows/${path} does not parse as YAML`);
+    continue;
+  }
+  for (const [jobName, job] of Object.entries(document?.jobs ?? {})) {
+    const steps = Array.isArray(job?.steps) ? job.steps : [];
+    const firstStaging = steps.findIndex((step) =>
+      String(step?.run ?? "").includes("stage-flutter-package.mjs"),
+    );
+    if (firstStaging === -1) continue;
+    /* Ordering matters, not merely presence: a job that installs after staging has already died at
+     * the import. So the install has to come before the FIRST step that runs the script, and
+     * `flutter-staging-installs-after-the-script-runs` moves a real install past a real staging
+     * step to prove that clause fires.
+     *
+     * The comparison is STEP-GRANULAR, which is its one remaining limit: an install and a staging
+     * run inside the SAME step, in that wrong order, compare equal here and pass. Nothing in the
+     * repository is written that way, and a step that does both is already doing two jobs. */
+    const install = steps.findIndex((step) => /pnpm install/u.test(String(step?.run ?? "")));
+    if (install === -1) {
+      stagingWithoutInstall.push(`.github/workflows/${path} → job "${jobName}" never installs`);
+    } else if (install > firstStaging) {
+      stagingWithoutInstall.push(
+        `.github/workflows/${path} → job "${jobName}" installs at step ${install + 1}, after it first runs the script at step ${firstStaging + 1}`,
+      );
+    }
+  }
+}
+check(
+  "VI-FLUTTER-STAGING-HAS-ITS-DEPENDENCIES",
+  stagingWithoutInstall.length === 0,
+  `every workflow job that runs scripts/publish/stage-flutter-package.mjs must install dependencies first — the script imports a CommonMark parser, so on a bare checkout it dies at the import instead of at a gate, and a publish job that fails that way has already warmed a toolchain and proved nothing. Missing: ${stagingWithoutInstall.join(", ") || "(nothing)"}.`,
+);
+
+check(
+  "VI-FLUTTER-CHANGELOG-CONTROLS-RUN",
+  source(".github/workflows/ci.yml").includes("node scripts/publish/flutter-changelog-heading-controls.mjs"),
+  "ci.yml must run scripts/publish/flutter-changelog-heading-controls.mjs. The two checks above read the staging source; only running the gate against a changelog that accepts and seven that must refuse can show the test behind the refusal is sound, and that is precisely what the source checks missed before.",
 );
 
 // ---------------------------------------------------------------------------
@@ -768,9 +1317,63 @@ const documentSteps = (doc) => {
         path: `jobs.${jobId}.steps[${index}]`,
         name: mapping.name ?? mapping.uses ?? "an unnamed step",
         job: jobId,
+        index,
         jobCondition,
         condition: mapping.if === undefined ? null : String(mapping.if),
+        /*
+         * Whether a failure of this step stops the ones after it. A failing step ends its job — that
+         * is what makes a gate a gate — unless it carries `continue-on-error: true`, which turns the
+         * refusal into a logged warning and runs the publication anyway. Retained here because a
+         * check that reads only a step's condition and its arguments cannot see it: measured, adding
+         * it to the Compose authorization left this entire preflight green.
+         */
+        continueOnError: mapping["continue-on-error"] === undefined ? null : String(mapping["continue-on-error"]),
         script: typeof mapping.run === "string" ? mapping.run : "",
+        /* What the step delegates to instead of a script. A `uses:` step has no `run:`, so every
+         * check that reads `script` sees nothing — which is indistinguishable from a step that does
+         * nothing, and was measured as a way to hide a publication. */
+        uses: typeof mapping.uses === "string" ? mapping.uses : null,
+        /*
+         * The environment the step's script actually sees, step keys winning over the job's.
+         * Resolved rather than read off the step alone: a value moved to job level is inherited by
+         * the step, so reading only `step.env` would report a binding that is really there as
+         * missing. VI-COMPOSE-VERSION-BOUND-TO-INPUT asks about the effective value.
+         */
+        env: {
+          ...(job && typeof job === "object" && job.env && typeof job.env === "object" ? job.env : {}),
+          ...(mapping.env && typeof mapping.env === "object" ? mapping.env : {}),
+        },
+        /*
+         * The interpreter the step's script actually runs under, and the directory it runs in, with
+         * the step's own key winning over `defaults.run` on the job and then on the workflow.
+         *
+         * Both decide what the pinned authorization command MEANS, which is why neither can be left
+         * unread. Measured on this repository: adding `shell: bash -c 'bash {0}; exit 0'` to the
+         * Compose authorization step left the pinned `run:` string and every predicate in this file
+         * untouched and this entire preflight green, while that wrapper reports success even when
+         * the authorization refuses — the fourth distinct place a refusal has been found unable to
+         * end its job. A `working-directory` override is the same shape: the command text is intact
+         * and resolves somewhere else, where `node scripts/...` is a missing file rather than a
+         * gate. Resolved rather than read off the step alone because `defaults.run` is inherited,
+         * so a check reading only the step would call an inherited override absent.
+         */
+        shell: (() => {
+          const defaultsOf = (owner) =>
+            owner && typeof owner === "object" && owner.defaults && typeof owner.defaults === "object" && owner.defaults.run && typeof owner.defaults.run === "object"
+              ? owner.defaults.run
+              : {};
+          const resolved = mapping.shell ?? defaultsOf(job).shell ?? defaultsOf(doc).shell;
+          return resolved === undefined ? null : String(resolved);
+        })(),
+        workingDirectory: (() => {
+          const defaultsOf = (owner) =>
+            owner && typeof owner === "object" && owner.defaults && typeof owner.defaults === "object" && owner.defaults.run && typeof owner.defaults.run === "object"
+              ? owner.defaults.run
+              : {};
+          const resolved =
+            mapping["working-directory"] ?? defaultsOf(job)["working-directory"] ?? defaultsOf(doc)["working-directory"];
+          return resolved === undefined ? null : String(resolved);
+        })(),
       });
     });
   }
@@ -957,6 +1560,268 @@ check(
   "WF-DRY-RUN-DEFENSE-IN-DEPTH",
   missingGuard.length === 0,
   `${missingGuard.join("; ")}. Measured, before this guard existed: the SwiftUI step reached both mirror pushes for empty, unset, \`False\` and \`yes\` — every value that was not the exact string \`true\`.`,
+);
+
+// ---------------------------------------------------------------------------
+// Version authorization, and the one binding that decides which number is built.
+//
+// Everything in the version-integrity block above asks whether the number that reaches the
+// registry can differ from the number that was *asked for*. These two ask the question behind it:
+// where the number asked for comes from, and whether the rehearsal and the publication are even
+// asking for the same one.
+//
+// Measured on this file before VI-COMPOSE-VERSION-BOUND-TO-INPUT existed: replacing the real
+// publish step's `VERSION_NAME: ${{ inputs.version }}` with `VERSION_NAME: 9.9.9` left the whole
+// preflight green. VI-COMPOSE-VERSION-FORWARDED requires each publish step to carry VERSION_NAME
+// and is satisfied by any value, so the dry run rehearsed the dispatched version and the upload
+// would have carried a hard-coded one — a permanent Central coordinate under a number nobody
+// dispatched, with a passing gate and a matching-looking dry run in front of it.
+// ---------------------------------------------------------------------------
+const AUTHORIZED_LINES = {
+  ".github/workflows/publish-compose.yml": "ui-compose",
+  ".github/workflows/publish-flutter.yml": "ui-flutter",
+  ".github/workflows/publish-swiftui.yml": "ui-swiftui",
+};
+
+const unauthorized = [];
+const looseVersionBinding = [];
+for (const workflow of workflows) {
+  const { doc, error } = parseWorkflow(workflow.path, workflow.text);
+  if (error) continue; // WF-PARSES owns that failure; concluding anything here would be the defect it exists for.
+  const steps = documentSteps(doc);
+
+  /*
+   * The authorization step. Gated by the publication's own condition on purpose — a dry run has to
+   * stay rehearsable under an arbitrary shape-valid version, or the release path stops being
+   * exercisable before it is irreversible. So what is required here is a gated step that runs the
+   * authorization for *this* workflow's line, and exactly one spelling of the condition, for the
+   * same reason WF-PUBLISH-STEP-CONDITION requires one.
+   */
+  const line = AUTHORIZED_LINES[workflow.path];
+  const authorizing = steps.filter((step) => /--authorize-version=/.test(step.script));
+  if (authorizing.length === 0) {
+    unauthorized.push(`${workflow.path} has no step running \`check-native-publish-preflight.mjs --authorize-version=\`. Semver shape is not authorization: without this step the version a permanent coordinate carries comes from a dispatch text box and no reviewed file records it`);
+  }
+  for (const step of authorizing) {
+    if (step.condition !== APPROVED_STEP_CONDITION) {
+      unauthorized.push(`${workflow.path} → "${step.name}" runs the version authorization with ${step.condition === null ? "no step-level condition" : `\`if: ${step.condition}\``}. It must carry \`if: ${APPROVED_STEP_CONDITION}\`, the same spelling as the publication: gating it any other way either blocks the dry run from rehearsing or lets a real publish past`);
+    }
+    /*
+     * AND THE COMMAND ITSELF MAY NOT SWALLOW ITS OWN FAILURE.
+     *
+     * The third place the same property can be lost, after `continue-on-error` and the step's
+     * position: inside `run:`. Measured in review — appending `|| true` to the authorization
+     * command left the whole preflight green, and the refusal then printed while the shell exited 0
+     * and the publication ran. A step-level failure only exists if the command's exit status
+     * reaches the step, and `||`, `;`, a pipe, `set +e` and an `if` wrapper all end that.
+     *
+     * Each clause above describes one property of this command, and this requires the command
+     * itself: one line, exactly the invocation, nothing before or after it. That is stricter than
+     * the sum of those clauses and it is deliberate — a gate whose spelling is pinned is one that
+     * can be read at a glance before a publication, the same reason WF-PUBLISH-STEP-CONDITION
+     * allows one spelling of the condition. The clauses stay because each names what its own
+     * spelling would cost, which a single "does not match" cannot.
+     */
+    const pinnedAuthorization = `node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=${line}`;
+    if (step.script.trim() !== pinnedAuthorization) {
+      unauthorized.push(`${workflow.path} → "${step.name}" must run exactly \`${pinnedAuthorization}\` and nothing else; it runs ${JSON.stringify(step.script.trim())}. Anything around the command can discard its exit status, and then the authorization's refusal is a line in a log rather than the end of the job — measured: appending \`|| true\` left this entire preflight green, the refusal printed, the shell exited 0 and the publication ran`);
+    }
+
+    /*
+     * AND THE INTERPRETER MAY NOT SWALLOW IT EITHER.
+     *
+     * The pin above fixes the command's text; it says nothing about what runs that text. A custom
+     * `shell:` is a wrapper around the script, so `shell: bash -c 'bash {0}; exit 0'` leaves the
+     * pinned string and every predicate here untouched and still reports success when the
+     * authorization refuses — measured on this repository as a green preflight, and the wrapper
+     * measured separately as exiting 0 on a script that exits 1. `working-directory` is the same
+     * trick on the other axis: the command is intact and resolves against another directory, where
+     * `scripts/check-native-publish-preflight.mjs` is a missing file. Both are inherited through
+     * `defaults.run`, so the effective value is what is asked about, not the step's own key.
+     *
+     * The runner default propagates a non-zero exit, so the safe spelling is no override at all.
+     * One directory is allowed because the job defaults point at the package and the repo-relative
+     * command needs the root.
+     */
+    if (step.shell !== null) {
+      unauthorized.push(`${workflow.path} → "${step.name}" runs the version authorization under \`shell: ${step.shell}\` (its own key or one inherited from \`defaults.run\`). The authorization must run under the runner's default shell, which ends the job on a non-zero exit; a custom shell is a wrapper around the pinned command and decides for itself what to exit with — measured: \`shell: bash -c 'bash {0}; exit 0'\` left this entire preflight green while reporting success on a refusal`);
+    }
+    if (step.workingDirectory !== null && step.workingDirectory !== ".") {
+      unauthorized.push(`${workflow.path} → "${step.name}" runs the version authorization in \`working-directory: ${step.workingDirectory}\` (its own key or one inherited from \`defaults.run\`). The pinned command is repo-relative, so anywhere but the repository root it names a file that is not there and the step fails for a reason that has nothing to do with the version — or, in a directory that happens to hold a copy, authorizes out of a file nobody reviewed`);
+    }
+
+    /*
+     * A GATE THAT DOES NOT STOP THE JOB IS NOT A GATE.
+     *
+     * Found in review, measured: adding `continue-on-error: true` to the Compose authorization left
+     * this entire preflight green. The refusal still prints, the step still shows red, and the
+     * publication runs anyway — the one property that makes a refusal a refusal is that the job
+     * ends, and nothing here was asking about it.
+     */
+    if (step.continueOnError !== null && step.continueOnError !== "false") {
+      unauthorized.push(`${workflow.path} → "${step.name}" carries \`continue-on-error: ${step.continueOnError}\`. The authorization's whole effect is that a refusal ends the job before the publication; with this, the refusal is a logged warning and the upload happens anyway. Measured: adding it left every other check in this block green`);
+    }
+    if (!new RegExp(`--line=${line}(?![\\w-])`).test(step.script)) {
+      unauthorized.push(`${workflow.path} → "${step.name}" must authorize against \`--line=${line}\`. Another line's authorization is another package's release decision, and reading the wrong one is how ${line} publishes on a number that was never declared for it`);
+    }
+
+    /*
+     * And the version this step authorizes has to be the one the publication will carry.
+     *
+     * Found by review on the commit that added this gate, and it is the same defect this whole
+     * block exists for, one level further in: the check asked for the condition and the line and
+     * never for the *value*. Two spellings got past it, both measured —
+     *
+     *   env:  VERSION: 0.1.0                      → preflight green
+     *   run:  --authorize-version=0.1.0 …         → preflight green
+     *
+     * — and either one authorizes `0.1.0` while the publish steps read `${{ inputs.version }}`
+     * independently and upload `9.9.9`. An authorization that can approve a different version from
+     * the one being published is not an authorization at all, so both halves are required: the
+     * argument comes from "$VERSION", and that variable is bound to the dispatch input.
+     */
+    if (!/--authorize-version="\$VERSION"/.test(step.script)) {
+      unauthorized.push(`${workflow.path} → "${step.name}" must pass \`--authorize-version="$VERSION"\`, reading the value from the step's own \`env\`. A literal on the command line authorizes a version the publication never carries, and a quoted "$VERSION" is also what keeps the input from being interpolated into the script text (WF-VERSION-NOT-INTERPOLATED)`);
+    }
+    /*
+     * And it has to be the *canonical* declaration that is read.
+     *
+     * `--lines-file=` exists so ci.yml can prove the authorization accepts one version and refuses
+     * five others; a gate that only ever refuses is indistinguishable from one that is broken. But
+     * a test seam left reachable from the publish path is a bypass, and review found this one:
+     * with `--lines-file=…/fixtures/native-release-lines/authorized.json` on the Compose
+     * authorization, every check in this block still passed — condition, line, argument and env
+     * binding all unchanged — while the step authorized `0.1.0` out of a committed fixture and the
+     * canonical file authorized nothing at all. So the seam is prohibited here by position: a
+     * publish workflow reads `release/native-release-lines.json` and has no say in the matter.
+     */
+    /* Another supported option, another bypass — this one found in review. Each mode of the
+     * preflight exits early, so an authorizing command that also carries `--version=` is decided
+     * by whichever is handled first, and `--version=` is a semver SHAPE check. Measured:
+     * `--authorize-version=9.9.9 --line=ui-compose --version=9.9.9` exited 0 while the canonical
+     * declaration authorized nothing, printing "is a publishable version" into the job log. The
+     * script now refuses conflicting modes outright, which covers every caller; this keeps the
+     * combination out of a publish workflow by position as well. */
+    if (/--version=/.test(step.script)) {
+      unauthorized.push(`${workflow.path} → "${step.name}" passes \`--version=\` alongside \`--authorize-version=\`. Each mode of the preflight exits on its own, so the run would be decided by the shape check rather than by the authorization. Measured: that combination exited 0 while release/native-release-lines.json authorized nothing. Validate the shape in its own earlier step, as these workflows already do`);
+    }
+    /* And the same bypass by repetition rather than by mode. These selectors are read with the
+     * first matching argument, so a second one is discarded in silence while still satisfying a
+     * check that only asks whether the right spelling is present. Measured in review: once a line
+     * authorizes a version, `--authorize-version=0.1.0 --authorize-version="$VERSION"` passed every
+     * structural check here and authorized 0.1.0 for a 9.9.9 dispatch; `--line=` repeats the trick
+     * on the other half. The script refuses both outright now; this keeps them out of a publish
+     * workflow by position as well. */
+    for (const selector of ["--authorize-version=", "--line="]) {
+      const occurrences = step.script.split(selector).length - 1;
+      if (occurrences > 1) {
+        unauthorized.push(`${workflow.path} → "${step.name}" passes \`${selector}\` ${occurrences} times. Only the first occurrence is read, so the others satisfy a check without affecting what is authorized — which is a publication approved by an argument that never ran`);
+      }
+    }
+    if (/--lines-file=/.test(step.script)) {
+      unauthorized.push(`${workflow.path} → "${step.name}" passes \`--lines-file=\`. That option exists only so ci.yml can prove the authorization accepts and refuses correctly against fixtures; a publish must read the canonical release/native-release-lines.json. Measured: pointed at the accepting fixture, this step authorized 0.1.0 while the canonical file authorized nothing, and every other check here still passed`);
+    }
+
+    const authorizedValue = step.env?.VERSION;
+    if (authorizedValue !== "${{ inputs.version }}") {
+      unauthorized.push(`${workflow.path} → "${step.name}" binds \`VERSION: ${authorizedValue === undefined ? "(nothing)" : authorizedValue}\`; it must be exactly \`\${{ inputs.version }}\`. The publish steps read the dispatch input independently, so any other value here authorizes one version and publishes another — measured: a literal left this entire preflight green`);
+    }
+  }
+
+
+  /*
+   * AND THE ORDERING HAS TO HOLD FOR THE *DECLARED* PUBLISHING STEP, NOT ONLY FOR ONE THIS FILE
+   * RECOGNISES BY ITS COMMAND.
+   *
+   * The sweep above finds a publication by a contiguous command token, and that is a discovery
+   * mechanism: a publication delegated somewhere else carries no token and is not found. Review
+   * measured both forms on `11d9c9b` — the Compose upload body moved into a local composite action
+   * (`uses:`, so `script` is empty) and the same body moved into `bash ./publish.sh` — each with the
+   * publishing step's name, condition and env kept and the authorization moved below it. The whole
+   * preflight exited 0 both times. An ordering check that depends on finding the publication is
+   * only as strong as the finding.
+   *
+   * PUBLISH_CONTRACT names the one step allowed to publish, per workflow, and that name does not
+   * depend on what the step's body happens to contain. So the ordering is required of it by name,
+   * and — fail-closed — the publication has to be WRITTEN THERE: the step's own `run:` must carry a
+   * recognised live publication. A step that delegates its body to an action or a script file is
+   * refused outright rather than scanned, because its body is a file this check does not read, and
+   * "I could not find a publication" must never read as "there is none".
+   */
+  const declaredPublishStep = PUBLISH_CONTRACT[workflow.path]?.publishes;
+  if (declaredPublishStep) {
+    const declared = steps.filter((step) => step.name === declaredPublishStep);
+    if (declared.length === 0) {
+      unauthorized.push(`${workflow.path} has no step named "${declaredPublishStep}", which PUBLISH_CONTRACT names as the one step allowed to publish. The ordering of the authorization is required of that step by name, so a renamed or removed publishing step leaves nothing for it to be ordered against`);
+    }
+    for (const step of declared) {
+      if (sideEffectLines(step.script).length === 0) {
+        unauthorized.push(`${workflow.path} → "${step.name}" (${step.path}) does not carry a recognised live publication in its own \`run:\`${step.uses ? ` — it runs \`uses: ${step.uses}\`` : step.script.trim() ? ` — its script is ${JSON.stringify(step.script.trim().slice(0, 80))}` : " — it has no script at all"}. The publication must be written in this step, not delegated to an action or a script file: a delegated body is a file this check does not read, and every structural property here would still pass while the upload happened somewhere unexamined. Measured: the body moved into a local composite action, and into \`bash ./publish.sh\`, each left this entire preflight green`);
+      }
+      const earlier = authorizing.filter((a) => a.job === step.job && a.index < step.index);
+      if (earlier.length === 0) {
+        const sameJob = authorizing.filter((a) => a.job === step.job);
+        unauthorized.push(`${workflow.path} → "${step.name}" (${step.path}) is the declared publishing step and has no version authorization before it in the same job. ${sameJob.length === 0 ? `jobs.${step.job} runs no authorization at all` : `the authorization is at ${sameJob.map((a) => a.path).join(", ")}, after it`}. This is asked of the declared step by name rather than of a step whose command this file recognises, because a publication delegated elsewhere carries no recognisable command and was measured passing the sweep-based ordering check`);
+      }
+    }
+  }
+
+  /*
+   * AND IT HAS TO RUN FIRST.
+   *
+   * The second half of the same finding, and it was a bypass too: moving "Authorize the version"
+   * after "Publish to Maven Central (Portal staging)" left the preflight green, because the check
+   * looked for an authorizing step *anywhere* in the workflow and never asked where. Steps in a
+   * job run in order, so an authorization after the upload refuses a coordinate that is already
+   * permanent — the gate reads as present and decides nothing.
+   *
+   * So each job carrying a live publication must also carry an authorization at a LOWER step
+   * index. Same job, because that is what makes the ordering GitHub's rather than a convention:
+   * a failing step ends its own job's remaining steps, and nothing weaker than that stops an
+   * upload. A publication in a job with no authorization in front of it is the same defect in its
+   * starkest form, so it is reported by the same clause.
+   */
+  for (const step of steps) {
+    if (sideEffectLines(step.script).length === 0) continue;
+    const earlier = authorizing.filter((a) => a.job === step.job && a.index < step.index);
+    if (earlier.length === 0) {
+      const sameJob = authorizing.filter((a) => a.job === step.job);
+      unauthorized.push(
+        `${workflow.path} → "${step.name}" (${step.path}) carries a live publication with no version authorization before it in the same job. ${
+          sameJob.length === 0
+            ? `jobs.${step.job} runs no authorization at all`
+            : `the authorization is at ${sameJob.map((a) => a.path).join(", ")}, after it`
+        }. Steps run in order and a failing step ends the job, which is the whole mechanism: an authorization that runs after the upload refuses a coordinate that is already permanent. Measured: moving the Compose authorization below the publish step left every other check in this block green`,
+      );
+    }
+  }
+
+  /*
+   * And the binding itself. A step that runs a Gradle publish task must bind VERSION_NAME to the
+   * dispatch input and nothing else — not a literal, not a different expression, not a value
+   * computed at run time. This is what makes the dry run evidence about the publication: both read
+   * the same single source.
+   */
+  if (workflow.path !== ".github/workflows/publish-compose.yml") continue;
+  for (const step of steps) {
+    if (!/gradle :ui:publish/.test(step.script)) continue;
+    const bound = step.env?.VERSION_NAME;
+    if (bound !== "${{ inputs.version }}") {
+      looseVersionBinding.push(`${workflow.path} → "${step.name}" binds \`VERSION_NAME: ${bound === undefined ? "(nothing)" : bound}\``);
+    }
+  }
+}
+
+check(
+  "VI-VERSION-AUTHORIZED",
+  unauthorized.length === 0,
+  `${unauthorized.join("; ")}. release/native-release-lines.json is the only thing that authorizes a native publish, and the step that reads it is the only thing that makes that true.`,
+);
+
+check(
+  "VI-COMPOSE-VERSION-BOUND-TO-INPUT",
+  looseVersionBinding.length === 0,
+  `${looseVersionBinding.join("; ")}. Every Gradle publish step must bind \`VERSION_NAME: \${{ inputs.version }}\` exactly. Any other value makes the rehearsal and the upload ask for different numbers, and the dry run then proves nothing about the version that is actually published — measured: a literal here left this entire preflight green.`,
 );
 
 // ---------------------------------------------------------------------------

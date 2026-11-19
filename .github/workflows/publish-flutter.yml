@@ -57,6 +57,22 @@ jobs:
         working-directory: .
         run: node scripts/check-native-publish-preflight.mjs
 
+      # Shape is not authorization. The step above proves the dispatch input *could* be a version;
+      # this proves it is the one release/native-release-lines.json declares for this line, so the
+      # number that reaches an irreversible registry has been through review rather than typed into
+      # a dispatch box. `authorizedNext: null` there means no publish is authorized, and that is the
+      # current declared state.
+      #
+      # Gated by the publication's own condition, deliberately: a dry run must keep rehearsing the
+      # whole release path under any shape-valid version, which is how a defect in that path is
+      # found without publishing anything.
+      - name: Authorize the version
+        if: ${{ inputs.dry_run == false }}
+        working-directory: .
+        env:
+          VERSION: ${{ inputs.version }}
+        run: node scripts/check-native-publish-preflight.mjs --authorize-version="$VERSION" --line=ui-flutter
+
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
