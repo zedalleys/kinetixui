@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -31,7 +31,6 @@ type Family = {
   test: string;
   directional: boolean;
   strict: boolean;
-  trackHelperCalls: boolean;
 };
 type Platform = { dir: string; ext: string; families: Record<string, Family> };
 type Spec = { platforms: Record<string, Platform>; gaps: Record<string, string[]>; kinds: Record<string, string> };
@@ -55,7 +54,7 @@ const spec: Spec = JSON.parse(
          dir: p.dir, ext: p.ext,
          families: Object.fromEntries(Object.entries(p.families).map(([fn, f]) => [fn, {
            helper: f.helper, members: f.members, test: f.test, directional: Boolean(f.directions),
-           strict: Boolean(f.strict), trackHelperCalls: Boolean(f.trackHelperCalls),
+           strict: Boolean(f.strict),
          }])),
        }]));
        const gaps = Object.fromEntries(Object.entries(s.KNOWN_GAPS).map(([n, g]) => [n, Object.keys(g)]));
@@ -91,7 +90,9 @@ function member(platform: string, p: Platform, family: Family, directions = fami
     ANIMATES[platform] +
     (directions ? "// .expanding / .collapsing chosen from state\n" : "") +
     `// routes through ${helper}\n` +
-    (family.trackHelperCalls ? `.modifier(${helper}())\n` : "") +
+    (helper === "KinetixSelectionIndicator" || helper === "kinetix_selection_indicator"
+      ? platform === "Compose" ? "KinetixSelectionIndicator { }\n" : "KinetixSelectionIndicator()\n"
+      : "") +
     // A strict family must read the setting and CALL the helper, not just mention it.
     (family.strict ? `${PREFERENCE[platform]}\n${helper}.runs(reduceMotion)\n` : "")
   );
@@ -158,6 +159,12 @@ function suite(
 function fixture(): string {
   const dir = mkdtempSync(join(tmpdir(), "kx-native-motion-"));
   temps.push(dir);
+  const contractFile = "tokens/contracts/motion.json";
+  const contract = readFileSync(join(repoRoot, contractFile), "utf8");
+  write(dir, contractFile, contract);
+  for (const file of JSON.parse(contract).roles["selection-indicator"].evidence) {
+    write(dir, file, readFileSync(join(repoRoot, file), "utf8"));
+  }
   for (const [name, p] of Object.entries(spec.platforms)) {
     mkdirSync(join(dir, p.dir), { recursive: true });
     for (const [familyName, family] of Object.entries(p.families)) {

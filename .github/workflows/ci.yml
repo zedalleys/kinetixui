@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, claude/m512-motion-promotion-register, codex/m689-motion-governance-repair]
+    branches: [main, claude/m512-motion-promotion-register, codex/m689-motion-governance-repair, codex/m6814-native-integration-recovery]
 
 permissions:
   contents: read
@@ -143,6 +143,12 @@ jobs:
       # unrelated roles each pass.
       - name: Motion promotion controls (a silent promotion really fails)
         run: pnpm check:motion-promotion-controls
+
+      - name: Selection verification rejects missing consumers, evidence, and invalid decisions
+        run: node scripts/selection-verification-negative-controls.mjs
+
+      - name: SwiftUI pixel analyzer rejects snapped forward and reverse travel
+        run: python3 -B packages/ui-swiftui/Acceptance/Selection/test_measure_selection.py
 
       - name: Changelog page is current with the packages
         run: pnpm check:releases
