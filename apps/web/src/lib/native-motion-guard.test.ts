@@ -25,7 +25,14 @@ const repoRoot = join(process.cwd(), "../..");
 const script = join(repoRoot, "scripts/check-native-motion.mjs");
 const specPath = join(repoRoot, "scripts/native-motion-spec.mjs");
 
-type Family = { helper: string; members: string[]; test: string; directional: boolean; strict: boolean };
+type Family = {
+  helper: string;
+  members: string[];
+  test: string;
+  directional: boolean;
+  strict: boolean;
+  trackHelperCalls: boolean;
+};
 type Platform = { dir: string; ext: string; families: Record<string, Family> };
 type Spec = { platforms: Record<string, Platform>; gaps: Record<string, string[]>; kinds: Record<string, string> };
 
@@ -47,7 +54,8 @@ const spec: Spec = JSON.parse(
        const platforms = Object.fromEntries(Object.entries(s.PLATFORMS).map(([n, p]) => [n, {
          dir: p.dir, ext: p.ext,
          families: Object.fromEntries(Object.entries(p.families).map(([fn, f]) => [fn, {
-           helper: f.helper, members: f.members, test: f.test, directional: Boolean(f.directions), strict: Boolean(f.strict),
+           helper: f.helper, members: f.members, test: f.test, directional: Boolean(f.directions),
+           strict: Boolean(f.strict), trackHelperCalls: Boolean(f.trackHelperCalls),
          }])),
        }]));
        const gaps = Object.fromEntries(Object.entries(s.KNOWN_GAPS).map(([n, g]) => [n, Object.keys(g)]));
@@ -83,6 +91,7 @@ function member(platform: string, p: Platform, family: Family, directions = fami
     ANIMATES[platform] +
     (directions ? "// .expanding / .collapsing chosen from state\n" : "") +
     `// routes through ${helper}\n` +
+    (family.trackHelperCalls ? `.modifier(${helper}())\n` : "") +
     // A strict family must read the setting and CALL the helper, not just mention it.
     (family.strict ? `${PREFERENCE[platform]}\n${helper}.runs(reduceMotion)\n` : "")
   );
@@ -226,6 +235,29 @@ describe("an animated component must be accounted for", () => {
     const [, p] = first();
     write(dir, join(p.dir, `Static${p.ext}`), "// nothing moves here\n");
     expect(run(dir).ok).toBe(true);
+  });
+});
+
+describe("tracked delegation agrees with the family members", () => {
+  it("rejects a declared member without a helper call", () => {
+    const dir = fixture();
+    const platform = spec.platforms.SwiftUI;
+    const family = platform.families.selectionIndicator;
+    write(dir, join(platform.dir, family.members[0]), PREFERENCE.SwiftUI);
+    const { ok, output } = run(dir);
+    expect(ok).toBe(false);
+    expect(output).toContain("selectionIndicator helper calls disagree with the declared members");
+  });
+
+  it("rejects an unregistered helper call even without local animation", () => {
+    const dir = fixture();
+    const platform = spec.platforms.SwiftUI;
+    const family = platform.families.selectionIndicator;
+    const helper = family.helper.replace(platform.ext, "");
+    write(dir, join(platform.dir, `Undeclared${platform.ext}`), `.modifier(${helper}())`);
+    const { ok, output } = run(dir);
+    expect(ok).toBe(false);
+    expect(output).toContain("Undeclared.swift: selectionIndicator helper calls disagree with the declared members");
   });
 });
 
