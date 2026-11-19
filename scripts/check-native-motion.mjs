@@ -70,6 +70,18 @@ for (const p of ledger) {
       errors.push(`${name}: the ${familyName} motion helper ${family.helper} is missing from ${p.dir}.`);
     }
 
+    // Delegating controls may have no local animation call for the inventory to detect.
+    if (family.trackHelperCalls && files.includes(family.helper)) {
+      const call = new RegExp(`\\b${family.helper.slice(0, -p.ext.length)}\\s*\\(`);
+      for (const file of files) {
+        if (file === family.helper) continue;
+        const callsHelper = call.test(read(`${p.dir}/${file}`));
+        if (callsHelper !== family.members.includes(file)) {
+          errors.push(`${name}/${file}: ${familyName} helper calls disagree with the declared members.`);
+        }
+      }
+    }
+
     // 2. Every member must reach the reader's setting, directly or through its helper.
     for (const member of family.members) {
       const src = read(`${p.dir}/${member}`);

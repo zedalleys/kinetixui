@@ -18,6 +18,6 @@ python3 measure-selection.py /tmp/selection-reduced.mp4 reduce
 
 The forward and reverse paths must expose distinct painted positions. The interrupted first-to-last transition must approach the middle target from its rendered position. RTL reverses the physical endpoints. The fixture's reduced-motion override keeps each sampled visible position at its expected endpoint.
 
-For the negative control, in a disposable checkout replace the indicator’s `withAnimation(Self.animation(reduceMotion: reduceMotion, stableGeometry: canTravel))` with `withAnimation(nil)`. Rebuild, record in LTR and run the same sampler. Both controls must fail for missing rendered intermediate positions. Restore the original file and repeat the LTR run.
+For the negative control, in a disposable checkout replace the indicator’s `withAnimation(animation)` with `withAnimation(nil)`. Rebuild, record in LTR and run the same sampler. Both controls must fail for missing rendered intermediate positions. Restore the original file and repeat the LTR run.
 
 Run the project’s `testVoiceOverSelectionForTabsAndSegments` XCTest only on the dedicated simulator. It confirms spoken selected and disabled traits and observes the shared selection after actual VoiceOver activation.

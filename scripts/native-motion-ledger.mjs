@@ -44,7 +44,7 @@ import { DIRECTION_TERMS, KNOWN_GAPS, PLATFORMS, directionTermDefects } from "./
  * the real ledger forbids. Same reasoning as the `ledgerPlatforms` seam it replaces.
  *
  * @param {object} [seams]
- * @param {Record<string, { contractPlatform?: string, dir?: string, ext?: string, animates?: RegExp, preference?: RegExp, families?: Record<string, { contractRole?: string | null, roleExemption?: string, helper?: string, members?: string[], test?: string, strict?: boolean, directions?: RegExp[] }> }>} [seams.platforms]
+ * @param {Record<string, { contractPlatform?: string, dir?: string, ext?: string, animates?: RegExp, preference?: RegExp, families?: Record<string, { contractRole?: string | null, roleExemption?: string, helper?: string, members?: string[], test?: string, strict?: boolean, trackHelperCalls?: boolean, directions?: RegExp[] }> }>} [seams.platforms]
  * @param {Record<string, Record<string, RegExp>>} [seams.directionTerms]
  * @param {Record<string, Record<string, string>>} [seams.knownGaps]
  * @returns {{ platforms: Array<object>, errors: string[] }}

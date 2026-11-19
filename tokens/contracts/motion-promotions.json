@@ -90,7 +90,23 @@
         "note": "Surfaced by this register rather than by a branch: `overlay` has had two platform consumers and `status: observed` with no recorded decision, so the rule was already triggered and nothing said so. No promotion is proposed here."
       },
       "review": "Open and previously unrecorded. Its single evidence file covers React only; Angular's side has no evidence entry. Decide whether to add Angular evidence and promote, or to state why `observed` is the right resting status for this role."
+    },
+    "selection-indicator": {
+      "state": "pending",
+      "platforms": [
+        "angular",
+        "compose",
+        "flutter",
+        "react",
+        "swiftui"
+      ],
+      "triggeredBy": {
+        "platform": "flutter",
+        "reference": "packages/ui-flutter/lib/src/kinetix_selection_indicator.dart",
+        "note": "Flutter was the first additional registered implementation in this composition."
+      },
+      "review": "Review the five-platform exact-head evidence, independent approval and native device acceptance before making a promotion decision."
     }
   },
-  "$note": "selection-indicator has no entry: on main only React consumes it, so the rule is not triggered and there is nothing to decide. The branch that adds the second platform adds the decision — which is this register working, not a gap in it."
+  "$note": "The selection-indicator trigger is recorded with its five verified implementation declarations. Its decision remains pending."
 }

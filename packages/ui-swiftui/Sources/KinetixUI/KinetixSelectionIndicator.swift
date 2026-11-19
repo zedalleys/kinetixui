@@ -67,8 +67,13 @@ struct KinetixSelectionIndicator: ViewModifier {
     @State private var previousDirection: LayoutDirection?
     @State private var resetsIndicator = false
 
-    static func animation(reduceMotion: Bool, stableGeometry: Bool) -> Animation? {
-        guard !reduceMotion && stableGeometry else { return nil }
+    static func animation(
+        reduceMotion: Bool,
+        stableGeometry: Bool,
+        from previous: CGRect?,
+        to next: CGRect?
+    ) -> Animation? {
+        guard !reduceMotion, stableGeometry, let previous, let next, previous != next else { return nil }
         let duration = KinetixDuration.base.components
         let seconds = Double(duration.seconds) + Double(duration.attoseconds) / 1e18
         let curve = KinetixEasing.emphasized
@@ -101,9 +106,16 @@ struct KinetixSelectionIndicator: ViewModifier {
                 let stableGeometry = previousDirection == direction &&
                     next.count == items.count &&
                     zip(next, items).allSatisfy { $0.id == $1.id && $0.frame == $1.frame }
-                let canTravel = stableGeometry &&
-                    next.filter(\.selected).count == 1 && items.filter(\.selected).count == 1
-                withAnimation(Self.animation(reduceMotion: reduceMotion, stableGeometry: canTravel)) {
+                let previous = items.filter(\.selected)
+                let selected = next.filter(\.selected)
+                let canTravel = stableGeometry && previous.count == 1 && selected.count == 1
+                let animation = Self.animation(
+                    reduceMotion: reduceMotion,
+                    stableGeometry: canTravel,
+                    from: previous.first?.frame,
+                    to: selected.first?.frame
+                )
+                withAnimation(animation) {
                     items = next
                     previousDirection = direction
                 }

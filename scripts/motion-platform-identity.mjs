@@ -27,6 +27,9 @@ const evidence = new Map([
   ["scripts/check-registry-motion.mjs", { react: ["loop"] }],
   ["scripts/check-native-motion.mjs", { swiftui: ["loop"], compose: ["loop"], flutter: ["loop"] }],
   ["scripts/angular-selection-glide.mjs", { angular: ["selection-indicator"] }],
+  ["packages/ui-flutter/test/selection_indicator_test.dart", { flutter: ["selection-indicator"] }],
+  ["packages/ui-swiftui/Tests/KinetixUITests/SelectionIndicatorTests.swift", { swiftui: ["selection-indicator"] }],
+  ["packages/ui-swiftui/Acceptance/Selection/measure-selection.py", { swiftui: ["selection-indicator"] }],
   ["packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionIndicatorTest.kt", { compose: ["selection-indicator"] }],
 ]);
 

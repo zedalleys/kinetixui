@@ -56,6 +56,13 @@ export const PLATFORMS = {
         members: ["Toggle.swift", "Checkbox.swift", "RadioGroup.swift"],
         test: "packages/ui-swiftui/Tests/KinetixUITests/SelectionMotionTests.swift",
       },
+      selectionIndicator: {
+        contractRole: "selection-indicator",
+        helper: "KinetixSelectionIndicator.swift",
+        trackHelperCalls: true,
+        members: ["Tabs.swift", "SegmentedControl.swift"],
+        test: "packages/ui-swiftui/Tests/KinetixUITests/SelectionIndicatorTests.swift",
+      },
       slide: {
         contractRole: "spatial",
         // A panel that slides across the screen is positional movement, which is what Reduce Motion
