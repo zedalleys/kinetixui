@@ -59,7 +59,6 @@ export const PLATFORMS = {
       selectionIndicator: {
         contractRole: "selection-indicator",
         helper: "KinetixSelectionIndicator.swift",
-        trackHelperCalls: true,
         members: ["Tabs.swift", "SegmentedControl.swift"],
         test: "packages/ui-swiftui/Tests/KinetixUITests/SelectionIndicatorTests.swift",
       },

@@ -52,7 +52,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 import { consumerIdentityErrors, isRepoFile } from "./motion-platform-identity.mjs";
-import { composeLedger } from "./native-motion-ledger.mjs";
+import { composeLedger, selectionMembershipErrors } from "./native-motion-ledger.mjs";
 
 const NATIVE_FILES = {
   swift: ["packages/tokens/dist/ios/KinetixMotion.swift", "packages/ui-swiftui/Sources/KinetixUI/KinetixMotion.swift"],
@@ -456,6 +456,10 @@ export function motionErrors(overrides = {}, ledgerPlatforms = undefined) {
    * problem it finds in one run, and a ledger fault should not hide a contract fault. */
   const composed = composeLedger(ledgerPlatforms ? { platforms: ledgerPlatforms } : undefined);
   for (const e of composed.errors) fail(e);
+  for (const e of selectionMembershipErrors(composed.platforms, {
+    list: (dir) => existsSync(join(ROOT, dir)) ? readdirSync(join(ROOT, dir)) : [],
+    read,
+  })) fail(e);
 
   /* The platform mapping comes from the ledger, which now names itself. It used to be a hardcoded
    * `{ SwiftUI, Compose, Flutter }` allowlist here, with `if (!platform) continue;` — so a platform

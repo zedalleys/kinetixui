@@ -3,6 +3,7 @@
   "$rule": "motion.json's selection-indicator note states the rule this file enforces: a role is promoted to proven once a SECOND platform consumes it. So every role consumed by two or more platforms needs a decision here, and `proven` requires that decision to be `approved`. A role consumed by one platform needs no entry — there is nothing yet to decide.",
   "$states": {
     "pending": "The rule has been triggered and the decision is deliberately open. The role's status must stay `observed` (or `proposed`). `review` says what the decision is waiting on.",
+    "deferred": "The review is deliberately deferred. Keep the role observed or proposed and record the reason in review.",
     "approved": "A promotion to `proven` is authorised. `approval.authority` says WHO authorised it, and `approval.basis` says on what — a reference a reviewer can check, not a restatement of the status."
   },
   "decisions": {

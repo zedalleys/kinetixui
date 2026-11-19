@@ -49,18 +49,46 @@ import { fileURLToPath } from "node:url";
 import { consumerIdentityErrors, isRepoFile } from "./motion-platform-identity.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const read = (p) => JSON.parse(readFileSync(`${root}/${p}`, "utf8"));
+const readText = (file) => readFileSync(root + "/" + file, "utf8");
+const read = (file) => JSON.parse(readText(file));
 
 export const CONTRACT = "tokens/contracts/motion.json";
 export const REGISTER = "tokens/contracts/motion-promotions.json";
 const PROMOTED = "proven";
 const OPEN_STATUSES = new Set(["proposed", "observed"]);
+const DECISION_FIELDS = new Set(["state", "platforms", "triggeredBy", "review", "approval"]);
+
+// JSON.parse keeps the last occurrence of a duplicate key. Inspect the original
+// tokens so two decisions for the same role cannot collapse into one.
+export function parsePromotionRegister(source) {
+  const register = JSON.parse(source);
+  const scopes = [];
+  for (const token of source.matchAll(/"(?:\\.|[^"\\])*"|[{}]/gs)) {
+    if (token[0] === "{") {
+      scopes.push(new Set());
+    } else if (token[0] === "}") {
+      scopes.pop();
+    } else if (/^\s*:/.test(source.slice(token.index + token[0].length))) {
+      const key = JSON.parse(token[0]);
+      const scope = scopes.at(-1);
+      if (scope.has(key)) throw new Error(REGISTER + ': duplicate key "' + key + '"');
+      scope.add(key);
+    }
+  }
+  return register;
+}
+
+function validApprovalDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(value);
+  return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
+}
 
 /**
  * The errors this gate finds, with injectable contract and file inputs, so the negative controls can
  * mutate a deep copy in memory instead of writing to the tree. The file inputs let controls model a missing or modified implementation.
  */
-export function promotionErrors({ contract = read(CONTRACT), register = read(REGISTER), isFile = (p) => isRepoFile(root, p), readSource = (p) => readFileSync(`${root}/${p}`, "utf8") } = {}) {
+export function promotionErrors({ contract = read(CONTRACT), register = parsePromotionRegister(readText(REGISTER)), isFile = (p) => isRepoFile(root, p), readSource = (p) => readFileSync(`${root}/${p}`, "utf8") } = {}) {
 const errors = [];
 const roles = contract.roles ?? {};
 const decisions = register.decisions ?? {};
@@ -97,10 +125,23 @@ for (const [name, role] of Object.entries(roles)) {
     continue;
   }
 
-  const { state, platforms: recorded, approval, review } = decision;
-  if (state !== "pending" && state !== "approved") {
-    errors.push(`${name}: decision state "${state}" is not one of "pending" or "approved" (see $states in ${REGISTER})`);
+  const { state, platforms: recorded, approval, review, triggeredBy } = decision;
+  if (!["pending", "deferred", "approved"].includes(state)) {
+    errors.push(name + ': invalid decision state "' + state + '" (see $states in ' + REGISTER + ")");
     continue;
+  }
+
+  for (const field of Object.keys(decision)) {
+    if (!DECISION_FIELDS.has(field)) errors.push(name + ": unsupported decision field " + field);
+  }
+
+  if (state !== "approved" || Object.hasOwn(decision, "triggeredBy")) {
+    const triggerMatches = triggeredBy && platforms.includes(triggeredBy.platform) &&
+      isFile(triggeredBy.reference) && (role.consumers ?? []).some(({ platform, file }) =>
+        platform === triggeredBy.platform && file === triggeredBy.reference);
+    if (!triggerMatches) {
+      errors.push(name + ": promotion trigger must reference a registered implementation for its platform and role");
+    }
   }
 
   if (!Array.isArray(recorded) || recorded.length !== platforms.length ||
@@ -113,6 +154,10 @@ for (const [name, role] of Object.entries(roles)) {
   }
 
   if (state === "approved") {
+    if (status !== PROMOTED) errors.push(name + ': approved decision requires role status "proven"');
+    if (!validApprovalDate(approval?.recordedAt)) {
+      errors.push(name + ": approved decision requires a valid approval.recordedAt date (YYYY-MM-DD)");
+    }
     if (!approval || typeof approval.authority !== "string" || !approval.authority.trim()) {
       errors.push(`${name}: an approved promotion needs \`approval.authority\` — who authorised it`);
     }
@@ -120,12 +165,15 @@ for (const [name, role] of Object.entries(roles)) {
       errors.push(`${name}: an approved promotion needs \`approval.basis\` — a reference a reviewer can check, not a restatement of the status`);
     }
   } else {
+    if (Object.hasOwn(decision, "approval")) {
+      errors.push(name + ": " + state + " decision must not contain approval metadata");
+    }
     if (typeof review !== "string" || !review.trim()) {
       errors.push(`${name}: a pending decision needs \`review\` — what the decision is waiting on. An empty one records nothing.`);
     }
     if (status === PROMOTED) {
       errors.push(
-        `${name}: status is "${PROMOTED}" while ${REGISTER} still records the decision as "pending".\n` +
+        `${name}: status is "${PROMOTED}" while ${REGISTER} still records the decision as "${state}".\n` +
           `      This is the promotion this check exists to refuse. To promote it legitimately, set the decision to\n` +
           `      "approved" with an authority and a basis in the same change, and say in the role's note what proved it.`,
       );
@@ -145,11 +193,19 @@ return { errors, triggered, decisions };
 /** The counts the CLI reports, kept with the gate so the controls can assert on them too. */
 export const summarise = ({ triggered, decisions }) => {
   const approved = Object.values(decisions).filter((d) => d.state === "approved").length;
-  return `check:motion-promotion ok — ${triggered.length} role${triggered.length === 1 ? "" : "s"} consumed by two or more platforms, ${approved} approved and ${triggered.length - approved} pending.`;
+  const deferred = Object.values(decisions).filter((d) => d.state === "deferred").length;
+  const status = approved + " approved, " + (triggered.length - approved - deferred) + " pending, " + deferred + " deferred";
+  return `check:motion-promotion ok — ${triggered.length} role${triggered.length === 1 ? "" : "s"} consumed by two or more platforms, ${status}.`;
 };
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-const result = promotionErrors();
+let result;
+try {
+  result = promotionErrors();
+} catch (error) {
+  console.error(error.message);
+  process.exit(1);
+}
 const errors = result.errors;
 if (errors.length) {
   console.error(errors.map((e) => `  ✗ ${e}`).join("\n"));

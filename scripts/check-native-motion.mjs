@@ -38,7 +38,8 @@ const root = argRoot ? resolve(argRoot) : fileURLToPath(new URL("..", import.met
 const read = (p) => (existsSync(`${root}/${p}`) ? readFileSync(`${root}/${p}`, "utf8") : null);
 
 import { directionCoverage, testNames } from "./native-motion-spec.mjs";
-import { composeLedger } from "./native-motion-ledger.mjs";
+import { composeLedger, selectionMembershipErrors } from "./native-motion-ledger.mjs";
+import { isRepoFile, selectionEvidenceErrors } from "./motion-platform-identity.mjs";
 
 /* The ledger is composed once, by the module both gates share, and its coherence errors are reported
  * here as well as by `check:motion-tokens`. Before this, each gate read its own projection of the
@@ -47,6 +48,16 @@ import { composeLedger } from "./native-motion-ledger.mjs";
  * a fact belonging to neither projection was checked by nobody. */
 const { platforms: ledger, errors } = composeLedger();
 const summary = [];
+const motionContract = read("tokens/contracts/motion.json");
+if (motionContract === null) {
+  errors.push("Missing tokens/contracts/motion.json for selection evidence validation.");
+} else {
+  errors.push(...selectionEvidenceErrors(JSON.parse(motionContract).roles?.["selection-indicator"], (file) => isRepoFile(root, file)));
+}
+errors.push(...selectionMembershipErrors(ledger, {
+  list: (dir) => existsSync(resolve(root, dir)) ? readdirSync(resolve(root, dir)) : [],
+  read,
+}));
 
 for (const p of ledger) {
   const name = p.name;
@@ -68,18 +79,6 @@ for (const p of ledger) {
     // 1. The helper must exist — it is what the family's members delegate to.
     if (!files.includes(family.helper)) {
       errors.push(`${name}: the ${familyName} motion helper ${family.helper} is missing from ${p.dir}.`);
-    }
-
-    // Delegating controls may have no local animation call for the inventory to detect.
-    if (family.trackHelperCalls && files.includes(family.helper)) {
-      const call = new RegExp(`\\b${family.helper.slice(0, -p.ext.length)}\\s*\\(`);
-      for (const file of files) {
-        if (file === family.helper) continue;
-        const callsHelper = call.test(read(`${p.dir}/${file}`));
-        if (callsHelper !== family.members.includes(file)) {
-          errors.push(`${name}/${file}: ${familyName} helper calls disagree with the declared members.`);
-        }
-      }
     }
 
     // 2. Every member must reach the reader's setting, directly or through its helper.

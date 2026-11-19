@@ -44,7 +44,7 @@ import { DIRECTION_TERMS, KNOWN_GAPS, PLATFORMS, directionTermDefects } from "./
  * the real ledger forbids. Same reasoning as the `ledgerPlatforms` seam it replaces.
  *
  * @param {object} [seams]
- * @param {Record<string, { contractPlatform?: string, dir?: string, ext?: string, animates?: RegExp, preference?: RegExp, families?: Record<string, { contractRole?: string | null, roleExemption?: string, helper?: string, members?: string[], test?: string, strict?: boolean, trackHelperCalls?: boolean, directions?: RegExp[] }> }>} [seams.platforms]
+ * @param {Record<string, { contractPlatform?: string, dir?: string, ext?: string, animates?: RegExp, preference?: RegExp, families?: Record<string, { contractRole?: string | null, roleExemption?: string, helper?: string, members?: string[], test?: string, strict?: boolean, directions?: RegExp[] }> }>} [seams.platforms]
  * @param {Record<string, Record<string, RegExp>>} [seams.directionTerms]
  * @param {Record<string, Record<string, string>>} [seams.knownGaps]
  * @returns {{ platforms: Array<object>, errors: string[] }}
@@ -175,4 +175,35 @@ export function composeLedger({ platforms = PLATFORMS, directionTerms = DIRECTIO
   }
 
   return { platforms: composed, errors };
+}
+
+// Calls in production files are independent of the ledger's declared membership. The
+// helper's filename in Dart is snake_case and Kotlin also accepts a trailing lambda.
+const selectionHelpers = new Map([
+  ["swiftui", { file: "KinetixSelectionIndicator.swift", call: /\bKinetixSelectionIndicator\s*\(/ }],
+  ["compose", { file: "KinetixSelectionIndicator.kt", call: /\bKinetixSelectionIndicator\s*[(\{]/ }],
+  ["flutter", { file: "kinetix_selection_indicator.dart", call: /\bKinetixSelectionIndicator\s*\(/ }],
+]);
+
+export function selectionMembershipErrors(platforms, { list, read }) {
+  const errors = [];
+  for (const p of platforms) {
+    const helper = selectionHelpers.get(p.contractPlatform);
+    if (!helper) continue;
+    const family = p.families.find((family) => family.name === "selectionIndicator");
+    const members = new Set(family?.members ?? []);
+    const callers = new Set(list(p.dir).filter((file) => file.endsWith(p.ext) && file !== helper.file)
+      .filter((file) => helper.call.test(read(p.dir + "/" + file).replace(/\/\*[\s\S]*?\*\/|\/\/[^\r\n]*/g, ""))));
+    for (const file of callers) {
+      if (!members.has(file)) {
+        errors.push(p.name + "/" + file + ": selectionIndicator helper calls disagree with the declared members (missing from ledger).");
+      }
+    }
+    for (const file of members) {
+      if (!callers.has(file)) {
+        errors.push(p.name + "/" + file + ": selectionIndicator helper calls disagree with the declared members (missing helper call).");
+      }
+    }
+  }
+  return errors;
 }

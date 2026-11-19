@@ -33,6 +33,28 @@ const evidence = new Map([
   ["packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/SelectionIndicatorTest.kt", { compose: ["selection-indicator"] }],
 ]);
 
+// Each platform's reviewed selection suite is required. SwiftUI has two complementary
+// probes: direction resolver tests and the mounted pixel analyzer.
+const selectionEvidence = [...evidence].flatMap(([file, claims]) =>
+  Object.entries(claims)
+    .filter(([, roles]) => roles.includes("selection-indicator"))
+    .map(([platform]) => [platform, file]));
+
+export function selectionEvidenceErrors(role, isFile) {
+  const platforms = new Set((role?.consumers ?? []).map(({ platform }) => platform));
+  const paths = new Set(role?.evidence ?? []);
+  const errors = [];
+  for (const platform of new Set(selectionEvidence.map(([platform]) => platform))) {
+    if (!platforms.has(platform)) errors.push("selection-indicator: missing required " + platform + " consumer");
+  }
+  for (const [platform, file] of selectionEvidence) {
+    if (!paths.has(file) || !isFile(file)) {
+      errors.push("selection-indicator: missing required " + platform + " evidence: " + file);
+    }
+  }
+  return errors;
+}
+
 function repoPath(path) {
   return typeof path === "string" && !path.includes("\0") &&
     path.split("/").every((part) => part && part !== "." && part !== ".." && !part.includes("\\"));
@@ -95,5 +117,6 @@ export function consumerIdentityErrors(name, role, { isFile, read }) {
       errors.push(`${name}: evidence "${path}" is not registered for this role on a consuming platform`);
     }
   }
+  if (name === "selection-indicator") errors.push(...selectionEvidenceErrors(role, isFile));
   return { errors, platforms: [...validPlatforms].sort() };
 }

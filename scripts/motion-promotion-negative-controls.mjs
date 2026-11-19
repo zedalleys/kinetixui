@@ -141,7 +141,7 @@ control(`${ANCHOR.pending} is promoted legitimately — decision approved in the
   r.decisions[ANCHOR.pending] = {
     state: "approved",
     platforms: [...new Set(c.roles[ANCHOR.pending].consumers.map((x) => x.platform))].sort(),
-    approval: { authority: "owner", basis: "A named forward/reverse test pair exists on every consuming platform; see the per-platform evidence listed on the role." },
+    approval: { authority: "owner", recordedAt: "2026-11-19", basis: "A named forward/reverse test pair exists on every consuming platform; see the per-platform evidence listed on the role." },
   };
 });
 
@@ -155,7 +155,9 @@ control(`an unrelated role is added with two platforms AND its decision`, "pass"
     consumers: c.roles[ANCHOR.pending].consumers.filter((x) => ["react", "angular"].includes(x.platform)),
     evidence: [],
   };
-  r.decisions["zzz-unrelated-pair"] = { state: "pending", platforms: ["angular", "react"], review: "Newly triggered; nothing decided." };
+  const trigger = c.roles["zzz-unrelated-pair"].consumers.find(({ platform }) => platform === "angular");
+  r.decisions["zzz-unrelated-pair"] = { state: "pending", platforms: ["angular", "react"],
+    review: "Newly triggered; nothing decided.", triggeredBy: { platform: trigger.platform, reference: trigger.file } };
 });
 
 // Keep the consumer and promotion registers in sync, so they cannot mask an ownership failure.
@@ -220,7 +222,7 @@ for (const [name, mutate, diagnostic] of identityCases) {
   mutate(role, files);
   const platforms = [...new Set(role.consumers.map((consumer) => consumer.platform))].sort();
   if (platforms.length >= 2) {
-    r.decisions[indicator] = { state: "pending", platforms, review: "Synthetic ownership control." };
+    r.decisions[indicator].platforms = platforms;
   } else {
     delete r.decisions[indicator];
   }
