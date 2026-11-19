@@ -204,6 +204,21 @@ const controls = [
     expect: /role "loop" declares `pairingExempt` with no reason/,
     contract: (c) => void (c.roles.loop.pairingExempt = {}),
   },
+  {
+    /* The vocabulary-soundness rule is only worth having if the composition actually runs it. This
+     * control is the wiring's own proof: it writes the exact vocabulary the three native selection
+     * branches introduce — a direction mixed with the reader's preference in one alternation — and
+     * the ledger must reject it. Without the `directionTermDefects` call in `composeLedger`, this
+     * goes blind. */
+    name: "a direction family whose vocabulary the reduced-motion preference alone can satisfy",
+    expect: /names the reader's preference and not a direction of travel/,
+    terms: (t) => void (t.disclosure = { kind: "direction", forward: /forward/i, reverse: /backward|reduced.?motion/i }),
+  },
+  {
+    name: "a direction family added without declaring its kind",
+    expect: /declares no kind/,
+    terms: (t) => void delete t.disclosure.kind,
+  },
 ];
 
 // ── preconditions: every anchor these controls mutate must still exist ─────────────────────────
@@ -275,5 +290,5 @@ console.log(
   `\nmotion ledger controls — all ${controls.length} fire. The ledger cannot lose a platform's contract ` +
     `name, lose a whole platform the contract still registers, name a role that does not exist, ` +
     `declare an exemption without a reason or a register line, ` +
-    `or add a platform the contract is never checked against.`,
+    `or add a platform the contract is never checked against, and a direction family's vocabulary cannot admit the reader's reduced-motion preference or omit its kind.`,
 );

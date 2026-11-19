@@ -51,6 +51,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
+import { consumerIdentityErrors, isRepoFile } from "./motion-platform-identity.mjs";
 import { composeLedger } from "./native-motion-ledger.mjs";
 
 const NATIVE_FILES = {
@@ -306,7 +307,11 @@ export function motionErrors(overrides = {}, ledgerPlatforms = undefined) {
     }
     const isLoop = pairingExempt;
     if (!isLoop && (!(role.duration ?? []).length || !(role.easing ?? []).length)) fail(`${at} is a transition but names no duration or no easing`);
-    for (const ev of role.evidence ?? []) if (!exists(ev)) fail(`${at} cites evidence ${ev}, which does not exist`);
+    const identity = consumerIdentityErrors(name, role, {
+      isFile: (p) => Object.hasOwn(overrides, p) || isRepoFile(ROOT, p),
+      read,
+    });
+    for (const error of identity.errors) fail(error);
     const consumers = role.consumers ?? [];
     if (role.status === "proven") {
       if (!(role.evidence ?? []).length) fail(`${at} is proven but cites no evidence`);
@@ -318,7 +323,7 @@ export function motionErrors(overrides = {}, ledgerPlatforms = undefined) {
        * `loop|…` identity existed, and the register in point 5 had nothing to hold. Four React
        * components, one Angular stylesheet and three native helpers were all implemented and tested in
        * their own suites the whole time; the contract simply did not say so. */
-      if (new Set(consumers.map((c) => c.platform)).size < 2) fail(`${at} is proven but has consumers on fewer than two platforms`);
+      if (identity.platforms.length < 2) fail(`${at} is proven but has consumers on fewer than two platforms`);
     }
     if (role.status === "observed" && !consumers.length) fail(`${at} is observed but lists no consumer`);
     if (role.status === "proposed" && consumers.length) fail(`${at} is proposed but lists consumers; promote it to observed`);
@@ -390,7 +395,11 @@ export function motionErrors(overrides = {}, ledgerPlatforms = undefined) {
    *
    * So the identities are written down too, and the two must agree in both directions. */
   const register = JSON.parse(read("tokens/contracts/motion-consumers.json"));
-  const held = new Set(register.identities ?? []);
+  const held = new Set();
+  for (const id of register.identities ?? []) {
+    if (held.has(id)) fail(`contract: motion-consumers.json repeats consumer identity "${id}"`);
+    held.add(id);
+  }
   const actual = new Set(
     Object.entries(contract.roles ?? {}).flatMap(([name, role]) =>
       (role.consumers ?? []).map((c) => `${name}|${c.platform}|${c.file}`),

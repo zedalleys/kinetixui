@@ -9,6 +9,7 @@ import {
   model,
   signal,
 } from '@angular/core';
+import { attachSelectionIndicator } from './selection-indicator';
 
 /**
  * Tabs — the package's first composite, and where the keyboard pattern is established.
@@ -65,10 +66,14 @@ export class KxTab {
 @Component({
   selector: 'kx-tab-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: '<ng-content />',
+  template: '<ng-content /><span class="kx-selection-indicator" aria-hidden="true"></span>',
   host: { class: 'kx-tab-list', role: 'tablist' },
 })
-export class KxTabList {}
+export class KxTabList {
+  constructor() {
+    attachSelectionIndicator(':scope > .kx-tab', ':scope > .kx-tab[aria-selected="true"]');
+  }
+}
 
 /**
  * The panel is focusable (`tabindex="0"`) because after Tab moves out of the tab list the next stop must be

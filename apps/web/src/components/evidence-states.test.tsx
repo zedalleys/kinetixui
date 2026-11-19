@@ -79,10 +79,12 @@ describe("evidenceStatus reads each count by the contract that produced it", () 
       .map((e) => e.count / e.of);
     const below = Math.max(...shares.filter((x) => x < LIMITED_EVIDENCE_SHARE));
     const above = Math.min(...shares.filter((x) => x >= LIMITED_EVIDENCE_SHARE));
-    // the premise: both sides are populated today (Compose RTL 1 of 90 is limited, React RTL 22 of 98 is partial)
     expect(Number.isFinite(below) && Number.isFinite(above)).toBe(true);
-    expect(evidenceStatus("Compose", "rtl").state).toBe("limited");
-    expect(evidenceStatus("Compose", "rtl").summary).toBe("Tests record it for 1 Jetpack Compose entry so far.");
+    const composeRtl = evidenceStatus("Compose", "rtl");
+    const count = EVIDENCE_COUNTS.Compose.rtl;
+    const noun = count === 1 ? "entry" : "entries";
+    expect(composeRtl.state).toBe("limited");
+    expect(composeRtl.summary).toBe(`Tests record it for ${count} Jetpack Compose ${noun} so far.`);
   });
 
   it("reads publication from the platform's declared distribution, in factual words rather than maturity words", () => {

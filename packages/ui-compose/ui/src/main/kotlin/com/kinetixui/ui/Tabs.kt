@@ -41,16 +41,19 @@ fun KinetixTabsList(
     val colors = KinetixColorScheme.current
     val shape = RoundedCornerShape(dimensionResource(R.dimen.radius_lg))
 
-    Row(
-        modifier = modifier
-            .height(36.dp) // h-9, not on the shared scale
-            .clip(shape)
-            .background(colors.muted, shape)
-            .padding(dimensionResource(R.dimen.spacing_1)),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-        content = content,
-    )
+    KinetixSelectionIndicator { indicator ->
+        Row(
+            modifier = modifier
+                .height(36.dp) // h-9, not on the shared scale
+                .clip(shape)
+                .background(colors.muted, shape)
+                .padding(dimensionResource(R.dimen.spacing_1))
+                .then(indicator),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            content = content,
+        )
+    }
 }
 
 @Composable
@@ -63,12 +66,14 @@ fun KinetixTabsTrigger(
 ) {
     val colors = KinetixColorScheme.current
     val shape = RoundedCornerShape(dimensionResource(R.dimen.radius_md))
-    val containerColor = if (selected) colors.background else Color.Transparent
+    val (indicator, paintLocally) = KinetixSelectionIndicatorItem(selected)
+    val containerColor = if (paintLocally) colors.background else Color.Transparent
     val contentColor = if (selected) colors.foreground else colors.mutedForeground
 
     Box(
         modifier = modifier
             .clip(shape)
+            .then(indicator)
             .background(containerColor, shape)
             // selectable (not clickable): announces the Tab role and the selected state to TalkBack
             .selectable(selected = selected, enabled = enabled, role = Role.Tab, onClick = onClick)

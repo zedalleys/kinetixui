@@ -25,9 +25,16 @@ const repoRoot = join(process.cwd(), "../..");
 const script = join(repoRoot, "scripts/check-native-motion.mjs");
 const specPath = join(repoRoot, "scripts/native-motion-spec.mjs");
 
-type Family = { helper: string; members: string[]; test: string; directional: boolean; strict: boolean };
+type Family = {
+  helper: string;
+  members: string[];
+  test: string;
+  directional: boolean;
+  strict: boolean;
+  trackHelperCalls: boolean;
+};
 type Platform = { dir: string; ext: string; families: Record<string, Family> };
-type Spec = { platforms: Record<string, Platform>; gaps: Record<string, string[]> };
+type Spec = { platforms: Record<string, Platform>; gaps: Record<string, string[]>; kinds: Record<string, string> };
 
 /**
  * The spec, reduced to the plain data these tests need.
@@ -47,11 +54,13 @@ const spec: Spec = JSON.parse(
        const platforms = Object.fromEntries(Object.entries(s.PLATFORMS).map(([n, p]) => [n, {
          dir: p.dir, ext: p.ext,
          families: Object.fromEntries(Object.entries(p.families).map(([fn, f]) => [fn, {
-           helper: f.helper, members: f.members, test: f.test, directional: Boolean(f.directions), strict: Boolean(f.strict),
+           helper: f.helper, members: f.members, test: f.test, directional: Boolean(f.directions),
+           strict: Boolean(f.strict), trackHelperCalls: Boolean(f.trackHelperCalls),
          }])),
        }]));
        const gaps = Object.fromEntries(Object.entries(s.KNOWN_GAPS).map(([n, g]) => [n, Object.keys(g)]));
-       process.stdout.write(JSON.stringify({ platforms, gaps }));`,
+       const kinds = Object.fromEntries(Object.entries(s.DIRECTION_TERMS).map(([k, t]) => [k, t.kind]));
+       process.stdout.write(JSON.stringify({ platforms, gaps, kinds }));`,
     ],
     { encoding: "utf8" },
   ),
@@ -82,6 +91,7 @@ function member(platform: string, p: Platform, family: Family, directions = fami
     ANIMATES[platform] +
     (directions ? "// .expanding / .collapsing chosen from state\n" : "") +
     `// routes through ${helper}\n` +
+    (family.trackHelperCalls ? `.modifier(${helper}())\n` : "") +
     // A strict family must read the setting and CALL the helper, not just mention it.
     (family.strict ? `${PREFERENCE[platform]}\n${helper}.runs(reduceMotion)\n` : "")
   );
@@ -94,17 +104,51 @@ const PREFERENCE: Record<string, string> = {
   Flutter: "final reduce = KinetixDisclosureMotion.reduceMotionOf(context);",
 };
 
-/** Test declarations covering both directions in a family's own vocabulary. */
-function suite(platform: string, familyName: string, only?: "forward" | "reverse") {
+/**
+ * A name matching BOTH of a family's direction terms — the shape that satisfied both ends of the pair
+ * while the clause tested each term against the whole list with `some()`.
+ */
+const DUAL: Record<string, string> = {
+  selectionIndicator: "previousToNextAndNextToPreviousGlide",
+  selection: "offToOnAndOnToOffAreSuppressed",
+  selectionState: "uncheckedToCheckedAndCheckedToUncheckedAreSuppressed",
+  loop: "runsWithNormalMotionAndStopsWithReducedMotion",
+  slide: "runsWithNormalMotionAndStopsWithReducedMotion",
+  disclosure: "expandsAndCollapsesTheContent",
+};
+
+/**
+ * Test declarations covering both directions in a family's own vocabulary.
+ *
+ * `only` emits one direction. `shape: "dual"` emits a single name matching both terms and nothing
+ * else; `shape: "dual+pair"` emits that name alongside the two independent ones, which is the benign
+ * arrangement six family/platform pairs on `main` are in and which must keep passing.
+ */
+function suite(
+  platform: string,
+  familyName: string,
+  only?: "forward" | "reverse",
+  shape?: "dual" | "dual+pair",
+) {
   const pair =
-    familyName === "selection"
+    familyName === "selectionIndicator"
+      ? { forward: "previousToNextGlides", reverse: "nextToPreviousRetargets" }
+      : familyName === "selection"
       ? { forward: "offToOnIsSuppressed", reverse: "onToOffIsSuppressed" }
       : familyName === "selectionState"
         ? { forward: "uncheckedToCheckedIsSuppressed", reverse: "checkedToUncheckedIsSuppressed" }
         : familyName === "loop" || familyName === "slide"
         ? { forward: "runsWithNormalMotion", reverse: "stopsWithReducedMotion" }
         : { forward: "expandsTheContent", reverse: "collapsesTheContent" };
-  const names = only ? [pair[only]] : [pair.forward, pair.reverse];
+  const dual = DUAL[familyName];
+  const names =
+    shape === "dual"
+      ? [dual]
+      : shape === "dual+pair"
+        ? [dual, pair.forward, pair.reverse]
+        : only
+          ? [pair[only]]
+          : [pair.forward, pair.reverse];
   if (platform === "SwiftUI") return names.map((n) => `func test${n[0].toUpperCase()}${n.slice(1)}() { }\n`).join("");
   if (platform === "Compose") return names.map((n) => `fun ${n}() { }\n`).join("");
   return names.map((n) => `testWidgets('${n}', (t) async { });\n`).join("");
@@ -191,6 +235,29 @@ describe("an animated component must be accounted for", () => {
     const [, p] = first();
     write(dir, join(p.dir, `Static${p.ext}`), "// nothing moves here\n");
     expect(run(dir).ok).toBe(true);
+  });
+});
+
+describe("tracked delegation agrees with the family members", () => {
+  it("rejects a declared member without a helper call", () => {
+    const dir = fixture();
+    const platform = spec.platforms.SwiftUI;
+    const family = platform.families.selectionIndicator;
+    write(dir, join(platform.dir, family.members[0]), PREFERENCE.SwiftUI);
+    const { ok, output } = run(dir);
+    expect(ok).toBe(false);
+    expect(output).toContain("selectionIndicator helper calls disagree with the declared members");
+  });
+
+  it("rejects an unregistered helper call even without local animation", () => {
+    const dir = fixture();
+    const platform = spec.platforms.SwiftUI;
+    const family = platform.families.selectionIndicator;
+    const helper = family.helper.replace(platform.ext, "");
+    write(dir, join(platform.dir, `Undeclared${platform.ext}`), `.modifier(${helper}())`);
+    const { ok, output } = run(dir);
+    expect(ok).toBe(false);
+    expect(output).toContain("Undeclared.swift: selectionIndicator helper calls disagree with the declared members");
   });
 });
 
@@ -305,6 +372,127 @@ describe("both directions must be named, in the family's own vocabulary", () => 
     const { ok, output } = run(dir);
     expect(ok).toBe(false);
     expect(output).toMatch(/no reduced-motion test for the \w+ family/);
+  });
+});
+
+/**
+ * Run `directionTermDefects` against a vocabulary written out as source, in a subprocess, for the
+ * same reason the spec itself is read that way: it is ESM JavaScript and its regexes do not survive
+ * JSON. `terms` is a JS object literal, so a regex can be written as a regex.
+ */
+function termDefects(terms: string): string[] {
+  return JSON.parse(
+    execFileSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        `import { directionTermDefects } from ${JSON.stringify(specPath)};
+         process.stdout.write(JSON.stringify(directionTermDefects("probe", ${terms})));`,
+      ],
+      { encoding: "utf8" },
+    ),
+  );
+}
+
+describe("the two directions must be covered by DIFFERENT tests", () => {
+  // Until M5.9 the clause tested each direction against the whole name list with `some()`, so ONE
+  // name matching both terms satisfied both ends of the pair. The gate then printed "tested in both
+  // directions" over a suite that had proven one transition. These are the controls for the fix: the
+  // first three must fail, and the last must pass, or the clause is measuring something else.
+
+  it("fails when a single test name is the only evidence for both directions", () => {
+    const dir = fixture();
+    const [name, , familyName, family] = directionalFamily();
+    write(dir, family.test, suite(name, familyName, undefined, "dual"));
+    const { ok, output } = run(dir);
+    expect(ok).toBe(false);
+    expect(output).toMatch(/also names the\n\s+(forward|reverse) direction/);
+  });
+
+  it("fails a symmetric family the same way — the clause is not specific to one vocabulary", () => {
+    const dir = fixture();
+    const [name, , familyName, family] = symmetricFamily();
+    write(dir, family.test, suite(name, familyName, undefined, "dual"));
+    const { ok, output } = run(dir);
+    expect(ok).toBe(false);
+    expect(output).toMatch(/so no test covers (forward|reverse) on its own/);
+  });
+
+  it("fails a mode family the same way, where the second term IS the reduced-motion preference", () => {
+    // `loop` and `slide` name two behaviours rather than two ends of a journey, so the preference is
+    // one of their terms by design. Distinctness still applies: "runs with normal motion and stops
+    // with reduced motion" is one test, and the mode clause stands down only for the vocabulary
+    // rule, never for this one.
+    const dir = fixture();
+    const modeFamily = Object.entries(spec.platforms).flatMap(([n, p]) =>
+      Object.entries(p.families).filter(([fn]) => spec.kinds[fn] === "mode").map(([fn, f]) => [n, fn, f] as const),
+    )[0];
+    expect(modeFamily, "no family declares kind: mode").toBeTruthy();
+    const [name, familyName, family] = modeFamily;
+    write(dir, family.test, suite(name, familyName, undefined, "dual"));
+    const { ok, output } = run(dir);
+    expect(ok).toBe(false);
+    expect(output).toMatch(/so no test covers (forward|reverse) on its own/);
+  });
+
+  it("PASSES when a both-ways name sits alongside two independent ones", () => {
+    // The control that keeps the clause honest. Six family/platform pairs on `main` contain a name
+    // matching both terms, and in every one each direction also has its own test — benign, and the
+    // reason the clause is keyed on "this direction has no independent test" rather than on "a
+    // both-ways name exists". A check keyed on the latter would redden all six and be switched off.
+    const dir = fixture();
+    const [name, , familyName, family] = directionalFamily();
+    write(dir, family.test, suite(name, familyName, undefined, "dual+pair"));
+    const { ok, output } = run(dir);
+    expect(ok, output).toBe(true);
+  });
+});
+
+describe("a direction's vocabulary must not admit the reduced-motion preference", () => {
+  // The upstream half of the fix, and the half that lasts. A direction term that the preference
+  // wording can satisfy on its own lets a suite prove a direction it never travels — which is how
+  // `selectionIndicator` was written on the three native selection branches:
+  //   reverse: /backward|reduced.?motion/i
+  // Catching it in the vocabulary catches it once, before any platform's suite is measured.
+
+  it("rejects a direction family whose term matches a preference-only phrase", () => {
+    const defects = termDefects("{ kind: 'direction', forward: /forward/i, reverse: /backward|reduced.?motion/i }");
+    expect(defects).toHaveLength(1);
+    expect(defects[0]).toMatch(/names the reader's preference and not a direction of travel/);
+  });
+
+  it("accepts the same term pair when the family declares itself a mode family", () => {
+    // The exemption must be reachable, or the rule would push an honest mode family into dishonest
+    // vocabulary. `loop` and `slide` depend on this.
+    expect(termDefects("{ kind: 'mode', forward: /normal motion/i, reverse: /reduced motion/i }")).toEqual([]);
+  });
+
+  it("rejects a family that declares no kind at all", () => {
+    // A new family added without a kind would silently opt out of the rule above. The three native
+    // selection branches each add `selectionIndicator`, and none of them declares one.
+    const defects = termDefects("{ forward: /forward/i, reverse: /backward/i }");
+    expect(defects).toHaveLength(1);
+    expect(defects[0]).toMatch(/declares no kind/);
+  });
+
+  it("finds no defect in any vocabulary the repository ships today", () => {
+    // So the rule is provably additive: it reddens nothing on `main`.
+    const all: Record<string, string[]> = JSON.parse(
+      execFileSync(
+        process.execPath,
+        [
+          "--input-type=module",
+          "-e",
+          `import { DIRECTION_TERMS, directionTermDefects } from ${JSON.stringify(specPath)};
+           process.stdout.write(JSON.stringify(Object.fromEntries(
+             Object.entries(DIRECTION_TERMS).map(([k, t]) => [k, directionTermDefects(k, t)]))));`,
+        ],
+        { encoding: "utf8" },
+      ),
+    );
+    expect(Object.keys(all).length).toBeGreaterThanOrEqual(5);
+    for (const [family, defects] of Object.entries(all)) expect(defects, family).toEqual([]);
   });
 });
 

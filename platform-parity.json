@@ -1771,7 +1771,7 @@
       "Angular": "preview",
       "SwiftUI": "experimental",
       "Compose": "experimental",
-      "Flutter": "experimental"
+      "Flutter": "beta"
     },
     "select": {
       "React": "beta",
@@ -1947,8 +1947,8 @@
       "beta": 10
     },
     "Flutter": {
-      "experimental": 83,
-      "beta": 7
+      "experimental": 82,
+      "beta": 8
     }
   },
   "catalogueVerification": {
@@ -2256,7 +2256,8 @@
         "build",
         "interaction",
         "largeText",
-        "published"
+        "published",
+        "reducedMotion"
       ],
       "SwiftUI": [
         "build"
@@ -2847,7 +2848,8 @@
         "accessibility",
         "build",
         "interaction",
-        "published"
+        "published",
+        "reducedMotion"
       ],
       "SwiftUI": [
         "build"
@@ -3809,16 +3811,24 @@
         "interaction",
         "largeText",
         "published",
+        "reducedMotion",
         "rtl"
       ],
       "SwiftUI": [
         "build"
       ],
       "Compose": [
-        "build"
+        "build",
+        "interaction",
+        "reducedMotion",
+        "rtl"
       ],
       "Flutter": [
-        "build"
+        "accessibility",
+        "build",
+        "interaction",
+        "reducedMotion",
+        "rtl"
       ]
     },
     "select": {
@@ -3974,6 +3984,7 @@
         "interaction",
         "largeText",
         "published",
+        "reducedMotion",
         "rtl"
       ],
       "SwiftUI": [
@@ -4190,6 +4201,7 @@
         "interaction",
         "largeText",
         "published",
+        "reducedMotion",
         "rtl"
       ],
       "SwiftUI": [
@@ -4199,6 +4211,7 @@
         "accessibility",
         "build",
         "interaction",
+        "reducedMotion",
         "rtl"
       ],
       "Flutter": [
@@ -4206,6 +4219,7 @@
         "build",
         "interaction",
         "largeText",
+        "reducedMotion",
         "rtl"
       ]
     },
@@ -4459,7 +4473,7 @@
       "accessibility": 80,
       "rtl": 47,
       "largeText": 53,
-      "reducedMotion": 23,
+      "reducedMotion": 28,
       "visual": 0,
       "published": 80
     },
@@ -4475,21 +4489,21 @@
     },
     "Compose": {
       "build": 90,
-      "interaction": 9,
+      "interaction": 10,
       "accessibility": 10,
-      "rtl": 1,
+      "rtl": 2,
       "largeText": 0,
-      "reducedMotion": 7,
+      "reducedMotion": 9,
       "visual": 0,
       "published": 0
     },
     "Flutter": {
       "build": 90,
-      "interaction": 7,
-      "accessibility": 7,
-      "rtl": 58,
+      "interaction": 8,
+      "accessibility": 8,
+      "rtl": 59,
       "largeText": 58,
-      "reducedMotion": 8,
+      "reducedMotion": 10,
       "visual": 0,
       "published": 0
     }
