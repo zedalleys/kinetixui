@@ -65,6 +65,11 @@ const PAGES = [
   "/docs/accessibility",
   "/docs/cli",
   "/docs/changelog",
+  // The guides index, added with the page itself. GUIDE_PAGES already covers each individual guide, so this
+  // route is the one part of the cluster nothing sweeps: a registry-driven list with its own card layout.
+  // Deferred when the page was written only because the axe job was close to its 35-minute cap; #448 raised
+  // that to 60, so the reason is gone and the gap is closed here rather than carried as debt.
+  "/guides",
   "/docs/angular",
   // The IoT module's page, added with the module. `/docs/angular` is the precedent: a module that ships
   // a docs page brings the page into this sweep, or the page is the one part of the site nothing checks.
