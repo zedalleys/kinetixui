@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, claude/m512-motion-promotion-register, codex/m689-motion-governance-repair, codex/m6814-native-integration-recovery, codex/m6816-motion-gate-closure]
+    branches: [main, claude/m512-motion-promotion-register, codex/m689-motion-governance-repair, codex/m6814-native-integration-recovery, codex/m6816-motion-gate-closure, codex/m6818-integration-closure]
 
 permissions:
   contents: read
@@ -147,7 +147,7 @@ jobs:
       - name: Selection verification rejects missing consumers, evidence, and invalid decisions
         run: node scripts/selection-verification-negative-controls.mjs
 
-      - name: SwiftUI rendered-motion analyzer CLI and snap controls
+      - name: SwiftUI rendered-motion analyzer CLI, snap and direction controls
         run: python3 -B packages/ui-swiftui/Acceptance/Selection/test_measure_selection.py
 
       - name: Changelog page is current with the packages

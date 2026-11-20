@@ -1,4 +1,4 @@
-"""Prove that mounted pixel analysis refuses a snap in either direction."""
+"""Verify the mounted selection analyzer's CLI and temporal trajectory checks."""
 import contextlib
 import functools
 import io
@@ -129,6 +129,48 @@ class AnalyzerCommandTests(unittest.TestCase):
                 run = self.run_analyzer(self.evidence(frames), optimize=True)
                 for control in ("Tabs", "SegmentedControl"):
                     self.assert_failure(run, control + " " + direction + ": expected three distinct")
+
+
+    def test_real_command_rejects_wrong_way_travel_in_both_directions(self):
+        for stage, direction, wrong in (
+            (1, "forward", [130, 110, 90, 70, 50, 30] + [130] * 6),
+            (2, "reverse", [10, 30, 50, 70, 90, 110] + [10] * 6),
+        ):
+            for mode in ("ltr", "rtl"):
+                with self.subTest(direction=direction, mode=mode):
+                    frames = trace()
+                    frames[stage] = [(x, x + 10) for x in wrong]
+                    if mode == "rtl":
+                        frames = {s: [tuple(140 - x for x in row) for row in rows] for s, rows in frames.items()}
+                    result = self.run_analyzer(self.evidence(frames), mode, optimize=True)
+                    for name in ("Tabs", "SegmentedControl"):
+                        self.assert_failure(result, f"{name} {direction}: wrong-way travel")
+
+    def test_real_command_requires_target_convergence_and_limited_jitter(self):
+        for label, stage, samples, diagnostic in (
+            ("away from start", 1, [2, 30, 50, 70, 90] + [130] * 6, "outside its endpoints"),
+            ("oscillation", 1, [30, 50, 46, 70, 90] + [130] * 6, "wrong-way travel"),
+            ("wrong reverse endpoint", 2, [110, 90, 70, 50] + [30] * 6, "reverse did not settle"),
+            ("wrong retarget trajectory", 4, [88, 83, 75, 86, 70] + [65] * 6, "retarget: wrong-way travel"),
+        ):
+            with self.subTest(label=label):
+                frames = trace()
+                frames[stage] = [(x, x + 10) for x in samples]
+                self.assert_failure(self.run_analyzer(self.evidence(frames)), diagnostic)
+
+        frames = trace()
+        frames[1] = [(x, x + 10) for x in [30, 50, 49, 70, 90] + [130] * 6]
+        self.assert_success(self.run_analyzer(self.evidence(frames)), "ltr")
+
+    def test_real_command_rejects_missing_and_out_of_order_stage_metadata(self):
+        frames = trace()
+        missing_target = {stage: rows for stage, rows in frames.items() if stage != 1}
+        self.assert_failure(self.run_analyzer(self.evidence(missing_target)), "1: 0")
+        invalid_marker = {7 if stage == 1 else stage: rows for stage, rows in frames.items()}
+        self.assert_failure(self.run_analyzer(self.evidence(invalid_marker)), "1: 0")
+        out_of_order = {stage: frames[stage] for stage in (0, 2, 1, 3, 4, 5, 6)}
+        self.assert_failure(self.run_analyzer(self.evidence(out_of_order)), "Stage markers out of order")
+
 
     def test_real_command_rejects_absent_and_malformed_evidence(self):
         no_reverse = trace()
