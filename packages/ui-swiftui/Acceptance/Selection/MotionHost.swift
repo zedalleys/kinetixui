@@ -6,6 +6,43 @@ struct SelectionLab: App {
     var body: some Scene { WindowGroup { SelectionHost() } }
 }
 
+// Capture the unanimated button's layout without reading its indicator preference
+// or affecting layout, hit testing, or the accessibility tree.
+private struct LayoutWitness: ViewModifier {
+    let slot: Int
+    let selected: Bool
+    let recording: Bool
+
+    func body(content: Content) -> some View {
+        if recording {
+            content
+                .overlay(alignment: .top) { rail.offset(y: -7) }
+                .overlay(alignment: .bottom) { rail.offset(y: 7) }
+                .overlay(alignment: .top) {
+                    if selected {
+                        Color(red: 0, green: 1, blue: 0).frame(width: 12, height: 5)
+                            .offset(y: -15)
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                    }
+                }
+        } else {
+            content
+        }
+    }
+
+    private var rail: some View {
+        [
+            Color(red: 0, green: 1, blue: 1),
+            Color(red: 0, green: 0, blue: 1),
+            Color(red: 1, green: 1, blue: 0),
+        ][slot]
+            .frame(height: 5)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+}
+
 struct SelectionHost: View {
     private let args = ProcessInfo.processInfo.arguments
     @State private var selected = 0
@@ -15,15 +52,21 @@ struct SelectionHost: View {
         VStack(spacing: 65) {
             KinetixTabsList {
                 KinetixTabsTrigger("First tab", isSelected: selected == 0) { selected = 0 }
+                    .modifier(LayoutWitness(slot: 0, selected: selected == 0, recording: args.contains("--timeline")))
                 KinetixTabsTrigger("Middle tab", isSelected: selected == 1) { selected = 1 }
+                    .modifier(LayoutWitness(slot: 1, selected: selected == 1, recording: args.contains("--timeline")))
                     .disabled(!args.contains("--timeline"))
                 KinetixTabsTrigger("Last tab", isSelected: selected == 2) { selected = 2 }
+                    .modifier(LayoutWitness(slot: 2, selected: selected == 2, recording: args.contains("--timeline")))
             }
             KinetixSegmentedControl {
                 KinetixSegmentedControlItem("First segment", isSelected: selected == 0) { selected = 0 }
+                    .modifier(LayoutWitness(slot: 0, selected: selected == 0, recording: args.contains("--timeline")))
                 KinetixSegmentedControlItem("Middle segment", isSelected: selected == 1) { selected = 1 }
+                    .modifier(LayoutWitness(slot: 1, selected: selected == 1, recording: args.contains("--timeline")))
                     .disabled(!args.contains("--timeline"))
                 KinetixSegmentedControlItem("Last segment", isSelected: selected == 2) { selected = 2 }
+                    .modifier(LayoutWitness(slot: 2, selected: selected == 2, recording: args.contains("--timeline")))
             }
             Text("Selected: \(selected)").foregroundStyle(.white).accessibilityIdentifier("selected-index")
         }
