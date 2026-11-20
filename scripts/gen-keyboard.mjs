@@ -75,6 +75,7 @@ const SUITES = {
   FileUpload: ["file-upload"],
   Toggle: ["toggle"],
   ToggleGroup: ["toggle-group"],
+  SegmentedControl: ["segmented-control"],
   "Input and Textarea": ["input", "textarea"],
   Select: ["select"],
   InputOTP: ["input-otp"],
