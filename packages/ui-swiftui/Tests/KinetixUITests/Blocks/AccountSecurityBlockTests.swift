@@ -94,6 +94,7 @@ struct AccountSecurityBlock: View {
 
 final class AccountSecurityBlockTests: XCTestCase {
     func testAccountSecurityBlockCompiles() {
-        XCTAssertNotNil(AccountSecurityBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: AccountSecurityBlock = AccountSecurityBlock()
     }
 }

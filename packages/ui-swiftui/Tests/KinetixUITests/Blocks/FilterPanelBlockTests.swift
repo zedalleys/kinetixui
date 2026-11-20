@@ -99,6 +99,7 @@ struct FilterPanelBlock: View {
 
 final class FilterPanelBlockTests: XCTestCase {
     func testFilterPanelBlockCompiles() {
-        XCTAssertNotNil(FilterPanelBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: FilterPanelBlock = FilterPanelBlock()
     }
 }

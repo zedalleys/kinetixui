@@ -57,6 +57,7 @@ struct LoadingStateBlock: View {
 
 final class LoadingStateBlockTests: XCTestCase {
     func testLoadingStateBlockCompiles() {
-        XCTAssertNotNil(LoadingStateBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: LoadingStateBlock = LoadingStateBlock()
     }
 }

@@ -32,6 +32,7 @@ struct StatCardsBlock: View {
 
 final class StatCardsBlockTests: XCTestCase {
     func testStatCardsBlockCompiles() {
-        XCTAssertNotNil(StatCardsBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: StatCardsBlock = StatCardsBlock()
     }
 }

@@ -58,6 +58,7 @@ struct PricingTierBlock: View {
 
 final class PricingTierBlockTests: XCTestCase {
     func testPricingTierBlockCompiles() {
-        XCTAssertNotNil(PricingTierBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: PricingTierBlock = PricingTierBlock()
     }
 }

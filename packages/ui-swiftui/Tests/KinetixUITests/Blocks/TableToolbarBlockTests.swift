@@ -78,6 +78,7 @@ struct TableToolbarBlock: View {
 
 final class TableToolbarBlockTests: XCTestCase {
     func testTableToolbarBlockCompiles() {
-        XCTAssertNotNil(TableToolbarBlock().body)
+        // The body is type-checked by Swift; evaluating it without mounting reads uninstalled @State.
+        let _: TableToolbarBlock = TableToolbarBlock()
     }
 }
