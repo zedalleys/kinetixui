@@ -25,6 +25,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildDiscovery } from "./business-discovery.mjs";
+import { demandProblems } from "./business-capability-demand.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DATA = join(ROOT, "docs/business-capabilities.json");
@@ -48,6 +49,18 @@ const TARGETS = {
 const STATUSES = ["existing", "partial", "planned", "not-planned"];
 const DELIVERY = ["component", "block", "recipe"];
 const TIERS = ["core", "pro"];
+// Demand (owner decision D-12a) is validated by ./business-capability-demand.mjs, which its sibling
+// .test.mjs tests directly — `pnpm check:capabilities` runs that test before this generator.
+// Two capability names are each listed as an alternative by two different rows. Folding family T's
+// `Gantt` into family B's row (D-12a) turned the name check alias-aware, which is what found them; they
+// are older than that change and neither is this slice's defect. Repairing one means deciding which row
+// should stop claiming the name, and that changes what a published row means — so they are declared here
+// rather than guessed at. The register RATCHETS: a name that no longer collides is an error, so it can
+// only shrink, and a re-added bare `Gantt` row is caught like anything else.
+const KNOWN_NAME_COLLISIONS = [
+  { name: "PendingState", why: "C's ResultState row and AB's ProcessingState row both list it. Plausibly two different things — a pending outcome screen and an inline pending indicator — in which case the names must say how they differ. Owner decision." },
+  { name: "UnitInput", why: "I's PercentageInput row and AC's DurationInput row both list it. Owner decision: one row owns `UnitInput`, or the two are renamed." },
+];
 // Never paywalled (Core/Pro rule 1). A row whose name matches one of these must stay Core.
 const CORE_FLOOR = [/^Core motion$/, /^IoT /, /^RequestedState/, /^StatusBanner/, /^AppShell/, /^OTPInput$/, /^FileUploader$/, /^Calendar$/];
 
@@ -73,12 +86,35 @@ const resolve = (ref) => {
   return false;
 };
 
-const seen = new Set();
+const today = new Date().toISOString().slice(0, 10);
+
+// A row's name may list alternatives with " / " (60-odd rows do). The uniqueness check reads every
+// alternative, not just the whole string: `GanttChart / Gantt` and a bare `Gantt` row are the same
+// capability twice, which is how family B's and family T's Gantt rows both survived a name check.
+const seen = new Map();
+const collided = new Set();
+const waived = new Set();
+for (const [i, w] of KNOWN_NAME_COLLISIONS.entries()) {
+  if (!w.name || !w.why || w.why.trim() === "") errors.push(`KNOWN_NAME_COLLISIONS[${i}]: needs a name and a reason`);
+  if (waived.has(w.name)) errors.push(`KNOWN_NAME_COLLISIONS[${i}]: "${w.name}" is registered twice`);
+  waived.add(w.name);
+}
 for (const family of data.families) {
   for (const row of family.capabilities) {
     const at = `${family.id} / ${row.name}`;
-    if (seen.has(row.name)) errors.push(`${at}: duplicate capability name`);
-    seen.add(row.name);
+    for (const alt of row.name.split(" / ")) {
+      const prior = seen.get(alt);
+      if (prior) {
+        collided.add(alt);
+        if (!waived.has(alt))
+          errors.push(`${at}: capability name "${alt}" is already claimed by ${prior} — one capability, two rows`);
+      } else seen.set(alt, at);
+    }
+    errors.push(...demandProblems(at, row, today));
+    // "—" renders as "no dependency" in the table and passes every shape check while naming nothing.
+    // An empty array says the same thing and a checker can read it.
+    if (row.dependsOn.includes("—"))
+      errors.push(`${at}: dependsOn contains "—" — use an empty array for "no dependency"`);
     if (!LAYERS[row.layer]) errors.push(`${at}: layer "${row.layer}"`);
     if (!TARGETS[row.target]) errors.push(`${at}: target "${row.target}"`);
     if (!STATUSES.includes(row.status)) errors.push(`${at}: status "${row.status}"`);
@@ -98,6 +134,12 @@ for (const family of data.families) {
     if (row.tier === "pro" && CORE_FLOOR.some((re) => re.test(row.name))) errors.push(`${at}: on the Core floor, cannot be Pro`);
   }
 }
+
+// The ratchet: a registered collision that no longer collides is debt someone paid off, so the entry has
+// to go. Without this the register would quietly outlive the defect it documents.
+for (const w of KNOWN_NAME_COLLISIONS)
+  if (!collided.has(w.name))
+    errors.push(`KNOWN_NAME_COLLISIONS: "${w.name}" no longer collides — remove it from the register`);
 
 // The status column a reader sees, in the brief's vocabulary.
 const shown = (row) => {

@@ -1,5 +1,5 @@
 {
-  "$comment": "Canonical business capability roadmap and website discovery metadata. Edit this file, then run `pnpm gen:capabilities` to regenerate the tables in docs/BUSINESS-CAPABILITY-ROADMAP.md and the website's discovery-index.json. `pnpm check:capabilities` fails if either is stale, an evidence reference does not resolve, or a discovery reference names something that does not exist.",
+  "$comment": "Canonical business capability roadmap and website discovery metadata. Edit this file, then run `pnpm gen:capabilities` to regenerate the tables in docs/BUSINESS-CAPABILITY-ROADMAP.md and the website's discovery-index.json. `pnpm check:capabilities` fails if either is stale, an evidence reference does not resolve, or a discovery reference names something that does not exist. Every row also carries a `demand` block: `state` is `unmeasured` (nobody has looked), `unknown` (looked, nothing conclusive) or `evidenced`, and `signals` is non-empty only when the state is `evidenced`. A signal records `date`, `source`, `ref`, `signal` (the asker's own words), `confidence` and `askedForThisCapability`, with optional `notes`. There is deliberately no numeric score and no total: demand is evidence with provenance or it is absent, and it is never inferred from a row's tier.",
   "families": [
     {
       "id": "A",
@@ -30,6 +30,10 @@
           "evidence": [
             "ui:data-grid"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Pagination",
             "Empty",
@@ -49,6 +53,10 @@
           "evidence": [
             "ui:data-table"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "TanStack-based table on React plus native ports; the light alternative to DataGrid. Angular planned (data wave)."
@@ -68,6 +76,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "DataGrid"
           ],
@@ -90,6 +102,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Select",
             "MultiSelect",
@@ -120,6 +136,10 @@
             "ui:multi-select",
             "block:table-toolbar"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 3,
           "notes": "Today a block (removable tags, a price slider, the filters behind them) assembled from Tag and MultiSelect. Promote to a component once two consumers (DataGrid, QueryBuilder) need the same chip contract."
@@ -143,6 +163,10 @@
             "block:stat-cards",
             "block:dashboard-tabs"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Sparkline"
           ],
@@ -158,6 +182,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "DataGrid"
           ],
@@ -191,6 +219,10 @@
             "ui:chart",
             "file:apps/web/src/app/charts/charts-content.tsx"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 3,
           "notes": "React: ChartContainer, tooltip, legend, loading/empty/error states and a screen-reader data table on Recharts. Reference lines and brush exist as recipes; a crosshair does not. Natives ship a narrower KinetixChart; Angular planned. No new charting dependency without an architecture review."
@@ -216,6 +248,10 @@
           "evidence": [
             "file:apps/web/src/app/charts/charts-content.tsx"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Chart infrastructure"
           ],
@@ -236,6 +272,10 @@
             "file:apps/web/src/app/charts/charts-content.tsx",
             "ui:circular-progress"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 3,
           "notes": "Gauge is a /charts recipe; ProgressRing exists as CircularProgress on all five platforms."
@@ -259,6 +299,10 @@
           "evidence": [
             "file:apps/web/src/app/charts/charts-content.tsx"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Chart infrastructure"
           ],
@@ -274,6 +318,10 @@
           "status": "planned",
           "delivery": "recipe",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Chart infrastructure"
           ],
@@ -289,6 +337,10 @@
           "status": "planned",
           "delivery": "recipe",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Chart infrastructure"
           ],
@@ -296,7 +348,7 @@
           "notes": "Events on a time axis; overlaps Scheduling's TimelinePlanner — build once."
         },
         {
-          "name": "GanttChart",
+          "name": "GanttChart / Gantt",
           "parts": [],
           "layer": "L2",
           "tier": "pro",
@@ -304,12 +356,16 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "TimelinePlanner",
             "DataGrid"
           ],
           "phase": 10,
-          "notes": "Dependency-aware planning is advanced organisational tooling."
+          "notes": "Dependency-aware planning is advanced organisational tooling. Folded family T's duplicate `Gantt` row into this one (2026-11-09, owner decision D-12a): they were one capability under two names, identical in tier, status, phase and target. Which family owns it is still open — Data visualization holds it because the chart renders here; Scheduling is the arguable alternative."
         }
       ]
     },
@@ -330,6 +386,10 @@
           "evidence": [
             "ui:result-state"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 1,
           "notes": "Phase 1. One foundation for PaymentSuccess, BookingConfirmed, OrderConfirmed, RefundConfirmed, TransferSuccess, ApplicationSubmitted, TicketIssued, VoucherRedeemed. success, error, warning, pending, info and partial. React-first; natives compose KinetixEmpty; Angular planned."
@@ -345,6 +405,10 @@
           "evidence": [
             "ui:result-state"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 1,
           "notes": "Not separate components: each is `<ResultState status=\"…\">`. Listed so nobody builds them."
@@ -362,6 +426,10 @@
           "evidence": [
             "ui:reference-code"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 1,
           "notes": "Phase 1. Selectable, copyable, announced; honest failure path when the clipboard is unavailable."
@@ -380,6 +448,10 @@
           "evidence": [
             "ui:price-breakdown"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 1,
           "notes": "Phase 1. Subtotal, tax, fees, discount, shipping, credit, total — values supplied formatted; no commerce-only wording."
@@ -395,6 +467,10 @@
           "evidence": [
             "ui:description-list"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 1,
           "notes": "Exists as DescriptionList on all five platforms. No new component. Its term column is a fixed 6rem mono caps skin; a `variant` for plain summaries is a candidate follow-up, not a new primitive."
@@ -419,6 +495,10 @@
           "evidence": [
             "ui:pass-card"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 1,
           "notes": "Phase 1. Foundation for boarding passes, tickets, vouchers, permits, memberships. Renders a supplied code; never encodes."
@@ -434,6 +514,10 @@
           "evidence": [
             "ui:pass-card"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 1,
           "notes": "A PassCard composition (a stub after PassCardDivider), shown on the PassCard page. Not a component."
@@ -447,6 +531,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "AmountDisplay",
             "ResultState",
@@ -473,6 +561,10 @@
           "evidence": [
             "block:receipt"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "PriceBreakdown",
             "ReferenceCode",
@@ -493,6 +585,10 @@
           "evidence": [
             "ui:timeline"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 2,
           "notes": "Phase 2: React's Timeline now takes a per-item `status` (complete, current, pending, warning, error, neutral) with a distinct marker shape and a spoken word per status, `aria-current=\"step\"`, an optional per-item action, and logical alignment (RTL-converted). Angular's KxTimelineItem has default/active/success/error but no pending or warning and does not speak its status. SwiftUI, Compose and Flutter timelines have no status yet, so this stays partial."
@@ -515,6 +611,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "ResultState",
             "ReferenceCode",
@@ -543,6 +643,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Card",
             "AmountDisplay",
@@ -560,6 +664,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "ToggleGroup",
             "SegmentedControl",
@@ -580,6 +688,10 @@
             "ui:number-input",
             "block:order-summary"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 2,
           "notes": "Phase 2: NumberInput IS the QuantityPicker contract, now with localisable stepper names, `aria-disabled` bounds that keep keyboard focus, and a polite announcement of stepper changes. No separate QuantityPicker component. The order-summary block uses it per line."
@@ -599,6 +711,10 @@
           "evidence": [
             "block:order-summary"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "PriceBreakdown",
             "NumberInput"
@@ -615,6 +731,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Sheet",
             "Cart"
@@ -633,6 +753,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Stepper",
             "Form",
@@ -661,6 +785,10 @@
           "evidence": [
             "block:order-summary"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "PriceBreakdown"
           ],
@@ -679,6 +807,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Card",
             "StatusTimeline",
@@ -697,6 +829,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Form",
             "RadioGroup",
@@ -714,6 +850,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "PriceBreakdown",
             "ResultState",
@@ -737,6 +877,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Calendar",
             "TimeSlotPicker"
@@ -755,6 +899,10 @@
           "evidence": [
             "ui:time-slot-picker"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "ToggleGroup"
           ],
@@ -773,6 +921,10 @@
             "ui:guest-picker",
             "ui:number-input"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "NumberInput",
             "Popover"
@@ -789,6 +941,10 @@
           "status": "planned",
           "delivery": "recipe",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Select",
             "Combobox",
@@ -813,6 +969,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "PassCard",
             "ReferenceCode",
@@ -831,6 +991,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "StatusTimeline"
           ],
@@ -846,6 +1010,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "AvailabilityPicker",
             "GuestPicker",
@@ -877,6 +1045,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Card",
             "Badge",
@@ -894,6 +1066,10 @@
           "status": "planned",
           "delivery": "recipe",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "PassCardField",
             "DescriptionList"
@@ -917,9 +1093,13 @@
             "ui:pass-card",
             "block:boarding-pass"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 2,
-          "notes": "Shown as the PassCard demo and, since BD-W6, as the boarding-pass block on all five platforms \u2014 React composes PassCard, the other four compose the same anatomy from card, fields, tear line and a supplied code. A domain wrapper may come later; the base never says \"flight\"."
+          "notes": "Shown as the PassCard demo and, since BD-W6, as the boarding-pass block on all five platforms — React composes PassCard, the other four compose the same anatomy from card, fields, tear line and a supplied code. A domain wrapper may come later; the base never says \"flight\"."
         },
         {
           "name": "TrainTicket / BusTicket / EventTicket",
@@ -932,6 +1112,10 @@
           "evidence": [
             "ui:pass-card"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 2,
           "notes": "PassCard compositions (EventTicket is on the PassCard page)."
@@ -950,6 +1134,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "ToggleGroup"
           ],
@@ -965,6 +1153,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Card",
             "List",
@@ -986,6 +1178,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "StatusTimeline",
             "Card"
@@ -1002,6 +1198,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "PriceBreakdown",
             "ResultState"
@@ -1033,6 +1233,10 @@
           "evidence": [
             "ui:pass-card"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 1,
           "notes": "Shipped as PassCard*: PassHolder is PassCardDescription or a field; PassValidity is a PassCardField with `<time>`; PassStatus composes Tag; PassTerms is PassCardFooter."
@@ -1048,6 +1252,10 @@
           "evidence": [
             "ui:pass-card"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 1,
           "notes": "PassCardCode renders a SUPPLIED barcode or QR image with a text alternative and readable value. Encoding stays out of the library — no barcode dependency, no invented security model."
@@ -1074,6 +1282,10 @@
           "evidence": [
             "ui:pass-card"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 2,
           "notes": "Compositions of PassCard (parking permit and voucher are on the PassCard page). Promote one to a component only when its behaviour, not its words, differs."
@@ -1087,6 +1299,10 @@
           "status": "not-planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "Platform wallet passes are issued server-side by the product; out of scope for a UI library."
@@ -1112,6 +1328,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Table",
             "PriceBreakdown",
@@ -1137,6 +1357,10 @@
           "evidence": [
             "block:receipt"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Receipt"
           ],
@@ -1162,9 +1386,11 @@
           "evidence": [
             "ui:amount-display"
           ],
-          "dependsOn": [
-            "—"
-          ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
+          "dependsOn": [],
           "phase": 2,
           "notes": "Phase 2. React beta: formatted value supplied by the product (never calculated), real minus or plus sign spoken as a word, tone independent of sign (a refund is negative and good), tabular figures, its own `dir=\"auto\"` run, optional full screen-reader label. Native tabs show a composition; Angular planned (data wave)."
         },
@@ -1179,6 +1405,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "InputGroup",
             "NumberInput",
@@ -1196,6 +1426,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "AmountDisplay"
           ],
@@ -1214,6 +1448,10 @@
             "ui:number-input",
             "ui:input-group"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 5,
           "notes": "NumberInput + InputGroup addon covers it today."
@@ -1227,6 +1465,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Input",
             "Field"
@@ -1248,6 +1490,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Input",
             "Field"
@@ -1268,6 +1514,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "AmountDisplay",
             "List",
@@ -1287,6 +1537,10 @@
           "evidence": [
             "ui:price-breakdown"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 1,
           "notes": "PriceBreakdown (the transfer example on its page)."
@@ -1308,6 +1562,10 @@
           "evidence": [
             "block:pricing-tier"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "AmountDisplay"
           ],
@@ -1323,6 +1581,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Card",
             "DescriptionList",
@@ -1343,6 +1605,10 @@
             "ui:progress",
             "ui:metric"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 5,
           "notes": "Progress + Metric compose it; a meter with thresholds announced in text is the gap."
@@ -1356,6 +1622,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "DataTable",
             "AmountDisplay"
@@ -1372,6 +1642,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "ResultState",
             "PriceBreakdown",
@@ -1395,6 +1669,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "AmountDisplay",
             "Metric"
@@ -1411,6 +1689,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "TransactionList"
           ],
@@ -1428,6 +1710,10 @@
           "evidence": [
             "ui:pass-card"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 2,
           "notes": "PassCard compositions."
@@ -1441,6 +1727,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Metric",
             "Progress",
@@ -1458,6 +1748,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "TransactionList"
           ],
@@ -1473,6 +1767,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Field",
             "ResultState"
@@ -1501,6 +1799,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Table",
             "Checkbox"
@@ -1517,6 +1819,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "PermissionMatrix",
             "Form"
@@ -1536,6 +1842,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Command",
             "Popover",
@@ -1555,6 +1865,10 @@
           "evidence": [
             "block:account-security"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "List",
             "AlertDialog"
@@ -1575,6 +1889,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "DataTable",
             "ReferenceCode",
@@ -1601,6 +1919,10 @@
             "block:sign-in",
             "block:create-account"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 4,
           "notes": "The sign-in and create-account blocks."
@@ -1616,6 +1938,10 @@
           "evidence": [
             "ui:input-otp"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "InputOTP on all five platforms."
@@ -1632,6 +1958,10 @@
             "block:create-account",
             "ui:password-input"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Progress"
           ],
@@ -1649,6 +1979,10 @@
           "evidence": [
             "block:account-security"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "ReferenceCode"
           ],
@@ -1664,6 +1998,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "InputOTP",
             "PassCardCode",
@@ -1689,6 +2027,10 @@
           "evidence": [
             "ui:stepper"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "Stepper on all five platforms."
@@ -1707,6 +2049,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "StatusTimeline",
             "Avatar",
@@ -1729,6 +2075,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "List",
             "Tag",
@@ -1746,6 +2096,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Tag",
             "`<time>`"
@@ -1762,6 +2116,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "AuditTrail"
           ],
@@ -1777,6 +2135,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "ApprovalFlow"
           ],
@@ -1804,6 +2166,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "StatusTimeline",
             "DiffViewer",
@@ -1826,6 +2192,10 @@
           "evidence": [
             "ui:stepper"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 6,
           "notes": "Stepper covers the shape; per-step status is the gap."
@@ -1839,6 +2209,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "FileUpload",
             "Image"
@@ -1858,6 +2232,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "DescriptionList",
             "Tag"
@@ -1874,9 +2252,11 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
-          "dependsOn": [
-            "—"
-          ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
+          "dependsOn": [],
           "phase": 6,
           "notes": "Needs a keyboard alternative (typed signature) to be Core."
         },
@@ -1889,6 +2269,10 @@
           "status": "planned",
           "delivery": "block",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "VerificationStepper",
             "DocumentCapture",
@@ -1918,6 +2302,10 @@
           "evidence": [
             "ui:file-upload"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "FileUpload has per-file loading/uploaded/error status and progress."
@@ -1936,6 +2324,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "DataTable",
             "Breadcrumb",
@@ -1959,6 +2351,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Toolbar",
             "ScrollArea"
@@ -1978,6 +2374,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "StatusTimeline",
             "DiffViewer"
@@ -2000,6 +2400,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Card",
             "Alert",
@@ -2021,6 +2425,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Metric",
             "RangeChart"
@@ -2041,6 +2449,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "List",
             "Tag"
@@ -2057,6 +2469,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "PassCard",
             "Tag"
@@ -2073,6 +2489,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "StatusTimeline"
           ],
@@ -2088,6 +2508,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "DataTable"
           ],
@@ -2103,6 +2527,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Tag",
             "ResultState"
@@ -2131,6 +2559,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "ButtonGroup"
           ],
@@ -2146,6 +2578,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Popover",
             "Card"
@@ -2166,6 +2602,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "DescriptionList",
             "StatusTimeline"
@@ -2182,6 +2622,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Card",
             "Tag"
@@ -2198,6 +2642,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "StatusTimeline",
             "ReferenceCode",
@@ -2215,6 +2663,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Map controls"
           ],
@@ -2252,6 +2704,10 @@
             "iot:DeviceLockControl",
             "iot:DeviceMediaControl"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "@kinetixui/iot, React only. Requested state is never shown as physical truth until the device reports it."
@@ -2281,6 +2737,10 @@
             "iot:DeviceBattery",
             "iot:DeviceConnection"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "Freshness contract: stale data says so."
@@ -2310,6 +2770,10 @@
             "iot:RoutineCard",
             "iot:CameraDeviceCard"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "DeviceSummary exists as DeviceStateSummary."
@@ -2327,6 +2791,10 @@
             "iot:CommandFeedback",
             "iot:CommandLifecycle"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "Exists as the command lifecycle (requested, pending, confirmed, failed, timed out). Do not weaken: requested is not reported."
@@ -2343,6 +2811,10 @@
             "iot:AlertCard",
             "iot:AlertList"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "AlertCard / AlertList."
@@ -2359,6 +2831,10 @@
             "iot:SpaceRollup",
             "iot:SpaceBreadcrumb"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "SpaceRollup / SpaceBreadcrumb."
@@ -2375,6 +2851,10 @@
             "iot:DeviceActivity",
             "iot:ActivityTimeline"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "DeviceActivity / ActivityTimeline."
@@ -2392,6 +2872,10 @@
             "iot:PairingMethodPicker",
             "iot:PairingFailure"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "The pairing family."
@@ -2407,6 +2891,10 @@
           "evidence": [
             "iot:FirmwareStatus"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "FirmwareStatus."
@@ -2420,6 +2908,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Map controls"
           ],
@@ -2435,6 +2927,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "DeviceHealthSummary"
           ],
@@ -2460,6 +2956,10 @@
           "evidence": [
             "ui:calendar"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "Month calendar with single and range modes (react-day-picker on React). Angular planned."
@@ -2473,6 +2973,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Calendar"
           ],
@@ -2488,27 +2992,16 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "CalendarWeek",
             "DataGrid"
           ],
           "phase": 8,
           "notes": ""
-        },
-        {
-          "name": "Gantt",
-          "parts": [],
-          "layer": "L2",
-          "tier": "pro",
-          "target": "pro-candidate",
-          "status": "planned",
-          "delivery": "component",
-          "evidence": [],
-          "dependsOn": [
-            "TimelinePlanner"
-          ],
-          "phase": 10,
-          "notes": "Pro candidate."
         }
       ]
     },
@@ -2529,6 +3022,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Card",
             "Avatar",
@@ -2549,6 +3046,10 @@
           "evidence": [
             "ui:kanban-board"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 8,
           "notes": "KanbanBoard with deal cards."
@@ -2565,6 +3066,10 @@
             "ui:timeline",
             "iot:ActivityTimeline"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "StatusTimeline"
           ],
@@ -2592,6 +3097,10 @@
           "evidence": [
             "ui:kanban-board"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 8,
           "notes": "Shipped with keyboard drag and drop (React only, standing native non-port). Swimlanes are missing."
@@ -2605,6 +3114,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Card",
             "Tag",
@@ -2622,9 +3135,11 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
-          "dependsOn": [
-            "—"
-          ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
+          "dependsOn": [],
           "phase": 10,
           "notes": ""
         }
@@ -2645,6 +3160,10 @@
           "evidence": [
             "ui:message-bubble"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 9,
           "notes": "MessageBubble and TypingIndicator on React and natives; a scrolling Conversation with grouping and unread markers is the gap."
@@ -2660,6 +3179,10 @@
           "evidence": [
             "block:comment-box"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "MentionInput"
           ],
@@ -2675,6 +3198,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Command",
             "Textarea"
@@ -2691,6 +3218,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Avatar",
             "Popover"
@@ -2716,6 +3247,10 @@
             "ui:code-block",
             "ui:markdown-editor"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 9,
           "notes": "CodeBlock (read-only) and MarkdownEditor (plain-textarea editing) exist; a shell around a real editor engine is the gap."
@@ -2731,6 +3266,10 @@
           "evidence": [
             "ui:diff-viewer"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": ""
@@ -2748,6 +3287,10 @@
           "evidence": [
             "ui:json-viewer"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "JsonViewer."
@@ -2764,6 +3307,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "VirtualList"
           ],
@@ -2779,6 +3326,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Tag",
             "StatusTimeline"
@@ -2804,6 +3355,10 @@
             "ui:metric",
             "ui:badge"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "EntityCard"
           ],
@@ -2819,6 +3374,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "List",
             "ResultState"
@@ -2837,6 +3396,10 @@
           "evidence": [
             "ui:banner"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "Banner (dismissible, intent-tinted, page-level)."
@@ -2850,6 +3413,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "StatusTimeline"
           ],
@@ -2865,6 +3432,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "QueryBuilder"
           ],
@@ -2889,6 +3460,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Textarea",
             "FileUpload",
@@ -2909,6 +3484,10 @@
             "ui:message-bubble",
             "ui:markdown-editor"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 9,
           "notes": "MessageBubble + rendered markdown; streaming announcement strategy (polite, chunked) is the gap."
@@ -2922,6 +3501,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Collapsible",
             "Card"
@@ -2942,6 +3525,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "StatusTimeline",
             "ResultState"
@@ -2968,6 +3555,10 @@
             "ui:app-bar",
             "ui:navigation-bar"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "Sidebar, AppBar, NavigationBar."
@@ -2983,6 +3574,10 @@
           "evidence": [
             "ui:page-header"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "PageHeader; ContextBar is a PageHeader slot."
@@ -2998,6 +3593,10 @@
           "evidence": [
             "ui:resizable"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "Resizable."
@@ -3014,6 +3613,10 @@
           "status": "planned",
           "delivery": "recipe",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Resizable",
             "List",
@@ -3031,6 +3634,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Sheet",
             "Resizable",
@@ -3059,6 +3666,10 @@
             "ui:alert",
             "block:alert-stack"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "Banner, Inform, Alert."
@@ -3076,6 +3687,10 @@
             "ui:spinner",
             "block:loading-state"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 1,
           "notes": "ResultState status=\"pending\" for a whole result; Spinner inline."
@@ -3089,6 +3704,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Tag"
           ],
@@ -3108,6 +3727,10 @@
             "iot:DeviceConnection",
             "iot:ConnectionHealth"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 3,
           "notes": "The IoT freshness and connectivity contract already exists; lifting a domain-neutral version into Core (with IoT re-using it) is the job — do not fork a second model."
@@ -3121,6 +3744,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "ResultState",
             "Banner"
@@ -3146,6 +3773,10 @@
             "ui:form",
             "ui:field"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 2,
           "notes": "Form (react-hook-form) and Field exist; repeatable groups and dependent selects are recipes to write."
@@ -3163,6 +3794,10 @@
             "ui:phone-input",
             "ui:country-select"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Field",
             "Select",
@@ -3183,6 +3818,10 @@
             "ui:date-range-input",
             "ui:calendar"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 2,
           "notes": "Phase 2: DateRangeInput is a React beta over Calendar range mode in a Popover with ISO calendar-date strings, so no time zone moves a booking; Calendar's chevrons now mirror under RTL. DateTimeRangeInput is not built."
@@ -3199,6 +3838,10 @@
             "ui:number-input",
             "ui:input-group"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": 5,
           "notes": ""
@@ -3226,6 +3869,10 @@
           "evidence": [
             "file:scripts/motion.mjs"
           ],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [],
           "phase": null,
           "notes": "Token-based durations and easings, reduced-motion evidence in CI. Primitives are not yet exported as components. Never paywalled."
@@ -3247,6 +3894,10 @@
           "status": "planned",
           "delivery": "component",
           "evidence": [],
+          "demand": {
+            "state": "unmeasured",
+            "signals": []
+          },
           "dependsOn": [
             "Core motion"
           ],
