@@ -61,7 +61,7 @@ appears, which is why they carry no fixed day.
 | 15 | **ART-001** | dev.to | article | P1 | A | Awareness | *Your cross-platform design system may be lying about parity* | Coverage → `/docs/platforms` | `kx_p1_a_parity_proof` | — | **Published** 2026-10-13 |
 | 16 | **LI-001** | LinkedIn | post | P1 | A | Awareness | Parity post A, with the article | Article, then `/docs/platforms` | `kx_p1_a_parity_proof` | ART-001 | Ready; tagged link as first comment |
 | 17 | **X-001** | X | thread | P1 | A | Awareness | Parity thread | `/docs/platforms` | `kx_p1_a_parity_proof` | ART-001 | Ready; tagged link as reply to post 9 |
-| 18 | **X-008** | X | thread (4) | P2 | F | Evaluation | Two trades | `/components` | `kx_p2_f_two_trades` | LI-007 | Ready |
+| 18 | **X-008** | X | thread (4) | P2 | F | Evaluation | Two trades | `/components` | `kx_p2_f_two_trades` | LI-007 | **Published** 2026-10-24 |
 | 20 | **LI-008** | LinkedIn | post | P1 | D | Evaluation | A partial count is not a tick | Evidence → `/docs/platforms` | `kx_p1_d_partial_evidence` | — | Ready |
 | 21 | **X-007** | X | single | P1 | D | Evaluation | Fractions, not ticks | — | `kx_p1_d_partial_evidence` | LI-008 | Ready |
 | — | **COM-004** | community | comment | P1 | D | Evaluation | Reporting partial evidence | opportunistic | — | LI-008 | Brief |
