@@ -16,8 +16,33 @@ bash record-selection.sh "$SIMULATOR_UDID" "$app" /tmp/selection-reduced.mp4 --r
 python3 measure-selection.py /tmp/selection-reduced.mp4 reduce
 ```
 
-The forward and reverse paths must expose distinct painted positions. The interrupted first-to-last transition must approach the middle target from its rendered position. RTL reverses the physical endpoints. The fixture's reduced-motion override keeps each sampled visible position at its expected endpoint.
+The recording fixture renders cyan, blue and yellow rails from the unanimated
+bounds of the first, middle and last controls. A separate green badge identifies
+the selected slot. The magenta indicator is measured independently in the same
+normalized raster. The analyzer checks stable layout, the fixture's logical
+selection schedule, and settled indicator center (4 px on either axis) and width
+(6 px). The top and bottom rails locate the control center despite rounded
+indicator corners. These tolerances cover raster quantization and compressed
+chroma edges. RTL reverses the physical endpoints without remapping logical
+slots. Older recordings without layout rails cannot establish destination
+geometry and should be re-recorded with this host.
 
-For the negative control, in a disposable checkout replace the indicator’s `withAnimation(animation)` with `withAnimation(nil)`. Rebuild, record in LTR and run the same sampler. Both controls must fail for missing rendered intermediate positions. Restore the original file and repeat the LTR run.
+Forward, reverse, and return from the middle slot require distinct painted
+positions. The interrupted first-to-last transition must approach the middle
+target from its rendered position. Reduced motion requires aligned endpoint
+samples at every stage. The final settled stage must retain the first slot.
+
+Run the same CLI suite used by CI from the repository root:
+
+```sh
+python3 -B packages/ui-swiftui/Acceptance/Selection/test_measure_selection.py
+```
+
+The suite exercises the real CLI with controlled RGB frames, including both
+snap directions, wrong-way motion, width, alignment, identity, missing evidence,
+and coherently shifted target metadata. For a product-motion control, replace
+the shared indicator's `withAnimation(animation)` with `withAnimation(nil)`
+in a disposable checkout. Rebuild, record and run the same analyzer. Replay
+the unmodified host to verify valid travel.
 
 Run the project’s `testVoiceOverSelectionForTabsAndSegments` XCTest only on the dedicated simulator. It confirms spoken selected and disabled traits and observes the shared selection after actual VoiceOver activation.
