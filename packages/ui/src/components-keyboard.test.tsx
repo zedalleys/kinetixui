@@ -43,6 +43,7 @@ import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } fro
 import { Modal } from "./components/modal";
 import { MultiSelect } from "./components/multi-select";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/popover";
+import { SegmentedControl, SegmentedControlItem } from "./components/segmented-control";
 import { RadioGroup, RadioGroupItem } from "./components/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/select";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "./components/sheet";
@@ -1339,6 +1340,76 @@ describe("ToggleGroup", () => {
     await user.keyboard(" ");
     expect(screen.getByRole("radio", { name: "Italic" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("radio", { name: "Bold" })).toHaveAttribute("aria-checked", "false");
+  });
+});
+
+describe("SegmentedControl", () => {
+  function Example({ dir }: { dir?: "ltr" | "rtl" } = {}) {
+    return (
+      <>
+        <button>before</button>
+        <SegmentedControl defaultValue="grid" aria-label="View" dir={dir}>
+          <SegmentedControlItem value="list">List</SegmentedControlItem>
+          <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
+          <SegmentedControlItem value="board">Board</SegmentedControlItem>
+        </SegmentedControl>
+      </>
+    );
+  }
+  const checked = () =>
+    screen
+      .getAllByRole("radio")
+      .filter((r) => r.getAttribute("aria-checked") === "true")
+      .map((r) => r.textContent);
+
+  it("is one tab stop that lands on the chosen segment, and the arrow keys move the selection with focus", async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+    await user.tab(); // before
+    await user.tab(); // into the strip, which has one stop
+    expect(screen.getByRole("radio", { name: "Grid" })).toHaveFocus();
+    expect(checked()).toEqual(["Grid"]);
+
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("radio", { name: "Board" })).toHaveFocus();
+    expect(checked()).toEqual(["Board"]);
+    await user.keyboard("{ArrowLeft}");
+    expect(screen.getByRole("radio", { name: "Grid" })).toHaveFocus();
+    expect(checked()).toEqual(["Grid"]);
+
+    // A roving tabindex: Tab leaves the strip rather than walking its segments.
+    await user.tab();
+    expect(screen.getByRole("radio", { name: "Grid" })).not.toHaveFocus();
+  });
+
+  it("Home and End move the selection to the first and last segment", async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+    await user.tab();
+    await user.tab();
+    await user.keyboard("{Home}");
+    expect(checked()).toEqual(["List"]);
+    await user.keyboard("{End}");
+    expect(checked()).toEqual(["Board"]);
+  });
+
+  it("follows the reading direction, so Arrow left is the next segment in a right-to-left strip", async () => {
+    const user = userEvent.setup();
+    render(<Example dir="rtl" />);
+    await user.tab();
+    await user.tab();
+    await user.keyboard("{ArrowLeft}");
+    expect(checked()).toEqual(["Board"]);
+  });
+
+  it("cannot be left with nothing chosen: Enter or Space on the chosen segment keeps it", async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+    await user.tab();
+    await user.tab();
+    await user.keyboard("{Enter}");
+    await user.keyboard(" ");
+    expect(checked()).toEqual(["Grid"]);
   });
 });
 

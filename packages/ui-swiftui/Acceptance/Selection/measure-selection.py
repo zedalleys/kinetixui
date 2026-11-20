@@ -17,7 +17,7 @@ def samples(video):
     with subprocess.Popen(command, stdout=subprocess.PIPE) as decoder:
         while frame := decoder.stdout.read(FRAME_SIZE):
             if len(frame) != FRAME_SIZE:
-                break
+                raise RuntimeError("Video decoder returned a partial frame")
             marker_width = 0
             for y in range(32, 180, 3):
                 row = frame[y * WIDTH * 3:(y + 1) * WIDTH * 3]
@@ -48,7 +48,12 @@ def samples(video):
             ]
             yield stage, tuple(centers)
         if decoder.wait() != 0:
-            raise RuntimeError("Video decoder failed")
+            raise RuntimeError(f"Video decoder failed (exit {decoder.returncode})")
+
+
+def require(condition, message):
+    if not condition:
+        raise AssertionError(message)
 
 
 def assert_travel(values, start, end, name):
@@ -56,7 +61,7 @@ def assert_travel(values, start, end, name):
     lower, upper = sorted((start, end))
     intermediate = [position for position in values if lower + margin < position < upper - margin]
     distinct = {round(position / 3) for position in intermediate}
-    assert len(distinct) >= 3, f"{name}: expected three distinct rendered intermediate positions, got {intermediate}"
+    require(len(distinct) >= 3, f"{name}: expected three distinct rendered intermediate positions, got {intermediate}")
 
 
 def assert_row(stages, row, name, mode):
@@ -64,24 +69,27 @@ def assert_row(stages, row, name, mode):
     settled = {stage: statistics.median(xs[-5:]) for stage, xs in positions.items() if stage != 3}
     first, last, middle = settled[0], settled[1], settled[4]
     print(f"{name} stages { {key: value[:12] for key, value in positions.items()} }", flush=True)
-    assert abs(first - last) > 75, f"{name}: first and last endpoints overlap"
-    assert (first > last) == (mode == "rtl"), f"{name}: physical direction is wrong"
-    assert min(first, last) + 10 < middle < max(first, last) - 10, f"{name}: bad middle endpoint"
-    assert abs(settled[2] - first) < 4 and abs(settled[6] - first) < 4, f"{name}: reverse did not settle"
+    require(abs(first - last) > 75, f"{name}: first and last endpoints overlap")
+    require((first > last) == (mode == "rtl"), f"{name}: physical direction is wrong")
+    require(min(first, last) + 10 < middle < max(first, last) - 10, f"{name}: bad middle endpoint")
+    require(abs(settled[2] - first) < 4 and abs(settled[6] - first) < 4, f"{name}: reverse did not settle")
     if mode == "reduce":
         for stage, target in ((1, last), (2, first), (3, last), (4, middle), (5, first), (6, first)):
-            assert all(abs(sample - target) <= 4 for sample in positions[stage]), (
-                f"{name}: rendered travel under reduced motion in stage {stage}"
+            require(
+                all(abs(sample - target) <= 4 for sample in positions[stage]),
+                f"{name}: rendered travel under reduced motion in stage {stage}",
             )
     else:
         assert_travel(positions[1], first, last, f"{name} forward")
         assert_travel(positions[2], last, first, f"{name} reverse")
         assert_travel(positions[3] + positions[4][:2], first, last, f"{name} interrupted forward")
         before, after = positions[3][-1], positions[4][0]
-        assert abs(before - after) < 32, f"{name}: abrupt retarget from {before} to {after}"
-        assert any(abs(sample - middle) > 8 for sample in positions[4][:4]), (
-            f"{name}: retarget snapped immediately to its endpoint"
+        require(abs(before - after) < 32, f"{name}: abrupt retarget from {before} to {after}")
+        require(
+            any(abs(sample - middle) > 8 for sample in positions[4][:4]),
+            f"{name}: retarget snapped immediately to its endpoint",
         )
+    return name
 
 
 def main():
@@ -90,23 +98,30 @@ def main():
     parser.add_argument("mode", choices=("ltr", "rtl", "reduce"))
     args = parser.parse_args()
     stages = {stage: [] for stage in range(7)}
-    for stage, centers in samples(args.video):
-        if stage is not None and len(centers) == 2:
-            stages[stage].append(centers)
-    assert all(len(frames) >= 2 for frames in stages.values()), {
-        stage: len(frames) for stage, frames in stages.items()
-    }
+    try:
+        for stage, centers in samples(args.video):
+            if stage is not None and len(centers) == 2:
+                stages[stage].append(centers)
+    except (OSError, RuntimeError) as error:
+        raise SystemExit(str(error)) from None
 
+    missing = {stage: len(frames) for stage, frames in stages.items() if len(frames) < 2}
+    if missing:
+        raise SystemExit(f"Missing frames with both selection controls by stage: {missing}")
+
+    expected = ("Tabs", "SegmentedControl")
+    verified = []
     failures = []
-    for row, name in enumerate(("Tabs", "SegmentedControl")):
+    for row, name in enumerate(expected):
         try:
-            assert_row(stages, row, name, args.mode)
+            verified.append(assert_row(stages, row, name, args.mode))
         except AssertionError as error:
             failures.append(str(error))
     if failures:
         raise SystemExit("\n".join(failures))
+    if tuple(verified) != expected:
+        raise SystemExit("Incomplete selection analysis: both controls must return a verification result")
     print(f"PASS mounted selection {args.mode}")
-
 
 if __name__ == "__main__":
     main()
