@@ -56,13 +56,40 @@ def require(condition, message):
         raise AssertionError(message)
 
 
-def assert_travel(values, start, end, name):
-    margin = 7
+# Decoder edges are measured in integer pixels and their midpoint can shift by
+# half a pixel. Allow two pixels of capture jitter without permitting cumulative
+# backtracking. The selection indicator uses a non-spring timing curve.
+POSITION_JITTER = 2
+SETTLED_TOLERANCE = 4
+
+
+def assert_travel(values, start, end, name, *, settles=True, min_positions=3):
+    require(abs(end - start) > SETTLED_TOLERANCE, f"{name}: missing distinct target geometry")
+    margin = min(7, abs(end - start) / 5)
     lower, upper = sorted((start, end))
     intermediate = [position for position in values if lower + margin < position < upper - margin]
     distinct = {round(position / 3) for position in intermediate}
-    require(len(distinct) >= 3, f"{name}: expected three distinct rendered intermediate positions, got {intermediate}")
+    require(
+        len(distinct) >= min_positions,
+        f"{name}: expected {'three' if min_positions == 3 else 'one'} distinct rendered intermediate positions, got {intermediate}",
+    )
 
+    span = end - start
+    tolerance = POSITION_JITTER / abs(span)
+    farthest = 0.0
+    for frame, position in enumerate(values):
+        progress = (position - start) / span
+        require(-tolerance <= progress <= 1 + tolerance, f"{name}: frame {frame} traveled outside its endpoints")
+        require(
+            progress >= farthest - tolerance,
+            f"{name}: wrong-way travel at frame {frame}: progress {progress:.3f} after {farthest:.3f}",
+        )
+        farthest = max(farthest, progress)
+    if settles:
+        require(
+            all(abs(x - end) < SETTLED_TOLERANCE for x in values[-3:]),
+            f"{name}: final frames did not converge on target {end}",
+        )
 
 def assert_row(stages, row, name, mode):
     positions = {stage: [centers[row] for centers in frames] for stage, frames in stages.items()}
@@ -82,13 +109,21 @@ def assert_row(stages, row, name, mode):
     else:
         assert_travel(positions[1], first, last, f"{name} forward")
         assert_travel(positions[2], last, first, f"{name} reverse")
-        assert_travel(positions[3] + positions[4][:2], first, last, f"{name} interrupted forward")
-        before, after = positions[3][-1], positions[4][0]
+        # The stage marker can precede the rendered turn by one frame. Split
+        # at the farthest of the first two samples toward the original target.
+        retarget = positions[4]
+        pivot = max(range(2), key=lambda frame: (retarget[frame] - first) / (last - first))
+        assert_travel(
+            positions[3] + retarget[:pivot + 1], first, last,
+            f"{name} interrupted forward", settles=False,
+        )
+        before, after = positions[3][-1], retarget[0]
         require(abs(before - after) < 32, f"{name}: abrupt retarget from {before} to {after}")
         require(
             any(abs(sample - middle) > 8 for sample in positions[4][:4]),
             f"{name}: retarget snapped immediately to its endpoint",
         )
+        assert_travel(retarget[pivot:], retarget[pivot], middle, f"{name} retarget", min_positions=1)
     return name
 
 
@@ -98,9 +133,13 @@ def main():
     parser.add_argument("mode", choices=("ltr", "rtl", "reduce"))
     args = parser.parse_args()
     stages = {stage: [] for stage in range(7)}
+    previous_stage = 0
     try:
         for stage, centers in samples(args.video):
             if stage is not None and len(centers) == 2:
+                if stage < previous_stage:
+                    raise RuntimeError(f"Stage markers out of order: {stage} follows {previous_stage}")
+                previous_stage = stage
                 stages[stage].append(centers)
     except (OSError, RuntimeError) as error:
         raise SystemExit(str(error)) from None
