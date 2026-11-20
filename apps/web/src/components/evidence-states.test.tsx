@@ -170,7 +170,7 @@ describe("8. native distribution wording", () => {
     const surfaces = [
       renderToStaticMarkup(<EvidenceColumns platforms={platformEvidence()} />),
       renderToStaticMarkup(<PlatformVerificationTable />),
-      ...PLATFORMS.map((p) => renderToStaticMarkup(<PlatformAtAGlance platform={p} />)),
+      ...PLATFORMS.map((p) => renderToStaticMarkup(<PlatformAtAGlance platform={p} page="/docs/platforms" />)),
     ].join("\n");
     // allowed only as part of a precise phrase, e.g. "not published to Swift Package Manager yet"
     expect(surfaces).not.toMatch(/Not published(?! to )/);
@@ -244,7 +244,7 @@ describe("/docs/platforms verification cards", () => {
 
 describe("platform at a glance", () => {
   it.each(["SwiftUI", "Compose"] as const)("%s: says which kinds are not yet verified or limited instead of 'Interaction 0/90'", (platform) => {
-    const html = renderToStaticMarkup(<PlatformAtAGlance platform={platform} />);
+    const html = renderToStaticMarkup(<PlatformAtAGlance platform={platform} page="/docs/platforms" />);
     expect(html).not.toMatch(/\b0\/\d+/);
     for (const kind of ["interaction", "accessibility", "rtl", "largeText"] as const) {
       const e = evidenceStatus(platform, kind);

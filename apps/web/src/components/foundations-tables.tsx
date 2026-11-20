@@ -637,7 +637,26 @@ export const componentName = (slug: string) =>
 const withCode = (text: string) => text.split("`").map((part, i) => (i % 2 ? <code key={i}>{part}</code> : part));
 
 /** Where each platform page's own first-run section starts (its first `##`, slugged by rehype-slug). */
-const FIRST_STEP: Partial<Record<Platform, string>> = { Angular: "#install", SwiftUI: "#setup", Compose: "#setup", Flutter: "#setup" };
+/*
+ * Where a platform's setup begins. Absolute, not a bare `#install`: this block is rendered on /docs/platforms
+ * as well as on each platform's own page, and a fragment-only href resolves against whatever page it lands on
+ * — on /docs/platforms it pointed at ids that do not exist there. An absolute path with a fragment is still a
+ * same-document jump when it is rendered on its own page, so the platform pages behave exactly as before.
+ */
+const FIRST_STEP: Record<Platform, string> = {
+  React: "/docs/installation",
+  Angular: "/docs/angular#install",
+  SwiftUI: "/docs/swiftui#setup",
+  Compose: "/docs/compose#setup",
+  Flutter: "/docs/flutter#setup",
+};
+
+/** A link to the page you are already on, with no fragment to move you, is not a next step — drop the row. */
+function firstStepFrom(platform: Platform, page: string): string | null {
+  const href = FIRST_STEP[platform];
+  const [path, fragment] = href.split("#");
+  return !fragment && path === page ? null : href;
+}
 
 /**
  * The seven facts an evaluator needs before reading a platform page, in one place at its top: package maturity,
@@ -645,7 +664,8 @@ const FIRST_STEP: Partial<Record<Platform, string>> = { Angular: "#install", Swi
  * start. Every value is read from the manifest, the generated verification counts or the /docs/platforms rows, so
  * the four platform pages differ exactly where the platforms do and cannot drift from the coverage table.
  */
-export function PlatformAtAGlance({ platform }: { platform: Platform }) {
+export function PlatformAtAGlance({ platform, page }: { platform: Platform; page: string }) {
+  const firstStep = firstStepFrom(platform, page);
   const def = PLATFORM_DEFINITIONS[platform];
   const row = platforms.find((r) => r.id === platform.toLowerCase());
   const shipped = platformCount(platform);
@@ -701,7 +721,7 @@ export function PlatformAtAGlance({ platform }: { platform: Platform }) {
             <Link href="/docs/tokens" className={link}>How tokens reach {def.label}</Link>
           </>,
         ],
-        ...(FIRST_STEP[platform] ? [["Start", <a key="start" href={FIRST_STEP[platform]} className={link}>{platform === "Angular" ? "Install" : "Set up"} {def.label}</a>] as const] : []),
+        ...(firstStep ? [["Start", <a key="start" href={firstStep} className={link}>{platform === "Angular" || platform === "React" ? "Install" : "Set up"} {def.label}</a>] as const] : []),
       ].map(([label, value]) => (
         <div key={label as string} className="flex flex-wrap items-baseline gap-x-3 px-3.5 py-2">
           <dt className="font-mono text-label-md uppercase tracking-[0.14em] text-muted-foreground sm:w-28 sm:shrink-0">{label}</dt>
