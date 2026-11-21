@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useDocumentDirection } from "@/lib/use-document-direction";
+import { useStickyUnderHeader } from "@/lib/use-sticky-under-header";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@kinetixui/ui";
 import { cn } from "@/lib/utils";
 
@@ -51,9 +52,15 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
   }, [categories]);
   const [value, setValue] = React.useState(ids[0]!);
   const dir = useDocumentDirection();
-  const [headerHeight, setHeaderHeight] = React.useState<number | null>(null);
   const root = React.useRef<HTMLDivElement>(null);
   const bar = React.useRef<HTMLDivElement>(null);
+  /**
+   * This bar had its own copy of the header measurement, with the same `top-12 md:top-[5.5rem]`
+   * fallback the catalogue's filter bar used — and so the same defect wherever the header wraps.
+   * Both now read one measurement from `useStickyUnderHeader`, which also withholds stickiness when
+   * the pinned pair would not fit the viewport.
+   */
+  const stickyBar = useStickyUnderHeader(bar);
 
   /**
    * Teardown for the alignment in flight. `alignPanel` is a callback, not an effect, so React does not
@@ -128,12 +135,6 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
   }, []);
 
   React.useEffect(() => {
-    const header = document.querySelector<HTMLElement>("body header.sticky, body > div header.sticky, header.sticky");
-    let observer: ResizeObserver | undefined;
-    if (header && typeof ResizeObserver !== "undefined") {
-      observer = new ResizeObserver(() => setHeaderHeight(header.getBoundingClientRect().height));
-      observer.observe(header);
-    }
     const fromHash = () => {
       const raw = decodeURIComponent(window.location.hash.slice(1));
       const id = ids.includes(raw) ? raw : aliasOf.get(raw);
@@ -151,7 +152,6 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
     window.addEventListener("hashchange", fromHash);
     return () => {
       window.removeEventListener("hashchange", fromHash);
-      observer?.disconnect();
     };
   }, [ids, aliasOf, alignPanel, revealTab]);
 
@@ -173,10 +173,11 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
       <div
         ref={bar}
         data-category-bar=""
-        style={headerHeight === null ? undefined : { top: headerHeight }}
+        data-sticky={stickyBar.sticky ? "" : undefined}
+        style={stickyBar.sticky ? { top: stickyBar.top } : undefined}
         className={cn(
-          "sticky z-30 -mx-4 border-b border-border bg-background/95 px-4 py-2 supports-[backdrop-filter]:bg-background/85 supports-[backdrop-filter]:backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8",
-          headerHeight === null && "top-12 md:top-[5.5rem]",
+          "z-30 -mx-4 border-b border-border bg-background/95 px-4 py-2 supports-[backdrop-filter]:bg-background/85 supports-[backdrop-filter]:backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8",
+          stickyBar.sticky && "sticky",
         )}
       >
         <TabsList aria-label={label} className="">

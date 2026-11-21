@@ -38,6 +38,7 @@ import { demoRegistry } from "@/registry/demos";
 import { THUMBNAIL_MOCKS } from "@/components/component-thumbnails";
 import type { CatalogueFacets, FacetOption } from "@/lib/business-discovery";
 import { platformChipLabel, resolveFacetParam, resolvePlatformParam } from "@/lib/catalogue-filters";
+import { useStickyUnderHeader } from "@/lib/use-sticky-under-header";
 
 // re-exported: the filter helpers moved to lib/catalogue-filters.ts so /blocks can share them without this module
 export { platformChipLabel, resolveFacetParam, resolvePlatformParam };
@@ -279,6 +280,10 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
   // debounce the search term into the URL so a filtered view is shareable and
   // Back/Forward restore it, without a history entry per keystroke.
   const searchRef = React.useRef<HTMLInputElement>(null);
+  const filterBarRef = React.useRef<HTMLDivElement>(null);
+  // Measured, not guessed: the header wraps as text grows, so no constant offset is right at every
+  // width and text size. See lib/use-sticky-under-header.ts for the measurements this replaces.
+  const stickyBar = useStickyUnderHeader(filterBarRef);
 
   // debounce the typed term into the URL (shareable, Back/Forward-restorable)
   React.useEffect(() => {
@@ -472,18 +477,40 @@ export function ComponentGallery({ facets }: { facets: CatalogueFacets }) {
 
       {/* filter bar */}
       <div
+        ref={filterBarRef}
+        data-filter-bar=""
+        data-sticky={stickyBar.sticky ? "" : undefined}
+        style={stickyBar.sticky ? { top: stickyBar.top } : undefined}
         className={cn(
-          "sticky top-12 z-30 -mx-4 mt-8 border-b border-border bg-background/95 px-4 py-3 backdrop-blur",
-          "supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-6 md:top-[5.5rem] lg:-mx-8 lg:px-8",
+          "z-30 -mx-4 mt-8 border-b border-border bg-background/95 px-4 py-3 backdrop-blur",
+          "supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8",
+          // Sticky only once the header has been measured and the pinned pair fits the budget; a bar
+          // that scrolls is always reachable, a bar pinned under a taller header is not.
+          stickyBar.sticky && "sticky",
         )}
       >
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
+          {/*
+            `flex-wrap`, and a floor under the field's width, for the reason site-header.tsx records
+            about its own rows: everything in here is sized in `rem`, so at the reader's doubled text
+            size the "Filters" button needs more of the row than a 320px viewport has. Without a
+            floor `flex-1` gave way instead — the field measured 48px wide, enough for its magnifier
+            glyph and nothing else, and a hit test at its own centre landed on the row behind it. The
+            field keeps a usable width and the button wraps under it; nothing changes at `sm` and up,
+            where both have always fitted.
+
+            The floor is the ROW, not a length: a first attempt used `min-w-[11rem]`, which is itself
+            emitted in `rem` and so became 352px of a 288px content box at 200% text — it traded the
+            crushed field for 64px of sideways scroll, measured, which is a 1.4.10 failure in place
+            of a 2.5.8 one. Below `sm` the field simply takes the whole row and the button wraps
+            under it, so the width comes from the container and there is no length to be wrong.
+          */}
+          <div className="flex flex-wrap items-center gap-2">
             <label htmlFor="component-search" className="sr-only">
               Filter components by name, primitive or category
             </label>
             {/* 44px on a touch screen: the clear button lives inside this clipped box, so the box is its hit area's ceiling */}
-            <InputGroup className="h-9 flex-1 coarse:h-11 sm:max-w-xs">
+            <InputGroup className="h-9 w-full coarse:h-11 sm:w-auto sm:max-w-xs sm:flex-1">
               <InputGroupAddon>
                 <Search aria-hidden />
               </InputGroupAddon>
