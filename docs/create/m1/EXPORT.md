@@ -16,3 +16,9 @@ The fixture creates a fresh temporary consumer directory with no Next.js source 
 Set `KINETIX_CREATE_EXPORT_FIXTURE=/private/tmp/kinetix-create-export-m1` to retain the generated fixture for `scripts/create-studio-browser.mjs`. The browser script serves only those generated static files on a temporary loopback server and operates exported Tabs. Normal fixture tests remove their temporary directory. No fixture or source output is deployed.
 
 Consumer setup: import @kinetixui/tokens/css, /css/dark and /css/extras, configure @kinetixui/ui/tailwind.config with a content glob covering the library dist and generated source, then import generated theme.css. Route components and font loading are the consumer's integration responsibility. Download statuses say source generated; M1 does not claim a hosted per-user build service.
+
+A stronger acceptance gate runs after this fixture: `scripts/create-studio-consumer-build.mjs`
+installs packed `@kinetixui/ui` and `@kinetixui/tokens` tarballs into an isolated consumer project,
+runs a real `vite build`, and reads the rendered structure of the built output against the saved
+document at every breakpoint boundary, with negative controls. See
+[CONSUMER-BUILD.md](./CONSUMER-BUILD.md). Neither gate is a published-version certification.
