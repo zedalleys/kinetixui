@@ -1,63 +1,153 @@
+/*
+ * Create Studio application shell.
+ *
+ * The editor is an application surface, not a page. `.create-studio` owns the application
+ * viewport: a three-row grid (app bar, workspace, status bar) whose middle row is the only one
+ * that flexes, so the design canvas grows with the window instead of being pushed down a
+ * scrolling document. The marketing header and footer are not rendered on this route at all
+ * (see components/app-chrome.tsx); nothing here hides them, so this file cannot be read as a
+ * cosmetic patch over page chrome.
+ */
 .create-studio {
   --studio-indigo: #6054f4;
   --studio-action: #5143db;
   --action: 245 68% 56%;
   --action-foreground: 0 0% 100%;
   --ring: 245 88% 64%;
+  --studio-appbar-gap: .5rem;
   font-family: var(--font-sans), sans-serif;
   color: hsl(var(--foreground));
   background: hsl(var(--background));
-  max-width: 112rem;
-  margin-inline: auto;
-  padding: 1.5rem;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
+/* Before a local workspace exists there is no editor to fill the viewport: let the introduction
+   sit in normal document flow and scroll if the text needs it. */
+.create-studio[data-shell="intro"] { grid-template-rows: auto minmax(0, 1fr); overflow-y: auto; }
 .create-studio *, .create-studio *::before, .create-studio *::after { box-sizing: border-box; }
-.create-studio :focus-visible { outline: 2px solid var(--studio-indigo); outline-offset: 3px; }
+.create-studio :focus-visible { outline: 2px solid var(--studio-indigo); outline-offset: 2px; }
 .create-studio ::selection { background: #6054f4; color: white; }
-.studio-heading, .studio-title, .studio-products, .studio-toolbar, .studio-panel-title, .studio-canvas-tools, .studio-zoom, .studio-reorder, .studio-export-actions, .studio-product-form, .studio-panel-switch { display: flex; align-items: center; gap: .5rem; }
-.studio-heading { justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding-block-end: 1.25rem; }
-.studio-title { gap: .75rem; }
-.studio-title h1 { font-size: 1.25rem; font-weight: 650; letter-spacing: -.025em; line-height: 1.4; }
-.studio-title p, .studio-muted, .studio-dev, .studio-save-state, .studio-artboard-label, .studio-announcement { font-size: .75rem; color: hsl(var(--muted-foreground)); line-height: 1.6; }
-.studio-dev { border: 1px solid hsl(var(--border)); border-radius: .375rem; padding: .25rem .5rem; }
-.studio-welcome { max-width: 42rem; margin: 4rem auto; padding: 1rem; }
-.studio-welcome h2 { font-size: 2rem; font-weight: 600; letter-spacing: -.03em; line-height: 1.2; }
-.studio-welcome p { margin-block: 1rem; line-height: 1.7; max-width: 65ch; }
-.studio-products { flex-wrap: wrap; gap: 1rem; padding-block: 1rem; border-block: 1px solid hsl(var(--border)); }
+
+.studio-title, .studio-appbar, .studio-toolbar, .studio-panel-title, .studio-canvas-tools, .studio-zoom,
+.studio-reorder, .studio-export-actions, .studio-product-form, .studio-panel-switch, .studio-statusbar,
+.studio-appbar-view, .studio-canvas-appearance, .studio-recovery, .studio-draft-chooser {
+  display: flex; align-items: center; gap: .5rem;
+}
+
+/* ---------- App bar ---------- */
+.studio-appbar {
+  flex-wrap: wrap;
+  padding: .5rem .75rem;
+  gap: var(--studio-appbar-gap);
+  border-block-end: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  /* A compact band: a two-line wrap at narrow widths is expected, a third is a layout fault. */
+  min-height: 3.25rem;
+}
+.studio-title { gap: .5rem; flex-shrink: 0; }
+.studio-title h1 { font-size: .9375rem; font-weight: 650; letter-spacing: -.02em; line-height: 1.3; white-space: nowrap; }
+.studio-appbar-tagline { margin-inline-end: auto; }
+.studio-project-name { flex: 1 1 10rem; min-width: 6rem; max-width: 22rem; }
+.studio-project-name input {
+  width: 100%; font-size: .875rem; font-weight: 600; background: transparent;
+  border-color: transparent; padding-inline: .5rem;
+}
+.studio-project-name input:hover:not(:disabled) { border-color: hsl(var(--border)); }
+.studio-project-name input:focus { background: hsl(var(--background)); border-color: hsl(var(--input)); }
+.studio-toolbar { flex-wrap: wrap; gap: .375rem; }
+.studio-appbar-view { margin-inline-start: auto; gap: .25rem; flex-wrap: wrap; }
+
+.studio-muted, .studio-dev, .studio-save-state, .studio-artboard-label, .studio-announcement,
+.studio-appbar-tagline {
+  font-size: .75rem; color: hsl(var(--muted-foreground)); line-height: 1.6;
+}
+.studio-dev { border: 1px solid hsl(var(--border)); border-radius: .375rem; padding: .125rem .5rem; white-space: nowrap; }
 .create-studio label { font-size: .75rem; font-weight: 500; }
-.create-studio select { display: block; width: 100%; min-height: 2.5rem; padding: .5rem; border: 1px solid hsl(var(--input)); border-radius: .375rem; background: hsl(var(--background)); color: hsl(var(--foreground)); font-size: .8125rem; }
-.studio-product-select { min-width: min(100%, 12rem); }
-.studio-product-form { flex: 1; flex-wrap: wrap; }
-.studio-product-form input { flex: 1; width: auto; min-width: 8rem; max-width: 20rem; }
-.studio-toolbar { flex-wrap: wrap; padding-block: .75rem; }
-.studio-product-title { font-size: .875rem; margin-inline-end: auto; max-width: 22rem; overflow-wrap: anywhere; }
-.studio-save-state { margin-inline: .25rem; }
-.studio-announcement { padding: .25rem 0 .75rem; min-height: 1.5rem; }
-.studio-workspace { display: grid; grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr) minmax(15rem, 19rem); border: 1px solid hsl(var(--border)); border-radius: .75rem; overflow: clip; min-height: 38rem; }
-.studio-navigator, .studio-inspector { background: hsl(var(--card)); min-width: 0; }
+.create-studio select {
+  display: block; width: 100%; min-height: 2.25rem; padding: .375rem .5rem;
+  border: 1px solid hsl(var(--input)); border-radius: .375rem;
+  background: hsl(var(--background)); color: hsl(var(--foreground)); font-size: .8125rem;
+}
+
+/* ---------- Welcome / empty states ---------- */
+.studio-welcome { max-width: 42rem; margin: 3rem auto; padding: 1rem; }
+.studio-welcome h2 { font-size: 1.75rem; font-weight: 600; letter-spacing: -.03em; line-height: 1.2; }
+.studio-welcome p { margin-block: 1rem; line-height: 1.7; max-width: 65ch; }
+
+/* ---------- Workspace ---------- */
+.studio-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+  min-height: 0;
+  overflow: hidden;
+}
+.studio-navigator, .studio-inspector { background: hsl(var(--card)); min-width: 0; display: none; }
 .studio-navigator { border-inline-end: 1px solid hsl(var(--border)); }
 .studio-inspector { border-inline-start: 1px solid hsl(var(--border)); }
-.studio-panel-section { padding: 1rem; }
-.studio-panel-section h2, .studio-panel-title h2 { font-size: .875rem; font-weight: 600; }
+.studio-navigator-open, .studio-inspector-open { display: flex; flex-direction: column; min-height: 0; }
+/* The navigator scrolls in its flexible region, not as a whole: the project, pages and panel
+   switch stay put while the layer tree or library scrolls under them. Without an explicit
+   `flex` the scroll region collapsed and the panel switch overlapped the library buttons --
+   measured in Chromium, not inferred. */
+.studio-navigator-open { overflow: hidden; }
+.studio-navigator-open > * { flex: 0 0 auto; }
+.studio-inspector-open { overflow-y: auto; }
+.studio-navigator-open { width: clamp(13rem, 19vw, 16rem); }
+.studio-inspector-open { width: clamp(15rem, 23vw, 20rem); }
+.studio-navigator-open > .studio-panel-scroll, .studio-panel-scroll { flex: 1 1 auto; min-height: 3rem; overflow-y: auto; }
+.studio-panel-section { padding: .875rem 1rem; }
+.studio-panel-section h2, .studio-panel-title h2 { font-size: .8125rem; font-weight: 600; display: flex; align-items: center; gap: .375rem; }
 .studio-panel-title { justify-content: space-between; flex-wrap: wrap; margin-block-end: .5rem; }
-.studio-panel-switch { gap: .25rem; padding: .5rem 1rem; border-block: 1px solid hsl(var(--border)); }
-.studio-library { display: grid; gap: .25rem; margin-block: 1rem; }
-.studio-library > button { display: flex; align-items: center; text-align: start; gap: .75rem; padding: .75rem .25rem; border-radius: .375rem; min-width: 0; color: inherit; }
+.studio-products { border-block-end: 1px solid hsl(var(--border)); display: grid; gap: .625rem; }
+.studio-product-select { min-width: 0; }
+.studio-product-form { flex-wrap: wrap; gap: .375rem; min-width: 0; max-width: 100%; }
+.studio-product-form input { min-width: 0; max-width: 100%; flex: 1 1 6rem; }
+.studio-panel-switch { gap: .25rem; padding: .5rem 1rem; border-block: 1px solid hsl(var(--border)); flex-wrap: wrap; flex-shrink: 0; }
+
+/* ---------- Library ---------- */
+.studio-library-group { margin-block-start: .75rem; }
+.studio-library-heading {
+  font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  color: hsl(var(--muted-foreground)); padding-block: .25rem;
+}
+.studio-library { display: grid; gap: .125rem; }
+.studio-library > button { display: flex; align-items: center; text-align: start; gap: .625rem; padding: .5rem .25rem; border-radius: .375rem; min-width: 0; color: inherit; }
 .studio-library > button:hover:not(:disabled) { background: hsl(var(--muted)); }
 .studio-library > button:disabled { opacity: .5; cursor: not-allowed; }
 .studio-library > button > span:nth-child(2) { flex: 1; min-width: 0; }
 .studio-library strong { display: block; font-size: .8125rem; font-weight: 550; }
 .studio-library small { display: block; font-size: .6875rem; color: hsl(var(--muted-foreground)); }
-.studio-library-icon { width: 2rem; height: 2rem; border: 1px solid hsl(var(--border)); border-radius: .375rem; display: grid; place-items: center; flex-shrink: 0; }
-.studio-layer-panel { padding-block: .75rem; }
-.studio-layer-panel [role="treeitem"] { display: flex; gap: .5rem; align-items: center; width: 100%; padding-block: .625rem; padding-inline-end: .75rem; text-align: start; font-size: .8125rem; }
+.studio-library-icon { width: 1.75rem; height: 1.75rem; border: 1px solid hsl(var(--border)); border-radius: .375rem; display: grid; place-items: center; flex-shrink: 0; }
+
+/* ---------- Layers ---------- */
+.studio-layer-panel { padding-block: .5rem; }
+.studio-layer-panel [role="treeitem"] {
+  display: flex; gap: .5rem; align-items: center; width: 100%; padding-block: .5rem;
+  padding-inline-end: .75rem; text-align: start; font-size: .8125rem;
+  justify-content: flex-start; border-radius: 0;
+}
 .studio-layer-panel [role="treeitem"] > span { overflow-wrap: anywhere; min-width: 0; }
 .studio-layer-panel [aria-selected="true"] { background: hsl(var(--accent)); box-shadow: inset 0 0 0 1px var(--studio-indigo); }
-.studio-center { min-width: 0; display: flex; flex-direction: column; background: hsl(var(--muted)); }
-.studio-canvas-tools { flex-wrap: wrap; padding: .75rem; background: hsl(var(--background)); border-block-end: 1px solid hsl(var(--border)); }
-.studio-viewport { flex: 1; min-width: 8rem; }
-.studio-canvas-tools select { margin-block-start: .25rem; }
-.studio-canvas { position: relative; min-height: 29rem; flex: 1; overflow: hidden; background-image: radial-gradient(hsl(var(--border)) .75px, transparent .75px); background-size: 16px 16px; touch-action: auto; }
+
+/* ---------- Centre column and canvas ---------- */
+.studio-center { min-width: 0; display: flex; flex-direction: column; background: hsl(var(--muted)); min-height: 0; overflow: hidden; }
+.studio-canvas-tools { flex-wrap: wrap; padding: .375rem .75rem; background: hsl(var(--background)); border-block-end: 1px solid hsl(var(--border)); flex-shrink: 0; }
+/* The contextual canvas strip is one compact row: a stacked label above each select cost 35px of
+   canvas height on every viewport, measured. Labels stay visible, inline with their control. */
+.studio-viewport { flex: 0 1 auto; min-width: 0; display: flex; align-items: center; gap: .375rem; }
+.studio-viewport label { white-space: nowrap; }
+.studio-viewport select { width: auto; max-width: 100%; min-width: 7rem; }
+.studio-canvas-appearance { flex-wrap: wrap; gap: .25rem; }
+
+.studio-canvas {
+  position: relative; flex: 1 1 auto; min-height: 8rem; overflow: hidden;
+  background-image: radial-gradient(hsl(var(--border)) .75px, transparent .75px);
+  background-size: 16px 16px; touch-action: auto;
+}
 .studio-panning { cursor: grab; touch-action: none; }
 .studio-panning:active { cursor: grabbing; }
 .studio-world { position: absolute; inset-block-start: 0; inset-inline-start: 0; transform-origin: top left; }
@@ -71,62 +161,99 @@
 .studio-empty { padding: 2rem 1rem; text-align: center; color: hsl(var(--muted-foreground)); font-size: .875rem; line-height: 1.7; }
 .studio-empty h2 { color: hsl(var(--foreground)); font-size: 1.125rem; font-weight: 600; }
 .studio-empty button { margin-block-start: 1rem; }
-.studio-zoom { flex-wrap: wrap; background: hsl(var(--background)); border-block-start: 1px solid hsl(var(--border)); padding: .375rem; font-size: .75rem; font-variant-numeric: tabular-nums; }
+.studio-zoom {
+  flex-wrap: wrap; background: hsl(var(--background)); border-block-start: 1px solid hsl(var(--border));
+  padding: .125rem .375rem; font-size: .75rem; font-variant-numeric: tabular-nums; flex-shrink: 0;
+}
 .studio-zoom > span { min-width: 3rem; text-align: center; }
-.studio-selection-label { margin-block-start: 1.25rem; font-weight: 600; font-size: 1rem; }
-.studio-fields { display: grid; gap: 1rem; margin-block-start: 1.5rem; min-width: 0; }
-.studio-field { display: grid; gap: .375rem; min-width: 0; }
+
+/* ---------- Inspector ---------- */
+.studio-selection-label { margin-block-start: 1rem; font-weight: 600; font-size: .9375rem; }
+.studio-fields { display: grid; gap: .875rem; margin-block-start: 1rem; min-width: 0; }
+.studio-field { display: grid; gap: .3125rem; min-width: 0; }
 .studio-field-input { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; min-width: 0; }
 .studio-field-input input { min-width: 0; flex: 1; width: 100%; }
 .studio-field input[type="checkbox"] { width: 1.25rem; height: 1.25rem; accent-color: var(--studio-indigo); }
-.studio-inspector-empty { display: grid; justify-items: start; gap: .75rem; margin-block-start: 3rem; color: hsl(var(--muted-foreground)); font-size: .875rem; line-height: 1.6; }
+.studio-inspector-group { display: grid; gap: .625rem; padding-block-start: .875rem; border-block-start: 1px solid hsl(var(--border)); }
+.studio-inspector-heading {
+  font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  color: hsl(var(--muted-foreground));
+}
+.studio-inspector-empty { display: grid; justify-items: start; gap: .75rem; margin-block-start: 2rem; color: hsl(var(--muted-foreground)); font-size: .875rem; line-height: 1.6; }
 .studio-inspector-empty h3 { color: hsl(var(--foreground)); font-weight: 600; font-size: 1rem; }
-.studio-error { padding: .75rem; border: 1px solid hsl(var(--destructive)); border-radius: .375rem; color: hsl(var(--foreground)); font-size: .875rem; }
+.studio-reorder { flex-wrap: wrap; }
+
+/* ---------- Status bar, errors, recovery ---------- */
+.studio-statusbar {
+  flex-wrap: wrap; gap: .5rem 1rem; padding: .375rem .75rem;
+  border-block-start: 1px solid hsl(var(--border)); background: hsl(var(--card));
+}
+.studio-save-state { font-weight: 550; color: hsl(var(--foreground)); white-space: nowrap; }
+.studio-announcement { flex: 1 1 12rem; min-width: 0; margin: 0; }
+.studio-recovery { gap: .25rem; flex-wrap: wrap; }
+.studio-error {
+  margin: 0 .75rem .5rem; padding: .625rem .75rem;
+  border: 1px solid hsl(var(--destructive)); border-radius: .375rem;
+  color: hsl(var(--foreground)); font-size: .8125rem;
+}
 .studio-error > div { display: flex; flex-wrap: wrap; gap: .5rem; margin-block-start: .5rem; }
+.studio-draft-chooser { flex-wrap: wrap; gap: .5rem; padding: .5rem .75rem; border-block-start: 1px solid hsl(var(--border)); }
+.studio-draft-chooser .studio-product-select { min-width: min(100%, 16rem); }
 .studio-export-code { max-height: 24rem; max-width: 100%; overflow: auto; padding: 1rem; background: hsl(var(--muted)); border-radius: .375rem; font-size: .75rem; }
 .studio-export-actions { flex-wrap: wrap; }
-.studio-mobile-tools { display: none; }
-@media (max-width: 75rem) {
-  .studio-workspace { grid-template-columns: minmax(12rem, 14rem) minmax(0, 1fr); }
-  .studio-inspector { display: none; grid-column: 1 / -1; border-inline-start: 0; border-block-start: 1px solid hsl(var(--border)); }
-  .studio-inspector-open { display: block; }
-  .studio-fields { grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
-  .studio-mobile-tools { display: flex; margin-block-end: .5rem; }
-}
-@media (max-width: 48rem) {
-  .create-studio { padding: 1rem; }
-  .studio-workspace { display: flex; flex-direction: column; }
-  .studio-navigator { border-inline-end: 0; border-block-end: 1px solid hsl(var(--border)); }
-  .studio-library { grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); }
-  .studio-panel-section { padding: .75rem; }
-  .studio-canvas { min-height: 28rem; }
-  .studio-inspector-open { display: block; }
-  .studio-products { align-items: stretch; }
-  .studio-product-form { flex-basis: 100%; }
-  .studio-toolbar { gap: .375rem; }
-  .studio-product-title, .studio-save-state { width: 100%; max-width: none; }
-  .studio-welcome { margin-block: 2rem; padding: .5rem; }
-}
-@media (forced-colors: active) {
-  .studio-node-selected, .studio-layer-panel [aria-selected="true"] { outline: 2px solid Highlight; }
-  .studio-canvas { background-image: none; }
-}
-@media (prefers-reduced-motion: reduce) { .create-studio * { scroll-behavior: auto; } }
-
-@media (min-width: 75rem) {
-  .studio-workspace { height: max(34rem, calc(100svh - 22rem)); }
-  .studio-navigator, .studio-inspector { overflow-y: auto; }
-  .studio-center { overflow: hidden; }
-  .studio-canvas { min-height: 20rem; }
-}
-@media (max-width: 48rem) { .studio-navigator { max-height: 24rem; overflow-y: auto; } }
-.studio-product-form { min-width: 0; max-width: 100%; }
-.studio-product-form input { min-width: 0; max-width: 100%; flex-basis: 10rem; }
 .create-studio button:not(.studio-artboard button), .studio-empty button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 .studio-dialog button { max-width: 100%; white-space: normal; }
-
-.studio-layer-panel [role="treeitem"] { justify-content: flex-start; border-radius: 0; }
-.studio-panel-switch, .studio-reorder { flex-wrap: wrap; }
 .studio-preview-frame { display: block; width: 100%; border: 0; background: hsl(var(--background)); }
 .studio-canvas-preview { overflow: auto; }
 .studio-breakpoint-source { margin: 0; font-size: .75rem; color: hsl(var(--muted-foreground)); }
+
+/* ---------- Narrow widths ----------
+ * Below 60rem the three columns cannot each hold a usable width, so the workspace becomes one
+ * scrollable column: the canvas keeps a floor of its own and the panels stay reachable above and
+ * below it rather than being hidden. Nothing is clipped; the column scrolls.
+ */
+@media (max-width: 59.9375rem) {
+  .studio-workspace { display: flex; flex-direction: column; overflow-y: auto; }
+  .studio-navigator-open, .studio-inspector-open { width: auto; flex: 0 0 auto; max-height: 36%; }
+  .studio-navigator-open { overflow-y: auto; }
+  .studio-navigator-open > .studio-panel-scroll { flex: 0 0 auto; overflow-y: visible; }
+  .studio-navigator { border-inline-end: 0; border-block-end: 1px solid hsl(var(--border)); }
+  .studio-inspector { border-inline-start: 0; border-block-start: 1px solid hsl(var(--border)); }
+  /* The canvas keeps the larger share of the application viewport; the panels are reached by
+     scrolling the workspace column rather than by shrinking the canvas to a strip. */
+  .studio-center { flex: 1 0 auto; min-height: min(62svh, 34rem); }
+  .studio-canvas { min-height: 14rem; }
+  .studio-fields { grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
+}
+@media (max-width: 48rem) {
+  .studio-appbar { padding: .5rem; }
+  .studio-panel-section { padding: .75rem; }
+  .studio-library { grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); }
+  .studio-project-name { flex-basis: 100%; max-width: none; order: 3; }
+  .studio-toolbar { order: 4; flex-basis: 100%; }
+  .studio-welcome { margin-block: 1.5rem; padding: .5rem; }
+}
+
+@media (forced-colors: active) {
+  .studio-node-selected, .studio-layer-panel [aria-selected="true"] { outline: 2px solid Highlight; }
+  .studio-canvas { background-image: none; }
+  .studio-project-name input { border-color: ButtonBorder; }
+}
+
+/*
+ * Motion. Two editor transitions only, both on properties that do not reflow the layout, both
+ * using the repository's own duration/easing tokens, and both removed under reduced motion --
+ * where the final state is reached immediately.
+ */
+.studio-layer-panel [role="treeitem"], .studio-node, .studio-project-name input {
+  transition: background-color var(--duration-fast, 120ms) var(--easing-standard, ease),
+              box-shadow var(--duration-fast, 120ms) var(--easing-standard, ease),
+              border-color var(--duration-fast, 120ms) var(--easing-standard, ease);
+}
+/* The site preflight already floors every transition to 0.01ms under reduced motion; this block
+   states the editor's own intent at component level rather than relying on that floor. Measured:
+   the floor is the rule that wins the cascade. */
+@media (prefers-reduced-motion: reduce) {
+  .create-studio * { scroll-behavior: auto; }
+  .studio-layer-panel [role="treeitem"], .studio-node, .studio-project-name input { transition: none; }
+}

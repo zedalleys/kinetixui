@@ -6,11 +6,16 @@ on:
       - "apps/web/src/components/create-studio/**"
       - "apps/web/src/app/create/studio/**"
       - "apps/web/src/app/api/create-studio/**"
+      # The editor's application shell: app-chrome.tsx decides whether the editor renders the
+      # site header and footer at all, so a change to it is a change to the editor.
+      - "apps/web/src/components/app-chrome.tsx"
+      - "apps/web/src/components/app-chrome.test.tsx"
       - "docs/create/**"
       - "scripts/create-schema/**"
       - "scripts/create-studio-browser.mjs"
       - "scripts/create-studio-responsive-browser.mjs"
       - "scripts/create-studio-consumer-build.mjs"
+      - "scripts/create-studio-workspace-browser.mjs"
       - ".github/workflows/create-studio.yml"
   workflow_dispatch:
 permissions:
@@ -65,6 +70,9 @@ jobs:
           done
           if [ "$ready" -ne 1 ]; then cat /tmp/create-server.log; exit 1; fi
           CREATE_ARTIFACTS=/tmp/create-evidence CREATE_EXPORT_FIXTURE=/tmp/kinetix-create-export-m1 node scripts/create-studio-browser.mjs
+          # The application-workspace shell: canvas geometry, chrome separation, reachability and
+          # the save-state vocabulary, each with its own negative control.
+          CREATE_ARTIFACTS=/tmp/create-evidence node scripts/create-studio-workspace-browser.mjs
       - name: Generated React builds in a real consumer project
         # Depends on the fixture the vitest step above writes, and on the built library packages.
         # A separate job would have to rebuild both, so this stays in the same job, after them.

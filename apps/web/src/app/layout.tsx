@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AppChrome } from "@/components/app-chrome";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { CursorGlow } from "@/components/cursor-glow";
@@ -115,13 +116,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               element paints over the earlier one and the glow stays behind
               everything that carries meaning. See cursor-glow.tsx. */}
           <CursorGlow />
-          <div className="relative flex min-h-dvh flex-col">
-            <SiteHeader />
-            <main id="main-content" className="flex-1">
-              {children}
-            </main>
-            <SiteFooter />
-          </div>
+          {/* Marketing pages keep the site header and footer. Application routes (the Create
+              Studio editor) take an application shell instead — see app-chrome.tsx. */}
+          <AppChrome header={<SiteHeader />} footer={<SiteFooter />}>
+            {children}
+          </AppChrome>
         </ThemeProvider>
         <AnalyticsProvider />
         <VercelAnalytics />
