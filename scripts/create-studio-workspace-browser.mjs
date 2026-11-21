@@ -234,7 +234,9 @@ try {
       assert.ok(geometry.horizontalOverflow <= 1, `horizontal overflow at ${floor.width}x${floor.height}: ${geometry.horizontalOverflow}px`);
       return geometry;
     };
-    for (const floor of CANVAS_FLOORS) measurements.push({ ...floor, ...(await assertFloor(floor)) });
+    // `canvasGeometry` reports its own `height`, so the floor's viewport is recorded under its own
+    // key rather than being overwritten by the canvas height in the artefact.
+    for (const floor of CANVAS_FLOORS) measurements.push({ viewport: `${floor.width}x${floor.height}`, floor: { px: floor.minPx, pct: floor.minPct }, ...(await assertFloor(floor)) });
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.waitForTimeout(120);
     await control(
