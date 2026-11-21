@@ -233,10 +233,11 @@ class AnalyzerCommandTests(unittest.TestCase):
 
     def test_real_command_requires_continuous_timeline_after_measurement(self):
         start = sum(len(trace()[s]) for s in range(4))
+        completion = sum(len(trace()[s]) for s in range(6))
         for label, indices, width in (
             ("one retarget frame", [start + 4], 0),
             ("retarget marker", range(start, start + len(trace()[4])), 0),
-            ("completion marker", range(46, 48), 0),
+            ("completion marker", range(completion, completion + 2), 0),
             ("all markers", range(sum(map(len, trace().values()))), 0),
             ("malformed marker", [start + 4], 33),
         ):
