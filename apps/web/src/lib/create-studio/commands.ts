@@ -1,10 +1,15 @@
 import { ADAPTERS, adapterFor, type Props } from "./registry";
 import { assertDocument, findNode, walk, serializeDocument, type Document, type Node } from "./model";
+import { BREAKPOINTS, canOverride, type Breakpoint } from "./responsive";
 
+type TokenBindings = NonNullable<Node["tokenBindings"]>;
 export type Command =
   | { type: "insert"; parentId: string; ref: string }
   | { type: "props"; ids: string[]; patch: Props }
-  | { type: "bindings"; ids: string[]; value: Node["tokenBindings"] }
+  | { type: "responsive"; id: string; breakpoint: Breakpoint; property: string; value?: Props[string] }
+  // A per-property patch, not a whole object: `undefined` for a property clears just that property,
+  // so changing one node's surface cannot disturb another's foreground. Mirrors `props` above.
+  | { type: "bindings"; ids: string[]; patch: { [K in keyof TokenBindings]?: TokenBindings[K] | undefined } }
   | { type: "delete"; ids: string[] }
   | { type: "move"; ids: string[]; parentId: string; index: number }
   | { type: "page"; name: string }
@@ -46,12 +51,35 @@ export function execute(history: History, command: Command): History {
     if (doc.nextNodeId >= 10_000_000_000) throw new Error("Node identity space exhausted");
     const node: Node = { id: `node_${doc.nextNodeId++}`, kind: command.ref.startsWith("layout:") ? "layout" : "component", ref: command.ref, props: { ...adapter.defaults }, ...(adapter.container ? { children: [] } : {}) };
     parent.children = [...(parent.children ?? []), node]; selection = [node.id];
+  } else if (command.type === "responsive") {
+    const node = findNode(doc, command.id);
+    if (!node?.ref || !canOverride(node.ref, command.property) || !BREAKPOINTS.some(({ id }) => id === command.breakpoint)) {
+      throw new Error("Unsupported responsive property or breakpoint");
+    }
+    const responsive = { ...node.responsive };
+    const patch = { ...responsive[command.breakpoint] };
+    if (command.value === undefined) delete patch[command.property];
+    else patch[command.property] = command.value;
+    if (Object.keys(patch).length) responsive[command.breakpoint] = patch;
+    else delete responsive[command.breakpoint];
+    if (Object.keys(responsive).length) node.responsive = responsive;
+    else delete node.responsive;
   } else if (command.type === "props" || command.type === "bindings") {
     for (const id of command.ids) {
       const node = findNode(doc, id); if (!node || !node.ref) throw new Error("Select an editable node");
       if (command.type === "props") node.props = { ...node.props, ...command.patch };
-      else if (command.value) node.tokenBindings = { ...command.value };
-      else delete node.tokenBindings;
+      else {
+        const bindings: TokenBindings = { ...node.tokenBindings };
+        for (const property of Object.keys(command.patch) as (keyof TokenBindings)[]) {
+          const ref = command.patch[property];
+          if (ref === undefined) delete bindings[property];
+          else bindings[property] = ref;
+        }
+        // Absent rather than `{}` when nothing is left, so the document serializes byte-identically
+        // to one that never carried bindings.
+        if (Object.keys(bindings).length) node.tokenBindings = bindings;
+        else delete node.tokenBindings;
+      }
     }
   } else if (command.type === "delete") {
     const nodes = topRoots(doc, command.ids);
