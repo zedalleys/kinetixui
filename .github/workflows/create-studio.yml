@@ -9,6 +9,8 @@ on:
       - "docs/create/**"
       - "scripts/create-schema/**"
       - "scripts/create-studio-browser.mjs"
+      - "scripts/create-studio-responsive-browser.mjs"
+      - "scripts/create-studio-consumer-build.mjs"
       - ".github/workflows/create-studio.yml"
   workflow_dispatch:
 permissions:
@@ -63,6 +65,18 @@ jobs:
           done
           if [ "$ready" -ne 1 ]; then cat /tmp/create-server.log; exit 1; fi
           CREATE_ARTIFACTS=/tmp/create-evidence CREATE_EXPORT_FIXTURE=/tmp/kinetix-create-export-m1 node scripts/create-studio-browser.mjs
+      - name: Generated React builds in a real consumer project
+        # Depends on the fixture the vitest step above writes, and on the built library packages.
+        # A separate job would have to rebuild both, so this stays in the same job, after them.
+        run: |
+          if [ ! -d /tmp/kinetix-create-export-m1 ]; then
+            echo "No generated export fixture: the export slice belongs to a dependent PR."
+            exit 0
+          fi
+          CREATE_ARTIFACTS=/tmp/create-evidence \
+          CREATE_EXPORT_FIXTURE=/tmp/kinetix-create-export-m1 \
+          CREATE_CONSUMER_DIR=/tmp/kinetix-create-consumer-build \
+            node scripts/create-studio-consumer-build.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

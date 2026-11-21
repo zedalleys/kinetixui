@@ -1,5 +1,10 @@
 {
-  "$comment": "Version 2 delta over immutable create-project.schema.json v1. schema.ts composes both sources; never duplicate the v1 definitions.",
+  "$comment": "Version 2 delta over immutable create-project.schema.json v1. model.ts composes both sources.",
+  "pages": {
+    "type": "array",
+    "minItems": 1,
+    "items": { "$ref": "#/$defs/page" }
+  },
   "layoutRefs": [
     "layout:stack",
     "layout:grid",
