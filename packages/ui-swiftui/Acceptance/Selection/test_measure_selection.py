@@ -203,10 +203,68 @@ class AnalyzerCommandTests(unittest.TestCase):
         missing_target = {stage: rows for stage, rows in frames.items() if stage != 1}
         self.assert_failure(self.run_analyzer(self.evidence(missing_target)), "1: 0")
         invalid_marker = {7 if stage == 1 else stage: rows for stage, rows in frames.items()}
-        self.assert_failure(self.run_analyzer(self.evidence(invalid_marker)), "1: 0")
+        self.assert_failure(self.run_analyzer(self.evidence(invalid_marker)), "Missing or invalid timeline marker")
         out_of_order = {stage: frames[stage] for stage in (0, 2, 1, 3, 4, 5, 6)}
         self.assert_failure(self.run_analyzer(self.evidence(out_of_order)), "Stage markers out of order")
 
+
+    def erase_markers(self, fixture, indices, width=0):
+        # Alter only the timeline region; retain paint, rails and selected identity.
+        with fixture.open("r+b") as footage:
+            for index in indices:
+                footage.seek(index * measure.FRAME_SIZE + 32 * measure.WIDTH * 3)
+                region = bytearray(148 * measure.WIDTH * 3)
+                if width:
+                    region[10 * 3:(10 + width) * 3] = bytes((0, 255, 0)) * width
+                footage.write(region)
+        return fixture
+
+    def test_real_command_rejects_hidden_displaced_settle_frames(self):
+        frames = trace()
+        # Twelve faulty late retarget samples follow enough clean samples to pass
+        # every assertion if the decoder silently drops the unmarked frames.
+        frames[4] += [(47, 57)] * 12
+        start = sum(len(frames[s]) for s in range(5)) - 12
+        visible = self.evidence(frames)
+        self.assert_failure(self.run_analyzer(visible), "stage 4 slot 1: indicator center x")
+        hidden = self.erase_markers(visible, range(start, start + 12))
+        self.assert_failure(self.run_analyzer(hidden), "Missing or invalid timeline marker")
+        self.assert_success(self.run_analyzer(self.evidence(trace())), "ltr")
+
+    def test_real_command_requires_continuous_timeline_after_measurement(self):
+        start = sum(len(trace()[s]) for s in range(4))
+        completion = sum(len(trace()[s]) for s in range(6))
+        for label, indices, width in (
+            ("one retarget frame", [start + 4], 0),
+            ("retarget marker", range(start, start + len(trace()[4])), 0),
+            ("completion marker", range(completion, completion + 2), 0),
+            ("all markers", range(sum(map(len, trace().values()))), 0),
+            ("malformed marker", [start + 4], 33),
+        ):
+            with self.subTest(label=label):
+                fixture = self.erase_markers(self.evidence(trace()), indices, width)
+                diagnostic = ("Missing frames with both selection controls" if label == "all markers"
+                              else "Missing or invalid timeline marker")
+                self.assert_failure(self.run_analyzer(fixture), diagnostic)
+        self.assert_success(self.run_analyzer(self.evidence(trace())), "ltr")
+
+    def test_real_command_rejects_reentered_and_truncated_timeline(self):
+        fixture = self.evidence(trace())
+        raw = fixture.read_bytes()
+        final = sum(len(trace()[s]) for s in range(6)) * measure.FRAME_SIZE
+        fixture.write_bytes(raw[:final])
+        self.assert_failure(self.run_analyzer(fixture), "6: 0")
+        # A repeated frame in the same stage is legitimate. A stage replayed
+        # after a later boundary is an invalid sequence.
+        fixture.write_bytes(raw + raw[:measure.FRAME_SIZE])
+        self.assert_failure(self.run_analyzer(fixture), "Stage markers out of order")
+        fixture.write_bytes(raw)
+        self.assert_success(self.run_analyzer(fixture), "ltr")
+
+    def test_real_command_accepts_leading_preroll(self):
+        fixture = self.evidence(trace())
+        fixture.write_bytes(bytes(measure.FRAME_SIZE) * 2 + fixture.read_bytes())
+        self.assert_success(self.run_analyzer(fixture), "ltr")
 
     def test_real_command_rejects_absent_and_malformed_evidence(self):
         no_reverse = trace()

@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, claude/m512-motion-promotion-register, codex/m689-motion-governance-repair, codex/m6814-native-integration-recovery, codex/m6816-motion-gate-closure, codex/m6818-integration-closure, codex/m6820-swiftui-direction-analyzer]
+    branches: [main, claude/m512-motion-promotion-register, codex/m689-motion-governance-repair, codex/m6814-native-integration-recovery, codex/m6816-motion-gate-closure, codex/m6818-integration-closure, codex/m6820-swiftui-direction-analyzer, codex/m6822-swiftui-destination-geometry]
 
 permissions:
   contents: read
