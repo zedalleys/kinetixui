@@ -1,5 +1,6 @@
 """Measure mounted SwiftUI indicator pixels and timeline markers in a simulator recording."""
 import argparse
+from contextlib import closing
 import subprocess
 from typing import NamedTuple
 
@@ -113,21 +114,31 @@ def samples(video):
         "-f", "rawvideo", "-pix_fmt", "rgb24", "pipe:1",
     ]
     with subprocess.Popen(command, stdout=subprocess.PIPE) as decoder:
-        while frame := decoder.stdout.read(FRAME_SIZE):
-            if len(frame) != FRAME_SIZE:
-                raise RuntimeError("Video decoder returned a partial frame")
-            marker_width = 0
-            for y in range(32, 180, 3):
-                row = frame[y * WIDTH * 3:(y + 1) * WIDTH * 3]
-                marker_width = max(marker_width, sum(
-                    g > 165 and r < 100 and b < 110
-                    for r, g, b in zip(row[::3], row[1::3], row[2::3])
-                ))
-            stage = round((marker_width - 20) / 20)
-            if 0 <= stage <= 6 and abs(marker_width - (20 + stage * 20)) <= 6:
-                yield stage, read_rows(frame)
-        if decoder.wait() != 0:
-            raise RuntimeError(f"Video decoder failed (exit {decoder.returncode})")
+        try:
+            while frame := decoder.stdout.read(FRAME_SIZE):
+                if len(frame) != FRAME_SIZE:
+                    raise RuntimeError("Video decoder returned a partial frame")
+                marker_width = 0
+                for y in range(32, 180, 3):
+                    row = frame[y * WIDTH * 3:(y + 1) * WIDTH * 3]
+                    marker_width = max(marker_width, sum(
+                        g > 165 and r < 100 and b < 110
+                        for r, g, b in zip(row[::3], row[1::3], row[2::3])
+                    ))
+                stage = round((marker_width - 20) / 20)
+                if 0 <= stage <= 6 and abs(marker_width - (20 + stage * 20)) <= 6:
+                    yield stage, read_rows(frame)
+                else:
+                    yield None, ()  # Preserve unreadable frames for timeline validation.
+            if decoder.wait() != 0:
+                raise RuntimeError(f"Video decoder failed (exit {decoder.returncode})")
+        finally:
+            # On evidence rejection, stop decoding before Popen waits. Closing
+            # the generator explicitly also avoids noisy FFmpeg broken pipes.
+            if decoder.poll() is None:
+                decoder.kill()
+            decoder.wait()
+            decoder.stdout.close()
 
 
 def require(condition, message):
@@ -235,15 +246,22 @@ def main():
     stages = {stage: [] for stage in range(7)}
     previous_stage = 0
     try:
-        for stage, rows in samples(args.video):
-            if stage < previous_stage:
-                raise RuntimeError(f"Stage markers out of order: {stage} follows {previous_stage}")
-            if not rows:
-                if any(stages.values()):
-                    raise RuntimeError(f"Missing indicator measurement in stage {stage}")
-                continue  # SwiftUI can paint the first marker before the first indicator.
-            previous_stage = stage
-            stages[stage].append(rows)
+        with closing(samples(args.video)) as decoded:
+            for frame_index, (stage, rows) in enumerate(decoded):
+                if stage is None:
+                    if any(stages.values()):
+                        raise RuntimeError(
+                            f"Missing or invalid timeline marker at frame {frame_index} after stage {previous_stage}"
+                        )
+                    continue  # Leading capture pre-roll precedes the measured run.
+                if stage < previous_stage:
+                    raise RuntimeError(f"Stage markers out of order: {stage} follows {previous_stage}")
+                if not rows:
+                    if any(stages.values()):
+                        raise RuntimeError(f"Missing indicator measurement in stage {stage}")
+                    continue  # SwiftUI can paint the first marker before the first indicator.
+                previous_stage = stage
+                stages[stage].append(rows)
     except (OSError, RuntimeError) as error:
         raise SystemExit(str(error)) from None
 
