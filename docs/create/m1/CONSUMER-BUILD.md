@@ -63,8 +63,13 @@ imports the module it measures cannot detect that module getting the cascade wro
   compared pixel by pixel. `visual` verification remains **0 on all five platforms**.
 - The claim this gate earns is exactly: **generated code builds successfully in a clean consumer
   project, and what it renders matches the saved project** at the measured widths.
-- The consumer install was verified locally with pnpm 10.28.0; CI runs it with the pnpm version
-  `pnpm/action-setup` installs for the repository.
+- The consumer project declares `allowBuilds: { esbuild: true }` (and the older
+  `onlyBuiltDependencies` spelling) in its own `pnpm-workspace.yaml`. Vite pulls esbuild, whose
+  build script pnpm refuses to run unapproved: pnpm 10/11 only warn, pnpm >= 12 raises
+  `ERR_PNPM_IGNORED_BUILDS` and exits 1. A real consumer using Vite under pnpm must declare the
+  same approval, which is why the gate declares it rather than passing `--ignore-scripts` — that
+  would hide a package whose build genuinely matters. Verified exit 0 under both pnpm 10.28.0 and
+  the repository's pinned 12.3.1.
 
 ## Companion unit gate
 

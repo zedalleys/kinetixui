@@ -194,6 +194,14 @@ async function scaffold() {
       ...CONSUMER_BUNDLER,
     },
   }, null, 2) + "\n");
+  // Vite pulls esbuild, whose build script pnpm refuses to run unapproved. pnpm 10/11 only warn;
+  // pnpm >= 12 makes it ERR_PNPM_IGNORED_BUILDS and exits 1 — which is how this gate passed locally
+  // on pnpm 10.28.0 and failed in CI on the repository's pinned 12.3.1. A real consumer using Vite
+  // under pnpm has to declare the same approval, so the gate declares it rather than installing
+  // with --ignore-scripts, which would hide a package whose build genuinely matters. Both spellings
+  // are written because the setting was renamed; verified exit 0 under 10.28.0 and 12.3.1.
+  await writeFile(join(consumer, "pnpm-workspace.yaml"),
+    "# pnpm >= 12 names this setting allowBuilds; pnpm 10/11 name it onlyBuiltDependencies.\nallowBuilds:\n  esbuild: true\nonlyBuiltDependencies:\n  - esbuild\n");
   await writeFile(join(consumer, "vite.config.ts"),
     'import { defineConfig } from "vite";\nimport react from "@vitejs/plugin-react";\nexport default defineConfig({ plugins: [react()], build: { minify: "esbuild", sourcemap: false } });\n');
   // The content scan covers the installed package dist, exactly as docs/create/m1/EXPORT.md instructs.
