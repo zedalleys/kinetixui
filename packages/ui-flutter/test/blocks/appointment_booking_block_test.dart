@@ -349,7 +349,7 @@ void main() {
     // this block has several horizontal rows. Capturing the details instead means a red here names the
     // widget that caused it, which is the difference between a gate and a puzzle.
     final List<String> overflows = <String>[];
-    final FlutterExceptionHandler? previousOnError = FlutterError.onError;
+    final void Function(FlutterErrorDetails)? previousOnError = FlutterError.onError;
     FlutterError.onError = (FlutterErrorDetails details) => overflows.add(details.toString());
     try {
       await tester.pumpWidget(
