@@ -113,6 +113,14 @@ const NEGATIVES = {
     breaks: "registry-has-a-driver",
     why: "a heredoc that prints the invocation executes nothing, so the payload of a `cat <<EOF` must not count as driving the registry either",
   },
+  "loop-lists-but-never-invokes": {
+    breaks: "driver-invokes-its-controls",
+    why: "a loop that captures the list, guards the count and logs each id but never runs `--negative=` executes no controls at all, and the registry must not read as driven",
+  },
+  "matrix-argument-ignores-the-matrix": {
+    breaks: "driver-invokes-its-controls",
+    why: "a matrix step whose `--negative=` argument is a literal id runs that one control in every cell, so the matrix covers one name and claims to cover all of them",
+  },
   "registry-driven-nowhere": {
     breaks: "registry-has-a-driver",
     why: "a registry no workflow names is a set of controls that never execute, which is how pm-matrix's seven went unnoticed",
@@ -182,6 +190,44 @@ function discoverRegistries() {
   return found;
 }
 
+/** A quoted argument stripped to its payload: `"$CONTROL"` -> `$CONTROL`. */
+const unquote = (arg) => arg.replace(/^["']|["']$/g, "");
+
+/** True when the argument is the loop's own variable, so each iteration runs a different control. */
+function consumesVariable(arg, name) {
+  return new RegExp(`^\\$(?:\\{${name}\\}|${name})$`).test(unquote(arg));
+}
+
+/**
+ * The word a step's `for` loop binds, so its body can be checked for consuming it. Preference order
+ * matters: the bare `#516` shape names the variable in the same statement as the list, the guarded
+ * shape names it against the captured variable, and only then is the first `for` in the step used.
+ */
+function loopVariable(run, script) {
+  const self = script.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const bare = run.match(new RegExp(`for\\s+(\\w+)\\s+in\\s+\\$\\([^)]*${self}\\s+--list-negatives`));
+  if (bare) return bare[1];
+  const captured = run.match(new RegExp(`^\\s*(\\w+)=\\$\\([^)]*${self}\\s+--list-negatives`, "m"));
+  if (captured) {
+    const iterates = run.match(new RegExp(`for\\s+(\\w+)\\s+in\\s+\\$(?:\\{${captured[1]}\\}|${captured[1]}\\b)`));
+    if (iterates) return iterates[1];
+  }
+  return run.match(/for\s+(\w+)\s+in\s/)?.[1] ?? null;
+}
+
+/**
+ * True when a matrix step's argument reaches `matrix.control` — written inline, or through an env
+ * binding on the step, the job or the workflow. A literal control id traces to nothing: every cell
+ * of the matrix would then run the same one.
+ */
+function tracesToMatrixControl(arg, bindings) {
+  const payload = unquote(arg);
+  if (/^\$\{\{\s*matrix\.control\s*\}\}$/.test(payload)) return true;
+  const name = payload.match(/^\$\{?(\w+)\}?$/)?.[1];
+  if (!name) return false;
+  return /matrix\.control/.test(String(bindings[name] ?? ""));
+}
+
 /** `--list-negatives`, run for real. Exit status and stdout are both part of the contract. */
 function listControls(script) {
   try {
@@ -215,13 +261,24 @@ function discoverDrivers() {
         const run = typeof step?.run === "string" ? step.run : "";
         if (!run) continue;
         const site = { workflow: file, job: jobId, step: step?.name ?? "(unnamed step)" };
+        // Nearest binding wins, as it does on the runner.
+        const bindings = { ...(doc?.env ?? {}), ...(job?.env ?? {}), ...(step?.env ?? {}) };
+        const calls = invocations(run, /(\S+\.mjs)\s+--negative=(\S*)/g);
         for (const found of invocations(run, /(\S+\.mjs)\s+--list-negatives/g)) {
-          loops.push({ ...site, script: found.script, run });
+          loops.push({
+            ...site,
+            script: found.script,
+            run,
+            variable: loopVariable(run, found.script),
+            args: calls.filter((c) => c.script === found.script).map((c) => c.arg),
+          });
         }
-        for (const found of invocations(run, /(\S+\.mjs)\s+--negative=/g)) {
+        for (const found of calls) {
           // Only a literal list is a second copy of the registry. A `fromJSON` matrix computed from a
           // job output is a different failure mode (an empty matrix skips the job) and is not claimed here.
-          if (Array.isArray(controls)) matrices.push({ ...site, script: found.script, controls: [...controls] });
+          if (Array.isArray(controls)) {
+            matrices.push({ ...site, script: found.script, controls: [...controls], arg: found.arg, bindings });
+          }
         }
       }
     }
@@ -292,7 +349,7 @@ function invocations(run, pattern) {
       const atCommandStart = /(?:^|[;&|(]|\b(?:then|do|else)\b)\s*(?:(?:node|pnpm\s+(?:exec|dlx)|npx)\s+)?$/.test(before);
       const insideQuotes = danglingQuote(before) !== null;
       const echoed = /\b(?:echo|printf)\b|(?:^|\s):\s/.test(before);
-      if (atCommandStart && !insideQuotes && !echoed) found.push({ script: m[1], line });
+      if (atCommandStart && !insideQuotes && !echoed) found.push({ script: m[1], arg: m[2] ?? "", line });
     }
     // State for the lines that follow. A real command can itself open a heredoc, so this runs after
     // the match above rather than instead of it.
@@ -368,8 +425,51 @@ function run({ control } = {}) {
     }
   }
 
+  if (control === "loop-lists-but-never-invokes") {
+    loops.push({
+      workflow: "a11y-browser.yml", job: "navigation-negative-controls", step: "A loop that logs instead of running",
+      script: "scripts/check-taxonomy-namespaces.mjs",
+      run: 'controls=$(node scripts/check-taxonomy-namespaces.mjs --list-negatives)\n'
+        + 'count=$(printf \'%s\\n\' "$controls" | grep -c . || true)\n'
+        + 'if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi\n'
+        + 'for control in $controls; do\n  echo "--- $control"\ndone\n',
+      variable: "control",
+      args: [],
+    });
+  }
+  if (control === "matrix-argument-ignores-the-matrix") {
+    matrices.push({
+      workflow: "native-swiftui.yml", job: "consumer-negative-controls", step: "Negative control: a pinned argument",
+      script: "scripts/check-taxonomy-namespaces.mjs",
+      controls: [...(controlsByScript.get("scripts/check-taxonomy-namespaces.mjs") ?? [])],
+      arg: "missing-import",
+      bindings: { CONTROL: "${{ matrix.control }}" },
+    });
+  }
+  // driver-invokes-its-controls
+  //
+  // Discovery proves a step NAMES a registry. It does not prove the step runs its controls, and
+  // Codex's review of `62ae2061` reproduced both ways that gap reads as green: a loop that captures
+  // the list, guards the count and logs each id but never invokes anything, and a matrix step whose
+  // argument is a literal control id, so all seven cells run the same one. Both left every control
+  // unexecuted with this gate passing, which is #516 one level up — the driver exists, the
+  // execution does not.
+  const executes = [];
+  for (const loop of loops) {
+    const consuming = loop.args.filter((arg) => loop.variable && consumesVariable(arg, loop.variable));
+    if (consuming.length > 0) { executes.push(loop); continue; }
+    fail("driver-invokes-its-controls", `${loop.workflow} job ${loop.job} step "${loop.step}" lists ${loop.script}'s controls`
+      + `${loop.variable ? ` into $${loop.variable}` : ""} but never invokes ${loop.script} --negative= with`
+      + `${loop.variable ? ` $${loop.variable}` : " it"}; the loop iterates over names and runs nothing`);
+  }
+  for (const m of matrices) {
+    if (tracesToMatrixControl(m.arg, m.bindings)) { executes.push(m); continue; }
+    fail("driver-invokes-its-controls", `${m.workflow} job ${m.job} step "${m.step}" invokes ${m.script} --negative=${m.arg}, `
+      + `which does not trace to matrix.control, so all ${m.controls.length} cells run the same control`);
+  }
+
   // registry-has-a-driver
-  const driven = new Set([...loops, ...matrices].map((d) => d.script));
+  const driven = new Set(executes.map((d) => d.script));
   if (control === "registry-driven-nowhere") driven.delete("scripts/check-taxonomy-namespaces.mjs");
   if (control === "heredoc-payload-counts-as-a-driver") {
     // The shape Codex reproduced against `ab8251b6`: the step prints the command from a heredoc.
