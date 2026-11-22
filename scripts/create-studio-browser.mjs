@@ -176,7 +176,15 @@ try {
   });
   await studio.getByRole("button", { name: "Save", exact: true }).click();
   await studio.getByRole("alert").waitFor();
-  assert.match(await studio.locator(".studio-save-state").innerText(), /Unsaved/);
+  // `route.abort` means this request never reached the server, so nothing was stored here — but the
+  // browser cannot tell that from a connection lost after the server had already committed, and the
+  // local route commits before it builds its reply. So the editor reports the outcome as unknown
+  // instead of asserting either answer (M5.22), and both false claims are checked. This replaces an
+  // assertion on /Unsaved/, which required the editor to state that the write did not happen.
+  const afterFailedSave = await studio.locator(".studio-save-state").innerText();
+  assert.doesNotMatch(afterFailedSave, /^Saved/, `a save that was not confirmed must never read as saved: "${afterFailedSave}"`);
+  assert.doesNotMatch(afterFailedSave, /Save failed/, `an unconfirmed save must not be reported as a definite failure: "${afterFailedSave}"`);
+  assert.match(afterFailedSave, /unconfirmed/i, `an unconfirmed save must say so: "${afterFailedSave}"`);
   assert.ok(await page.evaluate(() => Object.keys(localStorage).some(k => k.startsWith("kinetix-studio:"))));
   await page.unroute("**/api/create-studio");
   await save();

@@ -22,6 +22,36 @@ const viewportPresets = [
 type Product = { id: string; revision: number; doc: Document; readOnly: boolean };
 type Account = { accountId: string; workspaceId: string; productLimit: number; products: { id: string; name: string; readOnly: boolean; revision: number }[] };
 class ApiError extends Error { constructor(public code: string, message: string) { super(message); } }
+/**
+ * What a save attempt established about the user's stored data.
+ *
+ * `rejected` and `unconfirmed` are NOT the same claim, and collapsing them into one boolean is
+ * what produced the M5.21 finding: the status chip read "Save failed" after a save that had
+ * actually committed. The split is drawn from where the write can be interrupted:
+ *
+ *  - Every `ServiceError` the service raises is raised INSIDE `FileStore.transaction`'s `run`,
+ *    which executes before the temporary file is written and renamed. A coded rejection therefore
+ *    means the stored document was not touched. Those are `rejected`.
+ *  - A transport failure is `unconfirmed` because the route awaits `service().save(...)` and the
+ *    store renames the file into place before the response is built, so a connection lost after
+ *    the commit leaves the write DONE and only the acknowledgement lost.
+ *  - `SAVE_FAILED` is `unconfirmed` too, and this was MEASURED rather than assumed (M5.22): it is
+ *    the route's catch-all for any unexpected throw, and `FileStore.transaction` can throw from
+ *    its `finally` — releasing the lock — after `rename` has already committed the write. A test
+ *    that removes the lock directory from inside `run` reproduces exactly that: the transaction
+ *    rejects and the new state is on disk.
+ *  - Anything unclassified is `unconfirmed`, because the honest default is to claim less. Claiming
+ *    a failure that did not happen is the same class of lie as claiming a save that did not.
+ */
+type SaveOutcome = "none" | "confirmed" | "rejected" | "unconfirmed";
+const REJECTED_SAVE_CODES = new Set([
+  "NOT_CONFIGURED", "ORIGIN_REJECTED", "SESSION_REQUIRED", "NOT_FOUND", "PRODUCT_LIMIT_REACHED",
+  "PRODUCT_READ_ONLY", "REVISION_CONFLICT", "IDENTITY_REWIND", "INVALID_DOCUMENT", "INVALID_REQUEST",
+  "REQUEST_TOO_LARGE", "DOCUMENT_UNREADABLE",
+]);
+export function classifySaveFailure(error: unknown): "rejected" | "unconfirmed" {
+  return error instanceof ApiError && REJECTED_SAVE_CODES.has(error.code) ? "rejected" : "unconfirmed";
+}
 async function request<T>(body?: unknown, id?: string): Promise<T> {
   let res: Response;
   try {
@@ -119,7 +149,18 @@ export function CreateStudio() {
   // positions a pointer drag can. Backed by the existing `move` command's `index`.
   const [moveIndex, setMoveIndex] = React.useState("end");
   const [saving, setSaving] = React.useState(false);
-  const [saveFailed, setSaveFailed] = React.useState(false);
+  const [saveOutcome, setSaveOutcome] = React.useState<SaveOutcome>("none");
+  // The verdict of a reconciliation, kept in its own state rather than in `notice`. `notice` is
+  // written by several unrelated effects — the draft-storage one among them — and in M5.22 it
+  // overwrote this verdict within seconds of the check that produced it.
+  const [checked, setChecked] = React.useState("");
+  // Every save attempt whose outcome is still unknown, oldest first, kept so they can be
+  // RECONCILED against the stored document instead of guessed at. A LIST, not one attempt: after a
+  // lost acknowledgement the user may edit and try again, and each of those attempts could be the
+  // one that committed. Keeping only the latest made reconciliation compare the store against the
+  // wrong payload and report that another writer had been at work when nobody had (Codex, M5.22).
+  // Cleared the moment the question is settled either way, so it cannot grow across a session.
+  const pendingSaves = React.useRef<{ serialized: string; baseRevision: number }[]>([]);
   const [recovered, setRecovered] = React.useState(false);
   const [focusIndex, setFocusIndex] = React.useState(0);
   const [fieldDrafts, setFieldDrafts] = React.useState<Record<string, string>>({});
@@ -225,7 +266,7 @@ export function CreateStudio() {
       setProduct(p); setHistory(newHistory(p.doc)); setSaved(serializeDocument(p.doc)); setPageId(p.doc.pages[0].id);
       draftWriter.current = null; recoveredCopy.current = null;
       setDraftBase(null); setDraftChoices([]); setFieldDrafts({});
-      setSaveFailed(false); setRecovered(false); setNameDraft(null); setMoveTarget(""); setMoveIndex("end");
+      setSaveOutcome("none"); pendingSaves.current = []; setChecked(""); setRecovered(false); setNameDraft(null); setMoveTarget(""); setMoveIndex("end");
       setNotice("");
       try {
         if (account && draftsFor(account, p).length) setNotice("A draft from this browser is available. Use Recover draft to review it before saving.");
@@ -242,7 +283,7 @@ export function CreateStudio() {
       setProduct(p); setHistory(newHistory(p.doc)); setSaved(serializeDocument(p.doc)); setPageId(p.doc.pages[0].id);
       draftWriter.current = null; recoveredCopy.current = null;
       setDraftBase(null); setDraftChoices([]); setFieldDrafts({});
-      setSaveFailed(false); setRecovered(false); setNameDraft(null); setMoveTarget(""); setMoveIndex("end");
+      setSaveOutcome("none"); pendingSaves.current = []; setChecked(""); setRecovered(false); setNameDraft(null); setMoveTarget(""); setMoveIndex("end");
       createKey.current = null; setAccount(await request<Account>());
       setNotice("Product created. Add a component from the library, then edit it in Properties.");
     } catch (e) { if (e instanceof ApiError && e.code === "PRODUCT_LIMIT_REACHED") { dialogReturnFocus.current = newProductButton.current; setUpgrade(true); } else setError((e as Error).message); }
@@ -252,22 +293,101 @@ export function CreateStudio() {
     if (!history || !product || !account || readOnly || busy || staleDraft || Object.keys(fieldDrafts).length) return;
     setBusy(true); setSaving(true); setError("");
     const payload = history.doc;
+    const attempt = { serialized: serializeDocument(payload), baseRevision: draftBase ?? product.revision };
+    // A new attempt replaces the question the last verdict answered.
+    setChecked("");
     try {
       // Deliberately NOT read through readProduct: the editor keeps rendering the payload it just
       // sent, and the service validated that document before storing it. Rejecting the reply here
       // would report a save that SUCCEEDED as a failure, which is the one thing the save path must
       // never do.
       const p = await request<Product>({ operation: "save", id: product.id, revision: draftBase ?? product.revision, doc: payload });
-      setProduct(p); setSaved(serializeDocument(payload)); setDraftBase(null); setSaveFailed(false); setRecovered(false); setNotice("Saved to this computer's local server.");
+      setProduct(p); setSaved(serializeDocument(payload)); setDraftBase(null); setSaveOutcome("confirmed"); pendingSaves.current = []; setRecovered(false); setNotice("Saved to this computer's local server.");
       try {
         if (draftWriter.current && latest.current && serializeDocument(latest.current.doc) === serializeDocument(payload)) localStorage.removeItem(keyFor(account, product.id) + ":" + draftWriter.current);
       } catch { /* The server already confirmed the save. */ }
       setAccount(current => current && { ...current, products: current.products.map(item => item.id === p.id ? { ...item, name: p.doc.name, revision: p.revision, readOnly: p.readOnly } : item) });
     } catch (e) {
-      setError((e as Error).message);
-      setSaveFailed(true);
+      const outcome = classifySaveFailure(e);
+      // A conflict raised on a RETRY of an unconfirmed attempt is evidence the earlier attempt (or
+      // another writer) committed, so it must not downgrade the question to a settled failure. The
+      // retry itself is safe: it carries the old revision, so the service refuses it rather than
+      // overwriting the newer document.
+      const retryConflict = outcome === "rejected" && e instanceof ApiError && e.code === "REVISION_CONFLICT" && saveOutcome === "unconfirmed";
+      setSaveOutcome(retryConflict ? "unconfirmed" : outcome);
+      // An unconfirmed attempt joins the open questions. A settled rejection closes all of them,
+      // because a coded rejection proves the store was not touched by THIS attempt — but it says
+      // nothing about an earlier uncertain one, which is why a conflict on a retry is excluded.
+      if (outcome === "unconfirmed") pendingSaves.current = [...pendingSaves.current, attempt].slice(-20);
+      else if (!retryConflict) pendingSaves.current = [];
+      setError(retryConflict
+        ? "The stored revision has moved on since that unconfirmed save, so this retry was refused rather than overwriting it. Your earlier save may have committed. Check the stored version."
+        : (e as Error).message);
       if (e instanceof ApiError && e.code === "PRODUCT_READ_ONLY") setProduct({ ...product, readOnly: true });
     } finally { setBusy(false); setSaving(false); }
+  }
+  /**
+   * Settle an unconfirmed save by READING the stored product and comparing it to what was sent.
+   *
+   * This is the only honest way out of "it may or may not have been stored": the revision counter
+   * alone cannot distinguish our own committed write from another writer's, so the comparison is
+   * on the document itself, with the revision used only to recognise a store that never moved.
+   *
+   * It writes nothing and it never replaces what is on screen. `history` — the user's work,
+   * including anything they typed after the uncertain save — is untouched in every branch.
+   */
+  async function reconcile() {
+    if (!product || busy || !pendingSaves.current.length) return;
+    const attempts = pendingSaves.current;
+    // The revision the store was at when the uncertainty began. Only the FIRST open attempt knows
+    // it: a later one carries whatever the editor believed by then.
+    const floor = attempts[0].baseRevision;
+    setBusy(true);
+    try {
+      const stored = readProduct(await request<Product>(undefined, product.id));
+      const storedSerialized = serializeDocument(stored.doc);
+      const committed = attempts.find(item => item.serialized === storedSerialized);
+      if (committed) {
+        // The stored document IS what one of those saves sent: it committed, and only the reply was
+        // lost. Adopting the stored revision is right here, because the work on screen is based on
+        // the document that is stored.
+        setProduct(stored);
+        setSaved(committed.serialized); setDraftBase(null); setSaveOutcome("confirmed"); setRecovered(false);
+        pendingSaves.current = [];
+        setError("");
+        setChecked(`Checked: that save did commit. The stored version is revision ${stored.revision} and matches what was sent, so nothing was lost. Anything you changed afterwards is still unsaved.`);
+      } else if (stored.revision === floor) {
+        // The store never moved, so nothing was written and a retry is the right next step.
+        setProduct(stored);
+        setSaveOutcome("rejected");
+        pendingSaves.current = [];
+        setError("");
+        setChecked(`Checked: that save did not commit. The stored version is still revision ${stored.revision}, so your work is unsaved and can be saved again.`);
+      } else {
+        // Something else wrote.
+        //
+        // Adopting its revision while keeping the local document on screen would be the worst
+        // outcome of all: `staleDraft` would stay false for an ordinary edit, Save would stay
+        // enabled, and the next save would carry the newly adopted revision and OVERWRITE that
+        // writer's work instead of being refused — the one thing the save path must never do. The
+        // browser draft would be persisted against that foreign revision too.
+        //
+        // So the editor records the revision this work is actually based on as its draft base,
+        // which is the mechanism that already exists for exactly this state: `staleDraft` becomes
+        // true, Save is unavailable, the chip reads "Draft revision conflict", and the Download
+        // draft / Reopen saved affordances appear. Found by Codex at `1e21261e`.
+        setProduct(stored);
+        setDraftBase(floor);
+        setSaveOutcome("unconfirmed");
+        setChecked(`Checked: the stored version is revision ${stored.revision}, and it is not what that save sent.`);
+        setError(`The stored version is revision ${stored.revision} and does not match what that save sent, so something else has written to this product. Your work is based on revision ${floor}, so saving over it is unavailable. Download your draft, then reopen the saved version — reopening replaces what is on screen.`);
+      }
+    } catch (e) {
+      // Still unconfirmed: a check that could not be made settles nothing.
+      setSaveOutcome("unconfirmed");
+      setChecked("");
+      setError(`The stored version could not be checked, so that save is still unconfirmed. Your work is still open in this editor. ${(e as Error).message}`);
+    } finally { setBusy(false); }
   }
   function recover(draftKey?: string) {
     if (!account || !product || dirty || busy || Object.keys(fieldDrafts).length) return;
@@ -309,7 +429,12 @@ export function CreateStudio() {
     : busy ? "Working…"
     : staleDraft ? "Draft revision conflict"
     : Object.keys(fieldDrafts).length ? "Unapplied property draft"
-    : saveFailed && dirty ? "Save failed · Unsaved changes"
+    // Order is load-bearing. An unconfirmed save is neither a failure nor a success, so it is read
+    // BEFORE the failure branch and it does not borrow that branch's "Unsaved changes", which would
+    // assert the write did not happen. What it says instead is what is true: the answer is not
+    // known, and there is a way to find out.
+    : saveOutcome === "unconfirmed" ? "Save unconfirmed · Check the stored version"
+    : saveOutcome === "rejected" && dirty ? "Save failed · Unsaved changes"
     : dirty ? (recovered ? "Recovered draft · Unsaved changes" : "Unsaved changes")
     : "Saved locally";
   const moveTargetRow = containers.find(row => row.node.id === moveTarget);
@@ -503,9 +628,11 @@ export function CreateStudio() {
         {history && page && <div className="studio-recovery">
           <Button size="sm" variant="Ghost" disabled={!recoveryAvailable} onClick={() => recover()}>Recover draft</Button>
           {(dirty || staleDraft) && <Button variant="Ghost" size="sm" onClick={() => download("create-draft.json", serializeDocument(history.doc))}>Download draft</Button>}
+          {saveOutcome === "unconfirmed" && <Button size="sm" variant="Outline" onClick={() => { void reconcile(); }}>Check the stored version</Button>}
         </div>}
         <span className="studio-dev">Local development · billing not configured</span>
       </div>
+      {history && page && checked && <p className="studio-checked" role="status">{checked}</p>}
       {history && page && (error || staleDraft) && <div className="studio-error" role="alert"><p>{error || "This draft is based on a different saved revision. Download it or reopen the saved version."}</p><div><Button variant="Outline" size="sm" onClick={() => download("create-draft.json", serializeDocument(history.doc))}>Download draft</Button><Button variant="Ghost" size="sm" onClick={() => { void openProduct(product!.id, true); }}>Reopen saved (draft stays here)</Button></div></div>}
       {draftChoices.length > 1 && !dirty && <div className="studio-draft-chooser">
         <div className="studio-product-select"><Label htmlFor="studio-draft">Browser draft</Label><NativeSelect id="studio-draft" value={draftChoice} onChange={e => setDraftChoice(e.target.value)}>{draftChoices.map((draft, index) => <option key={draft.key} value={draft.key}>Draft {index + 1} · revision {draft.baseRevision}{draft.updatedAt ? " · " + new Date(draft.updatedAt).toLocaleString() : ""}</option>)}</NativeSelect></div>

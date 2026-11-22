@@ -21,6 +21,8 @@ on:
       - "scripts/create-studio-error-boundary-controls.sh"
       - "scripts/create-studio-recovery-browser.mjs"
       - "scripts/create-studio-recovery-exit-controls.sh"
+      - "scripts/create-studio-save-state-browser.mjs"
+      - "scripts/create-studio-save-state-controls.sh"
       - ".github/workflows/create-studio.yml"
   workflow_dispatch:
 permissions:
@@ -84,6 +86,12 @@ jobs:
           # implementations are scripts/create-studio-resilience-controls.sh, which mutates the
           # tree and so is run by hand, not here.
           CREATE_ARTIFACTS=/tmp/create-evidence node scripts/create-studio-resilience-browser.mjs
+          # What the editor claims about the user's stored data when a save cannot be confirmed:
+          # a commit whose acknowledgement is lost, an unreadable reply, a retry, a conflict,
+          # refusing browser storage, and the reconciliation that settles it. The source controls
+          # that remove the implementations are scripts/create-studio-save-state-controls.sh, which
+          # mutates the tree and so is run by hand, not here.
+          CREATE_ARTIFACTS=/tmp/create-evidence node scripts/create-studio-save-state-browser.mjs
       - name: Generated React builds in a real consumer project
         # Depends on the fixture the vitest step above writes, and on the built library packages.
         # A separate job would have to rebuild both, so this stays in the same job, after them.

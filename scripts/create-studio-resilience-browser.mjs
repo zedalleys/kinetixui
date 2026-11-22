@@ -211,20 +211,38 @@ try {
       assert.doesNotMatch(alert, /draft is still in this browser/i, `a transport failure must not promise browser persistence it cannot verify, read: ${alert.slice(0, 180)}`);
       assert.match(alert, /still open in this editor/i, `a transport failure must say the work is still open in the editor, read: ${alert.slice(0, 180)}`);
       const state = await studio.locator(".studio-save-state").innerText();
-      assert.match(state, /Save failed/, `the save state must report the failure, read: ${state}`);
-      assert.doesNotMatch(state, /^Saved/, "a failed save must never read as saved");
+      // `route.abort` means this particular request never reached the server, so in THIS case the
+      // write really did not commit — but the browser cannot tell a refused connection from one
+      // lost after the server committed: both arrive as the same rejected fetch. So the only
+      // statement the editor is entitled to make is that the outcome is unknown, and it must make
+      // neither of the two false ones. The order below is deliberate: each reading-control
+      // perturbs the chip into exactly one of them, and the assertion naming that one must fire.
+      assert.doesNotMatch(state, /^Saved/, `a save that was not confirmed must never read as saved, read: ${state}`);
+      assert.doesNotMatch(state, /Save failed/, `an unconfirmed save must not be reported as a definite failure, read: ${state}`);
+      assert.match(state, /unconfirmed/i, `the save state must report the save as unconfirmed, read: ${state}`);
     };
     await assertTruthfulFailure();
     readings.transportFailure = {
       alert: (await studio.getByRole("alert").first().innerText()).replace(/\s+/g, " ").slice(0, 220),
       state: await studio.locator(".studio-save-state").innerText(),
     };
+    // Both false claims, each with its own control. One reading cannot stand in for the other:
+    // before M5.22 the chip read "Save failed" here and the gate ASSERTED that, so a control for a
+    // false success passed while the false failure shipped.
     await control(
-      "the save-truth reading cannot tell a failure from a success",
+      "the save-truth reading cannot tell an unconfirmed save from a success",
       "reading-control",
       () => page.evaluate(() => { const el = document.querySelector(".studio-save-state"); el.dataset.controlPrevious = el.textContent; el.textContent = "Saved locally"; }),
       assertTruthfulFailure,
-      "the save state must report the failure",
+      "must never read as saved",
+      () => page.evaluate(() => { const el = document.querySelector(".studio-save-state"); el.textContent = el.dataset.controlPrevious; delete el.dataset.controlPrevious; }),
+    );
+    await control(
+      "the save-truth reading cannot tell an unconfirmed save from a failure",
+      "reading-control",
+      () => page.evaluate(() => { const el = document.querySelector(".studio-save-state"); el.dataset.controlPrevious = el.textContent; el.textContent = "Save failed \u00b7 Unsaved changes"; }),
+      assertTruthfulFailure,
+      "must not be reported as a definite failure",
       () => page.evaluate(() => { const el = document.querySelector(".studio-save-state"); el.textContent = el.dataset.controlPrevious; delete el.dataset.controlPrevious; }),
     );
     await context.unroute("**/api/create-studio");
