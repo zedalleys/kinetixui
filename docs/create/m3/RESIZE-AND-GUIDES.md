@@ -158,6 +158,7 @@ new ones measure:
 | the guide under the camera | within 2px at 120% zoom |
 | a camera pan during a resize | the frame moved 24px with the candidate width unchanged, and the guide stayed **1px** from its edge |
 | an editing-viewport change during a resize | 960 → 390 from the keyboard, the frame shrank from 600px, the candidate width unchanged, the guide still on the edge |
+| the measurement settles | the guide's style rewritten **0** times in 600ms with the pointer perfectly still |
 | the canvas resizing with no render at all | the canvas changed width by more than 50px and the RTL label stayed beside the guide |
 | the guide in RTL | on the frame's own **left** edge within 2px, with the right edge 370px away, and the label on the leading side |
 | keyboard reachability | the handle focusable with slider semantics, one press advancing the effective width by one |
@@ -208,6 +209,20 @@ Three measurement rules this slice earned, each of which first produced a false 
   `.studio-world`'s transform to change and then two animation frames, so the overlay's own
   re-measurement has been painted — but it never waits for the guide to reach the edge, which is
   exactly what it is there to measure.
+
+### What naming no causes costs, and the one assertion that is ungated
+
+A measurement that runs on every commit and writes state has to reach a fixed point, so that is
+measured: the churn on the guide's own `style` while a held drag is perfectly still. **0 rewrites in
+600ms.** The identity guard is what makes it terminate — it returns the *previous* object when every
+field is within 0.5px, which is what lets React bail out of the re-render.
+
+That assertion is **ungated, and the gate says so in its own output.** Removing the guard does not
+make the measurement merely churn: it makes the editor stop responding, and the control dies on the
+inspector's own Width field 22 checks before the settle assertion is reached. So that control is
+recorded as **evidence rather than proof**, with a weaker bar it can actually meet — the gate must
+fail, and the failure must not be one another control owes, or it would be credited for someone
+else's cause. A limitation printed is worth more than an assertion whose own control cannot reach it.
 
 ## Negative controls
 

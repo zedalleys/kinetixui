@@ -3,7 +3,7 @@
  * create-studio-m3-resize-negative-controls.mjs — proof that the M3-C resize checks in
  * `scripts/create-studio-canvas-browser.mjs` can actually fail.
  *
- * Six defects were repaired on this branch, and the last three are instances of one mistake: a
+ * Six defects were repaired on this branch, and one invariant the last repair depends on is gated too, and the last three are instances of one mistake: a
  * measurement that names the causes which can invalidate it. Three were invisible to the 25 checks
  * the gate already had, and three were invisible to every gate in the repository, so each repair
  * owes a control that reintroduces exactly that defect and shows the REAL gate going red for the
@@ -22,6 +22,11 @@
  *                             moves the frame, which is how two reachable cases were missed: a
  *                             camera pan and an editing-viewport change, each of which moves the
  *                             frame while the width and the guide are unchanged.
+ *   identity-guard-removed    the guard that lets React bail out is gone, so a measurement with no
+ *                             dependency list re-renders itself without ever settling. EVIDENCE
+ *                             ONLY: measured, this breaks the editor 22 checks before the settle
+ *                             assertion, so no failure can name that behaviour. Its bar is instead
+ *                             that the gate fails and the failure is not one another control owes.
  *   canvas-not-observed       the canvas is no longer observed, so geometry that moves with no
  *                             render at all — the window resizing, which restates the canvas's own
  *                             width — is never remeasured.
@@ -138,6 +143,22 @@ const CONTROLS = [
     owes: ["must be remeasured when the canvas resizes with no render of its own"],
   },
   {
+    name: "identity-guard-removed",
+    file: "apps/web/src/components/create-studio/create-studio.tsx",
+    from: ["    setGeometry(previous => previous && Object.keys(next).every(key => Math.abs(previous[key as keyof typeof next] - next[key as keyof typeof next]) < 0.5) ? previous : next);"],
+    to: ["    setGeometry(next);"],
+    // The guard is what makes a measurement with no dependency list safe: without it every commit
+    // writes a NEW object, which re-renders, which measures again. This control proves the gate can
+    // see that, and the measured churn is what distinguishes it.
+    // MEASURED, and not what I expected: removing the guard does not make the measurement merely
+    // churn, it makes the editor stop responding — the run dies on the inspector's own Width field
+    // 22 checks before the settle assertion. So this control cannot name that behaviour, and it is
+    // recorded as EVIDENCE rather than proof: the gate must still fail, and the failure must not be
+    // one another control owes, or this control would be credited for someone else's cause.
+    owes: [],
+    evidenceOnly: "removing the guard breaks the editor before the settle assertion is reached, so no failure can name it",
+  },
+  {
     name: "rtl-logical-property",
     file: "apps/web/src/components/create-studio/create-studio.tsx",
     from: ['style={{ left: edge, top: 0, height }}'],
@@ -212,19 +233,27 @@ try {
 
     const failure = terminalFailure(result.output);
     const matched = control.owes.filter(fragment => failure.includes(fragment));
+    // An evidence-only control owes no message, so the bar is instead that it must not be credited
+    // for a failure another control owes.
+    const borrowed = control.evidenceOnly
+      ? CONTROLS.flatMap(other => (other === control ? [] : other.owes)).filter(fragment => failure.includes(fragment))
+      : [];
     // Controls 2 and 3 trip the same assertion, so naming it is not enough: the measured offsets
     // have to say WHICH defect produced it, or one control could be credited for the other's cause.
     const offsets = /off the frame by (-?\d+)px, off the wrapper by (-?\d+)px/.exec(failure);
     const measured = { frame: offsets ? Number(offsets[1]) : null, wrapper: offsets ? Number(offsets[2]) : null };
     const discriminated = control.discriminates ? control.discriminates(measured) : true;
-    const detected = result.status !== 0 && matched.length > 0 && discriminated;
+    const detected = control.evidenceOnly
+      ? result.status !== 0 && borrowed.length === 0
+      : result.status !== 0 && matched.length > 0 && discriminated;
     findings.push({
       control: control.name, file: control.file, exitStatus: result.status, owes: control.owes, matched,
+      classification: control.evidenceOnly ? "evidence" : "proof", evidenceOnly: control.evidenceOnly ?? null, borrowed,
       measuredOffsets: measured, discriminated, detected,
       passesBeforeFailure: (result.output.match(/^PASS /gm) ?? []).length,
       failure: failure.split("\n").filter(Boolean).slice(0, 6).join("\n"),
     });
-    console.log(`CONTROL ${control.name} → exit ${result.status}, ${detected ? "detected" : "NOT DETECTED"}`);
+    console.log(`CONTROL ${control.name} → exit ${result.status}, ${detected ? "detected" : "NOT DETECTED"}${control.evidenceOnly ? " (evidence, not proof)" : ""}`);
     console.log(failure.split("\n").filter(Boolean).slice(0, 3).map(line => "  " + line).join("\n"));
   }
 } finally {

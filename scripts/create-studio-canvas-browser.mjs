@@ -22,6 +22,10 @@ const page = await context.newPage();
 const errors = [], results = [], a11y = [], measurements = {};
 page.on("pageerror", error => errors.push(error.message));
 const pass = name => { results.push(name); console.log("PASS " + name); };
+// A statement the run records without asserting it. A limitation printed is worth more than an
+// assertion whose own control cannot reach it.
+const notes = [];
+const note = text => { notes.push(text); console.log("NOTE " + text); };
 const studio = page.locator(".create-studio");
 const inspector = studio.getByRole("complementary", { name: "Properties inspector" });
 
@@ -789,6 +793,40 @@ try {
   await studio.getByRole("button", { name: "RTL", exact: true }).click();
   pass("the overlay is remeasured when the canvas changes size without any state change to render on");
 
+  // ------------------------------------------------- the unconditional measurement must SETTLE
+  // The cost of naming no causes is that the measurement runs on every commit and writes state, so
+  // the thing to prove is that it reaches a fixed point: the identity guard returns the PREVIOUS
+  // object when every field is within 0.5px, which is what lets React bail out of the re-render.
+  // Measured as the churn on the guide's own `style` while a held drag is perfectly still — a
+  // measurement that never settles rewrites it every frame.
+  await studio.getByLabel("Viewport width").selectOption("960");
+  await studio.getByRole("button", { name: "Reset view", exact: true }).click();
+  await inspector.getByLabel("Edit at breakpoint").selectOption("desktop");
+  await setEditedWidth(320);
+  narrowPoint = await handlePoint();
+  await dragFromTo(narrowPoint, { x: narrowPoint.x + 45, y: narrowPoint.y }, { release: false });
+  await drawnGeometry();
+  const churn = await page.evaluate(() => new Promise(done => {
+    const line = document.querySelector(".studio-guide");
+    if (!line) { done(-1); return; }
+    let records = 0;
+    const observer = new MutationObserver(list => { records += list.length; });
+    observer.observe(line, { attributes: true, attributeFilter: ["style"] });
+    setTimeout(() => { observer.disconnect(); done(records); }, 600);
+  }));
+  measurements.measurementSettles = { styleWritesWhileStill: churn, windowMs: 600 };
+  assert.ok(churn >= 0, "the guide must still be drawn for this measurement to mean anything");
+  // 600ms is ~36 frames at 60Hz. A measurement that does not settle rewrites the style on each one.
+  assert.ok(churn <= 4, `the measurement must reach a fixed point: the guide's style was rewritten ${churn} times in 600ms while the pointer was perfectly still`);
+  await page.keyboard.press("Escape");
+  pass("the unconditional measurement settles: a still pointer rewrites nothing");
+  // Said plainly, because it is the one assertion in this file whose own control cannot reach it:
+  // removing the identity guard does not merely make the measurement churn, it makes the editor
+  // stop responding — the control times out at the inspector, 22 checks before this line. So this
+  // assertion is EVIDENCE that the measurement settles, and the guard's necessity is proved by the
+  // suite as a whole rather than by a control naming this behaviour.
+  note("the settle assertion above is ungated: the only mutation that removes the guard breaks the editor long before this check, so the control for it is evidence rather than proof");
+
   // ------------------------------------------------- keyboard reachability of the repaired path
   // The whole repaired path has to be operable without a pointer: reach the handle by Tab alone and
   // move the frame's width with it.
@@ -855,7 +893,7 @@ try {
   assert.deepEqual(errors, []);
   const violations = a11y.flatMap(x => x.violations);
   const report = {
-    results, runtimeErrors: errors, accessibility: a11y, measurements,
+    results, notes, runtimeErrors: errors, accessibility: a11y, measurements,
     limitations: [
       "Chromium only; no manual assistive-technology certification",
       "Mouse pointer only: touch and trackpad use the same pointer events but are not driven here",
