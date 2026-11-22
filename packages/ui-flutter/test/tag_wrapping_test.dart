@@ -359,18 +359,24 @@ void main() {
     testWidgets('control: the removed LayoutBuilder form DOES break under IntrinsicWidth',
         (WidgetTester tester) async {
       setPhone(tester);
-      // Not collecting through `FlutterError.onError` here: this case wants the error to reach the
-      // test's own exception reporter, so `takeException()` returns it and its message can be read.
-      await tester.pumpWidget(host(const IntrinsicWidth(child: LayoutBuilderTagReplica(label))));
-      await tester.pump(const Duration(milliseconds: 50));
+      // Collected through `FlutterError.onError` rather than read from `takeException()`. One broken
+      // intrinsic-sizing pass raises FOUR errors — the assertion in `performLayout` and three
+      // consequences of the layout it abandoned — and `takeException()` then returns the aggregate
+      // 'multiple exceptions (4) were detected' summary, which names no cause at all. Asserting the
+      // documented reason against that summary failed on CI at `2191ddd` while the control was in fact
+      // working perfectly: the first collected error reads 'LayoutBuilder does not support returning
+      // intrinsic dimensions.' So the whole set is collected and the reason is required to appear in
+      // it, which is both true to the framework's behaviour and still a statement about the cause.
+      final List<String> errors = await pumpCollectingOverflows(
+          tester, host(const IntrinsicWidth(child: LayoutBuilderTagReplica(label))));
 
-      final Object? thrown = tester.takeException();
-      expect(thrown, isNotNull,
+      expect(errors, isNotEmpty,
           reason: 'the removed form must still break here, or the three cases above are claims about '
               'an instrument that cannot fail');
-      expect(thrown.toString().toLowerCase(), contains('intrinsic'),
+      expect(errors.any((String e) => e.toLowerCase().contains('intrinsic')), isTrue,
           reason: 'and it must break FOR THE DOCUMENTED REASON — LayoutBuilder refusing to report an '
-              'intrinsic dimension — not for some unrelated reason that happens to throw');
+              'intrinsic dimension — not for some unrelated reason that happens to throw. Collected:\n'
+              '${errors.join('\n\n')}');
     });
   });
 
