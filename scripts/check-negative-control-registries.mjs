@@ -141,6 +141,10 @@ const NEGATIVES = {
     breaks: "registry-has-a-driver",
     why: "a registry no workflow names is a set of controls that never execute, which is how pm-matrix's seven went unnoticed",
   },
+  "matrix-excludes-a-control": {
+    breaks: "matrix-matches-registry",
+    why: "a control removed by `exclude` never runs, so the declared list over-reports coverage and the registry comparison must see the effective set",
+  },
   "matrix-drops-a-control": {
     breaks: "matrix-matches-registry",
     why: "a control present in the script and missing from the matrix never runs, and the counting guard cannot see it",
@@ -278,6 +282,33 @@ function loopVariable(run, script) {
   return run.match(/for\s+(\w+)\s+in\s/)?.[1] ?? null;
 }
 
+/**
+ * The controls a literal matrix will ACTUALLY run, after `exclude` and `include`. Codex's review of
+ * `d0c559b2`: discovery copied `matrix.control` verbatim, so adding
+ * `exclude: [{ control: missing-import }]` left all seven recorded as covered while GitHub never ran
+ * that cell. A declared list is a claim; the effective set is what runs.
+ *
+ * `exclude` is only subtracted when the entry constrains `control` ALONE. An entry that also
+ * constrains another axis removes some combinations and leaves others, so whether the control runs
+ * at all depends on the whole matrix; rather than approximate that, the shape is refused with its
+ * reason. `include` entries that name a control add it, which is sound whatever else they carry.
+ */
+function effectiveControls(matrix) {
+  const declared = [...(matrix?.control ?? [])];
+  const excluded = new Set();
+  for (const entry of matrix?.exclude ?? []) {
+    const keys = Object.keys(entry ?? {});
+    if (!keys.includes("control")) continue;
+    if (keys.length > 1) {
+      return { why: `an \`exclude\` entry constrains ${keys.filter((k) => k !== "control").join(", ")} alongside control, so whether ${entry.control} runs at all cannot be established from this job alone` };
+    }
+    excluded.add(entry.control);
+  }
+  const included = (matrix?.include ?? []).map((e) => e?.control).filter(Boolean);
+  const controls = [...declared.filter((c) => !excluded.has(c)), ...included.filter((c) => !declared.includes(c))];
+  return { controls };
+}
+
 /** `${{ matrix.control }}` and nothing else — no operators, no fallback, no second expression. */
 const IS_MATRIX_CONTROL = /^\$\{\{\s*matrix\.control\s*\}\}$/;
 
@@ -344,7 +375,9 @@ function discoverDrivers() {
     if (!/\.ya?ml$/.test(file)) continue;
     const doc = yaml.load(readFileSync(join(ROOT, WORKFLOWS, file), "utf8"));
     for (const [jobId, job] of Object.entries(doc?.jobs ?? {})) {
-      const controls = job?.strategy?.matrix?.control;
+      const matrix = job?.strategy?.matrix;
+      const controls = matrix?.control;
+      const effective = effectiveControls(matrix);
       for (const step of job?.steps ?? []) {
         const run = typeof step?.run === "string" ? step.run : "";
         if (!run) continue;
@@ -362,7 +395,16 @@ function discoverDrivers() {
           // Only a literal list is a second copy of the registry. A `fromJSON` matrix computed from a
           // job output is a different failure mode (an empty matrix skips the job) and is not claimed here.
           if (Array.isArray(controls)) {
-            matrices.push({ ...site, script: found.script, controls: [...controls], arg: found.arg, bindings, run });
+            matrices.push({
+              ...site,
+              script: found.script,
+              // The effective set, so a control the matrix excludes is not certified as covered.
+              controls: effective.controls ?? [],
+              unrecognisedMatrix: effective.why,
+              arg: found.arg,
+              bindings,
+              run,
+            });
           }
         }
       }
@@ -539,6 +581,21 @@ function run({ control } = {}) {
         + 'done\n',
     });
   }
+  if (control === "matrix-excludes-a-control") {
+    // Judged through the real reducer: the site carries the raw matrix, and `effectiveControls()`
+    // is what must drop the excluded entry.
+    const script = "scripts/adoption/swiftui-consumer.mjs";
+    const declared = [...(controlsByScript.get(script) ?? [])];
+    const reduced = effectiveControls({ control: declared, exclude: [{ control: declared[0] }] });
+    matrices.push({
+      workflow: "native-swiftui.yml", job: "consumer-negative-controls", step: "Negative control: an excluded cell",
+      script,
+      controls: reduced.controls ?? [],
+      arg: '"$CONTROL"',
+      bindings: { CONTROL: "${{ matrix.control }}" },
+      run: 'node ' + script + ' --negative="$CONTROL"\n',
+    });
+  }
   if (control === "shell-reassigns-the-matrix-variable") {
     matrices.push({
       workflow: "native-swiftui.yml", job: "consumer-negative-controls", step: "Negative control: a reassigned variable",
@@ -623,6 +680,10 @@ function run({ control } = {}) {
     fail("driver-invokes-its-controls", `${where} lists ${loop.script}'s controls into $${variable}, but nothing INSIDE the loop invokes ${loop.script} --negative= with $${variable}; a call after \`done\` runs once, on the last name only`);
   }
   for (const m of matrices) {
+    if (m.unrecognisedMatrix) {
+      fail("matrix-matches-registry", `${m.workflow} job ${m.job} drives ${m.script} from a matrix this check cannot evaluate: ${m.unrecognisedMatrix}`);
+      continue;
+    }
     const verdict = tracesToMatrixControl(m.arg, m.bindings, m.run ?? "");
     if (verdict.ok) { executes.push(m); continue; }
     fail("driver-invokes-its-controls", `${m.workflow} job ${m.job} step "${m.step}" invokes ${m.script} --negative=${m.arg}, and ${verdict.why}, so all ${m.controls.length} cells would run the same control`);
@@ -708,6 +769,9 @@ function run({ control } = {}) {
 
   // matrix-matches-registry
   for (const m of matrices) {
+    // A matrix whose effective set could not be established is already reported by name; comparing
+    // an empty set against the registry here would add a second, misleading "never runs" line.
+    if (m.unrecognisedMatrix) continue;
     let listed = [...(controlsByScript.get(m.script) ?? [])];
     let declared = [...m.controls];
     if (control === "matrix-drops-a-control" && m.script === "scripts/adoption/swiftui-consumer.mjs") declared = declared.slice(1);
