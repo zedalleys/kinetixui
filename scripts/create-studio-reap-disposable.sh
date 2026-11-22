@@ -38,20 +38,25 @@ skipped=0
 # only ever makes this MORE conservative — is treated as abandoned.
 announced=" "
 active() {
-  local dw="$1" owner pid
-  [ -n "$keep" ] && [ "$dw" = "$keep" ] && return 0
-  owner="$dw.owner"
+  local dw="$1" base owner pid
+  # A batch's saved-product directory is the SIBLING `<worktree>.store`, and it carries no owner
+  # marker of its own: asking about `<worktree>.store.owner` always said "abandoned", so the sweep
+  # below deleted a LIVE batch's stored products while correctly sparing its worktree. Liveness
+  # belongs to the owning worktree, so resolve the sibling back to it before testing.
+  base="${1%.store}"
+  [ -n "$keep" ] && { [ "$dw" = "$keep" ] || [ "$base" = "$keep" ]; } && return 0
+  owner="$base.owner"
   [ -f "$owner" ] || return 1
   pid="$(awk 'NR==1{print $1}' "$owner" 2>/dev/null)"
   [ -n "$pid" ] || return 1
   kill -0 "$pid" 2>/dev/null || return 1
   # Announce each live batch once, however many of the sweeps below ask about it.
   case "$announced" in
-    *" $dw "*) : ;;
+    *" $base "*) : ;;
     *)
       printf 'SKIPPED  %s — still owned by a live batch (pid %s, started %s)\n' \
-        "$dw" "$pid" "$(awk 'NR==1{print $2}' "$owner" 2>/dev/null)"
-      announced="$announced$dw "
+        "$base" "$pid" "$(awk 'NR==1{print $2}' "$owner" 2>/dev/null)"
+      announced="$announced$base "
       skipped=$((skipped + 1))
       ;;
   esac

@@ -38,8 +38,19 @@ set -uo pipefail
 CAND="$(git rev-parse --show-toplevel)" || exit 2
 cd "$CAND" || exit 2
 INTEGRITY="$CAND/scripts/create-studio-candidate-integrity.sh"
-EVIDENCE="${ISOLATED_EVIDENCE:-/tmp/kinetix-m524/evidence}"
-mkdir -p "$EVIDENCE"
+# EVIDENCE IS PER BATCH, AND THAT IS LOAD-BEARING. Every batch writes step01.log, step02.log and
+# one fixed log per named runner. With a shared directory a later batch TRUNCATES those files while
+# the earlier batch's timestamped matrix receipt still names them, so a receipt would present
+# another commit's output as its own evidence — and two concurrent batches would overwrite each
+# other's logs as they ran. ISOLATED_EVIDENCE is therefore a PARENT: each batch gets its own
+# immutable subdirectory under it, named for the instant and the process, and refuses to reuse one.
+EVIDENCE_BASE="${ISOLATED_EVIDENCE:-/tmp/kinetix-m524/evidence}"
+EVIDENCE="$EVIDENCE_BASE/batch-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+if [ -e "$EVIDENCE" ]; then
+  printf 'REFUSED  evidence directory %s already exists; a batch must never overwrite another batch\n' "$EVIDENCE" >&2
+  exit 2
+fi
+mkdir -p "$EVIDENCE" || exit 2
 
 [ "$#" -ge 1 ] || { echo "usage: $0 <runner.sh> [...]"; exit 2; }
 
