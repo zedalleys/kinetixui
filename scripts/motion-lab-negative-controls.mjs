@@ -289,6 +289,31 @@ const CONTROLS = [
     to: `        onPointerUp={() => { setPressed(false); setFocused(false); }}`,
     expect: /pointer release does not end engagement|still shown for the keyboard/,
   },
+  // ── 24–25: Codex's third round, at head `a553983`.
+  {
+    id: 24,
+    brief: "(a decoration painted behind an opaque surface)",
+    name: "the ticks shrink back inside the slider's own track, where it paints over them",
+    file: CSS,
+    sections: "18",
+    from: `  inset-block-start: -6px;
+  inline-size: 2px;
+  block-size: 12px;`,
+    to: `  inset-block-start: -2px;
+  inline-size: 2px;
+  block-size: 4px;`,
+    expect: /stands proud of the slider|extends clear of the track/,
+  },
+  {
+    id: 25,
+    brief: "(a variant the technique cannot express)",
+    name: "phased is allowed onto the transform path, where it has no second edge and inherits a tier-long delay",
+    file: ENGINE,
+    sections: "19",
+    from: `      const transformable = technique === "transform" && equal && !vertical && travel !== "phased";`,
+    to: `      const transformable = technique === "transform" && equal && !vertical;`,
+    expect: /phased declines the transform path|moved an edge within 220ms|decline is announced/,
+  },
 ];
 
 /** Controls that need no build: the unit suite and the static gate's clauses. */

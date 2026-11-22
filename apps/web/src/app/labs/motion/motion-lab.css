@@ -218,11 +218,22 @@
   pointer-events: none;
 }
 
+/* The rail is centred on the thumb, which is also the centre of the shipped slider's 6px track — and that
+ * track paints AFTER the rail in DOM order with an opaque surface, so a 4px tick was entirely hidden behind
+ * it. Measured: 11 of 11 ticks occluded, `elementFromPoint` at each tick's centre returning the track's
+ * range. Codex found it, and it was a regression from centring them correctly: before that they were 12px
+ * above the track, wrong but visible.
+ *
+ * Raising the rail with `z-index` would put it above the thumb as well, because the rail is a sibling of the
+ * whole slider root and cannot be slotted between that root's track and its thumb from outside. So the
+ * ticks are tall enough to CROSS the track instead, which is what a scale normally looks like: 12px against
+ * a 6px track leaves 3px proud on each side. The thumb still covers the tick it sits on, which is correct —
+ * the thumb is the current value. */
 .kx-lab-tick {
   position: absolute;
-  inset-block-start: -2px;
+  inset-block-start: -6px;
   inline-size: 2px;
-  block-size: 4px;
+  block-size: 12px;
   margin-inline-start: -1px;
   border-radius: 1px;
   background-color: hsl(var(--muted-foreground) / 0.5);
@@ -236,8 +247,8 @@
 }
 
 .kx-lab-tick[data-current="true"] {
-  inset-block-start: -4px;
-  block-size: 8px;
+  inset-block-start: -9px;
+  block-size: 18px;
   background-color: hsl(var(--action));
 }
 

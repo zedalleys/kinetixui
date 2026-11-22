@@ -254,7 +254,21 @@ export function useTrackIndicator(
       const extent = (el: HTMLElement) => (vertical ? el.offsetHeight : el.offsetWidth);
       const first = items.length ? extent(items[0]) : 0;
       const equal = items.length > 1 && items.every((el) => Math.abs(extent(el) - first) <= 0.5);
-      const effective: LabTechnique = technique === "transform" && equal && !vertical ? "transform" : "inset";
+      /**
+       * `phased` is excluded from the transform path, and the reason is two-fold.
+       *
+       * The variant's whole behaviour is that the leading edge departs before the trailing edge follows, and
+       * a transform translates ONE fixed-width box — there are no two edges to stagger, so the advertised
+       * geometry cannot happen. Worse, it does not merely degrade: `.kx-lab-bar`'s fifth transition-delay
+       * value, the one for `transform`, is `--kx-lab-start-delay`, which the phased branch sets to a full
+       * duration tier for forward travel and to zero for reverse. A forward selection therefore sat
+       * completely still for 300ms and then moved, while a reverse one moved at once. Codex found this.
+       *
+       * This joins the existing fallbacks rather than inventing a new mechanism: the requested and effective
+       * techniques are both published on the track, so the lab can say that it declined.
+       */
+      const transformable = technique === "transform" && equal && !vertical && travel !== "phased";
+      const effective: LabTechnique = transformable ? "transform" : "inset";
       track.setAttribute("data-kx-lab-technique", effective);
       if (technique !== effective) track.setAttribute("data-kx-lab-technique-requested", technique);
       else track.removeAttribute("data-kx-lab-technique-requested");

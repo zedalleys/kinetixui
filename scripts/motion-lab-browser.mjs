@@ -156,7 +156,10 @@ async function sampleSelection(page, { from, to, interruptTo = null, interruptAf
   }
   await page.waitForTimeout(TRAVEL_CEILING_MS);
   const samples = await page.evaluate(() => window.__kxLab.stop());
-  return { samples: samples.filter((s) => s.t >= mark), interruptAt };
+  // `mark` is returned because `t` is `performance.now()`, not an offset: a check that wants "within N ms of
+  // the click" has no way to express that without it. The first version of section 19 compared `s.t <= 160`
+  // against absolute timestamps and matched zero frames, failing on a build where the fix was correct.
+  return { samples: samples.filter((s) => s.t >= mark), interruptAt, mark };
 }
 
 const distinct = (xs) => [...new Set(xs.map((x) => Math.round(x * 10) / 10))];
@@ -1000,6 +1003,100 @@ if (wants("17")) {
   check(cue.focused === true, "the thumb still holds focus after the pointer is released", `focus inside the slider = ${cue.focused}`);
   check(cue.engaged === "true", "a pointer release does not end engagement while the thumb is focused", `data-kx-lab-engaged = ${cue.engaged}`);
   check((cue.bubbleOpacity ?? 0) > 0.9 && (cue.haloOpacity ?? 0) > 0.9, "the bubble and halo are still shown for the keyboard after a click", `bubble ${cue.bubbleOpacity}, halo ${cue.haloOpacity}`);
+  await context.close();
+}
+
+// ── 18. A decoration that is painted behind an opaque surface is not a decoration ──────────────────────
+/**
+ * The tick rail is a sibling of the shipped slider's root and is rendered BEFORE it, so the root's track
+ * paints its opaque surface over anything the rail draws inside those 6px. Centring the rail on the thumb —
+ * the correct position, and the fix for an earlier finding — moved a 4px tick entirely inside that band:
+ * measured, 11 of 11 ticks occluded, with `elementFromPoint` at each tick's centre returning the track's
+ * range. The previous checks counted the ticks and measured their geometry, and a count cannot see a colour
+ * painted over the thing it counted. Codex found it.
+ *
+ * So this asserts VISIBILITY, by hit-testing a point near each tick's outer end, where it stands proud of
+ * the track. Nothing but a real stacking or sizing change can satisfy it.
+ */
+if (wants("18")) {
+  const { context, page } = await openLab();
+  await page.locator('[aria-label="Slider motion layers"] [data-state]', { hasText: /^Ticks$/ }).click();
+  await page.waitForTimeout(300);
+  await page.locator('.kx-lab-slider [role="slider"]').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(200);
+  const rail = await page.evaluate(() => {
+    const host = document.querySelector(".kx-lab-slider");
+    const ticks = [...host.querySelectorAll(".kx-lab-tick")];
+    const track = host.querySelector('[role="slider"]')?.parentElement?.parentElement;
+    const trackBox = track?.getBoundingClientRect();
+    // How much of each tick lies OUTSIDE the track's opaque band, above or below it. Hit-testing was tried
+    // first and cannot work: `elementFromPoint` skips `pointer-events: none` elements, and the whole rail is
+    // non-interactive by design, so it returns whatever is behind the tick whether the tick is visible or
+    // not. It reported "11 of 11 occluded" on the fixed build and on the broken one alike.
+    const proud = ticks.map((tick) => {
+      const r = tick.getBoundingClientRect();
+      if (!trackBox) return 0;
+      return Math.max(0, trackBox.top - r.top) + Math.max(0, r.bottom - trackBox.bottom);
+    });
+    return {
+      total: ticks.length,
+      leastProud: proud.length ? +Math.min(...proud).toFixed(1) : null,
+      tickHeight: ticks[0] ? +ticks[0].getBoundingClientRect().height.toFixed(1) : null,
+      trackHeight: trackBox ? +trackBox.height.toFixed(1) : null,
+    };
+  });
+  check(rail.total > 0, "the tick rail is drawn at all", `${rail.total} ticks`);
+  check(rail.tickHeight > rail.trackHeight, "a tick stands proud of the slider's own track", `tick ${rail.tickHeight}px against a ${rail.trackHeight}px track`);
+  check(rail.leastProud >= 2, "every tick extends clear of the track's opaque band", `the least-exposed tick stands ${rail.leastProud}px outside the track`);
+  await context.close();
+}
+
+// ── 19. A variant the transform path cannot express must be declined, not mangled ──────────────────────
+/**
+ * `phased`'s behaviour is that one edge departs before the other follows, and a transform translates one
+ * fixed-width box: there are no two edges to stagger. It did not merely degrade. The fifth transition-delay
+ * on `.kx-lab-bar` — the one for `transform` — is `--kx-lab-start-delay`, which the phased branch sets to a
+ * full duration tier for forward travel, so a forward selection stood still for 300ms and then moved while
+ * a reverse one moved at once. Codex found this.
+ *
+ * Two things are asserted, because the announcement without the behaviour would be a label: that the engine
+ * says it declined, and that a forward travel actually begins promptly.
+ */
+if (wants("19")) {
+  const { context, page } = await openLab();
+  await chooseVariant(page, "Phased");
+  await page.locator("#lab-technique [data-state]", { hasText: /^Transform$/ }).click();
+  await page.waitForTimeout(300);
+  const announced = await page.evaluate((sel) => {
+    const track = document.querySelector(sel);
+    return {
+      effective: track.getAttribute("data-kx-lab-technique"),
+      requested: track.getAttribute("data-kx-lab-technique-requested"),
+    };
+  }, SEG);
+  check(announced.effective === "inset", "phased declines the transform path rather than translating one box", `effective = ${announced.effective}, requested = ${announced.requested}`);
+  check(announced.requested === "transform", "and the decline is announced, not silent", `data-kx-lab-technique-requested = ${announced.requested}`);
+  // The behaviour behind the label: a forward selection must be moving well before a whole duration tier.
+  /**
+   * EITHER edge, and that is the point of the variant rather than a loosening of the check. `phased` holds
+   * the leading edge for a tier and lets the trailing edge go first, so on a forward travel the left edge
+   * is SUPPOSED to stay put while the box stretches: an assertion on `left` alone would fail a correct
+   * phased inset travel. The defect being excluded is different in kind — the transform path left the whole
+   * box motionless for a full tier — so the property is that the geometry changes at all.
+   *
+   * The window starts at the click (`run.mark`) and is 220ms wide: a React commit plus the observer costs
+   * about 58ms before anything can move, so a 160ms window measured from the click leaves only ~100ms of
+   * travel, and a tier-long hold is 300ms. The gap between those is what the check lives in.
+   */
+  const run = await sampleSelection(page, { from: "Day", to: "Month" });
+  const early = run.samples.filter((s) => s.t <= run.mark + 220);
+  const moved = early.length >= 2
+    ? Math.max(
+        Math.abs(early[early.length - 1].left - early[0].left),
+        Math.abs(early[early.length - 1].right - early[0].right),
+      )
+    : 0;
+  check(moved > 8, "a forward phased travel has moved an edge within 220ms, not waited out a delay", `${moved.toFixed(1)}px on the faster edge over ${early.length} frames in the first 220ms after the click`);
   await context.close();
 }
 
