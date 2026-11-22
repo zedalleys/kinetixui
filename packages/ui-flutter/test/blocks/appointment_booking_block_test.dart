@@ -303,6 +303,12 @@ void main() {
 
     await tester.tap(find.bySemanticsLabel('10:15'));
     await tester.pumpAndSettle();
+    // The block is taller than the 800x600 test surface, so Confirm sits below the fold of the
+    // SingleChildScrollView and a bare tap() lands on nothing. Scrolling it into view first is what a
+    // person does too; without it the warning is only a warning and the failure arrives later, at the
+    // assertion, reading as if the outcome were wrong rather than the tap.
+    await tester.ensureVisible(find.text('Confirm appointment'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Confirm appointment'));
     await tester.pumpAndSettle();
 
@@ -316,6 +322,8 @@ void main() {
     );
 
     // Returning to the picker clears the choice, so the block cannot show a stale confirmation.
+    await tester.ensureVisible(find.text('Choose another time'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Choose another time'));
     await tester.pumpAndSettle();
     expect(find.text('Choose a time to continue.'), findsOneWidget);
