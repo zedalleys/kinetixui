@@ -399,10 +399,22 @@ try {
     assert.doesNotMatch(unconfirmedText, /Save failed/, `an unconfirmed save must not be reported as a definite failure: read "${unconfirmedText}"`);
     await page.unroute("**/api/create-studio");
 
+    // Settle the open question FIRST. Under the corrected model (M5.23) a rejection arriving while
+    // an earlier attempt is still unresolved keeps the state unconfirmed — a rejection of the
+    // latest request says nothing about the ones before it — so a "Save failed" assertion made
+    // here would be asserting the defect. The abort above never reached the server, so the check
+    // resolves it to a definite failure, which is also the one path in this gate that exercises
+    // reconciliation.
+    await studio.getByRole("button", { name: "Check the stored version" }).click();
+    await page.waitForFunction(
+      () => /did not commit|Save failed/.test([".studio-checked", ".studio-error", ".studio-save-state"]
+        .map(s => document.querySelector(s)?.textContent ?? "").join(" ")),
+      null, { timeout: 30_000 });
+
     // And the vocabulary this gate exists to cover still includes a definite failure — now driven
-    // by a REAL rejection rather than by an abort mislabelled as one. The body is padded past the
-    // route's 1,050,000 byte ceiling, so the route answers 413 before `service().save` is called
-    // and therefore before anything can be written.
+    // by a REAL rejection rather than by an abort mislabelled as one, and from a state with nothing
+    // outstanding. The body is padded past the route's 1,050,000 byte ceiling, so the route answers
+    // 413 before `service().save` is called and therefore before anything can be written.
     await page.route("**/api/create-studio", async (route) => {
       if (route.request().method() !== "POST") return route.continue();
       const body = route.request().postData() ?? "{}";
