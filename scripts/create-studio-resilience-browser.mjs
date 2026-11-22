@@ -296,13 +296,27 @@ try {
       return { selector, open, display: getComputedStyle(panel).display, reachable };
     }));
 
+    // `display: none` removes a panel from the grid rather than leaving an empty track, so without
+    // explicit column assignments the canvas fell into the `auto` track and the inspector took the
+    // flexible one: hiding both panels measured 378px of canvas where open measured 864px. Hiding a
+    // panel must only ever give the canvas MORE room, never less, so this is asserted as a
+    // direction rather than as a pixel figure, which would pin the chrome's current widths.
+    const canvasWidth = () => page.evaluate(() => {
+      const el = document.querySelector('[role="region"][aria-label="Design canvas"]');
+      return el ? Math.round(el.getBoundingClientRect().width) : 0;
+    });
+
     const assertPanelsKeepSelection = async () => {
       for (const label of [/the project panel/, /properties/]) {
+        const open = await canvasWidth();
         await studio.getByRole("button", { name: label }).click();
         const closed = (await hiddenPanelFocus()).filter((panel) => panel.open === false);
         for (const panel of closed) assert.equal(panel.reachable, 0, `a hidden panel must hold no reachable focus: ${panel.selector} offers ${panel.reachable}`);
+        const hidden = await canvasWidth();
+        assert.ok(hidden >= open, `hiding a panel must not shrink the canvas (${label}): ${open}px open, ${hidden}px hidden`);
         assert.deepEqual(await selected(studio), ["Button"], `hiding a panel must not change the selection (${label})`);
         await studio.getByRole("button", { name: label }).click();
+        assert.equal(await canvasWidth(), open, `showing a panel again must restore the canvas (${label})`);
         assert.deepEqual(await selected(studio), ["Button"], `showing a panel must not change the selection (${label})`);
       }
       await studio.locator("#studio-viewport-width").selectOption("390");

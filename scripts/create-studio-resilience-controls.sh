@@ -120,6 +120,14 @@ control "committing a rename blurs the field" "$STUDIO" \
   'onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); renameProject(); (e.target as HTMLInputElement).blur(); } if (e.key === "Escape") setNameDraft(null); }} />' \
   "must keep focus in the project name field"
 
+# Codex's exact-head review of #653 found this; measured at 1440x1000, the defect took the canvas
+# from 864px to 378px when both panels were hidden, so hiding a panel to gain room lost more than
+# half of it. Removing the column assignments must redden the gate, or the repair is unguarded.
+control "the canvas has no column of its own when a panel is hidden" "$CSS" \
+  '.studio-center { grid-column: 2; }' \
+  '.studio-center { min-width: 0; }' \
+  "must not shrink the canvas"
+
 control "a hidden panel is hidden but still focusable" "$CSS" \
   '.studio-navigator, .studio-inspector { background: hsl(var(--card)); min-width: 0; display: none; }' \
   '.studio-navigator, .studio-inspector { background: hsl(var(--card)); min-width: 0; width: 0; overflow: hidden; }' \
