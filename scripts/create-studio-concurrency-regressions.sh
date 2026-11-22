@@ -61,7 +61,7 @@ open(p, "w").write(s)
 PY
 }
 
-revert_ownership() {
+revert_ownership_group() {
   python3 - "$1" <<'PY'
 import sys
 p = sys.argv[1] + "/scripts/create-studio-reap-disposable.sh"
@@ -81,6 +81,31 @@ s = s.replace(want, '''owner_alive() {
   [ -f "$owner" ] || return 1''')
 open(p, "w").write(s)
 PY
+}
+
+# THE REAPER HAS TWO INDEPENDENT DEFENCES, and one revert reaches only one of them. `owner_alive`
+# is called ONLY by `group_is_wholly_abandoned`; the sweep carries its own copy of the liveness
+# test inside `active()`. The first version of this prover reverted `owner_alive` alone and
+# reported a detection on the group assertion while the sixty-reaper-run arm stayed green — which
+# would have read as "the loop arm controls the ownership repair". It does not. Each defence gets
+# its own case, so a detection names which one it is about.
+revert_ownership_sweep() {
+  python3 - "$1" <<'EDIT'
+import sys
+p = sys.argv[1] + "/scripts/create-studio-reap-disposable.sh"
+s = open(p).read()
+want = """  owner="$base.owner"
+  [ -f "$owner" ] || return 1
+  pid="$(awk 'NR==1{print $1}' "$owner" 2>/dev/null)"
+  [ -n "$pid" ] || return 1
+  kill -0 "$pid" 2>/dev/null || return 1"""
+assert want in s, "anchor missing, cannot revert active()'s liveness test"
+# Reaping by prefix alone, as it did before the repair: a live batch looks abandoned. REAP_KEEP is
+# left in place, because that mechanism predates the repair and removing it too would make this a
+# stronger defect than the one that happened.
+s = s.replace(want, '  owner="$base.owner"\n  return 1')
+open(p, "w").write(s)
+EDIT
 }
 
 revert_index() {
@@ -160,11 +185,12 @@ run_case() {
 }
 
 requested=("$@")
-[ "${#requested[@]}" -eq 0 ] && requested=(signal ownership index)
+[ "${#requested[@]}" -eq 0 ] && requested=(signal ownership-sweep ownership-group index)
 for a in "${requested[@]}"; do
   case "$a" in
     signal)    run_case signal    signal    revert_signal    'SIGNAL_DELAYS="0.15 0.50"' ;;
-    ownership) run_case ownership ownership revert_ownership ;;
+    ownership-sweep) run_case ownership-sweep ownership revert_ownership_sweep ;;
+    ownership-group) run_case ownership-group ownership revert_ownership_group ;;
     index)     run_case index     index     revert_index ;;
     *) say "unknown case: $a"; exit 2 ;;
   esac

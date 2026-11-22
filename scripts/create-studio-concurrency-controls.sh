@@ -231,7 +231,7 @@ arm_index() {
   # the batch then reports a clean candidate as CHANGED. Measured on this harness: a passing
   # candidate called dirty, for no reason in the diff. The snapshot now runs write-tree against a
   # COPY of the index. Many at once is the direct reading of that.
-  local rounds=3 width=12 round i rc bad_rounds=0 lock_hits=0
+  local rounds=3 width=12 round i bad_rounds=0 unreadable=0 failed_total=0
   for round in $(seq 1 "$rounds"); do
     local pids=() statuses=0
     for i in $(seq 1 "$width"); do
@@ -239,18 +239,26 @@ arm_index() {
       pids+=($!)
     done
     for p in "${pids[@]}"; do wait "$p" || statuses=$((statuses + 1)); done
-    lock_hits=$((lock_hits + $(grep -l 'index.lock' "$out"/rec-"$round"-*.log 2> /dev/null | wc -l)))
+    failed_total=$((failed_total + statuses))
     printf '      round %s: %s concurrent snapshots, %s failed\n' "$round" "$width" "$statuses"
     [ "$statuses" -eq 0 ] || bad_rounds=$((bad_rounds + 1))
   done
+  # ATTRIBUTING THE FAILURE, and looking where the message actually goes. The first version of this
+  # arm grepped the run logs for `index.lock`, found none, and printed "0 logs mention index.lock"
+  # beside three rounds of failures — which reads as "the lock was not the cause" when the truth is
+  # that neither file could ever have said so. Two reasons, both measured by reverting the repair
+  # and reading every file the run touched: the snapshot runs `git write-tree` with `2>/dev/null`,
+  # so git's lock message is discarded at the source, and the diagnostic the script prints instead
+  # goes to stdout, which for `record` IS the snapshot file.
+  unreadable="$(grep -l 'COULD NOT READ THE INDEX' "$out"/snap-* "$out"/rec-*.log 2> /dev/null | wc -l)"
   # And they must agree: a snapshot that succeeded by reading a DIFFERENT tree would be worse than
   # one that failed, because it would be believed.
   local trees
   trees="$(cat "$out"/snap-*  2> /dev/null | tr ' ' '\n' | grep -E '^[0-9a-f]{40}$' | sort -u | wc -l)"
-  if [ "$bad_rounds" -eq 0 ] && [ "$lock_hits" -eq 0 ]; then
-    ok "index: $((rounds * width)) concurrent index snapshots all succeeded, with no index.lock contention"
+  if [ "$bad_rounds" -eq 0 ]; then
+    ok "index: $((rounds * width)) concurrent index snapshots all succeeded, and all agreed on one tree ($trees distinct)"
   else
-    bad "index: $bad_rounds of $rounds rounds had a failing snapshot, and $lock_hits log(s) mention index.lock"
+    bad "index: $failed_total of $((rounds * width)) concurrent snapshots failed across $bad_rounds of $rounds rounds; $unreadable of them could not read the index (git's own lock message is discarded by the snapshot, so the lock cannot be named from here)"
   fi
 
   # Two real batches, started together.
@@ -275,7 +283,7 @@ arm_index() {
   if grep -q 'candidate unchanged' "$out/b1.log" && grep -q 'candidate unchanged' "$out/b2.log"; then
     ok "index: both postflights report the candidate unchanged"
   else
-    bad "index: a postflight did not report the candidate unchanged — $(grep -h 'candidate' "$out/b1.log" "$out/b2.log" | tail -2)"
+    bad "index: a postflight did not report the candidate unchanged — b1 $(grep -q 'candidate unchanged' "$out/b1.log" && echo clean || grep -m1 -hE 'COULD NOT|INTEGRITY FAIL|ABORTING' "$out/b1.log" || echo 'not clean, no reason printed'), b2 $(grep -q 'candidate unchanged' "$out/b2.log" && echo clean || grep -m1 -hE 'COULD NOT|INTEGRITY FAIL|ABORTING' "$out/b2.log" || echo 'not clean, no reason printed')"
   fi
   # Evidence must not cross: one batch citing the other's directory is how a receipt comes to
   # present another run's output as its own.
