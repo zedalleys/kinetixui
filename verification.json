@@ -12604,7 +12604,7 @@
               "environment": "flutter_test"
             },
             {
-              "ref": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart:221-256",
+              "ref": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart:221-255",
               "environment": "flutter_test"
             }
           ],
@@ -12721,7 +12721,7 @@
               "environment": "flutter_test"
             },
             {
-              "ref": "packages/ui-flutter/test/blocks/shipment_tracking_block_test.dart:203-238",
+              "ref": "packages/ui-flutter/test/blocks/shipment_tracking_block_test.dart:203-237",
               "environment": "flutter_test"
             }
           ],
