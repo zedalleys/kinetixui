@@ -190,17 +190,32 @@ run_case() {
     bad "$label: the controls script is not in the worktree at $HEAD_SHA — commit it first; nothing was measured"
     git worktree remove --force "$dw" > /dev/null 2>&1; return
   fi
-  local rc assertions_failed arm_ran
+  # A disposable worktree has no built dist, because dist is gitignored — and an arm with nothing
+  # to write through cannot say anything about writing through. The candidate's dist is seeded into
+  # the worktree so the arm has a real target, and the seeding is named, because a setup step that
+  # happens silently is a setup step nobody checks.
+  local seeded=0
+  for d in packages/ui packages/tokens packages/iot; do
+    if [ -d "$CAND/$d/dist" ] && [ ! -e "$dw/$d/dist" ]; then
+      cp -a "$CAND/$d/dist" "$dw/$d/dist" && seeded=$((seeded + 1))
+    fi
+  done
+  [ "$seeded" -gt 0 ] && printf '      seeded %s built dist tree(s) into the worktree, so the arm has a real target\n' "$seeded"
+  local rc assertions_failed arm_ran unmeasurable
   ( cd "$dw" && eval "$extra" CONTROL_WORK="$WORK/work-$label" \
       timeout 900 bash scripts/create-studio-concurrency-controls.sh "$arm" ) > "$log" 2>&1
   rc=$?
   grep -E '^(PASS|FAIL)|exit=|round |sig=|batch exit|reaper:|poller:' "$log" | sed 's/^/      /' | tail -14
   assertions_failed="$(grep -c '^FAIL' "$log" || true)"
   arm_ran="$(grep -cE '^(PASS|FAIL)' "$log" || true)"
+  unmeasurable="$(grep -c '^CANNOT MEASURE' "$log" || true)"
   # A detection is a FAILING ASSERTION, not a non-zero exit status. Non-zero can also mean the arm
   # could not start, refused, or timed out, and none of those is evidence that the control sees the
   # defect.
-  if [ "$arm_ran" -eq 0 ]; then
+  if [ "$unmeasurable" -gt 0 ]; then
+    # "It could not run" is not "it detected the defect", however red it looks.
+    bad "$label: the '$arm' arm could not measure (exit $rc) — $(grep -m1 '^CANNOT MEASURE' "$log")"
+  elif [ "$arm_ran" -eq 0 ]; then
     bad "$label: the '$arm' arm printed no assertion at all (exit $rc); it did not run, so nothing was measured"
   elif [ "$assertions_failed" -ge 1 ]; then
     ok "$label: $assertions_failed of $arm_ran assertion(s) in the '$arm' arm FAILED with the repair reverted (exit $rc)"

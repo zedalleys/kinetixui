@@ -51,6 +51,13 @@ arms=0
 
 ok()   { printf 'PASS  %s\n' "$1"; arms=$((arms + 1)); }
 bad()  { printf 'FAIL  %s\n' "$1"; arms=$((arms + 1)); fails=$((fails + 1)); }
+# A THIRD VERDICT, because "it failed" and "it could not run" are different facts and collapsing
+# them is how a regression prover comes to announce a detection for a missing precondition. It did:
+# the linkage arm reported FAIL because a disposable worktree has no built dist, and that FAIL was
+# counted as evidence the arm sees the defect. An unmeasurable arm exits 2, which the prover
+# refuses to read as a detection.
+unmeasured=0
+cannot() { printf 'CANNOT MEASURE  %s\n' "$1"; unmeasured=$((unmeasured + 1)); }
 say()  { printf '%s\n' "$*"; }
 # `grep -c` prints the count AND exits 1 when the count is zero, so `grep -c … || printf 0` emits a
 # second zero and the integer test that follows fails on "0\n0" — a FAIL reported about an arm that
@@ -315,7 +322,7 @@ arm_linkage() {
   local dist="$CAND/packages/ui/dist/index.js"
   local nm="$CAND/node_modules/.modules.yaml"
   if [ ! -f "$dist" ]; then
-    bad "linkage: $dist is not present, so this arm cannot test anything (build the packages first)"
+    cannot "linkage: $dist is not present, so a write-through has nothing to reach — build the packages, or seed the checkout's dist, before running this arm"
     return
   fi
   local dist_before nm_before dist_after nm_after
@@ -409,6 +416,10 @@ else
 fi
 
 say ""
-say "concurrency controls — ${#requested[@]} arm group(s), $arms assertions, $fails failure(s)"
+say "concurrency controls — ${#requested[@]} arm group(s), $arms assertions, $fails failure(s), $unmeasured unmeasurable"
 say "evidence: $WORK"
-exit $((fails > 0))
+# 2 is "an arm could not run": distinct from 1, which is "an arm ran and found a problem". A caller
+# that cannot tell those apart cannot use either.
+if [ "$fails" -gt 0 ]; then exit 1; fi
+if [ "$unmeasured" -gt 0 ]; then exit 2; fi
+exit 0
