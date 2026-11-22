@@ -365,10 +365,22 @@ try {
     await assertUnconfirmed(page, "after the diverging retry");
     const alert = await alertText(studio);
     assert.match(alert, /moved on|newer revision/i, `the refusal must be explained, read: ${alert.slice(0, 200)}`);
-    // 4c. And the check must still recognise OUR earlier save, not mistake the refused retry for
-    // evidence of another writer. The editor keeps every attempt whose outcome is unknown; when it
-    // kept only the latest, this reported "something else has written to this product" with nobody
-    // else involved and the earlier payload sitting in the store (Codex, M5.22).
+    // 4c. A SECOND open question, before anything is checked. The user edits again and tries
+    // again, and this attempt never reaches the server at all — so now two attempts are
+    // outstanding and it is the EARLIER one that is stored.
+    //
+    // This is why the editor keeps a list rather than the last attempt. With only the latest, the
+    // check compares the store against the attempt that never arrived, finds a mismatch and a
+    // revision that has moved, and reports that something else has written to the product — with
+    // nobody else involved and the earlier payload sitting in the store.
+    await studio.getByRole("button", { name: "Add Badge", exact: true }).click();
+    await context.route("**/api/create-studio", (route) => (route.request().method() === "POST" ? route.abort("connectionrefused") : route.continue()));
+    await saveAndSettle(studio, page);
+    await context.unroute("**/api/create-studio");
+    await assertUnconfirmed(page, "with two attempts outstanding");
+    assert.equal((await stored(page)).revision, committed2.revision, "the second attempt never reached the server");
+
+    // 4d. The check must now recognise OUR earlier save among the open attempts.
     await studio.getByRole("button", { name: "Check the stored version" }).click();
     const retryVerdict = await verdictVisible(page);
     assert.match(retryVerdict, /did commit/i, `the check must report that the earlier save committed, read: ${retryVerdict.slice(0, 220)}`);
@@ -493,10 +505,12 @@ try {
     // screen would re-enable Save against a revision this work was never based on, and the next
     // save would overwrite that writer silently. So saving must be unavailable, and a click must
     // leave the store alone.
-    const state = await chip(page);
-    assert.match(state, /Draft revision conflict/, `work based on a superseded revision must say so, read: ${state}`);
+    // The behavioural assertion first: whether the editor CAN overwrite is the question, and the
+    // chip's wording is a symptom of the answer.
     const save = studio.getByRole("button", { name: "Save", exact: true });
     assert.ok(await save.isDisabled(), "saving over a foreign write must be unavailable, not merely discouraged");
+    const state = await chip(page);
+    assert.match(state, /Draft revision conflict/, `work based on a superseded revision must say so, read: ${state}`);
     // Forced, so that a handler reachable past the disabled attribute would still be caught.
     await save.click({ force: true }).catch(() => {});
     await page.waitForTimeout(2_000);
