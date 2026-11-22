@@ -111,6 +111,24 @@ await arm("a missing artifact", "reproduction", async dir => {
   await unlink(join(dir, "utilities.css"));
 }, "missing artifact utilities.css");
 
+// 4b · The emitted stylesheet. index.html loads bundle.css, and it was in no manifest: neither
+//      generation nor verification hashed it, so a stale stylesheet could be certified as intact.
+//      Found in review, which is why this arm exists at all.
+await arm("a stale emitted stylesheet", "reproduction", async dir => {
+  await appendFile(join(dir, "bundle.css"), "\n/* left behind by an earlier generation */\n");
+}, "bundle.css does not match its recorded hash");
+
+// 4c · A package link into ANOTHER workspace. The generator's link() swallows EEXIST, so a reused
+//      fixture directory keeps the old links while the signature attests this workspace's dist:
+//      both halves agree with their records, and the fixture describes output nobody built here.
+//      The link is repointed at a copy outside the root, which is what a previous worktree is.
+await arm("a package link into another workspace", "construction", async dir => {
+  const foreign = await mkdtemp(join(tmpdir(), "kinetix-foreign-workspace-"));
+  await cp(join(root, "packages/ui"), join(foreign, "ui"), { recursive: true, verbatimSymlinks: true });
+  await unlink(join(dir, "node_modules/@kinetixui/ui"));
+  await symlink(join(foreign, "ui"), join(dir, "node_modules/@kinetixui/ui"));
+}, "outside the workspace this fixture is signed against");
+
 // 5 · The built library output has changed since the fixture was bundled, so the bundle embeds the
 //     earlier output. Run inside a disposable copy of the dist directory, never the workspace's.
 {

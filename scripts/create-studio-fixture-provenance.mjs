@@ -31,8 +31,8 @@
 // makes every later assertion meaningless, which is why it is checked first and refuses loudly.
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { readFileSync, existsSync, statSync, readdirSync, readlinkSync, lstatSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { readFileSync, existsSync, statSync, readdirSync, readlinkSync, lstatSync, realpathSync } from "node:fs";
+import { join, resolve, sep } from "node:path";
 
 export const PROVENANCE_FILE = "provenance.json";
 export const SCHEMA = 1;
@@ -48,6 +48,11 @@ export const REQUIRED_ARTIFACTS = [
   "tsconfig.json",
   "main.tsx",
   "bundle.js",
+  // esbuild emits this from the imported theme and token styles, and index.html loads it. It was
+  // missing from this list, so neither generation nor verification hashed it: a stale or partly
+  // regenerated stylesheet could be certified as an intact fixture, and the page the gate measures
+  // is the one this file paints. Found in review.
+  "bundle.css",
   "index.html",
   "input.css",
   "utilities.css",
@@ -111,6 +116,9 @@ export const buildProvenance = (fixtureDir, root, commit) => ({
 // Returns a list of problems. An empty list is the only thing a caller may treat as "verified"; a
 // caller that merely checks for a thrown error would miss every one of these.
 export const verifyFixture = (fixtureDir, { root, expectedCommit }) => {
+  // The workspace every link must point into, resolved once, so a symlinked root does not
+  // make a legitimate link look foreign.
+  const rootDir = realpathSync(resolve(root));
   const problems = [];
   const dir = resolve(fixtureDir);
   const file = join(dir, PROVENANCE_FILE);
@@ -151,6 +159,21 @@ export const verifyFixture = (fixtureDir, { root, expectedCommit }) => {
     if (!link.isSymbolicLink()) { problems.push(`node_modules/${name} is not a symlink`); continue; }
     const target = readlinkSync(path);
     if (record.links?.[name] && record.links[name] !== target) problems.push(`node_modules/${name} points at ${target}, recorded ${record.links[name]}`);
+    // AND IT MUST POINT INTO THE WORKSPACE BEING SIGNED. The generator's `link()` swallows EEXIST,
+    // so a fixture directory reused while its previous workspace still exists keeps the OLD links —
+    // and the packages esbuild actually consumed are then the old workspace's, while the signature
+    // below attests `root/packages/*/dist`. Both halves agree with their records, and the fixture
+    // passes while describing output no one built here. Found in review, reproduced: verifyFixture
+    // returned no problems with the package links pointing at different output than was signed.
+    try {
+      const resolved = realpathSync(path);
+      const inside = resolved === rootDir || resolved.startsWith(rootDir + sep);
+      if (!inside) {
+        problems.push(`node_modules/${name} resolves to ${resolved}, which is outside the workspace this fixture is signed against (${rootDir}): the packages it was built from are not the packages described here`);
+      }
+    } catch {
+      /* unresolvable: already reported as dangling or unresolvable above */
+    }
     // The stale-symlink case: the target was inside a disposable worktree that has been destroyed.
     if (!existsSync(path)) problems.push(`node_modules/${name} is a dangling symlink to ${target}: this fixture directory was reused across worktrees`);
     else {

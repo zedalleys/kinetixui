@@ -106,10 +106,18 @@ arm_signal() {
     local want=143; [ "$sig" = INT ] && want=130
     for d in $delays; do
       rm -rf "$out/w"; mkdir -p "$out/w"; rm -f "$pidfile"
+      # THE TIMER RECORDS WHETHER IT ACTUALLY DELIVERED. Without this the arm inferred delivery
+      # from the batch's own behaviour — so a batch that exited 0 saying nothing was filed as
+      # "finished before the signal landed", which is indistinguishable from a handler that
+      # swallowed the signal. With every iteration filed that way the arm then printed FAIL while
+      # saying it had measured nothing, and the regression prover counted that FAIL as a detection:
+      # the precondition-versus-detection confusion the third verdict exists to prevent, reaching
+      # it by another route. Found in review.
+      rm -f "$out/delivered"
       ( for _ in $(seq 1 200); do [ -s "$pidfile" ] && break; sleep 0.02; done
         sleep "$d"
         local p; p="$(cat "$pidfile" 2>/dev/null)"
-        [ -n "$p" ] && kill -"$sig" "$p" 2> /dev/null ) &
+        if [ -n "$p" ] && kill -"$sig" "$p" 2> /dev/null; then printf 'yes\n' > "$out/delivered"; fi ) &
       local timer=$!
       ISOLATED_EVIDENCE="$out/w" NO_DEV_SERVER=1 NO_WORKSPACE_INPUTS=1 \
         setsid --wait bash -c 'echo $$ > "$1"; exec bash "$2" "CMD:true"' _ "$pidfile" "$ISO" \
@@ -122,9 +130,10 @@ arm_signal() {
       registered="$(git -C "$CAND" worktree list | grep -c 'kinetix-dw' || true)"
       cp "$out/w/run.log" "$out/$sig-$d.log"
       # A batch that had already finished before the signal arrived is not an observation about the
-      # handler. It is counted and named, never scored.
-      if [ "$rc" -eq 0 ] && [ "$said" -eq 0 ]; then
-        printf '      sig=%-4s delay=%-5s exit=0 — completed before the signal landed (not an observation)\n' "$sig" "$d"
+      # handler. It is counted and named, never scored — and "the signal was never delivered" is
+      # now read from the timer, which knows, rather than inferred from the batch, which does not.
+      if [ ! -s "$out/delivered" ]; then
+        printf '      sig=%-4s delay=%-5s exit=%-3s — the batch had already finished, so no signal was delivered (not an observation)\n' "$sig" "$d" "$rc"
         stray; continue
       fi
       observed=$((observed + 1))
@@ -141,7 +150,7 @@ arm_signal() {
     done
   done
   if [ "$observed" -eq 0 ]; then
-    bad "signal: no delay in the sweep delivered a signal to a running batch; this arm measured nothing"
+    cannot "signal: no delay in the sweep delivered a signal to a running batch — every batch finished first, so this arm says nothing about the handler either way"
   elif [ "$good" -eq "$observed" ]; then
     ok "signal: $good of $observed delivered signals ended the batch with the right status, an announcement, no clean receipt and no residue"
   else
