@@ -94,7 +94,7 @@ control "a loaded document is rendered without being read" "$STUDIO" \
   '  try { return product; }' \
   "must stay mounted when a document cannot be read"
 
-TRANSPORT='    throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server did not answer, so this save could not be confirmed — it may or may not have been stored. Your draft is still in this browser. Check that the development server is still running, then reopen the product to see what was stored, or download your draft.");'
+TRANSPORT='    throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server did not answer, so this save could not be confirmed — it may or may not have been stored. Your work is still open in this editor. Download your draft before reopening the product, because reopening replaces what is on screen. Then check that the development server is still running and retry.");'
 
 control "a transport failure surfaces the browser's own message" "$STUDIO" \
   "$TRANSPORT" \
@@ -109,6 +109,14 @@ control "a lost acknowledgement is reported as a save that did not happen" "$STU
   "$TRANSPORT" \
   '    throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server did not answer. Nothing was saved. Retry, or download your draft.");' \
   "must not claim nothing was saved"
+
+# Browser storage can refuse the write — the draft effect catches that and carries on without
+# persisting — so promising the draft is in the browser, and telling the user to reopen, can discard
+# the only current copy. Found by Codex at 031960b3: the third iteration on this one sentence.
+control "an unverifiable browser draft is promised to the user" "$STUDIO" \
+  "$TRANSPORT" \
+  '    throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server did not answer, so this save could not be confirmed. Your draft is still in this browser. Reopen the product to see what was stored.");' \
+  "must not promise browser persistence it cannot verify"
 
 control "Escape leaves the preview without returning focus" "$STUDIO" \
   '      if (event.key === "Escape") { if (preview) exitPreview(); setPan(false); drag.current = null; return; }' \

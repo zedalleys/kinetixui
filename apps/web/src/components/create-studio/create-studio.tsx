@@ -33,10 +33,15 @@ async function request<T>(body?: unknown, id?: string): Promise<T> {
     // response is built, so a connection that drops after the commit leaves the write DONE and
     // the reply lost. Claiming "nothing was saved" there would be a false statement about the
     // user's data, which is the same class of lie as reporting an unconfirmed save as saved.
-    // So the sentence reports uncertainty, and the draft is kept either way.
-    throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server did not answer, so this save could not be confirmed — it may or may not have been stored. Your draft is still in this browser. Check that the development server is still running, then reopen the product to see what was stored, or download your draft.");
+    // It must also NOT promise that the draft is in the browser: the draft-writing effect catches
+    // a `localStorage.setItem` failure (unavailable or full) and carries on WITHOUT persisting, so
+    // in that supported case the only current copy is the one on screen — and "reopen the product"
+    // would discard it. What is always true is that the work is still open in this editor, so that
+    // is what the sentence says, and it tells the user to download before reopening rather than
+    // trusting storage it cannot verify from here.
+    throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server did not answer, so this save could not be confirmed — it may or may not have been stored. Your work is still open in this editor. Download your draft before reopening the product, because reopening replaces what is on screen. Then check that the development server is still running and retry.");
   }
-  const data = await res.json().catch(() => { throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server sent a reply that could not be read, so this save could not be confirmed. Your draft is still in this browser. Reopen the product to see what was stored, or download your draft."); });
+  const data = await res.json().catch(() => { throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server sent a reply that could not be read, so this save could not be confirmed. Your work is still open in this editor. Download your draft before reopening the product."); });
   if (!res.ok) throw new ApiError(data.code, data.message);
   return data as T;
 }

@@ -199,7 +199,10 @@ try {
       // The editor must report that the save is UNCONFIRMED, and must say the draft is still held.
       assert.doesNotMatch(alert, /Nothing was saved/i, `a transport failure must not claim nothing was saved, read: ${alert.slice(0, 180)}`);
       assert.match(alert, /could not be confirmed/i, `a transport failure must report the save as unconfirmed, read: ${alert.slice(0, 180)}`);
-      assert.match(alert, /draft is still in this browser/i, `a transport failure must say the draft is still held, read: ${alert.slice(0, 180)}`);
+      // Not "the draft is in the browser": browser storage can have refused the write, and the
+      // editor cannot know from here. What is always true is the copy on screen.
+      assert.match(alert, /still open in this editor/i, `a transport failure must say the work is still open in the editor, read: ${alert.slice(0, 180)}`);
+      assert.doesNotMatch(alert, /draft is still in this browser/i, `a transport failure must not promise browser persistence it cannot verify, read: ${alert.slice(0, 180)}`);
       const state = await studio.locator(".studio-save-state").innerText();
       assert.match(state, /Save failed/, `the save state must report the failure, read: ${state}`);
       assert.doesNotMatch(state, /^Saved/, "a failed save must never read as saved");
