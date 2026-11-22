@@ -67,10 +67,14 @@ control() {
 
 echo "== M5.20 source negative controls =="
 
+# With the route recovery surface in place, removing this validation no longer reaches the
+# framework's error page — it reaches the recovery surface instead, because the exception is now
+# caught. So the behaviour this control proves is the editor staying up, not the error page being
+# avoided: the two repairs are layered, and this is the one that keeps the workspace mounted.
 control "a loaded document is rendered without being read" "$STUDIO" \
   '  try { return { ...product, doc: migrateDocument(product.doc) }; }' \
   '  try { return product; }' \
-  "must not reach the framework error page"
+  "must stay mounted when a document cannot be read"
 
 control "a transport failure surfaces the browser's own message" "$STUDIO" \
   '    throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server did not answer. Nothing was saved. Check that the development server is still running, then retry, or download your draft.");' \

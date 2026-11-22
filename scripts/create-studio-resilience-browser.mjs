@@ -139,10 +139,15 @@ try {
     }));
     await studio.locator("#studio-open-product").selectOption(realDocument.id);
     const assertReportedNotRendered = async () => {
-      await studio.getByRole("alert").first().waitFor({ timeout: 15_000 });
-      const alert = (await studio.getByRole("alert").first().innerText()).replace(/\s+/g, " ");
+      // Wait for whichever surface appears — the editor's own alert, the route's recovery surface,
+      // or the framework's error page — and only then read the page. Waiting on the alert alone
+      // would time out before the assertion that names what went wrong could run, which is exactly
+      // what happened when this gate was first pointed at the unvalidated implementation.
+      await page.waitForFunction(() => !!document.querySelector('.create-studio [role="alert"], .studio-recovery-surface')
+        || /Application error|client-side exception/i.test(document.body.innerText), { timeout: 20_000 });
       const chrome = await siteChrome(page);
       assert.ok(chrome.studio, "the workspace must stay mounted when a document cannot be read");
+      const alert = (await studio.getByRole("alert").first().innerText()).replace(/\s+/g, " ");
       assert.equal(chrome.frameworkError, false, "an unreadable document must not reach the framework error page");
       assert.deepEqual(chrome.footers, [], "the editor must still render no site footer");
       assert.match(alert, /cannot be opened by this version/i, `the editor must say the document cannot be opened, read: ${alert.slice(0, 180)}`);
