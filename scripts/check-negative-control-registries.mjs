@@ -141,6 +141,10 @@ const NEGATIVES = {
     breaks: "registry-has-a-driver",
     why: "a registry no workflow names is a set of controls that never execute, which is how pm-matrix's seven went unnoticed",
   },
+  "exclude-on-another-axis-removes-cells": {
+    breaks: "matrix-matches-registry",
+    why: "GitHub matches an exclusion partially, so `exclude: [{ os: … }]` removes every control's cell without naming one; the reducer must enumerate rather than look for `control` in the entry",
+  },
   "matrix-excludes-a-control": {
     breaks: "matrix-matches-registry",
     why: "a control removed by `exclude` never runs, so the declared list over-reports coverage and the registry comparison must see the effective set",
@@ -283,30 +287,54 @@ function loopVariable(run, script) {
 }
 
 /**
- * The controls a literal matrix will ACTUALLY run, after `exclude` and `include`. Codex's review of
- * `d0c559b2`: discovery copied `matrix.control` verbatim, so adding
- * `exclude: [{ control: missing-import }]` left all seven recorded as covered while GitHub never ran
- * that cell. A declared list is a claim; the effective set is what runs.
+ * The controls a literal matrix will ACTUALLY run. This enumerates the matrix instead of reasoning
+ * about it, because two rounds of reasoning about it were both wrong:
  *
- * `exclude` is only subtracted when the entry constrains `control` ALONE. An entry that also
- * constrains another axis removes some combinations and leaves others, so whether the control runs
- * at all depends on the whole matrix; rather than approximate that, the shape is refused with its
- * reason. `include` entries that name a control add it, which is sound whatever else they carry.
+ *   - `d0c559b2` copied `matrix.control` verbatim, so `exclude: [{ control: missing-import }]` left
+ *     that control certified while GitHub never ran the cell.
+ *   - `160bfe70` subtracted only exclusions that named `control` ALONE. GitHub matches an exclusion
+ *     PARTIALLY, so `exclude: [{ os: macos-latest }]` removes every control's cell without naming
+ *     one — six controls stayed certified and none ran. The same round filtered `include` against
+ *     the declared list, so re-adding an excluded combination through `include`, which GitHub
+ *     explicitly supports, made a correct workflow FAIL.
+ *
+ * So: build the product of the real axes, drop every combination an `exclude` entry matches on the
+ * keys it names, then union in the controls that `include` entries name. An include entry either
+ * updates a matching combination or adds a new one, so in both cases a cell with that control
+ * exists. An exclusion naming a key that is not an axis here cannot be evaluated, and a matrix large
+ * enough to be worth enumerating lazily is refused rather than approximated.
+ *
+ * https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategymatrixexclude
  */
+const MAX_COMBINATIONS = 10000;
+
 function effectiveControls(matrix) {
-  const declared = [...(matrix?.control ?? [])];
-  const excluded = new Set();
-  for (const entry of matrix?.exclude ?? []) {
-    const keys = Object.keys(entry ?? {});
-    if (!keys.includes("control")) continue;
-    if (keys.length > 1) {
-      return { why: `an \`exclude\` entry constrains ${keys.filter((k) => k !== "control").join(", ")} alongside control, so whether ${entry.control} runs at all cannot be established from this job alone` };
+  if (!Array.isArray(matrix?.control)) return { controls: [] };
+  const axes = Object.entries(matrix).filter(([k, v]) => k !== "include" && k !== "exclude" && Array.isArray(v));
+  const axisKeys = new Set(axes.map(([k]) => k));
+
+  for (const entry of matrix.exclude ?? []) {
+    const unknown = Object.keys(entry ?? {}).filter((k) => !axisKeys.has(k));
+    if (unknown.length > 0) {
+      return { why: `an \`exclude\` entry constrains ${unknown.join(", ")}, which is not a matrix axis in this job, so its effect cannot be established` };
     }
-    excluded.add(entry.control);
   }
-  const included = (matrix?.include ?? []).map((e) => e?.control).filter(Boolean);
-  const controls = [...declared.filter((c) => !excluded.has(c)), ...included.filter((c) => !declared.includes(c))];
-  return { controls };
+
+  const size = axes.reduce((n, [, v]) => n * v.length, 1);
+  if (size > MAX_COMBINATIONS) {
+    return { why: `the matrix expands to ${size} combinations, past the ${MAX_COMBINATIONS} this check will enumerate` };
+  }
+
+  let combinations = [{}];
+  for (const [key, values] of axes) {
+    combinations = combinations.flatMap((c) => values.map((v) => ({ ...c, [key]: v })));
+  }
+  // GitHub removes a combination when it matches an exclusion on every key that exclusion names.
+  const excluded = (c) => (matrix.exclude ?? []).some((e) => Object.entries(e ?? {}).every(([k, v]) => c[k] === v));
+  const controls = new Set(combinations.filter((c) => !excluded(c)).map((c) => c.control).filter(Boolean));
+  // `include` is applied after exclusions and can put an excluded combination back.
+  for (const entry of matrix.include ?? []) if (entry?.control) controls.add(entry.control);
+  return { controls: [...controls] };
 }
 
 /** `${{ matrix.control }}` and nothing else — no operators, no fallback, no second expression. */
@@ -579,6 +607,25 @@ function run({ control } = {}) {
         + 'for control in $controls; do\n'
         + '  node scripts/check-taxonomy-namespaces.mjs --negative="$control"\n'
         + 'done\n',
+    });
+  }
+  if (control === "exclude-on-another-axis-removes-cells") {
+    // Judged through the real reducer: an exclusion that names only `os` must still empty the
+    // control axis. If the reducer goes back to looking for `control` in the entry, this passes.
+    const script = "scripts/adoption/swiftui-consumer.mjs";
+    const reduced = effectiveControls({
+      control: [...(controlsByScript.get(script) ?? [])],
+      os: ["macos-latest"],
+      exclude: [{ os: "macos-latest" }],
+    });
+    matrices.push({
+      workflow: "native-swiftui.yml", job: "consumer-negative-controls", step: "Negative control: an axis-wide exclusion",
+      script,
+      controls: reduced.controls ?? [],
+      unrecognisedMatrix: reduced.why,
+      arg: '"$CONTROL"',
+      bindings: { CONTROL: "${{ matrix.control }}" },
+      run: 'node ' + script + ' --negative="$CONTROL"\n',
     });
   }
   if (control === "matrix-excludes-a-control") {
