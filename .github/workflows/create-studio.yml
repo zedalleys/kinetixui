@@ -24,6 +24,8 @@ on:
       - "scripts/create-studio-save-state-browser.mjs"
       - "scripts/create-studio-save-state-controls.sh"
       - "scripts/create-studio-candidate-integrity.sh"
+      - "scripts/create-studio-anchor-manifest.mjs"
+      - "scripts/create-studio-mutation-anchors.json"
       - "scripts/create-studio-isolated-controls.sh"
       - "scripts/create-studio-reap-disposable.sh"
       - "scripts/create-studio-interruption-safety.sh"
@@ -51,11 +53,17 @@ jobs:
           node-version: 22
           cache: pnpm
       - name: Candidate source assertions
-        # Fourteen load-bearing lines that a mutation runner replaces, or that a gate would stop
-        # being able to assert if residue were committed. A committed mutation is a CLEAN tree, so
-        # cleanliness cannot catch one; presence can. This is the check that would have stopped the
-        # retry-button residue that reached 4215958a.
+        # Load-bearing lines that a mutation runner replaces, or that a gate would stop being able
+        # to assert if residue were committed, PLUS every control mutation in
+        # scripts/create-studio-mutation-anchors.json, asserted present and/or absent. A committed
+        # mutation is a CLEAN tree, so cleanliness cannot catch one; presence and absence can. This
+        # is the check that would have stopped the retry-button residue that reached 4215958a.
         run: bash scripts/create-studio-candidate-integrity.sh assert
+      - name: Mutation anchors are the fixed point of the control runners
+        # The anchors are generated from the runners, so a control added or changed without
+        # regenerating them would leave a mutation nothing can reject. This step also proves each
+        # anchor can reject its own mutation, by applying it in memory. Needs no install.
+        run: node scripts/create-studio-anchor-manifest.mjs --check
       - run: pnpm install --frozen-lockfile
       - run: pnpm build:tokens
       - run: pnpm --filter @kinetixui/ui build && pnpm --filter @kinetixui/iot build
