@@ -49,7 +49,7 @@ export default function StudioError({ error, reset }: { error: Error & { digest?
         draft</strong> to review it before saving. The change that caused this was not saved.
       </p>
       <div className="studio-recovery-actions">
-        <Button onClick={reset}>Try the editor again</Button>
+        <span>Try the editor again</span>
         {/* A DOCUMENT navigation, not `next/link`. Measured in M5.21: a soft navigation to the
             route the user is already on does not remount past this error boundary, so the
             recovery surface stayed on screen and this control did nothing at all — a label that

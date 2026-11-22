@@ -679,6 +679,58 @@ try {
     await context.close();
   }
 
+  // ---------- 12. A settled save must not leave the editor unable to account for itself ---------
+  // The truncation marker records that the attempt list once dropped something. A confirmed save
+  // settles every open question, so that record is settled with them — otherwise the NEXT
+  // uncertainty inherits it, and a genuine competing write is reported as unknowable instead of
+  // being named. The user is told less than the editor knows, which is a different failure from
+  // the one case 11 covers but the same kind: a claim that does not match the evidence.
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const { page, studio } = await openSaved(context, "Marker reset");
+    const before = await stored(page);
+
+    // Overflow the list, exactly as case 11 does, so the marker is certainly set.
+    await context.route("**/api/create-studio", async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      await route.abort("connectionreset");
+    });
+    for (let i = 0; i < 21; i += 1) { await edit(studio); await saveAndSettle(studio, page); }
+    await context.unroute("**/api/create-studio");
+    await assertUnconfirmed(page, "after overflowing the list");
+
+    // Then a save that really succeeds, which settles everything.
+    await saveAndSettle(studio, page);
+    const state = await chip(page);
+    assert.match(state, /^Saved/, `the clean save must succeed for this case to mean anything, read: ${state}`);
+    const saved = await stored(page);
+    assert.ok(saved.revision > before.revision, `the clean save must have advanced the revision, read ${before.revision} → ${saved.revision}`);
+
+    // Now a fresh uncertainty with a genuine competing writer. The editor's list IS exhaustive
+    // here, so the honest answer names the other writer.
+    await edit(studio);
+    await context.route("**/api/create-studio", async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      await route.abort("connectionreset");
+    });
+    await saveAndSettle(studio, page);
+    await context.unroute("**/api/create-studio");
+    const elsewhere = await writeElsewhere(page, " (second writer)");
+    assert.equal(elsewhere.status, 200, `the foreign write must succeed for this case to mean anything: ${JSON.stringify(elsewhere)}`);
+
+    await studio.getByRole("button", { name: "Check the stored version" }).click();
+    const verdict = await verdictVisible(page);
+    assert.doesNotMatch(verdict, /cannot be determined|can no longer account/i, `with an exhaustive list the check must not plead ignorance, read: ${verdict.slice(0, 240)}`);
+    assert.match(verdict, /not what that save sent/i, `the check must report what it actually found, read: ${verdict.slice(0, 240)}`);
+    const alert = await alertText(studio);
+    assert.match(alert, /something else has written/i, `a genuine competing write must be named, read: ${alert.slice(0, 240)}`);
+    // Still blocked, for the right reason this time.
+    assert.ok(await studio.getByRole("button", { name: "Save", exact: true }).isDisabled(), "saving over a competing write must be unavailable");
+    readings.markerReset = { revisions: [before.revision, saved.revision], verdict: verdict.slice(0, 240), alert: alert.slice(0, 200) };
+    pass("a confirmed save settles the record that attempts were dropped, so a later competing write is named rather than called unknowable");
+    await context.close();
+  }
+
   await writeFile(resolve(out, "save-state.json"), JSON.stringify({ readings, results, controls }, null, 2));
   console.log(JSON.stringify({ passed: results.length, controls: controls.length, out }));
 } catch (error) {

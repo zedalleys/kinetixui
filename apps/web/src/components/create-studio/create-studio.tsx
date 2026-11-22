@@ -315,7 +315,14 @@ export function CreateStudio() {
       // would report a save that SUCCEEDED as a failure, which is the one thing the save path must
       // never do.
       const p = await request<Product>({ operation: "save", id: product.id, revision: draftBase ?? product.revision, doc: payload });
-      setProduct(p); setSaved(serializeDocument(payload)); setDraftBase(null); setSaveOutcome("confirmed"); pendingSaves.current = []; setRecovered(false); setNotice("Saved to this computer's local server.");
+      setProduct(p); setSaved(serializeDocument(payload)); setDraftBase(null); setSaveOutcome("confirmed");
+      // A confirmed save settles every open question, so the record that the list once dropped an
+      // attempt is settled with them. Clearing the attempts while leaving this set made the NEXT
+      // uncertainty report "this editor can no longer account for every unconfirmed save" over a
+      // list that was in fact exhaustive — so a genuine competing write would have been described
+      // as unknowable rather than named (Codex, M5.23).
+      pendingSaves.current = []; pendingTruncated.current = false;
+      setRecovered(false); setNotice("Saved to this computer's local server.");
       try {
         if (draftWriter.current && latest.current && serializeDocument(latest.current.doc) === serializeDocument(payload)) localStorage.removeItem(keyFor(account, product.id) + ":" + draftWriter.current);
       } catch { /* The server already confirmed the save. */ }

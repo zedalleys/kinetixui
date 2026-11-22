@@ -411,10 +411,24 @@ try {
         .map(s => document.querySelector(s)?.textContent ?? "").join(" ")),
       null, { timeout: 30_000 });
 
+    // Now get back to a state that is NOT already a definite failure. Reconciliation left the
+    // outcome `rejected`, so the chip already read "Save failed · Unsaved changes" before the 413
+    // was ever sent — and every assertion below would then have passed on reconciliation's verdict
+    // rather than on the rejected request's own. A regression in the 413 handler that left the
+    // previous outcome untouched would have gone unseen. Found by Codex on this PR's own head, and
+    // it is the same mistake in a new place: an assertion moved into a state where it was already
+    // satisfied for another reason.
+    await save(page, studio);
+    await expectState(/^Saved locally$/, "after a clean save, before the rejected one");
+    await inspector.getByLabel("Text", { exact: true }).fill("Edit that the server rejects");
+    await inspector.getByRole("button", { name: "Apply", exact: true }).click();
+    await page.waitForFunction(() => /Unsaved/.test(document.querySelector(".studio-save-state")?.textContent ?? ""), { timeout: 30_000 });
+
     // And the vocabulary this gate exists to cover still includes a definite failure — now driven
-    // by a REAL rejection rather than by an abort mislabelled as one, and from a state with nothing
-    // outstanding. The body is padded past the route's 1,050,000 byte ceiling, so the route answers
-    // 413 before `service().save` is called and therefore before anything can be written.
+    // by a REAL rejection rather than by an abort mislabelled as one, and from a state that is
+    // neither saved nor already failed, so the announcement can only come from this request. The
+    // body is padded past the route's 1,050,000 byte ceiling, so the route answers 413 before
+    // `service().save` is called and therefore before anything can be written.
     await page.route("**/api/create-studio", async (route) => {
       if (route.request().method() !== "POST") return route.continue();
       const body = route.request().postData() ?? "{}";

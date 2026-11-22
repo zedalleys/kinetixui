@@ -205,6 +205,17 @@ control "the stale-draft guard no longer disables saving over a superseded revis
   '  const staleDraft = false;' \
   "must be unavailable"
 
+# THE CONTROL FOR CODEX'S FINDING ON THIS PR'S OWN HEAD. A confirmed save clears the attempts; if
+# it does not also clear the record that the list once dropped one, the next uncertainty inherits it
+# and a genuine competing write is reported as unknowable instead of being named. That is the
+# mirror of case 11's defect: there the editor claimed more than it knew, here it claims less.
+control "a confirmed save leaves the truncation record behind" \
+  '      pendingSaves.current = []; pendingTruncated.current = false;
+      setRecovered(false); setNotice("Saved to this computer'"'"'s local server.");' \
+  '      pendingSaves.current = [];
+      setRecovered(false); setNotice("Saved to this computer'"'"'s local server.");' \
+  "with an exhaustive list the check must not plead ignorance"
+
 echo "== restored tree must pass =="
 restore_all
 if git diff --quiet -- "$STUDIO"; then
