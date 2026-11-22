@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { execFileSync } from "node:child_process";
+import { buildProvenance, headCommit, verifyFixture, PROVENANCE_FILE } from "../../../../../scripts/create-studio-fixture-provenance.mjs";
 import { createDocument } from "./model";
 import { execute, newHistory } from "./commands";
 import { exportReact } from "./export";
@@ -53,7 +54,18 @@ it("typechecks and bundles exported source in a clean React consumer directory",
     execFileSync(process.execPath, [require.resolve("tailwindcss/lib/cli.js"), "-c", join(directory, "tailwind.config.cjs"), "-i", join(directory, "input.css"), "-o", join(directory, "utilities.css")], { stdio: "pipe" });
     await copyFile(join(root, "apps/web/src/app/fonts/inter-latin.woff2"), join(directory, "inter-latin.woff2"));
     await writeFile(join(directory, "index.html"), '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Exported KinetixUI consumer</title><style>@font-face{font-family:Inter;src:url(inter-latin.woff2) format("woff2");font-weight:100 900;}</style><link rel="stylesheet" href="bundle.css"><link rel="stylesheet" href="utilities.css"></head><body><div id="root"></div><script type="module" src="bundle.js"></script></body></html>');
+    // THE FIXTURE RECORDS WHAT IT IS. Written last, after every artifact exists, because a
+    // provenance record that preceded the files it describes would be a record of an intention.
+    // A fixture with no provenance is rejected by every gate that reads it, so this write is not
+    // optional decoration: without it the M1 browser gate and the consumer build both refuse.
+    const commit = headCommit(root);
+    if (!commit) throw new Error("could not determine the commit this fixture is generated from; set KINETIX_CREATE_FIXTURE_COMMIT");
+    await writeFile(join(directory, PROVENANCE_FILE), JSON.stringify(buildProvenance(directory, root, commit), null, 2));
     expect(output.source).toContain("Screen2");
     expect(output.source).not.toContain("@/");
+    // The record must satisfy the verifier it was written for, at the moment it is written. If this
+    // ever fails, the generator and the gates disagree about what a complete fixture is, and the
+    // gates would then reject a fixture that is in fact correct.
+    expect(verifyFixture(directory, { root, expectedCommit: commit })).toEqual([]);
   } finally { if (!process.env.KINETIX_CREATE_EXPORT_FIXTURE) await rm(directory, { recursive: true, force: true }); }
 }, 60_000);
