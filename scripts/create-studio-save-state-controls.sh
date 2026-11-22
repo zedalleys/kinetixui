@@ -162,9 +162,17 @@ control "the reconciliation verdict shares the volatile announcement slot" \
 # screen leaves Save enabled against a revision this work was never based on, and the next save
 # overwrites that writer silently. Removing the conflict base is removing the only thing that stops
 # it.
+# The anchor reaches the foreign branch through the one line that is unique to it. Both that branch
+# and the truncation branch above contain the same `setProduct` / `setDraftBase(floor)` /
+# `setSaveOutcome("unconfirmed")` triple, so a bare `setDraftBase(floor);` anchor matched the
+# truncation branch first: the control perturbed the wrong code and the gate failed in case 11
+# instead of case 9. A control that fires for the wrong reason proves nothing.
 control "a foreign write during uncertainty leaves saving enabled over it" \
-  '        setDraftBase(floor);' \
-  '' \
+  '        setDraftBase(floor);
+        setSaveOutcome("unconfirmed");
+        setChecked(`Checked: the stored version is revision ${stored.revision}, and it is not what that save sent.`);' \
+  '        setSaveOutcome("unconfirmed");
+        setChecked(`Checked: the stored version is revision ${stored.revision}, and it is not what that save sent.`);' \
   "saving over a foreign write must be unavailable"
 
 # Codex's P2 at `1e21261e`. Keeping only the latest attempt makes reconciliation compare the store
@@ -183,6 +191,19 @@ control "overflowing the attempt list goes unrecorded, so the check blames a for
   '        if (next.length > PENDING_SAVE_LIMIT) pendingTruncated.current = true;' \
   '' \
   "must not blame a writer it cannot have observed"
+
+# The brief asks separately for a control that reintroduces OVERWRITING a competing writer's
+# document, and for one that reintroduces ENABLING Save after an unresolved conflicting revision.
+# In this code those are one mechanism — `staleDraft` is what blocks the save and what the
+# reconciliation branch arms — so the control above and this one approach it from the two ends:
+# that one stops the state being recorded, this one stops the recorded state having any effect.
+# Removing the guard leaves Save enabled against a revision the work was never based on, and the
+# next save carries the adopted revision and overwrites that writer. Recorded rather than claimed
+# as two independent protections.
+control "the stale-draft guard no longer disables saving over a superseded revision" \
+  '  const staleDraft = draftBase !== null && draftBase !== product?.revision;' \
+  '  const staleDraft = false;' \
+  "must be unavailable"
 
 echo "== restored tree must pass =="
 restore_all

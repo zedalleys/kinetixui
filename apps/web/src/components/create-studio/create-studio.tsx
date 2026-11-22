@@ -21,7 +21,7 @@ const viewportPresets = [
 ];
 type Product = { id: string; revision: number; doc: Document; readOnly: boolean };
 type Account = { accountId: string; workspaceId: string; productLimit: number; products: { id: string; name: string; readOnly: boolean; revision: number }[] };
-class ApiError extends Error { constructor(public code: string, message: string) { super(message); } }
+export class ApiError extends Error { constructor(public code: string, message: string) { super(message); } }
 /**
  * What a save attempt established about the user's stored data.
  *

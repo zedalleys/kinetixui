@@ -365,6 +365,11 @@ try {
     await assertUnconfirmed(page, "after the diverging retry");
     const alert = await alertText(studio);
     assert.match(alert, /moved on|newer revision/i, `the refusal must be explained, read: ${alert.slice(0, 200)}`);
+    // A conflict is the one rejection that is itself evidence the earlier attempt landed, so the
+    // user must be told that — not merely that the revision moved. The service's own message
+    // already says "A newer revision exists", which is why asserting only that passed with the
+    // conflict explanation deleted.
+    assert.match(alert, /earlier save may have committed/i, `a conflict on a retry must say the earlier save may be what moved the revision, read: ${alert.slice(0, 240)}`);
     // 4c. A SECOND open question, before anything is checked. The user edits again and tries
     // again, and this attempt never reaches the server at all — so now two attempts are
     // outstanding and it is the EARLIER one that is stored.
@@ -569,6 +574,53 @@ try {
     assert.match(verdict, /did commit/i, `the check must still recognise the earlier commit, read: ${verdict.slice(0, 200)}`);
     readings.rejectedRetry = { revisions: [before.revision, committed.revision], alert: alert.slice(0, 240), verdict: verdict.slice(0, 220) };
     pass("a definite rejection of a retry carries its own reason without settling an earlier unconfirmed save, and the check still finds that commit");
+    await context.close();
+  }
+
+  // ---------- 10b. A SECOND coded rejection, raised by a different mechanism -------------------
+  // So the repair cannot be passing for a reason peculiar to REQUEST_TOO_LARGE. Clearing the
+  // session cookie makes the real route read no token and the real service raise SESSION_REQUIRED
+  // from `account()`, before the store is touched. Nothing is fabricated.
+  //
+  // This needs a context of its own. Measured first inside case 10, AFTER its reconciliation: the
+  // check had already settled the earlier save, so there was no open question left and the chip's
+  // "Save failed" was correct. The case was wrong, not the code — a rejection is a settled failure
+  // once nothing is outstanding, and that is the whole point of the distinction.
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const { page, studio } = await openSaved(context, "Session rejection");
+    const before = await stored(page);
+    await edit(studio);
+    await context.route("**/api/create-studio", async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      await route.fetch();
+      await route.abort("connectionreset");
+    });
+    await saveAndSettle(studio, page);
+    await context.unroute("**/api/create-studio");
+    const committed = await stored(page);
+    assert.equal(committed.revision, before.revision + 1, `the first save must really have committed: ${before.revision} → ${committed.revision}`);
+    await assertUnconfirmed(page, "before the session rejection");
+
+    // Further user edits between the uncertain save and the rejection, which the brief names.
+    await edit(studio);
+    await edit(studio);
+    await context.clearCookies();
+    await saveAndSettle(studio, page);
+    const sessionAlert = await alertText(studio);
+    assert.match(sessionAlert, /workspace again|session/i, `the session rejection's own reason must reach the user, read: ${sessionAlert.slice(0, 200)}`);
+    assert.match(sessionAlert, /earlier save is still unconfirmed/i, `the user must be told the session refusal settles nothing about the earlier save, read: ${sessionAlert.slice(0, 240)}`);
+    await assertUnconfirmed(page, "after a session rejection");
+    assert.equal(await studio.getByRole("button", { name: "Check the stored version" }).count(), 1, "a session rejection must not take away the way to resolve the earlier save");
+    // The store cannot be read back through this page any more: without the cookie the read is
+    // refused by the same `account()` check, which is itself the proof that the rejection came
+    // from the real server rather than from anything this gate arranged. That these codes leave
+    // the store untouched is established where it can be — `save-classification.test.ts` covers
+    // all twelve, and every one is raised before `FileStore.transaction` writes.
+    const sessionRead = await stored(page);
+    assert.equal(sessionRead.revision, "SESSION_REQUIRED", `the rejection must come from the real session check, read: ${JSON.stringify(sessionRead).slice(0, 160)}`);
+    readings.sessionRejectedRetry = { revisions: [before.revision, committed.revision], alert: sessionAlert.slice(0, 240), state: await chip(page) };
+    pass("a session rejection after further edits leaves the earlier unconfirmed save unresolved and still checkable");
     await context.close();
   }
 
