@@ -38,6 +38,13 @@ failures=0
 # control <label> <old> <new>
 control() {
   local label="$1" old="$2" new="$3"
+  # See the note in create-studio-save-state-controls.sh: DUMP_ANCHORS dumps, runs nothing.
+  if [ -n "${DUMP_ANCHORS:-}" ]; then
+    printf '%s\t%s\t%s\t%s\n' "apps/web/src/app/create/studio/error.tsx" \
+      "$(printf '%s' "$old" | base64 -w0)" "$(printf '%s' "$new" | base64 -w0)" \
+      "$(printf '%s' "$label" | base64 -w0)"
+    return
+  fi
   if ! python3 - "$old" "$new" <<'PY'
 import sys
 p = "apps/web/src/app/create/studio/error.tsx"
@@ -78,6 +85,10 @@ control "the surface does not take focus" \
 control "the server reference line is rendered without a digest" \
   '{error.digest ? <p className="studio-muted">Reference for the server log: {error.digest}</p> : null}' \
   '<p className="studio-muted">Reference for the server log: {error.digest}</p>'
+
+# DUMP_ANCHORS dumped every control's mutation above and ran nothing; there is no restored tree
+# to verify, so stop here rather than starting a gate.
+[ -n "${DUMP_ANCHORS:-}" ] && exit 0
 
 echo "== restored file must pass =="
 if git diff --quiet -- "$F"; then echo "file restored"; else echo "FILE NOT RESTORED"; failures=$((failures + 1)); fi

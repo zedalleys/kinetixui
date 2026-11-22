@@ -56,7 +56,15 @@ rule() { printf '%s\n' "-- $* --------------------------------------------------
 # --- teardown ----------------------------------------------------------------------------------
 # Cleanup failure is reported, never swallowed: a worktree that would not go away is a finding, and
 # a leaked one shares hard-linked node_modules with the candidate.
+# TEARDOWN_DONE makes this idempotent, because it is now called explicitly BEFORE the result is
+# computed as well as from the trap. Codex's P2 on PR #661: the trap ran after
+# `exit $((problems > 0))` had already been evaluated, so a `CLEANUP FAILED` incremented a counter
+# nobody read and the batch still exited 0 — a leaked worktree, hard-linked to the candidate's
+# node_modules, reported as a clean certification.
+TEARDOWN_DONE=""
 teardown() {
+  [ -n "$TEARDOWN_DONE" ] && return
+  TEARDOWN_DONE=1
   if [ -n "$DEV_PID" ]; then
     kill -- "-$DEV_PID" 2>/dev/null || kill "$DEV_PID" 2>/dev/null
     for _ in 1 2 3 4 5 6 7 8 9 10; do kill -0 "$DEV_PID" 2>/dev/null || break; sleep 1; done
@@ -78,7 +86,7 @@ teardown() {
       problems=$((problems + 1))
     fi
   fi
-  [ -n "$DW" ] && rm -rf "$DW.store"
+  [ -n "$DW" ] && rm -rf "$DW.store" "$DW.owner"
   rm -f "$SNAP"
 }
 trap teardown EXIT INT TERM
@@ -102,6 +110,10 @@ fi
 rule "disposable worktree"
 DW="$(mktemp -d /tmp/kinetix-dw.XXXXXXXX)"
 rmdir "$DW"
+# Claim it BEFORE it exists, so there is no window in which a concurrent batch's reaper could see
+# an unowned worktree. Codex's P2 on PR #661: the reaper treated every /tmp/kinetix-dw.* as
+# abandoned, so two batches running at once would destroy each other's test environment.
+printf '%s %s %s\n' "$$" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CAND" > "$DW.owner"
 if ! git worktree add --detach "$DW" "$HEAD_SHA" 2>&1 | sed 's/^/       /'; then
   say "ABORTING: could not create the disposable worktree."
   exit 1
@@ -264,6 +276,11 @@ if ! bash "$INTEGRITY" verify "$SNAP"; then
   say "THE CANDIDATE CHANGED. This batch's certification evidence is invalid."
   problems=$((problems + 1))
 fi
+
+# Teardown BEFORE the result is computed, so that a cleanup failure is part of the verdict rather
+# than a line printed after it. The trap stays for the abnormal paths and is idempotent.
+rule "teardown"
+teardown
 
 rule "summary"
 say "candidate      $HEAD_SHA (immutable; nothing ran in it)"

@@ -26,6 +26,8 @@ set -uo pipefail
 MODE="${1:-}"
 SNAP="${2:-}"
 cd "$(git rev-parse --show-toplevel)" || exit 2
+MANIFEST="scripts/create-studio-mutation-anchors.json"
+ASSERTION_COUNT="?"
 
 fail=0
 note() { printf '%s\n' "$*"; }
@@ -36,6 +38,15 @@ bad() { printf 'INTEGRITY FAIL  %s\n' "$*"; fail=$((fail + 1)); }
 # These are the lines a mutation runner replaces, plus the assertions a gate would stop being able
 # to make if its own mutation residue were committed. A missing one means either a killed runner's
 # residue or a repair that was reverted; both must stop certification, so neither is tolerated.
+#
+# THIS LIST IS NO LONGER THE ONLY PROTECTION, and Codex was right that on its own it was not
+# enough: a hand-curated set of substrings missed three real runner mutations, because
+# `staleDraft` survives `const staleDraft = false;`, because one anchor's text appears at six
+# sites and a control changes one of them, and because one mutation had no anchor at all.
+# `scripts/create-studio-mutation-anchors.json` is now generated FROM the runners themselves
+# (`DUMP_ANCHORS=1`), covers every control mechanically, and is proved able to reject each
+# mutation by `scripts/create-studio-anchor-manifest.mjs --check`. The list below remains for the
+# gate assertions, which are not runner mutations and cannot be derived.
 assertions() {
   cat <<'ASSERTIONS'
 apps/web/src/app/create/studio/error.tsx|<Button onClick={reset}>Try the editor again</Button>|the recovery Retry button (replaced by a bare <span> by the recovery-exit control)
@@ -45,7 +56,7 @@ apps/web/src/components/create-studio/create-studio.tsx|outcome === "rejected" &
 apps/web/src/components/create-studio/create-studio.tsx|pendingSaves.current = next.slice(-PENDING_SAVE_LIMIT)|the bounded attempt history
 apps/web/src/components/create-studio/create-studio.tsx|if (next.length > PENDING_SAVE_LIMIT) pendingTruncated.current = true|the record that the bound dropped an attempt
 apps/web/src/components/create-studio/create-studio.tsx|pendingSaves.current = []; pendingTruncated.current = false;|Codex at c0218261: a confirmed save settles the truncation marker too
-apps/web/src/components/create-studio/create-studio.tsx|staleDraft|the guard that disables saving over a revision the work was not based on
+apps/web/src/components/create-studio/create-studio.tsx|const staleDraft = draftBase !== null && draftBase !== product?.revision;|the guard that disables saving over a revision the work was not based on
 scripts/create-studio-save-state-browser.mjs|earlier save is still unconfirmed|the gate assertion that a rejected retry keeps earlier uncertainty
 scripts/create-studio-save-state-browser.mjs|earlier save may have committed|the gate assertion a corrected control exposed as missing
 scripts/create-studio-save-state-browser.mjs|cannot be determined|can no longer account|the gate assertion that a truncated history refuses to conclude
@@ -56,26 +67,85 @@ ASSERTIONS
 }
 
 run_assertions() {
-  local file needle label line
-  while IFS= read -r line; do
-    [ -n "$line" ] || continue
-    file="${line%%|*}"
-    label="${line##*|}"
-    needle="${line#*|}"; needle="${needle%|*}"
-    if [ ! -f "$file" ]; then
-      bad "$file is missing — cannot assert: $label"
-      continue
-    fi
-    # An alternation is written as  a|b  inside the needle field; accept either side.
-    if printf '%s' "$needle" | grep -q '|'; then
-      local a b
-      a="${needle%%|*}"; b="${needle##*|}"
-      if grep -qF -- "$a" "$file" || grep -qF -- "$b" "$file"; then continue; fi
-    elif grep -qF -- "$needle" "$file"; then
-      continue
-    fi
-    bad "$file no longer contains \"$needle\" — $label"
-  done < <(assertions)
+  # The curated list above is a fixed-string substring test; the generated manifest
+  # (scripts/create-studio-mutation-anchors.json) is checked as PRESENT and/or ABSENT per entry.
+  # Both run in one python pass, because a multi-line anchor cannot be matched with grep, and
+  # because an ABSENCE assertion is the only thing that can catch a purely ADDITIVE mutation —
+  # the crash trigger the recovery harness injects, for instance, which adds code and removes
+  # nothing. Codex's P2 on PR #661 was that the curated list alone missed three real mutations;
+  # the manifest is derived from the runners so it cannot fall behind them unnoticed.
+  local out status curated
+  curated="$(mktemp)"
+  assertions > "$curated"
+  out="$(python3 -I - "$MANIFEST" "$curated" <<'ENGINE'
+import json, os, sys
+
+manifest_path, curated_path = sys.argv[1], sys.argv[2]
+problems = []
+cache = {}
+checked = 0
+
+
+def read(path):
+    if path not in cache:
+        try:
+            cache[path] = open(path, encoding="utf-8").read()
+        except OSError:
+            cache[path] = None
+    return cache[path]
+
+
+for line in open(curated_path, encoding="utf-8").read().splitlines():
+    if not line.strip():
+        continue
+    parts = line.split("|")
+    path, label = parts[0], parts[-1]
+    needles = parts[1:-1]          # an alternation is written as  a|b  in the needle field
+    content = read(path)
+    if content is None:
+        problems.append("%s is missing - cannot assert: %s" % (path, label))
+        continue
+    checked += 1
+    if not any(n in content for n in needles):
+        problems.append('%s no longer contains "%s" - %s' % (path, needles[0], label))
+
+if manifest_path and os.path.exists(manifest_path):
+    for entry in json.load(open(manifest_path, encoding="utf-8")).get("entries", []):
+        content = read(entry["file"])
+        if content is None:
+            problems.append("%s is missing - cannot assert: %s" % (entry["file"], entry["label"]))
+            continue
+        if entry.get("present") is not None:
+            checked += 1
+            if entry["present"] not in content:
+                problems.append(
+                    "%s no longer contains the anchor a control replaces - residue of: %s"
+                    % (entry["file"], entry["label"])
+                )
+        if entry.get("absent") is not None:
+            checked += 1
+            if entry["absent"] in content:
+                problems.append(
+                    "%s CONTAINS a control mutation - residue of: %s" % (entry["file"], entry["label"])
+                )
+else:
+    problems.append(
+        "the generated anchor manifest is missing at %r - run scripts/create-studio-anchor-manifest.mjs --write"
+        % (manifest_path,)
+    )
+
+for problem in problems:
+    print("INTEGRITY FAIL  " + problem)
+print("ASSERTIONS %d" % checked)
+sys.exit(1 if problems else 0)
+ENGINE
+)"
+  status=$?
+  rm -f "$curated"
+  ASSERTION_COUNT="$(printf '%s\n' "$out" | awk '/^ASSERTIONS /{print $2}')"
+  printf '%s\n' "$out" | grep -v '^ASSERTIONS ' || true
+  [ "$status" -ne 0 ] && fail=$((fail + 1))
+  return 0
 }
 
 snapshot() {
@@ -84,6 +154,17 @@ snapshot() {
   printf 'index %s\n' "$(git write-tree)"
   printf 'status-lines %s\n' "$(git status --porcelain | wc -l | tr -d ' ')"
   git status --porcelain | sort | sed 's/^/status /'
+  # CONTENTS, not just paths. Codex's P2 on PR #661: if the candidate already carries an unstaged
+  # edit or an untracked file, changing THAT file's contents during a batch moves neither HEAD, nor
+  # the index tree, nor a single porcelain line — so the old snapshot reported the candidate
+  # unchanged while its working files had drifted. `git diff HEAD` hashes every tracked
+  # modification, staged or not, and each untracked file is hashed by content.
+  printf 'tracked-diff %s\n' "$(git diff HEAD | sha256sum | cut -d' ' -f1)"
+  git ls-files --others --exclude-standard -z |
+    sort -z |
+    while IFS= read -r -d '' path; do
+      printf 'untracked %s %s\n' "$(sha256sum < "$path" | cut -d' ' -f1)" "$path"
+    done
 }
 
 case "$MODE" in
@@ -100,7 +181,7 @@ case "$MODE" in
     note "  tree  $(git rev-parse 'HEAD^{tree}')"
     note "  index $(git write-tree)"
     note "  working tree: $(git status --porcelain | wc -l | tr -d ' ') changed path(s)"
-    note "  $(assertions | grep -c .) source assertions hold"
+    note "  $ASSERTION_COUNT source assertions hold"
     ;;
   verify)
     [ -n "$SNAP" ] && [ -f "$SNAP" ] || { note "usage: $0 verify <snapshot-file>"; exit 2; }
@@ -116,7 +197,7 @@ case "$MODE" in
     rm -f "$local_now"
     run_assertions
     if [ "$fail" -ne 0 ]; then note "INTEGRITY POSTFLIGHT FAILED ($fail)"; exit 1; fi
-    note "candidate unchanged: $(git rev-parse HEAD), $(assertions | grep -c .) assertions hold"
+    note "candidate unchanged: $(git rev-parse HEAD), $ASSERTION_COUNT assertions hold"
     ;;
   assert)
     run_assertions
@@ -124,7 +205,7 @@ case "$MODE" in
       note "SOURCE ASSERTIONS FAILED ($fail) in $(pwd)"
       exit 1
     fi
-    note "$(assertions | grep -c .) source assertions hold in $(pwd)"
+    note "$ASSERTION_COUNT source assertions hold in $(pwd)"
     ;;
   *)
     note "usage: $0 {record <snapshot>|verify <snapshot>|assert}"

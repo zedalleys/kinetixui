@@ -69,6 +69,14 @@ PY
 # control <label> <old> <new> <expected substring of the failure>
 control() {
   local label="$1" old="$2" new="$3" expected="$4"
+  # DUMP_ANCHORS emits this control's mutation instead of running it, so that
+  # scripts/create-studio-anchor-manifest.mjs can derive every anchor mechanically rather than
+  # from a hand-kept list. It runs no gate and patches nothing.
+  if [ -n "${DUMP_ANCHORS:-}" ]; then
+    printf '%s\t%s\t%s\t%s\n' "$STUDIO" "$(printf '%s' "$old" | base64 -w0)" \
+      "$(printf '%s' "$new" | base64 -w0)" "$(printf '%s' "$label" | base64 -w0)"
+    return
+  fi
   # CONTROL_ONLY re-runs a single control in isolation, for when one of them failed on an
   # infrastructure timeout rather than on its own detection and needs a clean measurement. Skips
   # are counted and printed, and a filter that matches nothing is itself a failure, so a typo
@@ -232,6 +240,10 @@ control "a confirmed save leaves the truncation record behind" \
   '      pendingSaves.current = [];
       setRecovered(false); setNotice("Saved to this computer'"'"'s local server.");' \
   "with an exhaustive list the check must not plead ignorance"
+
+# DUMP_ANCHORS dumped every control's mutation above and ran nothing; there is no restored tree
+# to verify, so stop here rather than starting a gate.
+[ -n "${DUMP_ANCHORS:-}" ] && exit 0
 
 echo "== restored tree must pass =="
 restore_all

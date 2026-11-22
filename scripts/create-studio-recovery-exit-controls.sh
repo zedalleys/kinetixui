@@ -60,6 +60,33 @@ export function NodeView('
   const children = (node.children ?? []).map(child =>'
 }
 
+# This runner has no control() wrapper — it has one source negative control, plus the two
+# injections that install its crash trigger. DUMP_ANCHORS dumps all three and exits without
+# touching anything, so the anchor manifest covers this runner too: the control's mutation must be
+# detectable, and the trigger injections must be detectable AS RESIDUE, because a committed crash
+# trigger would make the editor throw on a real document. See
+# create-studio-save-state-controls.sh for the rationale.
+if [ -n "${DUMP_ANCHORS:-}" ]; then
+  dump() { printf '%s\t%s\t%s\t%s\n' "$1" "$(printf '%s' "$2" | base64 -w0)" \
+    "$(printf '%s' "$3" | base64 -w0)" "$(printf '%s' "$4" | base64 -w0)"; }
+  dump "$ERROR" \
+    '<Button variant="Outline" asChild><a href="/create/studio">Reload Create Studio</a></Button>' \
+    '<Button variant="Outline" asChild><Link href="/create/studio">Reload Create Studio</Link></Button>' \
+    'a soft-navigation reload is detected'
+  dump "$NODEVIEW" 'export function NodeView(' \
+    'function m521CrashTrigger(node: Node) {
+  const text = node.props?.text ?? node.props?.children ?? node.props?.label;
+  if (String(text) === "CRASH-NOW") throw new Error("deliberate adapter render failure (recovery-exit harness)");
+}
+export function NodeView(' \
+    'the crash trigger function is injected'
+  dump "$NODEVIEW" '  const children = (node.children ?? []).map(child =>' \
+    '  m521CrashTrigger(node);
+  const children = (node.children ?? []).map(child =>' \
+    'the crash trigger is called from NodeView'
+  exit 0
+fi
+
 echo "== M5.21 recovery-exit harness =="
 install_trigger
 output="$(run_gate)"; status=$?

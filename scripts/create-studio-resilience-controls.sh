@@ -63,6 +63,12 @@ PY
 # control <label> <file> <old> <new> <expected substring of the failure>
 control() {
   local label="$1" file="$2" old="$3" new="$4" expected="$5"
+  # See the note in create-studio-save-state-controls.sh: DUMP_ANCHORS dumps, runs nothing.
+  if [ -n "${DUMP_ANCHORS:-}" ]; then
+    printf '%s\t%s\t%s\t%s\n' "$file" "$(printf '%s' "$old" | base64 -w0)" \
+      "$(printf '%s' "$new" | base64 -w0)" "$(printf '%s' "$label" | base64 -w0)"
+    return
+  fi
   if ! patch_file "$file" "$old" "$new"; then
     echo "CONTROL BROKEN   $label (anchor missing)"; failures=$((failures + 1)); return
   fi
@@ -140,6 +146,10 @@ control "a hidden panel is hidden but still focusable" "$CSS" \
   '.studio-navigator, .studio-inspector { background: hsl(var(--card)); min-width: 0; display: none; }' \
   '.studio-navigator, .studio-inspector { background: hsl(var(--card)); min-width: 0; width: 0; overflow: hidden; }' \
   "must hold no reachable focus"
+
+# DUMP_ANCHORS dumped every control's mutation above and ran nothing; there is no restored tree
+# to verify, so stop here rather than starting a gate.
+[ -n "${DUMP_ANCHORS:-}" ] && exit 0
 
 echo "== restored tree must pass =="
 restore_all
