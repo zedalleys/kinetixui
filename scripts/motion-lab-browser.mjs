@@ -507,13 +507,19 @@ if (wants("7")) {
   // #645-#650 boundary. Asserting the correct behaviour would redden this gate on inherited debt; asserting
   // the current behaviour would freeze the defect into a contract. So it is a note with a number.
   note("keyboard activation on the shipped strip", `ArrowRight left aria-checked = ${afterArrow.chosen} on the focused radio — selection needs Space/Enter. Pre-existing in @kinetixui/ui, see the decision register.`);
-  const spaceActivates = await page.evaluate(async () => {
-    const active = document.activeElement;
-    active?.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
-    await new Promise((r) => requestAnimationFrame(r));
-    return active?.getAttribute("aria-checked");
-  });
-  note("the documented alternative works", `Space left aria-checked = ${spaceActivates} on the focused radio`);
+  /*
+   * A REAL key press, not `dispatchEvent(new KeyboardEvent(...))`. The earlier version dispatched a synthetic
+   * keydown and reported `aria-checked = false`, under a note labelled "the documented alternative works" —
+   * a label and a value that contradict each other, which should have been the tell. A Radix ToggleGroupItem
+   * is a `<button>` and selects on CLICK; an untrusted keydown does not make the browser synthesize that
+   * click, so the measurement described the dispatch rather than the component. Measured with a real press on
+   * `/docs/components/segmented-control` at `main` 6b1c990e: Space DOES select, and so does Enter.
+   */
+  const spaceActivates = await page.evaluate(() => document.activeElement?.getAttribute("aria-checked"));
+  await page.keyboard.press(" ");
+  await page.waitForTimeout(250);
+  const afterSpace = await page.evaluate(() => document.activeElement?.getAttribute("aria-checked"));
+  note("the documented alternative works", `a real Space press took aria-checked from ${spaceActivates} to ${afterSpace} on the focused radio`);
   check(afterArrow.ring.includes("rgb") || afterArrow.ring.includes("solid"), "a focus ring is painted after the travel", afterArrow.ring.slice(0, 80));
 
   // End lands on the LAST enabled segment: the fifth is disabled, so roving must skip it.
