@@ -166,7 +166,16 @@ jobs:
       # Proves the preflight can fail: each control breaks one property it asserts.
       - name: "Native publish preflight: negative controls"
         run: |
-          for control in $(node scripts/check-native-publish-preflight.mjs --list-negatives); do
+          controls=$(node scripts/check-native-publish-preflight.mjs --list-negatives)
+          # Normalise before counting. A listing of only whitespace is ONE non-empty line, so
+          # it passed the count below and then split into zero words: green, nothing run.
+          # Collapsing whitespace runs to newlines makes the count the loop's own iterations.
+          # Separate from the line above on purpose: a pipe would hide a failing lister, which
+          # `set -e` catches only because that assignment takes the command's own exit status.
+          controls=$(printf '%s' "$controls" | tr -s '[:space:]' '\n')
+          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          for control in $controls; do
             echo "--- $control"
             node scripts/check-native-publish-preflight.mjs --negative="$control"
           done
@@ -207,7 +216,16 @@ jobs:
 
       - name: "SwiftUI mirror publish route: negative controls"
         run: |
-          for control in $(node scripts/adoption/swiftui-mirror-consumer.mjs --list-negatives); do
+          controls=$(node scripts/adoption/swiftui-mirror-consumer.mjs --list-negatives)
+          # Normalise before counting. A listing of only whitespace is ONE non-empty line, so
+          # it passed the count below and then split into zero words: green, nothing run.
+          # Collapsing whitespace runs to newlines makes the count the loop's own iterations.
+          # Separate from the line above on purpose: a pipe would hide a failing lister, which
+          # `set -e` catches only because that assignment takes the command's own exit status.
+          controls=$(printf '%s' "$controls" | tr -s '[:space:]' '\n')
+          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          for control in $controls; do
             echo "--- $control"
             node scripts/adoption/swiftui-mirror-consumer.mjs --negative="$control"
           done
