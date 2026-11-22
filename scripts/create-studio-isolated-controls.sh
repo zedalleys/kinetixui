@@ -136,20 +136,36 @@ rule "dev server on $PORT (serving the worktree, not the candidate)"
 # CHILD: killing npx alone leaves next running, and on the first run that surviving process kept
 # writing into the worktree while it was being removed, which deleted it halfway and made every
 # later reading of that directory meaningless.
-setsid bash -c "cd '$DW/apps/web' && exec npx next dev -p $PORT" > "$EVIDENCE/dw-dev-$PORT.log" 2>&1 &
+# The dev server needs `KINETIX_CREATE_DEV=1` — exactly as `create-studio.yml` starts it. Without
+# it `/create/studio` renders an "in development" placeholder, and the API route refuses. Its store
+# directory is per-worktree, so two batches cannot share saved product state.
+DEV_DIR="$DW/.create-store"
+mkdir -p "$DEV_DIR"
+setsid env KINETIX_CREATE_DEV=1 KINETIX_CREATE_DEV_DIR="$DEV_DIR" \
+  bash -c "cd '$DW/apps/web' && exec npx next dev --hostname 127.0.0.1 -p $PORT" \
+  > "$EVIDENCE/dw-dev-$PORT.log" 2>&1 &
 DEV_PID=$!
+# Readiness must require the EDITOR, not a 200. The placeholder page returns 200 too, so the first
+# version of this probe reported "serving /create/studio" while serving a page with no editor on
+# it, and four browser gates then failed for what looked like four product defects. A probe that
+# cannot tell the difference between the thing and its placeholder is not a probe.
 ready=0
 for _ in $(seq 1 90); do
-  if curl -fsS -o /dev/null "http://127.0.0.1:$PORT/create/studio" 2>/dev/null; then ready=1; break; fi
+  body="$(curl -fsS "http://127.0.0.1:$PORT/create/studio" 2>/dev/null)"
+  if printf '%s' "$body" | grep -q 'Create Studio is in development'; then
+    say "ABORTING: the dev server is serving the placeholder, so KINETIX_CREATE_DEV did not reach it."
+    exit 1
+  fi
+  if printf '%s' "$body" | grep -q 'create-studio'; then ready=1; break; fi
   kill -0 "$DEV_PID" 2>/dev/null || break
   sleep 2
 done
 if [ "$ready" -ne 1 ]; then
-  say "ABORTING: the worktree's dev server never served /create/studio."
+  say "ABORTING: the worktree's dev server never served the Create Studio editor."
   tail -20 "$EVIDENCE/dw-dev-$PORT.log" | sed 's/^/       /'
   exit 1
 fi
-say "serving /create/studio from the disposable worktree"
+say "serving the Create Studio editor from the disposable worktree (store: $DEV_DIR)"
 
 # --- run the runners inside the worktree ---------------------------------------------------------
 # Each argument is either a runner in `scripts/`, or `CMD:<shell command>` to run in the pristine
