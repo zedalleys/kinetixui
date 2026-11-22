@@ -217,10 +217,23 @@ for runner in "$@"; do
     # KINETIX_CREATE_EXPORT_FIXTURE; the gates that READ it take CREATE_EXPORT_FIXTURE. Forwarding
     # only the second left the fixture directory empty, the consumer page served 500s, and the M1
     # gate timed out on "Continue" — which I first misattributed to machine load.
-    ( cd "$DW" && CREATE_BASE="http://127.0.0.1:$PORT" KINETIX_CREATE_DEV=1 \
-        CREATE_EXPORT_FIXTURE="${CREATE_EXPORT_FIXTURE:-}" \
-        KINETIX_CREATE_EXPORT_FIXTURE="${CREATE_EXPORT_FIXTURE:-}" \
-        CREATE_REQUIRE_FIXTURE="${CREATE_REQUIRE_FIXTURE:-}" bash -lc "$cmd" ) > "$log" 2>&1
+    #
+    # Forwarded ONLY when non-empty. Setting them to "" is not the same as leaving them unset: the
+    # fixture test resolved an empty value as a relative path, wrote a whole consumer project into
+    # apps/web and replaced the tracked apps/web/package.json, which then made the error-boundary
+    # controls in the SAME batch report "the suite stayed green with the defect in place". A
+    # verification step contaminating a later verification step is what this harness exists to stop,
+    # and only the worktree integrity gate caught it. Measured both ways: empty -> 14 contaminated
+    # paths with vitest still exit 0; unset -> 0 paths.
+    fixture_env=()
+    if [ -n "${CREATE_EXPORT_FIXTURE:-}" ]; then
+      fixture_env+=( "CREATE_EXPORT_FIXTURE=$CREATE_EXPORT_FIXTURE" "KINETIX_CREATE_EXPORT_FIXTURE=$CREATE_EXPORT_FIXTURE" )
+    fi
+    if [ -n "${CREATE_REQUIRE_FIXTURE:-}" ]; then
+      fixture_env+=( "CREATE_REQUIRE_FIXTURE=$CREATE_REQUIRE_FIXTURE" )
+    fi
+    ( cd "$DW" && env "CREATE_BASE=http://127.0.0.1:$PORT" KINETIX_CREATE_DEV=1 \
+        "${fixture_env[@]}" bash -lc "$cmd" ) > "$log" 2>&1
     status=$?
     tail -6 "$log" | sed 's/^/       /'
   else
