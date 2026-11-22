@@ -18,7 +18,15 @@ function failure(error: unknown) {
   if (error instanceof ServiceError) return response({ code: error.code, message: error.message }, error.status);
   if (error instanceof SyntaxError) return response({ code: "INVALID_REQUEST", message: "The request could not be read." }, 400);
   // Storage paths and operating-system details never cross the response boundary.
-  return response({ code: "SAVE_FAILED", message: "The operation could not be saved. Your current draft is unchanged. Download it or retry." }, 422);
+  //
+  // This is the catch-all for an unexpected throw, and it must NOT assert that nothing was stored.
+  // Measured in M5.22: `FileStore.transaction` writes a temporary file, renames it into place, and
+  // only then releases its lock in a `finally`. A throw from that cleanup arrives here AFTER the
+  // rename has committed the write — reproduced by removing the lock directory from inside the
+  // transaction body, which leaves the new state on disk and still rejects. The previous wording,
+  // "Your current draft is unchanged", was therefore a claim about the user's data that this code
+  // path cannot make.
+  return response({ code: "SAVE_FAILED", message: "This operation could not be completed, and it is not known whether it was stored. Your work is still open in the editor. Check the stored version before retrying, and download your draft first." }, 422);
 }
 export async function GET(request: NextRequest) {
   if (!developmentAllowed(request)) return response({ code: "NOT_CONFIGURED", message: "Create Studio's local adapter is available only on an explicitly enabled local development server." }, 404);

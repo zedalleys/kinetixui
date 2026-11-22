@@ -223,6 +223,16 @@
   color: hsl(var(--foreground)); font-size: .8125rem;
 }
 .studio-error > div { display: flex; flex-wrap: wrap; gap: .5rem; margin-block-start: .5rem; }
+/* The verdict of "Check the stored version". It is not an error — in the committed case it is good
+   news — and it must NOT share the status bar's volatile announcement slot: the draft-storage
+   effect writes there too, and measured in M5.22 it overwrote the verdict within seconds, so the
+   answer to "did my save commit?" disappeared on its own. This region persists until the next save
+   attempt replaces the question. */
+.studio-checked {
+  margin: 0 .75rem .5rem; padding: .625rem .75rem;
+  border: 1px solid hsl(var(--border)); border-radius: .375rem;
+  background: hsl(var(--muted)); color: hsl(var(--foreground)); font-size: .8125rem;
+}
 .studio-draft-chooser { flex-wrap: wrap; gap: .5rem; padding: .5rem .75rem; border-block-start: 1px solid hsl(var(--border)); }
 .studio-draft-chooser .studio-product-select { min-width: min(100%, 16rem); }
 .studio-export-code { max-height: 24rem; max-width: 100%; overflow: auto; padding: 1rem; background: hsl(var(--muted)); border-radius: .375rem; font-size: .75rem; }
