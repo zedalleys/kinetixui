@@ -523,6 +523,110 @@ try {
     await context.close();
   }
 
+  // ---------- 10. A definite rejection of a RETRY must not settle an earlier uncertain save ------
+  // The repair's first version excluded only REVISION_CONFLICT from clearing the open questions.
+  // So a lost acknowledgement followed by a retry the server refused for any OTHER reason —
+  // too large, session expired — wiped every pending attempt, flipped the chip to "Save failed"
+  // and removed the check, while a committed save sat unaccounted for. That is precisely the
+  // false-failure claim the brief forbids, arriving by a different door.
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const { page, studio } = await openSaved(context, "Rejected retry");
+    const before = await stored(page);
+    await edit(studio);
+    await context.route("**/api/create-studio", async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      await route.fetch();
+      await route.abort("connectionreset");
+    });
+    await saveAndSettle(studio, page);
+    await context.unroute("**/api/create-studio");
+    const committed = await stored(page);
+    assert.equal(committed.revision, before.revision + 1, `the first save must really have committed: ${before.revision} → ${committed.revision}`);
+    await assertUnconfirmed(page, "before the rejected retry");
+
+    // Now the retry is refused by the real route, with a code that is NOT a conflict.
+    await edit(studio);
+    await context.route("**/api/create-studio", async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      const body = route.request().postData() ?? "{}";
+      await route.continue({ postData: body.slice(0, -1) + ',"pad":"' + "x".repeat(1_100_000) + '"}' });
+    });
+    await saveAndSettle(studio, page);
+    await context.unroute("**/api/create-studio");
+
+    // The earlier save is still unresolved, so the state must still say so.
+    await assertUnconfirmed(page, "after a rejected retry");
+    const alert = await alertText(studio);
+    assert.match(alert, /too large/i, `the rejection's own reason must still reach the user, read: ${alert.slice(0, 200)}`);
+    assert.match(alert, /earlier save is still unconfirmed/i, `the user must be told the refusal settles nothing about the earlier save, read: ${alert.slice(0, 240)}`);
+    const check = studio.getByRole("button", { name: "Check the stored version" });
+    assert.equal(await check.count(), 1, "a rejected retry must not take away the only way to resolve the earlier save");
+
+    // And the check must still be able to find that earlier commit.
+    await check.click();
+    const verdict = await verdictVisible(page);
+    assert.match(verdict, /did commit/i, `the check must still recognise the earlier commit, read: ${verdict.slice(0, 200)}`);
+    readings.rejectedRetry = { revisions: [before.revision, committed.revision], alert: alert.slice(0, 240), verdict: verdict.slice(0, 220) };
+    pass("a definite rejection of a retry carries its own reason without settling an earlier unconfirmed save, and the check still finds that commit");
+    await context.close();
+  }
+
+  // ---------- 11. Once attempts have been dropped, the check must not blame a foreign writer ----
+  // The pending list is bounded. When the cap drops the attempt that actually committed, a check
+  // finds no match — and concluding "something else wrote" from that is a fabrication, which then
+  // blocks saving against a writer who does not exist. The editor must say it cannot tell.
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const { page, studio } = await openSaved(context, "Overflowed attempts");
+    const before = await stored(page);
+
+    // One real commit whose acknowledgement is lost: this is the attempt that must not be lost.
+    await edit(studio);
+    await context.route("**/api/create-studio", async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      await route.fetch();
+      await route.abort("connectionreset");
+    });
+    await saveAndSettle(studio, page);
+    await context.unroute("**/api/create-studio");
+    const committed = await stored(page);
+    assert.equal(committed.revision, before.revision + 1, `the first save must really have committed: ${before.revision} → ${committed.revision}`);
+
+    // Then more unconfirmed attempts than the list can hold, none of which reaches the server, so
+    // the store still holds the first attempt's document while the list no longer remembers it.
+    await context.route("**/api/create-studio", async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      await route.abort("connectionreset");
+    });
+    for (let i = 0; i < 21; i += 1) {
+      await edit(studio);
+      await saveAndSettle(studio, page);
+    }
+    await context.unroute("**/api/create-studio");
+    const unchanged = await stored(page);
+    assert.equal(unchanged.revision, committed.revision, `the aborted retries must not have reached the server: ${committed.revision} → ${unchanged.revision}`);
+    await assertUnconfirmed(page, "after overflowing the attempt list");
+
+    await studio.getByRole("button", { name: "Check the stored version" }).click();
+    const verdict = await verdictVisible(page);
+    // The whole point: no match was found, but that proves nothing here.
+    assert.doesNotMatch(verdict, /something else|another|someone else/i, `with attempts dropped, the check must not blame a writer it cannot have observed, read: ${verdict.slice(0, 240)}`);
+    assert.doesNotMatch(verdict, /did not commit/i, `the check must not claim the save failed when it can no longer tell, read: ${verdict.slice(0, 240)}`);
+    assert.match(verdict, /cannot be determined|can no longer account/i, `the check must say it cannot determine what happened, read: ${verdict.slice(0, 240)}`);
+    // Unknowable is not permission: writing over a revision nothing can account for stays blocked.
+    const save = studio.getByRole("button", { name: "Save", exact: true });
+    assert.ok(await save.isDisabled(), "saving over a revision the editor cannot account for must be unavailable");
+    assert.ok(await studio.getByRole("button", { name: "Download draft" }).first().isEnabled(), "the local work must still be downloadable");
+    await save.click({ force: true }).catch(() => {});
+    await page.waitForTimeout(2_000);
+    const afterSave = await stored(page);
+    assert.equal(afterSave.revision, unchanged.revision, `a forced save must not advance the revision, read ${unchanged.revision} → ${afterSave.revision}`);
+    readings.overflowedAttempts = { revisions: [before.revision, committed.revision, afterSave.revision], verdict: verdict.slice(0, 260), state: await chip(page) };
+    pass("once attempts have been dropped the check reports that it cannot determine the outcome rather than blaming a foreign writer, and saving stays blocked");
+    await context.close();
+  }
+
   await writeFile(resolve(out, "save-state.json"), JSON.stringify({ readings, results, controls }, null, 2));
   console.log(JSON.stringify({ passed: results.length, controls: controls.length, out }));
 } catch (error) {

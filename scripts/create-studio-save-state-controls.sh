@@ -2,6 +2,10 @@
 #
 # Source negative controls for the Create Studio save-acknowledgement gate (M5.22).
 #
+# Eleven controls. Nine were written with the model; two more were added after Codex's exact-head
+# review of `3927a8c7` found that a non-conflict rejection settled an earlier uncertain save, and
+# that overflowing the bounded attempt list let the check blame a writer that never existed.
+#
 # A browser gate cannot edit the source it measures, so the implementation controls live here.
 # Each entry removes exactly ONE part of the save-outcome model, runs the real gate, requires it to
 # fail NAMING the behaviour that part protects, and restores the file. The run ends by requiring the
@@ -128,12 +132,23 @@ control "reconciliation reports a commit without comparing the stored document" 
   '      const committed = attempts[0];' \
   "must report that this save did not commit"
 
-# A conflict on a retry is evidence the earlier attempt landed. Treating it as a settled failure
-# tells the user their work was lost at the exact moment the store is holding it.
-control "a conflict on a retry is treated as proof the earlier save failed" \
-  '    const retryConflict = outcome === "rejected" && e instanceof ApiError && e.code === "REVISION_CONFLICT" && saveOutcome === "unconfirmed";' \
-  '    const retryConflict = false;' \
-  "after the diverging retry"
+# THE CONTROL FOR CODEX'S FIRST FINDING AT `3927a8c7`, and the reason the condition is no longer
+# written in terms of a particular code. A rejection of the latest request proves the store was not
+# touched BY THAT REQUEST and establishes nothing about the ones before it. Narrowing the condition
+# back to REVISION_CONFLICT — which is what shipped at `3927a8c7` — makes a retry refused for any
+# other reason declare the earlier, still-unresolved save a settled failure and take the check away.
+control "a non-conflict rejection of a retry settles an earlier unconfirmed save" \
+  '    const keepUnconfirmed = outcome === "rejected" && earlierOpen;' \
+  '    const keepUnconfirmed = outcome === "rejected" && earlierOpen && e instanceof ApiError && e.code === "REVISION_CONFLICT";' \
+  "after a rejected retry"
+
+# A conflict on a retry is evidence the earlier attempt landed, which is worth saying in its own
+# words. Without that sentence the user is told the revision moved but not that this is the one
+# refusal which suggests their earlier save is what moved it.
+control "a conflict on a retry loses the sentence that explains it" \
+  '    const conflictOnRetry = earlierOpen && e instanceof ApiError && e.code === "REVISION_CONFLICT";' \
+  '    const conflictOnRetry = false;' \
+  "the stored revision has moved on"
 
 # The verdict in the status bar's shared announcement slot, which is what it did first. Several
 # unrelated effects write there — the draft-storage one fires repeatedly when storage is refusing
@@ -156,9 +171,18 @@ control "a foreign write during uncertainty leaves saving enabled over it" \
 # against the refused retry, so it reports another writer where there was none and cannot confirm
 # the save that actually committed.
 control "only the latest uncertain attempt is remembered" \
-  '      if (outcome === "unconfirmed") pendingSaves.current = [...pendingSaves.current, attempt].slice(-20);' \
-  '      if (outcome === "unconfirmed") pendingSaves.current = [attempt];' \
+  '        pendingSaves.current = next.slice(-PENDING_SAVE_LIMIT);' \
+  '        pendingSaves.current = [attempt];' \
   "the check must report that the earlier save committed"
+
+# THE CONTROL FOR CODEX'S SECOND FINDING AT `3927a8c7`. The list is bounded, so it can stop being
+# exhaustive — and a check that treats a bounded list as exhaustive converts "an attempt I no longer
+# hold may be what is stored" into "somebody else wrote", which then blocks saving against a writer
+# who does not exist. Not recording the overflow is what makes that fabrication possible.
+control "overflowing the attempt list goes unrecorded, so the check blames a foreign writer" \
+  '        if (next.length > PENDING_SAVE_LIMIT) pendingTruncated.current = true;' \
+  '' \
+  "must not blame a writer it cannot have observed"
 
 echo "== restored tree must pass =="
 restore_all

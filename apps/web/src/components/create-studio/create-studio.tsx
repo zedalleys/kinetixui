@@ -44,6 +44,13 @@ class ApiError extends Error { constructor(public code: string, message: string)
  *    a failure that did not happen is the same class of lie as claiming a save that did not.
  */
 type SaveOutcome = "none" | "confirmed" | "rejected" | "unconfirmed";
+/**
+ * How many unresolved save attempts the editor keeps for reconciliation. A bound is needed because
+ * each entry holds a serialized document and nothing clears them until the question is settled;
+ * crossing it is recorded rather than hidden, so the check can say it does not know instead of
+ * guessing.
+ */
+const PENDING_SAVE_LIMIT = 20;
 const REJECTED_SAVE_CODES = new Set([
   "NOT_CONFIGURED", "ORIGIN_REJECTED", "SESSION_REQUIRED", "NOT_FOUND", "PRODUCT_LIMIT_REACHED",
   "PRODUCT_READ_ONLY", "REVISION_CONFLICT", "IDENTITY_REWIND", "INVALID_DOCUMENT", "INVALID_REQUEST",
@@ -161,6 +168,12 @@ export function CreateStudio() {
   // wrong payload and report that another writer had been at work when nobody had (Codex, M5.22).
   // Cleared the moment the question is settled either way, so it cannot grow across a session.
   const pendingSaves = React.useRef<{ serialized: string; baseRevision: number }[]>([]);
+  // Whether the cap below has ever dropped an open attempt. Once it has, the list is no longer
+  // exhaustive, so a check that finds no match CANNOT conclude that somebody else wrote: the
+  // evicted payload could be the one in the store. Without this, twenty failed retries after a
+  // lost acknowledgement would make the check blame a writer who does not exist — and, since a
+  // foreign write now blocks saving, strand the user's work (Codex, M5.22).
+  const pendingTruncated = React.useRef(false);
   const [recovered, setRecovered] = React.useState(false);
   const [focusIndex, setFocusIndex] = React.useState(0);
   const [fieldDrafts, setFieldDrafts] = React.useState<Record<string, string>>({});
@@ -266,7 +279,7 @@ export function CreateStudio() {
       setProduct(p); setHistory(newHistory(p.doc)); setSaved(serializeDocument(p.doc)); setPageId(p.doc.pages[0].id);
       draftWriter.current = null; recoveredCopy.current = null;
       setDraftBase(null); setDraftChoices([]); setFieldDrafts({});
-      setSaveOutcome("none"); pendingSaves.current = []; setChecked(""); setRecovered(false); setNameDraft(null); setMoveTarget(""); setMoveIndex("end");
+      setSaveOutcome("none"); pendingSaves.current = []; pendingTruncated.current = false; setChecked(""); setRecovered(false); setNameDraft(null); setMoveTarget(""); setMoveIndex("end");
       setNotice("");
       try {
         if (account && draftsFor(account, p).length) setNotice("A draft from this browser is available. Use Recover draft to review it before saving.");
@@ -283,7 +296,7 @@ export function CreateStudio() {
       setProduct(p); setHistory(newHistory(p.doc)); setSaved(serializeDocument(p.doc)); setPageId(p.doc.pages[0].id);
       draftWriter.current = null; recoveredCopy.current = null;
       setDraftBase(null); setDraftChoices([]); setFieldDrafts({});
-      setSaveOutcome("none"); pendingSaves.current = []; setChecked(""); setRecovered(false); setNameDraft(null); setMoveTarget(""); setMoveIndex("end");
+      setSaveOutcome("none"); pendingSaves.current = []; pendingTruncated.current = false; setChecked(""); setRecovered(false); setNameDraft(null); setMoveTarget(""); setMoveIndex("end");
       createKey.current = null; setAccount(await request<Account>());
       setNotice("Product created. Add a component from the library, then edit it in Properties.");
     } catch (e) { if (e instanceof ApiError && e.code === "PRODUCT_LIMIT_REACHED") { dialogReturnFocus.current = newProductButton.current; setUpgrade(true); } else setError((e as Error).message); }
@@ -309,20 +322,31 @@ export function CreateStudio() {
       setAccount(current => current && { ...current, products: current.products.map(item => item.id === p.id ? { ...item, name: p.doc.name, revision: p.revision, readOnly: p.readOnly } : item) });
     } catch (e) {
       const outcome = classifySaveFailure(e);
-      // A conflict raised on a RETRY of an unconfirmed attempt is evidence the earlier attempt (or
-      // another writer) committed, so it must not downgrade the question to a settled failure. The
-      // retry itself is safe: it carries the old revision, so the service refuses it rather than
-      // overwriting the newer document.
-      const retryConflict = outcome === "rejected" && e instanceof ApiError && e.code === "REVISION_CONFLICT" && saveOutcome === "unconfirmed";
-      setSaveOutcome(retryConflict ? "unconfirmed" : outcome);
-      // An unconfirmed attempt joins the open questions. A settled rejection closes all of them,
-      // because a coded rejection proves the store was not touched by THIS attempt — but it says
-      // nothing about an earlier uncertain one, which is why a conflict on a retry is excluded.
-      if (outcome === "unconfirmed") pendingSaves.current = [...pendingSaves.current, attempt].slice(-20);
-      else if (!retryConflict) pendingSaves.current = [];
-      setError(retryConflict
+      // Whether an EARLIER attempt's outcome is still unknown. This is the condition, not the
+      // particular code that was returned: rejecting the latest request proves the store was not
+      // touched by THAT request and establishes nothing whatever about the ones before it. An
+      // earlier version of this carved out REVISION_CONFLICT alone, so a retry refused with
+      // REQUEST_TOO_LARGE or SESSION_REQUIRED cleared every open question, flipped the chip to
+      // "Save failed" and took the check away — while a committed save sat unaccounted for
+      // (Codex, M5.22).
+      const earlierOpen = pendingSaves.current.length > 0;
+      const keepUnconfirmed = outcome === "rejected" && earlierOpen;
+      setSaveOutcome(keepUnconfirmed ? "unconfirmed" : outcome);
+      if (outcome === "unconfirmed") {
+        const next = [...pendingSaves.current, attempt];
+        if (next.length > PENDING_SAVE_LIMIT) pendingTruncated.current = true;
+        pendingSaves.current = next.slice(-PENDING_SAVE_LIMIT);
+      } else if (!keepUnconfirmed) {
+        pendingSaves.current = []; pendingTruncated.current = false;
+      }
+      // A conflict is worth explaining in its own words, because it is the one rejection that is
+      // itself evidence the earlier attempt landed.
+      const conflictOnRetry = earlierOpen && e instanceof ApiError && e.code === "REVISION_CONFLICT";
+      setError(conflictOnRetry
         ? "The stored revision has moved on since that unconfirmed save, so this retry was refused rather than overwriting it. Your earlier save may have committed. Check the stored version."
-        : (e as Error).message);
+        : keepUnconfirmed
+          ? `${(e as Error).message} An earlier save is still unconfirmed, and this refusal says nothing about it. Check the stored version.`
+          : (e as Error).message);
       if (e instanceof ApiError && e.code === "PRODUCT_READ_ONLY") setProduct({ ...product, readOnly: true });
     } finally { setBusy(false); setSaving(false); }
   }
@@ -353,16 +377,27 @@ export function CreateStudio() {
         // the document that is stored.
         setProduct(stored);
         setSaved(committed.serialized); setDraftBase(null); setSaveOutcome("confirmed"); setRecovered(false);
-        pendingSaves.current = [];
+        pendingSaves.current = []; pendingTruncated.current = false;
         setError("");
         setChecked(`Checked: that save did commit. The stored version is revision ${stored.revision} and matches what was sent, so nothing was lost. Anything you changed afterwards is still unsaved.`);
       } else if (stored.revision === floor) {
         // The store never moved, so nothing was written and a retry is the right next step.
         setProduct(stored);
         setSaveOutcome("rejected");
-        pendingSaves.current = [];
+        pendingSaves.current = []; pendingTruncated.current = false;
         setError("");
         setChecked(`Checked: that save did not commit. The stored version is still revision ${stored.revision}, so your work is unsaved and can be saved again.`);
+      } else if (pendingTruncated.current) {
+        // The store has moved and none of the attempts still held match it — but attempts have been
+        // dropped, so the one that committed may be among them. Saying "something else wrote" here
+        // would blame a writer who may not exist. The editor says what it knows: it cannot account
+        // for every attempt, so this cannot be settled from the editor. Saving is still blocked,
+        // because writing over a revision nothing can account for is the dangerous act.
+        setProduct(stored);
+        setDraftBase(floor);
+        setSaveOutcome("unconfirmed");
+        setChecked(`Checked: the stored version is revision ${stored.revision}, and this editor can no longer account for every unconfirmed save, so what happened cannot be determined from here.`);
+        setError(`The stored version is revision ${stored.revision}. Too many saves went unanswered for this editor to tell whether one of them is what is stored, so saving over it is unavailable. Download your draft, then reopen the saved version — reopening replaces what is on screen.`);
       } else {
         // Something else wrote.
         //
