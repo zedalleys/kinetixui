@@ -14,10 +14,31 @@ Charts built on Recharts, themed with `--chart-1…5`.
 
 <Command op="cli-add" components={["chart"]} />
 
+This is the registry route, and it is the complete instruction: the `chart` registry item declares
+`recharts` in its own dependencies, so the CLI installs it for you.
+
+### If you install the package instead
+
+`@kinetixui/ui`'s chart exports are wrappers around `recharts` — `ChartContainer` renders whatever
+`recharts` chart you put inside it — so a chart also needs `recharts` as a dependency of **your**
+project, declared by you:
+
+<Command op="install-recharts" />
+
+That line is not optional on pnpm. npm, Yarn and Bun hoist `recharts` to your `node_modules` root as a
+transitive dependency of `@kinetixui/ui`, so importing it without declaring it happens to work; pnpm
+does not hoist, and the import fails to resolve. Declaring it is correct on all four.
+
+<Callout>
+  On Yarn you need one more package, at your own React major — see
+  [the Yarn note in Installation](/docs/installation).
+</Callout>
+
 ## React usage
 
 ```tsx
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@kinetixui/ui";
+import { Cell, Pie, PieChart } from "recharts";
 ```
 
 Styled entirely from the KinetixUI token contract — `bg-action`,

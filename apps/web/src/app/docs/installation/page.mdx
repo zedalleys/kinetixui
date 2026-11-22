@@ -128,12 +128,26 @@ not already have them:
 <Command op="install-tailwind" />
 
 <Callout>
-  **On Yarn, add one more package.** `@kinetixui/ui` includes charts built on `recharts`, which declares
-  `react-is` as a peer dependency. npm, pnpm and Bun install a transitive peer for you; neither Yarn
-  Classic nor Yarn 4 does, so a Yarn build fails to resolve `react-is`. Run `yarn add react-is` as well.
-  Measured on Yarn 1.22.22 and Yarn 4.18.1 with `node scripts/adoption/pm-matrix.mjs`. Yarn 4 also
-  refuses a version published in the last week by default (`npmMinimalAgeGate`), so a brand-new KinetixUI
-  release needs `yarn config set npmMinimalAgeGate 0` or a few days' patience.
+  **If you are on React 18, add one more package — whichever manager you use.** `@kinetixui/ui` includes
+  charts built on `recharts`, which declares `react-is` as a peer dependency, and react-is recognises only
+  the element brand of the React major it ships for. npm, pnpm and Bun do install that peer, but they
+  install **react-is 19 whatever React you are on**; Yarn installs no peer at all, so a Yarn build fails to
+  resolve it. On React 18 you therefore need:
+
+  <Command op="install-react-is-18" />
+
+  On React 19 you need nothing extra on npm, pnpm or Bun. On Yarn you always add it, at your own major:
+  `yarn add react-is@^19` on React 19, `yarn add react-is@^18` on React 18 — and never an unversioned
+  `yarn add react-is`, which installs react-is 19.
+
+  **The mismatch is silent, which is why it is worth a callout.** With react-is 19 under React 18, the
+  install reports success, `tsc` exits 0 and `vite build` exits 0, and a chart whose `<Cell>`s come from a
+  wrapped map renders with its fills dropped — we measured **0 of 3** where 3 is correct. A chart built from
+  a plain array of `<Cell>` is unaffected, so the symptom appears and disappears with the shape of your own
+  code. Measured on npm 10.9.4, pnpm 10.28.0, Bun 1.4.4, Yarn 1.22.22 and Yarn 4.18.1 against recharts
+  3.11.0, with `node scripts/adoption/react-consumer.mjs`. Yarn 4 also refuses a version published in the
+  last week by default (`npmMinimalAgeGate`), so a brand-new KinetixUI release needs
+  `yarn config set npmMinimalAgeGate 0` or a few days' patience.
 </Callout>
 
 Map the utilities onto the contract — KinetixUI ships a preset:

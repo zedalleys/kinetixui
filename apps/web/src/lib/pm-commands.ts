@@ -112,21 +112,52 @@ export interface Operation {
 const CLI = PACKAGES.cli;
 
 /**
- * Measured, 2026-10-26, by `node scripts/adoption/pm-matrix.mjs`: a clean consumer that installs
- * `@kinetixui/ui` with **either** Yarn line typechecks but fails its build on
- * `Rolldown failed to resolve import "react-is"`. npm 10.9.4, pnpm 12.3.1 and bun 1.4.4 all pass.
+ * Measured, 2026-10-26 and re-measured 2026-11-22 by `node scripts/adoption/pm-matrix.mjs`: a clean
+ * consumer that installs `@kinetixui/ui` with **either** Yarn line typechecks but fails its build on
+ * `Rolldown failed to resolve import "react-is"`. npm 10.9.4, pnpm 10.28.0, pnpm 12.3.1 and bun 1.4.4
+ * all pass.
  *
- * Cause: `recharts@3.10.1` — a dependency of `@kinetixui/ui` — declares `react-is` as a *peer*
- * dependency. npm 7+, pnpm and bun install a transitive peer automatically; Yarn Classic (1.22.22) and
- * Yarn Berry (4.18.1) both only warn. Adding `react-is` to the fixture by hand makes the Yarn build pass,
- * which is how the cause was confirmed rather than inferred.
+ * Cause: `recharts` — a dependency of `@kinetixui/ui`, `^3.10.1`, resolving to 3.11.0 on 2026-11-22 —
+ * declares `react-is` as a *peer* dependency. npm 7+, pnpm and bun install a transitive peer
+ * automatically; Yarn Classic (1.22.22) and Yarn Berry (4.18.1) both only warn. Adding `react-is` to the
+ * fixture by hand makes the Yarn build pass, which is how the cause was confirmed rather than inferred.
  *
- * The real fix is for `@kinetixui/ui` to depend on `react-is` itself. That changes a published package and
- * needs a changeset, so it is a separate release-affecting PR; until it ships, the Yarn tab says what a
- * Yarn reader has to do, because the alternative is a reader whose build breaks with no explanation.
+ * **The instruction has to name a version, and the version has to be the reader's own React major.**
+ * recharts accepts `react-is@^16.8.0 || ^17 || ^18 || ^19`, and react-is recognises only the element
+ * brand of the major it ships for: React 18 brands elements `Symbol(react.element)` and React 19 renamed
+ * it `Symbol(react.transitional.element)`. So on a React 18 consumer an unversioned `yarn add react-is`
+ * installs react-is 19, `isFragment` returns false, `recharts/util/ReactUtils.toArray` stops flattening,
+ * and `findAllByType(children, Cell)` finds **none** of the cells — measured 0 where 3 is correct, with
+ * `tsc` and `vite build` both exiting 0. A green build and a chart with no fills.
+ *
+ * **`@kinetixui/ui` must NOT declare `react-is` itself** — owner decision, 2026-11-05, when #493 was
+ * closed unmerged. Our peer is `react: ">=18"`, so no single pinned major is right for every consumer;
+ * a fixed entry would break the other half silently in exactly the way described above. The resolution
+ * is consumer-side and version-aware, which is what this caveat now says.
+ *
+ * **And it is not a Yarn problem.** Measured 2026-11-22 against the recharts `packages/ui` actually
+ * depends on (`^3.10.1`, resolving 3.11.0), in clean consumer projects per manager: npm, pnpm and Bun
+ * all install the transitive peer at react-is **19** whatever React the consumer is on, so a React 18
+ * consumer gets the mismatch with no command of their own to get wrong. Each renders a chart whose
+ * `<Cell>`s come from a wrapped map with **0 of 3** fills while `tsc` and `vite build` exit 0; Yarn is
+ * the one manager that fails loudly, because it installs no peer at all. Declaring `react-is@^18` fixes
+ * it on all four — a plain dependency is enough, no `overrides` or `resolutions` field needed, verified
+ * per manager with `node scripts/adoption/react-consumer.mjs --react=18 --react-is=^18`.
+ *
+ * The sentence this comment used to carry — "npm, pnpm and Bun install the matching version for you" —
+ * was wrong, and wrong in the direction that matters: it told the two thirds of readers who are not on
+ * Yarn that they had nothing to check.
  */
 const YARN_NEEDS_REACT_IS =
-  "Yarn does not install a transitive peer dependency. @kinetixui/ui bundles charts built on recharts, which declares react-is as a peer, so add it too: yarn add react-is. Measured on Yarn Classic 1.22.22 and Yarn 4.18.1; npm, pnpm and Bun install it for you.";
+  "Yarn does not install a transitive peer dependency. @kinetixui/ui bundles charts built on recharts, which declares react-is as a peer, so add it yourself — and match your own React major, because react-is only recognises the React major it ships for. On React 19: yarn add react-is@^19. On React 18: yarn add react-is@^18. Do not run an unversioned yarn add react-is on React 18: it installs react-is 19, the build still succeeds, and chart cell fills are dropped with no error. Measured on Yarn Classic 1.22.22 and Yarn 4.18.1.";
+
+/*
+ * npm, pnpm and Bun do install the peer — at react-is 19, whichever React you are on. On React 19 that
+ * is correct and there is nothing to say. On React 18 it is the same mismatch the Yarn caveat warns
+ * about, reached without typing a command, so the note belongs on these three tabs too.
+ */
+const reactIs18Caveat = (add: string) =>
+  `On React 18, add react-is yourself: ${add}. @kinetixui/ui bundles charts built on recharts, which declares react-is as a peer; this manager installs that peer at react-is 19 whatever React you are on, and react-is recognises only the React major it ships for. The mismatch is silent — the install reports success, tsc and vite build both exit 0, and a chart's cell fills are dropped: measured 0 of 3 against recharts 3.11.0. On React 19 you need nothing extra.`;
 
 
 /**
@@ -139,7 +170,12 @@ export const OPERATIONS = {
     kind: "install",
     label: "Install the React library and tokens",
     packages: [PACKAGES.ui, PACKAGES.tokens],
-    caveats: { yarn: YARN_NEEDS_REACT_IS },
+    caveats: {
+      yarn: YARN_NEEDS_REACT_IS,
+      npm: reactIs18Caveat("npm install react-is@^18"),
+      pnpm: reactIs18Caveat("pnpm add react-is@^18"),
+      bun: reactIs18Caveat("bun add react-is@^18"),
+    },
     cwd: "project-root",
   },
   "install-tokens": {
@@ -176,6 +212,39 @@ export const OPERATIONS = {
     kind: "install-dev",
     label: "Install Tailwind CSS 3 build tools",
     packages: ["tailwindcss@3", "postcss", "autoprefixer"],
+    cwd: "project-root",
+  },
+  /**
+   * Charts are the one family where consuming the **package** needs a direct dependency the package
+   * route does not give you. `@kinetixui/ui`'s chart exports are wrappers — `chart.tsx` opens with
+   * `import * as RechartsPrimitive from "recharts"` — so drawing anything means the reader writing
+   * `<PieChart>`, `<Pie>` and `<Cell>` themselves, imported from `recharts`.
+   *
+   * On npm, Yarn and Bun that import happens to resolve, because all three hoist a transitive
+   * dependency to the top level. **pnpm does not**, by design, and the reader gets
+   * `TS2307: Cannot find module 'recharts'` and a failed build. Measured 2026-11-22 on pnpm 12.3.1:
+   * undeclared → `tsc` 2 and `vite build` 1; declared → both 0, from a clean install.
+   *
+   * `cli add chart` is unaffected — `apps/web/public/r/chart.json` declares recharts in its own
+   * `dependencies`, so the CLI installs it. This operation is for the package route only.
+   */
+  /*
+   * The React 18 remedy as a copyable command per manager. A plain dependency is enough on all four —
+   * measured with `--react-is-field=dependency-only` on each — so this is an ordinary install, not an
+   * `overrides` or `resolutions` entry.
+   */
+  "install-react-is-18": {
+    id: "install-react-is-18",
+    kind: "install",
+    label: "Install the react-is major that matches React 18",
+    packages: ["react-is@^18"],
+    cwd: "project-root",
+  },
+  "install-recharts": {
+    id: "install-recharts",
+    kind: "install",
+    label: "Install recharts, which the chart components take as children",
+    packages: ["recharts"],
     cwd: "project-root",
   },
   "cli-init": {
