@@ -3,8 +3,8 @@
  * create-studio-m3-resize-negative-controls.mjs — proof that the M3-C resize checks in
  * `scripts/create-studio-canvas-browser.mjs` can actually fail.
  *
- * Four defects were repaired on this branch. Three of them were invisible to the 25 checks the
- * gate already had, and the fourth was invisible to every gate in the repository, so each repair
+ * Five defects were repaired on this branch. Three of them were invisible to the 25 checks the
+ * gate already had, and two were invisible to every gate in the repository, so each repair
  * owes a control that reintroduces exactly that defect and shows the REAL gate going red for the
  * reason the repair exists — not merely going red.
  *
@@ -14,6 +14,9 @@
  *                             a narrow frame it is drawn hundreds of pixels from the edge it claims.
  *   guide-does-not-follow     the overlay's measurement stops depending on the candidate width, so
  *                             the guide stays at the edge the gesture started from.
+ *   camera-not-in-dependencies
+ *                             the overlay stops depending on the camera transform, so a pan during
+ *                             a resize moves the frame and leaves the guide behind.
  *   rtl-logical-property      the guide is placed with `inset-inline-start` again, which resolves to
  *                             `right` in a right-to-left document and mirrors a physical
  *                             measurement twice.
@@ -86,12 +89,22 @@ const CONTROLS = [
   {
     name: "guide-does-not-follow",
     file: "apps/web/src/components/create-studio/create-studio.tsx",
-    from: ["}, [canvas, nodeId, width, guide, rtl]);"],
-    to: ["}, [canvas, nodeId, guide, rtl]);"],
+    from: ["}, [canvas, nodeId, width, guide, rtl, camera]);"],
+    to: ["}, [canvas, nodeId, guide, rtl, camera]);"],
     owes: ["must be drawn on the frame's own rendered edge"],
     // The mirror image: the guide lags the frame by a step, so |off the frame| is small but
     // nonzero while |off the wrapper| stays huge. That is what separates it from control 2.
     discriminates: ({ frame, wrapper }) => frame !== null && Math.abs(frame) > 3 && Math.abs(wrapper) > 100,
+  },
+  {
+    name: "camera-not-in-dependencies",
+    file: "apps/web/src/components/create-studio/create-studio.tsx",
+    from: ["}, [canvas, nodeId, width, guide, rtl, camera]);"],
+    to: ["}, [canvas, nodeId, width, guide, rtl]);"],
+    // The fifth defect, reported by an exact-head review of this branch: a pan during a resize
+    // moves the frame without changing the width or the guide, so a measurement keyed only on those
+    // stays behind. This control is the one that proves the new dependency is load-bearing.
+    owes: ["a pan during a resize must keep the guide on the frame's rendered edge"],
   },
   {
     name: "rtl-logical-property",

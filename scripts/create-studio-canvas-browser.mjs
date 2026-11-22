@@ -660,6 +660,43 @@ try {
   await studio.getByRole("button", { name: "Reset view", exact: true }).click();
   pass("the guide follows the frame's rendered edge through the canvas transform");
 
+  // ------------------------------------------------- the camera moving DURING a resize
+  // Found by an independent exact-head review of this PR, and reachable: the canvas's own arrow-key
+  // handler pans by 24px and fires only while the canvas ITSELF holds focus — which a pointer
+  // resize never takes away, because the handle's pointer-down prevents the default focus change.
+  // An arrow press mid-drag therefore moves `.studio-world`, and the frame with it, while the
+  // candidate width and the snap guide are both unchanged. A measurement keyed only on those stayed
+  // at coordinates the frame had already left.
+  //
+  // Both preconditions are MEASURED before the assertion, because a check that silently fails to
+  // move the camera, or to leave focus on the canvas, would pass against the defect it exists for.
+  await setWidth(320);
+  await studio.locator(".studio-canvas").evaluate(el => el.focus());
+  narrowPoint = await handlePoint();
+  await dragFromTo(narrowPoint, { x: narrowPoint.x + 50, y: narrowPoint.y }, { release: false });
+  const beforePan = await drawnGeometry();
+  assert.ok(Math.abs(beforePan.centre - beforePan.section.right) <= 2, `the guide must start on the frame's edge for this check to mean anything (off by ${Math.round(beforePan.centre - beforePan.section.right)}px)`);
+  const focusHeld = await page.evaluate(() => document.activeElement?.classList.contains("studio-canvas") ?? false);
+  assert.ok(focusHeld, "the canvas must still hold focus through the pointer press, or the pan this check depends on cannot be triggered");
+  const transformBefore = await studio.locator(".studio-world").getAttribute("style");
+  await page.keyboard.press("ArrowRight");
+  await page.waitForFunction(previous => (document.querySelector(".studio-world")?.getAttribute("style") ?? "") !== previous, transformBefore, { timeout: 10_000 });
+  // Two frames after the camera's own commit, so the overlay's re-measurement has been painted.
+  // This waits on the PERTURBATION, never on the quantity being asserted.
+  await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+  const afterPan = await drawnGeometry();
+  measurements.guideUnderPan = {
+    frameMoved: Math.round(afterPan.section.right - beforePan.section.right),
+    widthUnchanged: afterPan.text === beforePan.text,
+    offsetFromFrame: Math.round(afterPan.centre - afterPan.section.right),
+  };
+  assert.ok(Math.abs(afterPan.section.right - beforePan.section.right) >= 20, `the pan must actually move the rendered frame, or there is nothing to track (moved ${Math.round(afterPan.section.right - beforePan.section.right)}px)`);
+  assert.equal(afterPan.text, beforePan.text, "and must leave the candidate width alone, which is what makes the stale-dependency defect reachable");
+  assert.ok(Math.abs(afterPan.centre - afterPan.section.right) <= 2, `a pan during a resize must keep the guide on the frame's rendered edge (off by ${Math.round(afterPan.centre - afterPan.section.right)}px after the frame moved ${Math.round(afterPan.section.right - beforePan.section.right)}px)`);
+  await page.keyboard.press("Escape");
+  await studio.getByRole("button", { name: "Reset view", exact: true }).click();
+  pass("a camera pan during a resize keeps the guide on the frame's rendered edge");
+
   // ------------------------------------------------- RTL
   // The guide belongs on the edge being dragged, which in a right-to-left document is the frame's
   // LEFT edge. Direction is a property of the document, not of the screen.

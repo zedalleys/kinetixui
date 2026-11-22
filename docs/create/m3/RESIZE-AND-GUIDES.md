@@ -156,17 +156,36 @@ new ones measure:
 | the guide on the rendered edge | guide centre within **2px** of the frame's own edge, 560px from the wrapper's |
 | a snapped guide | drawn at the rendered edge it announces, within 2px, label `768px · Tablet · 768px` |
 | the guide under the camera | within 2px at 120% zoom |
+| a camera pan during a resize | the frame moved 24px with the candidate width unchanged, and the guide stayed **1px** from its edge |
 | the guide in RTL | on the frame's own **left** edge within 2px, with the right edge 370px away, and the label on the leading side |
 | keyboard reachability | the handle focusable with slider semantics, one press advancing the effective width by one |
 | 200% text in reduced motion | root font size 32px, `prefers-reduced-motion` actually matching, the handle still on the frame's edge, 0 axe violations, no runtime error |
 
-Two measurement rules this slice earned, both of which first produced a false positive:
+### 5. A pan during a resize left the guide behind
+
+Reported by an independent exact-head review of the repair branch. The canvas's own arrow-key
+handler pans by 24px and fires only while the canvas *itself* holds focus — which a pointer resize
+never takes away, because the handle's pointer-down calls `preventDefault()` and so the default
+focus change never happens. An arrow press mid-drag therefore moves `.studio-world`, and the frame
+with it, while the candidate width and the snap guide are both unchanged: a measurement keyed only
+on those stayed at coordinates the frame had already left. Zoom moves the frame the same way.
+
+The camera transform is now a dependency of the measurement. Its check measures both preconditions
+before asserting anything — that focus really is still on the canvas, and that the pan really did
+move the rendered frame — because a check that silently failed to do either would pass against the
+very defect it exists for.
+
+Three measurement rules this slice earned, each of which first produced a false positive:
 
 - **Read the guide and the frame in one evaluation**, after the overlay has rendered the candidate
   width the handle announces. Two separate reads straddle a render, and the few pixels of lag are
   indistinguishable from a placement defect.
 - **A 390 viewport hides defect 2 entirely**, because there the frame fills the artboard and the two
   edges coincide. Every earlier check runs at 390.
+- **Wait on the perturbation, never on the quantity asserted.** The pan check waits for
+  `.studio-world`'s transform to change and then two animation frames, so the overlay's own
+  re-measurement has been painted — but it never waits for the guide to reach the edge, which is
+  exactly what it is there to measure.
 
 ## Negative controls
 

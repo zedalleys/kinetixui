@@ -53,12 +53,18 @@ function draftsFor(account: Account, product: Product): Draft[] {
   }).sort((a, b) => b.updatedAt - a.updatedAt);
 }
 const nodeLabel = (node: Node) => node.metadata?.name ?? (node.ref === "layout:section" ? String(node.props?.name ?? "Frame") : node.ref ? ADAPTERS[node.ref]?.label ?? node.ref : "Page");
-function ResizeOverlay({ canvas, nodeId, width, guide, rtl }: { canvas: HTMLElement | null; nodeId: string; width: number; guide: string | null; rtl: boolean }) {
+function ResizeOverlay({ canvas, nodeId, width, guide, rtl, camera }: { canvas: HTMLElement | null; nodeId: string; width: number; guide: string | null; rtl: boolean; camera: string }) {
   // Measured AFTER the commit that applies the candidate width, not during it. Reading the rect in
   // the render body reads the DOM as it still is, so the guide trailed the frame by one gesture
   // step — a measured 2px at a twelve-step drag, and proportionally more the faster the pointer
   // moves. A layout effect runs after the style lands and before paint, so nothing is ever drawn at
   // the stale edge. `width` and `guide` are in the dependencies because they are what moves it.
+  //
+  // `camera` is in them too, and it is not redundant: the canvas's own arrow-key handler pans by
+  // 24px, and the handle's pointer-down prevents the default focus change, so the canvas can still
+  // hold focus through a pointer resize. An arrow press then moves `.studio-world` — and the frame
+  // with it — while the candidate width and the guide are both unchanged, which left the line and
+  // the label at coordinates the frame had already left. Zoom moves the frame the same way.
   const [geometry, setGeometry] = React.useState<{ edge: number; height: number; top: number; frameWidth: number } | null>(null);
   React.useLayoutEffect(() => {
     if (!canvas) { setGeometry(null); return; }
@@ -76,7 +82,7 @@ function ResizeOverlay({ canvas, nodeId, width, guide, rtl }: { canvas: HTMLElem
     const node = section.getBoundingClientRect();
     const next = { edge: (rtl ? node.left : node.right) - frame.left, height: frame.height, top: node.top - frame.top, frameWidth: frame.width };
     setGeometry(previous => previous && Object.keys(next).every(key => Math.abs(previous[key as keyof typeof next] - next[key as keyof typeof next]) < 0.5) ? previous : next);
-  }, [canvas, nodeId, width, guide, rtl]);
+  }, [canvas, nodeId, width, guide, rtl, camera]);
   if (!geometry) return null;
   const { edge, height, top, frameWidth } = geometry;
   // `edge` is a PHYSICAL distance from the canvas's left, read off a rect, so it is placed with
@@ -509,7 +515,7 @@ export function CreateStudio() {
                     {page.root.children?.length ? <NodeView node={page.root} selection={history.selection} onSelect={select} onNodePointerDown={(id, event) => { if (event.button === 0) beginDrag(event, { kind: "move", ids: history.selection.includes(id) ? history.selection : [id] }); }} dropParentId={dropHint?.parentId ?? null} resize={{ active: interaction.mode === "resize" ? { nodeId: interaction.nodeId, width: interaction.width } : null, limits: FRAME_WIDTH, onStart: (id, width, event) => beginResize(event, id, width), onSet: applyWidth }} editWidth={viewport} dir={rtl ? "rtl" : "ltr"} /> : <div className="studio-empty"><h2>A new screen, ready for you.</h2><p>Add a frame, then fill it with components.</p><Button disabled={readOnly} onClick={() => insert("layout:section")}><Plus className="size-4" />Add frame</Button></div>}
                   </div>}
               </div>
-              {interaction.mode === "resize" && <ResizeOverlay canvas={canvasRef.current} nodeId={interaction.nodeId} width={interaction.width} guide={interaction.guide} rtl={rtl} />}
+              {interaction.mode === "resize" && <ResizeOverlay canvas={canvasRef.current} nodeId={interaction.nodeId} width={interaction.width} guide={interaction.guide} rtl={rtl} camera={`${offset.x},${offset.y},${zoom}`} />}
               {interaction.mode === "drag" && <DropOverlay canvas={canvasRef.current} hint={dropHint} label={interaction.intent.kind === "insert" ? adapterFor(interaction.intent.ref).label : `${interaction.intent.ids.length} layer${interaction.intent.ids.length > 1 ? "s" : ""}`} x={interaction.x} y={interaction.y} />}
             </div>
             <p className="studio-announcement" role="status">{interaction.mode === "drag" ? (dropHint?.rejected ?? "Release to place it here.") : interaction.mode === "resize" ? `${interaction.width} pixels${interaction.guide ? ` · snapped to ${interaction.guide}` : ""}` : ""}</p>
