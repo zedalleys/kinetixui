@@ -68,19 +68,19 @@ describe("link checker negative controls", () => {
     collectAnchors();
     const el = document.createElement("div");
     el.innerHTML = [
-      '<a href="/use-cases/healthcare">x</a>',
+      '<a href="/use-cases/kx-no-such-domain">x</a>',
       '<a href="/blocks#no-such-block">x</a>',
       '<a href="/capabilities#workflow-no-such">x</a>',
       '<a href="/use-cases/commerce#flight-booking">x</a>',
-      '<a href="/components?domain=healthcare">x</a>',
+      '<a href="/components?domain=kx-no-such-domain">x</a>',
       '<a href="#nowhere">x</a>',
     ].join("");
     expect(problems(el)).toEqual([
-      "/use-cases/healthcare: no such page",
+      "/use-cases/kx-no-such-domain: no such page",
       "/blocks#no-such-block: no such block",
       "/capabilities#workflow-no-such: no #workflow-no-such on /capabilities",
       "/use-cases/commerce#flight-booking: no workflow #flight-booking on /use-cases/commerce",
-      "/components?domain=healthcare: /components does not offer this domain",
+      "/components?domain=kx-no-such-domain: /components does not offer this domain",
       "#nowhere: no such anchor on this page",
     ]);
   });
@@ -112,9 +112,15 @@ describe("Use Cases hub (/capabilities)", () => {
       const toPage = within(card).queryAllByRole("link").filter((a) => a.getAttribute("href") === `/use-cases/${d.id}`);
       expect(toPage.length > 0, d.id).toBe(d.page);
     }
-    // planned-only domains are named, never given a card
-    expect(document.getElementById("domain-healthcare")).toBeNull();
-    expect(screen.getByText(/On the roadmap with nothing shipped yet: Healthcare/)).toBeInTheDocument();
+    // Planned-only domains are named, never given a card. Which domains those are is data, so the
+    // assertion reads it rather than naming one: M5.26's healthcare and logistics blocks made the last
+    // two planned-only domains ship, and a test that had written "Healthcare" into the sentence then
+    // failed for the right reason in the wrong place.
+    const plannedOnly = DOMAINS.filter((d) => d.counts.existing + d.counts.partial === 0);
+    for (const d of plannedOnly) expect(document.getElementById(`domain-${d.id}`), d.id).toBeNull();
+    const roadmap = screen.queryByText(/On the roadmap with nothing shipped yet:/);
+    expect(Boolean(roadmap), `${plannedOnly.length} planned-only domain(s)`).toBe(plannedOnly.length > 0);
+    for (const d of plannedOnly) expect(roadmap!.textContent).toContain(d.title);
   });
 
   it("sends IoT to the IoT module and says no block or catalogue component exists for it", () => {

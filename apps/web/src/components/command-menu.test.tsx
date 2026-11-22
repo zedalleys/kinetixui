@@ -321,7 +321,15 @@ describe("CommandMenu: blocks and use cases (BD-W3b1)", { timeout: 20_000 }, () 
   it("never offers a use-case page that does not exist", async () => {
     serve();
     const { user, d } = await open();
+    // Healthcare has no /use-cases page (the projection admits a domain only once `page` is true), but since
+    // M5.26 it does have blocks. So the proof is the absence of the Use cases group, not an absence of
+    // results: this test used to assert zero options, which passed only while nothing healthcare-related
+    // shipped at all and said nothing about the rule it is named after.
     await search(user, d, "healthcare");
+    expect(within(d).queryByRole("group", { name: "Use cases" })).toBeNull();
+    expect(within(d).queryAllByRole("option").length).toBeGreaterThan(0);
+    // A term that matches nothing at all still says so.
+    await search(user, d, "kx-no-such-destination");
     expect(within(d).queryAllByRole("option")).toEqual([]);
     expect(within(d).getByText("No results found.")).toBeInTheDocument();
   });
@@ -379,7 +387,9 @@ describe("CommandMenu: blocks and use cases (BD-W3b1)", { timeout: 20_000 }, () 
     }
     await user.keyboard("{ArrowDown}");
     await waitFor(pointsAtHighlight);
-    await search(user, d, "healthcare");
+    // A term with no results at all: nothing is highlighted, so nothing may be pointed at. "healthcare"
+    // was that term until M5.26 gave it blocks.
+    await search(user, d, "kx-no-such-destination");
     await waitFor(() => expect(input).not.toHaveAttribute("aria-activedescendant"));
   });
 

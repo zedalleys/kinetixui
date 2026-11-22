@@ -492,6 +492,16 @@ jobs:
       - name: Documented React onboarding in a clean consumer
         run: node scripts/adoption/react-consumer.mjs
 
+      # The step above proves the documented INSTALLATION example compiles for a consumer. A block is a
+      # different artifact and a different risk: it is a whole composition people copy wholesale, so a
+      # primitive that is implemented but not exported from the package entry resolves inside this
+      # workspace and fails for everyone else. One published block per industry M5.26 implements is
+      # copied verbatim into a fixture outside the workspace, typechecked and built against packed
+      # artifacts, and required to survive into the bundle — otherwise a tree-shaken run would pass
+      # while compiling nothing.
+      - name: Blocks in a clean consumer (one per implemented industry)
+        run: node scripts/adoption/react-block-consumer.mjs
+
       - name: Build site
         run: pnpm build:web
 

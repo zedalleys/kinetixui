@@ -169,7 +169,13 @@ export function Showcase({
                 className={cn(
                   // wide demos scroll inside their frame; `safe center` keeps overflowing content reachable (plain center
                   // would clip its start edge), with `center` as the fallback for browsers without it
-                  "flex min-h-[280px] w-full items-center justify-center overflow-x-auto border-t border-border bg-background p-8 supports-[justify-content:safe_center]:[justify-content:safe_center]",
+                  //
+                  // The padding is halved below `sm` because it scales with the text: `p-8` is 2rem, so at
+                  // 200% text it took 128px of a 390px phone and left the demo 194px. That is what clipped
+                  // the boarding pass's Copy button under this frame's own `overflow-x`, where no scroll
+                  // could recover it — a loss of content under WCAG 1.4.4, found by check:blocks-runtime.
+                  // Halving it below `sm` only ever gives the demo more room; the desktop frame is unchanged.
+                  "flex min-h-[280px] w-full items-center justify-center overflow-x-auto border-t border-border bg-background p-4 sm:p-8 supports-[justify-content:safe_center]:[justify-content:safe_center]",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                   contentClassName,
                 )}

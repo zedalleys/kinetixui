@@ -11,6 +11,7 @@
 import type { ComponentType } from "react";
 import { AccountSecurityBlock } from "@/examples/blocks/account-security";
 import { AlertStackBlock } from "@/examples/blocks/alert-stack";
+import { AppointmentBookingBlock } from "@/examples/blocks/appointment-booking";
 import { BoardingPassBlock } from "@/examples/blocks/boarding-pass";
 import { CommentBoxBlock } from "@/examples/blocks/comment-box";
 import { CreateAccountBlock } from "@/examples/blocks/create-account";
@@ -26,11 +27,13 @@ import { PricingTierBlock } from "@/examples/blocks/pricing-tier";
 import { ProfileFormBlock } from "@/examples/blocks/profile-form";
 import { ReceiptBlock } from "@/examples/blocks/receipt";
 import { SettingsListBlock } from "@/examples/blocks/settings-list";
+import { ShipmentTrackingBlock } from "@/examples/blocks/shipment-tracking";
 import { SignInBlock } from "@/examples/blocks/sign-in";
 import { StatCardsBlock } from "@/examples/blocks/stat-cards";
 import { TableToolbarBlock } from "@/examples/blocks/table-toolbar";
 import { TeamMembersBlock } from "@/examples/blocks/team-members";
 import { TestimonialBlock } from "@/examples/blocks/testimonial";
+import { VitalsSummaryBlock } from "@/examples/blocks/vitals-summary";
 
 export const blockPreviews: Record<string, ComponentType> = {
   "sign-in": SignInBlock,
@@ -55,4 +58,7 @@ export const blockPreviews: Record<string, ComponentType> = {
   "create-account": CreateAccountBlock,
   "receipt": ReceiptBlock,
   "boarding-pass": BoardingPassBlock,
+  "appointment-booking": AppointmentBookingBlock,
+  "vitals-summary": VitalsSummaryBlock,
+  "shipment-tracking": ShipmentTrackingBlock,
 };

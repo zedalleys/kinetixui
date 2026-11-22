@@ -38,9 +38,18 @@ export function OrderSummaryBlock() {
       </CardHeader>
       <CardContent className="grid gap-4">
         <ul className="grid gap-4">
+          {/*
+            `flex-wrap` on each row below is load-bearing at large text, not tidiness. The row was a fixed
+            one-line flex: at 200% text the name took its share and the stepper was squeezed to 161px
+            against the 178px its own two buttons and field need, so the wrapper's `overflow-hidden` cut
+            17px off and the quantity digit no longer fitted its field. A person at 200% text could not
+            read the quantity they had chosen — WCAG 1.4.4. Wrapping lets the stepper drop to its own line
+            rather than be compressed below its minimum. Found by this milestone's new 200%-text clipping
+            check, after Codex pointed out that check only looked at ancestors, never inside the block.
+          */}
           {ITEMS.map((item) => (
-            <li key={item.id} className="flex items-center justify-between gap-3">
-              <div className="grid gap-0.5">
+            <li key={item.id} className="flex flex-wrap items-center justify-between gap-3">
+              <div className="grid min-w-0 gap-0.5">
                 <span className="text-sm">{item.name}</span>
                 <span className="text-xs text-muted-foreground">{money(item.unit)} each</span>
               </div>

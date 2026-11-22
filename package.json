@@ -151,6 +151,7 @@
     "check:native-publish-preflight": "node scripts/check-native-publish-preflight.mjs",
     "check:release-approval-gate": "node scripts/check-release-approval-gate.mjs",
     "check:swiftui-mirror": "node scripts/adoption/swiftui-mirror-consumer.mjs",
+    "check:block-consumer": "node scripts/adoption/react-block-consumer.mjs",
     "check:angular-api": "node scripts/angular-package/api-snapshot.mjs --check",
     "check:angular-graduation": "node scripts/check-angular-graduation.mjs",
     "check:angular-browser": "node scripts/angular-browser.mjs",

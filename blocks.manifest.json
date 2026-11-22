@@ -7,6 +7,7 @@
     "Forms",
     "Data",
     "Application",
+    "Scheduling",
     "Commerce",
     "Feedback",
     "Marketing"
@@ -301,6 +302,45 @@
         "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/ReceiptBlockTests.swift",
         "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/ReceiptBlockTest.kt",
         "Flutter": "packages/ui-flutter/test/blocks/receipt_block_test.dart"
+      }
+    },
+    "appointment-booking": {
+      "title": "Appointment booking",
+      "description": "Time-slot picker + the facts that decide a time, with a confirmed state.",
+      "category": "Scheduling",
+      "status": "beta",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/appointment-booking.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/appointment-booking.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/AppointmentBookingBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AppointmentBookingBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart"
+      }
+    },
+    "vitals-summary": {
+      "title": "Observations summary",
+      "description": "Monitored readings against their reference range, with freshness and source.",
+      "category": "Data",
+      "status": "beta",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/vitals-summary.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/vitals-summary.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/VitalsSummaryBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/VitalsSummaryBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart"
+      }
+    },
+    "shipment-tracking": {
+      "title": "Shipment tracking",
+      "description": "Consignment history with an exception that carries its own action.",
+      "category": "Application",
+      "status": "beta",
+      "sources": {
+        "React": "apps/web/src/examples/blocks/shipment-tracking.tsx",
+        "Angular": "packages/ui-angular/src/examples/blocks/shipment-tracking.ts",
+        "SwiftUI": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/ShipmentTrackingBlockTests.swift",
+        "Compose": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/ShipmentTrackingBlockTest.kt",
+        "Flutter": "packages/ui-flutter/test/blocks/shipment_tracking_block_test.dart"
       }
     }
   }

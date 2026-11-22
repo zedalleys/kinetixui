@@ -38,6 +38,39 @@ class KinetixTag extends StatelessWidget {
       KinetixTagVariant.outline => (Colors.transparent, c.foreground, c.border),
     };
 
+    final Widget text = Text(
+      label,
+      style: AppText.labelMd.copyWith(color: fg),
+      // `longestLine`, not the default `parent`. A `Text` given a BOUNDED width reports that width as
+      // its size, not the width of the words in it — so making the label flexible below, which is what
+      // lets it wrap, also made every tag inside any bounded container stretch to that container's
+      // width. Measured: a `Paid` tag that hugs at 66px became 146px inside a 146px box, and in
+      // `KinetixMultiSelect`'s `Wrap` each chip would have taken a whole row. `longestLine` makes the
+      // paragraph report the words instead, so the tag hugs its label exactly as it always did while
+      // still wrapping when there is not room for one line. Found by `test/tag_wrapping_test.dart`'s
+      // short-label case, which exists for precisely this: proving the wrapping fix is not a layout
+      // rewrite of every tag in the system.
+      textWidthBasis: TextWidthBasis.longestLine,
+    );
+
+    // The label must WRAP inside the tag rather than run past it. A Row hands an INFLEXIBLE child
+    // unbounded width, so the label measured at its full single-line length: at 200% text a two-word tag
+    // overflowed its container and the word was clipped, leaving a status that reads as absent. That is
+    // worse than a tag on two lines. WCAG 1.4.4. Found by M5.26's phone-width 200%-text gate on the vitals
+    // block, once the block's own two overflows were fixed and the next one surfaced in here.
+    //
+    // `Flexible` UNCONDITIONALLY, with no LayoutBuilder choosing between two forms. A `LayoutBuilder`
+    // was the first version of this and it was wrong twice over. `RenderFlex` permits a LOOSE flexible
+    // child under unbounded constraints when `mainAxisSize` is `min`, which this Row already is — its
+    // assertion fires only for `MainAxisSize.max` or a TIGHT fit, and `Flexible` defaults to loose. So
+    // there was nothing to guard against: under an unbounded width the flexible child is handed an
+    // unbounded constraint and measures one line, exactly as the inflexible form did.
+    //
+    // And the guard did real harm. `LayoutBuilder` THROWS when asked for an intrinsic dimension (and
+    // with assertions off returns zero instead), so `IntrinsicWidth(child: KinetixTag(...))`,
+    // `IntrinsicHeight` around a row of tags, and a `Table` column sized intrinsically all broke on a
+    // layout that worked before. Found by Codex's exact-head review of `2415c61`; pinned by the
+    // intrinsic-sizing cases in `test/tag_wrapping_test.dart`.
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -48,15 +81,12 @@ class KinetixTag extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            label,
-            style: AppText.labelMd.copyWith(color: fg),
-          ),
+          Flexible(child: text),
           if (onRemove != null) ...[
             const SizedBox(width: 4),
-            // A named button, not a bare GestureDetector: without a name and a role a screen reader cannot
-            // find the control or say what it does — and without a semantics tap action (which the
-            // `excludeSemantics` this used to carry dropped), it cannot activate it either.
+            // A named button, not a bare GestureDetector: without a name and a role a screen reader
+            // cannot find the control or say what it does — and without a semantics tap action (which
+            // the `excludeSemantics` this used to carry dropped), it cannot activate it either.
             IconControl(
               label: removeLabel ?? 'Remove $label',
               onTap: onRemove,

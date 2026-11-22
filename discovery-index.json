@@ -1037,6 +1037,28 @@
       "blocks": [],
       "iot": []
     },
+    "AppointmentBooking": {
+      "name": "AppointmentBooking",
+      "status": "existing",
+      "delivery": "block",
+      "layer": "L4",
+      "components": [],
+      "blocks": [
+        "appointment-booking"
+      ],
+      "iot": []
+    },
+    "ObservationsSummary": {
+      "name": "ObservationsSummary",
+      "status": "existing",
+      "delivery": "block",
+      "layer": "L4",
+      "components": [],
+      "blocks": [
+        "vitals-summary"
+      ],
+      "iot": []
+    },
     "Map controls": {
       "name": "Map controls",
       "status": "planned",
@@ -1080,6 +1102,17 @@
       "layer": "L3",
       "components": [],
       "blocks": [],
+      "iot": []
+    },
+    "ShipmentTracking": {
+      "name": "ShipmentTracking",
+      "status": "existing",
+      "delivery": "block",
+      "layer": "L4",
+      "components": [],
+      "blocks": [
+        "shipment-tracking"
+      ],
       "iot": []
     },
     "IoT controls": {
@@ -1679,7 +1712,7 @@
         }
       ],
       "counts": {
-        "existing": 4,
+        "existing": 6,
         "partial": 4,
         "planned": 10
       },
@@ -1693,10 +1726,12 @@
         "tag"
       ],
       "blocks": [
+        "appointment-booking",
         "dashboard-tabs",
         "filter-panel",
         "stat-cards",
-        "table-toolbar"
+        "table-toolbar",
+        "vitals-summary"
       ],
       "iot": [],
       "rows": [
@@ -1717,7 +1752,9 @@
         "AppointmentCard / AppointmentStatus",
         "ClinicalTimeline",
         "LabResultTable",
-        "ConsentStatus"
+        "ConsentStatus",
+        "AppointmentBooking",
+        "ObservationsSummary"
       ]
     },
     {
@@ -2070,19 +2107,22 @@
         }
       ],
       "counts": {
-        "existing": 0,
+        "existing": 1,
         "partial": 0,
         "planned": 5
       },
       "components": [],
-      "blocks": [],
+      "blocks": [
+        "shipment-tracking"
+      ],
       "iot": [],
       "rows": [
         "Map controls",
         "MapMarker / MapMarkerCard / MapCluster",
         "RouteSummary",
         "FleetVehicleCard / VehicleStatus",
-        "ShipmentCard / ShipmentStatus / ShipmentTimeline / TrackingTimeline / DeliveryStatus"
+        "ShipmentCard / ShipmentStatus / ShipmentTimeline / TrackingTimeline / DeliveryStatus",
+        "ShipmentTracking"
       ]
     },
     {
@@ -2707,32 +2747,45 @@
       "summary": "Patient summaries, vitals, medications, appointments and lab results.",
       "page": false,
       "counts": {
-        "existing": 0,
+        "existing": 5,
         "partial": 0,
         "planned": 7
       },
-      "components": [],
-      "blocks": [],
+      "components": [
+        "reference-code",
+        "result-state",
+        "time-slot-picker"
+      ],
+      "blocks": [
+        "appointment-booking",
+        "vitals-summary"
+      ],
       "iot": [],
       "capabilities": [
-        "data-analytics"
+        "data-analytics",
+        "transactions",
+        "booking-scheduling"
       ],
-      "workflows": [],
+      "workflows": [
+        "appointment-booking"
+      ],
       "rows": [
+        "ResultState",
+        "ReferenceCode",
+        "TimeSlotPicker",
         "PatientSummary / PatientStatus / PatientAlert",
         "VitalSign",
         "MedicationList",
         "AppointmentCard / AppointmentStatus",
         "ClinicalTimeline",
         "LabResultTable",
-        "ConsentStatus"
+        "ConsentStatus",
+        "AppointmentBooking",
+        "ObservationsSummary"
       ],
       "publication": {
-        "eligible": false,
-        "unmet": [
-          "has no workflow",
-          "0 shipping catalogue components or blocks, fewer than 5"
-        ]
+        "eligible": true,
+        "unmet": []
       }
     },
     {
@@ -2741,12 +2794,14 @@
       "summary": "Maps, routes, vehicles and shipment tracking.",
       "page": false,
       "counts": {
-        "existing": 0,
+        "existing": 1,
         "partial": 0,
         "planned": 5
       },
       "components": [],
-      "blocks": [],
+      "blocks": [
+        "shipment-tracking"
+      ],
       "iot": [],
       "capabilities": [
         "spatial"
@@ -2757,13 +2812,14 @@
         "MapMarker / MapMarkerCard / MapCluster",
         "RouteSummary",
         "FleetVehicleCard / VehicleStatus",
-        "ShipmentCard / ShipmentStatus / ShipmentTimeline / TrackingTimeline / DeliveryStatus"
+        "ShipmentCard / ShipmentStatus / ShipmentTimeline / TrackingTimeline / DeliveryStatus",
+        "ShipmentTracking"
       ],
       "publication": {
         "eligible": false,
         "unmet": [
           "has no workflow",
-          "0 shipping catalogue components or blocks, fewer than 5"
+          "1 shipping catalogue components or blocks, fewer than 5"
         ]
       }
     },
@@ -2860,7 +2916,7 @@
       "summary": "Fields and zones, crop cycles, soil and weather telemetry, irrigation and yield.",
       "page": false,
       "counts": {
-        "existing": 11,
+        "existing": 12,
         "partial": 4,
         "planned": 11
       },
@@ -2876,6 +2932,7 @@
       "blocks": [
         "dashboard-tabs",
         "filter-panel",
+        "shipment-tracking",
         "stat-cards",
         "table-toolbar"
       ],
@@ -2933,6 +2990,7 @@
         "RouteSummary",
         "FleetVehicleCard / VehicleStatus",
         "ShipmentCard / ShipmentStatus / ShipmentTimeline / TrackingTimeline / DeliveryStatus",
+        "ShipmentTracking",
         "IoT controls",
         "IoT monitoring",
         "IoT summaries & cards",
@@ -3175,6 +3233,41 @@
       "coverage": {
         "existing": 3,
         "partial": 1,
+        "planned": 0
+      }
+    },
+    {
+      "id": "appointment-booking",
+      "title": "Booking an appointment",
+      "domain": "healthcare",
+      "summary": "From the times a provider offers to a confirmed booking the patient can quote back.",
+      "stages": [
+        {
+          "title": "See what is offered",
+          "rows": [
+            "AppointmentBooking"
+          ],
+          "status": "existing"
+        },
+        {
+          "title": "Choose a time",
+          "rows": [
+            "TimeSlotPicker"
+          ],
+          "status": "existing"
+        },
+        {
+          "title": "Confirm",
+          "rows": [
+            "ResultState",
+            "ReferenceCode"
+          ],
+          "status": "existing"
+        }
+      ],
+      "coverage": {
+        "existing": 3,
+        "partial": 0,
         "planned": 0
       }
     }
@@ -4149,12 +4242,14 @@
       "domains": [
         "commerce",
         "travel-booking",
-        "finance"
+        "finance",
+        "healthcare"
       ],
       "workflows": [
         "checkout",
         "flight-booking",
-        "money-transfer"
+        "money-transfer",
+        "appointment-booking"
       ],
       "buildsToward": [
         "Domain result screens",
@@ -4188,12 +4283,14 @@
       "domains": [
         "commerce",
         "travel-booking",
-        "finance"
+        "finance",
+        "healthcare"
       ],
       "workflows": [
         "checkout",
         "flight-booking",
-        "money-transfer"
+        "money-transfer",
+        "appointment-booking"
       ],
       "buildsToward": [
         "TransactionCard",
@@ -4412,9 +4509,12 @@
         "booking-scheduling"
       ],
       "domains": [
-        "travel-booking"
+        "travel-booking",
+        "healthcare"
       ],
-      "workflows": [],
+      "workflows": [
+        "appointment-booking"
+      ],
       "buildsToward": [
         "AvailabilityPicker / AppointmentPicker"
       ]
@@ -4498,6 +4598,17 @@
       ],
       "domains": [],
       "workflows": []
+    },
+    "appointment-booking": {
+      "capabilities": [
+        "data-analytics"
+      ],
+      "domains": [
+        "healthcare"
+      ],
+      "workflows": [
+        "appointment-booking"
+      ]
     },
     "boarding-pass": {
       "capabilities": [
@@ -4617,6 +4728,16 @@
       "domains": [],
       "workflows": []
     },
+    "shipment-tracking": {
+      "capabilities": [
+        "spatial"
+      ],
+      "domains": [
+        "logistics",
+        "agriculture"
+      ],
+      "workflows": []
+    },
     "sign-in": {
       "capabilities": [
         "identity-security"
@@ -4654,6 +4775,15 @@
     "testimonial": {
       "capabilities": [],
       "domains": [],
+      "workflows": []
+    },
+    "vitals-summary": {
+      "capabilities": [
+        "data-analytics"
+      ],
+      "domains": [
+        "healthcare"
+      ],
       "workflows": []
     }
   }

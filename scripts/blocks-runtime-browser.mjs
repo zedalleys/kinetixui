@@ -17,7 +17,8 @@
  *
  * Only what a passage asserts counts. The accessibility pass runs axe over each block's own preview in light
  * and dark, left-to-right and right-to-left. The interaction passes drive one block each and assert what changed:
- * order summary by keyboard and by pointer, receipt and the boarding pass by keyboard. A block with no interaction passage here stays Build verified on React.
+ * order summary by keyboard and by pointer, receipt and the boarding pass by keyboard, appointment booking by keyboard
+ * through its whole radio-group model. A block with no interaction passage here stays Build verified on React.
  */
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -208,21 +209,231 @@ const block = (page, slug) => page.locator(`[id="${slug}"] [data-showcase-previe
     ok("boarding-pass: gate and seat are text, the code is one named image, and Enter on the copy button puts the confirmation code on the clipboard and announces it");
   await context.close();
 }
+// kx-verify-block: interaction
+{
+  // appointment-booking: the slots are a radio group, so the keyboard model is the contract — one tab stop
+  // for the group, arrows between available times, and an unavailable time skipped rather than merely
+  // greyed. Confirm must stay disabled until a time exists, and the outcome must reach the live region that
+  // is in the DOM from first render (see the block's own note on why `announce` is not used).
+  const { context, page } = await open();
+  const root = block(page, "appointment-booking");
+  const group = root.getByRole("radiogroup", { name: /available times/i });
+  const confirm = root.getByRole("button", { name: "Confirm appointment" });
+  const status = root.locator('[role="status"]').first();
+
+  // The group is named, and its unavailable times are disabled rather than absent: a slot that is gone
+  // without a word is a different claim from one a reader can see is taken.
+  if ((await group.count()) !== 1) fail(`appointment-booking: expected one named radio group, found ${await group.count()}`);
+  const slots = group.getByRole("radio");
+  const total = await slots.count();
+  const disabled = await group.locator('[role="radio"][aria-disabled="true"], [role="radio"][data-disabled]').count();
+  if (total !== 7) fail(`appointment-booking: the group offers ${total} times, expected 7`);
+  if (disabled !== 2) fail(`appointment-booking: ${disabled} times read as unavailable, expected 2`);
+
+  // Nothing is chosen yet, so the action is disabled AND the reason is on the page rather than implied.
+  if (!(await confirm.isDisabled())) fail("appointment-booking: Confirm is enabled before any time is chosen");
+  if (!(await root.getByText("Choose a time to continue.").count()))
+    fail("appointment-booking: the disabled Confirm button has no sentence explaining why");
+  // The live region exists before it has anything to say — which is the condition that makes the
+  // announcement land at all.
+  if ((await status.count()) !== 1) fail("appointment-booking: no live region is present before the outcome");
+
+  // Keyboard. Focus is placed ON the group's entry point rather than tabbed to from the top of the page:
+  // /blocks carries 25 showcases, so a Tab count from the document start measures where this block sits in
+  // the page, not how the group behaves. Everything asserted below is local to the group.
+  //
+  // Two things this passage learned the hard way, both recorded because the first versions of it reported
+  // defects in a component that was working:
+  //
+  //   settle after the key   roving focus moves through React state, so reading `:focus` on the next line
+  //                          measures the frame BEFORE the move. Without the wait this "found" that the
+  //                          arrow keys did nothing.
+  //   arrows SELECT          a radio group's arrow keys move focus and change the selection together —
+  //                          that is the platform's radio contract, not a quirk. So Confirm becomes
+  //                          enabled during the walk, and Space is not what enables it. An earlier
+  //                          version pressed Space while focus had been left on Confirm (because it
+  //                          re-focused slot index 1, which is one of the UNAVAILABLE slots and takes no
+  //                          focus) and so confirmed the booking by accident, then reported the button
+  //                          missing.
+  const focusedTime = async () => (await group.locator(":focus").getAttribute("value").catch(() => null)) ?? "";
+  const press = async (key) => {
+    await page.keyboard.press(key);
+    await page.waitForTimeout(150);
+  };
+  const TAKEN = ["2026-04-07T09:30", "2026-04-07T13:30"];
+  const availableSlot = (value) => group.locator(`[role="radio"][value="${value}"]`);
+
+  await slots.first().focus();
+  await page.waitForTimeout(100);
+  const first = await focusedTime();
+  if (!first) fail("appointment-booking: focusing the first time did not put focus inside the group");
+
+  // Walk the whole group twice over with the arrow key. `loop` is on, so this wraps; what must never
+  // happen is focus landing on a time the data says is taken.
+  const walked = [first];
+  for (let i = 0; i < 9; i++) {
+    await press("ArrowRight");
+    walked.push(await focusedTime());
+  }
+  const landedOnTaken = walked.filter((v) => TAKEN.includes(v));
+  if (landedOnTaken.length) fail(`appointment-booking: the arrow keys stopped on an unavailable time (${[...new Set(landedOnTaken)].join(", ")})`);
+  // The walk must actually have covered the five available times, or "never landed on a taken one" is
+  // satisfied by a group that never moved at all.
+  const distinct = new Set(walked.filter(Boolean));
+  if (distinct.size !== 5) fail(`appointment-booking: the arrow walk reached ${distinct.size} distinct times, expected the 5 available ones`);
+
+  // Moving through a radio group selects as it goes, so by now a time is chosen and the action is live.
+  if (await confirm.isDisabled()) fail("appointment-booking: Confirm is still disabled after the arrow keys moved through the group");
+  if (await root.getByText("Choose a time to continue.").count())
+    fail("appointment-booking: the 'choose a time' sentence is still shown after a time was chosen");
+
+  // One tab stop: from inside the group, a single Tab must leave it. A group that kept a tabbable node per
+  // slot would still be inside it after one press, which is the defect this asserts against.
+  //
+  // Focus is moved to 10:15 FIRST, and that is the whole assertion. The arrow walk above ends on 15:45,
+  // which is the last slot in DOM order, and Tab leaves the group from there whether or not every radio
+  // is tabbable — so asserting from that position passed for precisely the defect it claimed to detect.
+  // Found by Codex's exact-head review, not by me. From 10:15 there are two available slots after it, so
+  // a per-slot tab stop keeps focus inside the group and the assertion reddens.
+  await availableSlot("2026-04-07T10:15").focus();
+  await page.waitForTimeout(100);
+  if ((await focusedTime()) !== "2026-04-07T10:15")
+    fail("appointment-booking: 10:15 did not take focus, so the tab-stop assertion would start from an unknown place");
+  await press("Tab");
+  if (await group.locator(":focus").count()) fail("appointment-booking: Tab from inside the group stayed in it, so the times are more than one tab stop");
+
+  // Space on an available time selects it, so the outcome can be checked against a known choice rather
+  // than against wherever the walk happened to stop.
+  await availableSlot("2026-04-07T15:45").focus();
+  await page.waitForTimeout(100);
+  await press(" ");
+  const chosen = await focusedTime();
+  if (chosen !== "2026-04-07T15:45") fail(`appointment-booking: Space left focus on ${chosen || "nothing"}, expected 15:45`);
+
+  if (await confirm.isDisabled()) fail("appointment-booking: Confirm is disabled with a time selected");
+  else {
+    await confirm.click();
+    await page.waitForTimeout(250);
+    const said = (await status.textContent())?.trim();
+    if (!said?.includes("Appointment confirmed")) fail(`appointment-booking: the live region says "${said}", expected a confirmation`);
+    // It must name the time that was taken, in the words a reader saw, not echo a slot id.
+    if (!said?.includes("15:45")) fail(`appointment-booking: the confirmation does not name the chosen time 15:45 (said "${said}")`);
+    if (said?.includes("2026-04-07T")) fail(`appointment-booking: the confirmation printed a raw slot id ("${said}")`);
+    // Going back must clear the choice, so a stale confirmation cannot be left on screen.
+    await root.getByRole("button", { name: "Choose another time" }).click();
+    await page.waitForTimeout(250);
+    if (!(await confirm.isDisabled())) fail("appointment-booking: returning to the picker left the previous choice selected");
+  }
+
+  if (!failures.some((f) => f.startsWith("appointment-booking")))
+    ok("appointment-booking: 7 times with 2 unavailable, the arrow walk reaches all 5 available ones and never a taken one, the group is one tab stop, and confirming 15:45 names that time in a live region that was present beforehand");
+  await context.close();
+}
 // kx-verify-block: end
 
-/* ── layout: the three interactive blocks at phone and desktop width (not block evidence; a page check) ── */
+/* ── layout: the measured blocks at phone and desktop width, at default text and at 200% ───────────────
+   Not block evidence and deliberately outside a marked passage: this is a page check, and overflow here
+   is a property of the page's own width, not of the block's source.
+
+   200% text is included because it is where a composition fails first and because it is a different
+   failure from a narrow viewport: 390px narrows the box, 200% text widens the content inside it, and a
+   grid that survives one can still be broken by the other. Text is scaled by the root font size rather
+   than by a page zoom, which is what Resize Text asks for — a zoom would scale the viewport with it and
+   measure nothing. */
+const LAYOUT_SLUGS = ["order-summary", "receipt", "boarding-pass", "appointment-booking", "vitals-summary", "shipment-tracking"];
 for (const width of [390, 1280])
-  for (const dir of ["ltr", "rtl"]) {
-    const { context, page } = await open({ width, dir });
-    for (const slug of ["order-summary", "receipt", "boarding-pass"]) {
-      const over = await block(page, slug).evaluate((el) => [...el.querySelectorAll("*")].filter((n) => n.getBoundingClientRect().right > innerWidth + 1 || n.getBoundingClientRect().left < -1).length);
-      if (over) fail(`layout ${slug} ${width}/${dir}: ${over} element(s) outside the viewport`);
+  for (const dir of ["ltr", "rtl"])
+    for (const rootPx of [16, 32]) {
+      const { context, page } = await open({ width, dir });
+      if (rootPx !== 16) {
+        await page.evaluate((px) => (document.documentElement.style.fontSize = `${px}px`), rootPx);
+        // Reflow before measuring: the grids here fall to fewer columns, and reading the frame before
+        // that happens measures the old layout.
+        await page.waitForTimeout(250);
+      }
+      const look = `${width}/${dir}/${rootPx === 16 ? "100%" : "200%"}`;
+      for (const slug of LAYOUT_SLUGS) {
+        // TWO DIFFERENT ASSERTIONS, because the two text sizes support different claims from this page.
+        //
+        // Each preview sits in a showcase frame that centres its child inside a fixed content box and is
+        // itself `overflow-x: auto`. At 390px that box is 324px WHATEVER the text size, and the frame's
+        // own padding is in `rem`, so at a 32px root it takes a further ~130px before the block sees any
+        // of the width. The frame therefore cannot answer "does this block fit a phone at 200% text":
+        // three references for that question gave three answers — 47 "elements outside the viewport" in
+        // `receipt`, then 38px of spill, then 234px — and two of the blocks it accused have shipped for
+        // months. No route on this site renders a block AS the page's content, so the question is not
+        // answerable from here; M5.26's report carries it as an open gap rather than a guessed number.
+        //
+        // What this page CAN answer, and what each arm asserts:
+        //
+        //   100% text   the block's content fits the width it is given. A block that fails that is broken
+        //               at any text size.
+        //   200% text   the content stays REACHABLE — none of it is clipped away. That is the
+        //               loss-of-content half of WCAG 1.4.4, it is a property of the block and its frame
+        //               together, and it is exactly what this page does show. Overflow into a scrollable
+        //               ancestor is reachable; overflow under `overflow: hidden` is gone.
+        const over = await block(page, slug).evaluate((el, { strict, vw }) => {
+          const child = el.firstElementChild;
+          if (!child) return "the preview frame is empty";
+          if (strict) {
+            const spill = Math.round(child.scrollWidth - child.clientWidth);
+            return spill > 0 ? `content overflows the ${child.clientWidth}px it is given by ${spill}px` : null;
+          }
+          // `sr-only` text is clipped on purpose — that is how it is kept off the screen — so a
+          // visually-hidden subtree is not a loss of content.
+          //
+          // DESCENDANTS as well as ancestors. An earlier version walked only from the card upwards, which
+          // left the whole inside of the block invisible to it: a constrained descendant with
+          // `overflow-x: hidden` can discard its text while the card and the frame both still report
+          // equal scrollWidth and clientWidth, and the check returned "nothing lost". Found by Codex's
+          // exact-head review.
+          // A form field is skipped: every UA gives `input`, `textarea` and `select` `overflow: hidden`
+          // unconditionally, and a field scrolls its own value as the caret moves, so its overflow is its
+          // own mechanism rather than content taken away. Without this skip every text field on the site
+          // is a failure.
+          const FIELDS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
+          const swallows = new Set(["hidden", "clip"]);
+          const clipped = (root) => {
+            const ancestors = [];
+            for (let n = root.parentElement; n && n !== document.body; n = n.parentElement) ancestors.push(n);
+            const found = [];
+            for (const node of [root, ...root.querySelectorAll("*"), ...ancestors]) {
+              if (FIELDS.has(node.tagName) || node.closest(".sr-only")) continue;
+              const spill = Math.round(node.scrollWidth - node.clientWidth);
+              if (spill > 0 && swallows.has(getComputedStyle(node).overflowX))
+                found.push(`${spill}px on <${node.tagName.toLowerCase()}${node.className ? `.${node.className.toString().split(/\s+/)[0]}` : ""}>`);
+            }
+            return found;
+          };
+
+          const asShown = clipped(child);
+          if (!asShown.length) return null;
+
+          // Clipping measured here is not yet the block's fault, for the same reason the stricter reflow
+          // question is unanswerable from this page: the frame hands the block a box that is 324px at a
+          // 390px viewport whatever the text size, minus padding that scales WITH the text. A container
+          // can therefore clip only because its parent is narrow, and widening the frame would cure it.
+          //
+          // So the suspected cause is removed and the measurement repeated — §10's own method, inside the
+          // gate. Only clipping that SURVIVES being handed the full viewport width belongs to the block:
+          // that one is its own sizing, and no page width would fix it. The frame is restored immediately.
+          const prev = el.getAttribute("style") ?? "";
+          el.style.cssText += `;width:${vw}px;max-width:none;padding:0;justify-content:flex-start`;
+          const survives = clipped(child);
+          if (prev) el.setAttribute("style", prev);
+          else el.removeAttribute("style");
+
+          if (!survives.length) return null;
+          return `content is clipped away even in the full ${vw}px width: ${survives.join(", ")}`;
+        }, { strict: rootPx === 16, vw: width });
+        if (over) fail(`layout ${slug} ${look}: ${over}`);
+      }
+      const scroll = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+      if (scroll > 0) fail(`layout /blocks ${look}: the page scrolls sideways by ${scroll}px`);
+      await context.close();
     }
-    const scroll = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
-    if (scroll > 0) fail(`layout /blocks ${width}/${dir}: the page scrolls sideways by ${scroll}px`);
-    await context.close();
-  }
-if (!failures.some((f) => f.startsWith("layout"))) ok("layout: order-summary, receipt and boarding-pass stay inside the viewport at 390 and 1280, LTR and RTL");
+if (!failures.some((f) => f.startsWith("layout")))
+  ok(`layout: ${LAYOUT_SLUGS.length} blocks fit the width they are given at default text, lose no content to clipping at 200%, and never make /blocks scroll sideways — at 390 and 1280, LTR and RTL`);
 
 /* ── controls: real responses through the same `watch` wiring, into a throwaway log ───────────────────
  * The unit tests in scripts/release/test/blocks-runtime-console.test.mjs drive the classifier with
