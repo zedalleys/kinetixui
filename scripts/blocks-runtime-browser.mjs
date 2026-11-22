@@ -289,6 +289,16 @@ const block = (page, slug) => page.locator(`[id="${slug}"] [data-showcase-previe
 
   // One tab stop: from inside the group, a single Tab must leave it. A group that kept a tabbable node per
   // slot would still be inside it after one press, which is the defect this asserts against.
+  //
+  // Focus is moved to 10:15 FIRST, and that is the whole assertion. The arrow walk above ends on 15:45,
+  // which is the last slot in DOM order, and Tab leaves the group from there whether or not every radio
+  // is tabbable — so asserting from that position passed for precisely the defect it claimed to detect.
+  // Found by Codex's exact-head review, not by me. From 10:15 there are two available slots after it, so
+  // a per-slot tab stop keeps focus inside the group and the assertion reddens.
+  await availableSlot("2026-04-07T10:15").focus();
+  await page.waitForTimeout(100);
+  if ((await focusedTime()) !== "2026-04-07T10:15")
+    fail("appointment-booking: 10:15 did not take focus, so the tab-stop assertion would start from an unknown place");
   await press("Tab");
   if (await group.locator(":focus").count()) fail("appointment-booking: Tab from inside the group stayed in it, so the times are more than one tab stop");
 
@@ -362,7 +372,7 @@ for (const width of [390, 1280])
         //               loss-of-content half of WCAG 1.4.4, it is a property of the block and its frame
         //               together, and it is exactly what this page does show. Overflow into a scrollable
         //               ancestor is reachable; overflow under `overflow: hidden` is gone.
-        const over = await block(page, slug).evaluate((el, strict) => {
+        const over = await block(page, slug).evaluate((el, { strict, vw }) => {
           const child = el.firstElementChild;
           if (!child) return "the preview frame is empty";
           if (strict) {
@@ -371,17 +381,51 @@ for (const width of [390, 1280])
           }
           // `sr-only` text is clipped on purpose — that is how it is kept off the screen — so a
           // visually-hidden subtree is not a loss of content.
+          //
+          // DESCENDANTS as well as ancestors. An earlier version walked only from the card upwards, which
+          // left the whole inside of the block invisible to it: a constrained descendant with
+          // `overflow-x: hidden` can discard its text while the card and the frame both still report
+          // equal scrollWidth and clientWidth, and the check returned "nothing lost". Found by Codex's
+          // exact-head review.
+          // A form field is skipped: every UA gives `input`, `textarea` and `select` `overflow: hidden`
+          // unconditionally, and a field scrolls its own value as the caret moves, so its overflow is its
+          // own mechanism rather than content taken away. Without this skip every text field on the site
+          // is a failure.
+          const FIELDS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
           const swallows = new Set(["hidden", "clip"]);
-          for (let node = child; node && node !== document.body; node = node.parentElement) {
-            if (node.closest(".sr-only")) continue;
-            const spill = Math.round(node.scrollWidth - node.clientWidth);
-            if (spill <= 0) continue;
-            const ox = getComputedStyle(node).overflowX;
-            if (swallows.has(ox))
-              return `${spill}px of content is clipped away by overflow-x: ${ox} on <${node.tagName.toLowerCase()}>`;
-          }
-          return null;
-        }, rootPx === 16);
+          const clipped = (root) => {
+            const ancestors = [];
+            for (let n = root.parentElement; n && n !== document.body; n = n.parentElement) ancestors.push(n);
+            const found = [];
+            for (const node of [root, ...root.querySelectorAll("*"), ...ancestors]) {
+              if (FIELDS.has(node.tagName) || node.closest(".sr-only")) continue;
+              const spill = Math.round(node.scrollWidth - node.clientWidth);
+              if (spill > 0 && swallows.has(getComputedStyle(node).overflowX))
+                found.push(`${spill}px on <${node.tagName.toLowerCase()}${node.className ? `.${node.className.toString().split(/\s+/)[0]}` : ""}>`);
+            }
+            return found;
+          };
+
+          const asShown = clipped(child);
+          if (!asShown.length) return null;
+
+          // Clipping measured here is not yet the block's fault, for the same reason the stricter reflow
+          // question is unanswerable from this page: the frame hands the block a box that is 324px at a
+          // 390px viewport whatever the text size, minus padding that scales WITH the text. A container
+          // can therefore clip only because its parent is narrow, and widening the frame would cure it.
+          //
+          // So the suspected cause is removed and the measurement repeated — §10's own method, inside the
+          // gate. Only clipping that SURVIVES being handed the full viewport width belongs to the block:
+          // that one is its own sizing, and no page width would fix it. The frame is restored immediately.
+          const prev = el.getAttribute("style") ?? "";
+          el.style.cssText += `;width:${vw}px;max-width:none;padding:0;justify-content:flex-start`;
+          const survives = clipped(child);
+          if (prev) el.setAttribute("style", prev);
+          else el.removeAttribute("style");
+
+          if (!survives.length) return null;
+          return `content is clipped away even in the full ${vw}px width: ${survives.join(", ")}`;
+        }, { strict: rootPx === 16, vw: width });
         if (over) fail(`layout ${slug} ${look}: ${over}`);
       }
       const scroll = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);

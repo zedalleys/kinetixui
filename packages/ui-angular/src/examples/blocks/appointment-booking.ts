@@ -122,7 +122,20 @@ const LABELS = new Map(GROUPS.flatMap((g) => g.slots.map((s) => [s.value, s.labe
           <section class="slots" aria-labelledby="ab-slots-label" aria-describedby="ab-slots-zone">
             <span class="slots-label" id="ab-slots-label">Available times</span>
             <span class="slots-zone" id="ab-slots-zone">Times in Riyadh (GMT+3)</span>
-            <kx-radio-group class="tiles" [value]="slot()" (selected)="slot.set($event)">
+            <!--
+              The label and the zone are attached to the GROUP, not only to the section around it.
+              The kx-radio-group component puts role="radiogroup" on its host and names it from nothing, so without
+              these two the choice group was reachable but anonymous: a reader entering it heard
+              "radiogroup" with no "Available times" and no "Times in Riyadh". Found by Codex's exact-head
+              review of #660 — the ids were already here, serving only the visible headings.
+            -->
+            <kx-radio-group
+              class="tiles"
+              aria-labelledby="ab-slots-label"
+              aria-describedby="ab-slots-zone"
+              [value]="slot()"
+              (selected)="slot.set($event)"
+            >
               @for (group of groups; track group.label) {
                 <!-- A period INSIDE the one group: the arrow keys still cross between morning and
                      afternoon, which two separate groups would prevent. -->

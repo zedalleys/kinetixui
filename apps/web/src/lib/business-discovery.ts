@@ -131,8 +131,15 @@ export { DISCOVERY_ROUTES } from "./discovery-routes";
  * is the condition that matters, not because it is doing work today: a new domain registered ahead of its
  * implementation is exactly the case it exists for, and the test beside it proves the filter still rejects
  * such a domain rather than only observing that none exists.
+ *
+ * The predicate is exported as a name so that test can feed a synthetic domain to the SAME code this list
+ * is built from. While the rule was inlined into the `filter` call, a control could only re-state it, which
+ * meant replacing this whole expression with `DOMAINS` would still have passed every assertion — because
+ * every domain ships today and so nothing real is excluded. Found by Codex's exact-head review of #660.
  */
-export const BUSINESS_NEEDS = DOMAINS.filter((d) => d.counts.existing + d.counts.partial > 0);
+export const domainShips = (d: Domain) => d.counts.existing + d.counts.partial > 0;
+
+export const BUSINESS_NEEDS = DOMAINS.filter(domainShips);
 
 /* -------------------------------------------------------------------------------------- catalogue facets */
 

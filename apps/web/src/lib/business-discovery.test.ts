@@ -11,6 +11,7 @@ import {
   DISCOVERY_ROUTES,
   DOMAINS,
   ROWS,
+  domainShips,
   UNCLASSIFIED,
   WORKFLOWS,
   DOMAIN_PAGES,
@@ -61,15 +62,20 @@ describe("business discovery index", () => {
     // block, and a listed name would have had to be deleted to let that through. What the test is
     // actually for is that a need is offered only when something in it ships, so it asks exactly that
     // of every domain in the index, and nothing about which domains those happen to be.
-    const shipping = (d: Domain) => d.counts.existing + d.counts.partial > 0;
-    for (const d of DOMAINS) expect(ids.includes(d.id), `${d.id}: offered=${ids.includes(d.id)}, shipping=${shipping(d)}`).toBe(shipping(d));
-    expect(DOMAINS.some(shipping)).toBe(true);
+    // `domainShips` is imported from the implementation, never restated here. A test-local copy of the
+    // rule was this control's first version and it proved nothing: every domain ships today, so replacing
+    // the production `DOMAINS.filter(domainShips)` with plain `DOMAINS` would have passed both the loop
+    // and the control below. Exercising the exported predicate is what makes deleting the filter fail.
+    // Found by Codex's exact-head review of #660.
+    for (const d of DOMAINS)
+      expect(ids.includes(d.id), `${d.id}: offered=${ids.includes(d.id)}, shipping=${domainShips(d)}`).toBe(domainShips(d));
+    expect(DOMAINS.some(domainShips)).toBe(true);
     // Every domain ships something as of M5.26, so the filter removes nothing today and observing the
     // real list cannot tell whether it still works. The control supplies the case the data no longer
     // has: a registered domain with nothing in it must not be offered. Without this, the assertion
-    // above would pass just as well against a filter that returned everything.
     const nothingShips = { ...DOMAINS[0]!, id: "kx-control-domain", counts: { existing: 0, partial: 0, planned: 3 } };
-    expect([...DOMAINS, nothingShips].filter(shipping).map((d) => d.id)).not.toContain("kx-control-domain");
+    expect(domainShips(nothingShips)).toBe(false);
+    expect([...DOMAINS, nothingShips].filter(domainShips).map((d) => d.id)).not.toContain("kx-control-domain");
   });
 
   it("puts every discovery page in the sitemap's route list", () => {
