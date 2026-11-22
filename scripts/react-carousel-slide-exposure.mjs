@@ -132,6 +132,21 @@ export const DEFECTS = {
   },
 
   /**
+   * Before the fix a vertical carousel ignored the block keys and answered the inline pair instead. The
+   * press is swallowed in the capture phase before the component's bubble handler can see it, which is
+   * indistinguishable, from the page's side, from a handler that never mapped the key.
+   */
+  "vertical-ignores-block-keys": () => {
+    document.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") e.stopPropagation();
+      },
+      true,
+    );
+  },
+
+  /**
    * Restores "a phrase per position": the announcement's settle window collapsed to nothing, so every
    * `select` in a burst speaks instead of only the landing. Done by shortening the component's own
    * `QUIET_MS` timer — and ONLY that timer, matched by its exact delay, so React's scheduling, the
@@ -491,12 +506,11 @@ async function statics(browser, base) {
 }
 
 /**
- * WHICH arrow keys a vertical carousel answers, recorded as the behaviour it is rather than the behaviour
- * it should be. React answers the INLINE pair on both axes; `@kinetixui/angular` answers the block pair on
- * a vertical track (`packages/ui-angular/src/lib/carousel.ts:68,352`), so the two platforms disagree.
- * Aligning them changes a published consumer behaviour, so it is a separate follow-up — and these rows are
- * what that follow-up flips. Before this gate existed nothing could mount a vertical React carousel at
- * all, so this disagreement was invisible on every branch.
+ * WHICH arrow keys a vertical carousel answers — the subject of this pull request. The rows below are the
+ * ones inverted from the branch this is stacked on: there the block pair moved nothing and the inline pair
+ * moved the track, which is what `main` does and the inverse of `@kinetixui/angular`
+ * (`packages/ui-angular/src/lib/carousel.ts:68,352`). Before this gate existed nothing could mount a
+ * vertical React carousel at all, so the disagreement was invisible on every branch.
  */
 async function verticalKeys(browser, base) {
   const name = "vertical keys";
@@ -506,21 +520,21 @@ async function verticalKeys(browser, base) {
   else return void bad(name, "control: the vertical fixture starts at the first slide", `selected ${start.engineSelected} — nothing below measures a move`);
 
   await page.evaluate(() => document.getElementById("slide-link-1")?.focus());
-  await page.keyboard.press("ArrowDown");
-  await settle(page);
-  const afterBlock = await read(page);
-  if (afterBlock.engineSelected === 0)
-    ok(name, "TODAY: the block pair moves nothing — the follow-up is what changes this", `ArrowDown left it at ${afterBlock.engineSelected}`);
-  else bad(name, "TODAY: the block pair moves nothing — the follow-up is what changes this", `ArrowDown moved it to ${afterBlock.engineSelected}`);
-
-  if (afterBlock.spoken.length === 0) ok(name, "and a key that moves nothing announces nothing", "[]");
-  else bad(name, "and a key that moves nothing announces nothing", JSON.stringify(afterBlock.spoken));
-
   await page.keyboard.press("ArrowRight");
   await settle(page);
   const afterInline = await read(page);
-  if (afterInline.engineSelected === 1) ok(name, "the inline pair moves a vertical carousel", `ArrowRight → selected ${afterInline.engineSelected}`);
-  else bad(name, "the inline pair moves a vertical carousel", `ArrowRight → selected ${afterInline.engineSelected}`);
+  if (afterInline.engineSelected === 0)
+    ok(name, "the inline pair moves nothing on a vertical track", `ArrowRight left it at ${afterInline.engineSelected}`);
+  else bad(name, "the inline pair moves nothing on a vertical track", `ArrowRight moved it to ${afterInline.engineSelected}`);
+
+  if (afterInline.spoken.length === 0) ok(name, "and a key that moves nothing announces nothing", "[]");
+  else bad(name, "and a key that moves nothing announces nothing", JSON.stringify(afterInline.spoken));
+
+  await page.keyboard.press("ArrowDown");
+  await settle(page);
+  const afterBlock = await read(page);
+  if (afterBlock.engineSelected === 1) ok(name, "the block pair moves a vertical carousel", `ArrowDown → selected ${afterBlock.engineSelected}`);
+  else bad(name, "the block pair moves a vertical carousel", `ArrowDown → selected ${afterBlock.engineSelected}`);
 
   await ctx.close();
 }
@@ -597,7 +611,7 @@ async function reducedMotion(browser, base) {
   const name = "reduced motion";
   const { ctx, page } = await open(browser, `${base}/vertical.html`, { reducedMotion: "reduce" });
   await page.evaluate(() => document.getElementById("slide-link-1")?.focus());
-  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowDown");
   await settle(page);
   const s = await read(page);
   const out = s.slides.filter((x) => !x.inView);
@@ -652,8 +666,8 @@ async function main() {
   try {
     await axis(browser, server.base, { file: "horizontal.html", name: "horizontal", forward: "ArrowRight" });
     await axis(browser, server.base, { file: "horizontal-rtl.html", name: "horizontal rtl", forward: "ArrowLeft" });
-    await axis(browser, server.base, { file: "vertical.html", name: "vertical", forward: "ArrowRight" });
-    await axis(browser, server.base, { file: "vertical-rtl.html", name: "vertical rtl", forward: "ArrowLeft" });
+    await axis(browser, server.base, { file: "vertical.html", name: "vertical", forward: "ArrowDown" });
+    await axis(browser, server.base, { file: "vertical-rtl.html", name: "vertical rtl", forward: "ArrowDown" });
     await intent(browser, server.base, "horizontal.html");
     await intent(browser, server.base, "horizontal-engine-threshold.html");
     await grouped(browser, server.base);
