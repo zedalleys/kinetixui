@@ -23,10 +23,30 @@ type Product = { id: string; revision: number; doc: Document; readOnly: boolean 
 type Account = { accountId: string; workspaceId: string; productLimit: number; products: { id: string; name: string; readOnly: boolean; revision: number }[] };
 class ApiError extends Error { constructor(public code: string, message: string) { super(message); } }
 async function request<T>(body?: unknown, id?: string): Promise<T> {
-  const res = await fetch("/api/create-studio" + (id ? "?id=" + encodeURIComponent(id) : ""), body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : { cache: "no-store" });
-  const data = await res.json();
+  let res: Response;
+  try {
+    res = await fetch("/api/create-studio" + (id ? "?id=" + encodeURIComponent(id) : ""), body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : { cache: "no-store" });
+  } catch {
+    // A dropped connection or a stopped local server. The browser's own message ("Failed to
+    // fetch") says nothing a designer can act on, and nothing was written, so say that.
+    throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server did not answer. Nothing was saved. Check that the development server is still running, then retry, or download your draft.");
+  }
+  const data = await res.json().catch(() => { throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server sent a reply that could not be read. Nothing was saved. Retry, or download your draft."); });
   if (!res.ok) throw new ApiError(data.code, data.message);
   return data as T;
+}
+/**
+ * Read a product the server just handed us before rendering it. The service validates what it
+ * stores, but the editor still has to survive a reply it cannot draw — a document saved by a
+ * newer editor, a node whose `ref` this build does not implement, a truncated response. Without
+ * this, such a reply threw inside the canvas render and replaced the workspace with the
+ * framework's error page (measured in M5.20); with it, the editor stays up and says so.
+ */
+function readProduct(product: Product): Product {
+  try { return { ...product, doc: migrateDocument(product.doc) }; }
+  catch (cause) {
+    throw new ApiError("DOCUMENT_UNREADABLE", `This saved product cannot be opened by this version of Create Studio: ${cause instanceof Error ? cause.message : "the document could not be read"}. The saved copy has not been changed. Open another product, or use an editor that supports it.`);
+  }
 }
 function download(name: string, text: string) {
   const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
@@ -174,14 +194,14 @@ export function CreateStudio() {
     const handler = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
       if (target.closest('input,textarea,select,[contenteditable="true"],[role="dialog"]')) return;
-      if (event.key === "Escape") { setPreview(false); setPan(false); drag.current = null; return; }
+      if (event.key === "Escape") { if (preview) exitPreview(); setPan(false); drag.current = null; return; }
       if (!(event.metaKey || event.ctrlKey) || !latest.current) return;
       if (event.key.toLowerCase() === "z" && !readOnly && !busy && !preview) {
         event.preventDefault(); applyHistory(event.shiftKey ? "redo" : "undo");
       }
     };
     window.addEventListener("keydown", handler); return () => window.removeEventListener("keydown", handler);
-  }, [readOnly, busy, preview, applyHistory]);
+  }, [readOnly, busy, preview, applyHistory, exitPreview]);
   async function start() {
     setBusy(true); setError("");
     try { setAccount(await request<Account>({ operation: "session" })); } catch (e) { setError((e as Error).message); }
@@ -191,7 +211,7 @@ export function CreateStudio() {
     if (dirty && !reopenSaved) { setError("Save or download your current draft before opening another product."); return; }
     setBusy(true); setError("");
     try {
-      const p = await request<Product>(undefined, id);
+      const p = readProduct(await request<Product>(undefined, id));
       setProduct(p); setHistory(newHistory(p.doc)); setSaved(serializeDocument(p.doc)); setPageId(p.doc.pages[0].id);
       draftWriter.current = null; recoveredCopy.current = null;
       setDraftBase(null); setDraftChoices([]); setFieldDrafts({});
@@ -208,7 +228,7 @@ export function CreateStudio() {
     setBusy(true); setError("");
     try {
       createKey.current ??= crypto.randomUUID();
-      const p = await request<Product>({ operation: "create", name: productName, key: createKey.current });
+      const p = readProduct(await request<Product>({ operation: "create", name: productName, key: createKey.current }));
       setProduct(p); setHistory(newHistory(p.doc)); setSaved(serializeDocument(p.doc)); setPageId(p.doc.pages[0].id);
       draftWriter.current = null; recoveredCopy.current = null;
       setDraftBase(null); setDraftChoices([]); setFieldDrafts({});
@@ -223,6 +243,10 @@ export function CreateStudio() {
     setBusy(true); setSaving(true); setError("");
     const payload = history.doc;
     try {
+      // Deliberately NOT read through readProduct: the editor keeps rendering the payload it just
+      // sent, and the service validated that document before storing it. Rejecting the reply here
+      // would report a save that SUCCEEDED as a failure, which is the one thing the save path must
+      // never do.
       const p = await request<Product>({ operation: "save", id: product.id, revision: draftBase ?? product.revision, doc: payload });
       setProduct(p); setSaved(serializeDocument(payload)); setDraftBase(null); setSaveFailed(false); setRecovered(false); setNotice("Saved to this computer's local server.");
       try {
@@ -301,7 +325,7 @@ export function CreateStudio() {
           <Input id="studio-project-title" aria-label="Project name" value={nameDraft ?? doc!.name} maxLength={120} disabled={readOnly || preview || busy}
             onChange={e => setNameDraft(e.target.value)}
             onBlur={renameProject}
-            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); renameProject(); (e.target as HTMLInputElement).blur(); } if (e.key === "Escape") setNameDraft(null); }} />
+            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); renameProject(); } if (e.key === "Escape") setNameDraft(null); }} />
         </div>
         <div className="studio-toolbar" role="group" aria-label="Document actions">
           <Button size="icon" variant="Ghost" aria-label="Undo" title="Undo (⌘/Ctrl Z)" disabled={!history.past.length || readOnly || busy || preview} onClick={() => applyHistory("undo")}><Undo2 className="size-4" /></Button>
