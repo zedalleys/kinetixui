@@ -74,6 +74,10 @@ mkdir -p "$EVIDENCE" || exit 2
 HEAD_SHA="$(git rev-parse HEAD)"
 SNAP="$(mktemp)"
 DW=""
+# Both initialized before the traps are installed, because `set -u` makes an unset variable inside a
+# handler a second failure on top of the one being handled.
+ALLOC=""
+INTERRUPTED=""
 PORT=""
 DEV_PID=""
 problems=0
@@ -115,9 +119,33 @@ teardown() {
     fi
   fi
   [ -n "$DW" ] && rm -rf "$DW.store" "$DW.owner"
+  # The allocation placeholder, if a signal arrived between reserving the name and releasing it.
+  # It lives outside the swept namespace, so nothing else would ever collect it.
+  [ -n "$ALLOC" ] && [ -d "$ALLOC" ] && rmdir "$ALLOC" 2>/dev/null
   rm -f "$SNAP"
 }
-trap teardown EXIT INT TERM
+# A SIGNAL MUST END THE BATCH, not merely tidy up on the way past. Until Codex's P2 on PR #661 this
+# read `trap teardown EXIT INT TERM`, and a handler that only calls `teardown` RETURNS: the batch
+# resumed normal execution with `TEARDOWN_DONE=1`, so both later teardown calls were no-ops, the
+# worktree and ownership marker it had just cleaned were recreated by the lines that followed, and
+# the exit status was whatever the truncated run happened to leave. Measured at 461148f5, five
+# delays per signal: SIGINT exited **0** with `problems 0` at every delay — a success verdict for a
+# batch that never ran — and SIGTERM leaked a registered worktree plus its marker at the two
+# earliest delays. The status after interruption was not even stable between runs, which is itself
+# the point: it was never a verdict, only a residue.
+#
+# So INT and TERM now clean up and then TERMINATE, with the conventional 128+signal status, and they
+# say in words that the batch is not a result. EXIT keeps the plain handler, because teardown is
+# idempotent and must still run on a normal or failed exit.
+on_signal() {
+  INTERRUPTED="$1"
+  say "INTERRUPTED by SIG$1 — this batch is NOT a certification result, whatever ran before it."
+  teardown
+  exit "$2"
+}
+trap teardown EXIT
+trap 'on_signal INT 130' INT
+trap 'on_signal TERM 143' TERM
 
 # --- reap what interrupted batches left behind --------------------------------------------------
 # A killed batch cannot clean up after itself. Its dev server, in its own session, survives, and
@@ -136,12 +164,25 @@ fi
 
 # --- build the disposable worktree ---------------------------------------------------------------
 rule "disposable worktree"
-DW="$(mktemp -d /tmp/kinetix-dw.XXXXXXXX)"
-rmdir "$DW"
-# Claim it BEFORE it exists, so there is no window in which a concurrent batch's reaper could see
-# an unowned worktree. Codex's P2 on PR #661: the reaper treated every /tmp/kinetix-dw.* as
-# abandoned, so two batches running at once would destroy each other's test environment.
+# THE NAME IS RESERVED OUTSIDE THE NAMESPACE THE REAPER SWEEPS. `mktemp -d /tmp/kinetix-dw.XXXX`
+# followed by `rmdir` was already an attempt at this, and Codex's second P2 at 461148f5 showed why
+# it is not enough: `mktemp -d` CREATES the directory, so for the instant before `rmdir` there is a
+# real, unowned `/tmp/kinetix-dw.*` on disk. The reaper's predicate is "no ownership marker means
+# abandoned" — measured directly: an unowned directory is `REAPED   orphaned directory …` and gone,
+# the same directory with a live-pid marker is `SKIPPED … still owned by a live batch`. A reaper
+# that selects the name in that instant can run its `rm -rf` after the worktree is real, so the
+# window's length is not the measure of the harm.
+#
+# mktemp reserves the name under a prefix the reaper never looks at, the ownership marker for the
+# FINAL name is written while that name still does not exist, and only then is the placeholder
+# released. No `/tmp/kinetix-dw.*` directory is ever observable without its owner. The intermediate
+# state — a marker whose directory does not exist yet — is already safe: the reaper's marker sweep
+# removes such a file only when its pid is dead, and ours is this process.
+ALLOC="$(mktemp -d /tmp/kinetix-alloc.XXXXXXXX)"
+DW="/tmp/kinetix-dw.${ALLOC#/tmp/kinetix-alloc.}"
 printf '%s %s %s\n' "$$" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CAND" > "$DW.owner"
+rmdir "$ALLOC" || { say "ABORTING: could not release the allocation placeholder $ALLOC."; exit 1; }
+ALLOC=""
 if ! git worktree add --detach "$DW" "$HEAD_SHA" 2>&1 | sed 's/^/       /'; then
   say "ABORTING: could not create the disposable worktree."
   exit 1

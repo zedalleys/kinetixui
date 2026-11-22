@@ -148,10 +148,52 @@ ENGINE
   return 0
 }
 
+# THE INDEX TREE IS READ THROUGH A PRIVATE INDEX, and that is a correctness property rather than
+# tidiness. `git write-tree` on the candidate's own index takes `.git/index.lock`, and two batches
+# cannot both hold it. Measured at 461148f5 with two batches started together: the loser printed
+# `fatal: Unable to create '…/.git/index.lock': File exists.`, the command substitution yielded an
+# EMPTY string, and the snapshot recorded `index ` with no value. The postflight then compared an
+# empty field against a populated one and announced `THE CANDIDATE CHANGED` about a candidate whose
+# head, tree, porcelain lines and diff hash were all identical. That is fail-closed, and it is still
+# a defect: a gate that can accuse a clean candidate teaches its reader to discount it, and the next
+# accusation may be true.
+#
+# Copying the index and pointing GIT_INDEX_FILE at the copy takes no lock in the candidate at all,
+# so the claim this harness already prints — "candidate (immutable; nothing ran in it)" — becomes
+# literally true of the snapshot as well as of the runners. A failure to read it is now an ERROR
+# that stops the batch, never an empty field that flows into a comparison.
+index_tree() {
+  local src copy tree
+  src="$(git rev-parse --git-path index)" || return 1
+  copy="$(mktemp /tmp/kinetix-idx.XXXXXXXX)" || return 1
+  if [ -f "$src" ] && ! cp "$src" "$copy"; then rm -f "$copy"; return 1; fi
+  tree="$(GIT_INDEX_FILE="$copy" git write-tree 2>/dev/null)" || { rm -f "$copy"; return 1; }
+  rm -f "$copy"
+  case "$tree" in
+    "" | *[!0-9a-f]*) return 1 ;;
+  esac
+  printf '%s\n' "$tree"
+}
+
+read_index_tree_or_die() {
+  if ! INDEX_TREE="$(index_tree)"; then
+    note "COULD NOT READ THE INDEX  writing a tree through a private index copy failed."
+    note "  This batch is NOT a certification result. An unreadable field is an error here,"
+    note "  never a value, because an empty field would read as a change to the candidate."
+    exit 2
+  fi
+}
+
+# Assigned in the caller's own shell, deliberately. `printf '%s' "$(f)"` where f calls `exit` exits
+# only the subshell, so a refusal written that way would still print an empty field and let the
+# batch continue — the original defect wearing the repair's clothes.
+INDEX_TREE=""
+
 snapshot() {
+  read_index_tree_or_die
   printf 'head %s\n' "$(git rev-parse HEAD)"
   printf 'tree %s\n' "$(git rev-parse 'HEAD^{tree}')"
-  printf 'index %s\n' "$(git write-tree)"
+  printf 'index %s\n' "$INDEX_TREE"
   printf 'status-lines %s\n' "$(git status --porcelain | wc -l | tr -d ' ')"
   git status --porcelain | sort | sed 's/^/status /'
   # CONTENTS, not just paths. Codex's P2 on PR #661: if the candidate already carries an unstaged
@@ -179,7 +221,7 @@ case "$MODE" in
     snapshot > "$SNAP"
     note "candidate recorded at $(git rev-parse HEAD)"
     note "  tree  $(git rev-parse 'HEAD^{tree}')"
-    note "  index $(git write-tree)"
+    note "  index $INDEX_TREE"
     note "  working tree: $(git status --porcelain | wc -l | tr -d ' ') changed path(s)"
     note "  $ASSERTION_COUNT source assertions hold"
     ;;
