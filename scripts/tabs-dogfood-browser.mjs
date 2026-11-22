@@ -20,10 +20,15 @@ try {
     { name: "phone-large-rtl", width: 390, dir: "rtl", text: 32, dark: true },
     { name: "tablet-large", width: 768, dir: "ltr", text: 32, dark: true },
     { name: "forced-colors", width: 1280, dir: "rtl", text: 16, dark: false, forced: true },
+    // A short window at doubled text is the one shape in which the category bar's stickiness is
+    // turned OFF (header + bar exceed half the viewport — use-sticky-under-header.ts). Every other
+    // case here keeps the bar pinned, so without this one the alignment assertion below could not
+    // tell the repaired clearance from the formula it replaced: both agree while the bar is pinned.
+    { name: "short-window-large-text", width: 1280, dir: "ltr", text: 32, dark: false, height: 400 },
   ]) {
     console.log("Checking", config.name);
     const context = await browser.newContext({
-      viewport: { width: config.width, height: 900 },
+      viewport: { width: config.width, height: config.height ?? 900 },
       reducedMotion: "reduce",
       forcedColors: config.forced ? "active" : "none",
     });
@@ -69,6 +74,7 @@ try {
         return { left: a.left - b.left, right: a.right - b.right };
       });
       assert(geometry.left >= -2 && geometry.right <= 2, "focused last tab must be revealed locally");
+
       const styles = await last.evaluate((el) => {
         const s = getComputedStyle(el);
         return {
@@ -201,7 +207,53 @@ try {
         await page.emulateMedia({ reducedMotion: "no-preference" });
         assert(parseFloat(await chip.evaluate((el) => getComputedStyle(el).transitionDuration)) > 0);
       }
-      results.push({ case: config.name, pass: true, focusGeometry: geometry, styles });
+      // Arriving by a category link scrolls that panel to rest under whatever stays pinned above
+      // it, and what stays pinned depends on the width and text size: the category bar is sticky
+      // only while it and the header together fit in half the viewport
+      // (use-sticky-under-header.ts). The clearance used to be read off the bar's own `top`, which
+      // is `auto` once the bar is not sticky — `parseFloat` gave NaN, the fallback gave 0, and the
+      // panel came to rest at the bar's height, underneath a taller header, hiding the start of the
+      // category just asked for. Measured at 1280x400 with 32px text: panel top 122px against a
+      // header bottom of 178px, i.e. 56px of the chosen category covered.
+      //
+      // This is the hash path on purpose. Selecting by click or by keyboard does NOT reproduce it:
+      // both move focus, and the browser's own focus scrolling lands afterwards and happens to
+      // leave the panel below the header. A link carries no focus to scroll to, so nothing hides
+      // the defect — which is also how a reader following a shared category link arrives.
+      // By this point the gate has moved on to the Components page, so come back to the lab before
+      // asking it what categories it has.
+      await page.goto(base + "/iot");
+      await page.waitForSelector("[data-category-tab]", { timeout: 15000 });
+      await page.waitForTimeout(600);
+      const otherCategory = await page.evaluate(() => {
+        const open = document.querySelector("[data-category-panel]:not([hidden])")?.getAttribute("data-category-panel");
+        const all = [...document.querySelectorAll("[data-category-tab]")].map((e) => e.getAttribute("data-category-tab"));
+        return all.find((id) => id !== open) ?? null;
+      });
+      assert(otherCategory, "the IoT lab must offer more than one category to link to");
+      await page.goto(base + "/iot#" + otherCategory);
+      await page.waitForTimeout(1400);
+      const alignment = await page.evaluate(() => {
+        const header = document.querySelector("header.sticky");
+        const bar = document.querySelector("[data-category-bar]");
+        const panel = document.querySelector("[data-category-panel]:not([hidden])");
+        if (!header || !bar || !panel) return null;
+        return {
+          headerBottom: +header.getBoundingClientRect().bottom.toFixed(1),
+          panelTop: +panel.getBoundingClientRect().top.toFixed(1),
+          panelId: panel.getAttribute("data-category-panel"),
+          barPinned: getComputedStyle(bar).position === "sticky",
+        };
+      });
+      // A missing element is a failure, not a pass: without the population there is nothing to say.
+      assert(alignment, "the IoT category bar, its header and an open panel must all be present");
+      assert(
+        alignment.panelTop >= alignment.headerBottom - 1,
+        `category "${alignment.panelId}" opens ${(alignment.headerBottom - alignment.panelTop).toFixed(1)}px under the site header ` +
+          `(panel top ${alignment.panelTop}px, header bottom ${alignment.headerBottom}px, bar pinned: ${alignment.barPinned})`,
+      );
+
+      results.push({ case: config.name, pass: true, focusGeometry: geometry, styles, alignment });
     } catch (error) {
       results.push({ case: config.name, pass: false, error: String(error) });
       console.error(config.name, error.message);
