@@ -57,10 +57,11 @@ rule() { printf '%s\n' "-- $* --------------------------------------------------
 # Cleanup failure is reported, never swallowed: a worktree that would not go away is a finding, and
 # a leaked one shares hard-linked node_modules with the candidate.
 teardown() {
-  if [ -n "$DEV_PID" ] && kill -0 "$DEV_PID" 2>/dev/null; then
-    kill "$DEV_PID" 2>/dev/null
+  if [ -n "$DEV_PID" ]; then
+    kill -- "-$DEV_PID" 2>/dev/null || kill "$DEV_PID" 2>/dev/null
     for _ in 1 2 3 4 5 6 7 8 9 10; do kill -0 "$DEV_PID" 2>/dev/null || break; sleep 1; done
-    kill -9 "$DEV_PID" 2>/dev/null
+    kill -9 -- "-$DEV_PID" 2>/dev/null
+    sleep 1
   fi
   if [ -n "$DW" ] && [ -d "$DW" ]; then
     if [ -n "${KEEP_WORKTREE:-}" ]; then
@@ -68,10 +69,11 @@ teardown() {
       say "  remove it with: git -C $CAND worktree remove --force $DW"
       return
     fi
-    if git -C "$CAND" worktree remove --force "$DW" 2>/dev/null; then
+    if git -C "$CAND" worktree remove --force "$DW" 2>"$EVIDENCE/cleanup-stderr.log"; then
       say "disposable worktree destroyed"
     else
       say "CLEANUP FAILED  could not remove the disposable worktree at $DW"
+      sed 's/^/                /' "$EVIDENCE/cleanup-stderr.log" 2>/dev/null
       say "                it hard-links the candidate's node_modules; remove it by hand."
       problems=$((problems + 1))
     fi
@@ -106,7 +108,19 @@ for d in . apps/web packages/ui packages/tokens packages/iot packages/cli packag
       say "ABORTING: could not hard-link $d/node_modules into the worktree."; exit 1; }
   fi
 done
-say "node_modules hard-linked into the worktree"
+# `packages/*/dist` is gitignored, so a fresh worktree has none — and `apps/web`'s vitest global
+# setup refuses to render components from an unstamped dist, which is the right guard and stops the
+# suite before a single test runs. The dist is hard-linked from the candidate, which is sound
+# because the worktree is at the candidate's exact HEAD: the stamp records a hash of the package
+# source, so if a control ever mutated `packages/**` the stamp check would fail loudly rather than
+# measure stale output.
+for d in packages/ui packages/tokens packages/iot; do
+  if [ -d "$CAND/$d/dist" ] && [ ! -e "$DW/$d/dist" ]; then
+    cp -al "$CAND/$d/dist" "$DW/$d/dist" || {
+      say "ABORTING: could not hard-link $d/dist into the worktree."; exit 1; }
+  fi
+done
+say "node_modules and built dist hard-linked into the worktree"
 
 # A worktree that is not a faithful copy of the candidate must stop the run BEFORE any mutation.
 if ! (cd "$DW" && bash "$INTEGRITY" assert); then
@@ -118,7 +132,11 @@ fi
 # --- its own dev server --------------------------------------------------------------------------
 PORT="$(node -e 'const s=require("net").createServer();s.listen(0,()=>{console.log(s.address().port);s.close()})')"
 rule "dev server on $PORT (serving the worktree, not the candidate)"
-( cd "$DW/apps/web" && exec npx next dev -p "$PORT" ) > "$EVIDENCE/dw-dev-$PORT.log" 2>&1 &
+# setsid, so the whole dev server process group can be killed. `npx next dev` spawns `next` as a
+# CHILD: killing npx alone leaves next running, and on the first run that surviving process kept
+# writing into the worktree while it was being removed, which deleted it halfway and made every
+# later reading of that directory meaningless.
+setsid bash -c "cd '$DW/apps/web' && exec npx next dev -p $PORT" > "$EVIDENCE/dw-dev-$PORT.log" 2>&1 &
 DEV_PID=$!
 ready=0
 for _ in $(seq 1 90); do

@@ -26,7 +26,12 @@ fi
 restore() { git checkout -- "$F"; }
 trap 'restore' EXIT INT TERM
 
-run() { pnpm --filter @kinetixui/web exec vitest run src/app/create/studio/error.test.tsx 2>&1; }
+# `--fail-if-no-match` is load-bearing, not decoration: `pnpm --filter <name> exec` exits 0 when
+# the filter matches no project, printing only "No projects matched the filters" and running
+# nothing. A gate that lost its match — a renamed package, a typo, a misdetected workspace root —
+# would then report success having executed no test at all. Measured: without the flag, exit 0;
+# with it, exit 1.
+run() { pnpm --filter @kinetixui/web --fail-if-no-match exec vitest run src/app/create/studio/error.test.tsx 2>&1; }
 
 failures=0
 
