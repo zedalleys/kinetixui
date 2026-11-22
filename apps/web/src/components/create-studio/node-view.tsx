@@ -4,6 +4,7 @@ import { Button, Input, Label, Card, CardHeader, CardTitle, CardDescription, Car
 import type { Node } from "@/lib/create-studio/model";
 import { adapterFor } from "@/lib/create-studio/registry";
 import { nodeStyle } from "@/lib/create-studio/presentation";
+import { responsiveProps } from "@/lib/create-studio/responsive";
 export type ResizeHandling = {
   /** The node being resized and the width it would take; the document is not written until release. */
   active: { nodeId: string; width: number } | null;
@@ -17,12 +18,19 @@ export function NodeView({ node, selection, onSelect, onNodePointerDown, dropPar
   if (node.kind === "slot") return <>{children}</>;
   const adapter = adapterFor(node.ref!);
   const p = { ...adapter.defaults, ...node.props };
+  // The resize affordance has to read the SAME props the frame renders. `nodeStyle` resolves the
+  // editing viewport's overrides (`responsiveProps`), so reading base `node.props` here made the
+  // handle disagree with the frame it sits on: at a breakpoint carrying a width override the frame
+  // rendered the override while the handle announced, and stepped from, the base width.
+  const effective = editWidth === undefined ? p : { ...adapter.defaults, ...responsiveProps(node, editWidth) };
   const style = nodeStyle(node, editWidth);
   // Live resize feedback without touching the document: the committed width arrives through the
   // ordinary `props`/`responsive` command only when the pointer is released.
   if (resize?.active?.nodeId === node.id) style.width = resize.active.width;
-  const resizable = !preview && !!resize && node.ref === "layout:section" && p.widthMode !== "fill" && selection.includes(node.id);
-  const currentWidth = Number(resize?.active?.nodeId === node.id ? resize.active.width : p.width);
+  // `widthMode` is overridable per breakpoint, so this must be the effective mode: a frame
+  // overridden to `fill` at the editing viewport renders at 100% and has no fixed width to drag.
+  const resizable = !preview && !!resize && node.ref === "layout:section" && effective.widthMode !== "fill" && selection.includes(node.id);
+  const currentWidth = Number(resize?.active?.nodeId === node.id ? resize.active.width : effective.width);
   const layoutId = node.responsive ? node.id : undefined;
   let content: React.ReactNode;
   switch (node.ref) {

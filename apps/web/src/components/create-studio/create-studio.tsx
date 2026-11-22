@@ -54,16 +54,40 @@ function draftsFor(account: Account, product: Product): Draft[] {
 }
 const nodeLabel = (node: Node) => node.metadata?.name ?? (node.ref === "layout:section" ? String(node.props?.name ?? "Frame") : node.ref ? ADAPTERS[node.ref]?.label ?? node.ref : "Page");
 function ResizeOverlay({ canvas, nodeId, width, guide, rtl }: { canvas: HTMLElement | null; nodeId: string; width: number; guide: string | null; rtl: boolean }) {
-  if (!canvas) return null;
-  const frame = canvas.getBoundingClientRect();
-  const node = canvas.querySelector(`[data-studio-node="${nodeId}"]`)?.getBoundingClientRect();
-  if (!node) return null;
-  // The guide is drawn on the edge being dragged, down the full height of the canvas, so it can be
-  // lined up against anything else on the screen. Announced in the status line, never colour alone.
-  const edge = (rtl ? node.left : node.right) - frame.left;
+  // Measured AFTER the commit that applies the candidate width, not during it. Reading the rect in
+  // the render body reads the DOM as it still is, so the guide trailed the frame by one gesture
+  // step — a measured 2px at a twelve-step drag, and proportionally more the faster the pointer
+  // moves. A layout effect runs after the style lands and before paint, so nothing is ever drawn at
+  // the stale edge. `width` and `guide` are in the dependencies because they are what moves it.
+  const [geometry, setGeometry] = React.useState<{ edge: number; height: number; top: number; frameWidth: number } | null>(null);
+  React.useLayoutEffect(() => {
+    if (!canvas) { setGeometry(null); return; }
+    const frame = canvas.getBoundingClientRect();
+    // The FRAME's own edge, not its wrapper's. The wrapper is a full-width block, so on a frame
+    // narrower than the artboard the guide and the width label sat hundreds of pixels away at the
+    // wrapper's edge while the handle — which M3-A had already moved onto the frame — tracked the
+    // frame: the line claimed an alignment it was not drawn at. The direct `:scope > div > section`
+    // path addresses THIS node's own section rather than a nested frame's, and the section carries
+    // the live candidate width as an inline style, so its rect is the candidate edge without
+    // recomputing the gesture here. Reading a rect also means the camera's CSS transform is already
+    // applied, so no scale arithmetic is repeated.
+    const section = canvas.querySelector(`[data-studio-node="${nodeId}"]`)?.querySelector(":scope > div > section");
+    if (!section) { setGeometry(null); return; }
+    const node = section.getBoundingClientRect();
+    const next = { edge: (rtl ? node.left : node.right) - frame.left, height: frame.height, top: node.top - frame.top, frameWidth: frame.width };
+    setGeometry(previous => previous && Object.keys(next).every(key => Math.abs(previous[key as keyof typeof next] - next[key as keyof typeof next]) < 0.5) ? previous : next);
+  }, [canvas, nodeId, width, guide, rtl]);
+  if (!geometry) return null;
+  const { edge, height, top, frameWidth } = geometry;
+  // `edge` is a PHYSICAL distance from the canvas's left, read off a rect, so it is placed with
+  // `left`. `inset-inline-start` resolves to `right` in a right-to-left document, which put the
+  // guide a measured 127px on the far side of the edge it was supposed to be drawn on: a logical
+  // property applied to a physical measurement mirrors it twice. The label is the one thing that
+  // genuinely belongs on the inline side, so it alone is mirrored, and explicitly.
+  const labelSide = rtl ? { right: frameWidth - edge + 8 } : { left: edge + 8 };
   return <div className="studio-resize-overlay" aria-hidden="true">
-    <div className={`studio-guide ${guide ? "studio-guide-snapped" : ""}`} style={{ insetInlineStart: edge, insetBlockStart: 0, height: frame.height }} />
-    <div className="studio-guide-label" style={{ insetInlineStart: edge + 8, insetBlockStart: node.top - frame.top + 8 }}>{width}px{guide ? ` · ${guide}` : ""}</div>
+    <div className={`studio-guide ${guide ? "studio-guide-snapped" : ""}`} data-studio-guide={nodeId} style={{ left: edge, top: 0, height }} />
+    <div className="studio-guide-label" data-studio-guide-label={nodeId} style={{ ...labelSide, top: top + 8 }}>{width}px{guide ? ` · ${guide}` : ""}</div>
   </div>;
 }
 function DropOverlay({ canvas, hint, label, x, y }: { canvas: HTMLElement | null; hint: { rect: Rect | null; indicator: Rect | null; rejected: string | null } | null; label: string; x: number; y: number }) {
@@ -214,8 +238,15 @@ export function CreateStudio() {
    * is last so a deliberate breakpoint width always wins over the nearest round number.
    */
   const widthGuides = (): Guide[] => {
-    const siblings = rows.flatMap(({ node }) => node.ref === "layout:section" && node.id !== current?.id && typeof node.props?.width === "number"
-      ? [{ value: node.props.width as number, label: `${nodeLabel(node)} · ${node.props.width}px` }] : []);
+    // A sibling's EFFECTIVE width at the editing viewport, not its base: aligning against a frame
+    // means aligning against the edge that is drawn, and a sibling carrying a breakpoint override
+    // is not drawn at its base width. Same root cause as the handle reading base props.
+    const siblings = rows.flatMap(({ node }) => {
+      if (node.ref !== "layout:section" || node.id === current?.id) return [];
+      const props = responsiveProps(node, viewport);
+      if (props.widthMode === "fill" || typeof props.width !== "number") return [];
+      return [{ value: props.width, label: `${nodeLabel(node)} · ${props.width}px` }];
+    });
     return [
       { value: viewport, label: `Viewport · ${viewport}px` },
       ...BREAKPOINTS.map(item => ({ value: item.minWidth, label: `${item.label} · ${item.minWidth}px` })),
