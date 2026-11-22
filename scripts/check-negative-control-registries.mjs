@@ -129,6 +129,14 @@ const NEGATIVES = {
     breaks: "driver-invokes-its-controls",
     why: "`${{ matrix.control && 'x' }}` mentions the matrix and delivers one fixed control to every cell, so presence of the words cannot stand in for identity",
   },
+  "count-is-not-zero-on-empty": {
+    breaks: "loop-shape-guarded",
+    why: "`wc -c` returns 1 for an empty list, so a guard built on it never fires; a count only guards the loop if the operation is zero on empty",
+  },
+  "shell-reassigns-the-matrix-variable": {
+    breaks: "driver-invokes-its-controls",
+    why: "a `CONTROL=…` line in the step's own shell overrides the YAML binding, so every cell runs one control while the env block still reads correctly",
+  },
   "registry-driven-nowhere": {
     breaks: "registry-has-a-driver",
     why: "a registry no workflow names is a set of controls that never execute, which is how pm-matrix's seven went unnoticed",
@@ -284,7 +292,7 @@ const IS_MATRIX_CONTROL = /^\$\{\{\s*matrix\.control\s*\}\}$/;
  * refused with its reason rather than guessed at. Refusing an unrecognised shape can only cost a
  * workflow author one explicit line; accepting one costs the controls silently.
  */
-function tracesToMatrixControl(arg, bindings) {
+function tracesToMatrixControl(arg, bindings, run = "") {
   const payload = unquote(arg);
   if (IS_MATRIX_CONTROL.test(payload)) return { ok: true };
   const name = payload.match(/^\$\{?(\w+)\}?$/)?.[1];
@@ -297,6 +305,13 @@ function tracesToMatrixControl(arg, bindings) {
   const value = String(bindings[name]);
   if (!IS_MATRIX_CONTROL.test(value.trim())) {
     return { ok: false, why: `$${name} is bound to \`${value}\`, which is not \`\${{ matrix.control }}\` itself` };
+  }
+  // Codex's review of `83b67510`: a `CONTROL=missing-import` line in the step's own shell overrides
+  // the YAML binding, and a binding read from YAML alone cannot see that. The environment is only
+  // what the cell receives if the shell does not reassign it.
+  const assigns = new RegExp(`(?:^|[;&|(]\\s*)${name}=`, "m").test(run.replace(/#.*$/gm, ""));
+  if (assigns) {
+    return { ok: false, why: `the step's own shell assigns $${name}, which overrides the \`${value}\` binding` };
   }
   return { ok: true };
 }
@@ -347,7 +362,7 @@ function discoverDrivers() {
           // Only a literal list is a second copy of the registry. A `fromJSON` matrix computed from a
           // job output is a different failure mode (an empty matrix skips the job) and is not claimed here.
           if (Array.isArray(controls)) {
-            matrices.push({ ...site, script: found.script, controls: [...controls], arg: found.arg, bindings });
+            matrices.push({ ...site, script: found.script, controls: [...controls], arg: found.arg, bindings, run });
           }
         }
       }
@@ -461,8 +476,22 @@ function loopShape(run, script) {
   if (!captured) return { shape: "unrecognised", why: "the list is neither the `for` word list nor captured into a variable of its own" };
   const list = captured[1];
 
-  const counted = text.match(new RegExp(`^\\s*(\\w+)=\\$\\([^)]*\\$(?:\\{${list}\\}|${list}\\b)[^)]*\\)`, "m"));
-  if (!counted) return { shape: "unrecognised", why: `no count is derived from $${list}` };
+  // Codex's review of `83b67510`: accepting any substitution that MENTIONED the list let
+  // `printf '%s\\n' "$controls" | wc -c` count as the guard. On an empty list that returns 1, not 0,
+  // so `-lt 1` is false, the guard does not fire and the loop runs nothing. A count is only a guard
+  // if it is zero on empty, which depends on the operation, so the operation is allowlisted:
+  // `grep -c .` fed by `printf '%s\\n'` or `echo`, with or without `|| true`.
+  const counting = `=\\$\\(\\s*(?:printf\\s+(?:'%s\\\\n'|"%s\\\\n")|echo)\\s+"?\\$(?:\\{${list}\\}|${list})"?\\s*\\|\\s*grep\\s+-c\\s+\\.\\s*(?:\\|\\|\\s*true\\s*)?\\)`;
+  const counted = text.match(new RegExp(`^\\s*(\\w+)${counting}`, "m"));
+  if (!counted) {
+    const mentions = new RegExp(`^\\s*\\w+=\\$\\([^)]*\\$(?:\\{${list}\\}|${list}\\b)`, "m").test(text);
+    return {
+      shape: "unrecognised",
+      why: mentions
+        ? `a count is derived from $${list}, but not by \`grep -c .\` over \`printf\`/\`echo\`, so whether it is zero on an empty list cannot be established here`
+        : `no count is derived from $${list}`,
+    };
+  }
   const count = counted[1];
 
   const refuses = lines.some((l) =>
@@ -498,6 +527,28 @@ function run({ control } = {}) {
     }
   }
 
+  if (control === "count-is-not-zero-on-empty") {
+    loops.push({
+      workflow: "a11y-browser.yml", job: "navigation-negative-controls", step: "A loop counting bytes instead of lines",
+      script: "scripts/check-taxonomy-namespaces.mjs",
+      run: 'controls=$(node scripts/check-taxonomy-namespaces.mjs --list-negatives)\n'
+        + 'count=$(printf \'%s\\n\' "$controls" | wc -c)\n'
+        + 'if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi\n'
+        + 'for control in $controls; do\n'
+        + '  node scripts/check-taxonomy-namespaces.mjs --negative="$control"\n'
+        + 'done\n',
+    });
+  }
+  if (control === "shell-reassigns-the-matrix-variable") {
+    matrices.push({
+      workflow: "native-swiftui.yml", job: "consumer-negative-controls", step: "Negative control: a reassigned variable",
+      script: "scripts/check-taxonomy-namespaces.mjs",
+      controls: [...(controlsByScript.get("scripts/check-taxonomy-namespaces.mjs") ?? [])],
+      arg: '"$CONTROL"',
+      bindings: { CONTROL: "${{ matrix.control }}" },
+      run: 'CONTROL=missing-import\nnode scripts/check-taxonomy-namespaces.mjs --negative="$CONTROL"\n',
+    });
+  }
   if (control === "loop-lists-but-never-invokes") {
     loops.push({
       workflow: "a11y-browser.yml", job: "navigation-negative-controls", step: "A loop that logs instead of running",
@@ -572,7 +623,7 @@ function run({ control } = {}) {
     fail("driver-invokes-its-controls", `${where} lists ${loop.script}'s controls into $${variable}, but nothing INSIDE the loop invokes ${loop.script} --negative= with $${variable}; a call after \`done\` runs once, on the last name only`);
   }
   for (const m of matrices) {
-    const verdict = tracesToMatrixControl(m.arg, m.bindings);
+    const verdict = tracesToMatrixControl(m.arg, m.bindings, m.run ?? "");
     if (verdict.ok) { executes.push(m); continue; }
     fail("driver-invokes-its-controls", `${m.workflow} job ${m.job} step "${m.step}" invokes ${m.script} --negative=${m.arg}, and ${verdict.why}, so all ${m.controls.length} cells would run the same control`);
   }
