@@ -148,7 +148,7 @@ control "a non-conflict rejection of a retry settles an earlier unconfirmed save
 control "a conflict on a retry loses the sentence that explains it" \
   '    const conflictOnRetry = earlierOpen && e instanceof ApiError && e.code === "REVISION_CONFLICT";' \
   '    const conflictOnRetry = false;' \
-  "the stored revision has moved on"
+  "must say the earlier save may be what moved the revision"
 
 # The verdict in the status bar's shared announcement slot, which is what it did first. Several
 # unrelated effects write there — the draft-storage one fires repeatedly when storage is refusing
