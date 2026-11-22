@@ -99,6 +99,10 @@ const notesDir = `${root}/release/notes`;
 const notes = existsSync(notesDir) ? readdirSync(notesDir).filter((f) => f.endsWith(".json")).sort() : [];
 if (notes.length === 0) errors.push("release/notes holds no curated notes — this check would pass by having nothing to compare");
 
+// The writer activates only the version named in `packages/ui/package.json`, so that version is the
+// ONLY one a regeneration can restore. Read it so the diagnostic prescribes a repair that works.
+const writableVersion = JSON.parse(readFileSync(`${root}/packages/ui/package.json`, "utf8")).version;
+
 let compared = 0;
 for (const file of notes) {
   const version = file.replace(/\.json$/, "");
@@ -151,8 +155,15 @@ for (const file of notes) {
       errors.push(
         `${version}: apps/web/src/lib/releases.ts no longer matches release/notes/${file}.\n` +
           `      The note was corrected after it was activated, and the changelog page still carries the\n` +
-          `      superseded text. Re-running the generator will NOT repair this — delete the ${version}\n` +
-          `      entry from releases.ts and re-run \`node scripts/version-release-meta.mjs\`.\n` +
+          `      superseded text. Re-running the generator over the file as it stands will NOT repair this,\n` +
+          `      because the writer only ever writes a version that is MISSING from the history.\n` +
+          (version === writableVersion
+            ? `      ${version} is the version in packages/ui/package.json, so it is regenerable: delete the\n` +
+              `      ${version} entry from releases.ts and re-run \`node scripts/version-release-meta.mjs\`.\n`
+            : `      ${version} is NOT the version in packages/ui/package.json (${writableVersion}), which is the\n` +
+              `      only version the writer will ever write — so deleting this entry would remove it\n` +
+              `      permanently AND leave this check skipping ${version} altogether. Edit the entry in\n` +
+              `      releases.ts to match the note instead; the expectation printed below is that text.\n`) +
           `      they agree for ${at} characters, then diverge at line ${line} of the entry (… marks the point):\n` +
           `        page: …${window(page)}\n` +
           `        note: …${window(note)}`,
