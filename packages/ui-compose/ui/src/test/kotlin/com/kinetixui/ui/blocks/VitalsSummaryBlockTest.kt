@@ -29,6 +29,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * The "Observations summary" block — see SignInBlockTest.kt for how block fixtures work.
@@ -139,6 +140,8 @@ internal fun spokenReading(reading: VitalReading): String = buildList {
 // kx-block:end
 
 @RunWith(RobolectricTestRunner::class)
+// Pinned like every other block fixture here: the default SDK 37 needs Java 21 and CI runs Java 17.
+@Config(sdk = [34])
 class VitalsSummaryBlockTest {
     @get:Rule
     val rule = createComposeRule()

@@ -45,6 +45,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * The "Appointment booking" block — see SignInBlockTest.kt for how block fixtures work.
@@ -258,6 +259,8 @@ private fun SlotRow(slot: AppointmentSlot, selected: Boolean, onSelect: () -> Un
 // kx-block:end
 
 @RunWith(RobolectricTestRunner::class)
+// Pinned like every other block fixture here: the default SDK 37 needs Java 21 and CI runs Java 17.
+@Config(sdk = [34])
 class AppointmentBookingBlockTest {
     @get:Rule
     val rule = createComposeRule()

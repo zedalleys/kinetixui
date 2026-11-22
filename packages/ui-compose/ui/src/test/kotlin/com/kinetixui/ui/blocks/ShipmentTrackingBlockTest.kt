@@ -37,6 +37,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * The "Shipment tracking" block — see SignInBlockTest.kt for how block fixtures work.
@@ -159,6 +160,8 @@ fun ShipmentTrackingBlock(onChooseDate: () -> Unit = {}) {
 // kx-block:end
 
 @RunWith(RobolectricTestRunner::class)
+// Pinned like every other block fixture here: the default SDK 37 needs Java 21 and CI runs Java 17.
+@Config(sdk = [34])
 class ShipmentTrackingBlockTest {
     @get:Rule
     val rule = createComposeRule()
