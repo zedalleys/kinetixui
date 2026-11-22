@@ -253,10 +253,17 @@ arm_index() {
   unreadable="$(grep -l 'COULD NOT READ THE INDEX' "$out"/snap-* "$out"/rec-*.log 2> /dev/null | wc -l)"
   # And they must agree: a snapshot that succeeded by reading a DIFFERENT tree would be worse than
   # one that failed, because it would be believed.
+  # ONLY the index field. Counting every 40-hex token in the snapshots counts the commit SHA too,
+  # so this reported "all agreed on one tree (2 distinct)" — a sentence at odds with its own
+  # number, about a reading the assertion did not even use.
   local trees
-  trees="$(cat "$out"/snap-*  2> /dev/null | tr ' ' '\n' | grep -E '^[0-9a-f]{40}$' | sort -u | wc -l)"
-  if [ "$bad_rounds" -eq 0 ]; then
-    ok "index: $((rounds * width)) concurrent index snapshots all succeeded, and all agreed on one tree ($trees distinct)"
+  trees="$(awk '$1 == "index" {print $2}' "$out"/snap-* 2> /dev/null | sort -u | wc -l)"
+  if [ "$bad_rounds" -eq 0 ] && [ "$trees" -eq 1 ]; then
+    ok "index: $((rounds * width)) concurrent index snapshots all succeeded, and every one recorded the same index tree"
+  elif [ "$bad_rounds" -eq 0 ]; then
+    # Worse than a failure, because it would be believed: a snapshot that succeeded while reading a
+    # different tree.
+    bad "index: all $((rounds * width)) concurrent snapshots succeeded but recorded $trees different index trees"
   else
     bad "index: $failed_total of $((rounds * width)) concurrent snapshots failed across $bad_rounds of $rounds rounds; $unreadable of them could not read the index (git's own lock message is discarded by the snapshot, so the lock cannot be named from here)"
   fi
