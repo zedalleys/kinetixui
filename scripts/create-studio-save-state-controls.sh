@@ -2,6 +2,10 @@
 #
 # Source negative controls for the Create Studio save-acknowledgement gate (M5.22).
 #
+# Eleven controls. Nine were written with the model; two more were added after Codex's exact-head
+# review of `3927a8c7` found that a non-conflict rejection settled an earlier uncertain save, and
+# that overflowing the bounded attempt list let the check blame a writer that never existed.
+#
 # A browser gate cannot edit the source it measures, so the implementation controls live here.
 # Each entry removes exactly ONE part of the save-outcome model, runs the real gate, requires it to
 # fail NAMING the behaviour that part protects, and restores the file. The run ends by requiring the
@@ -65,6 +69,14 @@ PY
 # control <label> <old> <new> <expected substring of the failure>
 control() {
   local label="$1" old="$2" new="$3" expected="$4"
+  # CONTROL_ONLY re-runs a single control in isolation, for when one of them failed on an
+  # infrastructure timeout rather than on its own detection and needs a clean measurement. Skips
+  # are counted and printed, and a filter that matches nothing is itself a failure, so a typo
+  # here can never read as "the controls passed".
+  if [ -n "${CONTROL_ONLY:-}" ] && [ "${label#*"$CONTROL_ONLY"}" = "$label" ]; then
+    skipped=$((skipped + 1)); return
+  fi
+  selected=$((selected + 1))
   if ! patch_file "$STUDIO" "$old" "$new"; then
     echo "CONTROL BROKEN   $label (anchor missing)"; failures=$((failures + 1)); return
   fi
@@ -85,6 +97,8 @@ control() {
   fi
 }
 
+skipped=0
+selected=0
 echo "== M5.22 save-acknowledgement source negative controls =="
 
 CLASSIFY='  return error instanceof ApiError && REJECTED_SAVE_CODES.has(error.code) ? "rejected" : "unconfirmed";'
@@ -128,12 +142,23 @@ control "reconciliation reports a commit without comparing the stored document" 
   '      const committed = attempts[0];' \
   "must report that this save did not commit"
 
-# A conflict on a retry is evidence the earlier attempt landed. Treating it as a settled failure
-# tells the user their work was lost at the exact moment the store is holding it.
-control "a conflict on a retry is treated as proof the earlier save failed" \
-  '    const retryConflict = outcome === "rejected" && e instanceof ApiError && e.code === "REVISION_CONFLICT" && saveOutcome === "unconfirmed";' \
-  '    const retryConflict = false;' \
-  "after the diverging retry"
+# THE CONTROL FOR CODEX'S FIRST FINDING AT `3927a8c7`, and the reason the condition is no longer
+# written in terms of a particular code. A rejection of the latest request proves the store was not
+# touched BY THAT REQUEST and establishes nothing about the ones before it. Narrowing the condition
+# back to REVISION_CONFLICT — which is what shipped at `3927a8c7` — makes a retry refused for any
+# other reason declare the earlier, still-unresolved save a settled failure and take the check away.
+control "a non-conflict rejection of a retry settles an earlier unconfirmed save" \
+  '    const keepUnconfirmed = outcome === "rejected" && earlierOpen;' \
+  '    const keepUnconfirmed = outcome === "rejected" && earlierOpen && e instanceof ApiError && e.code === "REVISION_CONFLICT";' \
+  "after a rejected retry"
+
+# A conflict on a retry is evidence the earlier attempt landed, which is worth saying in its own
+# words. Without that sentence the user is told the revision moved but not that this is the one
+# refusal which suggests their earlier save is what moved it.
+control "a conflict on a retry loses the sentence that explains it" \
+  '    const conflictOnRetry = earlierOpen && e instanceof ApiError && e.code === "REVISION_CONFLICT";' \
+  '    const conflictOnRetry = false;' \
+  "must say the earlier save may be what moved the revision"
 
 # The verdict in the status bar's shared announcement slot, which is what it did first. Several
 # unrelated effects write there — the draft-storage one fires repeatedly when storage is refusing
@@ -147,18 +172,59 @@ control "the reconciliation verdict shares the volatile announcement slot" \
 # screen leaves Save enabled against a revision this work was never based on, and the next save
 # overwrites that writer silently. Removing the conflict base is removing the only thing that stops
 # it.
+# The anchor reaches the foreign branch through the one line that is unique to it. Both that branch
+# and the truncation branch above contain the same `setProduct` / `setDraftBase(floor)` /
+# `setSaveOutcome("unconfirmed")` triple, so a bare `setDraftBase(floor);` anchor matched the
+# truncation branch first: the control perturbed the wrong code and the gate failed in case 11
+# instead of case 9. A control that fires for the wrong reason proves nothing.
 control "a foreign write during uncertainty leaves saving enabled over it" \
-  '        setDraftBase(floor);' \
-  '' \
+  '        setDraftBase(floor);
+        setSaveOutcome("unconfirmed");
+        setChecked(`Checked: the stored version is revision ${stored.revision}, and it is not what that save sent.`);' \
+  '        setSaveOutcome("unconfirmed");
+        setChecked(`Checked: the stored version is revision ${stored.revision}, and it is not what that save sent.`);' \
   "saving over a foreign write must be unavailable"
 
 # Codex's P2 at `1e21261e`. Keeping only the latest attempt makes reconciliation compare the store
 # against the refused retry, so it reports another writer where there was none and cannot confirm
 # the save that actually committed.
 control "only the latest uncertain attempt is remembered" \
-  '      if (outcome === "unconfirmed") pendingSaves.current = [...pendingSaves.current, attempt].slice(-20);' \
-  '      if (outcome === "unconfirmed") pendingSaves.current = [attempt];' \
+  '        pendingSaves.current = next.slice(-PENDING_SAVE_LIMIT);' \
+  '        pendingSaves.current = [attempt];' \
   "the check must report that the earlier save committed"
+
+# THE CONTROL FOR CODEX'S SECOND FINDING AT `3927a8c7`. The list is bounded, so it can stop being
+# exhaustive — and a check that treats a bounded list as exhaustive converts "an attempt I no longer
+# hold may be what is stored" into "somebody else wrote", which then blocks saving against a writer
+# who does not exist. Not recording the overflow is what makes that fabrication possible.
+control "overflowing the attempt list goes unrecorded, so the check blames a foreign writer" \
+  '        if (next.length > PENDING_SAVE_LIMIT) pendingTruncated.current = true;' \
+  '' \
+  "must not blame a writer it cannot have observed"
+
+# The brief asks separately for a control that reintroduces OVERWRITING a competing writer's
+# document, and for one that reintroduces ENABLING Save after an unresolved conflicting revision.
+# In this code those are one mechanism — `staleDraft` is what blocks the save and what the
+# reconciliation branch arms — so the control above and this one approach it from the two ends:
+# that one stops the state being recorded, this one stops the recorded state having any effect.
+# Removing the guard leaves Save enabled against a revision the work was never based on, and the
+# next save carries the adopted revision and overwrites that writer. Recorded rather than claimed
+# as two independent protections.
+control "the stale-draft guard no longer disables saving over a superseded revision" \
+  '  const staleDraft = draftBase !== null && draftBase !== product?.revision;' \
+  '  const staleDraft = false;' \
+  "must be unavailable"
+
+# THE CONTROL FOR CODEX'S FINDING ON THIS PR'S OWN HEAD. A confirmed save clears the attempts; if
+# it does not also clear the record that the list once dropped one, the next uncertainty inherits it
+# and a genuine competing write is reported as unknowable instead of being named. That is the
+# mirror of case 11's defect: there the editor claimed more than it knew, here it claims less.
+control "a confirmed save leaves the truncation record behind" \
+  '      pendingSaves.current = []; pendingTruncated.current = false;
+      setRecovered(false); setNotice("Saved to this computer'"'"'s local server.");' \
+  '      pendingSaves.current = [];
+      setRecovered(false); setNotice("Saved to this computer'"'"'s local server.");' \
+  "with an exhaustive list the check must not plead ignorance"
 
 echo "== restored tree must pass =="
 restore_all
@@ -174,6 +240,12 @@ if printf '%s\n' "$final" | tail -1 | grep -q '"passed"'; then
   echo "restored tree passes the gate"
 else
   echo "RESTORED TREE DOES NOT PASS"; printf '%s\n' "$final" | tail -6 | sed 's/^/       /'; failures=$((failures + 1))
+fi
+if [ -n "${CONTROL_ONLY:-}" ]; then
+  echo "CONTROL_ONLY=$CONTROL_ONLY selected $selected, skipped $skipped"
+  if [ "$selected" -eq 0 ]; then
+    echo "CONTROL_ONLY MATCHED NOTHING — no control was measured"; failures=$((failures + 1))
+  fi
 fi
 echo "controls with problems: $failures"
 exit $((failures > 0))

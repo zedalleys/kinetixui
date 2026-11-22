@@ -66,6 +66,25 @@ const DEFAULTS = {
   "layout:grid": { columns: 2, gap: "spacing.4", padding: "spacing.4" },
   "layout:section": { name: "Untitled screen", width: 640, widthMode: "fixed", gap: "spacing.4", padding: "spacing.6" },
 };
+/**
+ * The refs this gate actually makes an assertion about.
+ *
+ * Without this, an unrecognised `node.ref` fell through every branch below and the loop returned no
+ * disagreement for it — so a node whose output was entirely absent passed. Verified by Codex on
+ * #651's exact head, and verified here: an unknown ref produced `[]` with no DOM lookup at all.
+ *
+ * The second assertion is the part that keeps this honest over time. Listing the refs is no use if
+ * a ninth adapter can be added to DEFAULTS and rendered while this gate stays silent about it, so
+ * extending the supported set without extending the gate must redden rather than widen the hole.
+ */
+const ASSERTED_REFS = new Set([
+  "layout:section", "layout:grid", "layout:stack",
+  "component:Button", "component:Badge", "component:Input", "component:Card", "component:Tabs",
+]);
+for (const ref of Object.keys(DEFAULTS)) {
+  assert.ok(ASSERTED_REFS.has(ref), `the gate makes no assertion about the supported ref ${ref}; add one rather than widening ASSERTED_REFS`);
+}
+
 function* nodesOf(document) {
   for (const page of document.pages) {
     const stack = [page.root];
@@ -87,6 +106,12 @@ async function disagreements(page, document, width) {
   for (const node of nodesOf(document)) {
     if (!node.ref) continue;
     const props = { ...DEFAULTS[node.ref], ...effectiveProps(node, width) };
+    // Fail closed. A ref-less node is an intentional slot and is skipped above; a node carrying a
+    // ref this gate cannot assert about is unverified output, which is not the same as agreement.
+    if (!ASSERTED_REFS.has(node.ref)) {
+      failures.push(`${node.id} ref "${node.ref}": this gate makes no assertion about that reference, so its output is unverified`);
+      continue;
+    }
     if (node.ref === "layout:section") {
       await check(`${node.id} frame "${props.name}"`, async () =>
         assert.ok(await page.locator(`section[aria-label=${JSON.stringify(String(props.name))}]`).count() > 0, "no section with that accessible name"));
@@ -130,6 +155,26 @@ async function disagreements(page, document, width) {
           // maxWidth:100% clamps a fixed frame to the viewport, so compare against the smaller.
           const expected = Math.min(Number(props.width), width);
           assert.ok(Math.abs(parseFloat(box.width) - expected) <= 1, `width ${box.width} is not ${expected}px`);
+        } else if (node.ref === "layout:section") {
+          // The effective mode is `fill`, and skipping the width here is what let a fill frame
+          // report its old fixed 640px at a 1440px viewport and still pass — so the one saved
+          // width-mode override in the fixture was protected by nothing. Verified by Codex on
+          // #651's exact head.
+          //
+          // `fill` means the frame takes its containing block's content width, so that is what is
+          // measured: both widths from the same kind of reading (laid-out boxes), and the parent's
+          // padding and borders removed, because the content box is what a child can fill.
+          const measured = await element.first().evaluate(el => {
+            const parent = el.parentElement;
+            if (!parent) return null;
+            const style = getComputedStyle(parent);
+            const inner = parent.getBoundingClientRect().width
+              - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+              - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth);
+            return { self: el.getBoundingClientRect().width, inner };
+          });
+          assert.ok(measured, "a fill frame must have a containing block to fill");
+          assert.ok(Math.abs(measured.self - measured.inner) <= 1, `a fill frame is ${measured.self}px, not its containing block's ${measured.inner}px`);
         }
       });
     }
@@ -280,8 +325,27 @@ try {
   const page = await context.newPage();
   const runtimeErrors = [];
   page.on("pageerror", error => runtimeErrors.push(error.message));
-  await page.goto(site.url);
-  await page.locator("section").first().waitFor();
+  /**
+   * Navigate and wait until React has actually committed.
+   *
+   * `waitUntil: "load"` says the document and its subresources arrived; it says nothing about the
+   * asynchronous `createRoot(...).render(...)` in the scaffolded entry having run. The control
+   * navigations below had no mount wait at all, and `disagreements()` reads with immediate
+   * `count()` calls rather than retrying assertions — so a control could be credited because the
+   * whole page was still absent, not because the behaviour it perturbs was detected. Verified by
+   * Codex on #651's exact head.
+   *
+   * The marker is the first `section`, which is what the initial navigation already waited for: it
+   * is committed output, and it is deliberately NOT the property any control mutates (control B
+   * changes a Button's text, control C strips the responsive stylesheet), so waiting on it cannot
+   * mask the very thing being measured.
+   */
+  const gotoMounted = async (url) => {
+    await page.goto(url, { waitUntil: "load" });
+    await page.locator("section").first().waitFor({ state: "attached", timeout: 30_000 });
+    await page.waitForFunction(() => document.querySelectorAll("section").length > 0, null, { timeout: 30_000 });
+  };
+  await gotoMounted(site.url);
   assert.deepEqual(runtimeErrors, [], "the built consumer page raised runtime errors");
   pass("the built consumer page mounts with no runtime error");
 
@@ -326,7 +390,7 @@ try {
   const savedText = { ...DEFAULTS["component:Button"], ...savedButton.props }.text;
   await writeFile(join(consumer, "design.tsx"), design.replace(JSON.stringify(savedText), JSON.stringify(savedText + " (dropped)")));
   rebuild();
-  await page.goto(site.url, { waitUntil: "load" });
+  await gotoMounted(site.url);
   const lostProperty = await disagreements(page, document, 1440);
   await writeFile(join(consumer, "design.tsx"), design);
   await control("a lost saved property is detected in the rendered output", lostProperty.some(failure => failure.includes(savedButton.id)), lostProperty);
@@ -341,7 +405,7 @@ try {
   const overridden = [...nodesOf(document)].find(node => node.ref === "layout:grid" && node.responsive?.desktop?.columns !== undefined);
   assert.ok(overridden, "the fixture composition must contain a measurable desktop grid override for control C");
   await page.setViewportSize({ width: 1440, height: 1200 });
-  await page.goto(site.url, { waitUntil: "load" });
+  await gotoMounted(site.url);
   const discarded = await disagreements(page, document, 1440);
   await writeFile(join(consumer, "theme.css"), theme);
   rebuild();
@@ -349,11 +413,69 @@ try {
   // some unrelated reason a stripped stylesheet might cause.
   await control("a discarded responsive configuration is detected at the desktop breakpoint", discarded.some(failure => failure.includes(overridden.id)), discarded);
 
+  // D: a node carrying a reference this gate cannot assert about must be reported, not skipped.
+  // This control perturbs the DOCUMENT rather than the output, because the hole was in the
+  // comparison itself: before the repair, an unrecognised ref produced no assertion and no
+  // disagreement, so an entirely absent node passed. Nothing is rebuilt — the built page is
+  // untouched and still correct, which is the point: the only thing wrong is that the gate is
+  // being asked about something it does not understand, and it must say so.
+  // Reload first. Control C left the page showing its stripped-stylesheet build, and reading that
+  // page here mixed C's failures into D's evidence — D still detected its own defect, because its
+  // assertion names the unknown ref, but evidence a reviewer cannot attribute is evidence that has
+  // to be taken on trust.
+  await gotoMounted(site.url);
+  const unknownRef = structuredClone(document);
+  unknownRef.pages[0].root.children = [
+    ...(unknownRef.pages[0].root.children ?? []),
+    { id: "control-d-unknown", kind: "component", ref: "component:NotAnAdapter", props: {} },
+  ];
+  const unknown = await disagreements(page, unknownRef, 1440);
+  await control(
+    "a node reference the gate cannot assert about is reported rather than skipped",
+    unknown.some(failure => failure.includes("control-d-unknown") && failure.includes("no assertion")),
+    unknown,
+  );
+
+  // E: a frame whose effective width mode is `fill` must be measured too. Before the repair the
+  // width assertion ran only for `fixed`, so the fixture's one saved `fill` override was protected
+  // by nothing — a fill frame could render at its old 640px and pass.
+  //
+  // The (node, width) pair is DERIVED from the document rather than hard-coded, so this control
+  // cannot quietly stop testing anything if the fixture changes: if no fill frame exists at any
+  // measured width, the control refuses instead of passing.
+  let fillCase = null;
+  for (const width of widths) {
+    for (const node of nodesOf(document)) {
+      if (node.ref !== "layout:section" || !node.responsive) continue;
+      const props = { ...DEFAULTS[node.ref], ...effectiveProps(node, width) };
+      if (props.widthMode === "fill") { fillCase = { node, width }; break; }
+    }
+    if (fillCase) break;
+  }
+  assert.ok(fillCase, "the fixture composition must contain a frame whose effective width mode is fill for control E");
+  await writeFile(join(consumer, "theme.css"), `${theme}\n[data-kx-layout="${fillCase.node.id}"]{width:640px !important;}\n`);
+  rebuild();
+  await page.setViewportSize({ width: fillCase.width, height: 1200 });
+  await page.waitForFunction(w => Math.abs(innerWidth - w) <= 1, fillCase.width);
+  await gotoMounted(site.url);
+  const narrowed = await disagreements(page, document, fillCase.width);
+  await writeFile(join(consumer, "theme.css"), theme);
+  rebuild();
+  await control(
+    `a fill frame rendered at a fixed width is detected at ${fillCase.width}px`,
+    narrowed.some(failure => failure.includes(fillCase.node.id) && failure.includes("containing block")),
+    narrowed,
+  );
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  await page.waitForFunction(() => Math.abs(innerWidth - 1440) <= 1);
+
   // Restore and prove the gate is green again on the repaired fixture, so the controls above
   // cannot be credited to a gate that simply fails everything.
-  await page.goto(site.url, { waitUntil: "load" });
+  // Through the same helper: Codex named this check too, because a restored fixture read before
+  // React commits fails for a reason that has nothing to do with the fixture.
+  await gotoMounted(site.url);
   assert.deepEqual(await disagreements(page, document, 1440), [], "the restored fixture must pass again");
-  pass("three negative controls redden the gate and the restored fixture passes again");
+  pass("five negative controls redden the gate and the restored fixture passes again");
 
   await context.close();
   await site.close();
