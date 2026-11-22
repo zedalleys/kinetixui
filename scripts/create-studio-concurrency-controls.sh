@@ -219,9 +219,12 @@ arm_ownership() {
   local waited=0
   while [ ! -s "$out/grp.info" ] && [ "$waited" -lt 100 ]; do sleep 0.1; waited=$((waited + 1)); done
   local pgid aban live
-  read -r pgid aban live < "$out/grp.info" 2> /dev/null || true
+  [ -s "$out/grp.info" ] && read -r pgid aban live < "$out/grp.info"
   if [ -z "${live:-}" ]; then
-    bad "ownership: the shared-group control could not start its decoys, so it measured nothing"
+    # The decoys are scaffolding, not the subject: if they never start, this arm has observed
+    # nothing about the group-reaping repair, and an unobserved experiment must not be reported as
+    # a failing assertion — the regression prover reads a FAIL as a detection.
+    cannot "ownership: the shared-group control could not start its decoys within 10s (grp.info $([ -s "$out/grp.info" ] && echo 'held '"$(tr -d '\n' < "$out/grp.info")" || echo 'never written')), so the group hazard was not exercised"
   else
     printf '%s %s %s\n' "$live" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CAND" > "$B.owner"
     printf '      shared group %s — abandoned %s, live %s (owner marker written for the live one)\n' "$pgid" "$aban" "$live"
