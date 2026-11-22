@@ -194,7 +194,12 @@ try {
       // This order matters: the control for this behaviour restores the browser's own message, and
       // the assertion that names THAT must be the one that fires.
       assert.doesNotMatch(alert, /Failed to fetch/i, `a transport failure must not surface the browser's own message, read: ${alert.slice(0, 180)}`);
-      assert.match(alert, /Nothing was saved/i, `a transport failure must say nothing was saved, read: ${alert.slice(0, 180)}`);
+      // Deliberately NOT "nothing was saved": the server commits before it builds the reply, so a
+      // connection lost after the commit leaves the write done and only the acknowledgement lost.
+      // The editor must report that the save is UNCONFIRMED, and must say the draft is still held.
+      assert.doesNotMatch(alert, /Nothing was saved/i, `a transport failure must not claim nothing was saved, read: ${alert.slice(0, 180)}`);
+      assert.match(alert, /could not be confirmed/i, `a transport failure must report the save as unconfirmed, read: ${alert.slice(0, 180)}`);
+      assert.match(alert, /draft is still in this browser/i, `a transport failure must say the draft is still held, read: ${alert.slice(0, 180)}`);
       const state = await studio.locator(".studio-save-state").innerText();
       assert.match(state, /Save failed/, `the save state must report the failure, read: ${state}`);
       assert.doesNotMatch(state, /^Saved/, "a failed save must never read as saved");

@@ -19,20 +19,33 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 BASE="${CREATE_BASE:-http://127.0.0.1:3137}"
 ARTIFACTS="${CREATE_ARTIFACTS:-.impeccable/review/create-studio}"
-restore_all() { git checkout -- "$STUDIO" "$CSS" 2>/dev/null || true; }
-trap 'restore_all' EXIT INT TERM
-
 STUDIO=apps/web/src/components/create-studio/create-studio.tsx
 CSS=apps/web/src/app/create/studio/studio.css
 failures=0
 
-if ! git diff --quiet -- "$STUDIO" "$CSS"; then
+# The preflight runs BEFORE the restoring trap is installed, and that order is load-bearing: the
+# trap discards working-tree changes to these two files, so a trap armed before this check would
+# destroy the very edits the check exists to protect the moment the refusal exits.
+if ! git diff --quiet -- "$STUDIO" "$CSS" || ! git diff --cached --quiet -- "$STUDIO" "$CSS"; then
   echo "refusing to run: $STUDIO or $CSS has uncommitted changes, and this script restores by discarding them"
   exit 2
 fi
 
+restore_all() { git checkout -- "$STUDIO" "$CSS" 2>/dev/null || true; }
+trap 'restore_all' EXIT INT TERM
+
 run_gate() {
   CREATE_BASE="$BASE" CREATE_ARTIFACTS="$ARTIFACTS" node scripts/create-studio-resilience-browser.mjs 2>&1
+}
+
+# The gate prints the diagnostic of each of its own reading-controls, and those diagnostics quote
+# the assertion message the reading-control deliberately induced. So a SUCCESSFUL gate run already
+# contains strings like "must not drop focus to the document body". Searching the whole output for
+# the expected substring would therefore report a source control as passing even when the source
+# mutation reproduced nothing. Two things fix that: the gate must EXIT NONZERO, and the substring
+# must appear in the terminal failure — the part of the output after the last reading-control line.
+terminal_failure() {
+  awk '/^CONTROL /{last = NR} {line[NR] = $0} END {for (i = last + 1; i <= NR; i++) print line[i]}'
 }
 
 # patch <file> <old> <new>
@@ -53,13 +66,18 @@ control() {
   if ! patch_file "$file" "$old" "$new"; then
     echo "CONTROL BROKEN   $label (anchor missing)"; failures=$((failures + 1)); return
   fi
-  local output; output="$(run_gate)"
+  local output status
+  output="$(run_gate)"; status=$?
   git checkout -- "$file"
-  if echo "$output" | grep -qF -- "$expected"; then
+  if [ "$status" -eq 0 ]; then
+    echo "CONTROL FAILED   $label — the gate PASSED with the defect in place"
+    failures=$((failures + 1)); return
+  fi
+  if printf '%s\n' "$output" | terminal_failure | grep -qF -- "$expected"; then
     echo "CONTROL PASS     $label"
-    echo "$output" | grep -F -- "$expected" | head -1 | cut -c1-200 | sed 's/^/       detected: /'
+    printf '%s\n' "$output" | terminal_failure | grep -F -- "$expected" | head -1 | cut -c1-200 | sed 's/^/       detected: /'
   else
-    echo "CONTROL FAILED   $label — the gate did not fail naming: $expected"
+    echo "CONTROL FAILED   $label — the gate failed, but its terminal failure did not name: $expected"
     echo "$output" | tail -6 | sed 's/^/       /'
     failures=$((failures + 1))
   fi
@@ -76,10 +94,21 @@ control "a loaded document is rendered without being read" "$STUDIO" \
   '  try { return product; }' \
   "must stay mounted when a document cannot be read"
 
+TRANSPORT='    throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server did not answer, so this save could not be confirmed — it may or may not have been stored. Your draft is still in this browser. Check that the development server is still running, then reopen the product to see what was stored, or download your draft.");'
+
 control "a transport failure surfaces the browser's own message" "$STUDIO" \
-  '    throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server did not answer. Nothing was saved. Check that the development server is still running, then retry, or download your draft.");' \
+  "$TRANSPORT" \
   '    throw new ApiError("NETWORK_UNAVAILABLE", "Failed to fetch");' \
   "must not surface the browser's own message"
+
+# The server commits before it builds its reply, so a connection lost after the commit leaves the
+# write DONE and only the acknowledgement lost. This control restores the sentence this PR shipped
+# with first — "Nothing was saved" — which is a false statement about the user's data in exactly
+# that case, and is the mirror image of reporting an unconfirmed save as saved.
+control "a lost acknowledgement is reported as a save that did not happen" "$STUDIO" \
+  "$TRANSPORT" \
+  '    throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server did not answer. Nothing was saved. Retry, or download your draft.");' \
+  "must not claim nothing was saved"
 
 control "Escape leaves the preview without returning focus" "$STUDIO" \
   '      if (event.key === "Escape") { if (preview) exitPreview(); setPan(false); drag.current = null; return; }' \

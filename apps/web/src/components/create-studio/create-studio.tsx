@@ -28,10 +28,15 @@ async function request<T>(body?: unknown, id?: string): Promise<T> {
     res = await fetch("/api/create-studio" + (id ? "?id=" + encodeURIComponent(id) : ""), body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : { cache: "no-store" });
   } catch {
     // A dropped connection or a stopped local server. The browser's own message ("Failed to
-    // fetch") says nothing a designer can act on, and nothing was written, so say that.
-    throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server did not answer. Nothing was saved. Check that the development server is still running, then retry, or download your draft.");
+    // fetch") says nothing a designer can act on. What this must NOT say is that nothing was
+    // saved: the route awaits `service().save(...)` and the store persists the file before the
+    // response is built, so a connection that drops after the commit leaves the write DONE and
+    // the reply lost. Claiming "nothing was saved" there would be a false statement about the
+    // user's data, which is the same class of lie as reporting an unconfirmed save as saved.
+    // So the sentence reports uncertainty, and the draft is kept either way.
+    throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server did not answer, so this save could not be confirmed — it may or may not have been stored. Your draft is still in this browser. Check that the development server is still running, then reopen the product to see what was stored, or download your draft.");
   }
-  const data = await res.json().catch(() => { throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server sent a reply that could not be read. Nothing was saved. Retry, or download your draft."); });
+  const data = await res.json().catch(() => { throw new ApiError("NETWORK_UNAVAILABLE", "The local Create Studio server sent a reply that could not be read, so this save could not be confirmed. Your draft is still in this browser. Reopen the product to see what was stored, or download your draft."); });
   if (!res.ok) throw new ApiError(data.code, data.message);
   return data as T;
 }
