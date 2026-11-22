@@ -795,10 +795,15 @@ try {
 
   // ------------------------------------------------- the unconditional measurement must SETTLE
   // The cost of naming no causes is that the measurement runs on every commit and writes state, so
-  // the thing to prove is that it reaches a fixed point: the identity guard returns the PREVIOUS
-  // object when every field is within 0.5px, which is what lets React bail out of the re-render.
-  // Measured as the churn on the guide's own `style` while a held drag is perfectly still — a
-  // measurement that never settles rewrites it every frame.
+  // the thing to prove is that it reaches a fixed point.
+  //
+  // The instrument matters more than the window here. Counting writes to the guide's `style` CANNOT
+  // tell a settled measurement from one that commits every frame with unchanged numbers: React
+  // diffs style property by property, so a commit carrying the same `left`, `top` and `height`
+  // produces no DOM write at all and a MutationObserver sees nothing. What is counted instead is
+  // the MEASUREMENT — `getBoundingClientRect` on the frame's own section, which the layout effect
+  // calls once per execution — and the style writes are recorded beside it only to show that they
+  // would have read zero either way.
   await studio.getByLabel("Viewport width").selectOption("960");
   await studio.getByRole("button", { name: "Reset view", exact: true }).click();
   await inspector.getByLabel("Edit at breakpoint").selectOption("desktop");
@@ -806,26 +811,58 @@ try {
   narrowPoint = await handlePoint();
   await dragFromTo(narrowPoint, { x: narrowPoint.x + 45, y: narrowPoint.y }, { release: false });
   await drawnGeometry();
-  const churn = await page.evaluate(() => new Promise(done => {
+  const settle = await page.evaluate(async id => {
+    const twoFrames = () => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done)));
+    const section = document.querySelector(`[data-studio-node="${id}"]`)?.querySelector(":scope > div > section");
     const line = document.querySelector(".studio-guide");
-    if (!line) { done(-1); return; }
-    let records = 0;
-    const observer = new MutationObserver(list => { records += list.length; });
+    // A control that changes the editor's state WITHOUT changing any geometry: the canvas's own
+    // light/dark toggle. Clicked an even number of times, it also leaves the canvas as it was.
+    const toggle = document.querySelector('[aria-label="Dark canvas"], [aria-label="Light canvas"]');
+    if (!section || !line || !toggle) return { refused: "the frame, the guide and the canvas theme toggle must all be present" };
+    const original = Element.prototype.getBoundingClientRect;
+    let measures = 0, styleWrites = 0;
+    Element.prototype.getBoundingClientRect = function patched(...args) {
+      if (this === section) measures += 1;
+      return original.apply(this, args);
+    };
+    const observer = new MutationObserver(records => { styleWrites += records.length; });
     observer.observe(line, { attributes: true, attributeFilter: ["style"] });
-    setTimeout(() => { observer.disconnect(); done(records); }, 600);
-  }));
-  measurements.measurementSettles = { styleWritesWhileStill: churn, windowMs: 600 };
-  assert.ok(churn >= 0, "the guide must still be drawn for this measurement to mean anything");
-  // 600ms is ~36 frames at 60Hz. A measurement that does not settle rewrites the style on each one.
-  assert.ok(churn <= 4, `the measurement must reach a fixed point: the guide's style was rewritten ${churn} times in 600ms while the pointer was perfectly still`);
+    try {
+      // Phase one: perfectly still. A measurement that never settles runs on every frame.
+      await new Promise(done => setTimeout(done, 600));
+      const idle = { measures, styleWrites };
+      // Phase two: four commits that cannot move anything. This is the instrument's own positive
+      // control — if the counter does not move here, phase one's zero meant nothing.
+      let commits = 0;
+      for (let press = 0; press < 4; press += 1) { toggle.click(); commits += 1; await twoFrames(); }
+      return { idle, after: { measures, styleWrites }, commits };
+    } finally {
+      Element.prototype.getBoundingClientRect = original;
+      observer.disconnect();
+    }
+  }, frameId);
+  assert.ok(!settle.refused, `the settle measurement refused rather than passed: ${settle.refused}`);
+  const measuredCommits = settle.after.measures - settle.idle.measures;
+  measurements.measurementSettles = {
+    idleMeasurements: settle.idle.measures, idleStyleWrites: settle.idle.styleWrites, windowMs: 600,
+    commits: settle.commits, measurementsPerCommit: measuredCommits, styleWritesAcrossCommits: settle.after.styleWrites - settle.idle.styleWrites,
+  };
+  // The instrument first: it must see the commits, or its zero above says nothing.
+  assert.ok(measuredCommits >= settle.commits, `the instrument must see every commit: ${settle.commits} state changes produced ${measuredCommits} measurements`);
+  // And the reason the obvious instrument was the wrong one, asserted rather than asserted about:
+  // those same commits write NOTHING to the guide's style.
+  assert.equal(settle.after.styleWrites - settle.idle.styleWrites, 0, `this is why counting style writes cannot measure this: ${settle.commits} commits wrote ${settle.after.styleWrites - settle.idle.styleWrites} style changes`);
+  // Then the claim: 600ms is ~36 frames at 60Hz, so a measurement that does not settle runs dozens
+  // of times with the pointer still. Judged against the per-commit cost the instrument just proved.
+  assert.ok(settle.idle.measures <= settle.commits, `the measurement must reach a fixed point: it ran ${settle.idle.measures} times in 600ms with the pointer perfectly still, against ${measuredCommits} for ${settle.commits} deliberate commits`);
   await page.keyboard.press("Escape");
-  pass("the unconditional measurement settles: a still pointer rewrites nothing");
+  pass("the unconditional measurement settles, measured as executions rather than as DOM writes");
   // Said plainly, because it is the one assertion in this file whose own control cannot reach it:
   // removing the identity guard does not merely make the measurement churn, it makes the editor
-  // stop responding — the control times out at the inspector, 22 checks before this line. So this
-  // assertion is EVIDENCE that the measurement settles, and the guard's necessity is proved by the
-  // suite as a whole rather than by a control naming this behaviour.
-  note("the settle assertion above is ungated: the only mutation that removes the guard breaks the editor long before this check, so the control for it is evidence rather than proof");
+  // stop responding — the control times out at the inspector, 22 checks before this line. So the
+  // guard's necessity is proved by the suite as a whole rather than by a control naming this
+  // behaviour, and the control is recorded as evidence.
+  note("the settle assertion above is ungated: the only mutation that removes the identity guard breaks the editor long before this check, so its control is evidence rather than proof");
 
   // ------------------------------------------------- keyboard reachability of the repaired path
   // The whole repaired path has to be operable without a pointer: reach the handle by Tab alone and

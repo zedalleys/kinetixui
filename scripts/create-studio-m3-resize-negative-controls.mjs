@@ -157,6 +157,10 @@ const CONTROLS = [
     // one another control owes, or this control would be credited for someone else's cause.
     owes: [],
     evidenceOnly: "removing the guard breaks the editor before the settle assertion is reached, so no failure can name it",
+    // So the bar is: the gate ran deep into the editor, and the failure is the editor becoming
+    // unusable — not an empty output, a server that never started or a browser that never launched.
+    requires: ["locator.inputValue", "getByLabel('Width'"],
+    minPasses: 10,
   },
   {
     name: "rtl-logical-property",
@@ -209,21 +213,32 @@ try {
     });
     let result;
     try {
-      // The server must come up and the editor must actually render; a control credited to a server
-      // that never started would prove nothing at all.
+      // Readiness is checked OUTSIDE the catch below, and deliberately: an unready server, a
+      // browser that will not launch or a run killed by the timeout are INFRASTRUCTURE failures,
+      // and a catch that folded them into `{ status: 1 }` would hand a control a nonzero exit it
+      // did not earn — measured on the evidence-only control, whose weaker bar such a failure met
+      // with an empty output. These are fatal and stop the run.
       let ready = false;
       for (let attempt = 0; attempt < 120 && !ready; attempt += 1) {
         ready = await fetch(`${base}/create/studio`).then(response => response.ok).catch(() => false);
         if (!ready) await new Promise(done => setTimeout(done, 1000));
       }
       assert.ok(ready, `the control server for "${control.name}" never became ready on ${base}`);
-      result = execFileSync("node", [join(repo, "scripts/create-studio-canvas-browser.mjs")], {
-        cwd: tree, encoding: "utf8", stdio: "pipe", timeout: 900_000,
-        env: { ...process.env, CREATE_BASE: base, CREATE_ARTIFACTS: join(workspace, `evidence-${control.name}`) },
-      });
-      result = { status: 0, output: result };
-    } catch (error) {
-      result = { status: error.status ?? 1, output: `${error.stdout ?? ""}\n${error.stderr ?? ""}` };
+      try {
+        const output = execFileSync("node", [join(repo, "scripts/create-studio-canvas-browser.mjs")], {
+          cwd: tree, encoding: "utf8", stdio: "pipe", timeout: 900_000,
+          env: { ...process.env, CREATE_BASE: base, CREATE_ARTIFACTS: join(workspace, `evidence-${control.name}`) },
+        });
+        result = { status: 0, output };
+      } catch (error) {
+        // Only an ordinary nonzero EXIT of the gate is a result. No numeric status means the
+        // process could not be spawned, and a signal means it was killed — the timeout sends
+        // SIGTERM — so neither says anything about the mutation.
+        if (typeof error.status !== "number" || error.signal) {
+          throw new Error(`the gate did not run to a verdict for control "${control.name}": ${error.signal ? `killed by ${error.signal}` : String(error.message ?? error)}`);
+        }
+        result = { status: error.status, output: `${error.stdout ?? ""}\n${error.stderr ?? ""}` };
+      }
     } finally {
       // The dev server spawns `next` as a child, so it dies as a process GROUP or it keeps writing
       // into a worktree that is about to be removed.
@@ -233,22 +248,28 @@ try {
 
     const failure = terminalFailure(result.output);
     const matched = control.owes.filter(fragment => failure.includes(fragment));
-    // An evidence-only control owes no message, so the bar is instead that it must not be credited
-    // for a failure another control owes.
+    // An evidence-only control owes no assertion message, so its bar is threefold: it must not be
+    // credited for a failure another control owes, it must name the failure it DID observe, and the
+    // gate must have run deep enough to have reached the mutation at all. Excluding the others'
+    // fragments alone would also be met by an empty output.
     const borrowed = control.evidenceOnly
       ? CONTROLS.flatMap(other => (other === control ? [] : other.owes)).filter(fragment => failure.includes(fragment))
       : [];
+    const passes = (result.output.match(/^PASS /gm) ?? []).length;
+    const required = (control.requires ?? []).filter(fragment => failure.includes(fragment));
+    const reached = passes >= (control.minPasses ?? 0);
     // Controls 2 and 3 trip the same assertion, so naming it is not enough: the measured offsets
     // have to say WHICH defect produced it, or one control could be credited for the other's cause.
     const offsets = /off the frame by (-?\d+)px, off the wrapper by (-?\d+)px/.exec(failure);
     const measured = { frame: offsets ? Number(offsets[1]) : null, wrapper: offsets ? Number(offsets[2]) : null };
     const discriminated = control.discriminates ? control.discriminates(measured) : true;
     const detected = control.evidenceOnly
-      ? result.status !== 0 && borrowed.length === 0
+      ? result.status !== 0 && borrowed.length === 0 && required.length === (control.requires ?? []).length && reached
       : result.status !== 0 && matched.length > 0 && discriminated;
     findings.push({
       control: control.name, file: control.file, exitStatus: result.status, owes: control.owes, matched,
       classification: control.evidenceOnly ? "evidence" : "proof", evidenceOnly: control.evidenceOnly ?? null, borrowed,
+      requires: control.requires ?? null, required, minPasses: control.minPasses ?? null, reached,
       measuredOffsets: measured, discriminated, detected,
       passesBeforeFailure: (result.output.match(/^PASS /gm) ?? []).length,
       failure: failure.split("\n").filter(Boolean).slice(0, 6).join("\n"),
