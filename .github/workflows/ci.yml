@@ -126,7 +126,10 @@ jobs:
       - name: "Native publish preflight: negative controls"
         run: |
           controls=$(node scripts/check-native-publish-preflight.mjs --list-negatives)
-          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          # Count the WORDS the loop will iterate, not the lines: an unquoted expansion
+          # splits exactly as the `for` below does, so a whitespace-only listing yields no
+          # arguments and no lines, while a quoted one yields one non-empty line and passes.
+          count=$(printf '%s\n' $controls | grep -c . || true)
           if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
           for control in $controls; do
             echo "--- $control"
@@ -143,7 +146,10 @@ jobs:
       - name: "SwiftUI mirror publish route: negative controls"
         run: |
           controls=$(node scripts/adoption/swiftui-mirror-consumer.mjs --list-negatives)
-          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          # Count the WORDS the loop will iterate, not the lines: an unquoted expansion
+          # splits exactly as the `for` below does, so a whitespace-only listing yields no
+          # arguments and no lines, while a quoted one yields one non-empty line and passes.
+          count=$(printf '%s\n' $controls | grep -c . || true)
           if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
           for control in $controls; do
             echo "--- $control"
