@@ -79,25 +79,27 @@ class VitalsSummaryBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           KinetixCardHeader(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const <Widget>[
-                      KinetixCardTitle('Observations'),
-                      // Freshness and source before the values: a panel of stale numbers looks exactly
-                      // like a live one.
-                      KinetixCardDescription(
-                        'Recorded 7 Apr 2026, 08:12 · Ward round, bedside monitor',
-                      ),
-                    ],
+            children: <Widget>[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const <Widget>[
+                        KinetixCardTitle('Observations'),
+                        // Freshness and source before the values: a panel of stale numbers looks exactly
+                        // like a live one.
+                        KinetixCardDescription(
+                          'Recorded 7 Apr 2026, 08:12 · Ward round, bedside monitor',
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const KinetixTag('Nurse-recorded', variant: KinetixTagVariant.secondary),
-              ],
-            ),
+                  const KinetixTag('Nurse-recorded', variant: KinetixTagVariant.secondary),
+                ],
+              ),
+            ],
           ),
           KinetixCardContent(
             child: Column(

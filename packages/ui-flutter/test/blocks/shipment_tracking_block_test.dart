@@ -65,22 +65,24 @@ class ShipmentTrackingBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           KinetixCardHeader(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const <Widget>[
-                      KinetixCardTitle('Track consignment'),
-                      KinetixCardDescription('Kinetix Freight · 2 parcels, 4.6 kg'),
-                    ],
+            children: <Widget>[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const <Widget>[
+                        KinetixCardTitle('Track consignment'),
+                        KinetixCardDescription('Kinetix Freight · 2 parcels, 4.6 kg'),
+                      ],
+                    ),
                   ),
-                ),
-                // A word. The tone is the second channel.
-                const KinetixTag('Delayed', variant: KinetixTagVariant.warning),
-              ],
-            ),
+                  // A word. The tone is the second channel.
+                  const KinetixTag('Delayed', variant: KinetixTagVariant.warning),
+                ],
+              ),
+            ],
           ),
           KinetixCardContent(
             child: Column(

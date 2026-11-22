@@ -98,22 +98,24 @@ class _AppointmentBookingBlockState extends State<AppointmentBookingBlock> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           KinetixCardHeader(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const <Widget>[
-                      KinetixCardTitle('Book an appointment'),
-                      KinetixCardDescription('Dr Lina Okafor · Cardiology review'),
-                    ],
+            children: <Widget>[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const <Widget>[
+                        KinetixCardTitle('Book an appointment'),
+                        KinetixCardDescription('Dr Lina Okafor · Cardiology review'),
+                      ],
+                    ),
                   ),
-                ),
-                // A word, not a colour.
-                const KinetixTag('Telehealth', variant: KinetixTagVariant.secondary),
-              ],
-            ),
+                  // A word, not a colour.
+                  const KinetixTag('Telehealth', variant: KinetixTagVariant.secondary),
+                ],
+              ),
+            ],
           ),
           KinetixCardContent(
             child: Column(
