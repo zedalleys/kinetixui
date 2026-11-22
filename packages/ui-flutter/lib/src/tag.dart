@@ -41,6 +41,16 @@ class KinetixTag extends StatelessWidget {
     final Widget text = Text(
       label,
       style: AppText.labelMd.copyWith(color: fg),
+      // `longestLine`, not the default `parent`. A `Text` given a BOUNDED width reports that width as
+      // its size, not the width of the words in it — so making the label flexible below, which is what
+      // lets it wrap, also made every tag inside any bounded container stretch to that container's
+      // width. Measured: a `Paid` tag that hugs at 66px became 146px inside a 146px box, and in
+      // `KinetixMultiSelect`'s `Wrap` each chip would have taken a whole row. `longestLine` makes the
+      // paragraph report the words instead, so the tag hugs its label exactly as it always did while
+      // still wrapping when there is not room for one line. Found by `test/tag_wrapping_test.dart`'s
+      // short-label case, which exists for precisely this: proving the wrapping fix is not a layout
+      // rewrite of every tag in the system.
+      textWidthBasis: TextWidthBasis.longestLine,
     );
 
     // The label must WRAP inside the tag rather than run past it. A Row hands an inflexible child

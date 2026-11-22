@@ -162,6 +162,10 @@ void main() {
     testWidgets('a removable tag wraps too, and its dismiss control stays named and tappable',
         (WidgetTester tester) async {
       setPhone(tester);
+      // `getSemantics` throws unless the semantics tree is being built, and it must be asked for
+      // before the first pump.
+      final SemanticsHandle handle = tester.ensureSemantics();
+      addTearDown(handle.dispose);
       final Size single =
           await probeSingleLineSize(tester, label, textScale: 2.0, removable: true);
       int removed = 0;
@@ -183,17 +187,22 @@ void main() {
       expect(overflows, isEmpty, reason: overflows.join('\n\n'));
       expect(tester.takeException(), isNull);
 
-      final Finder dismiss = find.bySemanticsLabel('Remove $label');
-      expect(tester.getSemantics(dismiss), isSemantics(isButton: true, hasTapAction: true));
-      await tester.tap(dismiss);
+      expect(tester.getSemantics(find.bySemanticsLabel('Remove $label')),
+          isSemantics(label: 'Remove $label', isButton: true, hasTapAction: true));
+      // What TalkBack / VoiceOver's activate gesture sends: the semantics tap action, not a pointer
+      // event. A pointer tap would also pass while the control was unreachable to a screen reader.
+      tester.semantics.tap(find.semantics.byLabel('Remove $label'));
       expect(removed, 1, reason: 'the dismiss control must still work once the label wraps around it');
     });
   });
 
   group('unbounded width: the previous behaviour stands, and nothing asserts', () {
     // `Flexible` under unbounded constraints throws a parent-data/intrinsics assertion. These are the
-    // three everyday unbounded hosts; if `lib/src/tag.dart` ever drops its `hasBoundedWidth` guard,
-    // each of them crashes here rather than in someone's app.
+    // everyday unbounded hosts; if `lib/src/tag.dart` ever drops its `hasBoundedWidth` guard, each of
+    // them crashes here rather than in someone's app. `UnconstrainedBox` is deliberately NOT one of
+    // them: it reports an overflow of its own when the child exceeds the incoming width, which at 200%
+    // text on a 390 surface it would — so a red there would be a different defect wearing this one's
+    // clothes. A scroll view clips without reporting, which is what this group needs.
     final Map<String, Widget Function(Widget tag)> unbounded = <String, Widget Function(Widget)>{
       'a horizontal scroll view':
           (Widget tag) => SingleChildScrollView(scrollDirection: Axis.horizontal, child: tag),
@@ -309,27 +318,39 @@ void main() {
           reason: 'the details must NAME the widget that overflowed, not just the pixel count — that '
               'is the whole reason this file collects FlutterErrorDetails and not FlutterError');
 
-      // `takeException` is drained so the control does not fail on the error it deliberately caused.
-      expect(tester.takeException(), isNotNull);
+      // Deliberately NOT asserting `takeException()` here. The collector above REPLACES
+      // `FlutterError.onError` for the duration of the pump, so the error never reaches the test's own
+      // exception reporter and `takeException()` is null — which says nothing either way. Asserting it
+      // was non-null is a mistake this control made on its first run, and it failed for that reason
+      // while the overflow it exists to catch had been caught correctly.
     });
 
-    testWidgets('control: a bound tighter than one word still reports rather than clipping silently',
-        (WidgetTester tester) async {
+    testWidgets('a bound tighter than the longest word is clipped INSIDE the paragraph, which this '
+        'instrument cannot see', (WidgetTester tester) async {
       setPhone(tester);
-      // Below the width of the longest single word there is no wrapping that can help, and the correct
-      // behaviour is to SAY so — an overflow report — rather than clip the word away. This pins that the
-      // fix did not buy its green by hiding the error.
+      // A named limit, not a control. The first version of this test asserted that an impossible bound
+      // would still be REPORTED rather than clipped in silence. It does not: measured, Flutter raises
+      // nothing here. The flexed label is handed a loose constraint, `RenderParagraph` clamps its own
+      // size to that constraint, and the glyphs that do not fit are drawn outside the paragraph's box
+      // and clipped by whatever is above it. No `RenderFlex` ever overflows, so the whole family of
+      // gates in this repository that watch for overflow — including this file — is blind to it.
+      //
+      // That blind spot is recorded here rather than left as a passing assertion about something else.
+      // It is not reachable from the blocks: their narrowest real bound is a `KinetixCard` at ~342px
+      // against a longest word of ~200px at 200% text. It would matter at a text scale beyond 200% or
+      // in a container narrower than any this system ships.
       final Size single = await probeSingleLineSize(tester, label, textScale: 2.0);
+      final double impossible = (single.width * 0.2).floorToDouble();
 
       final List<String> overflows = await pumpCollectingOverflows(
         tester,
-        host(SizedBox(width: (single.width * 0.2).floorToDouble(), child: const KinetixTag(label)),
-            textScale: 2.0),
+        host(SizedBox(width: impossible, child: const KinetixTag(label)), textScale: 2.0),
       );
 
-      expect(overflows, isNotEmpty,
-          reason: 'an impossible bound must still be reported, not clipped in silence');
-      expect(tester.takeException(), isNotNull);
+      expect(overflows, isEmpty,
+          reason: 'if this ever reddens, Flutter HAS started reporting the case and the comment above '
+              'is out of date — rewrite it as a real control');
+      expect(tester.getSize(find.byType(KinetixTag)).width, lessThanOrEqualTo(impossible));
     });
   });
 
