@@ -104,6 +104,26 @@ export function useTrackIndicator(
       raf = 0;
     };
 
+    /**
+     * A fade run owns two things that outlive the frame it was started on: a `transitionend` listener that
+     * writes the destination while the indicator is invisible, and a timer that writes it anyway if that
+     * event never arrives. Both close over THAT run's destination, so either one firing after a later
+     * placement has superseded it moves the indicator to a stale item and leaves it there.
+     *
+     * Codex found this on PR #662, and the cross-variant path is the one that does not self-correct: the
+     * glide branch removed `settle` before re-adding it but never removed a pending `swap`, so a fade
+     * interrupted by a Glide selection ran both on the glide's own `transitionend` — the glide landed
+     * correctly and the stale `swap` then moved it back, onto an item that is not selected.
+     */
+    let fadeSwap: (() => void) | null = null;
+    let fadeTimer = 0;
+    const stopFade = () => {
+      if (fadeSwap) bar.removeEventListener("transitionend", fadeSwap);
+      fadeSwap = null;
+      if (fadeTimer) window.clearTimeout(fadeTimer);
+      fadeTimer = 0;
+    };
+
     const writeEdges = (s: number, e: number) => {
       bar.style.setProperty("--kx-lab-start", `${s}px`);
       bar.style.setProperty("--kx-lab-end", `${e}px`);
@@ -202,6 +222,7 @@ export function useTrackIndicator(
       const item = track.querySelector<HTMLElement>(selectedSelector);
       if (!item) {
         stopSpring();
+        stopFade();
         track.removeAttribute("data-kx-lab-measured");
         track.setAttribute("data-kx-lab-state", "resting");
         chosen = null;
@@ -243,6 +264,12 @@ export function useTrackIndicator(
 
       if (!reframed && chosen === item && nextStart === start && nextEnd === end) return;
 
+      // Past this line the placement WILL write something, so any fade still owed its destination is
+      // superseded and must be cancelled. It is cancelled here rather than in each branch because every
+      // branch supersedes it, and the branch that forgot was how the defect arose. A placement that returned
+      // early above has changed nothing and must NOT cancel a fade in flight, or it would be left invisible.
+      stopFade();
+
       const travels = travel !== "none" && !reduced() && !reframed && chosen !== null && chosen !== item;
 
       // A reframe or a snap must not be interpolated: transitions go off BEFORE anything is written, or the
@@ -278,6 +305,8 @@ export function useTrackIndicator(
         track.setAttribute("data-kx-lab-state", "travelling");
         notify.current?.(travel);
         const swap = () => {
+          // Whichever of the two paths arrives first releases both, so no handle outlives the run it belongs to.
+          stopFade();
           if (effective === "transform" && frameWidth > 0) writeTransform(nextStart, vertical, rtl);
           else writeEdges(nextStart, nextEnd);
           bar.style.transition = "opacity var(--duration-fast) var(--easing-enter)";
@@ -285,11 +314,15 @@ export function useTrackIndicator(
           settle();
         };
         bar.removeEventListener("transitionend", settle);
+        // Tracked, so a later placement can cancel it. `once` is not enough on its own: the event that
+        // consumes it may belong to a different run's transition.
+        fadeSwap = swap;
         bar.addEventListener("transitionend", swap, { once: true });
         // A fade that never fires `transitionend` — a hidden tab, a cancelled transition — must still arrive.
-        window.setTimeout(() => {
+        fadeTimer = window.setTimeout(() => {
+          if (fadeSwap !== swap) return;
           if (bar.style.opacity === "0") {
-            bar.removeEventListener("transitionend", swap);
+            stopFade();
             swap();
           }
         }, 600);
@@ -357,6 +390,7 @@ export function useTrackIndicator(
 
     return () => {
       stopSpring();
+      stopFade();
       if (settleTimer) window.clearTimeout(settleTimer);
       states.disconnect();
       reframes.disconnect();

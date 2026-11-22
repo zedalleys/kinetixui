@@ -78,8 +78,30 @@ export function LabSlider({
   disabled = false,
 }: LabSliderProps) {
   const hostRef = React.useRef<HTMLDivElement | null>(null);
-  const [engaged, setEngaged] = React.useState(false);
+  /**
+   * Engagement is the UNION of two independent conditions, not one flag that either can clear.
+   *
+   * With a single flag, a reader who clicked the thumb and then kept adjusting with the arrow keys lost the
+   * value bubble and the halo at `pointerup`: the thumb was still focused, but no second focus event fires
+   * for the keyboard presses that follow, so nothing ever set the flag back. Every subsequent keyboard
+   * adjustment then happened with the cue hidden — which is the reader most in need of it. Found by Codex on
+   * PR #662. A pointer release may only release the pointer's claim.
+   */
+  const [pressed, setPressed] = React.useState(false);
+  const [focused, setFocused] = React.useState(false);
+  const engaged = pressed || focused;
   const [thumb, setThumb] = React.useState<number | null>(null);
+  /**
+   * The thumb's centre on the BLOCK axis, in pixels from the host's top edge.
+   *
+   * The decorations were originally pinned to `inset-block-start: 50%`, which is the host's centre, not the
+   * track's: the host carries asymmetric block padding (`pt-7 pb-1`) to make room for the value bubble above
+   * the thumb, so its 50% sat 12px above the thumb — measured on a 38px host, reported by Codex on PR #662,
+   * and invisible to the browser gate, which asserted horizontal centring only. Deriving the offset from the
+   * padding would hard-code two Tailwind utilities and the thumb's size; measuring it is the same discipline
+   * the inline axis already follows one state above.
+   */
+  const [thumbMid, setThumbMid] = React.useState<number | null>(null);
 
   const has = (layer: LabSliderLayer) => layers.includes(layer);
 
@@ -91,17 +113,21 @@ export function LabSlider({
       const handle = host.querySelector<HTMLElement>('[role="slider"]');
       if (!handle) {
         setThumb(null);
+        setThumbMid(null);
         return;
       }
       const hostBox = host.getBoundingClientRect();
       const handleBox = handle.getBoundingClientRect();
       if (hostBox.width === 0) {
         setThumb(null);
+        setThumbMid(null);
         return;
       }
       const physical = handleBox.left + handleBox.width / 2 - hostBox.left;
       const rtl = getComputedStyle(host).direction === "rtl";
       setThumb(rtl ? hostBox.width - physical : physical);
+      // The block axis does not mirror, so this one is physical in both directions.
+      setThumbMid(handleBox.top + handleBox.height / 2 - hostBox.top);
     };
     measure();
     const sizes = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
@@ -128,6 +154,8 @@ export function LabSlider({
       className="kx-lab-slider pb-1 pt-7"
       data-kx-lab-engaged={engaged && !disabled ? "true" : "false"}
       data-kx-lab-layers={layers.join(" ")}
+      // Published on the host so the halo and the tick rail both inherit one measurement.
+      style={thumbMid === null ? undefined : ({ ["--kx-lab-thumb-mid" as string]: `${thumbMid}px` } as React.CSSProperties)}
     >
       {has("ticks") && ticks.length > 0 ? (
         <div className="kx-lab-ticks" aria-hidden="true">
@@ -157,11 +185,11 @@ export function LabSlider({
       */}
       <Slider
         aria-label={label}
-        onPointerDown={() => setEngaged(true)}
-        onPointerUp={() => setEngaged(false)}
-        onPointerCancel={() => setEngaged(false)}
-        onFocus={() => setEngaged(true)}
-        onBlur={() => setEngaged(false)}
+        onPointerDown={() => setPressed(true)}
+        onPointerUp={() => setPressed(false)}
+        onPointerCancel={() => setPressed(false)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         value={[value]}
         min={min}
         max={max}

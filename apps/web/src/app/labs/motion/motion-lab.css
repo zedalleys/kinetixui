@@ -132,7 +132,10 @@
  * is measured and one that is hoped for. */
 .kx-lab-halo {
   position: absolute;
-  inset-block-start: 50%;
+  /* The measured thumb centre, not the host's 50%: the host's block padding is asymmetric to clear the value
+   * bubble, so its centre is 12px above the thumb. `50%` is only the fallback for the frame before the first
+   * measurement lands. See the comment on `thumbMid` in lab-slider.tsx. */
+  inset-block-start: var(--kx-lab-thumb-mid, 50%);
   inset-inline-start: var(--kx-lab-thumb, 0px);
   block-size: 2rem;
   inline-size: 2rem;
@@ -209,7 +212,8 @@
 .kx-lab-ticks {
   position: absolute;
   inset-inline: 0;
-  inset-block-start: 50%;
+  /* Same measured centre as the halo. */
+  inset-block-start: var(--kx-lab-thumb-mid, 50%);
   block-size: 0;
   pointer-events: none;
 }

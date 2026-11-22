@@ -113,18 +113,56 @@ export function MotionLab() {
     timers.current.push(window.setTimeout(fn, ms));
   };
 
-  const systemReduce =
-    typeof window === "undefined" ? false : window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /**
+   * The system preference, read through a subscription with an explicit server snapshot.
+   *
+   * It was originally read inline during render with a `typeof window` branch. That is two defects in one
+   * line, both found by Codex on PR #662. The server renders `false` and the first client render reads
+   * `true` for a reader who has reduced motion on, so the switch's props and the presence of the explanatory
+   * sentence differ between the two trees — a hydration mismatch, on the page whose subject is honouring
+   * that preference. And a value read during render has no subscription, so changing the preference in the
+   * OS left this switch and the stage's `data-kx-lab-reduce` attribute stale until some other interaction
+   * happened to re-render.
+   *
+   * `useSyncExternalStore` is the fix for both at once: `getServerSnapshot` makes the two trees agree, and
+   * `subscribe` makes the preference live. The engine keeps its own listener for the geometry; this one is
+   * for what the reader is told.
+   */
+  const systemReduce = React.useSyncExternalStore(
+    (onChange) => {
+      const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+      query.addEventListener("change", onChange);
+      return () => query.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => false,
+  );
 
   const contract = labTravelContract(state.travel);
 
-  /** Select the first segment, then retarget to the third while the first run is still travelling. */
+  /**
+   * Send the indicator somewhere it is not, then retarget it while that travel is still in flight.
+   *
+   * The first version named `SEGMENTS[0]` outright, which on a freshly loaded page is already the selection —
+   * so the first call changed nothing, the engine's no-change early return fired, and the delayed call started
+   * an ORDINARY travel from a resting indicator. The button's own demonstration did not demonstrate anything,
+   * in exactly the default state a reader meets it in. Codex found this on PR #662; the browser gate missed it
+   * because the gate drives its own clicks rather than this button, so the continuity measurement was never
+   * affected — only the thing a human can press.
+   *
+   * Picking the destinations relative to the CURRENT selection makes the first leg real whatever is selected.
+   */
   const interrupt = () => {
-    setSegment(SEGMENTS[0].value);
-    setTab(TABS[0].value);
+    const away = (items: readonly { value: string; disabled?: boolean }[], current: string) =>
+      items.filter((entry) => !entry.disabled && entry.value !== current).map((entry) => entry.value);
+    const segs = away(SEGMENTS, segment);
+    const tabs = away(TABS, tab);
+    if (segs.length < 2 || tabs.length < 2) return;
+    setSegment(segs[0]);
+    setTab(tabs[0]);
     later(() => {
-      setSegment(SEGMENTS[2].value);
-      setTab(TABS[2].value);
+      setSegment(segs[segs.length - 1]);
+      setTab(tabs[tabs.length - 1]);
     }, INTERRUPT_AT_MS);
   };
 

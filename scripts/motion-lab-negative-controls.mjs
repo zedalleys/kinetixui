@@ -60,6 +60,7 @@ const SPRING = "apps/web/src/lib/motion-lab/spring.ts";
 const CSS = "apps/web/src/app/labs/motion/motion-lab.css";
 const SHELL = "apps/web/src/components/motion-lab/motion-lab.tsx";
 const LAB_SEG = "apps/web/src/components/motion-lab/lab-segmented-control.tsx";
+const LAB_SLIDER = "apps/web/src/components/motion-lab/lab-slider.tsx";
 
 /**
  * The ten defects named in the brief, each as one mutation of the candidate's own source.
@@ -212,6 +213,81 @@ const CONTROLS = [
     // The measured refusal: with no indicator the engine never sets `data-kx-lab-measured`, so the gate's
     // own page-ready wait times out. That is the gate declining to measure rather than passing over nothing.
     expect: /(data-kx-lab-measured|Timeout|empty population|no checks ran)/,
+  },
+  // ── 19–21: the three Codex found on PR #662. Each one is here because the gate did NOT catch it, so each
+  // new assertion needed a control before it could count as evidence rather than as a hope.
+  {
+    id: 19,
+    brief: "(a cue placed on the wrong axis)",
+    name: "the thumb's block-axis centre is never published, so the cues fall back to the host's 50%",
+    file: LAB_SLIDER,
+    sections: "11",
+    from: `      setThumbMid(handleBox.top + handleBox.height / 2 - hostBox.top);`,
+    to: `      setThumbMid(null);`,
+    expect: /BLOCK axis|tick rail sits on the track/,
+  },
+  {
+    id: 20,
+    brief: "(a stale listener that survives a variant change)",
+    name: "a fade's pending destination is not cancelled when another variant supersedes it",
+    file: ENGINE,
+    sections: "14",
+    /**
+     * Pointed at the CLEANUP, not at the guard inside `place`, and that was itself a finding.
+     *
+     * The first version of this control removed the cancellation after `place`'s no-change early return, and
+     * the gate PASSED. The reason is that `travel` is a dependency of the hook: changing the variant re-runs
+     * the effect, so the cross-variant scenario is closed by the cleanup returning — which is exactly the
+     * line the pre-fix engine was missing, since it removed `settle` there and never `swap`. A control has to
+     * delete the line that actually carries the property, or it measures nothing; the identically-named call
+     * one scope away was not it.
+     */
+    from: `      stopSpring();
+      stopFade();
+      if (settleTimer) window.clearTimeout(settleTimer);`,
+    to: `      stopSpring();
+      if (settleTimer) window.clearTimeout(settleTimer);`,
+    expect: /fade interrupted by another variant|indicator is visible after a cross-variant/,
+  },
+  {
+    id: 21,
+    brief: "(a scripted demonstration that demonstrates nothing)",
+    name: "the Interrupt button's first leg targets the current selection, so there is nothing to interrupt",
+    file: SHELL,
+    sections: "15",
+    from: `    setSegment(segs[0]);`,
+    to: `    setSegment(segment);`,
+    expect: /pressing Interrupt changes the selection twice/,
+  },
+  // ── 22–23: Codex's second round, at head `8fb12349`.
+  {
+    id: 22,
+    brief: "(a preference read during render)",
+    name: "the system preference is read inline again, so the two trees disagree and nothing subscribes",
+    file: SHELL,
+    sections: "16",
+    from: `  const systemReduce = React.useSyncExternalStore(
+    (onChange) => {
+      const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+      query.addEventListener("change", onChange);
+      return () => query.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => false,
+  );`,
+    to: `  const systemReduce =
+    typeof window === "undefined" ? false : window.matchMedia("(prefers-reduced-motion: reduce)").matches;`,
+    expect: /hydration mismatch|updates the page with no interaction|reflected on first paint/,
+  },
+  {
+    id: 23,
+    brief: "(a cue a pointer release takes with it)",
+    name: "a pointer release clears focus engagement as well as its own",
+    file: LAB_SLIDER,
+    sections: "17",
+    from: `        onPointerUp={() => setPressed(false)}`,
+    to: `        onPointerUp={() => { setPressed(false); setFocused(false); }}`,
+    expect: /pointer release does not end engagement|still shown for the keyboard/,
   },
 ];
 

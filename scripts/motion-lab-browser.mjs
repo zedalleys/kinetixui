@@ -196,10 +196,48 @@ if (wants("1")) {
 }
 
 // ── 2. Interruption and retargeting: continue from the rendered position ───────────────────────────────
+let judgedContinuity = 0;
 if (wants("2")) for (const [label, variant] of [["glide", "Glide"], ["phased", "Phased"], ["spring", "Spring"]]) {
   const { context, page } = await openLab();
   await chooseVariant(page, variant);
-  const run = await sampleSelection(page, { from: "Day", to: "Quarter", interruptTo: "Week", interruptAfterMs: 110 });
+  /**
+   * STARVATION, and why one re-sample is legitimate here.
+   *
+   * The assertion below compares two consecutive sample intervals. That is sound while the sampler is getting
+   * its frames, and unsound when it is not: a stalled interval covers real motion that the previous interval
+   * does not, so the ratio stops describing the trajectory and starts describing the scheduler. This was
+   * observed once — `glide` read 5.406 px/ms against an approach of 0.748 on a CORRECT build, while the
+   * control suite was compiling a second copy of the site on the same container; ten runs on an idle machine
+   * read 0.99–1.34 against approaches of 1.24–1.69.
+   *
+   * So the run is re-sampled once, and the trigger is a MEASURED precondition — a frame gap in the judged
+   * window more than 2.5x the run's median — not the result. That distinction is the whole point: re-running
+   * because a check went red is how a flake gets buried, and re-running because the instrument demonstrably
+   * missed its frames is how it gets read. If the second sample stalls too, the gate reports a note naming
+   * the stall rather than an assertion it cannot support — and `judgedContinuity` then guarantees the section
+   * cannot go silent across all three variants without failing.
+   */
+  const stalled = (samples, peakIdx) => {
+    if (peakIdx < 2) return false;
+    const gaps = samples.slice(1).map((s, i) => s.t - samples[i].t).filter((g) => g > 0).sort((a, b) => a - b);
+    if (gaps.length < 5) return false;
+    const median = gaps[Math.floor(gaps.length / 2)];
+    const judged = [samples[peakIdx].t - samples[peakIdx - 1].t, samples[peakIdx - 1].t - samples[peakIdx - 2].t];
+    return judged.some((g) => g > median * 2.5);
+  };
+  const peakOf = (samples, interruptAt) => {
+    const first = samples.findIndex((x) => x.t > interruptAt);
+    let idx = first;
+    for (let i = first; i < samples.length; i += 1) if (samples[i].left > samples[idx].left) idx = i;
+    return idx;
+  };
+  let run = await sampleSelection(page, { from: "Day", to: "Quarter", interruptTo: "Week", interruptAfterMs: 110 });
+  let stallNote = null;
+  if (stalled(run.samples, peakOf(run.samples, run.interruptAt))) {
+    const again = await sampleSelection(page, { from: "Day", to: "Quarter", interruptTo: "Week", interruptAfterMs: 110 });
+    if (stalled(again.samples, peakOf(again.samples, again.interruptAt))) stallNote = "both samples stalled in the judged window";
+    else run = again;
+  }
   const before = run.samples.filter((s) => s.t <= run.interruptAt);
   const after = run.samples.filter((s) => s.t > run.interruptAt);
   if (before.length < 3 || after.length < 3) {
@@ -244,7 +282,10 @@ if (wants("2")) for (const [label, variant] of [["glide", "Glide"], ["phased", "
   let peakIndex = firstAfterIndex;
   for (let i = firstAfterIndex; i < all.length; i += 1) if (all[i].left > all[peakIndex].left) peakIndex = i;
   const excursion = all[peakIndex].left - lastBefore;
-  if (peakIndex >= 2 && excursion > 6) {
+  if (stallNote) {
+    note(`${label}: continuity not judged`, `${stallNote} — the sampler missed frames around the turning point, so the interval ratio would describe the scheduler rather than the trajectory`);
+  } else if (peakIndex >= 2 && excursion > 6) {
+    judgedContinuity += 1;
     const into = all[peakIndex];
     const beforeInto = all[peakIndex - 1];
     const beforeThat = all[peakIndex - 2];
@@ -591,6 +632,10 @@ if (wants("11")) for (const dir of ["ltr", "rtl"]) {
       const r = el.getBoundingClientRect();
       return r.left + r.width / 2;
     };
+    const mid = (el) => {
+      const r = el.getBoundingClientRect();
+      return r.top + r.height / 2;
+    };
     return {
       value: handle?.getAttribute("aria-valuenow"),
       text: bubble?.textContent?.trim() ?? null,
@@ -600,6 +645,11 @@ if (wants("11")) for (const dir of ["ltr", "rtl"]) {
       haloHidden: halo ? Boolean(halo.closest('[aria-hidden="true"]')) : null,
       bubbleOffset: bubble && handle ? centre(bubble) - centre(handle) : null,
       haloOffset: halo && handle ? centre(halo) - centre(handle) : null,
+      // The BLOCK axis, which the gate did not look at until Codex pointed out that the host's padding is
+      // asymmetric and its 50% therefore is not the thumb's centre. A cue 12px above the thumb it belongs to
+      // is a wrong cue, and a horizontal-only assertion cannot see it.
+      haloBlockOffset: halo && handle ? mid(halo) - mid(handle) : null,
+      tickBlockOffset: ticks[0] && handle ? mid(ticks[0]) - mid(handle) : null,
       bubbleOpacity: bubble ? parseFloat(getComputedStyle(bubble).opacity) : null,
       ticks: ticks.length,
       current: ticks.filter((t) => t.getAttribute("data-current") === "true").length,
@@ -611,6 +661,8 @@ if (wants("11")) for (const dir of ["ltr", "rtl"]) {
   check(geometry.text === `${geometry.value}%`, `slider (${dir}): the bubble shows the announced value`, `bubble "${geometry.text}" vs aria-valuenow ${geometry.value}`);
   check(Math.abs(geometry.bubbleOffset ?? 999) <= 2, `slider (${dir}): the bubble is centred on the thumb`, `${(geometry.bubbleOffset ?? NaN).toFixed(2)}px from the thumb's centre`);
   check(Math.abs(geometry.haloOffset ?? 999) <= 2, `slider (${dir}): the halo is centred on the thumb`, `${(geometry.haloOffset ?? NaN).toFixed(2)}px from the thumb's centre`);
+  check(Math.abs(geometry.haloBlockOffset ?? 999) <= 2, `slider (${dir}): the halo is centred on the thumb's BLOCK axis too`, `${(geometry.haloBlockOffset ?? NaN).toFixed(2)}px above/below the thumb's centre`);
+  check(Math.abs(geometry.tickBlockOffset ?? 999) <= 2, `slider (${dir}): the tick rail sits on the track, not above it`, `${(geometry.tickBlockOffset ?? NaN).toFixed(2)}px from the thumb's centre`);
   check((geometry.bubbleOpacity ?? 0) > 0.9, `slider (${dir}): the bubble is shown for a keyboard reader`, `opacity ${geometry.bubbleOpacity}`);
   check(geometry.ticks === 11 && geometry.current === 1, `slider (${dir}): one tick per step, one marked current`, `${geometry.ticks} ticks, ${geometry.current} current`);
   await context.close();
@@ -771,6 +823,183 @@ if (wants("13")) {
   });
   check(Math.abs(settled.barLeft - settled.left) <= EPSILON && Math.abs(settled.barWidth - settled.width) <= EPSILON, "after rapid alternation the indicator is on the segment chosen last", `${settled.label}: bar ${settled.barLeft.toFixed(1)}x${settled.barWidth.toFixed(1)} vs segment ${settled.left.toFixed(1)}x${settled.width.toFixed(1)}`);
   check(settled.state === "resting", "after rapid alternation the track reports itself at rest", `data-kx-lab-state = ${settled.state}`);
+  await context.close();
+}
+
+// ── 14. A fade's pending destination must not outlive the run that owns it ─────────────────────────────
+/**
+ * The fade variant writes its destination from a `transitionend` listener, while the indicator is invisible,
+ * with a timer as a fallback. Both close over THAT run's destination. The glide branch removed `settle` before
+ * re-adding it but never removed a pending `swap`, so a fade interrupted by a Glide selection ran both on the
+ * glide's own `transitionend`: the glide landed correctly and the stale callback then moved the indicator back
+ * to the fade's destination, leaving it on an item that is not selected. Reported by Codex on PR #662.
+ *
+ * The cross-variant direction is the one that does not self-correct, so that is the one asserted. A fade
+ * followed by another fade also ran a stale callback, but the newer one ran after it and overwrote the result,
+ * so it was invisible by the time anything could be measured.
+ */
+if (wants("14")) {
+  const { context, page } = await openLab();
+  await chooseVariant(page, "Fade");
+  await seg(page, "Quarter").click();
+  // Mid-fade: the fade-out is `fast` (200ms), so 90ms is before its `transitionend` can have fired.
+  await page.waitForTimeout(90);
+  await chooseVariant(page, "Glide");
+  await seg(page, "Month").click();
+  // Long enough for the glide to land AND for the fade's 600ms fallback timer to have come and gone.
+  await page.waitForTimeout(1100);
+  const landed = await page.evaluate((sel) => {
+    const track = document.querySelector(sel);
+    const bar = track.querySelector(".kx-lab-bar").getBoundingClientRect();
+    const chosen = track.querySelector('[data-state="on"], [aria-checked="true"]');
+    const box = chosen.getBoundingClientRect();
+    return {
+      label: chosen.textContent.trim(),
+      barLeft: bar.left,
+      barWidth: bar.width,
+      left: box.left,
+      width: box.width,
+      opacity: parseFloat(getComputedStyle(track.querySelector(".kx-lab-bar")).opacity),
+      state: track.getAttribute("data-kx-lab-state"),
+    };
+  }, SEG);
+  check(
+    Math.abs(landed.barLeft - landed.left) <= EPSILON && Math.abs(landed.barWidth - landed.width) <= EPSILON,
+    "a fade interrupted by another variant leaves no callback to move the indicator back",
+    `${landed.label}: bar ${landed.barLeft.toFixed(1)}x${landed.barWidth.toFixed(1)} vs segment ${landed.left.toFixed(1)}x${landed.width.toFixed(1)}`,
+  );
+  check(landed.opacity > 0.9, "the indicator is visible after a cross-variant interruption", `opacity ${landed.opacity}`);
+  check(landed.state === "resting", "the track reports itself at rest after a cross-variant interruption", `data-kx-lab-state = ${landed.state}`);
+  await context.close();
+}
+
+// ── 15. The lab's own Interrupt button must interrupt something ────────────────────────────────────────
+/**
+ * The gate's own continuity measurement (section 2) drives its clicks directly, so it never pressed this
+ * button — and the button named the FIRST segment outright, which on a freshly loaded page is already
+ * selected. The first leg was a no-change early return and the delayed leg was an ordinary travel from a
+ * resting indicator. The demonstration a reader can press demonstrated nothing, in its default state.
+ *
+ * What is asserted is the property that was missing: the selection must change TWICE, so the first leg is a
+ * real travel for the second to interrupt. Counting transitions of the checked item is enough to separate a
+ * real two-leg run from a one-leg one, and it does not depend on frame timing.
+ */
+if (wants("15")) {
+  const { context, page } = await openLab();
+  await chooseVariant(page, "Glide");
+  const seen = await page.evaluate(async (sel) => {
+    const track = document.querySelector(sel);
+    const read = () => track.querySelector('[data-state="on"], [aria-checked="true"]')?.textContent.trim() ?? null;
+    const order = [read()];
+    const press = [...document.querySelectorAll("button")].find((b) => /^Interrupt$/.test(b.textContent.trim()));
+    if (!press) return { error: "no Interrupt button" };
+    const states = [];
+    const poll = setInterval(() => {
+      const now = read();
+      if (now !== order[order.length - 1]) order.push(now);
+      states.push(track.getAttribute("data-kx-lab-state"));
+    }, 16);
+    press.click();
+    await new Promise((r) => setTimeout(r, 900));
+    clearInterval(poll);
+    return { order, travelled: states.filter((s) => s === "travelling").length };
+  }, SEG);
+  if (seen.error) check(false, "the Interrupt button is on the page", seen.error);
+  else {
+    // order[0] is the selection before the press, so two legs means three entries.
+    check(seen.order.length >= 3, "pressing Interrupt changes the selection twice, so the second leg interrupts a real travel", `selections seen: ${seen.order.join(" → ")}`);
+    check(seen.travelled > 0, "the track was observed travelling during the scripted interruption", `${seen.travelled} travelling sample(s)`);
+  }
+  await context.close();
+}
+
+if (wants("2")) {
+  // The guard on the escape hatch above: a note is an acceptable answer for ONE variant on a loaded machine,
+  // and an acceptable answer for all three only if the section is allowed to prove nothing.
+  check(judgedContinuity > 0, "at least one variant's continuity was actually judged", `${judgedContinuity} of 3 variants judged; the rest were notes`);
+}
+
+// ── 16. The system preference must survive hydration and stay live ────────────────────────────────────
+/**
+ * Two defects in one line, both found by Codex at head `8fb12349`.
+ *
+ * The preference was read inline during render behind a `typeof window` branch, so the server rendered
+ * `false` and the first client render read `true` for a reader who has reduced motion on: the switch's
+ * props and the presence of the explanatory sentence differed between the two trees. A hydration mismatch,
+ * on the page whose subject is honouring that preference. React reports it as a console error, which
+ * `openLab` collects — so this check is possible only because console errors are not filtered away.
+ *
+ * And a value read during render has no subscription, so changing the preference left this switch and the
+ * stage's attribute stale until something else happened to re-render. That half is asserted by changing the
+ * emulated preference with NO interaction afterwards and requiring the page to follow.
+ */
+if (wants("16")) {
+  const { context, page, errors } = await openLab({ reducedMotion: "reduce" });
+  /**
+   * NOT control-proven, and said so here rather than left to be assumed. Control 22 restores the inline read
+   * and the gate goes red — but on the LIVENESS check below, not on this one. A production React build
+   * reports a recovered hydration mismatch as a minified error (`#418`/`#423`) whose text may carry none of
+   * the words below, so this assertion may be incapable of firing on the very defect it names. It is kept
+   * because a hydration error appearing here would be worth knowing about, and the pattern covers the
+   * minified form too; the property itself is carried by the two checks after it, which ARE proven.
+   */
+  const hydration = errors.filter((e) => /[Hh]ydrat|did not match|server.rendered|server HTML|Minified React error|react\.dev\/errors/.test(e));
+  check(hydration.length === 0, "loading with reduced motion on reports no hydration error (see note: not control-proven)", hydration.length ? hydration[0].slice(0, 220) : "no hydration error reported by React");
+  const first = await page.evaluate(() => ({
+    reduce: document.querySelector("[data-kx-lab-reduce]")?.getAttribute("data-kx-lab-reduce"),
+    checked: document.querySelector("#lab-reduce")?.getAttribute("aria-checked") ?? document.querySelector("#lab-reduce")?.dataset.state,
+    explained: !!document.body.textContent.includes("set by your system"),
+  }));
+  check(first.reduce === "true" && first.explained, "the system preference is reflected on first paint, with its explanation", `data-kx-lab-reduce = ${first.reduce}, switch = ${first.checked}, sentence present = ${first.explained}`);
+  // Live, with nothing clicked: the only thing that can update the page here is a subscription.
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.waitForTimeout(250);
+  const after = await page.evaluate(() => ({
+    reduce: document.querySelector("[data-kx-lab-reduce]")?.getAttribute("data-kx-lab-reduce"),
+    explained: !!document.body.textContent.includes("set by your system"),
+  }));
+  check(after.reduce === "false" && !after.explained, "changing the system preference updates the page with no interaction", `data-kx-lab-reduce = ${after.reduce}, sentence present = ${after.explained}`);
+  await context.close();
+}
+
+// ── 17. A pointer release must not take the keyboard's cue with it ─────────────────────────────────────
+/**
+ * Engagement was one flag that either a pointer release or a blur could clear. A reader who clicked the
+ * thumb and then kept adjusting with the arrow keys lost the bubble and the halo at `pointerup`: the thumb
+ * was still focused, but no second focus event fires for the keypresses that follow. Every subsequent
+ * keyboard adjustment then happened with the cue hidden, for the reader most likely to need it. Found by
+ * Codex at head `8fb12349`; engagement is now the union of pressed and focused.
+ */
+if (wants("17")) {
+  const { context, page } = await openLab();
+  const thumb = page.locator('.kx-lab-slider [role="slider"]');
+  // `boundingBox()` does not scroll, and the slider sits at y≈1382 on a 900px viewport: the first version of
+  // this check drove the mouse to a point outside the viewport, which blurred the thumb and changed nothing.
+  // Every assertion then failed for a reason that had nothing to do with the defect.
+  await thumb.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(200);
+  const box = await thumb.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.up();
+  // The pointer is gone and the thumb still has focus. This is the state the defect lived in.
+  await page.waitForTimeout(200);
+  await page.keyboard.press("ArrowRight");
+  await page.waitForTimeout(300);
+  const cue = await page.evaluate(() => {
+    const host = document.querySelector(".kx-lab-slider");
+    const bubble = host?.querySelector(".kx-lab-bubble");
+    const halo = host?.querySelector(".kx-lab-halo");
+    return {
+      engaged: host?.getAttribute("data-kx-lab-engaged"),
+      focused: host?.contains(document.activeElement) ?? false,
+      bubbleOpacity: bubble ? parseFloat(getComputedStyle(bubble).opacity) : null,
+      haloOpacity: halo ? parseFloat(getComputedStyle(halo).opacity) : null,
+    };
+  });
+  check(cue.focused === true, "the thumb still holds focus after the pointer is released", `focus inside the slider = ${cue.focused}`);
+  check(cue.engaged === "true", "a pointer release does not end engagement while the thumb is focused", `data-kx-lab-engaged = ${cue.engaged}`);
+  check((cue.bubbleOpacity ?? 0) > 0.9 && (cue.haloOpacity ?? 0) > 0.9, "the bubble and halo are still shown for the keyboard after a click", `bubble ${cue.bubbleOpacity}, halo ${cue.haloOpacity}`);
   await context.close();
 }
 
