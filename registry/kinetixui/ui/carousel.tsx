@@ -71,15 +71,6 @@ function inlineKey(key: string, rtl: boolean): "forward" | "backward" | null {
 }
 
 /**
- * The block axis has no direction to resolve: `writing-mode` is not something this carousel varies, and a
- * vertical track always runs top to bottom. So ArrowDown is forward whatever the document's `dir` says —
- * which is why this takes no `rtl` and is not `inlineKey` with another pair of keys.
- *
- * `@kinetixui/angular` had already decided this (`packages/ui-angular/src/lib/carousel.ts:352`) and written
- * it into its docstring at `:68`: "vertical carousels use ArrowUp and ArrowDown". React answered the
- * INLINE keys on a vertical track instead — the two platforms were exact opposites on the same component.
- */
-/**
  * How long the engine must be quiet before the move is announced. It spans a whole movement rather than a
  * frame: the engine emits `scroll` about once per frame while animating, so any value comfortably above a
  * frame coalesces an entire move — and a held key or a flung drag with it — into one phrase. Short enough
@@ -119,12 +110,6 @@ function selectedSlide(api: CarouselApi): number {
     // fall through to the snap index
   }
   return snap;
-}
-
-function blockKey(key: string): "forward" | "backward" | null {
-  if (key === "ArrowDown") return "forward";
-  if (key === "ArrowUp") return "backward";
-  return null;
 }
 
 const Carousel = React.forwardRef<
@@ -440,13 +425,13 @@ const Carousel = React.forwardRef<
           // Absent an override, direction is read at the press rather than taken from state, so a key is
           // never mapped by a direction that has already changed under it.
           //
-          // Keys follow the AXIS: the inline pair on a horizontal track, the block pair on a vertical one.
-          // A vertical carousel used to answer ArrowLeft/ArrowRight and ignore ArrowUp/ArrowDown — the
-          // exact inverse of `@kinetixui/angular`, which has shipped the block pair and documented it
-          // since it was written. This is a BREAKING change for a consumer who drove a vertical carousel
-          // with the inline keys; the changeset says so.
+          // A vertical carousel answers the INLINE pair here, on both axes, which is what this component
+          // has always done. `@kinetixui/angular` answers the block pair on a vertical track
+          // (`packages/ui-angular/src/lib/carousel.ts:68,352`), so the two platforms disagree — but
+          // aligning them changes a published consumer behaviour, so it is a separate follow-up rather
+          // than part of this accessibility correction. Nothing below depends on which pair it is.
           const engineRtl = opts?.direction ? opts.direction === "rtl" : isRtl(e.currentTarget);
-          const move = horizontal ? inlineKey(e.key, engineRtl) : blockKey(e.key);
+          const move = inlineKey(e.key, engineRtl);
           if (move) {
             e.preventDefault();
             // Intent is recorded only when the move can happen. A press against an endpoint on a

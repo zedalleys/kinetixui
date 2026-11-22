@@ -37,20 +37,24 @@ const EXPECTED = {
   },
   // Also the grouped section's cross-check, which reads a slide's own name to compare it with the phrase.
   "no-slide-names": { pattern: /every slide is named|agrees with that slide's own name/, minimum: 5 },
-  "no-region-name": { pattern: /the region is named|a consumer's own region name wins/, minimum: 5 },
+  "no-region-name": {
+    pattern: /the region is named|a consumer's own region name wins|falls back to a name that is not|exposes all four as named landmarks|kept EXACTLY|names the region from its heading|distinguishable from an unnamed one|two UNNAMED carousels share one name/,
+    // 8 is the MEASURED count, not a floor below it: with no region name at all the four naming rows
+    // redden along with the three per-axis ones and the "a consumer's own name wins" row. A minimum
+    // comfortably under the measurement would accept a mutation that broke fewer rows than it should.
+    minimum: 8,
+  },
+  // The owner's rule is that the fallback must not displace a consumer's own name, so the control that
+  // matters is the one that makes it displace it. It reddens the naming rows that compare the two, and
+  // NOT "an unnamed carousel falls back to a name" — that row is true either way, which is precisely why
+  // it cannot be the only naming assertion.
+  "fallback-overrides-consumer-name": {
+    pattern: /kept EXACTLY|a consumer's own region name wins|distinguishable from an unnamed one/,
+    minimum: 3,
+  },
   "no-announcement": {
     pattern: /announced|announces|is announced|speaks once, naming the landing|names the SLIDE, not the snap/,
     minimum: 15,
-  },
-  // Named by the MOVEMENT, not by focus or the announcement. Swallowing the block keys stops the carousel
-  // moving, and the row that says so is "control: the move actually advanced one position" — which a
-  // `/focus|announce/i` pattern does not cover, so that pattern accepted a run in which the row proving
-  // the keys work was among the unexplained failures.
-  "vertical-ignores-block-keys": {
-    // Including the reduced-motion section, which drives the VERTICAL fixture with ArrowDown — so
-    // swallowing the block keys stops its move too, and the row saying so is this defect's, not collateral.
-    pattern: /the move actually advanced|focus is not dropped when its slide leaves the view|is announced exactly ONCE|naming where the track ENDED|the move is still announced/,
-    minimum: 7,
   },
   // Collapsing the settle window also makes a gesture begun mid-phrase speak twice, so that row is this
   // defect's too rather than collateral.

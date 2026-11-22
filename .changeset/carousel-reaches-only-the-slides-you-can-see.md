@@ -1,12 +1,14 @@
 ---
-"@kinetixui/ui": minor
+"@kinetixui/ui": patch
 ---
 
 **Carousel: a reader reaches only the slides they can see, and hears where they are.**
 
-Five accessibility repairs, each bringing React into line with a contract `@kinetixui/angular` has shipped
-and documented since it was written. All five were measured as present on `main` before this change, so
-none of them is a regression in the carousel work that precedes it.
+Four accessibility repairs, each bringing React into line with a contract `@kinetixui/angular` has shipped
+and documented since it was written. All four were measured as present on `main` before this change, so
+none of them is a regression in the carousel work that precedes it. **No arrow key changes meaning here**
+— the axis-aligned keys are a published behaviour change and are held out into a separate follow-up, so
+this release is a patch.
 
 - **Slides out of view are `inert`.** Previously Tab walked into every off-screen slide: with a link in
   each of five slides the tab order read `slide 1 → 2 → 3 → 4 → 5 → Previous → Next`, so a keyboard reader
@@ -23,16 +25,16 @@ none of them is a regression in the carousel work that precedes it.
   that turns out to be a click rather than a drag, and a press against the endpoint of a non-looping
   carousel, announce nothing and leave nothing behind for a later movement to be mistaken for the
   reader's.
-- **The region has an accessible name**, defaulting to "Slides" and deferring to a consumer's own
-  `aria-label` or `aria-labelledby`. An unnamed `role="region"` is not exposed as a landmark at all, so the
+- **The region has an accessible name**, falling back to "Slides" only when the consumer has not named
+  it: a consumer's own `aria-label` is kept exactly as passed, and `aria-labelledby` names the region from
+  the element it points at with no `aria-label` competing. Two carousels a consumer has not named share
+  the fallback, so naming them is the consumer's call. An unnamed `role="region"` is not exposed as a landmark at all, so the
   carousel could not be reached by landmark navigation.
 
-**BREAKING for a vertical carousel's keys.** Arrow keys now follow the AXIS: `ArrowLeft`/`ArrowRight` on a
-horizontal track (still resolved against the engine's direction, so RTL is unchanged), and
-`ArrowUp`/`ArrowDown` on a vertical one. A vertical carousel previously answered the horizontal pair and
-ignored the vertical pair — the exact inverse of Angular. A consumer who drove a vertical carousel with
-`ArrowLeft`/`ArrowRight` must move to `ArrowUp`/`ArrowDown`; nothing else changes, and `onKeyDown` is still
-composed first, so a consumer who handled those keys themselves is unaffected.
+**Arrow keys are unchanged.** A vertical carousel still answers `ArrowLeft`/`ArrowRight` and still ignores
+`ArrowUp`/`ArrowDown`, which is the inverse of `@kinetixui/angular`. Aligning them would break a consumer
+who drives a vertical carousel with the horizontal pair, so it is a separate follow-up rather than part of
+an accessibility patch.
 
 No other public API changes. `CarouselItem` now renders `tabIndex={-1}`, `aria-label` and (when out of view)
 `inert`; a consumer's own `aria-label` still wins, and `tabIndex={-1}` adds no tab stop.

@@ -30,6 +30,12 @@ const label = html.dataset.kxLabel ?? undefined;
 const engineThreshold = html.dataset.kxThreshold === "engine";
 /** `data-kx-group="2"` sets `slidesToScroll`, under which a scroll SNAP is not a slide. */
 const group = Number(html.dataset.kxGroup ?? "1");
+/**
+ * `data-kx-naming="1"` renders FOUR carousels instead of one, to answer a question a single-carousel
+ * page cannot: how a reader tells two of them apart. Naming needs no engine instrumentation, so these
+ * are plain mounts — were they instrumented they would overwrite each other's `data-kx-*` readings.
+ */
+const naming = html.dataset.kxNaming === "1";
 
 /**
  * What a screen reader would have been HANDED, in order. Reading the live region once at the end cannot
@@ -117,4 +123,39 @@ function Harness() {
   );
 }
 
-createRoot(document.getElementById("root")!).render(<Harness />);
+/**
+ * Four carousels on one page: unnamed, named by `aria-label`, named by `aria-labelledby`, and a SECOND
+ * unnamed one. The fourth exists to measure the case the other three cannot — two carousels that the
+ * consumer has not named at all, which a reader can only tell apart by something other than their names.
+ */
+function NamingFixture() {
+  const one = (key: string, extra: Record<string, string> = {}) => (
+    <Carousel key={key} orientation="horizontal" data-kx-case={key} {...extra}>
+      <CarouselContent className="kx-harness-viewport">
+        {Array.from({ length: 3 }, (_, i) => (
+          <CarouselItem key={i}>
+            <div className="kx-harness-slide">
+              <a href="#" id={`${key}-link-${i + 1}`}>
+                link {i + 1}
+              </a>
+            </div>
+          </CarouselItem>
+        ))}
+      </CarouselContent>
+      <CarouselPrevious />
+      <CarouselNext />
+    </Carousel>
+  );
+  return (
+    <>
+      {one("unnamed")}
+      {one("label", { "aria-label": "Featured work" })}
+      <h2 id="kx-heading">Spring collection</h2>
+      {one("labelledby", { "aria-labelledby": "kx-heading" })}
+      {one("unnamed-twin")}
+      <span data-kx-ready="" hidden />
+    </>
+  );
+}
+
+createRoot(document.getElementById("root")!).render(naming ? <NamingFixture /> : <Harness />);

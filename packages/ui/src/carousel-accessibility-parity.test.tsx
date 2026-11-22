@@ -112,17 +112,23 @@ describe("the region's accessible name", () => {
   });
 });
 
-describe("axis-aligned arrow keys", () => {
-  it("vertical: ArrowDown and ArrowUp are claimed", async () => {
+describe("which arrow keys each axis claims", () => {
+  /**
+   * React claims the INLINE pair on both axes. `@kinetixui/angular` claims the block pair on a vertical
+   * track (`packages/ui-angular/src/lib/carousel.ts:68,352`), so the platforms disagree — and aligning
+   * them changes a published consumer behaviour, so it is a separate follow-up. These two tests are what
+   * that follow-up inverts; they record today's behaviour rather than endorsing it.
+   */
+  it("vertical: the inline pair is claimed, as it always has been", async () => {
     render(<Fixture orientation="vertical" />);
-    expect(press("ArrowDown")).toBe(true);
-    expect(press("ArrowUp")).toBe(true);
+    expect(press("ArrowRight")).toBe(true);
+    expect(press("ArrowLeft")).toBe(true);
   });
 
-  it("vertical: ArrowLeft and ArrowRight are NOT claimed — the breaking half of this change", async () => {
+  it("vertical: the block pair is NOT claimed — this is what the follow-up changes", async () => {
     render(<Fixture orientation="vertical" />);
-    expect(press("ArrowLeft")).toBe(false);
-    expect(press("ArrowRight")).toBe(false);
+    expect(press("ArrowDown")).toBe(false);
+    expect(press("ArrowUp")).toBe(false);
   });
 
   it("horizontal: ArrowLeft and ArrowRight are claimed, ArrowUp and ArrowDown are not", async () => {
@@ -133,7 +139,7 @@ describe("axis-aligned arrow keys", () => {
     expect(press("ArrowDown")).toBe(false);
   });
 
-  it("horizontal RTL still resolves the inline pair, so the axis change did not eat the direction fix", async () => {
+  it("horizontal RTL still resolves the inline pair, so the accessibility work did not eat the direction fix", async () => {
     render(
       <div dir="rtl">
         <Fixture orientation="horizontal" />
@@ -143,20 +149,9 @@ describe("axis-aligned arrow keys", () => {
     expect(press("ArrowLeft")).toBe(true);
   });
 
-  it("a vertical carousel's keys do not depend on the document's direction", async () => {
-    render(
-      <div dir="rtl">
-        <Fixture orientation="vertical" />
-      </div>,
-    );
-    expect(press("ArrowDown")).toBe(true);
-    expect(press("ArrowUp")).toBe(true);
-    expect(press("ArrowLeft")).toBe(false);
-  });
-
-  it("a modifier still belongs to the browser, on either axis", async () => {
-    render(<Fixture orientation="vertical" />);
-    const ev = new KeyboardEvent("keydown", { key: "ArrowDown", altKey: true, bubbles: true, cancelable: true });
+  it("a modifier still belongs to the browser", async () => {
+    render(<Fixture orientation="horizontal" />);
+    const ev = new KeyboardEvent("keydown", { key: "ArrowRight", altKey: true, bubbles: true, cancelable: true });
     region().dispatchEvent(ev);
     expect(ev.defaultPrevented).toBe(false);
   });

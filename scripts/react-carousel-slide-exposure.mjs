@@ -79,6 +79,21 @@ export const DEFECTS = {
     };
   },
 
+  /**
+   * The owner's instruction for the fallback name is that it must not be forced onto a consumer who has
+   * named the region themselves. This restores the behaviour that would break it: the fallback is written
+   * over whatever the consumer passed. Without this control the naming rows would pass against a
+   * component that ignored a consumer's name entirely, since "the region has A name" is also true then.
+   */
+  "fallback-overrides-consumer-name": () => {
+    const setAttr = Element.prototype.setAttribute;
+    Element.prototype.setAttribute = function (name, value) {
+      if (name === "aria-label" && this.getAttribute?.("aria-roledescription") === "carousel")
+        return setAttr.call(this, name, "Slides");
+      return setAttr.call(this, name, value);
+    };
+  },
+
   /** Before the fix the region had no accessible name, so it was not exposed as a landmark at all. */
   "no-region-name": () => {
     const setAttr = Element.prototype.setAttribute;
@@ -117,11 +132,6 @@ export const DEFECTS = {
   },
 
   /**
-   * Before the fix a vertical carousel ignored the block keys and answered the inline pair instead. The
-   * press is swallowed in the capture phase before the component's bubble handler can see it, which is
-   * indistinguishable, from the page's side, from a handler that never mapped the key.
-   */
-  /**
    * Restores "a phrase per position": the announcement's settle window collapsed to nothing, so every
    * `select` in a burst speaks instead of only the landing. Done by shortening the component's own
    * `QUIET_MS` timer — and ONLY that timer, matched by its exact delay, so React's scheduling, the
@@ -139,15 +149,6 @@ export const DEFECTS = {
     });
   },
 
-  "vertical-ignores-block-keys": () => {
-    document.addEventListener(
-      "keydown",
-      (e) => {
-        if (e.key === "ArrowDown" || e.key === "ArrowUp") e.stopPropagation();
-      },
-      true,
-    );
-  },
 };
 
 const DEFECT = process.env.KX_CAROUSEL_DEFECT;
@@ -407,7 +408,7 @@ async function intent(browser, base, file) {
   await page.waitForTimeout(700);
   s = await read(page);
   await clear();
-  await page.keyboard.press(file.startsWith("vertical") ? "ArrowDown" : "ArrowRight");
+  await page.keyboard.press("ArrowRight");
   await page.waitForTimeout(300);
   await page.setViewportSize({ width: box.width - 200, height: box.height });
   await page.waitForTimeout(900);
@@ -489,12 +490,114 @@ async function statics(browser, base) {
   await ctx.close();
 }
 
+/**
+ * WHICH arrow keys a vertical carousel answers, recorded as the behaviour it is rather than the behaviour
+ * it should be. React answers the INLINE pair on both axes; `@kinetixui/angular` answers the block pair on
+ * a vertical track (`packages/ui-angular/src/lib/carousel.ts:68,352`), so the two platforms disagree.
+ * Aligning them changes a published consumer behaviour, so it is a separate follow-up — and these rows are
+ * what that follow-up flips. Before this gate existed nothing could mount a vertical React carousel at
+ * all, so this disagreement was invisible on every branch.
+ */
+async function verticalKeys(browser, base) {
+  const name = "vertical keys";
+  const { ctx, page } = await open(browser, `${base}/vertical.html`);
+  const start = await read(page);
+  if (start.engineSelected === 0) ok(name, "control: the vertical fixture starts at the first slide", `selected ${start.engineSelected}`);
+  else return void bad(name, "control: the vertical fixture starts at the first slide", `selected ${start.engineSelected} — nothing below measures a move`);
+
+  await page.evaluate(() => document.getElementById("slide-link-1")?.focus());
+  await page.keyboard.press("ArrowDown");
+  await settle(page);
+  const afterBlock = await read(page);
+  if (afterBlock.engineSelected === 0)
+    ok(name, "TODAY: the block pair moves nothing — the follow-up is what changes this", `ArrowDown left it at ${afterBlock.engineSelected}`);
+  else bad(name, "TODAY: the block pair moves nothing — the follow-up is what changes this", `ArrowDown moved it to ${afterBlock.engineSelected}`);
+
+  if (afterBlock.spoken.length === 0) ok(name, "and a key that moves nothing announces nothing", "[]");
+  else bad(name, "and a key that moves nothing announces nothing", JSON.stringify(afterBlock.spoken));
+
+  await page.keyboard.press("ArrowRight");
+  await settle(page);
+  const afterInline = await read(page);
+  if (afterInline.engineSelected === 1) ok(name, "the inline pair moves a vertical carousel", `ArrowRight → selected ${afterInline.engineSelected}`);
+  else bad(name, "the inline pair moves a vertical carousel", `ArrowRight → selected ${afterInline.engineSelected}`);
+
+  await ctx.close();
+}
+
+/**
+ * How a browser NAMES these regions, and how a reader tells two of them apart. Four carousels on one
+ * page: unnamed, `aria-label`, `aria-labelledby`, and a second unnamed one. The names are read from
+ * Chromium's own accessibility tree rather than from the attributes, because `aria-labelledby` names a
+ * region from another element's text and an attribute read cannot see that at all.
+ *
+ * The fourth carousel is here to measure a limitation rather than a contract: two carousels the consumer
+ * has not named are both "Slides", so a reader cannot tell them apart by name. That is asserted as the
+ * fact it is, so it cannot change — in either direction — without a row moving.
+ */
+async function naming(browser, base) {
+  const name = "naming";
+  const { ctx, page } = await open(browser, `${base}/naming.html`);
+
+  const dom = await page.evaluate(() => {
+    const regions = [...document.querySelectorAll('[role="region"]')];
+    return regions.map((r) => ({
+      kase: r.getAttribute("data-kx-case"),
+      label: r.getAttribute("aria-label"),
+      labelledby: r.getAttribute("aria-labelledby"),
+      rd: r.getAttribute("aria-roledescription"),
+    }));
+  });
+
+  if (dom.length === 4) ok(name, "control: the page really holds four carousels", dom.map((d) => d.kase).join(", "));
+  else return void bad(name, "control: the page really holds four carousels", `${dom.length} region(s) — nothing below is measuring four carousels`);
+
+  // Chromium's own computed names, in document order.
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Accessibility.enable");
+  const tree = await cdp.send("Accessibility.getFullAXTree");
+  const axNames = tree.nodes.filter((n) => n.role && n.role.value === "region").map((n) => (n.name ? n.name.value : null));
+
+  if (axNames.length === 4) ok(name, "control: a browser exposes all four as named landmarks", JSON.stringify(axNames));
+  else return void bad(name, "control: a browser exposes all four as named landmarks", `${axNames.length} region(s) in the accessibility tree: ${JSON.stringify(axNames)}`);
+
+  const [unnamed, labelled, labelledBy, twin] = axNames;
+  const d = Object.fromEntries(dom.map((x) => [x.kase, x]));
+
+  if (unnamed && !/carousel/i.test(unnamed))
+    ok(name, "an unnamed carousel falls back to a name that is not the roledescription's word", `${JSON.stringify(unnamed)} + roledescription ${JSON.stringify(d.unnamed.rd)}`);
+  else bad(name, "an unnamed carousel falls back to a name that is not the roledescription's word", JSON.stringify(unnamed));
+
+  if (labelled === "Featured work" && d.label.label === "Featured work")
+    ok(name, "a consumer's own name is kept EXACTLY, not replaced by the fallback", JSON.stringify(labelled));
+  else bad(name, "a consumer's own name is kept EXACTLY, not replaced by the fallback", `accessible name ${JSON.stringify(labelled)}, attribute ${JSON.stringify(d.label.label)}`);
+
+  // `aria-labelledby` must SUPPRESS the fallback rather than compete with it: were both present the
+  // fallback would be the one a browser ignores, so the attribute would say one thing and the reader
+  // hear another.
+  if (labelledBy === "Spring collection" && d.labelledby.label === null)
+    ok(name, "`aria-labelledby` names the region from its heading, with no `aria-label` competing", `${JSON.stringify(labelledBy)}, aria-label ${JSON.stringify(d.labelledby.label)}`);
+  else bad(name, "`aria-labelledby` names the region from its heading, with no `aria-label` competing", `accessible name ${JSON.stringify(labelledBy)}, aria-label ${JSON.stringify(d.labelledby.label)}`);
+
+  if (labelled !== unnamed) ok(name, "a named carousel is distinguishable from an unnamed one beside it", `${JSON.stringify(unnamed)} vs ${JSON.stringify(labelled)}`);
+  else bad(name, "a named carousel is distinguishable from an unnamed one beside it", `both ${JSON.stringify(unnamed)}`);
+
+  // A LIMITATION, asserted so it cannot change silently: the fallback is the same word every time, so
+  // two carousels a consumer has not named are not distinguishable by name. Naming them is the
+  // consumer's call; this row records which way it currently is.
+  if (unnamed === twin)
+    ok(name, "LIMITATION: two UNNAMED carousels share one name, so only a consumer can tell them apart", `both ${JSON.stringify(unnamed)}`);
+  else bad(name, "LIMITATION: two UNNAMED carousels share one name, so only a consumer can tell them apart", `${JSON.stringify(unnamed)} vs ${JSON.stringify(twin)} — the fallback now varies, which this row did not expect`);
+
+  await ctx.close();
+}
+
 /** Under reduced motion the engine jumps instead of easing; every claim above must still hold. */
 async function reducedMotion(browser, base) {
   const name = "reduced motion";
   const { ctx, page } = await open(browser, `${base}/vertical.html`, { reducedMotion: "reduce" });
   await page.evaluate(() => document.getElementById("slide-link-1")?.focus());
-  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowRight");
   await settle(page);
   const s = await read(page);
   const out = s.slides.filter((x) => !x.inView);
@@ -549,12 +652,14 @@ async function main() {
   try {
     await axis(browser, server.base, { file: "horizontal.html", name: "horizontal", forward: "ArrowRight" });
     await axis(browser, server.base, { file: "horizontal-rtl.html", name: "horizontal rtl", forward: "ArrowLeft" });
-    await axis(browser, server.base, { file: "vertical.html", name: "vertical", forward: "ArrowDown" });
-    await axis(browser, server.base, { file: "vertical-rtl.html", name: "vertical rtl", forward: "ArrowDown" });
+    await axis(browser, server.base, { file: "vertical.html", name: "vertical", forward: "ArrowRight" });
+    await axis(browser, server.base, { file: "vertical-rtl.html", name: "vertical rtl", forward: "ArrowLeft" });
     await intent(browser, server.base, "horizontal.html");
     await intent(browser, server.base, "horizontal-engine-threshold.html");
     await grouped(browser, server.base);
     await statics(browser, server.base);
+    await naming(browser, server.base);
+    await verticalKeys(browser, server.base);
     await reducedMotion(browser, server.base);
     await touch(browser, server.base);
   } finally {

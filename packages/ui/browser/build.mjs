@@ -98,13 +98,16 @@ const PAGES = {
   "horizontal-engine-threshold.html": { axis: "horizontal", slides: 5, threshold: "engine" },
   // `slidesToScroll: 2`, under which a scroll SNAP index is not a slide index.
   "horizontal-grouped.html": { axis: "horizontal", slides: 5, group: 2 },
+  // FOUR carousels on one page — unnamed, `aria-label`, `aria-labelledby`, and a second unnamed one.
+  // How a reader tells two carousels apart cannot be measured on a page that holds one.
+  "naming.html": { axis: "horizontal", slides: 3, naming: true },
 };
-for (const [file, { axis, slides, dir, label, threshold, group }] of Object.entries(PAGES)) {
+for (const [file, { axis, slides, dir, label, threshold, group, naming }] of Object.entries(PAGES)) {
   writeFileSync(
     join(outDir, file),
     index.replace(
       '<html lang="en">',
-      `<html lang="en" data-kx-axis="${axis}" data-kx-slides="${slides}"${dir ? ` dir="${dir}"` : ""}${label ? ` data-kx-label="${label}"` : ""}${threshold ? ` data-kx-threshold="${threshold}"` : ""}${group ? ` data-kx-group="${group}"` : ""}>`,
+      `<html lang="en" data-kx-axis="${axis}" data-kx-slides="${slides}"${dir ? ` dir="${dir}"` : ""}${label ? ` data-kx-label="${label}"` : ""}${threshold ? ` data-kx-threshold="${threshold}"` : ""}${group ? ` data-kx-group="${group}"` : ""}${naming ? ' data-kx-naming="1"' : ""}>`,
     ),
   );
 }
