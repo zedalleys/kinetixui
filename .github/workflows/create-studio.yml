@@ -23,7 +23,16 @@ on:
       - "scripts/create-studio-recovery-exit-controls.sh"
       - "scripts/create-studio-save-state-browser.mjs"
       - "scripts/create-studio-save-state-controls.sh"
+      - "scripts/create-studio-candidate-integrity.sh"
+      - "scripts/create-studio-isolated-controls.sh"
+      - "scripts/create-studio-reap-disposable.sh"
+      - "scripts/create-studio-interruption-safety.sh"
       - ".github/workflows/create-studio.yml"
+  # After main receives the code. Unfiltered on purpose: the pull-request path list cannot see a
+  # change to packages/ui or the tokens that breaks the editor, so the only place such a break can
+  # be caught is a run on main itself. Before this, nothing re-ran these gates after a merge.
+  push:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -41,6 +50,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - name: Candidate source assertions
+        # Fourteen load-bearing lines that a mutation runner replaces, or that a gate would stop
+        # being able to assert if residue were committed. A committed mutation is a CLEAN tree, so
+        # cleanliness cannot catch one; presence can. This is the check that would have stopped the
+        # retry-button residue that reached 4215958a.
+        run: bash scripts/create-studio-candidate-integrity.sh assert
       - run: pnpm install --frozen-lockfile
       - run: pnpm build:tokens
       - run: pnpm --filter @kinetixui/ui build && pnpm --filter @kinetixui/iot build
@@ -58,9 +73,13 @@ jobs:
       - name: Browser and accessibility evidence when editor is present
         shell: bash
         run: |
+          # This used to `exit 0` when the browser gate was absent, which was right while early
+          # storage-only slices genuinely had no editor. Every PR in the current stack carries the
+          # gate, so a missing file can now only mean it was lost — and skipping would report a
+          # green check having run no browser evidence at all.
           if [ ! -f scripts/create-studio-browser.mjs ]; then
-            echo "Storage-only slice: editor browser evidence belongs to the dependent PR."
-            exit 0
+            echo "::error::scripts/create-studio-browser.mjs is missing; refusing to report the editor as verified"
+            exit 1
           fi
           pnpm exec playwright install --with-deps chromium
           KINETIX_CREATE_DEV=1 KINETIX_CREATE_DEV_DIR=/tmp/kinetix-create-ci pnpm --filter @kinetixui/web exec next dev --hostname 127.0.0.1 --port 3137 > /tmp/create-server.log 2>&1 &
@@ -68,7 +87,14 @@ jobs:
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           ready=0
           for attempt in {1..60}; do
-            if curl --fail --silent http://127.0.0.1:3137/create/studio > /dev/null; then
+            # The placeholder page returns 200 as well, so a bare `curl --fail` cannot tell the
+            # editor from "Create Studio is in development". Require the editor itself.
+            body="$(curl --fail --silent http://127.0.0.1:3137/create/studio || true)"
+            if printf '%s' "$body" | grep -q 'Create Studio is in development'; then
+              echo "::error::the dev server is serving the placeholder; KINETIX_CREATE_DEV did not reach it"
+              cat /tmp/create-server.log; exit 1
+            fi
+            if printf '%s' "$body" | grep -q 'create-studio'; then
               ready=1
               break
             fi
@@ -76,7 +102,9 @@ jobs:
             sleep 1
           done
           if [ "$ready" -ne 1 ]; then cat /tmp/create-server.log; exit 1; fi
-          CREATE_ARTIFACTS=/tmp/create-evidence CREATE_EXPORT_FIXTURE=/tmp/kinetix-create-export-m1 node scripts/create-studio-browser.mjs
+          # CREATE_REQUIRE_FIXTURE: without the fixture this gate skips the clean consumer bundle
+          # and the whole responsive acceptance module and still exits 0 (17 passes, not 21).
+          CREATE_ARTIFACTS=/tmp/create-evidence CREATE_EXPORT_FIXTURE=/tmp/kinetix-create-export-m1 CREATE_REQUIRE_FIXTURE=1 node scripts/create-studio-browser.mjs
           # The application-workspace shell: canvas geometry, chrome separation, reachability and
           # the save-state vocabulary, each with its own negative control.
           CREATE_ARTIFACTS=/tmp/create-evidence node scripts/create-studio-workspace-browser.mjs
@@ -92,13 +120,19 @@ jobs:
           # that remove the implementations are scripts/create-studio-save-state-controls.sh, which
           # mutates the tree and so is run by hand, not here.
           CREATE_ARTIFACTS=/tmp/create-evidence node scripts/create-studio-save-state-browser.mjs
+          # The route-level recovery surface (#655): its reload exit must actually exit. This gate
+          # was listed in the path filter above and invoked nowhere, so it gated nothing.
+          CREATE_ARTIFACTS=/tmp/create-evidence node scripts/create-studio-recovery-browser.mjs
       - name: Generated React builds in a real consumer project
         # Depends on the fixture the vitest step above writes, and on the built library packages.
         # A separate job would have to rebuild both, so this stays in the same job, after them.
         run: |
-          if [ ! -d /tmp/kinetix-create-export-m1 ]; then
-            echo "No generated export fixture: the export slice belongs to a dependent PR."
-            exit 0
+          # Was `exit 0` on a missing fixture. The vitest step above writes it whenever this
+          # stack's code is present, so a missing fixture now means that coupling broke — and a
+          # silent skip would report a consumer production build that never ran.
+          if [ ! -f /tmp/kinetix-create-export-m1/index.html ]; then
+            echo "::error::no generated export fixture; the vitest step did not write it"
+            exit 1
           fi
           CREATE_ARTIFACTS=/tmp/create-evidence \
           CREATE_EXPORT_FIXTURE=/tmp/kinetix-create-export-m1 \

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Explicit local development browser verification; never targets a deployed service.
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createRequire } from "node:module";
@@ -14,7 +15,16 @@ await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
 const page = await context.newPage();
-const errors = [], results = [], a11y = [];
+const errors = [], results = [], a11y = [], skipped = [];
+// Checked at startup, before a browser is launched, so a certification run with no fixture fails in
+// a second rather than after the whole journey — and so its negative control is cheap to run.
+const FIXTURE_SKIP_REASON = "CREATE_EXPORT_FIXTURE is not set, so the clean consumer bundle and the responsive acceptance module did not run";
+if (process.env.CREATE_REQUIRE_FIXTURE === "1" && !process.env.CREATE_EXPORT_FIXTURE) {
+  throw new Error(`certification requires the export fixture: ${FIXTURE_SKIP_REASON}`);
+}
+if (process.env.CREATE_EXPORT_FIXTURE && !existsSync(resolve(process.env.CREATE_EXPORT_FIXTURE, "index.html"))) {
+  throw new Error(`CREATE_EXPORT_FIXTURE names ${process.env.CREATE_EXPORT_FIXTURE}, which holds no index.html — the fixture was never written (the vitest step writes it when KINETIX_CREATE_EXPORT_FIXTURE is set)`);
+}
 page.on("pageerror", error => errors.push(error.message));
 const pass = name => { results.push(name); console.log("PASS " + name); };
 const studio = page.locator(".create-studio");
@@ -302,7 +312,18 @@ try {
   await page.emulateMedia({ reducedMotion: "reduce", forcedColors: "active" });
   await capture("forced-colors-reduced-motion.png");
   pass("responsive, RTL, light/dark, forced-colors and reduced-motion visual matrix");
+  // The consumer section is optional by design — a storage-only slice has no export to render —
+  // but an optional section that is skipped silently is a fail-open. Measured in M5.24: with the
+  // variable unset this gate reported `"passed": 17` instead of 21 and exited 0, having skipped the
+  // clean consumer bundle AND the entire responsive acceptance module, and nothing in its output
+  // said so. The skip is now named and recorded in the report, and fatal when the caller is
+  // certifying (`CREATE_REQUIRE_FIXTURE=1`, which CI sets). A fixture that is named but empty fails
+  // at once rather than as a 30-second timeout on a button that can never render.
   const fixture = process.env.CREATE_EXPORT_FIXTURE;
+  if (!fixture) {
+    console.log(`SKIPPED ${FIXTURE_SKIP_REASON}`);
+    skipped.push(FIXTURE_SKIP_REASON);
+  }
   if (fixture) {
     const { createServer } = await import("node:http");
     const server = createServer(async (req, res) => { try {
@@ -325,11 +346,11 @@ try {
     pass("clean consumer bundle renders and Tabs operate in a real browser");
   }
   assert.deepEqual(errors, []);
-  const report = { results, runtimeErrors: errors, accessibility: a11y, limitations: ["Chromium only; no manual assistive-technology certification", "Local adapter only; no production auth/billing or hosted verification", "Edit canvas uses intrinsic sizing; Preview uses an independent CSS viewport", "200% overflow/axe measured using CDP font preferences; screenshots preserve 32px root text with CSS because Playwright resets CDP fonts during capture"] };
+  const report = { results, skipped, runtimeErrors: errors, accessibility: a11y, limitations: ["Chromium only; no manual assistive-technology certification", "Local adapter only; no production auth/billing or hosted verification", "Edit canvas uses intrinsic sizing; Preview uses an independent CSS viewport", "200% overflow/axe measured using CDP font preferences; screenshots preserve 32px root text with CSS because Playwright resets CDP fonts during capture"] };
   await writeFile(resolve(out, "browser-results.json"), JSON.stringify(report, null, 2));
   const violations = a11y.flatMap(x => x.violations);
   assert.equal(violations.length, 0, JSON.stringify(a11y, null, 2));
-  console.log(JSON.stringify({ passed: results.length, axeViolations: violations.length, out }));
+  console.log(JSON.stringify({ passed: results.length, skipped: skipped.length, axeViolations: violations.length, out }));
 } catch (error) {
   await writeFile(resolve(out, "browser-failure.json"), JSON.stringify({ message: String(error), results, errors, a11y }, null, 2));
   await page.screenshot({ path: resolve(out, "failure.png"), fullPage: true }).catch(() => {});
