@@ -52,6 +52,16 @@ void setPhone(WidgetTester tester) {
   addTearDown(tester.view.reset);
 }
 
+/// A container that offers at most [width], the way a real one does.
+///
+/// Deliberately NOT `SizedBox(width:)`, which is a TIGHT constraint and makes its child exactly that
+/// wide whatever the child wants — the pre-fix tag included. A tight box cannot tell a tag that hugs
+/// its label from one that stretches to fill the room, and the short-label case below failed for
+/// precisely that reason on its first run. A card's content box and a `Wrap`'s cell both hand their
+/// child a LOOSE maximum, so that is what is modelled here.
+Widget bound(double width, {required Widget child}) =>
+    ConstrainedBox(constraints: BoxConstraints(maxWidth: width), child: child);
+
 /// Pumps [child] and returns every `RenderFlex` overflow Flutter reported while doing so.
 ///
 /// `FlutterError.toString()` says only "A RenderFlex overflowed by N pixels" — it does NOT name the
@@ -135,7 +145,7 @@ void main() {
 
         final List<String> overflows = await pumpCollectingOverflows(
           tester,
-          host(SizedBox(width: bounded, child: const KinetixTag(label)), textScale: scale),
+          host(bound(bounded, child: const KinetixTag(label)), textScale: scale),
         );
 
         expect(overflows, isEmpty, reason: overflows.join('\n\n'));
@@ -165,7 +175,6 @@ void main() {
       // `getSemantics` throws unless the semantics tree is being built, and it must be asked for
       // before the first pump.
       final SemanticsHandle handle = tester.ensureSemantics();
-      addTearDown(handle.dispose);
       final Size single =
           await probeSingleLineSize(tester, label, textScale: 2.0, removable: true);
       int removed = 0;
@@ -173,11 +182,11 @@ void main() {
       final List<String> overflows = await pumpCollectingOverflows(
         tester,
         host(
-          SizedBox(
-            // Read off the REMOVABLE tag's own single-line width: the dismiss control takes room that a
-            // plain tag's probe knows nothing about, and sizing from the plain probe would squeeze the
-            // control below its minimum for a reason that has nothing to do with wrapping.
-            width: (single.width * 0.8).floorToDouble(),
+          // The bound is read off the REMOVABLE tag's own single-line width: the dismiss control takes
+          // room that a plain tag's probe knows nothing about, and sizing from the plain probe would
+          // squeeze the control below its minimum for a reason unrelated to wrapping.
+          bound(
+            (single.width * 0.8).floorToDouble(),
             child: KinetixTag(label, onRemove: () => removed++),
           ),
           textScale: 2.0,
@@ -193,6 +202,9 @@ void main() {
       // event. A pointer tap would also pass while the control was unreachable to a screen reader.
       tester.semantics.tap(find.semantics.byLabel('Remove $label'));
       expect(removed, 1, reason: 'the dismiss control must still work once the label wraps around it');
+      // Disposed here, not in a tearDown: flutter_test verifies that no handle is active at the end of
+      // the test BODY, which runs before any tearDown, so addTearDown is too late.
+      handle.dispose();
     });
   });
 
@@ -271,10 +283,7 @@ void main() {
             final List<String> overflows = await pumpCollectingOverflows(
               tester,
               host(
-                SizedBox(
-                  width: bounded,
-                  child: KinetixTag(label, variant: variant, onRemove: () {}),
-                ),
+                bound(bounded, child: KinetixTag(label, variant: variant, onRemove: () {})),
                 textScale: 2.0,
                 brightness: brightness,
                 direction: direction,
@@ -305,7 +314,7 @@ void main() {
 
       final List<String> overflows = await pumpCollectingOverflows(
         tester,
-        host(SizedBox(width: bounded, child: const UnwrappedTagReplica(label)), textScale: 2.0),
+        host(bound(bounded, child: const UnwrappedTagReplica(label)), textScale: 2.0),
       );
 
       // If this is ever empty, the harness above is measuring nothing and every green in this file is
@@ -344,7 +353,7 @@ void main() {
 
       final List<String> overflows = await pumpCollectingOverflows(
         tester,
-        host(SizedBox(width: impossible, child: const KinetixTag(label)), textScale: 2.0),
+        host(bound(impossible, child: const KinetixTag(label)), textScale: 2.0),
       );
 
       expect(overflows, isEmpty,
@@ -389,7 +398,7 @@ void main() {
       final Size single = await probeSingleLineSize(tester, 'Paid');
       final List<String> overflows = await pumpCollectingOverflows(
         tester,
-        host(SizedBox(width: single.width + 80, child: const KinetixTag('Paid'))),
+        host(bound(single.width + 80, child: const KinetixTag('Paid'))),
       );
 
       expect(overflows, isEmpty, reason: overflows.join('\n\n'));
