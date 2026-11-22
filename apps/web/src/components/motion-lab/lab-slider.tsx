@@ -128,12 +128,6 @@ export function LabSlider({
       className="kx-lab-slider pb-1 pt-7"
       data-kx-lab-engaged={engaged && !disabled ? "true" : "false"}
       data-kx-lab-layers={layers.join(" ")}
-      onPointerDown={() => setEngaged(true)}
-      onPointerUp={() => setEngaged(false)}
-      onPointerCancel={() => setEngaged(false)}
-      // Focus and blur bubble from the thumb, so one pair of handlers on the host covers keyboard entry and exit.
-      onFocus={() => setEngaged(true)}
-      onBlur={() => setEngaged(false)}
     >
       {has("ticks") && ticks.length > 0 ? (
         <div className="kx-lab-ticks" aria-hidden="true">
@@ -156,8 +150,18 @@ export function LabSlider({
           <span className="kx-lab-bubble">{format(value)}</span>
         </span>
       ) : null}
+      {/*
+        Engagement is bound to the control, not to the wrapper: `Slider` forwards unknown props to the Radix root,
+        which composes them with its own handlers, so a press lands only on the slider itself and not on the padding
+        the bubble needs. Focus and blur bubble out of the thumb, so one pair here covers keyboard entry and exit.
+      */}
       <Slider
         aria-label={label}
+        onPointerDown={() => setEngaged(true)}
+        onPointerUp={() => setEngaged(false)}
+        onPointerCancel={() => setEngaged(false)}
+        onFocus={() => setEngaged(true)}
+        onBlur={() => setEngaged(false)}
         value={[value]}
         min={min}
         max={max}
