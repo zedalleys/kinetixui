@@ -139,6 +139,12 @@ if ! (cd "$DW" && bash "$INTEGRITY" assert); then
 fi
 
 # --- its own dev server --------------------------------------------------------------------------
+# NO_DEV_SERVER=1 skips it, for steps that must not share `apps/web/.next` with `next dev` — the
+# production build above all, which rewrites the directory a running dev server is serving from.
+if [ -n "${NO_DEV_SERVER:-}" ]; then
+  PORT="none"
+  say "NO_DEV_SERVER set — no dev server for this batch"
+else
 PORT="$(node -e 'const s=require("net").createServer();s.listen(0,()=>{console.log(s.address().port);s.close()})')"
 rule "dev server on $PORT (serving the worktree, not the candidate)"
 # setsid, so the whole dev server process group can be killed. `npx next dev` spawns `next` as a
@@ -178,6 +184,7 @@ if [ "$ready" -ne 1 ]; then
   exit 1
 fi
 say "serving the Create Studio editor from the disposable worktree (store: $DEV_DIR)"
+fi
 
 # --- run the runners inside the worktree ---------------------------------------------------------
 # Each argument is either a runner in `scripts/`, or `CMD:<shell command>` to run in the pristine
