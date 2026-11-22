@@ -28,6 +28,8 @@ const label = html.dataset.kxLabel ?? undefined;
  * `scripts/react-carousel-slide-exposure.mjs`'s "one move speaks once" section.
  */
 const engineThreshold = html.dataset.kxThreshold === "engine";
+/** `data-kx-group="2"` sets `slidesToScroll`, under which a scroll SNAP is not a slide. */
+const group = Number(html.dataset.kxGroup ?? "1");
 
 /**
  * What a screen reader would have been HANDED, in order. Reading the live region once at the end cannot
@@ -53,7 +55,7 @@ function Harness() {
       // rounding, so the in-view set flipped between 1 and 2 slides between runs of the same gate and the
       // announcement's wording flipped with it. A fixture must not leave the thing under measurement to a
       // coin flip; this is an engine option, not a change to the component.
-      opts={engineThreshold ? {} : { inViewThreshold: 0.5 }}
+      opts={{ ...(engineThreshold ? {} : { inViewThreshold: 0.5 }), ...(group > 1 ? { slidesToScroll: group } : {}) }}
       setApi={(api) => {
         if (!api) return;
         // The gate must not read a carousel that has not measured: `slidesInView` is empty until it has,
@@ -69,6 +71,13 @@ function Harness() {
           // The SELECTED index, which is what the component announces and the only quantity that does not
           // wobble during the engine's 1.7s settle. Published so a gate asserts the phrase by value.
           html.dataset.kxSelected = String(api.selectedScrollSnap());
+          // The slide that snap corresponds to. Under `slidesToScroll` they are different numbers.
+          try {
+            const reg = api.internalEngine().slideRegistry?.[api.selectedScrollSnap()];
+            html.dataset.kxSelectedSlide = String(Array.isArray(reg) && reg.length ? reg[0] : api.selectedScrollSnap());
+          } catch {
+            html.dataset.kxSelectedSlide = String(api.selectedScrollSnap());
+          }
           if (api.slidesInView().length) setReady(true);
         };
         mark();

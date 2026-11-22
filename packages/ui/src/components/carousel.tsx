@@ -94,6 +94,33 @@ const QUIET_MS = 80;
  */
 const INTENT_IDLE_MS = 600;
 
+/**
+ * The index of the SLIDE a scroll snap has landed on.
+ *
+ * These are the same number only while one slide scrolls at a time. Under `slidesToScroll` they diverge,
+ * and they diverge further with every move: measured with five slides and `slidesToScroll: 2`, one press of
+ * Next leaves the engine on snap 1, which is slide index **2** — so announcing the snap said "Slide 2 of 5"
+ * while the carousel was showing slide 3, and a second press said "Slide 3 of 5" from slide 5. The slides'
+ * own `aria-label`s and the total both count individual slides, so the announcement contradicted every
+ * other thing the reader was told.
+ *
+ * `slideRegistry` is the engine's own map from snap to the slides in it, so this reports the first slide of
+ * the group the reader has moved to. It is reached through `internalEngine()`, which is why it is read
+ * defensively: if a future engine version renames or reshapes it, the announcement falls back to the snap
+ * index — the behaviour before this, wrong under `slidesToScroll` and right everywhere else — rather than
+ * throwing inside a live-region update.
+ */
+function selectedSlide(api: CarouselApi): number {
+  const snap = api!.selectedScrollSnap();
+  try {
+    const group = api!.internalEngine().slideRegistry?.[snap];
+    if (Array.isArray(group) && group.length && typeof group[0] === "number") return group[0];
+  } catch {
+    // fall through to the snap index
+  }
+  return snap;
+}
+
 function blockKey(key: string): "forward" | "backward" | null {
   if (key === "ArrowDown") return "forward";
   if (key === "ArrowUp") return "backward";
@@ -168,10 +195,19 @@ const Carousel = React.forwardRef<
    * `pointerDown` had armed a flag that nothing cleared until something else moved the track.
    */
   const intentAt = React.useRef(0);
+  /**
+   * Which intent this is. A pending announcement belongs to the gesture that scheduled it, and without
+   * this it could be spent by a newer one: measured — pressing Next, then starting a drag 40ms later,
+   * announced the control's position and left the drag's landing SILENT, because the pending callback
+   * found the drag's fresh intent and consumed it. Every new gesture takes a new number, and a callback
+   * whose number is no longer current stands down.
+   */
+  const intentId = React.useRef(0);
   /** Whether the engine has scrolled since intent was recorded: what tells a drag from a click. */
   const engineMoved = React.useRef(false);
   /** Recorded by the arrow keys and the controls, each of which checks first that the move is possible. */
   const noteUserMove = React.useCallback(() => {
+    intentId.current += 1;
     intentAt.current = Date.now();
     engineMoved.current = false;
   }, []);
@@ -266,12 +302,14 @@ const Carousel = React.forwardRef<
     if (!win) return;
     let quiet = 0;
 
-    const say = () => {
+    const say = (gen: number) => {
+      // A newer gesture owns the floor: this callback was scheduled for an intent that is over.
+      if (gen !== intentId.current) return;
       if (!intentAt.current) return;
       intentAt.current = 0;
       const total = api.slideNodes().length;
       if (!total) return;
-      setAnnouncement(`Slide ${api.selectedScrollSnap() + 1} of ${total}`);
+      setAnnouncement(`Slide ${selectedSlide(api) + 1} of ${total}`);
     };
 
     /**
@@ -292,12 +330,14 @@ const Carousel = React.forwardRef<
         return;
       }
       win.clearTimeout(quiet);
-      quiet = win.setTimeout(say, QUIET_MS);
+      const gen = intentId.current;
+      quiet = win.setTimeout(() => say(gen), QUIET_MS);
     };
 
     // The engine is the only thing that knows whether a press became a drag, and it knows it at the
     // release, not at the press — so the press records intent and the release is what withdraws it.
     const press = () => {
+      intentId.current += 1;
       intentAt.current = Date.now();
       engineMoved.current = false;
     };

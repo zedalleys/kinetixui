@@ -96,13 +96,15 @@ const PAGES = {
   // The engine's OWN `inViewThreshold`, not the pinned 0.5 the other pages use. An animated move changes
   // the in-view set more than once here, which is the condition a single-notification fixture hides.
   "horizontal-engine-threshold.html": { axis: "horizontal", slides: 5, threshold: "engine" },
+  // `slidesToScroll: 2`, under which a scroll SNAP index is not a slide index.
+  "horizontal-grouped.html": { axis: "horizontal", slides: 5, group: 2 },
 };
-for (const [file, { axis, slides, dir, label, threshold }] of Object.entries(PAGES)) {
+for (const [file, { axis, slides, dir, label, threshold, group }] of Object.entries(PAGES)) {
   writeFileSync(
     join(outDir, file),
     index.replace(
       '<html lang="en">',
-      `<html lang="en" data-kx-axis="${axis}" data-kx-slides="${slides}"${dir ? ` dir="${dir}"` : ""}${label ? ` data-kx-label="${label}"` : ""}${threshold ? ` data-kx-threshold="${threshold}"` : ""}>`,
+      `<html lang="en" data-kx-axis="${axis}" data-kx-slides="${slides}"${dir ? ` dir="${dir}"` : ""}${label ? ` data-kx-label="${label}"` : ""}${threshold ? ` data-kx-threshold="${threshold}"` : ""}${group ? ` data-kx-group="${group}"` : ""}>`,
     ),
   );
 }

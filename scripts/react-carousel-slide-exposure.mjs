@@ -185,6 +185,8 @@ const read = (page) =>
       return {
         engineInView,
         engineSelected: Number(document.documentElement.dataset.kxSelected ?? "-1"),
+        // The SLIDE that snap landed on. Equal to the snap only while one slide scrolls at a time.
+        engineSelectedSlide: Number(document.documentElement.dataset.kxSelectedSlide ?? "-1"),
         // Every phrase the live region has HELD, in order — what a screen reader would have been handed.
         // Reading the region once cannot tell "announced the landing" from "announced somewhere it passed
         // through and then fell silent": both leave one string in the DOM.
@@ -317,7 +319,7 @@ async function axis(browser, base, { file, name, forward }) {
   // defect this row exists to catch, and `/Slide \d+ of 5/` passes it happily. The value is taken from the
   // engine's SELECTED index, which is what is announced and the only quantity that is final — the in-view
   // set is still changing a second and a half after the slide has visibly arrived.
-  const expected = `Slide ${after.engineSelected + 1} of 5`;
+  const expected = `Slide ${after.engineSelectedSlide + 1} of 5`;
   if (after.announcement === expected) ok(name, "the reader's move is announced, naming where the track ENDED", JSON.stringify(after.announcement));
   else bad(name, "the reader's move is announced, naming where the track ENDED", `announced ${JSON.stringify(after.announcement)}, the engine has selected ${JSON.stringify(expected)}`);
 
@@ -369,7 +371,7 @@ async function intent(browser, base, file) {
   await page.waitForTimeout(700);
   let said = await spoken();
   let s = await read(page);
-  const landing = `Slide ${s.engineSelected + 1} of 5`;
+  const landing = `Slide ${s.engineSelectedSlide + 1} of 5`;
   if (said.length === 1 && said[0] === landing) ok(name, "a burst of presses speaks once, naming the landing", JSON.stringify(said));
   else bad(name, "a burst of presses speaks once, naming the landing", `${JSON.stringify(said)}, engine selected ${s.engineSelected}`);
   if (s.engineSelected > 1) ok(name, "control: the burst actually moved several positions", `selected ${s.engineSelected}`);
@@ -414,6 +416,59 @@ async function intent(browser, base, file) {
   else bad(name, "a press against the endpoint, then a resize, announces nothing", JSON.stringify(said));
   if (s.engineSelected === 4) ok(name, "control: the carousel really is at its last slide", `selected ${s.engineSelected} of 0..4`);
   else bad(name, "control: the carousel really is at its last slide", `selected ${s.engineSelected} — the row above was not measured at an endpoint`);
+
+  await ctx.close();
+
+  // A gesture that starts while an earlier one's phrase is still pending must not have its own landing
+  // spent by it. Measured before the fix: Next, then a drag beginning 40ms later, announced the control's
+  // position and left the drag's landing SILENT — the pending callback found the drag's fresh intent and
+  // consumed it. A fresh page, because this needs the carousel at a known start.
+  const { ctx: raceCtx, page: race } = await open(browser, `${base}/${file}`);
+  const track = await race.locator(".overflow-hidden").boundingBox();
+  const midY = track.y + track.height / 2;
+  await race.evaluate(() => void (window.__kxSpoken.length = 0));
+  await race.getByRole("button", { name: "Next slide" }).click({ force: true, noWaitAfter: true });
+  await race.waitForTimeout(40); // inside QUIET_MS, so the control's phrase is still pending
+  await race.mouse.move(track.x + track.width * 0.8, midY);
+  await race.mouse.down();
+  await race.waitForTimeout(120); // ...and past it, so a pending callback would have fired by now
+  for (const f of [0.6, 0.4, 0.2]) await race.mouse.move(track.x + track.width * f, midY);
+  await race.mouse.up();
+  await race.waitForTimeout(1600);
+  const r = await read(race);
+  const raceLanding = `Slide ${r.engineSelectedSlide + 1} of 5`;
+  if (r.spoken.length === 1 && r.spoken[0] === raceLanding)
+    ok(name, "a gesture begun mid-phrase is announced, once, at ITS landing", JSON.stringify(r.spoken));
+  else bad(name, "a gesture begun mid-phrase is announced, once, at ITS landing", `${JSON.stringify(r.spoken)}, the engine landed on ${JSON.stringify(raceLanding)}`);
+  await raceCtx.close();
+}
+
+/**
+ * `slidesToScroll: 2`. A scroll SNAP is not a slide under it, and the two diverge further with every move:
+ * one press of Next leaves the engine on snap 1, which is slide index 2. Everything else the reader is
+ * told — each slide's own name, and the total — counts individual slides, so an announcement that reported
+ * the snap contradicted all of it.
+ */
+async function grouped(browser, base) {
+  const name = "grouped (slidesToScroll: 2)";
+  const { ctx, page } = await open(browser, `${base}/horizontal-grouped.html`);
+  await page.evaluate(() => void (window.__kxSpoken.length = 0));
+  await page.getByRole("button", { name: "Next slide" }).click();
+  await page.waitForTimeout(700);
+  const s = await read(page);
+
+  if (s.engineSelected !== s.engineSelectedSlide)
+    ok(name, "control: the snap and the slide really have diverged", `snap ${s.engineSelected}, slide ${s.engineSelectedSlide}`);
+  else bad(name, "control: the snap and the slide really have diverged", `both ${s.engineSelected} — this fixture is not exercising grouped scrolling, so the rows below prove nothing`);
+
+  const expected = `Slide ${s.engineSelectedSlide + 1} of 5`;
+  if (s.spoken.length === 1 && s.spoken[0] === expected) ok(name, "the announcement names the SLIDE, not the snap", JSON.stringify(s.spoken));
+  else bad(name, "the announcement names the SLIDE, not the snap", `${JSON.stringify(s.spoken)}, the engine is on slide ${s.engineSelectedSlide} (snap ${s.engineSelected})`);
+
+  // The announcement and the slide's own name must agree, since a reader hears both.
+  const label = s.slides[s.engineSelectedSlide]?.label;
+  if (label === `${s.engineSelectedSlide + 1} of 5`) ok(name, "and it agrees with that slide's own name", `${JSON.stringify(s.spoken[0])} vs ${JSON.stringify(label)}`);
+  else bad(name, "and it agrees with that slide's own name", `announced ${JSON.stringify(s.spoken[0])} but that slide is named ${JSON.stringify(label)}`);
 
   await ctx.close();
 }
@@ -464,7 +519,7 @@ async function touch(browser, base) {
   await page.mouse.up();
   await settle(page);
   const s = await read(page);
-  if (s.announcement === `Slide ${s.engineSelected + 1} of 5`) ok(name, "a drag announces where it landed", JSON.stringify(s.announcement));
+  if (s.announcement === `Slide ${s.engineSelectedSlide + 1} of 5`) ok(name, "a drag announces where it landed", JSON.stringify(s.announcement));
   else bad(name, "a drag announces where it landed", JSON.stringify(s.announcement));
   const out = s.slides.filter((x) => !x.inView);
   if (out.length && out.every((x) => x.inert)) ok(name, "the slides left behind are inert", `${out.length} inert`);
@@ -498,6 +553,7 @@ async function main() {
     await axis(browser, server.base, { file: "vertical-rtl.html", name: "vertical rtl", forward: "ArrowDown" });
     await intent(browser, server.base, "horizontal.html");
     await intent(browser, server.base, "horizontal-engine-threshold.html");
+    await grouped(browser, server.base);
     await statics(browser, server.base);
     await reducedMotion(browser, server.base);
     await touch(browser, server.base);

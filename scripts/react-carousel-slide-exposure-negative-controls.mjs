@@ -35,9 +35,13 @@ const EXPECTED = {
     pattern: /Tab never lands in a slide out of view|a slide out of view is inert|slides out of view are still inert|the slides left behind are inert/,
     minimum: 10,
   },
-  "no-slide-names": { pattern: /every slide is named/, minimum: 4 },
+  // Also the grouped section's cross-check, which reads a slide's own name to compare it with the phrase.
+  "no-slide-names": { pattern: /every slide is named|agrees with that slide's own name/, minimum: 5 },
   "no-region-name": { pattern: /the region is named|a consumer's own region name wins/, minimum: 5 },
-  "no-announcement": { pattern: /announced|announces|is announced|speaks once, naming the landing/, minimum: 12 },
+  "no-announcement": {
+    pattern: /announced|announces|is announced|speaks once, naming the landing|names the SLIDE, not the snap/,
+    minimum: 15,
+  },
   // Named by the MOVEMENT, not by focus or the announcement. Swallowing the block keys stops the carousel
   // moving, and the row that says so is "control: the move actually advanced one position" — which a
   // `/focus|announce/i` pattern does not cover, so that pattern accepted a run in which the row proving
@@ -48,7 +52,9 @@ const EXPECTED = {
     pattern: /the move actually advanced|focus is not dropped when its slide leaves the view|is announced exactly ONCE|naming where the track ENDED|the move is still announced/,
     minimum: 7,
   },
-  "announce-per-position": { pattern: /speaks once, naming the landing/, minimum: 2 },
+  // Collapsing the settle window also makes a gesture begun mid-phrase speak twice, so that row is this
+  // defect's too rather than collateral.
+  "announce-per-position": { pattern: /speaks once, naming the landing|begun mid-phrase/, minimum: 4 },
 };
 
 function run(defect) {
