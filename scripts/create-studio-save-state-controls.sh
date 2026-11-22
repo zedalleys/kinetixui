@@ -124,8 +124,8 @@ control "the unconfirmed state has no reading of its own" \
 # Reconciliation is the only thing that can settle the question, so a reconciliation that answers
 # without looking is worse than none: it converts "I do not know" into a confident wrong answer.
 control "reconciliation reports a commit without comparing the stored document" \
-  '      if (serializeDocument(stored.doc) === attempt.serialized) {' \
-  '      if (true) {' \
+  '      const committed = attempts.find(item => item.serialized === storedSerialized);' \
+  '      const committed = attempts[0];' \
   "must report that this save did not commit"
 
 # A conflict on a retry is evidence the earlier attempt landed. Treating it as a settled failure
