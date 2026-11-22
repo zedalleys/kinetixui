@@ -186,7 +186,10 @@ try {
       // Wait on the ALERT, not on the save state: the save-state reading is what one of the
       // controls below perturbs, and a wait on it would time out before the assertion that names
       // what went wrong could run.
-      await page.waitForFunction(() => /Nothing was saved/i.test(document.querySelector('[role="alert"]')?.textContent ?? ""), { timeout: 15_000 });
+      // Wait only for an alert to EXIST, then read it. Waiting for the sentence this gate wants
+      // would time out whenever the implementation says something else, and a timeout names the
+      // wait rather than the defect.
+      await page.waitForFunction(() => ((document.querySelector('.create-studio [role="alert"]')?.textContent ?? "").trim().length > 0), { timeout: 20_000 });
       const alert = (await studio.getByRole("alert").first().innerText()).replace(/\s+/g, " ");
       assert.match(alert, /Nothing was saved/i, `a transport failure must say nothing was saved, read: ${alert.slice(0, 180)}`);
       assert.doesNotMatch(alert, /Failed to fetch/i, "a transport failure must not surface the browser's own message");
