@@ -12,8 +12,12 @@ import { exportReact } from "@/lib/create-studio/export";
 import { NodeView } from "./node-view";
 import { ViewportPreview } from "./viewport-preview";
 import { BREAKPOINTS, canOverride, responsiveProps, type Breakpoint } from "@/lib/create-studio/responsive";
-import { reduce, IDLE, type Interaction, type InteractionEvent, type DragIntent, type Rect } from "@/lib/create-studio/interaction";
+import { reduce, IDLE, snapWidth, type Guide, type Interaction, type InteractionEvent, type DragIntent, type Rect } from "@/lib/create-studio/interaction";
 import { resolveDrop, subtreeIds } from "./canvas-drop";
+import layoutRegistry from "../../../../../docs/create/layout-registry.json";
+const FRAME_WIDTH = layoutRegistry.layouts["layout:section"].width;
+// How close to a guide the pointer must come for it to take over, in document pixels.
+const SNAP_TOLERANCE = 8;
 
 const viewportPresets = [
   { label: "Mobile", width: 390, height: 844 },
@@ -49,6 +53,19 @@ function draftsFor(account: Account, product: Product): Draft[] {
   }).sort((a, b) => b.updatedAt - a.updatedAt);
 }
 const nodeLabel = (node: Node) => node.metadata?.name ?? (node.ref === "layout:section" ? String(node.props?.name ?? "Frame") : node.ref ? ADAPTERS[node.ref]?.label ?? node.ref : "Page");
+function ResizeOverlay({ canvas, nodeId, width, guide, rtl }: { canvas: HTMLElement | null; nodeId: string; width: number; guide: string | null; rtl: boolean }) {
+  if (!canvas) return null;
+  const frame = canvas.getBoundingClientRect();
+  const node = canvas.querySelector(`[data-studio-node="${nodeId}"]`)?.getBoundingClientRect();
+  if (!node) return null;
+  // The guide is drawn on the edge being dragged, down the full height of the canvas, so it can be
+  // lined up against anything else on the screen. Announced in the status line, never colour alone.
+  const edge = (rtl ? node.left : node.right) - frame.left;
+  return <div className="studio-resize-overlay" aria-hidden="true">
+    <div className={`studio-guide ${guide ? "studio-guide-snapped" : ""}`} style={{ insetInlineStart: edge, insetBlockStart: 0, height: frame.height }} />
+    <div className="studio-guide-label" style={{ insetInlineStart: edge + 8, insetBlockStart: node.top - frame.top + 8 }}>{width}px{guide ? ` · ${guide}` : ""}</div>
+  </div>;
+}
 function DropOverlay({ canvas, hint, label, x, y }: { canvas: HTMLElement | null; hint: { rect: Rect | null; indicator: Rect | null; rejected: string | null } | null; label: string; x: number; y: number }) {
   const frame = canvas?.getBoundingClientRect();
   if (!frame) return null;
@@ -177,9 +194,37 @@ export function CreateStudio() {
     // would add the component twice for one click. The machine still reports it, which is what tells
     // those handlers a drag did not happen.
     if (commit.kind === "press") return;
+    if (commit.kind === "resize") { applyWidth(commit.nodeId, commit.width); return; }
     dragged.current = true;
     if (commit.kind === "insert") perform({ type: "insert", parentId: commit.parentId, ref: commit.ref, index: commit.index });
     else perform({ type: "move", ids: commit.ids, parentId: commit.parentId, index: commit.index });
+  };
+  /**
+   * One width change is one history step, and it is written where the person is editing: to the
+   * breakpoint override when a breakpoint is selected, to the base props otherwise. The same
+   * function serves the pointer handle and its keyboard equivalent, so the two cannot diverge.
+   */
+  const applyWidth = (nodeId: string, width: number) => {
+    if (activeBreakpoint) perform({ type: "responsive", id: nodeId, breakpoint: activeBreakpoint.id, property: "width", value: width });
+    else perform({ type: "props", ids: [nodeId], patch: { width } });
+  };
+  /**
+   * What a frame's edge can snap to, most meaningful first — ties go to the earlier guide. The
+   * breakpoints come from the responsive contract rather than from literals here, and the 8px step
+   * is last so a deliberate breakpoint width always wins over the nearest round number.
+   */
+  const widthGuides = (): Guide[] => {
+    const siblings = rows.flatMap(({ node }) => node.ref === "layout:section" && node.id !== current?.id && typeof node.props?.width === "number"
+      ? [{ value: node.props.width as number, label: `${nodeLabel(node)} · ${node.props.width}px` }] : []);
+    return [
+      { value: viewport, label: `Viewport · ${viewport}px` },
+      ...BREAKPOINTS.map(item => ({ value: item.minWidth, label: `${item.label} · ${item.minWidth}px` })),
+      ...siblings,
+    ];
+  };
+  const beginResize = (event: React.PointerEvent, nodeId: string, width: number) => {
+    if (readOnly || preview || busy) return;
+    dispatch({ type: "resize-start", pointerId: event.pointerId, x: event.clientX, nodeId, width });
   };
   // Cancellation still goes through the machine — there is one definition of what cancelling does —
   // but with a stable identity, so the keyboard handler does not re-register on every render.
@@ -209,6 +254,15 @@ export function CreateStudio() {
       return resolution;
     };
     const move = (event: PointerEvent) => {
+      const state = interactionRef.current;
+      if (state.mode === "resize") {
+        // Screen travel is divided by the camera's scale, so a resize measures the same number of
+        // document pixels at any zoom. In a right-to-left document the inline edge grows leftwards.
+        const travelled = ((event.clientX - state.originX) / zoom) * (rtl ? -1 : 1);
+        const snapped = snapWidth(state.startWidth + travelled, widthGuides(), { min: FRAME_WIDTH.min, max: FRAME_WIDTH.max, tolerance: SNAP_TOLERANCE });
+        dispatch({ type: "pointer-move", pointerId: event.pointerId, x: event.clientX, y: event.clientY, width: snapped.width, guide: snapped.guide?.label ?? null });
+        return;
+      }
       const resolution = resolve(event.clientX, event.clientY);
       dispatch({ type: "pointer-move", pointerId: event.pointerId, x: event.clientX, y: event.clientY, target: resolution?.target ?? null, rejected: resolution?.rejected ?? null });
     };
@@ -246,6 +300,10 @@ export function CreateStudio() {
   React.useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
+      // A pointer gesture is global: it does not belong to whatever has keyboard focus. Escape must
+      // abandon one even when focus is sitting in a property field, which is exactly where it tends
+      // to be after typing a width and then reaching for the handle.
+      if (event.key === "Escape" && interactionRef.current.mode !== "idle") { cancelGesture(); return; }
       if (target.closest('input,textarea,select,[contenteditable="true"],[role="dialog"]')) return;
       if (event.key === "Escape") { setPreview(false); setPan(false); cancelGesture(); return; }
       if (!(event.metaKey || event.ctrlKey) || !latest.current) return;
@@ -417,12 +475,13 @@ export function CreateStudio() {
                 <div className="studio-artboard-label"><span>{page.name}</span><span>{preview ? `${viewport} × ${viewportHeight}` : `${viewport}px`} · {Math.round(zoom * 100)}%</span></div>
                 {preview ? <ViewportPreview root={page.root} height={viewportHeight} dark={dark} rtl={rtl} theme={themeStyle} onExit={exitPreview} /> :
                   <div data-studio-drop={page.root.id} className={`studio-artboard ${dark ? "dark" : "theme-light"} ${dropHint?.parentId === page.root.id ? "studio-node-drop" : ""}`} dir={rtl ? "rtl" : "ltr"} style={{ ...themeStyle, pointerEvents: pan ? "none" : undefined }}>
-                    {page.root.children?.length ? <NodeView node={page.root} selection={history.selection} onSelect={select} onNodePointerDown={(id, event) => { if (event.button === 0) beginDrag(event, { kind: "move", ids: history.selection.includes(id) ? history.selection : [id] }); }} dropParentId={dropHint?.parentId ?? null} editWidth={viewport} dir={rtl ? "rtl" : "ltr"} /> : <div className="studio-empty"><h2>A new screen, ready for you.</h2><p>Add a frame, then fill it with components.</p><Button disabled={readOnly} onClick={() => insert("layout:section")}><Plus className="size-4" />Add frame</Button></div>}
+                    {page.root.children?.length ? <NodeView node={page.root} selection={history.selection} onSelect={select} onNodePointerDown={(id, event) => { if (event.button === 0) beginDrag(event, { kind: "move", ids: history.selection.includes(id) ? history.selection : [id] }); }} dropParentId={dropHint?.parentId ?? null} resize={{ active: interaction.mode === "resize" ? { nodeId: interaction.nodeId, width: interaction.width } : null, limits: FRAME_WIDTH, onStart: (id, width, event) => beginResize(event, id, width), onSet: applyWidth }} editWidth={viewport} dir={rtl ? "rtl" : "ltr"} /> : <div className="studio-empty"><h2>A new screen, ready for you.</h2><p>Add a frame, then fill it with components.</p><Button disabled={readOnly} onClick={() => insert("layout:section")}><Plus className="size-4" />Add frame</Button></div>}
                   </div>}
               </div>
+              {interaction.mode === "resize" && <ResizeOverlay canvas={canvasRef.current} nodeId={interaction.nodeId} width={interaction.width} guide={interaction.guide} rtl={rtl} />}
               {interaction.mode === "drag" && <DropOverlay canvas={canvasRef.current} hint={dropHint} label={interaction.intent.kind === "insert" ? adapterFor(interaction.intent.ref).label : `${interaction.intent.ids.length} layer${interaction.intent.ids.length > 1 ? "s" : ""}`} x={interaction.x} y={interaction.y} />}
             </div>
-            <p className="studio-announcement" role="status">{interaction.mode === "drag" ? (dropHint?.rejected ?? "Release to place it here.") : ""}</p>
+            <p className="studio-announcement" role="status">{interaction.mode === "drag" ? (dropHint?.rejected ?? "Release to place it here.") : interaction.mode === "resize" ? `${interaction.width} pixels${interaction.guide ? ` · snapped to ${interaction.guide}` : ""}` : ""}</p>
             <div className="studio-zoom" role="group" aria-label="Canvas camera"><Button size="icon" variant="Ghost" aria-label="Zoom out" onClick={() => setZoom(Math.max(.1, Math.round((zoom - .1) * 10) / 10))}><ZoomOut className="size-4" /></Button><span>{Math.round(zoom * 100)}%</span><Button size="icon" variant="Ghost" aria-label="Zoom in" onClick={() => setZoom(Math.min(4, Math.round((zoom + .1) * 10) / 10))}><ZoomIn className="size-4" /></Button><Button size="sm" variant="Ghost" onClick={() => { setZoom(1); setOffset({ x: 24, y: 24 }); }}>Reset view</Button><Button size="sm" variant="Ghost" disabled={dirty || busy || !!Object.keys(fieldDrafts).length} onClick={() => recover()}>Recover draft</Button></div>
           </div>
           <aside className={`studio-inspector ${inspector ? "studio-inspector-open" : ""}`} aria-label="Properties inspector">
