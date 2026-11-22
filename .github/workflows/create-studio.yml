@@ -18,6 +18,7 @@ on:
       - "scripts/create-studio-workspace-browser.mjs"
       - "scripts/create-studio-resilience-browser.mjs"
       - "scripts/create-studio-resilience-controls.sh"
+      - "scripts/create-studio-error-boundary-controls.sh"
       - ".github/workflows/create-studio.yml"
   workflow_dispatch:
 permissions:
