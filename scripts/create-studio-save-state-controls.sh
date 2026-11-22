@@ -69,6 +69,14 @@ PY
 # control <label> <old> <new> <expected substring of the failure>
 control() {
   local label="$1" old="$2" new="$3" expected="$4"
+  # CONTROL_ONLY re-runs a single control in isolation, for when one of them failed on an
+  # infrastructure timeout rather than on its own detection and needs a clean measurement. Skips
+  # are counted and printed, and a filter that matches nothing is itself a failure, so a typo
+  # here can never read as "the controls passed".
+  if [ -n "${CONTROL_ONLY:-}" ] && [ "${label#*"$CONTROL_ONLY"}" = "$label" ]; then
+    skipped=$((skipped + 1)); return
+  fi
+  selected=$((selected + 1))
   if ! patch_file "$STUDIO" "$old" "$new"; then
     echo "CONTROL BROKEN   $label (anchor missing)"; failures=$((failures + 1)); return
   fi
@@ -89,6 +97,8 @@ control() {
   fi
 }
 
+skipped=0
+selected=0
 echo "== M5.22 save-acknowledgement source negative controls =="
 
 CLASSIFY='  return error instanceof ApiError && REJECTED_SAVE_CODES.has(error.code) ? "rejected" : "unconfirmed";'
@@ -230,6 +240,12 @@ if printf '%s\n' "$final" | tail -1 | grep -q '"passed"'; then
   echo "restored tree passes the gate"
 else
   echo "RESTORED TREE DOES NOT PASS"; printf '%s\n' "$final" | tail -6 | sed 's/^/       /'; failures=$((failures + 1))
+fi
+if [ -n "${CONTROL_ONLY:-}" ]; then
+  echo "CONTROL_ONLY=$CONTROL_ONLY selected $selected, skipped $skipped"
+  if [ "$selected" -eq 0 ]; then
+    echo "CONTROL_ONLY MATCHED NOTHING — no control was measured"; failures=$((failures + 1))
+  fi
 fi
 echo "controls with problems: $failures"
 exit $((failures > 0))
