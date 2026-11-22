@@ -19,6 +19,8 @@ on:
       - "scripts/create-studio-resilience-browser.mjs"
       - "scripts/create-studio-resilience-controls.sh"
       - "scripts/create-studio-error-boundary-controls.sh"
+      - "scripts/create-studio-recovery-browser.mjs"
+      - "scripts/create-studio-recovery-exit-controls.sh"
       - ".github/workflows/create-studio.yml"
   workflow_dispatch:
 permissions:
