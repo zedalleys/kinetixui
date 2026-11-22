@@ -39,14 +39,12 @@ say "== interruption safety, candidate $(git rev-parse HEAD) =="
 say "   runner under test: $RUNNER"
 
 # Any worktree this script leaks is its own business to clean up, but it is always named first.
+# A killed orchestrator leaks its worktree AND its dev server, which runs in its own session and so
+# survives the kill. The first version of this harness removed only the worktree, and left a dev
+# server running on a deleted directory after every killed phase. The reaper removes both and names
+# each, so the leak is part of the evidence rather than a slowdown in whatever runs next.
 cleanup_leaks() {
-  local wt
-  while IFS= read -r wt; do
-    [ -n "$wt" ] || continue
-    say "       leaked worktree: $wt"
-    git -C "$CAND" worktree remove --force "$wt" > /dev/null 2>&1 || rm -rf "$wt"
-  done < <(git -C "$CAND" worktree list --porcelain | awk '/^worktree /{print $2}' | grep '^/tmp/kinetix-dw' || true)
-  git -C "$CAND" worktree prune > /dev/null 2>&1
+  bash "$CAND/scripts/create-studio-reap-disposable.sh" | sed 's/^/       /'
 }
 
 # waits until $1 (a grep -E pattern) appears in the batch log, or until the batch ends

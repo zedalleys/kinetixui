@@ -82,6 +82,14 @@ teardown() {
 }
 trap teardown EXIT INT TERM
 
+# --- reap what interrupted batches left behind --------------------------------------------------
+# A killed batch cannot clean up after itself. Its dev server, in its own session, survives, and
+# measured leaks held about 8.6 GB of a 15 GB machine — enough that three browser-gate steps timed
+# out in a way that read as flaky gates. Each one reaped is named, so a leak is a reported fact
+# about the previous batch rather than a silent slowdown in this one.
+rule "reap earlier interrupted batches"
+bash "$CAND/scripts/create-studio-reap-disposable.sh"
+
 # --- preflight on the candidate -----------------------------------------------------------------
 rule "candidate preflight"
 if ! bash "$INTEGRITY" record "$SNAP"; then
