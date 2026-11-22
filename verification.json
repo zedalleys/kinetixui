@@ -12596,15 +12596,15 @@
           ],
           "accessibility": [
             {
-              "ref": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart:164-195",
+              "ref": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart:173-204",
               "environment": "flutter_test"
             },
             {
-              "ref": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart:196-220",
+              "ref": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart:205-229",
               "environment": "flutter_test"
             },
             {
-              "ref": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart:221-255",
+              "ref": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart:230-264",
               "environment": "flutter_test"
             }
           ],

@@ -96,7 +96,13 @@ class VitalsSummaryBlock extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const KinetixTag('Nurse-recorded', variant: KinetixTagVariant.secondary),
+                  // Flexible, not bare: at 200% text this one tag is 361px wide against the 342px the
+                  // card's padding leaves, so the Row overflowed by 19px and the word "Nurse-recorded"
+                  // was clipped — the provenance of every number below it, lost. Flexible caps its width
+                  // and lets the word wrap inside it.
+                  const Flexible(
+                    child: KinetixTag('Nurse-recorded', variant: KinetixTagVariant.secondary),
+                  ),
                 ],
               ),
             ],
@@ -136,16 +142,19 @@ class _ReadingRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(reading.label),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              // Wrap, not Row: the reading and its status word are both inflexible, and at 200% text the
+              // pair ran 93px past the card, which clipped the status away. The status word is the whole
+              // point of the row — a number with its "High" cut off reads as a number in range. Wrapping
+              // puts it on the line below instead of losing it.
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.end,
                 children: <Widget>[
                   Text('${reading.value} ${reading.unit}'),
                   // A word first. The tag's tone is the second channel, never the only one.
                   if (reading.status.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(start: 8),
-                      child: KinetixTag(reading.status, variant: KinetixTagVariant.warning),
-                    ),
+                    KinetixTag(reading.status, variant: KinetixTagVariant.warning),
                 ],
               ),
               // Printed in full, so the judgement can be checked rather than trusted.
