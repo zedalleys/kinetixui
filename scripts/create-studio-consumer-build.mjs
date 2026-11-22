@@ -413,13 +413,69 @@ try {
   // some unrelated reason a stripped stylesheet might cause.
   await control("a discarded responsive configuration is detected at the desktop breakpoint", discarded.some(failure => failure.includes(overridden.id)), discarded);
 
+  // D: a node carrying a reference this gate cannot assert about must be reported, not skipped.
+  // This control perturbs the DOCUMENT rather than the output, because the hole was in the
+  // comparison itself: before the repair, an unrecognised ref produced no assertion and no
+  // disagreement, so an entirely absent node passed. Nothing is rebuilt — the built page is
+  // untouched and still correct, which is the point: the only thing wrong is that the gate is
+  // being asked about something it does not understand, and it must say so.
+  // Reload first. Control C left the page showing its stripped-stylesheet build, and reading that
+  // page here mixed C's failures into D's evidence — D still detected its own defect, because its
+  // assertion names the unknown ref, but evidence a reviewer cannot attribute is evidence that has
+  // to be taken on trust.
+  await gotoMounted(site.url);
+  const unknownRef = structuredClone(document);
+  unknownRef.pages[0].root.children = [
+    ...(unknownRef.pages[0].root.children ?? []),
+    { id: "control-d-unknown", kind: "component", ref: "component:NotAnAdapter", props: {} },
+  ];
+  const unknown = await disagreements(page, unknownRef, 1440);
+  await control(
+    "a node reference the gate cannot assert about is reported rather than skipped",
+    unknown.some(failure => failure.includes("control-d-unknown") && failure.includes("no assertion")),
+    unknown,
+  );
+
+  // E: a frame whose effective width mode is `fill` must be measured too. Before the repair the
+  // width assertion ran only for `fixed`, so the fixture's one saved `fill` override was protected
+  // by nothing — a fill frame could render at its old 640px and pass.
+  //
+  // The (node, width) pair is DERIVED from the document rather than hard-coded, so this control
+  // cannot quietly stop testing anything if the fixture changes: if no fill frame exists at any
+  // measured width, the control refuses instead of passing.
+  let fillCase = null;
+  for (const width of widths) {
+    for (const node of nodesOf(document)) {
+      if (node.ref !== "layout:section" || !node.responsive) continue;
+      const props = { ...DEFAULTS[node.ref], ...effectiveProps(node, width) };
+      if (props.widthMode === "fill") { fillCase = { node, width }; break; }
+    }
+    if (fillCase) break;
+  }
+  assert.ok(fillCase, "the fixture composition must contain a frame whose effective width mode is fill for control E");
+  await writeFile(join(consumer, "theme.css"), `${theme}\n[data-kx-layout="${fillCase.node.id}"]{width:640px !important;}\n`);
+  rebuild();
+  await page.setViewportSize({ width: fillCase.width, height: 1200 });
+  await page.waitForFunction(w => Math.abs(innerWidth - w) <= 1, fillCase.width);
+  await gotoMounted(site.url);
+  const narrowed = await disagreements(page, document, fillCase.width);
+  await writeFile(join(consumer, "theme.css"), theme);
+  rebuild();
+  await control(
+    `a fill frame rendered at a fixed width is detected at ${fillCase.width}px`,
+    narrowed.some(failure => failure.includes(fillCase.node.id) && failure.includes("containing block")),
+    narrowed,
+  );
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  await page.waitForFunction(() => Math.abs(innerWidth - 1440) <= 1);
+
   // Restore and prove the gate is green again on the repaired fixture, so the controls above
   // cannot be credited to a gate that simply fails everything.
   // Through the same helper: Codex named this check too, because a restored fixture read before
   // React commits fails for a reason that has nothing to do with the fixture.
   await gotoMounted(site.url);
   assert.deepEqual(await disagreements(page, document, 1440), [], "the restored fixture must pass again");
-  pass("three negative controls redden the gate and the restored fixture passes again");
+  pass("five negative controls redden the gate and the restored fixture passes again");
 
   await context.close();
   await site.close();
