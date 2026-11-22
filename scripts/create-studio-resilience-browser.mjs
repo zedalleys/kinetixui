@@ -75,7 +75,12 @@ async function openEditor(context, { name }) {
   page.setDefaultNavigationTimeout(120_000);
   const studio = page.locator(".create-studio");
   await page.goto(base + "/create/studio");
-  await studio.getByRole("button", { name: "Start local workspace" }).click();
+  // Not a bare click: a click dispatched before React attaches its handler reaches the button and
+  // does nothing, the workspace never opens, and the symptom is a timeout on the product-name field
+  // several lines later. One source control hit exactly that and failed for the wrong reason, which
+  // made it worthless as evidence. `startWorkspace` is the hydration-tolerant form and is used here
+  // for the same reason it exists further down.
+  await startWorkspace(page, studio);
   await studio.getByLabel("New product name").fill(name);
   await studio.getByRole("button", { name: "New product", exact: true }).click();
   await studio.getByRole("button", { name: "Add Button", exact: true }).waitFor();
@@ -200,9 +205,11 @@ try {
       assert.doesNotMatch(alert, /Nothing was saved/i, `a transport failure must not claim nothing was saved, read: ${alert.slice(0, 180)}`);
       assert.match(alert, /could not be confirmed/i, `a transport failure must report the save as unconfirmed, read: ${alert.slice(0, 180)}`);
       // Not "the draft is in the browser": browser storage can have refused the write, and the
-      // editor cannot know from here. What is always true is the copy on screen.
-      assert.match(alert, /still open in this editor/i, `a transport failure must say the work is still open in the editor, read: ${alert.slice(0, 180)}`);
+      // editor cannot know from here. What is always true is the copy on screen. The doesNotMatch
+      // comes FIRST because its control replaces one sentence with the other, and the assertion the
+      // control reintroduces must be the one that fires — the same ordering rule as above.
       assert.doesNotMatch(alert, /draft is still in this browser/i, `a transport failure must not promise browser persistence it cannot verify, read: ${alert.slice(0, 180)}`);
+      assert.match(alert, /still open in this editor/i, `a transport failure must say the work is still open in the editor, read: ${alert.slice(0, 180)}`);
       const state = await studio.locator(".studio-save-state").innerText();
       assert.match(state, /Save failed/, `the save state must report the failure, read: ${state}`);
       assert.doesNotMatch(state, /^Saved/, "a failed save must never read as saved");
