@@ -1100,6 +1100,101 @@ if (wants("19")) {
   await context.close();
 }
 
+// ── 20. A cue the same colour as what it sits on is not a cue ──────────────────────────────────────────
+/**
+ * A tick's VISIBILITY is geometry plus colour, and section 18 measured only the geometry. The passed ticks
+ * were painted `hsl(var(--background))` — the specimen container's own `bg-background` — so once the ticks
+ * were extended to stand proud of the track, the exposed part landed on a surface of exactly its own colour:
+ * measured at 1.00:1 in both appearances, white on white and `rgb(11, 17, 40)` on `rgb(11, 17, 40)`. Every
+ * passed tick but the current one was invisible at every value. Codex found it; section 18 could not, because
+ * it never read a colour.
+ *
+ * Non-text contrast has a 3:1 floor, so that is the threshold, and it is asserted in BOTH appearances because
+ * the two have different token values and a single-appearance check would cover half the readers.
+ */
+if (wants("20")) {
+  /**
+   * The appearance is driven by the lab's OWN switch, not by the context's `colorScheme`. The stage declares
+   * `theme-light` or `dark` on itself — which is the fix for finding 9 — so it no longer follows the system
+   * preference at all, and a `colorScheme: "dark"` context would have left the stage light while the arm
+   * claimed to be measuring dark. The first run of this section did exactly that: both arms reported the
+   * surface as `rgb(255, 255, 255)`, which is how a two-arm check ends up running one arm twice.
+   */
+  for (const appearance of ["light", "dark"]) {
+    const { context, page } = await openLab();
+    await page.locator('[aria-label="Slider motion layers"] [data-state]', { hasText: /^Ticks$/ }).click();
+    if (appearance === "dark") await page.locator("#lab-dark").click();
+    await page.waitForTimeout(300);
+    const read = await page.evaluate(() => {
+      const srgb = (css) => {
+        const n = (css.match(/[\d.]+/g) || []).map(Number);
+        return { r: n[0] ?? 0, g: n[1] ?? 0, b: n[2] ?? 0, a: n.length > 3 ? n[3] : 1 };
+      };
+      // A tick is partly transparent, so what a reader sees is the tick COMPOSITED over the surface behind it.
+      // Comparing the declared colour instead would credit an alpha of 0 with whatever hue it names.
+      const over = (fg, bg) => ({ r: fg.r * fg.a + bg.r * (1 - fg.a), g: fg.g * fg.a + bg.g * (1 - fg.a), b: fg.b * fg.a + bg.b * (1 - fg.a), a: 1 });
+      const lum = (c) => {
+        const f = [c.r, c.g, c.b].map((v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; });
+        return 0.2126 * f[0] + 0.7152 * f[1] + 0.0722 * f[2];
+      };
+      const ratio = (a, b) => { const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x); return (hi + 0.05) / (lo + 0.05); };
+      const host = document.querySelector(".kx-lab-slider");
+      const ticks = [...host.querySelectorAll(".kx-lab-tick")];
+      const surface = host.closest(".bg-background");
+      if (!surface || ticks.length === 0) return { ticks: ticks.length, surface: !!surface, worst: null };
+      const bg = srgb(getComputedStyle(surface).backgroundColor);
+      const score = (t) => +ratio(over(srgb(getComputedStyle(t).backgroundColor), bg), bg).toFixed(2);
+      const passed = ticks.filter((t) => t.dataset.passed === "true");
+      const unpassed = ticks.filter((t) => t.dataset.passed === "false");
+      return {
+        ticks: ticks.length,
+        passedCount: passed.length,
+        surfaceColor: getComputedStyle(surface).backgroundColor,
+        passedWorst: passed.length ? Math.min(...passed.map(score)) : null,
+        unpassedWorst: unpassed.length ? Math.min(...unpassed.map(score)) : null,
+      };
+    });
+    check(read.passedCount > 0, `slider (${appearance}): some ticks are marked passed at the default value`, `${read.passedCount} of ${read.ticks}`);
+    // The surface is named in the detail so an arm that silently ran the wrong appearance is visible in the output.
+    check(read.passedWorst !== null && read.passedWorst >= 3, `slider (${appearance}): a passed tick contrasts with the surface it sits on`, `worst passed tick ${read.passedWorst}:1 against ${read.surfaceColor}`);
+    check(read.unpassedWorst !== null && read.unpassedWorst >= 3, `slider (${appearance}): an unpassed tick contrasts with it too`, `worst unpassed tick ${read.unpassedWorst}:1 against ${read.surfaceColor}`);
+    await context.close();
+  }
+}
+
+// ── 21. A scoped appearance control must not depend on the document's theme ────────────────────────────
+/**
+ * The stage carried `className={dark ? "dark" : undefined}`, and removing a class cannot undo tokens the
+ * element INHERITS. The site runs `next-themes` with `attribute="class"` and `defaultTheme="system"`, so a
+ * reader whose system asks for dark gets `.dark` on the document and the stage inherited every dark token
+ * while this switch read `unchecked` — measured, specimen background `rgb(11, 17, 40)` with the switch off.
+ * Codex found it. The fix is `theme-light` for the false branch, the same override the site's other scoped
+ * previews use.
+ *
+ * The check opens the page with a DARK system preference, which is the condition that exposes it, and
+ * requires the switch to move the specimens both ways from there.
+ */
+if (wants("21")) {
+  const { context, page } = await openLab({ colorScheme: "dark" });
+  const surface = ".kx-lab-slider";
+  const specimenBg = () => page.evaluate((sel) => {
+    const el = document.querySelector(sel)?.closest(".bg-background");
+    return el ? getComputedStyle(el).backgroundColor : null;
+  }, surface);
+  const documentIsDark = await page.evaluate(() => document.documentElement.classList.contains("dark"));
+  check(documentIsDark, "the document really is in dark mode for this check", `html.dark = ${documentIsDark}`);
+  const off = await specimenBg();
+  await page.locator("#lab-dark").click();
+  await page.waitForTimeout(250);
+  const on = await specimenBg();
+  check(off !== null && on !== null && off !== on, "the stage's appearance follows the lab switch, not the document", `switch off ${off}, on ${on}`);
+  // Naming the value, not only the difference: with the switch off the stage must be LIGHTER than with it on,
+  // or a defect that inverted the two would satisfy "they differ".
+  const lightness = (css) => { const n = (css.match(/[\d.]+/g) || []).map(Number); return (n[0] + n[1] + n[2]) / 3; };
+  check(off !== null && on !== null && lightness(off) > lightness(on), "and off is the light appearance, on is the dark one", `off mean channel ${off && lightness(off).toFixed(0)}, on ${on && lightness(on).toFixed(0)}`);
+  await context.close();
+}
+
 await browser.close();
 
 console.log(`motion-lab-browser — ${ROUTE}`);

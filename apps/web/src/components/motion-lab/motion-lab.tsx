@@ -307,7 +307,16 @@ export function MotionLab() {
 
       <section
         aria-labelledby="lab-stage"
-        className={state.dark ? "dark" : undefined}
+        /*
+         * `theme-light` for the false branch, not `undefined`. Removing a class cannot undo tokens the stage
+         * INHERITS: the site runs `next-themes` with `attribute="class"` and `defaultTheme="system"`, so a
+         * reader whose system asks for dark gets `.dark` on the document and the stage inherited every dark
+         * token while this switch read `unchecked`. Measured: specimen background `rgb(11, 17, 40)` with the
+         * switch off. `theme-light` declares the full light token contract in `globals.css`, which is the
+         * same override `theme-preview.tsx` and `create-preview.tsx` already use for a scoped appearance.
+         * Found by Codex on PR #662.
+         */
+        className={state.dark ? "dark" : "theme-light"}
         dir={state.rtl ? "rtl" : "ltr"}
         data-kx-lab-stage=""
         data-kx-lab-reduce={state.reduce || systemReduce ? "true" : "false"}

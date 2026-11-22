@@ -314,6 +314,42 @@ const CONTROLS = [
     to: `      const transformable = technique === "transform" && equal && !vertical;`,
     expect: /phased declines the transform path|moved an edge within 220ms|decline is announced/,
   },
+  {
+    id: 26,
+    brief: "(a cue the same colour as what it sits on)",
+    name: "a passed tick is painted in the stage's own background colour again",
+    file: CSS,
+    sections: "20",
+    from: `  background-color: hsl(var(--action));
+}
+
+/* The current tick shares`,
+    to: `  background-color: hsl(var(--background));
+}
+
+/* The current tick shares`,
+    expect: /a passed tick contrasts with the surface/,
+  },
+  {
+    id: 28,
+    brief: "(a cue whose alpha drops it under the contrast floor)",
+    name: "an unpassed tick goes back to half alpha, which composites to 2.02:1 over the stage",
+    file: CSS,
+    sections: "20",
+    from: `  background-color: hsl(var(--muted-foreground));`,
+    to: `  background-color: hsl(var(--muted-foreground) / 0.5);`,
+    expect: /an unpassed tick contrasts with it too/,
+  },
+  {
+    id: 27,
+    brief: "(a scoped control that depends on an ancestor)",
+    name: "the stage stops declaring the light appearance, so it inherits the document's dark tokens",
+    file: SHELL,
+    sections: "21",
+    from: `        className={state.dark ? "dark" : "theme-light"}`,
+    to: `        className={state.dark ? "dark" : undefined}`,
+    expect: /appearance follows the lab switch|off is the light appearance/,
+  },
 ];
 
 /** Controls that need no build: the unit suite and the static gate's clauses. */

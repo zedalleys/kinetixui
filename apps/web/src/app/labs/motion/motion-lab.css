@@ -236,16 +236,32 @@
   block-size: 12px;
   margin-inline-start: -1px;
   border-radius: 1px;
-  background-color: hsl(var(--muted-foreground) / 0.5);
+  /* Opaque, not `/ 0.5`. Composited over the stage, half-alpha `--muted-foreground` measured 2.02:1 against
+   * the surface — under the 3:1 floor for a non-text cue, and measured only once the gate started compositing
+   * the tick over what is behind it instead of reading its declared colour. */
+  background-color: hsl(var(--muted-foreground));
   transition-property: background-color, block-size, inset-block-start;
   transition-duration: var(--duration-instant);
   transition-timing-function: var(--easing-standard);
 }
 
+/* A passed tick is tinted toward the current value's colour, NOT painted in `--background`.
+ *
+ * It was `hsl(var(--background))`, which is exactly the specimen container's own `bg-background`: measured at
+ * 1.00:1 against it in both appearances — white on white, `rgb(11, 17, 40)` on `rgb(11, 17, 40)` — so every
+ * passed tick but the current one was invisible, at value 40 and at every other value. The error was hidden
+ * while the ticks were short enough to sit inside the shipped track, which covered them anyway; extending
+ * them to cross the track is what put them on the stage where the colour could be seen to be wrong.
+ *
+ * `--action` flips with the appearance, so one declaration contrasts in both. Found by Codex on PR #662. */
 .kx-lab-tick[data-passed="true"] {
-  background-color: hsl(var(--background));
+  background-color: hsl(var(--action));
 }
 
+/* The current tick shares the passed ticks' colour and is distinguished by HEIGHT — 18px against 12px, half
+ * again. Both are `--action` because both needed to clear 3:1 against the stage, and two opaque tints of one
+ * hue far enough apart to read as different would have put one of them back under that floor. Size is the
+ * stronger cue for "you are here" anyway, and the thumb sits on this tick. */
 .kx-lab-tick[data-current="true"] {
   inset-block-start: -9px;
   block-size: 18px;
