@@ -12446,13 +12446,13 @@
           ],
           "interaction": [
             {
-              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AppointmentBookingBlockTest.kt:290-307",
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AppointmentBookingBlockTest.kt:316-333",
               "environment": "robolectric"
             }
           ],
           "accessibility": [
             {
-              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AppointmentBookingBlockTest.kt:270-289",
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AppointmentBookingBlockTest.kt:286-315",
               "environment": "robolectric"
             }
           ],
@@ -12475,13 +12475,17 @@
           ],
           "interaction": [
             {
-              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart:292-331",
+              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart:297-336",
               "environment": "flutter_test"
             }
           ],
           "accessibility": [
             {
-              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart:266-291",
+              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart:271-296",
+              "environment": "flutter_test"
+            },
+            {
+              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart:337-420",
               "environment": "flutter_test"
             }
           ],

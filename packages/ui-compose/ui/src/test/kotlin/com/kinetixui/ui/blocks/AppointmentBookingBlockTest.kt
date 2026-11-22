@@ -15,12 +15,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.isNotEnabled
+import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -28,6 +33,7 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import com.kinetixui.ui.KinetixButton
 import com.kinetixui.ui.KinetixButtonVariant
 import com.kinetixui.ui.KinetixCard
@@ -238,6 +244,9 @@ private fun SlotRow(slot: AppointmentSlot, selected: Boolean, onSelect: () -> Un
                 selected = selected,
                 enabled = !slot.unavailable,
                 onClick = onSelect,
+                // The ROLE belongs to the control, and the control is this row. Without it the row was
+                // selectable with no role at all, so TalkBack announced a selected thing of no known kind.
+                role = Role.RadioButton,
             )
             .semantics { if (state.isNotEmpty()) stateDescription = state }
             .padding(vertical = 4.dp),
@@ -249,6 +258,13 @@ private fun SlotRow(slot: AppointmentSlot, selected: Boolean, onSelect: () -> Un
             // null, so the radio is drawn but is not a second control: the row above is the control.
             onClick = null,
             enabled = !slot.unavailable,
+            // `onClick = null` is NOT the same as semantics-free. KinetixRadioButton installs
+            // `.selectable(role = Role.RadioButton, enabled = enabled && onClick != null)`
+            // unconditionally, so a null onClick leaves behind an unnamed, permanently disabled radio
+            // beside the row — even for an available slot. TalkBack then meets two nodes per time: a
+            // roleless selectable row and a dead radio. Clearing the semantics leaves the dot as the
+            // drawing it is. Found by Codex's exact-head review of e28bb73, not by the gate.
+            modifier = Modifier.clearAndSetSemantics {},
         )
         Column {
             Text(slot.label)
@@ -282,6 +298,16 @@ class AppointmentBookingBlockTest {
         // false: this fixture has two unavailable slots on purpose, and CI is what said so.
         val unavailable = APPOINTMENT_PERIODS.sumOf { period -> period.slots.count { it.unavailable } }
         rule.onAllNodesWithText("Unavailable").assertCountEquals(unavailable)
+        // ONE radio per time, and it is the row. The decorative dot used to leave a second node behind —
+        // an unnamed, permanently disabled radio beside each row, available slots included — because
+        // `onClick = null` silences the callback and not the semantics. Counting the role is what catches
+        // that: the words alone cannot see it, which is how it shipped past the first review.
+        val slots = APPOINTMENT_PERIODS.sumOf { period -> period.slots.size }
+        val isRadio = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton)
+        rule.onAllNodes(isRadio).assertCountEquals(slots)
+        // Disabled means exactly the unavailable ones, no more: a count that matched the slot total would
+        // also pass with every radio dead.
+        rule.onAllNodes(isRadio and isNotEnabled()).assertCountEquals(unavailable)
         // The disabled action and the sentence that explains it are both present.
         rule.onNodeWithText("Confirm appointment").assertIsNotEnabled()
         rule.onNodeWithText("Choose a time to continue.").assertExists()

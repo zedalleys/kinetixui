@@ -175,18 +175,23 @@ class _AppointmentBookingBlockState extends State<AppointmentBookingBlock> {
           ],
         ],
       ),
-      Row(
+      // Wrap, not Row. In a Row neither child is flexible, so Flutter measures both at their
+      // unconstrained width; at 200% text on a phone that exceeds what KinetixCardContent's horizontal
+      // padding leaves, the row overflows, and KinetixCard's Clip.antiAlias then clips the sentence that
+      // explains why Confirm is disabled rather than letting it wrap. The reader is left with a dead
+      // button and no reason. Wrap puts the sentence on its own line instead. The React and Angular
+      // ports already wrap this row; Flutter did not. Found by Codex's exact-head review of e28bb73.
+      Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: <Widget>[
           KinetixButton(
             // `null` is the disabled treatment, and the reason is written beside it rather than guessed.
             onPressed: _selected == null ? null : () => setState(() => _booked = _selected),
             child: const Text('Confirm appointment'),
           ),
-          if (_selected == null)
-            const Padding(
-              padding: EdgeInsetsDirectional.only(start: 12),
-              child: Text('Choose a time to continue.'),
-            ),
+          if (_selected == null) const Text('Choose a time to continue.'),
         ],
       ),
     ];
@@ -328,4 +333,88 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Choose a time to continue.'), findsOneWidget);
   });
+
+  // kx-verify-block: accessibility
+  testWidgets('the reason Confirm is disabled survives a phone width at 200% text',
+      (WidgetTester tester) async {
+    // WCAG 1.4.4: at 200% text nothing may be lost. The confirmation row used to be a Row with no
+    // flexible child, so the sentence explaining the disabled button was clipped away by the card's
+    // own Clip.antiAlias and the reader got a dead button with no reason. The 800x600 default surface
+    // cannot see this; a phone width with doubled text can.
+    tester.view.physicalSize = const Size(390, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: KinetixTheme(
+          brightness: Brightness.light,
+          child: Builder(
+            builder: (BuildContext context) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(2.0)),
+              child: const Scaffold(body: SingleChildScrollView(child: AppointmentBookingBlock())),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // An overflow is reported as a FlutterError, so an unwrapped row fails here rather than silently
+    // drawing a clipped sentence.
+    expect(tester.takeException(), isNull);
+    final Finder reason = find.text('Choose a time to continue.');
+    expect(reason, findsOneWidget);
+    // Present is not enough: the words must be inside the surface, not clipped off its edge.
+    final Rect box = tester.getRect(reason);
+    expect(box.left, greaterThanOrEqualTo(0));
+    expect(box.right, lessThanOrEqualTo(390));
+    expect(box.width, greaterThan(0));
+  });
+
+  // The negative control for the test above, executed rather than described: the SAME two children in
+  // the unwrapped Row this block used to have, at the same width and text scale. If this did not
+  // overflow, the test above would be asserting nothing — it would pass for a layout that never had the
+  // problem. This container has no Flutter toolchain, so CI is where both of these first run.
+  testWidgets('control: the same row without wrapping does overflow at that width and scale',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(390, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: KinetixTheme(
+          brightness: Brightness.light,
+          child: Builder(
+            builder: (BuildContext context) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(2.0)),
+              child: const Scaffold(
+                body: KinetixCard(
+                  child: KinetixCardContent(
+                    child: Row(
+                      children: <Widget>[
+                        KinetixButton(
+                          onPressed: null,
+                          child: Text('Confirm appointment'),
+                        ),
+                        Padding(
+                          padding: EdgeInsetsDirectional.only(start: 12),
+                          child: Text('Choose a time to continue.'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final Object? thrown = tester.takeException();
+    expect(thrown, isNotNull);
+    expect(thrown.toString(), contains('overflowed'));
+  });
+
 }
