@@ -104,6 +104,11 @@ const PAGES = [
   "/capabilities",
   "/use-cases/commerce",
   "/use-cases/travel-booking",
+  // The Motion Lab (M5.25): a page whose whole content is interactive selection controls, a slider with
+  // overlays and three pickers, which is the densest concentration of selection semantics on the site. It is
+  // noindex and carries no marketing claim, so the SEO contract leaves it alone; axe does not, deliberately,
+  // because a laboratory for accessible motion that is not itself swept would be the wrong kind of laboratory.
+  "/labs/motion",
 ];
 const WIDTHS = [
   // 320 is the narrowest width the site claims to support, and it is not a rounding of 375: a fixed-width

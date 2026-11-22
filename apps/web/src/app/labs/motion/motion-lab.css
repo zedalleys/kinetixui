@@ -1,0 +1,293 @@
+/* Motion Lab — the lab's own motion layer.
+ *
+ * Scoped entirely under `.kx-lab-*`. It styles no shipped component globally: every rule that reaches into
+ * `@kinetixui/ui` markup is nested under a lab class, so nothing here can affect a page that does not opt in.
+ *
+ * `!important` appears exactly twice, both times to suppress a shipped selection fill so that ONE travelling
+ * indicator can carry selection instead of each item painting its own. The shipped rules are Tailwind
+ * arbitrary variants with the same specificity as these, so cascade order alone would not settle it, and
+ * raising specificity with a longer selector would be the same override spelled less legibly. Both are
+ * fenced by `[data-kx-lab-measured]` — the attribute the engine sets only once it has measured the track —
+ * so before hydration, and in any frame where measurement failed, the shipped fill is the selection cue and
+ * the reader is never left with nothing marked.
+ *
+ * Properties: the indicator animates logical insets under the `inset` technique, which MOTION.md allows for a
+ * selection indicator with a recorded reason — here, that a physical `transform` cannot mirror under RTL —
+ * and `transform` under the `transform` technique, which is the compositor-friendly path the lab measures
+ * against it. `transition-all` is never used; every rule names its properties.
+ */
+
+.kx-lab-track {
+  position: relative;
+}
+
+/* The travelling indicator. Hidden until measured, and hidden under forced colours, where the item's own
+ * system SelectedItem pair carries selection — the same arrangement the shipped Tabs bar uses. */
+.kx-lab-bar {
+  position: absolute;
+  display: none;
+  pointer-events: none;
+  opacity: 1;
+  transition-property: inset-inline-start, inset-inline-end, inset-block-start, inset-block-end, transform;
+  transition-duration: var(--duration-base);
+  transition-timing-function: var(--kx-lab-ease, var(--easing-emphasized));
+  transition-delay: var(--kx-lab-start-delay, 0ms), var(--kx-lab-end-delay, 0ms),
+    var(--kx-lab-start-delay, 0ms), var(--kx-lab-end-delay, 0ms), var(--kx-lab-start-delay, 0ms);
+}
+
+.kx-lab-track[data-kx-lab-measured] .kx-lab-bar {
+  display: block;
+}
+
+/* The rule above is `.kx-lab-track[data-kx-lab-measured] .kx-lab-bar` — specificity (0,3,0). A media query
+ * adds none, so hiding the indicator under forced colours needs (0,3,1) or more, which the `span` type
+ * selector supplies. Measured: without it the bar stayed `display: block` with forced colours active, which
+ * the browser gate caught as a failure rather than a reviewer catching it as a smell. */
+@media (forced-colors: active) {
+  .kx-lab-track[data-kx-lab-measured] span.kx-lab-bar {
+    display: none;
+  }
+}
+
+/* The `inset` technique writes both logical edges. */
+.kx-lab-track[data-kx-lab-technique="inset"] .kx-lab-bar {
+  inset-inline-start: var(--kx-lab-start, 0px);
+  inset-inline-end: var(--kx-lab-end, 0px);
+}
+
+/* The `transform` technique keeps a fixed-width indicator at the track's leading edge and translates it. */
+.kx-lab-track[data-kx-lab-technique="transform"] .kx-lab-bar {
+  inset-inline-start: 0;
+  inset-inline-end: auto;
+  width: var(--kx-lab-width, 0px);
+  transform: var(--kx-lab-translate, translate3d(0, 0, 0));
+  will-change: transform;
+}
+
+/* ── Segmented strip ─────────────────────────────────────────────────────── */
+
+/* The chosen item's own row, measured by the engine, with the track's padding as the fallback for the frame
+ * before the first measurement. A wrapped strip has several rows and the indicator belongs to one of them. */
+.kx-lab-seg .kx-lab-bar {
+  inset-block-start: var(--kx-lab-cross-start, 0.25rem);
+  inset-block-end: var(--kx-lab-cross-end, 0.25rem);
+  border-radius: var(--radius-md, 0.375rem);
+  background-color: hsl(var(--foreground));
+  box-shadow: 0 1px 2px 0 hsl(var(--foreground) / 0.12);
+}
+
+.kx-lab-seg [data-state] {
+  position: relative;
+  z-index: 1;
+}
+
+@media (forced-colors: none) {
+  .kx-lab-seg[data-kx-lab-measured] [data-state="on"] {
+    background-color: transparent !important;
+  }
+}
+
+/* ── Tab list ────────────────────────────────────────────────────────────── */
+
+/* The shipped list draws its own bar. With the lab layer on, that bar is the one thing that would duplicate,
+ * so it is hidden and the list is given `motion="none"` in the lab so its own hook does no travel work. */
+.kx-lab-tabs[data-kx-tabs-indicator] span[data-kx-tabs-bar] {
+  display: none;
+}
+
+.kx-lab-tabs [role="tab"] {
+  position: relative;
+  z-index: 1;
+}
+
+.kx-lab-tabs[data-kx-lab-shape="underline"] .kx-lab-bar {
+  inset-block-start: auto;
+  inset-block-end: var(--kx-lab-cross-end, 0px);
+  block-size: 2px;
+  background-color: hsl(var(--foreground));
+}
+
+.kx-lab-tabs[data-kx-lab-shape="pill"] .kx-lab-bar {
+  inset-block-start: var(--kx-lab-cross-start, 0.25rem);
+  inset-block-end: var(--kx-lab-cross-end, 0.25rem);
+  border-radius: 9999px;
+  background-color: hsl(var(--foreground) / 0.1);
+}
+
+@media (forced-colors: none) {
+  .kx-lab-tabs[data-kx-lab-measured] [role="tab"][data-state="active"] {
+    border-color: transparent !important;
+  }
+}
+
+/* ── Slider ──────────────────────────────────────────────────────────────── */
+
+.kx-lab-slider {
+  position: relative;
+}
+
+/* A halo around the thumb rather than a scaled thumb: Radix writes the thumb's own `transform` inline to
+ * centre it, so a lab rule on that property would be overridden in some versions and would silently stop
+ * working in others. The halo is a sibling the lab owns outright, which is the difference between a cue that
+ * is measured and one that is hoped for. */
+.kx-lab-halo {
+  position: absolute;
+  /* The measured thumb centre, not the host's 50%: the host's block padding is asymmetric to clear the value
+   * bubble, so its centre is 12px above the thumb. `50%` is only the fallback for the frame before the first
+   * measurement lands. See the comment on `thumbMid` in lab-slider.tsx. */
+  inset-block-start: var(--kx-lab-thumb-mid, 50%);
+  inset-inline-start: var(--kx-lab-thumb, 0px);
+  block-size: 2rem;
+  inline-size: 2rem;
+  margin-block-start: -1rem;
+  margin-inline-start: -1rem;
+  border-radius: 9999px;
+  background-color: hsl(var(--action) / 0.16);
+  opacity: 0;
+  transform: scale(0.6);
+  pointer-events: none;
+  transition-property: opacity, transform;
+  transition-duration: var(--duration-instant);
+  transition-timing-function: var(--easing-standard);
+}
+
+.kx-lab-slider[data-kx-lab-engaged="true"] .kx-lab-halo {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (forced-colors: active) {
+  .kx-lab-halo {
+    display: none;
+  }
+}
+
+/* A zero-width flex anchor placed at the thumb, with the bubble centred inside it.
+ *
+ * The obvious version — `inset-inline-start: var(--kx-lab-thumb); translate: -50% 0` — is correct in LTR and
+ * wrong in RTL, and the browser gate measured the error at 43.36px. `inset-inline-start` under RTL places the
+ * element's TRAILING edge, so the bubble then needs shifting the other way, while `translate`'s percentage is
+ * physical and always goes left. The halo escapes this only because its width is a known 2rem and it can use
+ * a logical `margin-inline-start: -1rem`; the bubble's width is its content's.
+ *
+ * A direction-conditional `[dir="rtl"]` rule would fix the symptom, and RTL.md warns against exactly that
+ * shape — an ancestor-matching direction selector rather than a logical property. A zero-width flex line
+ * centres its overflowing child on the inline axis in either direction with no rule to get the wrong way
+ * round, so there is nothing left to mirror. The bubble's own motion is on the BLOCK axis, which does not
+ * mirror at all. */
+.kx-lab-bubble-anchor {
+  position: absolute;
+  inset-block-end: calc(100% + 0.5rem);
+  inset-inline-start: var(--kx-lab-thumb, 0px);
+  inline-size: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.kx-lab-bubble {
+  flex: none;
+  padding-block: 0.125rem;
+  padding-inline: 0.5rem;
+  border-radius: var(--radius-sm, 0.25rem);
+  background-color: hsl(var(--foreground));
+  color: hsl(var(--background));
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  translate: 0 0.25rem;
+  transition-property: opacity, translate;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-exit);
+}
+
+.kx-lab-slider[data-kx-lab-engaged="true"] .kx-lab-bubble {
+  opacity: 1;
+  translate: 0 0;
+  transition-timing-function: var(--easing-enter);
+}
+
+.kx-lab-ticks {
+  position: absolute;
+  inset-inline: 0;
+  /* Same measured centre as the halo. */
+  inset-block-start: var(--kx-lab-thumb-mid, 50%);
+  block-size: 0;
+  pointer-events: none;
+}
+
+/* The rail is centred on the thumb, which is also the centre of the shipped slider's 6px track — and that
+ * track paints AFTER the rail in DOM order with an opaque surface, so a 4px tick was entirely hidden behind
+ * it. Measured: 11 of 11 ticks occluded, `elementFromPoint` at each tick's centre returning the track's
+ * range. Codex found it, and it was a regression from centring them correctly: before that they were 12px
+ * above the track, wrong but visible.
+ *
+ * Raising the rail with `z-index` would put it above the thumb as well, because the rail is a sibling of the
+ * whole slider root and cannot be slotted between that root's track and its thumb from outside. So the
+ * ticks are tall enough to CROSS the track instead, which is what a scale normally looks like: 12px against
+ * a 6px track leaves 3px proud on each side. The thumb still covers the tick it sits on, which is correct —
+ * the thumb is the current value. */
+.kx-lab-tick {
+  position: absolute;
+  inset-block-start: -6px;
+  inline-size: 2px;
+  block-size: 12px;
+  margin-inline-start: -1px;
+  border-radius: 1px;
+  /* Opaque, not `/ 0.5`. Composited over the stage, half-alpha `--muted-foreground` measured 2.02:1 against
+   * the surface — under the 3:1 floor for a non-text cue, and measured only once the gate started compositing
+   * the tick over what is behind it instead of reading its declared colour. */
+  background-color: hsl(var(--muted-foreground));
+  transition-property: background-color, block-size, inset-block-start;
+  transition-duration: var(--duration-instant);
+  transition-timing-function: var(--easing-standard);
+}
+
+/* A passed tick is tinted toward the current value's colour, NOT painted in `--background`.
+ *
+ * It was `hsl(var(--background))`, which is exactly the specimen container's own `bg-background`: measured at
+ * 1.00:1 against it in both appearances — white on white, `rgb(11, 17, 40)` on `rgb(11, 17, 40)` — so every
+ * passed tick but the current one was invisible, at value 40 and at every other value. The error was hidden
+ * while the ticks were short enough to sit inside the shipped track, which covered them anyway; extending
+ * them to cross the track is what put them on the stage where the colour could be seen to be wrong.
+ *
+ * `--action` flips with the appearance, so one declaration contrasts in both. Found by Codex on PR #662. */
+.kx-lab-tick[data-passed="true"] {
+  background-color: hsl(var(--action));
+}
+
+/* The current tick shares the passed ticks' colour and is distinguished by HEIGHT — 18px against 12px, half
+ * again. Both are `--action` because both needed to clear 3:1 against the stage, and two opaque tints of one
+ * hue far enough apart to read as different would have put one of them back under that floor. Size is the
+ * stronger cue for "you are here" anyway, and the thumb sits on this tick. */
+.kx-lab-tick[data-current="true"] {
+  inset-block-start: -9px;
+  block-size: 18px;
+  background-color: hsl(var(--action));
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────────
+ *
+ * The engine already takes the no-travel path under the effective preference, so these rules are a floor and
+ * not the mechanism: they cover the layers CSS owns outright (the halo, the bubble, the ticks), and they
+ * remove the interpolation only — every end state above is reached either way. The lab's own toggle writes
+ * `data-kx-lab-reduce="true"` on the shell, which is OR-ed with the media query and can never cancel it. */
+@media (prefers-reduced-motion: reduce) {
+  .kx-lab-bar,
+  .kx-lab-halo,
+  .kx-lab-bubble,
+  .kx-lab-tick {
+    transition-duration: 0.01ms;
+    transition-delay: 0ms;
+  }
+}
+
+[data-kx-lab-reduce="true"] .kx-lab-bar,
+[data-kx-lab-reduce="true"] .kx-lab-halo,
+[data-kx-lab-reduce="true"] .kx-lab-bubble,
+[data-kx-lab-reduce="true"] .kx-lab-tick {
+  transition-duration: 0.01ms;
+  transition-delay: 0ms;
+}
