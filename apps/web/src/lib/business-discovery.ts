@@ -123,8 +123,14 @@ export function coverageLine(w: Pick<Workflow, "coverage" | "stages">): string {
 export { DISCOVERY_ROUTES } from "./discovery-routes";
 
 /**
- * A domain is worth offering under "Explore by business need" only when something in it ships today. Healthcare and
- * logistics are planned end to end; listing them would be a list of promises.
+ * A domain is worth offering under "Explore by business need" only when something in it ships today.
+ *
+ * The rule has not changed; what it excludes has. It was written when healthcare and logistics were planned
+ * end to end, so listing them would have been a list of promises. M5.26 gave each a block that ships, and as
+ * of that change EVERY domain satisfies this filter — so it currently removes nothing. It is kept because it
+ * is the condition that matters, not because it is doing work today: a new domain registered ahead of its
+ * implementation is exactly the case it exists for, and the test beside it proves the filter still rejects
+ * such a domain rather than only observing that none exists.
  */
 export const BUSINESS_NEEDS = DOMAINS.filter((d) => d.counts.existing + d.counts.partial > 0);
 

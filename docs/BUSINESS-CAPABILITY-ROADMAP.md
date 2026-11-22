@@ -158,7 +158,7 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 
 <!-- BEGIN GENERATED: capability tables (pnpm gen:capabilities) -->
 
-169 capabilities in 30 families. Existing 46, partial 28, planned 86, Pro candidate 8, not planned 1.
+172 capabilities in 30 families. Existing 49, partial 28, planned 86, Pro candidate 8, not planned 1.
 
 ### Summary by phase
 
@@ -169,7 +169,7 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 | 3 | DataGrid, QueryBuilder, FilterBar, MetricCard, Chart infrastructure, Core chart types, Gauge, Advanced chart types, RangeChart, SyncStatus / ConnectionStatus / StaleDataState / OfflineState, ConflictState / MaintenanceState |
 | 4 | PermissionMatrix, RoleEditor, WorkspaceSwitcher, SessionManager / DeviceSession, APIKeyTable / SecretKeyManager, AuthShell / AuthCard, PasswordStrength / PasswordRequirement, RecoveryCodeList, MFA setup, ApprovalFlow, TaskQueue, SLAIndicator, WorkflowHistory, AuditTrail, EntityCard / StatusCard foundation, ActivityFeed, MasterDetail, InspectorPanel / UtilityPanel / WorkspaceLayout, ApprovalStatus |
 | 5 | TransactionCard, Invoice, MoneyInput, ExchangeRateDisplay / ExchangeRate, PercentageInput / UnitInput, IBANInput / AccountNumberInput, PaymentCardInput, TransactionList, PricingTable, PlanSummary / SubscriptionCard / SubscriptionStatus / BillingCycle / RenewalStatus, UsageMeter / QuotaMeter / CreditBalance, InvoiceList / PaymentHistory, Upgrade / downgrade / cancel flows, WalletBalance / GiftCardBalance, WalletTransaction, RewardPoints / RewardProgress / RewardTier / LoyaltyStatus / LoyaltyBenefits, RewardHistory, GiftCardRedeem, DurationInput / UnitInput |
-| 6 | VerificationStepper, DocumentCapture / DocumentPreview, IdentityReview, SignaturePad, KYC flow, FileManager, DocumentViewer shell, VersionHistory, PatientSummary / PatientStatus / PatientAlert, VitalSign, MedicationList, AppointmentCard / AppointmentStatus, ClinicalTimeline, LabResultTable, ConsentStatus |
+| 6 | VerificationStepper, DocumentCapture / DocumentPreview, IdentityReview, SignaturePad, KYC flow, FileManager, DocumentViewer shell, VersionHistory, PatientSummary / PatientStatus / PatientAlert, VitalSign, MedicationList, AppointmentCard / AppointmentStatus, ClinicalTimeline, LabResultTable, ConsentStatus, AppointmentBooking, ObservationsSummary, ShipmentTracking |
 | 7 | Map controls, MapMarker / MapMarkerCard / MapCluster, RouteSummary, FleetVehicleCard / VehicleStatus, ShipmentCard / ShipmentStatus / ShipmentTimeline / TrackingTimeline / DeliveryStatus, SpatialDeviceMarker, DeviceMaintenance |
 | 8 | TimelineChart, CalendarWeek / CalendarDay / CalendarEvent / CalendarResource, Scheduler / AvailabilityGrid / TimelinePlanner, PipelineBoard, KanbanBoard, TaskCard / Milestone |
 | 9 | MessageBubble / Conversation / Thread, CommentComposer / CommentThread, MentionInput, PresenceIndicator / ReactionPicker, CodeEditorShell, LogViewer, EnvironmentBadge / DeploymentStatus / DeploymentStep, StatusCard / StatusIndicator, HealthCheckList, IncidentTimeline, AlertRuleBuilder, PromptInput, ChatMessage / AssistantResponse / StreamingText, ToolCall / Citation / SourcesPanel, AgentTask |
@@ -368,6 +368,8 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 | ClinicalTimeline | — | L3 Domain | Core | React-only Domain | planned | — | StatusTimeline | 6 |  |
 | LabResultTable | — | L3 Domain | Core | React-only Domain | planned | — | DataTable | 6 |  |
 | ConsentStatus | — | L3 Domain | Core | React-only Domain | planned | — | Tag, ResultState | 6 |  |
+| AppointmentBooking | — | L4 Block | Core | Block / composition | block | block:appointment-booking | TimeSlotPicker, DescriptionList, ResultState, ReferenceCode, Card | 6 | A beta block on all five platforms. The slots are a single-selection group on every platform (TimeSlotPicker on React, native radios elsewhere); the clinic vocabulary is the example, not the contract, so a consultation, a viewing or a service call is the same block. Availability arrives as data: the block holds, fetches and releases nothing, and converts no time zone. |
+| ObservationsSummary | ReadingRow | L4 Block | Core | Block / composition | block | block:vitals-summary | DescriptionList, Tag, Separator, Card | 6 | A beta block on all five platforms. Monitored readings against the range they are judged by, with freshness and source stated before the values. The block never decides what is abnormal — ranges and the status word arrive as data, the same rule the planned VitalSign component carries. Reusable for any ranged reading: soil moisture, water quality, cell voltages, machine temperatures. |
 
 ### R. Maps, logistics & fleet
 
@@ -379,6 +381,7 @@ section is stale or if any row cites evidence that does not exist. **Status** us
 | FleetVehicleCard / VehicleStatus | — | L3 Domain | Core | React-only Domain | planned | — | Card, Tag | 7 |  |
 | ShipmentCard / ShipmentStatus / ShipmentTimeline / TrackingTimeline / DeliveryStatus | — | L3 Domain | Core | React-only Domain | planned | — | StatusTimeline, ReferenceCode, PassCard | 7 | ShipmentTimeline and TrackingTimeline are StatusTimeline; the tracking number is ReferenceCode. |
 | GeofenceEditor | — | L3 Domain | Pro | Pro candidate | Pro candidate | — | Map controls | 10 | Pro candidate. |
+| ShipmentTracking | — | L4 Block | Core | Block / composition | block | block:shipment-tracking | Timeline, DescriptionList, Inform, ReferenceCode, Tag, Card | 6 | A beta block on all five platforms. A consignment history whose exception is modelled rather than drawn: the failed attempt is a warning and not an error, the undelivered step stays pending, and the action sits with its reason. React's Timeline carries the per-event status and action; Angular, SwiftUI, Compose and Flutter have a narrower Timeline, so those versions carry the state in words — recorded in M5.26's five-platform matrix, not fixed inside a block fixture. |
 
 ### S. IoT
 

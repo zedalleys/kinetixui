@@ -9999,36 +9999,36 @@
     "React": {
       "not-implemented": 0,
       "source": 0,
-      "build": 19,
+      "build": 21,
       "headless": 0,
-      "runtime": 3
+      "runtime": 4
     },
     "Angular": {
       "not-implemented": 0,
       "source": 0,
-      "build": 21,
+      "build": 24,
       "headless": 1,
       "runtime": 0
     },
     "SwiftUI": {
       "not-implemented": 0,
       "source": 0,
-      "build": 22,
+      "build": 25,
       "headless": 0,
       "runtime": 0
     },
     "Compose": {
       "not-implemented": 0,
       "source": 0,
-      "build": 18,
-      "headless": 4,
+      "build": 20,
+      "headless": 5,
       "runtime": 0
     },
     "Flutter": {
       "not-implemented": 0,
       "source": 0,
-      "build": 18,
-      "headless": 4,
+      "build": 19,
+      "headless": 6,
       "runtime": 0
     }
   },
@@ -10050,7 +10050,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -10145,7 +10145,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -10240,7 +10240,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -10341,7 +10341,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -10436,7 +10436,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -10537,7 +10537,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -10638,7 +10638,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -10739,7 +10739,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -10834,7 +10834,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -10929,7 +10929,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -11024,7 +11024,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -11119,7 +11119,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -11214,7 +11214,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -11339,7 +11339,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -11452,7 +11452,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -11553,7 +11553,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -11678,7 +11678,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -11809,7 +11809,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -11916,7 +11916,7 @@
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ],
@@ -12029,13 +12029,13 @@
           ],
           "interaction": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:111-158",
+              "ref": "scripts/blocks-runtime-browser.mjs:112-159",
               "environment": "chromium"
             }
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ]
@@ -12145,13 +12145,13 @@
           ],
           "interaction": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:179-210",
+              "ref": "scripts/blocks-runtime-browser.mjs:180-211",
               "environment": "chromium"
             }
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ]
@@ -12267,13 +12267,13 @@
           ],
           "interaction": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:159-178",
+              "ref": "scripts/blocks-runtime-browser.mjs:160-179",
               "environment": "chromium"
             }
           ],
           "accessibility": [
             {
-              "ref": "scripts/blocks-runtime-browser.mjs:77-110",
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
               "environment": "chromium"
             }
           ]
@@ -12365,6 +12365,356 @@
           ],
           "limitations": [
             "no interaction test",
+            "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
+          ]
+        }
+      }
+    },
+    "appointment-booking": {
+      "title": "Appointment booking",
+      "platforms": {
+        "React": {
+          "level": "runtime",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/appointment-booking.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:212-321",
+              "environment": "chromium"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
+              "environment": "chromium"
+            }
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/appointment-booking.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/AppointmentBookingBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "headless",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AppointmentBookingBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AppointmentBookingBlockTest.kt:281-298",
+              "environment": "robolectric"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AppointmentBookingBlockTest.kt:265-280",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (robolectric), not observed in a browser or on a device",
+            "accessibility tested headless only (robolectric), not observed in a browser or on a device"
+          ]
+        },
+        "Flutter": {
+          "level": "headless",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart:290-321",
+              "environment": "flutter_test"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart:264-289",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (flutter_test), not observed in a browser or on a device",
+            "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
+          ]
+        }
+      }
+    },
+    "vitals-summary": {
+      "title": "Observations summary",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/vitals-summary.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/vitals-summary.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/VitalsSummaryBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/VitalsSummaryBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/VitalsSummaryBlockTest.kt:146-167",
+              "environment": "robolectric"
+            },
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/VitalsSummaryBlockTest.kt:168-176",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (robolectric), not observed in a browser or on a device"
+          ]
+        },
+        "Flutter": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart:162-193",
+              "environment": "flutter_test"
+            },
+            {
+              "ref": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart:194-218",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
+          ]
+        }
+      }
+    },
+    "shipment-tracking": {
+      "title": "Shipment tracking",
+      "platforms": {
+        "React": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "apps/web/src/examples/blocks/shipment-tracking.tsx"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm build:web (Next.js production build of apps/web)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "scripts/blocks-runtime-browser.mjs:78-111",
+              "environment": "chromium"
+            }
+          ],
+          "limitations": [
+            "no interaction test"
+          ]
+        },
+        "Angular": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-angular/src/examples/blocks/shipment-tracking.ts"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/ci.yml: pnpm check:angular-blocks (ngc strict-template compile of packages/ui-angular/tsconfig.blocks.json)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "SwiftUI": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-swiftui/Tests/KinetixUITests/Blocks/ShipmentTrackingBlockTests.swift"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-swiftui.yml: swift test (swift test compiles the test target)"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "no accessibility test"
+          ]
+        },
+        "Compose": {
+          "level": "build",
+          "source": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/ShipmentTrackingBlockTest.kt"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-compose.yml: ./gradlew :ui:testDebugUnitTest (Gradle compiles the unit-test source set)"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/ShipmentTrackingBlockTest.kt:166-188",
+              "environment": "robolectric"
+            }
+          ],
+          "limitations": [
+            "no interaction test",
+            "accessibility tested headless only (robolectric), not observed in a browser or on a device"
+          ]
+        },
+        "Flutter": {
+          "level": "headless",
+          "source": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/shipment_tracking_block_test.dart"
+            }
+          ],
+          "build": [
+            {
+              "ref": ".github/workflows/native-flutter.yml: flutter test (flutter test compiles the test directory)"
+            }
+          ],
+          "interaction": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/shipment_tracking_block_test.dart:179-200",
+              "environment": "flutter_test"
+            }
+          ],
+          "accessibility": [
+            {
+              "ref": "packages/ui-flutter/test/blocks/shipment_tracking_block_test.dart:144-178",
+              "environment": "flutter_test"
+            }
+          ],
+          "limitations": [
+            "interaction tested headless only (flutter_test), not observed in a browser or on a device",
             "accessibility tested headless only (flutter_test), not observed in a browser or on a device"
           ]
         }

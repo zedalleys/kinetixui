@@ -56,9 +56,20 @@ describe("business discovery index", () => {
   it("offers a business need only when something in it ships", () => {
     const ids = BUSINESS_NEEDS.map((d) => d.id);
     expect(ids).toEqual(expect.arrayContaining(["commerce", "travel-booking", "finance", "iot"]));
-    // planned end to end today: listing them would be a list of promises
-    expect(ids).not.toContain("healthcare");
-    expect(ids).not.toContain("logistics");
+    // The rule, derived rather than named. This used to pin "healthcare" and "logistics" as absent,
+    // which was a snapshot of a day when every row in them was planned — M5.26 gave each a shipping
+    // block, and a listed name would have had to be deleted to let that through. What the test is
+    // actually for is that a need is offered only when something in it ships, so it asks exactly that
+    // of every domain in the index, and nothing about which domains those happen to be.
+    const shipping = (d: Domain) => d.counts.existing + d.counts.partial > 0;
+    for (const d of DOMAINS) expect(ids.includes(d.id), `${d.id}: offered=${ids.includes(d.id)}, shipping=${shipping(d)}`).toBe(shipping(d));
+    expect(DOMAINS.some(shipping)).toBe(true);
+    // Every domain ships something as of M5.26, so the filter removes nothing today and observing the
+    // real list cannot tell whether it still works. The control supplies the case the data no longer
+    // has: a registered domain with nothing in it must not be offered. Without this, the assertion
+    // above would pass just as well against a filter that returned everything.
+    const nothingShips = { ...DOMAINS[0]!, id: "kx-control-domain", counts: { existing: 0, partial: 0, planned: 3 } };
+    expect([...DOMAINS, nothingShips].filter(shipping).map((d) => d.id)).not.toContain("kx-control-domain");
   });
 
   it("puts every discovery page in the sitemap's route list", () => {
@@ -141,7 +152,12 @@ describe("catalogue facets", () => {
     for (const o of facets.capabilities)
       expect(Object.values(facets.bySlug).some((b) => b.capabilities.includes(o.id)), o.id).toBe(true);
     for (const o of facets.domains) expect(Object.values(facets.bySlug).some((b) => b.domains.includes(o.id)), o.id).toBe(true);
-    expect(facets.domains.map((d) => d.id)).not.toContain("healthcare");
+    // The line above IS the rule; "healthcare" was named here as an example of a domain that had no
+    // block, and M5.26 gave it two. Asserting the converse keeps the example's point without pinning a
+    // name: a domain no block reaches is not offered as a block filter.
+    const reached = new Set(Object.values(facets.bySlug).flatMap((b) => b.domains));
+    for (const d of DOMAINS) expect(facets.domains.some((o) => o.id === d.id), d.id).toBe(reached.has(d.id));
+    expect(DOMAINS.some((d) => !reached.has(d.id))).toBe(true);
   });
 
   it("does not offer unclassified as a layer filter", () => {
