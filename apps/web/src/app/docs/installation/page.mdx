@@ -142,10 +142,10 @@ not already have them:
 
   **The mismatch is silent, which is why it is worth a callout.** With react-is 19 under React 18, the
   install reports success, `tsc` exits 0 and `vite build` exits 0, and a chart whose `<Cell>`s come from a
-  wrapped map renders with its fills dropped — we measured **0 of 3** where 3 is correct. A chart built from
-  a plain array of `<Cell>` is unaffected, so the symptom appears and disappears with the shape of your own
-  code. Measured on npm 10.9.4, pnpm 10.28.0, Bun 1.4.4, Yarn 1.22.22 and Yarn 4.18.1 against recharts
-  3.11.0, with `node scripts/adoption/react-consumer.mjs`. Yarn 4 also refuses a version published in the
+  wrapped map renders with **every one of its cell fills dropped** — we measured none of the three where all
+  three are correct. A chart built from a plain array of `<Cell>` is unaffected, so the symptom appears and
+  disappears with the shape of your own code. Measured on npm 10.9.4, pnpm 10.28.0, Bun 1.4.4, Yarn 1.22.22
+  and Yarn 4.18.1 against recharts 3.11.0, with `node scripts/adoption/react-consumer.mjs`. Yarn 4 also refuses a version published in the
   last week by default (`npmMinimalAgeGate`), so a brand-new KinetixUI release needs
   `yarn config set npmMinimalAgeGate 0` or a few days' patience.
 </Callout>
