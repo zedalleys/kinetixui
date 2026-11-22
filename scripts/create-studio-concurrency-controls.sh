@@ -104,7 +104,7 @@ arm_signal() {
         local p; p="$(cat "$pidfile" 2>/dev/null)"
         [ -n "$p" ] && kill -"$sig" "$p" 2> /dev/null ) &
       local timer=$!
-      ISOLATED_EVIDENCE="$out/w" NO_DEV_SERVER=1 \
+      ISOLATED_EVIDENCE="$out/w" NO_DEV_SERVER=1 NO_WORKSPACE_INPUTS=1 \
         setsid --wait bash -c 'echo $$ > "$1"; exec bash "$2" "CMD:true"' _ "$pidfile" "$ISO" \
         > "$out/w/run.log" 2>&1
       rc=$?
@@ -302,13 +302,94 @@ arm_index() {
   stray
 }
 
+# =================================================================================================
+arm_linkage() {
+  say "-- linkage: a write through the worktree must not reach the candidate ----------"
+  local out="$WORK/linkage"; mkdir -p "$out/b"
+  # THE INPUTS ARE BORROWED, AND BORROWED USED TO MEAN SHARED. `cp -al` gave the worktree the
+  # candidate's own inodes for node_modules and packages/*/dist, so an append or a truncation
+  # through the worktree's path changed the CANDIDATE's bytes — and since those paths are
+  # gitignored, the postflight could not see it and printed `candidate unchanged`. Reported by the
+  # owner; reproduced here before the repair: one append changed packages/ui/dist/index.js in the
+  # candidate, 63 assertions still "held", exit 0.
+  local dist="$CAND/packages/ui/dist/index.js"
+  local nm="$CAND/node_modules/.modules.yaml"
+  if [ ! -f "$dist" ]; then
+    bad "linkage: $dist is not present, so this arm cannot test anything (build the packages first)"
+    return
+  fi
+  local dist_before nm_before dist_after nm_after
+  dist_before="$(sha256sum "$dist" | awk '{print $1}')"
+  nm_before="$([ -f "$nm" ] && sha256sum "$nm" | awk '{print $1}' || echo absent)"
+  printf '      candidate before: dist %s, node_modules %s\n' "${dist_before:0:12}" "${nm_before:0:12}"
+  ISOLATED_EVIDENCE="$out/b" NO_DEV_SERVER=1 bash "$ISO" \
+    "CMD:printf '/* written through the worktree */\n' >> packages/ui/dist/index.js; printf 'x' >> node_modules/.modules.yaml; true" \
+    > "$out/batch.log" 2>&1
+  local rc=$?
+  dist_after="$(sha256sum "$dist" | awk '{print $1}')"
+  nm_after="$([ -f "$nm" ] && sha256sum "$nm" | awk '{print $1}' || echo absent)"
+  printf '      candidate after:  dist %s, node_modules %s ; batch exit=%s\n' "${dist_after:0:12}" "${nm_after:0:12}" "$rc"
+  if [ "$dist_after" = "$dist_before" ] && [ "$nm_after" = "$nm_before" ]; then
+    ok "linkage: a write through the worktree into the built output and into node_modules left the candidate's bytes identical"
+  else
+    bad "linkage: THE CANDIDATE'S BYTES CHANGED — dist $([ "$dist_after" = "$dist_before" ] && echo same || echo CHANGED), node_modules $([ "$nm_after" = "$nm_before" ] && echo same || echo CHANGED)"
+  fi
+  # And the batch must have SAID so, because a correct outcome that the receipt cannot vouch for is
+  # the same fail-open in a better mood.
+  if grep -q 'gitignored inputs unchanged' "$out/batch.log"; then
+    ok "linkage: the batch signed the candidate's gitignored inputs and reported them unchanged"
+  else
+    bad "linkage: the batch's receipt does not vouch for the gitignored inputs — $(grep -m1 'gitignored inputs' "$out/batch.log" || echo 'no signature line at all')"
+  fi
+  if [ "$rc" -eq 0 ]; then
+    ok "linkage: the batch completed (exit 0) — the writes went to private copies, not to the candidate"
+  else
+    bad "linkage: the batch exited $rc; $(grep -m1 -E 'ABORTING|CHANGED' "$out/batch.log" || echo 'no reason printed')"
+  fi
+  stray
+}
+
+# =================================================================================================
+arm_marker() {
+  say "-- marker: no ownership marker, no registration, no command --------------------"
+  local out="$WORK/marker"; mkdir -p "$out/b"
+  # A batch with no ownership marker reads as ABANDONED, so the reaper may destroy its worktree
+  # while it runs. The marker write had its status unchecked, so a denied path left the batch
+  # registering a worktree, running its command and exiting 0 — reported by the owner. The marker
+  # is now published atomically and checked, before registration.
+  #
+  # DENY_MARKER points the publication at a path that cannot exist, so the real write fails with a
+  # real errno on the real code path, rather than the control asserting that a branch exists.
+  local sentinel="$out/COMMAND-RAN"
+  rm -f "$sentinel"
+  local before_reg; before_reg="$(git -C "$CAND" worktree list | grep -c 'kinetix-dw' || true)"
+  DENY_MARKER=1 NO_WORKSPACE_INPUTS=1 NO_DEV_SERVER=1 ISOLATED_EVIDENCE="$out/b" \
+    bash "$ISO" "CMD:touch $sentinel" > "$out/batch.log" 2>&1
+  local rc=$?
+  local after_reg markers ran
+  after_reg="$(git -C "$CAND" worktree list | grep -c 'kinetix-dw' || true)"
+  markers="$(ls -1 /tmp/kinetix-dw.*.owner 2> /dev/null | wc -l)"
+  ran="$([ -e "$sentinel" ] && echo yes || echo no)"
+  printf '      exit=%s registered=%s->%s markers=%s command_ran=%s\n' "$rc" "$before_reg" "$after_reg" "$markers" "$ran"
+  grep -m2 -E 'ABORTING|could not publish' "$out/batch.log" | sed 's/^/      /'
+  if [ "$rc" -ne 0 ] && [ "$after_reg" -eq "$before_reg" ] && [ "$ran" = "no" ] && [ "$markers" -eq 0 ]; then
+    ok "marker: a denied publication gave exit $rc, no registration, no command execution and no marker left behind"
+  else
+    bad "marker: exit=$rc registered=$before_reg->$after_reg command_ran=$ran markers=$markers — a batch without an owner got as far as $([ "$ran" = yes ] && echo 'running its command' || echo 'registering a worktree')"
+  fi
+  rm -f "$sentinel"
+  stray
+}
+
 requested=("$@")
-[ "${#requested[@]}" -eq 0 ] && requested=(signal ownership index)
+[ "${#requested[@]}" -eq 0 ] && requested=(signal ownership index linkage marker)
 for a in "${requested[@]}"; do
   case "$a" in
     signal) arm_signal ;;
     ownership) arm_ownership ;;
     index) arm_index ;;
+    linkage) arm_linkage ;;
+    marker) arm_marker ;;
     *) say "unknown arm: $a"; exit 2 ;;
   esac
   say ""

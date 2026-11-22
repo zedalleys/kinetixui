@@ -180,7 +180,33 @@ rule "disposable worktree"
 # removes such a file only when its pid is dead, and ours is this process.
 ALLOC="$(mktemp -d /tmp/kinetix-alloc.XXXXXXXX)"
 DW="/tmp/kinetix-dw.${ALLOC#/tmp/kinetix-alloc.}"
-printf '%s %s %s\n' "$$" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CAND" > "$DW.owner"
+# PUBLICATION, NOT A HOPEFUL WRITE. `printf … > "$DW.owner"` had its status unchecked: with the
+# path denied, the write failed and the batch went on to create the worktree, run the command and
+# exit 0 — a batch with no owner, which the reaper reads as abandoned and may destroy underneath
+# itself. Reported by the owner, reproduced here. The marker is now written to a temp name and
+# renamed into place, every step's status is checked, and the content is read back: a marker that
+# exists but is empty is not ownership either. Nothing is registered and no command runs unless
+# this succeeds.
+MARKER="$DW.owner"
+# DENY_MARKER points the publication at a path that cannot exist, so the REAL write fails with a
+# real errno on the REAL code path. It is the mandatory control for the rule above, in the same
+# spirit as LEAVE_MUTATION below, and it is never a product setting.
+[ -n "${DENY_MARKER:-}" ] && MARKER="$DW.owner/denied-by-control/marker"
+publish_marker() {
+  local tmp="$MARKER.tmp.$$"
+  printf '%s %s %s\n' "$$" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CAND" > "$tmp" 2> /dev/null || return 1
+  [ -s "$tmp" ] || { rm -f "$tmp"; return 1; }
+  mv -f "$tmp" "$MARKER" 2> /dev/null || { rm -f "$tmp"; return 1; }
+  [ -s "$MARKER" ] || return 1
+}
+if ! publish_marker; then
+  say "ABORTING: could not publish the ownership marker at $MARKER."
+  say "  A batch with no marker reads as abandoned, so the reaper could destroy it while it ran."
+  say "  Nothing was registered and no command was executed."
+  rmdir "$ALLOC" 2> /dev/null
+  ALLOC=""
+  exit 1
+fi
 rmdir "$ALLOC" || { say "ABORTING: could not release the allocation placeholder $ALLOC."; exit 1; }
 ALLOC=""
 if ! git worktree add --detach "$DW" "$HEAD_SHA" 2>&1 | sed 's/^/       /'; then
@@ -189,15 +215,30 @@ if ! git worktree add --detach "$DW" "$HEAD_SHA" 2>&1 | sed 's/^/       /'; then
 fi
 say "worktree at $DW, detached at $HEAD_SHA"
 
-# Hard-linked node_modules: same filesystem, so this costs ~1s and ~0 bytes. The relative symlinks
-# pnpm writes inside node_modules resolve WITHIN the copy, so the worktree's own packages/** are
-# what its app resolves — which is why mutations there would be visible too.
-for d in . apps/web packages/ui packages/tokens packages/iot packages/cli packages/create-preset packages/create-theme packages/ui-angular; do
-  if [ -d "$CAND/$d/node_modules" ] && [ ! -e "$DW/$d/node_modules" ]; then
-    cp -al "$CAND/$d/node_modules" "$DW/$d/node_modules" || {
-      say "ABORTING: could not hard-link $d/node_modules into the worktree."; exit 1; }
-  fi
-done
+# PRIVATE WRITABLE COPIES, because hard links are not isolation. `cp -al` was chosen for cost: the
+# same filesystem, about a second, about no bytes. But a hard link is the SAME INODE, so a writer
+# that truncates or appends in place through the worktree's path changes the CANDIDATE's bytes —
+# and because these inputs are gitignored, the integrity gate could not see it. Reproduced at the
+# owner's report: one append through the runner changed `packages/ui/dist/index.js` in the
+# candidate while the batch printed `candidate unchanged`, `63 assertions hold`, and exited 0.
+#
+# Copy-on-write would give isolation at near-zero cost, but `cp --reflink=always` fails here
+# ("Operation not supported" on ext4), so the honest option is a real copy: measured at 19.5 s and
+# 1.1 GB for the largest tree. That cost is paid per batch, and it is why an arm that needs no
+# workspace inputs says so with NO_WORKSPACE_INPUTS=1 rather than paying it fourteen times.
+#
+# The relative symlinks pnpm writes inside node_modules resolve WITHIN the copy (cp -a preserves
+# them as symlinks), so the worktree's own packages/** are still what its app resolves.
+if [ -n "${NO_WORKSPACE_INPUTS:-}" ]; then
+  say "workspace inputs NOT copied (NO_WORKSPACE_INPUTS=1): this batch cannot build or render"
+else
+  for d in . apps/web packages/ui packages/tokens packages/iot packages/cli packages/create-preset packages/create-theme packages/ui-angular; do
+    if [ -d "$CAND/$d/node_modules" ] && [ ! -e "$DW/$d/node_modules" ]; then
+      cp -a "$CAND/$d/node_modules" "$DW/$d/node_modules" || {
+        say "ABORTING: could not copy $d/node_modules into the worktree."; exit 1; }
+    fi
+  done
+fi
 # `packages/*/dist` is gitignored, so a fresh worktree has none — and `apps/web`'s vitest global
 # setup refuses to render components from an unstamped dist, which is the right guard and stops the
 # suite before a single test runs. The dist is hard-linked from the candidate, which is sound
@@ -206,11 +247,31 @@ done
 # measure stale output.
 for d in packages/ui packages/tokens packages/iot; do
   if [ -d "$CAND/$d/dist" ] && [ ! -e "$DW/$d/dist" ]; then
-    cp -al "$CAND/$d/dist" "$DW/$d/dist" || {
-      say "ABORTING: could not hard-link $d/dist into the worktree."; exit 1; }
+    cp -a "$CAND/$d/dist" "$DW/$d/dist" || {
+      say "ABORTING: could not copy $d/dist into the worktree."; exit 1; }
   fi
 done
-say "node_modules and built dist hard-linked into the worktree"
+say "node_modules and built dist copied into the worktree (private, writable, not linked)"
+
+# AND THE CLAIM IS CHECKED, not trusted. Prevention and detection are different things: the copies
+# above remove the mechanism that was reported, and this removes the blind spot that let it pass as
+# a success. `git` cannot speak for a gitignored path, so the batch records its own signature over
+# the inputs it borrowed — contents for the dist trees, which are small, and size and mtime for
+# node_modules, which is 1.2 GB and walks in 0.27 s — and the postflight requires it to be
+# unchanged. Any future write-through, by any mechanism, then fails the batch instead of printing
+# that the candidate is unchanged.
+inputs_signature() {
+  {
+    for d in packages/ui packages/tokens packages/iot; do
+      [ -d "$CAND/$d/dist" ] && (cd "$CAND/$d/dist" && find . -type f -exec sha256sum {} + | sort)
+    done
+    for d in . apps/web packages/ui packages/tokens packages/iot packages/cli packages/create-preset packages/create-theme packages/ui-angular; do
+      [ -d "$CAND/$d/node_modules" ] && find "$CAND/$d/node_modules" -printf '%p %s %T@\n' | sort
+    done
+  } 2> /dev/null | sha256sum | awk '{print $1}'
+}
+INPUTS_BEFORE="$(inputs_signature)"
+say "gitignored inputs signed: ${INPUTS_BEFORE:0:12}"
 
 # A worktree that is not a faithful copy of the candidate must stop the run BEFORE any mutation.
 if ! (cd "$DW" && bash "$INTEGRITY" assert); then
@@ -357,6 +418,15 @@ rule "candidate postflight"
 if ! bash "$INTEGRITY" verify "$SNAP"; then
   say "THE CANDIDATE CHANGED. This batch's certification evidence is invalid."
   problems=$((problems + 1))
+fi
+INPUTS_AFTER="$(inputs_signature)"
+if [ "$INPUTS_AFTER" != "$INPUTS_BEFORE" ]; then
+  say "THE CANDIDATE'S GITIGNORED INPUTS CHANGED  ${INPUTS_BEFORE:0:12} -> ${INPUTS_AFTER:0:12}"
+  say "  Something in this batch wrote through to the candidate's built output or node_modules."
+  say "  git cannot see these paths, so this batch's certification evidence is invalid."
+  problems=$((problems + 1))
+else
+  say "gitignored inputs unchanged: ${INPUTS_AFTER:0:12}"
 fi
 
 # Teardown BEFORE the result is computed, so that a cleanup failure is part of the verdict rather

@@ -121,6 +121,39 @@ open(p, "w").write(s)
 PY
 }
 
+# Back to `cp -al`: the worktree gets the candidate's own inodes, so a write through it reaches the
+# candidate. The inputs signature goes too, because it was added in the same repair and leaving it
+# would test only half of what was reverted.
+revert_linkage() {
+  python3 - "$1" <<'EDIT'
+import sys
+p = sys.argv[1] + "/scripts/create-studio-isolated-controls.sh"
+s = open(p).read()
+for want in ('cp -a "$CAND/$d/node_modules"', 'cp -a "$CAND/$d/dist"', 'INPUTS_AFTER="$(inputs_signature)"'):
+    assert want in s, f"anchor missing, cannot revert: {want}"
+s = s.replace('cp -a "$CAND/$d/node_modules"', 'cp -al "$CAND/$d/node_modules"')
+s = s.replace('cp -a "$CAND/$d/dist"', 'cp -al "$CAND/$d/dist"')
+s = s.replace('INPUTS_AFTER="$(inputs_signature)"', 'INPUTS_AFTER="$INPUTS_BEFORE"  # reverted: the inputs are not re-read')
+open(p, "w").write(s)
+EDIT
+}
+
+# Back to a single unchecked write. DENY_MARKER still resolves the path, so the denial is injectable
+# in both versions — otherwise the reverted code could not be put in the failing situation at all,
+# and the case would measure nothing.
+revert_marker() {
+  python3 - "$1" <<'EDIT'
+import sys
+p = sys.argv[1] + "/scripts/create-studio-isolated-controls.sh"
+s = open(p).read()
+start = s.index("publish_marker() {")
+end = s.index("rmdir \"$ALLOC\" ||", start)
+assert start < end, "anchors missing, cannot revert the marker publication"
+s = s[:start] + 'printf \'%s %s %s\\n\' "$$" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CAND" > "$MARKER" 2> /dev/null\n' + s[end:]
+open(p, "w").write(s)
+EDIT
+}
+
 run_case() {
   local label="$1" arm="$2" revert="$3" extra="${4:-}"
   local dw="$WORK/wt-$label" log="$WORK/$label.log"
@@ -185,13 +218,15 @@ run_case() {
 }
 
 requested=("$@")
-[ "${#requested[@]}" -eq 0 ] && requested=(signal ownership-sweep ownership-group index)
+[ "${#requested[@]}" -eq 0 ] && requested=(signal ownership-sweep ownership-group index linkage marker)
 for a in "${requested[@]}"; do
   case "$a" in
     signal)    run_case signal    signal    revert_signal    'SIGNAL_DELAYS="0.15 0.50"' ;;
     ownership-sweep) run_case ownership-sweep ownership revert_ownership_sweep ;;
     ownership-group) run_case ownership-group ownership revert_ownership_group ;;
     index)     run_case index     index     revert_index ;;
+    linkage)   run_case linkage   linkage   revert_linkage ;;
+    marker)    run_case marker    marker    revert_marker ;;
     *) say "unknown case: $a"; exit 2 ;;
   esac
 done
