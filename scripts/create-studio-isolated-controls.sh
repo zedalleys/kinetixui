@@ -78,6 +78,7 @@ teardown() {
       problems=$((problems + 1))
     fi
   fi
+  [ -n "$DW" ] && rm -rf "$DW.store"
   rm -f "$SNAP"
 }
 trap teardown EXIT INT TERM
@@ -147,7 +148,10 @@ rule "dev server on $PORT (serving the worktree, not the candidate)"
 # The dev server needs `KINETIX_CREATE_DEV=1` — exactly as `create-studio.yml` starts it. Without
 # it `/create/studio` renders an "in development" placeholder, and the API route refuses. Its store
 # directory is per-worktree, so two batches cannot share saved product state.
-DEV_DIR="$DW/.create-store"
+# OUTSIDE the worktree. Inside it, the store showed up as `?? .create-store/` and the residue check
+# correctly refused the batch — the harness had written into the disposable tree itself. The right
+# answer was to move the store, not to teach the check to ignore untracked files.
+DEV_DIR="$DW.store"
 mkdir -p "$DEV_DIR"
 setsid env KINETIX_CREATE_DEV=1 KINETIX_CREATE_DEV_DIR="$DEV_DIR" \
   bash -c "cd '$DW/apps/web' && exec npx next dev --hostname 127.0.0.1 -p $PORT" \
@@ -190,8 +194,14 @@ for runner in "$@"; do
     label="$(printf 'step%02d' "$step")"
     log="$EVIDENCE/$label.log"
     rule "$label: $cmd"
+    # Both fixture names, deliberately. The vitest step that WRITES the export fixture reads
+    # KINETIX_CREATE_EXPORT_FIXTURE; the gates that READ it take CREATE_EXPORT_FIXTURE. Forwarding
+    # only the second left the fixture directory empty, the consumer page served 500s, and the M1
+    # gate timed out on "Continue" — which I first misattributed to machine load.
     ( cd "$DW" && CREATE_BASE="http://127.0.0.1:$PORT" KINETIX_CREATE_DEV=1 \
-        CREATE_EXPORT_FIXTURE="${CREATE_EXPORT_FIXTURE:-}" bash -lc "$cmd" ) > "$log" 2>&1
+        CREATE_EXPORT_FIXTURE="${CREATE_EXPORT_FIXTURE:-}" \
+        KINETIX_CREATE_EXPORT_FIXTURE="${CREATE_EXPORT_FIXTURE:-}" \
+        CREATE_REQUIRE_FIXTURE="${CREATE_REQUIRE_FIXTURE:-}" bash -lc "$cmd" ) > "$log" 2>&1
     status=$?
     tail -6 "$log" | sed 's/^/       /'
   else
