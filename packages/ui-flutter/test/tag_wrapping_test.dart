@@ -264,6 +264,65 @@ void main() {
     });
   });
 
+  group('intrinsic sizing: a parent may ask the tag how wide it wants to be', () {
+    // Added after Codex's exact-head review of `2415c61`, which was right: the first version of the
+    // wrapping fix wrapped the whole tag in a `LayoutBuilder` to choose between a flexible and an
+    // inflexible label. `LayoutBuilder` THROWS when asked for an intrinsic dimension — and with
+    // assertions disabled returns zero instead, which is worse — so a tag under any intrinsic-sizing
+    // parent broke on a layout that had worked before.
+    //
+    // The guard was also unnecessary. `RenderFlex` permits a LOOSE flexible child under unbounded
+    // constraints when `mainAxisSize` is `min`; its assertion fires only for `MainAxisSize.max` or a
+    // tight fit, and `Flexible` defaults to loose. The unbounded group above is the evidence for that
+    // half: it passes with the label unconditionally flexible.
+    //
+    // These are the cases that would have caught the regression, and they are the reason the builder
+    // is gone rather than merely suspected.
+    final Map<String, Widget Function(Widget tag)> intrinsic = <String, Widget Function(Widget)>{
+      'IntrinsicWidth': (Widget tag) => IntrinsicWidth(child: tag),
+      'IntrinsicHeight around a row of tags': (Widget tag) => IntrinsicHeight(
+            child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[tag]),
+          ),
+      'a Table column sized to its contents': (Widget tag) => Table(
+            defaultColumnWidth: const IntrinsicColumnWidth(),
+            children: <TableRow>[
+              TableRow(children: <Widget>[tag]),
+            ],
+          ),
+    };
+
+    for (final MapEntry<String, Widget Function(Widget)> entry in intrinsic.entries) {
+      testWidgets('${entry.key} does not throw, at 200% text', (WidgetTester tester) async {
+        setPhone(tester);
+        final List<String> overflows = await pumpCollectingOverflows(
+          tester,
+          host(entry.value(const KinetixTag(label)), textScale: 2.0),
+        );
+
+        // The assertion that matters is this one. A `LayoutBuilder` here throws
+        // "LayoutBuilder does not support returning intrinsic dimensions".
+        expect(tester.takeException(), isNull,
+            reason: 'asking the tag for an intrinsic dimension must not throw');
+        expect(overflows, isEmpty, reason: overflows.join('\n\n'));
+        expect(find.text(label), findsOneWidget);
+      });
+    }
+
+    testWidgets('IntrinsicWidth gives a short tag exactly the width it wants',
+        (WidgetTester tester) async {
+      setPhone(tester);
+      // Not just "does not throw": the intrinsic width must be the RIGHT width. With assertions
+      // disabled a `LayoutBuilder` reports zero rather than throwing, which would make a tag under
+      // this parent collapse silently — so the size is asserted, not only the absence of an exception.
+      final Size single = await probeSingleLineSize(tester, 'Paid');
+      await tester.pumpWidget(host(const IntrinsicWidth(child: KinetixTag('Paid'))));
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.byType(KinetixTag)), single);
+    });
+  });
+
   group('every variant, both themes, both directions', () {
     // The wrapping change is in the shared build method, so it applies to all five variants and both
     // brightnesses at once — including `outline`, the only one that draws a border and so the only one
