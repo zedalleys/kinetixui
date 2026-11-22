@@ -152,17 +152,40 @@ fi
 say "serving /create/studio from the disposable worktree"
 
 # --- run the runners inside the worktree ---------------------------------------------------------
+# Each argument is either a runner in `scripts/`, or `CMD:<shell command>` to run in the pristine
+# worktree — which is how a regression matrix gets measured on a checkout that nothing has touched.
+# Every step writes one line to the matrix receipt: the command, its exit status and its evidence
+# file, so a later claim about this batch can be checked against what actually ran.
+MATRIX="$EVIDENCE/matrix-$(date -u +%Y%m%dT%H%M%SZ).tsv"
+printf 'commit\tstep\tcommand\texit\tevidence\n' > "$MATRIX"
+step=0
 for runner in "$@"; do
-  base="$(basename "$runner")"
-  log="$EVIDENCE/${base%.sh}-isolated.log"
-  rule "$base"
-  ( cd "$DW" && CREATE_BASE="http://127.0.0.1:$PORT" KINETIX_CREATE_DEV=1 \
-      CONTROL_ONLY="${CONTROL_ONLY:-}" bash "$DW/scripts/$base" ) > "$log" 2>&1
-  status=$?
-  grep -E '^CONTROL (PASS|FAILED|BROKEN)|^controls with problems|restored tree|tree restored|file restored|CONTROL_ONLY' "$log" | sed 's/^/       /'
+  step=$((step + 1))
+  if [ "${runner#CMD:}" != "$runner" ]; then
+    cmd="${runner#CMD:}"
+    label="$(printf 'step%02d' "$step")"
+    log="$EVIDENCE/$label.log"
+    rule "$label: $cmd"
+    ( cd "$DW" && CREATE_BASE="http://127.0.0.1:$PORT" KINETIX_CREATE_DEV=1 \
+        CREATE_EXPORT_FIXTURE="${CREATE_EXPORT_FIXTURE:-}" bash -lc "$cmd" ) > "$log" 2>&1
+    status=$?
+    tail -6 "$log" | sed 's/^/       /'
+  else
+    base="$(basename "$runner")"
+    cmd="scripts/$base"
+    log="$EVIDENCE/${base%.sh}-isolated.log"
+    rule "$base"
+    ( cd "$DW" && CREATE_BASE="http://127.0.0.1:$PORT" KINETIX_CREATE_DEV=1 \
+        CONTROL_ONLY="${CONTROL_ONLY:-}" bash "$DW/scripts/$base" ) > "$log" 2>&1
+    status=$?
+    grep -E '^CONTROL (PASS|FAILED|BROKEN)|^controls with problems|restored tree|tree restored|file restored|CONTROL_ONLY' "$log" | sed 's/^/       /'
+  fi
   say "       exit=$status   evidence: $log"
+  printf '%s\t%s\t%s\t%s\t%s\n' "$HEAD_SHA" "$step" "$cmd" "$status" "$log" >> "$MATRIX"
   [ "$status" -eq 0 ] || problems=$((problems + 1))
 done
+say ""
+say "matrix receipt: $MATRIX"
 
 # --- the mandatory negative control on THIS script ------------------------------------------------
 if [ -n "${LEAVE_MUTATION:-}" ]; then
