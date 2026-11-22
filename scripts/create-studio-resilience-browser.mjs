@@ -191,8 +191,10 @@ try {
       // wait rather than the defect.
       await page.waitForFunction(() => ((document.querySelector('.create-studio [role="alert"]')?.textContent ?? "").trim().length > 0), { timeout: 20_000 });
       const alert = (await studio.getByRole("alert").first().innerText()).replace(/\s+/g, " ");
+      // This order matters: the control for this behaviour restores the browser's own message, and
+      // the assertion that names THAT must be the one that fires.
+      assert.doesNotMatch(alert, /Failed to fetch/i, `a transport failure must not surface the browser's own message, read: ${alert.slice(0, 180)}`);
       assert.match(alert, /Nothing was saved/i, `a transport failure must say nothing was saved, read: ${alert.slice(0, 180)}`);
-      assert.doesNotMatch(alert, /Failed to fetch/i, "a transport failure must not surface the browser's own message");
       const state = await studio.locator(".studio-save-state").innerText();
       assert.match(state, /Save failed/, `the save state must report the failure, read: ${state}`);
       assert.doesNotMatch(state, /^Saved/, "a failed save must never read as saved");
