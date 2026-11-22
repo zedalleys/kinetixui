@@ -154,9 +154,13 @@ export function CreateStudio() {
   // written by several unrelated effects — the draft-storage one among them — and in M5.22 it
   // overwrote this verdict within seconds of the check that produced it.
   const [checked, setChecked] = React.useState("");
-  // What the last save attempt sent, kept so an unconfirmed attempt can be RECONCILED against the
-  // stored document instead of guessed at. Cleared once the question is settled either way.
-  const pendingSave = React.useRef<{ serialized: string; baseRevision: number } | null>(null);
+  // Every save attempt whose outcome is still unknown, oldest first, kept so they can be
+  // RECONCILED against the stored document instead of guessed at. A LIST, not one attempt: after a
+  // lost acknowledgement the user may edit and try again, and each of those attempts could be the
+  // one that committed. Keeping only the latest made reconciliation compare the store against the
+  // wrong payload and report that another writer had been at work when nobody had (Codex, M5.22).
+  // Cleared the moment the question is settled either way, so it cannot grow across a session.
+  const pendingSaves = React.useRef<{ serialized: string; baseRevision: number }[]>([]);
   const [recovered, setRecovered] = React.useState(false);
   const [focusIndex, setFocusIndex] = React.useState(0);
   const [fieldDrafts, setFieldDrafts] = React.useState<Record<string, string>>({});
@@ -262,7 +266,7 @@ export function CreateStudio() {
       setProduct(p); setHistory(newHistory(p.doc)); setSaved(serializeDocument(p.doc)); setPageId(p.doc.pages[0].id);
       draftWriter.current = null; recoveredCopy.current = null;
       setDraftBase(null); setDraftChoices([]); setFieldDrafts({});
-      setSaveOutcome("none"); pendingSave.current = null; setChecked(""); setRecovered(false); setNameDraft(null); setMoveTarget(""); setMoveIndex("end");
+      setSaveOutcome("none"); pendingSaves.current = []; setChecked(""); setRecovered(false); setNameDraft(null); setMoveTarget(""); setMoveIndex("end");
       setNotice("");
       try {
         if (account && draftsFor(account, p).length) setNotice("A draft from this browser is available. Use Recover draft to review it before saving.");
@@ -279,7 +283,7 @@ export function CreateStudio() {
       setProduct(p); setHistory(newHistory(p.doc)); setSaved(serializeDocument(p.doc)); setPageId(p.doc.pages[0].id);
       draftWriter.current = null; recoveredCopy.current = null;
       setDraftBase(null); setDraftChoices([]); setFieldDrafts({});
-      setSaveOutcome("none"); pendingSave.current = null; setChecked(""); setRecovered(false); setNameDraft(null); setMoveTarget(""); setMoveIndex("end");
+      setSaveOutcome("none"); pendingSaves.current = []; setChecked(""); setRecovered(false); setNameDraft(null); setMoveTarget(""); setMoveIndex("end");
       createKey.current = null; setAccount(await request<Account>());
       setNotice("Product created. Add a component from the library, then edit it in Properties.");
     } catch (e) { if (e instanceof ApiError && e.code === "PRODUCT_LIMIT_REACHED") { dialogReturnFocus.current = newProductButton.current; setUpgrade(true); } else setError((e as Error).message); }
@@ -289,7 +293,7 @@ export function CreateStudio() {
     if (!history || !product || !account || readOnly || busy || staleDraft || Object.keys(fieldDrafts).length) return;
     setBusy(true); setSaving(true); setError("");
     const payload = history.doc;
-    pendingSave.current = { serialized: serializeDocument(payload), baseRevision: draftBase ?? product.revision };
+    const attempt = { serialized: serializeDocument(payload), baseRevision: draftBase ?? product.revision };
     // A new attempt replaces the question the last verdict answered.
     setChecked("");
     try {
@@ -298,7 +302,7 @@ export function CreateStudio() {
       // would report a save that SUCCEEDED as a failure, which is the one thing the save path must
       // never do.
       const p = await request<Product>({ operation: "save", id: product.id, revision: draftBase ?? product.revision, doc: payload });
-      setProduct(p); setSaved(serializeDocument(payload)); setDraftBase(null); setSaveOutcome("confirmed"); pendingSave.current = null; setRecovered(false); setNotice("Saved to this computer's local server.");
+      setProduct(p); setSaved(serializeDocument(payload)); setDraftBase(null); setSaveOutcome("confirmed"); pendingSaves.current = []; setRecovered(false); setNotice("Saved to this computer's local server.");
       try {
         if (draftWriter.current && latest.current && serializeDocument(latest.current.doc) === serializeDocument(payload)) localStorage.removeItem(keyFor(account, product.id) + ":" + draftWriter.current);
       } catch { /* The server already confirmed the save. */ }
@@ -311,7 +315,11 @@ export function CreateStudio() {
       // overwriting the newer document.
       const retryConflict = outcome === "rejected" && e instanceof ApiError && e.code === "REVISION_CONFLICT" && saveOutcome === "unconfirmed";
       setSaveOutcome(retryConflict ? "unconfirmed" : outcome);
-      if (outcome === "rejected" && !retryConflict) pendingSave.current = null;
+      // An unconfirmed attempt joins the open questions. A settled rejection closes all of them,
+      // because a coded rejection proves the store was not touched by THIS attempt — but it says
+      // nothing about an earlier uncertain one, which is why a conflict on a retry is excluded.
+      if (outcome === "unconfirmed") pendingSaves.current = [...pendingSaves.current, attempt].slice(-20);
+      else if (!retryConflict) pendingSaves.current = [];
       setError(retryConflict
         ? "The stored revision has moved on since that unconfirmed save, so this retry was refused rather than overwriting it. Your earlier save may have committed. Check the stored version."
         : (e as Error).message);
@@ -329,29 +337,50 @@ export function CreateStudio() {
    * including anything they typed after the uncertain save — is untouched in every branch.
    */
   async function reconcile() {
-    if (!product || busy || !pendingSave.current) return;
-    const attempt = pendingSave.current;
+    if (!product || busy || !pendingSaves.current.length) return;
+    const attempts = pendingSaves.current;
+    // The revision the store was at when the uncertainty began. Only the FIRST open attempt knows
+    // it: a later one carries whatever the editor believed by then.
+    const floor = attempts[0].baseRevision;
     setBusy(true);
     try {
       const stored = readProduct(await request<Product>(undefined, product.id));
-      setProduct(stored);
-      if (serializeDocument(stored.doc) === attempt.serialized) {
-        // The stored document IS what that save sent: it committed, and only the reply was lost.
-        setSaved(attempt.serialized); setDraftBase(null); setSaveOutcome("confirmed"); setRecovered(false);
-        pendingSave.current = null;
+      const storedSerialized = serializeDocument(stored.doc);
+      const committed = attempts.find(item => item.serialized === storedSerialized);
+      if (committed) {
+        // The stored document IS what one of those saves sent: it committed, and only the reply was
+        // lost. Adopting the stored revision is right here, because the work on screen is based on
+        // the document that is stored.
+        setProduct(stored);
+        setSaved(committed.serialized); setDraftBase(null); setSaveOutcome("confirmed"); setRecovered(false);
+        pendingSaves.current = [];
         setError("");
         setChecked(`Checked: that save did commit. The stored version is revision ${stored.revision} and matches what was sent, so nothing was lost. Anything you changed afterwards is still unsaved.`);
-      } else if (stored.revision === attempt.baseRevision) {
+      } else if (stored.revision === floor) {
         // The store never moved, so nothing was written and a retry is the right next step.
+        setProduct(stored);
         setSaveOutcome("rejected");
-        pendingSave.current = null;
+        pendingSaves.current = [];
         setError("");
         setChecked(`Checked: that save did not commit. The stored version is still revision ${stored.revision}, so your work is unsaved and can be saved again.`);
       } else {
-        // Something else wrote. Do not guess, and do not offer a retry that would overwrite it.
+        // Something else wrote.
+        //
+        // Adopting its revision while keeping the local document on screen would be the worst
+        // outcome of all: `staleDraft` would stay false for an ordinary edit, Save would stay
+        // enabled, and the next save would carry the newly adopted revision and OVERWRITE that
+        // writer's work instead of being refused — the one thing the save path must never do. The
+        // browser draft would be persisted against that foreign revision too.
+        //
+        // So the editor records the revision this work is actually based on as its draft base,
+        // which is the mechanism that already exists for exactly this state: `staleDraft` becomes
+        // true, Save is unavailable, the chip reads "Draft revision conflict", and the Download
+        // draft / Reopen saved affordances appear. Found by Codex at `1e21261e`.
+        setProduct(stored);
+        setDraftBase(floor);
         setSaveOutcome("unconfirmed");
         setChecked(`Checked: the stored version is revision ${stored.revision}, and it is not what that save sent.`);
-        setError(`The stored version is revision ${stored.revision} and does not match what that save sent, so something else has written to this product. Download your draft before reopening the saved version, because reopening replaces what is on screen.`);
+        setError(`The stored version is revision ${stored.revision} and does not match what that save sent, so something else has written to this product. Your work is based on revision ${floor}, so saving over it is unavailable. Download your draft, then reopen the saved version — reopening replaces what is on screen.`);
       }
     } catch (e) {
       // Still unconfirmed: a check that could not be made settles nothing.

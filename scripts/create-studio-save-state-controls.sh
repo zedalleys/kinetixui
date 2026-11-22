@@ -143,6 +143,23 @@ control "the reconciliation verdict shares the volatile announcement slot" \
   '        setNotice(`Checked: that save did not commit.' \
   "must not be overwritten by an unrelated notice"
 
+# Codex's P1 at `1e21261e`. Adopting a foreign writer's revision while keeping the local document on
+# screen leaves Save enabled against a revision this work was never based on, and the next save
+# overwrites that writer silently. Removing the conflict base is removing the only thing that stops
+# it.
+control "a foreign write during uncertainty leaves saving enabled over it" \
+  '        setDraftBase(floor);' \
+  '' \
+  "saving over a foreign write must be unavailable"
+
+# Codex's P2 at `1e21261e`. Keeping only the latest attempt makes reconciliation compare the store
+# against the refused retry, so it reports another writer where there was none and cannot confirm
+# the save that actually committed.
+control "only the latest uncertain attempt is remembered" \
+  '      if (outcome === "unconfirmed") pendingSaves.current = [...pendingSaves.current, attempt].slice(-20);' \
+  '      if (outcome === "unconfirmed") pendingSaves.current = [attempt];' \
+  "the check must report that the earlier save committed"
+
 echo "== restored tree must pass =="
 restore_all
 if git diff --quiet -- "$STUDIO"; then

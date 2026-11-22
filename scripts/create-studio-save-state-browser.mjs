@@ -85,6 +85,7 @@ async function verdictText(studio) {
   if (await dedicated.count()) return (await dedicated.innerText()).replace(/\s+/g, " ");
   return (await studio.locator(".studio-announcement").innerText()).replace(/\s+/g, " ");
 }
+
 /**
  * Wait for a verdict and return the text AS IT APPEARED.
  *
@@ -96,8 +97,13 @@ async function verdictText(studio) {
  */
 const verdictVisible = async (page) => {
   const handle = await page.waitForFunction(() => {
-    const text = ((document.querySelector(".studio-checked")?.textContent ?? "") + " " + (document.querySelector(".studio-announcement")?.textContent ?? "")).replace(/\s+/g, " ").trim();
-    return /did commit|did not commit|could not be checked/i.test(text) ? text : false;
+    const text = [".studio-checked", ".studio-announcement", ".studio-error"]
+      .map((selector) => document.querySelector(selector)?.textContent ?? "")
+      .join(" ").replace(/\s+/g, " ").trim();
+    // Every verdict opens with "Checked:"; the one case that cannot reach a verdict says the store
+    // could not be checked, and that one lives in the error region. All three regions are read so
+    // that moving a verdict produces a behavioural failure rather than a locator timeout.
+    return /Checked:|could not be checked/i.test(text) ? text : false;
   }, { timeout: 30_000 });
   return String(await handle.jsonValue());
 };
@@ -127,6 +133,21 @@ async function openSaved(context, name) {
   await page.waitForFunction(() => document.querySelector(".studio-save-state")?.textContent === "Saved locally", { timeout: 30_000 });
   return { page, studio };
 }
+
+/** Another writer, through the real route, behind the editor's back. */
+const writeElsewhere = (page, suffix) => page.evaluate(async (mark) => {
+  const list = await (await fetch("/api/create-studio", { cache: "no-store" })).json();
+  const id = list.products[0].id;
+  const product = await (await fetch("/api/create-studio?id=" + encodeURIComponent(id), { cache: "no-store" })).json();
+  const doc = JSON.parse(JSON.stringify(product.doc));
+  doc.name = doc.name + mark;
+  const reply = await fetch("/api/create-studio", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ operation: "save", id, revision: product.revision, doc }),
+  });
+  const body = await reply.json();
+  return { status: reply.status, revision: body.revision ?? body.code };
+}, suffix);
 
 /** Make one more edit, so there is something to save. */
 const edit = (studio) => studio.getByRole("button", { name: "Add Badge", exact: true }).click();
@@ -344,11 +365,21 @@ try {
     await assertUnconfirmed(page, "after the diverging retry");
     const alert = await alertText(studio);
     assert.match(alert, /moved on|newer revision/i, `the refusal must be explained, read: ${alert.slice(0, 200)}`);
+    // 4c. And the check must still recognise OUR earlier save, not mistake the refused retry for
+    // evidence of another writer. The editor keeps every attempt whose outcome is unknown; when it
+    // kept only the latest, this reported "something else has written to this product" with nobody
+    // else involved and the earlier payload sitting in the store (Codex, M5.22).
+    await studio.getByRole("button", { name: "Check the stored version" }).click();
+    const retryVerdict = await verdictVisible(page);
+    assert.match(retryVerdict, /did commit/i, `the check must report that the earlier save committed, read: ${retryVerdict.slice(0, 220)}`);
+    assert.doesNotMatch(retryVerdict, /did not commit/i, "the check must not report the opposite of what the store holds");
+    const afterCheck = await stored(page);
+    assert.equal(afterCheck.revision, committed2.revision, "checking must not write");
     readings.retryAfterUncertainty = {
       revisions: [before.revision, committed.revision, afterReplay.revision, committed2.revision, afterRetry.revision],
-      replayState, divergingState: await chip(page), alert: alert.slice(0, 220),
+      replayState, divergingState: alert.slice(0, 120), retryVerdict: retryVerdict.slice(0, 220),
     };
-    pass("a replay the server recognises resolves an uncertain save to the truth, and a diverging retry is refused rather than overwriting");
+    pass("a replay the server recognises resolves an uncertain save to the truth, a diverging retry is refused rather than overwriting, and the check still recognises the earlier save");
     await context.close();
   }
 
@@ -358,19 +389,7 @@ try {
     const { page, studio } = await openSaved(context, "Conflict");
     const before = await stored(page);
     // Another writer, through the real route, behind the editor's back.
-    const elsewhere = await page.evaluate(async () => {
-      const list = await (await fetch("/api/create-studio", { cache: "no-store" })).json();
-      const id = list.products[0].id;
-      const product = await (await fetch("/api/create-studio?id=" + encodeURIComponent(id), { cache: "no-store" })).json();
-      const doc = JSON.parse(JSON.stringify(product.doc));
-      doc.name = doc.name + " (written elsewhere)";
-      const reply = await fetch("/api/create-studio", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ operation: "save", id, revision: product.revision, doc }),
-      });
-      const body = await reply.json();
-      return { status: reply.status, revision: body.revision ?? body.code };
-    });
+    const elsewhere = await writeElsewhere(page, " (written elsewhere)");
     assert.equal(elsewhere.status, 200, `the behind-the-back save must succeed for this case to mean anything, read: ${JSON.stringify(elsewhere)}`);
     assert.equal(elsewhere.revision, before.revision + 1, `the other writer must have advanced the revision, read: ${JSON.stringify(elsewhere)}`);
     await edit(studio);
@@ -442,6 +461,51 @@ try {
     assert.match(held, /did not commit/i, `the verdict must not be overwritten by an unrelated notice, read: ${held.slice(0, 200)}`);
     readings.reconciledNotCommitted = { verdict: verdict.slice(0, 220), state: settled, revision: before.revision };
     pass("reconciliation proves a save that did not commit, and only then is it called a failure");
+    await context.close();
+  }
+
+  // ---------- 9. A foreign write during uncertainty must never become a licence to overwrite ----
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const { page, studio } = await openSaved(context, "Foreign write");
+    const before = await stored(page);
+    await edit(studio);
+    await context.route("**/api/create-studio", async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      await route.fetch();
+      await route.abort("connectionreset");
+    });
+    await saveAndSettle(studio, page);
+    await context.unroute("**/api/create-studio");
+    await assertUnconfirmed(page, "foreign write");
+    // Now somebody else stores something different, so the store holds neither the editor's
+    // document nor the revision the uncertainty began at.
+    const elsewhere = await writeElsewhere(page, " (foreign writer)");
+    assert.equal(elsewhere.status, 200, `the foreign write must succeed for this case to mean anything: ${JSON.stringify(elsewhere)}`);
+    const foreign = await stored(page);
+    assert.match(foreign.name ?? "", /foreign writer/, "the store must hold the other writer's document");
+
+    await studio.getByRole("button", { name: "Check the stored version" }).click();
+    const verdict = await verdictVisible(page);
+    assert.doesNotMatch(verdict, /did commit/i, `the check must not claim a commit when the store holds someone else's document, read: ${verdict.slice(0, 200)}`);
+
+    // The point of the case. Adopting the foreign revision while keeping the local document on
+    // screen would re-enable Save against a revision this work was never based on, and the next
+    // save would overwrite that writer silently. So saving must be unavailable, and a click must
+    // leave the store alone.
+    const state = await chip(page);
+    assert.match(state, /Draft revision conflict/, `work based on a superseded revision must say so, read: ${state}`);
+    const save = studio.getByRole("button", { name: "Save", exact: true });
+    assert.ok(await save.isDisabled(), "saving over a foreign write must be unavailable, not merely discouraged");
+    // Forced, so that a handler reachable past the disabled attribute would still be caught.
+    await save.click({ force: true }).catch(() => {});
+    await page.waitForTimeout(2_000);
+    const afterSave = await stored(page);
+    assert.equal(afterSave.revision, foreign.revision, `a save after a foreign write must not advance the revision, read ${foreign.revision} → ${afterSave.revision}`);
+    assert.match(afterSave.name ?? "", /foreign writer/, "a save after a foreign write must not overwrite the other writer's document");
+    assert.ok(await studio.getByRole("button", { name: "Download draft" }).first().isEnabled(), "the local work must still be downloadable");
+    readings.foreignWrite = { revisions: [before.revision, foreign.revision, afterSave.revision], verdict: verdict.slice(0, 220), state, storedName: afterSave.name };
+    pass("a foreign write during uncertainty blocks saving over it, and a save attempt leaves the other writer's document intact");
     await context.close();
   }
 
