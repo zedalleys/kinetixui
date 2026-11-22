@@ -199,4 +199,39 @@ void main() {
     await tester.pumpAndSettle();
     expect(pressed, 1);
   });
+
+  // kx-verify-block: accessibility
+  testWidgets('nothing is clipped away at a phone width with 200% text',
+      (WidgetTester tester) async {
+    // WCAG 1.4.4. The default 800x600 test surface cannot see this class of defect at all: the sibling
+    // booking block overflowed by 166px here while every one of its other tests passed. Capturing the
+    // error details rather than only the exception means this red names the widget that caused it.
+    tester.view.physicalSize = const Size(390, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final List<String> overflows = <String>[];
+    final void Function(FlutterErrorDetails)? previousOnError = FlutterError.onError;
+    FlutterError.onError = (FlutterErrorDetails details) => overflows.add(details.toString());
+    try {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: KinetixTheme(
+            brightness: Brightness.light,
+            child: Builder(
+              builder: (BuildContext context) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(2.0)),
+                child: const Scaffold(body: SingleChildScrollView(child: ShipmentTrackingBlock())),
+              ),
+            ),
+          ),
+        ),
+      );
+    } finally {
+      FlutterError.onError = previousOnError;
+    }
+
+    expect(overflows, isEmpty, reason: overflows.join('\n\n'));
+    expect(tester.takeException(), isNull);
+  });
 }

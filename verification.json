@@ -12475,17 +12475,17 @@
           ],
           "interaction": [
             {
-              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart:297-336",
+              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart:305-344",
               "environment": "flutter_test"
             }
           ],
           "accessibility": [
             {
-              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart:271-296",
+              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart:279-304",
               "environment": "flutter_test"
             },
             {
-              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart:337-430",
+              "ref": "packages/ui-flutter/test/blocks/appointment_booking_block_test.dart:345-438",
               "environment": "flutter_test"
             }
           ],
@@ -12602,6 +12602,10 @@
             {
               "ref": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart:196-220",
               "environment": "flutter_test"
+            },
+            {
+              "ref": "packages/ui-flutter/test/blocks/vitals_summary_block_test.dart:221-256",
+              "environment": "flutter_test"
             }
           ],
           "limitations": [
@@ -12714,6 +12718,10 @@
           "accessibility": [
             {
               "ref": "packages/ui-flutter/test/blocks/shipment_tracking_block_test.dart:146-180",
+              "environment": "flutter_test"
+            },
+            {
+              "ref": "packages/ui-flutter/test/blocks/shipment_tracking_block_test.dart:203-238",
               "environment": "flutter_test"
             }
           ],

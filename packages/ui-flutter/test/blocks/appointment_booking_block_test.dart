@@ -217,21 +217,29 @@ class _AppointmentBookingBlockState extends State<AppointmentBookingBlock> {
           ),
           // Excluded, because the radio above already carries exactly these words as its name. Without
           // this the time would be announced twice.
-          ExcludeSemantics(
-            child: Padding(
-              padding: const EdgeInsetsDirectional.only(start: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    slot.label,
-                    style: TextStyle(
-                      decoration: slot.unavailable ? TextDecoration.lineThrough : null,
+          //
+          // Expanded, so the words take the space left beside the radio and WRAP in it. Unflexed, this
+          // Column was measured at its unconstrained width and the row overflowed by 166px at 390 wide
+          // with 200% text — the card then clipped the time and its note away. The gate's own message
+          // named this Row; the first fix, wrapping the confirmation row, was necessary and addressed a
+          // different overflow in the same block.
+          Expanded(
+            child: ExcludeSemantics(
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(start: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      slot.label,
+                      style: TextStyle(
+                        decoration: slot.unavailable ? TextDecoration.lineThrough : null,
+                      ),
                     ),
-                  ),
-                  if (slot.note != null) Text(slot.note!),
-                  if (slot.unavailable) const Text('Unavailable'),
-                ],
+                    if (slot.note != null) Text(slot.note!),
+                    if (slot.unavailable) const Text('Unavailable'),
+                  ],
+                ),
               ),
             ),
           ),
