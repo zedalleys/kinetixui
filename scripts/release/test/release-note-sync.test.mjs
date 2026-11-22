@@ -30,7 +30,7 @@ const NOTE = {
 };
 
 /** A scratch repository holding the gate, the writer, one note and one activated page. */
-function sandbox({ note = NOTE, activate = true } = {}) {
+function sandbox({ note = NOTE, activate = true, advanceTo = null } = {}) {
   const dir = mkdtempSync(path.join(tmpdir(), "kinetix-note-sync-control-"));
   for (const sub of ["scripts/release", "packages/ui", "apps/web/src/lib", "release/notes"]) mkdirSync(path.join(dir, sub), { recursive: true });
   for (const f of ["check-release-note-sync.mjs", "version-release-meta.mjs"]) cpSync(path.join(repo, "scripts", f), path.join(dir, "scripts", f));
@@ -47,6 +47,10 @@ function sandbox({ note = NOTE, activate = true } = {}) {
     assert.equal(activated.status, 0, `could not activate the fixture: ${activated.stdout}${activated.stderr}`);
     assert.match(readFileSync(page, "utf8"), /version: "0\.28\.0"/);
   }
+  // Activation happens while the note's version IS the package version. `advanceTo` then moves the
+  // package on, which is what makes the activated note HISTORICAL — the state in which the writer
+  // can no longer restore its entry.
+  if (advanceTo) writeFileSync(path.join(dir, "packages/ui/package.json"), JSON.stringify({ version: advanceTo }));
   return { dir, page, noteFile: path.join(dir, `release/notes/${note.version}.json`) };
 }
 
@@ -74,7 +78,51 @@ describe("check:release-note-sync", () => {
       const run = check(dir);
       assert.equal(run.status, 1, run.stdout + run.stderr);
       assert.match(run.stderr, /no longer matches/);
-      assert.match(run.stderr, /delete the 0\.28\.0\s+entry from releases\.ts/s);
+      // 0.28.0 is still the package version here, so the regenerable branch must be the one printed.
+      assert.match(run.stderr, /0\.28\.0 is the version in packages\/ui\/package\.json, so it is regenerable/);
+      assert.match(run.stderr, /delete the\s+0\.28\.0 entry from releases\.ts/s);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  // The diagnostic used to prescribe delete-and-regenerate for EVERY version. `version-release-meta.mjs`
+  // reads its version from `packages/ui/package.json` and writes only when that version is missing from
+  // the history, so on any other version that advice removes a published entry and cannot put it back —
+  // and the gate then skips the note as 'not activated yet' and goes green. Both halves are asserted.
+  it("tells a historical note to be edited, not deleted and regenerated", () => {
+    const { dir, noteFile } = sandbox({ advanceTo: "0.29.0" });
+    try {
+      edit(noteFile, "painted by a nested span", "painted by the indicator itself");
+      const run = check(dir);
+      assert.equal(run.status, 1, run.stdout + run.stderr);
+      assert.match(run.stderr, /0\.28\.0 is NOT the version in packages\/ui\/package\.json \(0\.29\.0\)/);
+      assert.match(run.stderr, /deleting this entry would remove it\s+permanently/s);
+      assert.match(run.stderr, /Edit the entry in\s+releases\.ts to match the note instead/s);
+      assert.doesNotMatch(run.stderr, /so it is regenerable/);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  it("the repair it prescribes for a historical note is the only one that works", () => {
+    const { dir, page, noteFile } = sandbox({ advanceTo: "0.29.0" });
+    try {
+      edit(noteFile, "painted by a nested span", "painted by the indicator itself");
+      assert.equal(check(dir).status, 1, "the fixture must start red");
+
+      // The repair the OLD diagnostic prescribed: delete the entry, re-run the writer.
+      const before = readFileSync(page, "utf8");
+      const start = before.indexOf('  {\n    version: "0.28.0"');
+      assert.ok(start > 0, "the activated 0.28.0 entry is not where this control expects it");
+      const end = before.indexOf("\n  },\n", start) + "\n  },\n".length;
+      writeFileSync(page, before.slice(0, start) + before.slice(end));
+      const regen = spawnSync(process.execPath, ["scripts/version-release-meta.mjs"], { cwd: dir, encoding: "utf8" });
+
+      assert.doesNotMatch(
+        readFileSync(page, "utf8"),
+        /version: "0\.28\.0"/,
+        `the writer restored a historical entry, which would make the old advice sound (status ${regen.status})`,
+      );
+      const after = check(dir);
+      assert.equal(after.status, 0, "and the gate goes GREEN on the loss, which is why the advice was dangerous");
+      assert.match(after.stdout, /0 activated notes of 1/);
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 
