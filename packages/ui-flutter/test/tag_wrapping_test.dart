@@ -127,6 +127,40 @@ class UnwrappedTagReplica extends StatelessWidget {
       );
 }
 
+/// The pre-review tag, reproduced: the same `Row` and the same flexible label, wrapped in the
+/// `LayoutBuilder` that Codex's exact-head review of `2415c61` had removed.
+///
+/// It exists because "`IntrinsicWidth` does not throw" is a claim about an instrument as much as about
+/// the tag: it would pass just as well if nothing in this file could ever provoke an intrinsic-sizing
+/// failure. Injecting the removed form and REQUIRING it to throw is what makes those cases evidence.
+/// Retained as a standing control at the owner's direction, alongside [UnwrappedTagReplica], which is
+/// the same idea for bounded wrapping.
+class LayoutBuilderTagReplica extends StatelessWidget {
+  const LayoutBuilderTagReplica(this.label, {super.key});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: KinetixTheme.of(context).secondary,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              if (constraints.hasBoundedWidth)
+                Flexible(child: Text(label, textWidthBasis: TextWidthBasis.longestLine))
+              else
+                Text(label, textWidthBasis: TextWidthBasis.longestLine),
+            ],
+          ),
+        ),
+      );
+}
+
 void main() {
   // Two words, so wrapping has somewhere to break. A single long token could only be wrapped by
   // breaking mid-word, which is a different question from the one this file is about.
@@ -320,6 +354,23 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(tester.getSize(find.byType(KinetixTag)), single);
+    });
+
+    testWidgets('control: the removed LayoutBuilder form DOES break under IntrinsicWidth',
+        (WidgetTester tester) async {
+      setPhone(tester);
+      // Not collecting through `FlutterError.onError` here: this case wants the error to reach the
+      // test's own exception reporter, so `takeException()` returns it and its message can be read.
+      await tester.pumpWidget(host(const IntrinsicWidth(child: LayoutBuilderTagReplica(label))));
+      await tester.pump(const Duration(milliseconds: 50));
+
+      final Object? thrown = tester.takeException();
+      expect(thrown, isNotNull,
+          reason: 'the removed form must still break here, or the three cases above are claims about '
+              'an instrument that cannot fail');
+      expect(thrown.toString().toLowerCase(), contains('intrinsic'),
+          reason: 'and it must break FOR THE DOCUMENTED REASON — LayoutBuilder refusing to report an '
+              'intrinsic dimension — not for some unrelated reason that happens to throw');
     });
   });
 
