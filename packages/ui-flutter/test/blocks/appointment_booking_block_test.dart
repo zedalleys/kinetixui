@@ -345,22 +345,32 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: KinetixTheme(
-          brightness: Brightness.light,
-          child: Builder(
-            builder: (BuildContext context) => MediaQuery(
-              data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(2.0)),
-              child: const Scaffold(body: SingleChildScrollView(child: AppointmentBookingBlock())),
+    // The exception alone says only "A RenderFlex overflowed by N pixels": it does not say WHICH one, and
+    // this block has several horizontal rows. Capturing the details instead means a red here names the
+    // widget that caused it, which is the difference between a gate and a puzzle.
+    final List<String> overflows = <String>[];
+    final FlutterExceptionHandler? previousOnError = FlutterError.onError;
+    FlutterError.onError = (FlutterErrorDetails details) => overflows.add(details.toString());
+    try {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: KinetixTheme(
+            brightness: Brightness.light,
+            child: Builder(
+              builder: (BuildContext context) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(2.0)),
+                child: const Scaffold(body: SingleChildScrollView(child: AppointmentBookingBlock())),
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    } finally {
+      FlutterError.onError = previousOnError;
+    }
 
-    // An overflow is reported as a FlutterError, so an unwrapped row fails here rather than silently
-    // drawing a clipped sentence.
+    // Nothing may overflow: an overflow at this width and scale means content is being clipped away.
+    expect(overflows, isEmpty, reason: overflows.join('\n\n'));
     expect(tester.takeException(), isNull);
     final Finder reason = find.text('Choose a time to continue.');
     expect(reason, findsOneWidget);
