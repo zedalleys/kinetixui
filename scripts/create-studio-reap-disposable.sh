@@ -37,6 +37,17 @@ skipped=0
 # owner file, an owner that has gone, or a PID that has been reused by an unrelated process, which
 # only ever makes this MORE conservative — is treated as abandoned.
 announced=" "
+# Liveness without announcing or counting, so the group-safety test below can ask freely.
+owner_alive() {
+  local base owner pid
+  base="${1%.store}"
+  owner="$base.owner"
+  [ -f "$owner" ] || return 1
+  pid="$(awk 'NR==1{print $1}' "$owner" 2>/dev/null)"
+  [ -n "$pid" ] || return 1
+  kill -0 "$pid" 2>/dev/null
+}
+
 active() {
   local dw="$1" base owner pid
   # A batch's saved-product directory is the SIBLING `<worktree>.store`, and it carries no owner
@@ -86,7 +97,31 @@ kill_group() {
     kill "-$sig" "$pid" 2>/dev/null
     return
   fi
+  # A GROUP IS NOT A BATCH. Two orchestrators started from the same non-job-controlling shell
+  # share a process group, so a negative PID can reach a LIVE batch's processes even though its
+  # ownership marker is valid and the sweep above correctly spared its worktree. Measured: the
+  # reaper announced the live batch as skipped and then SIGTERMed its owner. The orchestrator now
+  # puts each batch in its own session, and this is the second lock: if any member of the group
+  # serves a live-owned worktree, the group is not wholly abandoned and only the single process is
+  # signalled.
+  if ! group_is_wholly_abandoned "$pgid"; then
+    printf 'REFUSED  group %s also holds a LIVE batch process — signalling pid %s alone\n' "$pgid" "$pid"
+    kill "-$sig" "$pid" 2>/dev/null
+    return
+  fi
   kill "-$sig" -- "-$pgid" 2>/dev/null || kill "-$sig" "$pid" 2>/dev/null
+}
+
+group_is_wholly_abandoned() {
+  local pgid="$1" p g rest other
+  while IFS=' ' read -r p g rest; do
+    [ "$g" = "$pgid" ] || continue
+    other="$(printf '%s' "$rest" | grep -oE '/tmp/kinetix-dw\.[A-Za-z0-9]+' | head -1)"
+    [ -n "$other" ] || continue
+    if [ -n "$keep" ] && [ "${other%.store}" = "$keep" ]; then return 1; fi
+    owner_alive "$other" && return 1
+  done < <(dw_processes)
+  return 0
 }
 
 dw_processes() {

@@ -35,6 +35,23 @@
 
 set -uo pipefail
 
+# EACH BATCH GETS ITS OWN SESSION, and that is a safety property, not tidiness. Started from a
+# non-job-controlling shell, two orchestrators share a process group, and the reaper's cleanup of an
+# abandoned batch signals the group — so it could SIGTERM a LIVE batch's owner while its ownership
+# marker was valid and its worktree correctly spared. Measured, before this: "announced the live
+# batch as skipped and then terminated its owner". `setsid -w` re-execs this script as a session
+# leader, so the group holds this batch's processes and nothing else; it waits and returns the
+# script's own exit status, and the ownership marker is written after the re-exec, so it records the
+# leader's pid. The reaper carries a second, independent lock for the same hazard.
+if [ -z "${ISOLATED_OWN_SESSION:-}" ]; then
+  self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+  if [ "$(ps -o pgid= -p $$ 2>/dev/null | tr -d ' ')" != "$$" ] && command -v setsid > /dev/null 2>&1; then
+    export ISOLATED_OWN_SESSION=1
+    exec setsid -w "$self" "$@"
+  fi
+  export ISOLATED_OWN_SESSION=1
+fi
+
 CAND="$(git rev-parse --show-toplevel)" || exit 2
 cd "$CAND" || exit 2
 INTEGRITY="$CAND/scripts/create-studio-candidate-integrity.sh"
