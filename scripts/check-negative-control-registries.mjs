@@ -109,6 +109,10 @@ const NEGATIVES = {
     breaks: "registry-has-a-driver",
     why: "an echoed command line is a mention, not an execution, so a step that only prints the invocation must not count as driving the registry",
   },
+  "heredoc-payload-counts-as-a-driver": {
+    breaks: "registry-has-a-driver",
+    why: "a heredoc that prints the invocation executes nothing, so the payload of a `cat <<EOF` must not count as driving the registry either",
+  },
   "registry-driven-nowhere": {
     breaks: "registry-has-a-driver",
     why: "a registry no workflow names is a set of controls that never execute, which is how pm-matrix's seven went unnoticed",
@@ -236,21 +240,65 @@ function discoverDrivers() {
  *
  * So a match counts only when it stands at the start of a command on its own line: preceded by
  * nothing but whitespace, a shell separator, or an interpreter prefix, outside quotes, and not
- * behind `echo`/`printf`/`:`. Comments are stripped first. Stripping at `#` is cruder than a shell
+ * behind `echo`/`printf`/`:`. Comments are stripped first.
+ *
+ * Codex's review of the first repair, `ab8251b6`, found that line-by-line scanning was not enough:
+ * a `cat <<'EOF'` whose payload is the invocation read as a command, because quote and
+ * command-position state restarted on every line. Replacing `native-swiftui.yml`'s real call with
+ * that block kept driver discovery and matrix equality intact while executing nothing. The scanner
+ * now carries two pieces of state across lines -- the open heredoc delimiter and a string left
+ * open -- and treats everything inside either as data. Stripping at `#` is cruder than a shell
  * parser and can discard a legitimate `#` inside a quoted argument — which can only make this
  * stricter, turning a real driver into a reported "driven by nothing" rather than a silent pass.
  */
+/**
+ * The quote a line leaves open, or null. Scanning character by character is what distinguishes a
+ * line that merely contains quotes from one that ENDS inside a string; counting quote marks cannot,
+ * because a line can hold an odd number of each and still end closed.
+ */
+function danglingQuote(line) {
+  let open = null;
+  for (let i = 0; i < line.length; i += 1) {
+    const c = line[i];
+    if (open === null && (c === '"' || c === "'")) open = c;
+    else if (open === c) open = null;
+    else if (open === '"' && c === "\\") i += 1; // escapes act only inside double quotes
+  }
+  return open;
+}
+
+/** The delimiter a line's heredoc redirection opens, or null. `<<-` and quoted forms included. */
+function heredocDelimiter(line) {
+  const m = line.match(/<<-?\s*(?:"([^"]+)"|'([^']+)'|([A-Za-z_][A-Za-z0-9_]*))/);
+  return m ? (m[1] ?? m[2] ?? m[3]) : null;
+}
+
 function invocations(run, pattern) {
   const found = [];
+  let heredoc = null; // inside a heredoc payload: every line is data
+  let quoted = null;  // inside a string opened on an earlier line: likewise
   for (const raw of run.split("\n")) {
+    if (heredoc !== null) {
+      if (raw.trim() === heredoc) heredoc = null;
+      continue;
+    }
+    if (quoted !== null) {
+      if (raw.includes(quoted)) quoted = null;
+      continue;
+    }
     const line = raw.replace(/#.*$/, "");
     for (const m of line.matchAll(pattern)) {
       const before = line.slice(0, m.index);
       const atCommandStart = /(?:^|[;&|(]|\b(?:then|do|else)\b)\s*(?:(?:node|pnpm\s+(?:exec|dlx)|npx)\s+)?$/.test(before);
-      const insideQuotes = (before.match(/["']/g) ?? []).length % 2 === 1;
+      const insideQuotes = danglingQuote(before) !== null;
       const echoed = /\b(?:echo|printf)\b|(?:^|\s):\s/.test(before);
       if (atCommandStart && !insideQuotes && !echoed) found.push({ script: m[1], line });
     }
+    // State for the lines that follow. A real command can itself open a heredoc, so this runs after
+    // the match above rather than instead of it.
+    const delimiter = heredocDelimiter(raw);
+    if (delimiter !== null) heredoc = delimiter;
+    else quoted = danglingQuote(line);
   }
   return found;
 }
@@ -323,6 +371,16 @@ function run({ control } = {}) {
   // registry-has-a-driver
   const driven = new Set([...loops, ...matrices].map((d) => d.script));
   if (control === "registry-driven-nowhere") driven.delete("scripts/check-taxonomy-namespaces.mjs");
+  if (control === "heredoc-payload-counts-as-a-driver") {
+    // The shape Codex reproduced against `ab8251b6`: the step prints the command from a heredoc.
+    // Asserted through the real detector, so this control fails if `invocations()` ever stops
+    // carrying heredoc state across lines.
+    const printed = invocations(
+      'cat <<\'EOF\'\nnode scripts/check-taxonomy-namespaces.mjs --negative="$CONTROL"\nEOF\n',
+      /(\S+\.mjs)\s+--negative=/g,
+    );
+    if (printed.length === 0) driven.delete("scripts/check-taxonomy-namespaces.mjs");
+  }
   if (control === "mentioned-not-invoked") {
     // What `invocations()` must refuse: the step prints the command instead of running it. Asserted
     // through the real detector rather than by deleting from the set, so this control fails if
