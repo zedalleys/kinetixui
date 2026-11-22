@@ -120,9 +120,12 @@ jobs:
           # that remove the implementations are scripts/create-studio-save-state-controls.sh, which
           # mutates the tree and so is run by hand, not here.
           CREATE_ARTIFACTS=/tmp/create-evidence node scripts/create-studio-save-state-browser.mjs
-          # The route-level recovery surface (#655): its reload exit must actually exit. This gate
-          # was listed in the path filter above and invoked nowhere, so it gated nothing.
-          CREATE_ARTIFACTS=/tmp/create-evidence node scripts/create-studio-recovery-browser.mjs
+          # NOT here: scripts/create-studio-recovery-browser.mjs (#655). It needs a crash trigger
+          # that only scripts/create-studio-recovery-exit-controls.sh installs, by mutating source,
+          # and it refuses to run without one ("the crash trigger is not installed, so this gate
+          # proves nothing"). Invoking it here would fail every run. It belongs with the other
+          # source controls, run through scripts/create-studio-isolated-controls.sh so the
+          # mutation lands in a disposable worktree — see the M5.24 CI coverage plan.
       - name: Generated React builds in a real consumer project
         # Depends on the fixture the vitest step above writes, and on the built library packages.
         # A separate job would have to rebuild both, so this stays in the same job, after them.

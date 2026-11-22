@@ -163,10 +163,17 @@ control "a conflict on a retry loses the sentence that explains it" \
 # The verdict in the status bar's shared announcement slot, which is what it did first. Several
 # unrelated effects write there — the draft-storage one fires repeatedly when storage is refusing
 # writes — and the answer the user had just asked for removed itself within seconds.
+# The expected phrase is shared by BOTH ways this defect shows itself, because which one fires is a
+# race: if the gate reads the verdict before the draft-storage notice overwrites it, the later
+# persistence assertion fires ("must not be overwritten by an unrelated notice"); if the overwrite
+# wins, the verdict is never readable and the wait fails ("…removed by an unrelated notice…").
+# Requiring only the first made this control pass in some runs and report a wrong reason in others
+# (2 of 5 measured), while the gate itself failed every time — so the flake was in the control's
+# reading, not in the gate's detection.
 control "the reconciliation verdict shares the volatile announcement slot" \
   '        setChecked(`Checked: that save did not commit.' \
   '        setNotice(`Checked: that save did not commit.' \
-  "must not be overwritten by an unrelated notice"
+  "an unrelated notice"
 
 # Codex's P1 at `1e21261e`. Adopting a foreign writer's revision while keeping the local document on
 # screen leaves Save enabled against a revision this work was never based on, and the next save
