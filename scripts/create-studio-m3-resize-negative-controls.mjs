@@ -3,8 +3,9 @@
  * create-studio-m3-resize-negative-controls.mjs — proof that the M3-C resize checks in
  * `scripts/create-studio-canvas-browser.mjs` can actually fail.
  *
- * Five defects were repaired on this branch. Three of them were invisible to the 25 checks the
- * gate already had, and two were invisible to every gate in the repository, so each repair
+ * Six defects were repaired on this branch, and the last three are instances of one mistake: a
+ * measurement that names the causes which can invalidate it. Three were invisible to the 25 checks
+ * the gate already had, and three were invisible to every gate in the repository, so each repair
  * owes a control that reintroduces exactly that defect and shows the REAL gate going red for the
  * reason the repair exists — not merely going red.
  *
@@ -12,11 +13,18 @@
  *                             a breakpoint writes base + step and the frame never advances.
  *   guide-on-the-wrapper      the guide measures the full-width `.studio-node` wrapper again, so on
  *                             a narrow frame it is drawn hundreds of pixels from the edge it claims.
- *   guide-does-not-follow     the overlay's measurement stops depending on the candidate width, so
- *                             the guide stays at the edge the gesture started from.
- *   camera-not-in-dependencies
- *                             the overlay stops depending on the camera transform, so a pan during
- *                             a resize moves the frame and leaves the guide behind.
+ *   nothing-sees-the-candidate-width
+ *                             BOTH invalidation paths stop seeing the candidate width — the effect
+ *                             is pinned to a list without it and the section is unobserved — so the
+ *                             guide stays at the edge the gesture started from.
+ *   measurement-pinned-to-named-causes
+ *                             the measurement is pinned to a dependency list that ENUMERATES what
+ *                             moves the frame, which is how two reachable cases were missed: a
+ *                             camera pan and an editing-viewport change, each of which moves the
+ *                             frame while the width and the guide are unchanged.
+ *   canvas-not-observed       the canvas is no longer observed, so geometry that moves with no
+ *                             render at all — the window resizing, which restates the canvas's own
+ *                             width — is never remeasured.
  *   rtl-logical-property      the guide is placed with `inset-inline-start` again, which resolves to
  *                             `right` in a right-to-left document and mirrors a physical
  *                             measurement twice.
@@ -87,24 +95,47 @@ const CONTROLS = [
     discriminates: ({ frame, wrapper }) => frame !== null && Math.abs(wrapper) <= 3 && Math.abs(frame) > 100,
   },
   {
-    name: "guide-does-not-follow",
+    name: "nothing-sees-the-candidate-width",
     file: "apps/web/src/components/create-studio/create-studio.tsx",
-    from: ["}, [canvas, nodeId, width, guide, rtl, camera]);"],
-    to: ["}, [canvas, nodeId, guide, rtl, camera]);"],
+    // BOTH invalidation paths, because either one alone still catches the candidate width: pinning
+    // the effect leaves the observer watching the section, which resizes under the drag. Measured —
+    // the single-hunk version of this control reddened four checks later, at another assertion. A
+    // defect the repair catches by a second route is no defect at all, and a control that cannot
+    // reintroduce one proves nothing.
+    from: [
+      "  React.useLayoutEffect(() => { measure(); });",
+      "    observer.observe(canvas);\n    observer.observe(section);",
+    ],
+    to: [
+      "  React.useLayoutEffect(() => { measure(); }, [canvas, nodeId, guide, rtl]);",
+      "    observer.observe(canvas);\n    void section;",
+    ],
     owes: ["must be drawn on the frame's own rendered edge"],
-    // The mirror image: the guide lags the frame by a step, so |off the frame| is small but
-    // nonzero while |off the wrapper| stays huge. That is what separates it from control 2.
+    // The mirror image of control 2: the guide lags the frame by a step, so |off the frame| is
+    // small but nonzero while |off the wrapper| stays huge. That is what separates the two.
     discriminates: ({ frame, wrapper }) => frame !== null && Math.abs(frame) > 3 && Math.abs(wrapper) > 100,
   },
   {
-    name: "camera-not-in-dependencies",
+    name: "measurement-pinned-to-named-causes",
     file: "apps/web/src/components/create-studio/create-studio.tsx",
-    from: ["}, [canvas, nodeId, width, guide, rtl, camera]);"],
-    to: ["}, [canvas, nodeId, width, guide, rtl]);"],
-    // The fifth defect, reported by an exact-head review of this branch: a pan during a resize
-    // moves the frame without changing the width or the guide, so a measurement keyed only on those
-    // stays behind. This control is the one that proves the new dependency is load-bearing.
-    owes: ["a pan during a resize must keep the guide on the frame's rendered edge"],
+    from: ["  React.useLayoutEffect(() => { measure(); });"],
+    to: ["  React.useLayoutEffect(() => { measure(); }, [canvas, nodeId, width, guide, rtl]);"],
+    // The dependency list that enumerates the causes which move the frame. TWO were missed in
+    // review this way — a camera pan and an editing-viewport change — so this control carries both
+    // messages: which one the gate reaches first is its own ordering, not a property of the defect.
+    owes: [
+      "a pan during a resize must keep the guide on the frame's rendered edge",
+      "a viewport change during a resize must keep the guide on the frame's rendered edge",
+    ],
+  },
+  {
+    name: "canvas-not-observed",
+    file: "apps/web/src/components/create-studio/create-studio.tsx",
+    from: ["    observer.observe(canvas);\n    observer.observe(section);"],
+    to: ["    void canvas;\n    observer.observe(section);"],
+    // The case neither a commit nor any dependency list can catch: the canvas resizes with no state
+    // change to render on. Only the observer sees it.
+    owes: ["must be remeasured when the canvas resizes with no render of its own"],
   },
   {
     name: "rtl-logical-property",

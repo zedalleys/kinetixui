@@ -157,6 +157,8 @@ new ones measure:
 | a snapped guide | drawn at the rendered edge it announces, within 2px, label `768px · Tablet · 768px` |
 | the guide under the camera | within 2px at 120% zoom |
 | a camera pan during a resize | the frame moved 24px with the candidate width unchanged, and the guide stayed **1px** from its edge |
+| an editing-viewport change during a resize | 960 → 390 from the keyboard, the frame shrank from 600px, the candidate width unchanged, the guide still on the edge |
+| the canvas resizing with no render at all | the canvas changed width by more than 50px and the RTL label stayed beside the guide |
 | the guide in RTL | on the frame's own **left** edge within 2px, with the right edge 370px away, and the label on the leading side |
 | keyboard reachability | the handle focusable with slider semantics, one press advancing the effective width by one |
 | 200% text in reduced motion | root font size 32px, `prefers-reduced-motion` actually matching, the handle still on the frame's edge, 0 axe violations, no runtime error |
@@ -174,6 +176,26 @@ The camera transform is now a dependency of the measurement. Its check measures 
 before asserting anything — that focus really is still on the canvas, and that the pan really did
 move the rendered frame — because a check that silently failed to do either would pass against the
 very defect it exists for.
+
+### 6. The viewport changing mid-resize, and the class behind defects 3, 5 and 6
+
+A second exact-head review found the same mistake again: the viewport select keeps focus exactly as
+the canvas does, so switching it mid-drag changes the **artboard's** width and the frame moves
+through its own `max-width: 100%` — while the candidate width, the guide and the camera are all
+unchanged.
+
+Two findings of one shape is the signal. **A dependency list that enumerates the causes which can
+invalidate a measurement is a fail-open**, and the right repair is not a third cause but to stop
+naming any: the layout effect now runs after **every** commit, with no dependency list. Every state
+that can move the frame lives in this component's parent, so every such change arrives here as a
+commit, and the 0.5px identity guard is what makes running each time safe — an unchanged reading
+returns the previous object and React bails out of the re-render.
+
+That still leaves geometry that moves with **no render at all**, so the canvas and the frame's
+section are observed directly with a `ResizeObserver`. The gated case is the window resizing: the
+canvas's height is pinned by the workspace's own `min-height`, and `edge` is invariant under a pure
+translation, so the quantity that actually goes stale is the canvas's **width** — which in RTL is
+what places the width label. The check measures that precondition rather than assuming it.
 
 Three measurement rules this slice earned, each of which first produced a false positive:
 

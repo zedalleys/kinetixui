@@ -491,6 +491,7 @@ try {
       const centre = line ? line.getBoundingClientRect().left + line.getBoundingClientRect().width / 2 : null;
       return {
         section: section.getBoundingClientRect().toJSON(), wrapper: wrapper.getBoundingClientRect().toJSON(),
+        canvas: document.querySelector(".studio-canvas").getBoundingClientRect().toJSON(),
         line: line?.getBoundingClientRect().toJSON() ?? null, label: label?.getBoundingClientRect().toJSON() ?? null,
         text: label?.textContent ?? null, centre,
       };
@@ -697,6 +698,43 @@ try {
   await studio.getByRole("button", { name: "Reset view", exact: true }).click();
   pass("a camera pan during a resize keeps the guide on the frame's rendered edge");
 
+  // ------------------------------------------------- the editing viewport changing DURING a resize
+  // The second instance of the same class, also from review: the viewport select keeps focus the
+  // same way the canvas does, so switching it mid-drag changes the ARTBOARD's width. The frame then
+  // moves through its own `max-width: 100%` while the candidate width, the guide and the camera are
+  // all unchanged. Both widths are set to 600 — base and the desktop override — so the model width
+  // is identical either side of the switch and only the available width changes. 600 is wide enough
+  // that a 390 artboard must clamp it, and narrow enough that the handle stays inside the canvas,
+  // which clips: a wider frame puts its own handle out of pointer reach.
+  await inspector.getByLabel("Edit at breakpoint").selectOption("desktop");
+  await studio.getByLabel("Viewport width").selectOption("960");
+  await setEditedWidth(600);
+  await inspector.getByLabel("Edit at breakpoint").selectOption("base");
+  await setEditedWidth(600);
+  await studio.getByLabel("Viewport width").focus();
+  narrowPoint = await handlePoint();
+  await dragFromTo(narrowPoint, { x: narrowPoint.x + 30, y: narrowPoint.y }, { release: false });
+  const beforeViewport = await drawnGeometry();
+  assert.ok(Math.abs(beforeViewport.centre - beforeViewport.section.right) <= 2, `the guide must start on the frame's edge for this check to mean anything (off by ${Math.round(beforeViewport.centre - beforeViewport.section.right)}px)`);
+  const selectHeld = await page.evaluate(() => document.activeElement?.id === "studio-viewport-width");
+  assert.ok(selectHeld, "the viewport select must still hold focus through the pointer press, or the switch this check depends on cannot be made from the keyboard");
+  // 960 → 768 → 390, from the keyboard, with the pointer still down.
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("ArrowUp");
+  await page.waitForFunction(() => document.querySelector("#studio-viewport-width")?.value === "390", null, { timeout: 10_000 });
+  await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+  const afterViewport = await drawnGeometry();
+  measurements.guideUnderViewportChange = {
+    frameWidthBefore: Math.round(beforeViewport.section.width), frameWidthAfter: Math.round(afterViewport.section.width),
+    candidateUnchanged: afterViewport.text === beforeViewport.text, offsetFromFrame: Math.round(afterViewport.centre - afterViewport.section.right),
+  };
+  assert.ok(beforeViewport.section.width - afterViewport.section.width > 150, `the switch must actually shrink the rendered frame, or there is nothing to track (${Math.round(beforeViewport.section.width)}px → ${Math.round(afterViewport.section.width)}px)`);
+  assert.equal(afterViewport.text, beforeViewport.text, "and must leave the candidate width alone, which is what makes the stale-dependency defect reachable");
+  assert.ok(Math.abs(afterViewport.centre - afterViewport.section.right) <= 2, `a viewport change during a resize must keep the guide on the frame's rendered edge (off by ${Math.round(afterViewport.centre - afterViewport.section.right)}px after the frame shrank to ${Math.round(afterViewport.section.width)}px)`);
+  await page.keyboard.press("Escape");
+  pass("an editing-viewport change during a resize keeps the guide on the frame's rendered edge");
+
+
   // ------------------------------------------------- RTL
   // The guide belongs on the edge being dragged, which in a right-to-left document is the frame's
   // LEFT edge. Direction is a property of the document, not of the screen.
@@ -716,6 +754,40 @@ try {
   await page.keyboard.press("Escape");
   await studio.getByRole("button", { name: "RTL", exact: true }).click();
   pass("in an RTL document the guide is drawn on the frame's own leading edge");
+
+  // ------------------------------------------------- geometry that moves with no commit at all
+  // The window resizing is the case neither a dependency list nor a commit can catch: nothing in
+  // the editor's state changes, so no render is scheduled at all. This is what the ResizeObserver
+  // is for. The canvas's HEIGHT is fixed by the workspace's own `min-height`, and `edge` is
+  // invariant under a pure translation of the canvas — so the quantity that actually goes stale is
+  // the canvas's WIDTH, which in a right-to-left document is what places the width label
+  // (`right: frameWidth - edge`). Measured here rather than assumed: the precondition asserts the
+  // canvas really did change width.
+  await studio.getByLabel("Viewport width").selectOption("960");
+  await studio.getByRole("button", { name: "Reset view", exact: true }).click();
+  // The desktop override is what a 960 viewport renders, so that is the one to set.
+  await inspector.getByLabel("Edit at breakpoint").selectOption("desktop");
+  await setEditedWidth(320);
+  await studio.getByRole("button", { name: "RTL", exact: true }).click();
+  narrowPoint = await handlePoint();
+  await dragFromTo(narrowPoint, { x: narrowPoint.x - 40, y: narrowPoint.y }, { release: false });
+  const beforeWindow = await drawnGeometry();
+  assert.ok(Math.abs(beforeWindow.label.right - beforeWindow.centre) <= 16, `the label must start beside the guide for this check to mean anything (label right ${Math.round(beforeWindow.label.right)}, guide ${Math.round(beforeWindow.centre)})`);
+  const windowBefore = page.viewportSize();
+  await page.setViewportSize({ width: windowBefore.width - 260, height: windowBefore.height });
+  await page.waitForFunction(w => Math.abs(document.querySelector(".studio-canvas").getBoundingClientRect().width - w) > 50, beforeWindow.canvas.width, { timeout: 10_000 });
+  await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+  const afterWindow = await drawnGeometry();
+  measurements.guideUnderWindowResize = {
+    canvasWidthBefore: Math.round(beforeWindow.canvas.width), canvasWidthAfter: Math.round(afterWindow.canvas.width),
+    labelOffset: Math.round(afterWindow.label.right - afterWindow.centre),
+  };
+  assert.ok(Math.abs(afterWindow.canvas.width - beforeWindow.canvas.width) > 50, `the window resize must actually change the canvas's width (${Math.round(beforeWindow.canvas.width)}px → ${Math.round(afterWindow.canvas.width)}px)`);
+  assert.ok(Math.abs(afterWindow.label.right - afterWindow.centre) <= 16, `the overlay must be remeasured when the canvas resizes with no render of its own (label right ${Math.round(afterWindow.label.right)} against a guide at ${Math.round(afterWindow.centre)}, after the canvas went from ${Math.round(beforeWindow.canvas.width)}px to ${Math.round(afterWindow.canvas.width)}px)`);
+  await page.keyboard.press("Escape");
+  await page.setViewportSize(windowBefore);
+  await studio.getByRole("button", { name: "RTL", exact: true }).click();
+  pass("the overlay is remeasured when the canvas changes size without any state change to render on");
 
   // ------------------------------------------------- keyboard reachability of the repaired path
   // The whole repaired path has to be operable without a pointer: reach the handle by Tab alone and
