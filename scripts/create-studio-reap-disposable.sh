@@ -59,30 +59,58 @@ active() {
 }
 
 # --- processes serving a disposable worktree that is not the caller's ----------------------------
-while IFS= read -r line; do
-  [ -n "$line" ] || continue
-  pid="${line%% *}"
-  rest="${line#* }"; pgid="${rest%% *}"; args="${rest#* }"
+# FIELD PARSING IS LOAD-BEARING HERE, and getting it wrong is dangerous rather than merely wrong.
+# `ps -eo pid=,pgid=` right-pads its columns, so splitting on the FIRST space left the group id
+# EMPTY and the group kill expanded to `kill -TERM -- -`. That is how reaping one leaked process
+# from an earlier run killed the orchestrator that had invoked the reaper — found by running it,
+# 2026-11-22. Fields are now split with awk, and no group signal is sent unless the group id is
+# all digits, is not this process's own group, and is not 1.
+MY_PGID="$(ps -o pgid= -p $$ 2>/dev/null | tr -d ' ')"
+
+kill_group() {
+  local sig="$1" pgid="$2" pid="$3"
+  case "$pgid" in
+    "" | *[!0-9]*)
+      printf 'REFUSED  process %s has no readable process group — signalling that pid alone\n' "$pid"
+      kill "-$sig" "$pid" 2>/dev/null
+      return ;;
+  esac
+  if [ "$pgid" = "1" ] || [ "$pgid" = "$MY_PGID" ]; then
+    printf 'REFUSED  not signalling group %s (init, or this reaper own group) — signalling pid %s alone\n' \
+      "$pgid" "$pid"
+    kill "-$sig" "$pid" 2>/dev/null
+    return
+  fi
+  kill "-$sig" -- "-$pgid" 2>/dev/null || kill "-$sig" "$pid" 2>/dev/null
+}
+
+dw_processes() {
+  ps -eo pid=,pgid=,args= |
+    awk '{ pid = $1; pgid = $2; $1 = ""; $2 = ""; sub(/^ +/, ""); print pid, pgid, $0 }' |
+    grep -E '/tmp/kinetix-dw\.' | grep -v -- "$0" | grep -v 'grep' || true
+}
+
+while IFS=' ' read -r pid pgid args; do
+  [ -n "$pid" ] || continue
   dw="$(printf '%s' "$args" | grep -oE '/tmp/kinetix-dw\.[A-Za-z0-9]+' | head -1)"
   [ -n "$dw" ] || continue
   active "$dw" && continue
-  printf 'REAPED   process %s (group %s) serving %s%s\n' "$pid" "$pgid" "$dw" \
+  printf 'REAPED   process %s (group %s) serving %s%s\n' "$pid" "${pgid:-unknown}" "$dw" \
     "$([ -d "$dw" ] || printf ' — its worktree is already deleted')"
-  kill -TERM -- "-$pgid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null
+  kill_group TERM "$pgid" "$pid"
   reaped=$((reaped + 1))
-done < <(ps -eo pid=,pgid=,args= | sed 's/^ *//' | grep -E '/tmp/kinetix-dw\.' | grep -v -- "$0" | grep -v 'grep' || true)
+done < <(dw_processes)
 
 if [ "$reaped" -gt 0 ]; then
   sleep 3
-  # The SIGKILL sweep is per-process-group and must skip the groups of live batches, or it would
-  # undo the liveness check above.
-  while IFS= read -r line; do
-    [ -n "$line" ] || continue
-    g="${line%% *}"; rest="${line#* }"
-    dw="$(printf '%s' "$rest" | grep -oE '/tmp/kinetix-dw\.[A-Za-z0-9]+' | head -1)"
+  # The SIGKILL sweep must skip live batches, or it would undo the liveness check above, and it
+  # goes through the same guarded kill_group.
+  while IFS=' ' read -r pid pgid args; do
+    [ -n "$pid" ] || continue
+    dw="$(printf '%s' "$args" | grep -oE '/tmp/kinetix-dw\.[A-Za-z0-9]+' | head -1)"
     [ -n "$dw" ] && active "$dw" > /dev/null && continue
-    kill -9 -- "-$g" 2>/dev/null
-  done < <(ps -eo pgid=,args= | sed 's/^ *//' | grep -E '/tmp/kinetix-dw\.' | grep -v grep || true)
+    kill_group 9 "$pgid" "$pid"
+  done < <(dw_processes)
 fi
 
 # --- worktrees left registered or on disk --------------------------------------------------------
