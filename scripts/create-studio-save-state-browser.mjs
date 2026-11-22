@@ -85,12 +85,22 @@ async function verdictText(studio) {
   if (await dedicated.count()) return (await dedicated.innerText()).replace(/\s+/g, " ");
   return (await studio.locator(".studio-announcement").innerText()).replace(/\s+/g, " ");
 }
-const verdictVisible = (page) => page.waitForFunction(
-  () => /did commit|did not commit|could not be checked/i.test(
-    (document.querySelector(".studio-checked")?.textContent ?? "") + " " + (document.querySelector(".studio-announcement")?.textContent ?? ""),
-  ),
-  { timeout: 30_000 },
-);
+/**
+ * Wait for a verdict and return the text AS IT APPEARED.
+ *
+ * Capturing it inside the wait matters: when the verdict shared the status bar's announcement slot
+ * it was overwritten faster than a second round-trip could read it, so a re-query returned the
+ * clobbering notice and the first assertion failed with "no verdict" — which is true but names the
+ * wrong defect. Reading it here lets that first assertion pass and leaves the PERSISTENCE check
+ * below as the one that fails, which is the behaviour actually at stake.
+ */
+const verdictVisible = async (page) => {
+  const handle = await page.waitForFunction(() => {
+    const text = ((document.querySelector(".studio-checked")?.textContent ?? "") + " " + (document.querySelector(".studio-announcement")?.textContent ?? "")).replace(/\s+/g, " ").trim();
+    return /did commit|did not commit|could not be checked/i.test(text) ? text : false;
+  }, { timeout: 30_000 });
+  return String(await handle.jsonValue());
+};
 
 async function startWorkspace(page, studio) {
   const start = studio.getByRole("button", { name: "Start local workspace" });
@@ -242,8 +252,7 @@ try {
     // The verdict has a region of its own. It deliberately does NOT live in the status bar's
     // announcement slot: measured here first, the draft-storage effect wrote over it within
     // seconds and the answer the user had just asked for vanished by itself.
-    await verdictVisible(page);
-    const verdict = await verdictText(studio);
+    const verdict = await verdictVisible(page);
     assert.match(verdict, /did commit/i, `reconciliation must report that this save committed, read: ${verdict.slice(0, 200)}`);
     assert.doesNotMatch(verdict, /did not commit/i, "reconciliation must not report the opposite of what the store holds");
     const settled = await chip(page);
@@ -416,8 +425,7 @@ try {
     const before8 = await stored(page);
     assert.equal(before8.revision, before.revision, "nothing reached the server in this case");
     await studio.getByRole("button", { name: "Check the stored version" }).click();
-    await verdictVisible(page);
-    const verdict = await verdictText(studio);
+    const verdict = await verdictVisible(page);
     assert.match(verdict, /did not commit/i, `reconciliation must report that this save did not commit, read: ${verdict.slice(0, 200)}`);
     const settled = await chip(page);
     assert.match(settled, /Save failed/, `once PROVED not to have committed, the save may be called a failure, read: ${settled}`);
