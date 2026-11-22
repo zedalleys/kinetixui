@@ -20,6 +20,27 @@ const html = document.documentElement;
 const axis = html.dataset.kxAxis === "vertical" ? "vertical" : "horizontal";
 const count = Number(html.dataset.kxSlides ?? "5");
 const label = html.dataset.kxLabel ?? undefined;
+/**
+ * `data-kx-threshold="engine"` leaves `inViewThreshold` at the engine's own default instead of the pinned
+ * 0.5 below. One fixture page must do this: pinning the threshold is what makes the in-view set stable
+ * enough to assert, and it ALSO collapses an animated move's in-view changes into a single notification —
+ * so a gate run only against the pinned fixture cannot see a defect that needs two of them. See
+ * `scripts/react-carousel-slide-exposure.mjs`'s "one move speaks once" section.
+ */
+const engineThreshold = html.dataset.kxThreshold === "engine";
+
+/**
+ * What a screen reader would have been HANDED, in order. Reading the live region once at the end cannot
+ * tell "announced the landing" from "announced somewhere it passed through and then fell silent": both
+ * leave one string in the DOM. This records every text the region has held, so the gate can assert the
+ * SEQUENCE — how many phrases one movement produced, and which one was last.
+ */
+declare global {
+  interface Window {
+    __kxSpoken?: string[];
+  }
+}
+window.__kxSpoken = [];
 
 function Harness() {
   const [ready, setReady] = React.useState(false);
@@ -32,7 +53,7 @@ function Harness() {
       // rounding, so the in-view set flipped between 1 and 2 slides between runs of the same gate and the
       // announcement's wording flipped with it. A fixture must not leave the thing under measurement to a
       // coin flip; this is an engine option, not a change to the component.
-      opts={{ inViewThreshold: 0.5 }}
+      opts={engineThreshold ? {} : { inViewThreshold: 0.5 }}
       setApi={(api) => {
         if (!api) return;
         // The gate must not read a carousel that has not measured: `slidesInView` is empty until it has,
@@ -45,11 +66,28 @@ function Harness() {
           // inert assertion flap. The component's contract is about the engine's notion, so the gate is
           // given the engine's notion.
           html.dataset.kxInView = api.slidesInView().join(",");
+          // The SELECTED index, which is what the component announces and the only quantity that does not
+          // wobble during the engine's 1.7s settle. Published so a gate asserts the phrase by value.
+          html.dataset.kxSelected = String(api.selectedScrollSnap());
           if (api.slidesInView().length) setReady(true);
         };
         mark();
         api.on("slidesInView", mark);
+        api.on("select", mark);
         api.on("reInit", mark);
+
+        // The live region is the component's own; find it from the root the engine was given.
+        const region = api.rootNode().closest('[role="region"]') ?? api.rootNode();
+        const live = region.querySelector("[aria-live]");
+        if (live) {
+          const record = () => {
+            const text = live.textContent ?? "";
+            const log = window.__kxSpoken!;
+            if (text && text !== log[log.length - 1]) log.push(text);
+          };
+          record();
+          new MutationObserver(record).observe(live, { childList: true, characterData: true, subtree: true });
+        }
       }}
     >
       <CarouselContent className="kx-harness-viewport">

@@ -121,6 +121,24 @@ export const DEFECTS = {
    * press is swallowed in the capture phase before the component's bubble handler can see it, which is
    * indistinguishable, from the page's side, from a handler that never mapped the key.
    */
+  /**
+   * Restores "a phrase per position": the announcement's settle window collapsed to nothing, so every
+   * `select` in a burst speaks instead of only the landing. Done by shortening the component's own
+   * `QUIET_MS` timer — and ONLY that timer, matched by its exact delay, so React's scheduling, the
+   * engine's animation and Playwright's own instrumentation are left alone. A control that slowed or
+   * broke the whole page would redden rows for reasons that have nothing to do with the behaviour.
+   */
+  "announce-per-position": () => {
+    const native = window.setTimeout;
+    Object.defineProperty(window, "setTimeout", {
+      configurable: true,
+      writable: true,
+      value: function (fn, delay, ...rest) {
+        return native.call(window, fn, delay === 80 ? 0 : delay, ...rest);
+      },
+    });
+  },
+
   "vertical-ignores-block-keys": () => {
     document.addEventListener(
       "keydown",
@@ -166,6 +184,11 @@ const read = (page) =>
         .map(Number);
       return {
         engineInView,
+        engineSelected: Number(document.documentElement.dataset.kxSelected ?? "-1"),
+        // Every phrase the live region has HELD, in order — what a screen reader would have been handed.
+        // Reading the region once cannot tell "announced the landing" from "announced somewhere it passed
+        // through and then fell silent": both leave one string in the DOM.
+        spoken: [...((window.__kxSpoken ?? []))],
         regionName: region?.getAttribute("aria-label"),
         roleDescription: region?.getAttribute("aria-roledescription"),
         announcement: live?.textContent ?? null,
@@ -291,13 +314,21 @@ async function axis(browser, base, { file, name, forward }) {
   else bad(name, "the live region is polite and atomic", `${after.liveMode}/${after.liveAtomic}`);
 
   // By VALUE, not by shape: a phrase of the right shape naming the slide the reader just LEFT is the
-  // defect this row exists to catch, and `/Slide \d+ of 5/` passes it happily.
-  const expected = `Slide ${(after.engineInView[0] ?? -1) + 1} of 5`;
+  // defect this row exists to catch, and `/Slide \d+ of 5/` passes it happily. The value is taken from the
+  // engine's SELECTED index, which is what is announced and the only quantity that is final — the in-view
+  // set is still changing a second and a half after the slide has visibly arrived.
+  const expected = `Slide ${after.engineSelected + 1} of 5`;
   if (after.announcement === expected) ok(name, "the reader's move is announced, naming where the track ENDED", JSON.stringify(after.announcement));
-  else bad(name, "the reader's move is announced, naming where the track ENDED", `announced ${JSON.stringify(after.announcement)}, the engine shows ${JSON.stringify(expected)} in view`);
+  else bad(name, "the reader's move is announced, naming where the track ENDED", `announced ${JSON.stringify(after.announcement)}, the engine has selected ${JSON.stringify(expected)}`);
 
-  if (after.engineInView[0] === 1) ok(name, "control: the move actually advanced one position", `in view ${after.engineInView}`);
-  else bad(name, "control: the move actually advanced one position", `in view ${after.engineInView} — the phrase above describes a move that did not happen`);
+  // ONE phrase, not a running commentary. A movement changes the in-view set several times — measured
+  // `[0] → [] → [1]` for one keypress — so a phrase emitted per change both says the wrong thing and says
+  // it repeatedly; a screen reader would read each one out.
+  if (after.spoken.length === 1) ok(name, "one move is announced exactly ONCE", JSON.stringify(after.spoken));
+  else bad(name, "one move is announced exactly ONCE", `${after.spoken.length} phrases: ${JSON.stringify(after.spoken)}`);
+
+  if (after.engineSelected === 1) ok(name, "control: the move actually advanced one position", `selected ${after.engineSelected}, in view ${after.engineInView}`);
+  else bad(name, "control: the move actually advanced one position", `selected ${after.engineSelected} — the phrase above describes a move that did not happen`);
 
   // ── naming ───────────────────────────────────────────────────────────────
   if (s.slides.every((x, i) => x.label === `${i + 1} of 5`)) ok(name, "every slide is named “N of 5”", s.slides.map((x) => x.label).join(", "));
@@ -306,6 +337,83 @@ async function axis(browser, base, { file, name, forward }) {
   if (s.regionName && !/carousel/i.test(s.regionName))
     ok(name, "the region is named, and not with the word the roledescription already says", `${JSON.stringify(s.regionName)} + roledescription ${JSON.stringify(s.roleDescription)}`);
   else bad(name, "the region is named, and not with the word the roledescription already says", JSON.stringify(s.regionName));
+
+  await ctx.close();
+}
+
+
+/**
+ * Reader intent: what the announcement is FOR. Each row here is a way the live region can speak when the
+ * reader did not ask it to, or stay silent when they did — and none of them was visible to a gate that
+ * read the region once at the end of a keypress.
+ *
+ * It runs on `horizontal-engine-threshold.html` as well as the pinned fixture. Pinning `inViewThreshold`
+ * is what makes the in-view set stable enough to assert, and it also collapses a movement's in-view
+ * changes into fewer notifications — so a gate run only against the pinned fixture cannot see a defect
+ * that needs several of them. Measured: `[0] → [] → [1]` pinned, and a set still changing 1500ms in with
+ * the engine's own threshold.
+ */
+async function intent(browser, base, file) {
+  const name = `intent (${file.replace(".html", "")})`;
+  const { ctx, page } = await open(browser, `${base}/${file}`);
+  const next = page.getByRole("button", { name: "Next slide" });
+  const spoken = () => page.evaluate(() => [...(window.__kxSpoken ?? [])]);
+  const clear = () => page.evaluate(() => void (window.__kxSpoken.length = 0));
+
+  // A burst speaks ONCE, naming where the track came to rest — not once per position it passed through.
+  await clear();
+  for (let i = 0; i < 6; i++) {
+    await next.click({ force: true });
+    await page.waitForTimeout(25);
+  }
+  await page.waitForTimeout(700);
+  let said = await spoken();
+  let s = await read(page);
+  const landing = `Slide ${s.engineSelected + 1} of 5`;
+  if (said.length === 1 && said[0] === landing) ok(name, "a burst of presses speaks once, naming the landing", JSON.stringify(said));
+  else bad(name, "a burst of presses speaks once, naming the landing", `${JSON.stringify(said)}, engine selected ${s.engineSelected}`);
+  if (s.engineSelected > 1) ok(name, "control: the burst actually moved several positions", `selected ${s.engineSelected}`);
+  else bad(name, "control: the burst actually moved several positions", `selected ${s.engineSelected} — the row above describes a burst that did not happen`);
+
+  // A press on a slide's own link is a CLICK, not a drag. The engine reports `pointerDown` either way, so
+  // a region that speaks on the press alone will later attribute someone else's movement to the reader.
+  await clear();
+  await page.locator("#slide-link-2").click({ force: true }).catch(() => {});
+  await page.waitForTimeout(200);
+  said = await spoken();
+  if (!said.length) ok(name, "a press that is a click, not a drag, announces nothing", "[]");
+  else bad(name, "a press that is a click, not a drag, announces nothing", JSON.stringify(said));
+
+  // ...and the intent it recorded must not be left for the next thing that moves the track to spend.
+  // Measured before the fix: this resize announced "Slides 2 to 3 of 5".
+  const box = page.viewportSize();
+  await page.setViewportSize({ width: box.width - 160, height: box.height });
+  await page.waitForTimeout(900);
+  said = await spoken();
+  if (!said.length) ok(name, "a resize after that click announces nothing", "[]");
+  else bad(name, "a resize after that click announces nothing", `${JSON.stringify(said)} — a movement the reader never asked for, announced as theirs`);
+  await page.setViewportSize(box);
+  await page.waitForTimeout(300);
+
+  // An endpoint press on a non-looping carousel moves nothing and emits nothing. If it records intent, the
+  // next reInit or autoplay tick is announced as the reader's move.
+  await page.evaluate(() => document.querySelector('[role="region"]')?.focus());
+  for (let i = 0; i < 8; i++) {
+    await next.click({ force: true });
+    await page.waitForTimeout(25);
+  }
+  await page.waitForTimeout(700);
+  s = await read(page);
+  await clear();
+  await page.keyboard.press(file.startsWith("vertical") ? "ArrowDown" : "ArrowRight");
+  await page.waitForTimeout(300);
+  await page.setViewportSize({ width: box.width - 200, height: box.height });
+  await page.waitForTimeout(900);
+  said = await spoken();
+  if (!said.length) ok(name, "a press against the endpoint, then a resize, announces nothing", "[]");
+  else bad(name, "a press against the endpoint, then a resize, announces nothing", JSON.stringify(said));
+  if (s.engineSelected === 4) ok(name, "control: the carousel really is at its last slide", `selected ${s.engineSelected} of 0..4`);
+  else bad(name, "control: the carousel really is at its last slide", `selected ${s.engineSelected} — the row above was not measured at an endpoint`);
 
   await ctx.close();
 }
@@ -356,7 +464,7 @@ async function touch(browser, base) {
   await page.mouse.up();
   await settle(page);
   const s = await read(page);
-  if (/^Slides? \d+( to \d+)? of 5$/.test(s.announcement ?? "")) ok(name, "a drag announces where it landed", JSON.stringify(s.announcement));
+  if (s.announcement === `Slide ${s.engineSelected + 1} of 5`) ok(name, "a drag announces where it landed", JSON.stringify(s.announcement));
   else bad(name, "a drag announces where it landed", JSON.stringify(s.announcement));
   const out = s.slides.filter((x) => !x.inView);
   if (out.length && out.every((x) => x.inert)) ok(name, "the slides left behind are inert", `${out.length} inert`);
@@ -388,6 +496,8 @@ async function main() {
     await axis(browser, server.base, { file: "horizontal-rtl.html", name: "horizontal rtl", forward: "ArrowLeft" });
     await axis(browser, server.base, { file: "vertical.html", name: "vertical", forward: "ArrowDown" });
     await axis(browser, server.base, { file: "vertical-rtl.html", name: "vertical rtl", forward: "ArrowDown" });
+    await intent(browser, server.base, "horizontal.html");
+    await intent(browser, server.base, "horizontal-engine-threshold.html");
     await statics(browser, server.base);
     await reducedMotion(browser, server.base);
     await touch(browser, server.base);

@@ -29,11 +29,26 @@ const GATE = join(root, "scripts/react-carousel-slide-exposure.mjs");
  * many rows must fail — a defect that broke one row where it should break eight would otherwise pass.
  */
 const EXPECTED = {
-  "no-inert": { pattern: /Tab never lands in a slide out of view|a slide out of view is inert/, minimum: 8 },
+  // Every section that asserts inertness, not only the per-axis ones: the reduced-motion and touch
+  // sections assert it too, and a pattern that did not name them left them as unexplained failures.
+  "no-inert": {
+    pattern: /Tab never lands in a slide out of view|a slide out of view is inert|slides out of view are still inert|the slides left behind are inert/,
+    minimum: 10,
+  },
   "no-slide-names": { pattern: /every slide is named/, minimum: 4 },
   "no-region-name": { pattern: /the region is named|a consumer's own region name wins/, minimum: 5 },
-  "no-announcement": { pattern: /announced|announces|is announced/, minimum: 6 },
-  "vertical-ignores-block-keys": { pattern: /focus|announce/i, minimum: 2 },
+  "no-announcement": { pattern: /announced|announces|is announced|speaks once, naming the landing/, minimum: 12 },
+  // Named by the MOVEMENT, not by focus or the announcement. Swallowing the block keys stops the carousel
+  // moving, and the row that says so is "control: the move actually advanced one position" — which a
+  // `/focus|announce/i` pattern does not cover, so that pattern accepted a run in which the row proving
+  // the keys work was among the unexplained failures.
+  "vertical-ignores-block-keys": {
+    // Including the reduced-motion section, which drives the VERTICAL fixture with ArrowDown — so
+    // swallowing the block keys stops its move too, and the row saying so is this defect's, not collateral.
+    pattern: /the move actually advanced|focus is not dropped when its slide leaves the view|is announced exactly ONCE|naming where the track ENDED|the move is still announced/,
+    minimum: 7,
+  },
+  "announce-per-position": { pattern: /speaks once, naming the landing/, minimum: 2 },
 };
 
 function run(defect) {
@@ -47,11 +62,40 @@ function run(defect) {
   }
 }
 
-const rowsOf = (out, failing) =>
-  out
-    .split("\n")
-    .filter((l) => (failing ? /^\s+FAIL /.test(l) : /^\s+ok {2}/.test(l)))
-    .map((l) => l.trim().replace(/^(FAIL|ok)\s+/, ""));
+/**
+ * Every row of a gate run, as a stable IDENTITY and its detail, kept apart.
+ *
+ * The identity is the section heading plus the assertion's name — the things that do not change when the
+ * assertion's outcome does. The detail is everything after it, and the detail is exactly what differs
+ * between a row passing and the same row failing: "in view 1" becomes "in view 0". Comparing whole lines
+ * therefore finds almost no collateral failure, because a collaterally-failing row never looks like its
+ * own passing line. That is how this file's specificity check came to assert nothing, and the fix is to
+ * compare what identifies a row rather than what reports it.
+ *
+ * The split is exact rather than heuristic: the gate pads each name to a common width and then prints two
+ * spaces and the detail, so the first run of two or more spaces ends the name. A row that does not parse
+ * is returned with a null name and made to fail loudly below rather than silently dropped.
+ */
+function rowsOf(out, failing) {
+  const want = failing ? "FAIL" : "ok";
+  const rows = [];
+  let section = "?";
+  for (const line of out.split("\n")) {
+    if (/^\S/.test(line) && line.trim() && !/^(CONTROL|react-carousel)/.test(line)) {
+      section = line.trim();
+      continue;
+    }
+    // `FAIL` is followed by ONE space and `ok` by three — the gate pads the status token, not the gap. A
+    // parser that demanded two matched the passing rows and none of the failing ones, so every "it fails
+    // BECAUSE of that behaviour" check compared against an empty list and the row that caught it was the
+    // one asking whether the other assertions had still RUN.
+    const m = /^\s+(FAIL|ok)\s+(.*)$/.exec(line);
+    if (!m || m[1] !== want) continue;
+    const [name, ...rest] = m[2].split(/ {2,}/);
+    rows.push({ id: `${section} \u25b8 ${name.trim()}`, name: name.trim() || null, detail: rest.join("  ").trim() });
+  }
+  return rows;
+}
 
 const results = [];
 const ok = (n, d) => results.push([true, n, d]);
@@ -61,7 +105,13 @@ const bad = (n, d) => results.push([false, n, d]);
 const clean = run(null);
 if (clean.code === 0 && /all ok/.test(clean.out)) ok("positive: the gate passes on the component as shipped", `${rowsOf(clean.out, false).length} rows ok`);
 else bad("positive: the gate passes on the component as shipped", `exit ${clean.code}\n${clean.out.slice(-900)}`);
-const cleanPassing = new Set(rowsOf(clean.out, false));
+
+const cleanRows = rowsOf(clean.out, false);
+const cleanPassing = new Set(cleanRows.map((r) => r.id));
+// Every row must parse, or the two checks below are comparing nothing. Fail closed.
+const unparsed = cleanRows.filter((r) => !r.name);
+if (!unparsed.length) ok("every row of a clean run parses into a stable identity", `${cleanPassing.size} identities`);
+else bad("every row of a clean run parses into a stable identity", `${unparsed.length} rows did not parse: ${JSON.stringify(unparsed.slice(0, 3))}`);
 
 /* ── one negative control per defect ──────────────────────────────────────── */
 for (const defect of Object.keys(DEFECTS)) {
@@ -83,14 +133,23 @@ for (const defect of Object.keys(DEFECTS)) {
   }
 
   const failed = rowsOf(r.out, true);
-  const named = failed.filter((l) => pattern.test(l));
-  if (named.length >= minimum) ok(`negative: ${defect} — and it fails BECAUSE of that behaviour`, `${named.length} matching rows (≥ ${minimum}), e.g. ${JSON.stringify(named[0])}`);
-  else bad(`negative: ${defect} — and it fails BECAUSE of that behaviour`, `${named.length} of ${failed.length} failing rows match ${pattern} (needed ${minimum}): ${JSON.stringify(failed.slice(0, 6))}`);
+  const passed = rowsOf(r.out, false);
+  const named = failed.filter((row) => pattern.test(row.id));
+  if (named.length >= minimum) ok(`negative: ${defect} — and it fails BECAUSE of that behaviour`, `${named.length} matching rows (≥ ${minimum}), e.g. ${JSON.stringify(named[0].id)}`);
+  else bad(`negative: ${defect} — and it fails BECAUSE of that behaviour`, `${named.length} of ${failed.length} failing rows match ${pattern} (needed ${minimum}): ${JSON.stringify(failed.slice(0, 6).map((x) => x.id))}`);
 
-  // Specificity: no row that passes clean may fail here unless the pattern claims it.
-  const collateral = failed.filter((l) => cleanPassing.has(l) && !pattern.test(l));
+  // Specificity, by IDENTITY: no row that passes clean may fail here unless the pattern claims it.
+  const collateral = failed.filter((row) => cleanPassing.has(row.id) && !pattern.test(row.id));
   if (!collateral.length) ok(`negative: ${defect} — and it breaks nothing else`, `${failed.length} failing rows, all accounted for`);
-  else bad(`negative: ${defect} — and it breaks nothing else`, `unexplained failures: ${JSON.stringify(collateral.slice(0, 6))}`);
+  else bad(`negative: ${defect} — and it breaks nothing else`, `unexplained failures: ${JSON.stringify(collateral.slice(0, 6).map((x) => x.id))}`);
+
+  // ...and no row may simply VANISH. A mutation that makes a section throw part way through removes the
+  // assertions after it, and an assertion that did not run is not an assertion that passed — the gate
+  // would report fewer rows and still be counted as having covered them.
+  const ran = new Set([...failed, ...passed].map((row) => row.id));
+  const vanished = [...cleanPassing].filter((id) => !ran.has(id));
+  if (!vanished.length) ok(`negative: ${defect} — and every other assertion still RAN`, `${ran.size} of ${cleanPassing.size} identities present`);
+  else bad(`negative: ${defect} — and every other assertion still RAN`, `${vanished.length} assertions disappeared: ${JSON.stringify(vanished.slice(0, 6))}`);
 }
 
 /* ── the component on disk is untouched ───────────────────────────────────── */

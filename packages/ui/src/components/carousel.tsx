@@ -79,6 +79,21 @@ function inlineKey(key: string, rtl: boolean): "forward" | "backward" | null {
  * it into its docstring at `:68`: "vertical carousels use ArrowUp and ArrowDown". React answered the
  * INLINE keys on a vertical track instead — the two platforms were exact opposites on the same component.
  */
+/**
+ * How long the engine must be quiet before the move is announced. It spans a whole movement rather than a
+ * frame: the engine emits `scroll` about once per frame while animating, so any value comfortably above a
+ * frame coalesces an entire move — and a held key or a flung drag with it — into one phrase. Short enough
+ * that the phrase still follows the move closely; see the announcement effect for why a frame is not.
+ */
+const QUIET_MS = 80;
+
+/**
+ * How long recorded intent may sit with nothing acting on it. It bounds the one case the deterministic
+ * rules cannot see: a key or control press that records intent and then produces no `select` at all. Every
+ * `scroll` refreshes it, so a slow drag is never caught by it.
+ */
+const INTENT_IDLE_MS = 600;
+
 function blockKey(key: string): "forward" | "backward" | null {
   if (key === "ArrowDown") return "forward";
   if (key === "ArrowUp") return "backward";
@@ -135,8 +150,31 @@ const Carousel = React.forwardRef<
    * engine's own `pointerDown`, and cleared the moment it is spent — so one gesture announces once, no
    * matter how many positions it crossed.
    */
-  const userMoved = React.useRef(false);
-  const noteUserMove = React.useCallback(() => void (userMoved.current = true), []);
+  /**
+   * The reader's intent to move, and whether the engine has actually moved since it was recorded.
+   *
+   * Two refs rather than one flag, because "the reader asked for a move" and "a move happened" are
+   * different facts and the announcement needs both. A press that moves nothing must not leave intent
+   * behind for the next thing that moves the track to spend — measured before this was split: clicking a
+   * slide's own link (no drag) and then resizing the window announced "Slides 2 to 3 of 5", a resize the
+   * reader never asked for, reported as their own move.
+   */
+  /**
+   * The reader's intent to move, as the time it was recorded, and whether the engine has moved since.
+   *
+   * A timestamp rather than a flag because intent must not outlive the gesture that recorded it. Measured
+   * before this: clicking a slide's own link (no drag) and then resizing the window announced
+   * "Slides 2 to 3 of 5" — a resize the reader never asked for, reported as their own move, because a
+   * `pointerDown` had armed a flag that nothing cleared until something else moved the track.
+   */
+  const intentAt = React.useRef(0);
+  /** Whether the engine has scrolled since intent was recorded: what tells a drag from a click. */
+  const engineMoved = React.useRef(false);
+  /** Recorded by the arrow keys and the controls, each of which checks first that the move is possible. */
+  const noteUserMove = React.useCallback(() => {
+    intentAt.current = Date.now();
+    engineMoved.current = false;
+  }, []);
 
   /**
    * The direction the engine is actually running, with the consumer's override taking precedence exactly as
@@ -185,58 +223,98 @@ const Carousel = React.forwardRef<
   }, [api]);
 
   /**
-   * The announcement: one phrase per movement, only for a reader's own move, describing where the track
-   * ended up.
+   * The announcement: one phrase per movement, only for a reader's own move, naming where it landed.
    *
-   * It hangs off `select`, not `settle`. **`settle` is never emitted by this engine** — measured in
-   * Chromium against embla-carousel 8.6.0, where a keyboard-driven `scrollNext` emits `scroll` 91 times,
-   * `select` once and `slidesInView` once, and `settle` not at all. A listener on `settle` registers
-   * without error and then never runs, so the live region stayed empty while every other row of
-   * `scripts/react-carousel-slide-exposure.mjs` passed: the quiet kind of failure, and the reason that
-   * gate asserts the phrase itself rather than that a live region exists.
+   * Three things about this engine had to be measured rather than assumed, and each one ruled out a
+   * plausible design:
    *
-   * The trigger is `slidesInView`, not `select`. `select` fires when the TARGET index changes, which is
-   * before the engine has recomputed which slides are in view — measured: announcing from a `select`
-   * named the slide the reader had just LEFT ("Slide 1 of 5" after moving from slide 1 to slide 2), and
-   * it did so only sometimes, because whether the stale list was still the old one depended on the frame
-   * the callback landed in. `slidesInView` fires once the list it is named after is the current one.
+   *   - **`settle` is never emitted.** In Chromium against embla-carousel 8.6.0, one move of the pinned
+   *     horizontal fixture at 900x700 emits `scroll` 210 times, `select` once and `slidesInView` four
+   *     times, and `settle` not at all. A listener on it registers without error and never runs, so the
+   *     live region stayed empty while every other row of
+   *     `scripts/react-carousel-slide-exposure.mjs` passed.
+   *   - **`scroll` goes on long after the slide has arrived** — to about 1.7s, as the physics settle. So
+   *     "announce once the engine falls quiet" is a 1.7s delay on every keypress, and longer on a burst.
+   *   - **the in-view set keeps changing for as long.** Measured `[0] → [] → [1]` with the threshold
+   *     pinned, and still changing at 1500ms with the engine's own — one of those states having NO slide
+   *     in view. There is no frame, and no short quiet window, in which that set is reliably final.
    *
-   * A burst — a held key, a flung drag — fires it per position, so the callbacks are coalesced into one
-   * frame: the pending one is cancelled and re-scheduled, so a burst speaks ONCE, and because the phrase
-   * is read inside the frame it describes where the track ended rather than somewhere it passed through.
-   * That is also what keeps rapid interaction from queueing a stale phrase behind a polite region.
+   * So the in-view set is not what is announced. The SELECTED index is: it is decided the moment the move
+   * is requested, it never wobbles, and it is what `@kinetixui/angular` announces too
+   * (`packages/ui-angular/src/lib/carousel.ts:338`). `select` fires because that index changed, so reading
+   * it in that handler cannot be stale — which was the other measured failure of this effect: reading the
+   * in-view list inside a `select` handler named the slide the reader had just LEFT ("Slide 1 of 5" after
+   * moving from slide 1 to slide 2), intermittently, depending on the frame the callback landed in.
    *
-   * The reader's flag is consumed on announcing, so an autoplay plugin's tick, a `reInit` from a resize or
-   * a `dir` flip, and the first layout all stay silent: none of them sets it.
+   * A carousel showing several slides at once therefore announces the selected one rather than the visible
+   * range. That is Angular's behaviour, and it is the only form that is decidable: a range read at any
+   * particular moment during a 1.7s settle is a different range.
+   *
+   * One phrase per movement: a held key or a burst of clicks fires `select` per position, so the phrase is
+   * scheduled `QUIET_MS` after the last of them and each one pushes it back. The reader hears where the
+   * track ended, once, rather than every position it passed through.
+   *
+   * Intent is spent on one movement and never outlives its gesture. A press that turns out to be a click
+   * rather than a drag is dropped on `pointerUp`; a key or control that cannot move — an endpoint on a
+   * non-looping carousel — records none; and intent that nothing acts on goes stale after
+   * `INTENT_IDLE_MS`. An autoplay plugin's tick, a `reInit` from a resize or a `dir` flip, and the first
+   * layout are all silent, because none of them records intent and none can spend another gesture's.
    */
   React.useEffect(() => {
     if (!api) return;
     const win = root.current?.ownerDocument.defaultView;
     if (!win) return;
-    let frame = 0;
-    const speak = () => {
-      if (!userMoved.current) return;
-      win.cancelAnimationFrame(frame);
-      frame = win.requestAnimationFrame(() => {
-        if (!userMoved.current) return;
-        userMoved.current = false;
-        const shown = api.slidesInView();
-        const total = api.slideNodes().length;
-        if (!total) return;
-        const first = (shown[0] ?? api.selectedScrollSnap()) + 1;
-        const last = (shown.at(-1) ?? first - 1) + 1;
-        setAnnouncement(shown.length > 1 ? `Slides ${first} to ${last} of ${total}` : `Slide ${first} of ${total}`);
-      });
+    let quiet = 0;
+
+    const say = () => {
+      if (!intentAt.current) return;
+      intentAt.current = 0;
+      const total = api.slideNodes().length;
+      if (!total) return;
+      setAnnouncement(`Slide ${api.selectedScrollSnap() + 1} of ${total}`);
     };
-    // A drag is the reader moving the track too, and the engine is the only thing that knows a press
-    // became a drag rather than a click on a slide's own link.
-    const arm = () => void (userMoved.current = true);
-    api.on("slidesInView", speak);
-    api.on("pointerDown", arm);
+
+    /**
+     * The engine is moving under the reader's hand. This is what tells a drag from a click on a slide's
+     * own link, and it keeps a long gesture's intent fresh so the idle bound below applies to abandoned
+     * intent rather than to a slow drag.
+     */
+    const moving = () => {
+      if (!intentAt.current) return;
+      engineMoved.current = true;
+      intentAt.current = Date.now();
+    };
+
+    const selected = () => {
+      // Intent nothing acted on in time is not this movement's.
+      if (!intentAt.current || Date.now() - intentAt.current > INTENT_IDLE_MS) {
+        intentAt.current = 0;
+        return;
+      }
+      win.clearTimeout(quiet);
+      quiet = win.setTimeout(say, QUIET_MS);
+    };
+
+    // The engine is the only thing that knows whether a press became a drag, and it knows it at the
+    // release, not at the press — so the press records intent and the release is what withdraws it.
+    const press = () => {
+      intentAt.current = Date.now();
+      engineMoved.current = false;
+    };
+    const release = () => {
+      if (!engineMoved.current) intentAt.current = 0;
+    };
+
+    api.on("scroll", moving);
+    api.on("select", selected);
+    api.on("pointerDown", press);
+    api.on("pointerUp", release);
     return () => {
-      win.cancelAnimationFrame(frame);
-      api?.off("slidesInView", speak);
-      api?.off("pointerDown", arm);
+      win.clearTimeout(quiet);
+      api?.off("scroll", moving);
+      api?.off("select", selected);
+      api?.off("pointerDown", press);
+      api?.off("pointerUp", release);
     };
   }, [api]);
 
@@ -331,9 +409,17 @@ const Carousel = React.forwardRef<
           const move = horizontal ? inlineKey(e.key, engineRtl) : blockKey(e.key);
           if (move) {
             e.preventDefault();
-            noteUserMove();
-            if (move === "forward") scrollNext();
-            else scrollPrev();
+            // Intent is recorded only when the move can happen. A press against an endpoint on a
+            // non-looping carousel moves nothing and emits nothing, so recording intent there would leave
+            // it waiting for whatever moved the track next — an autoplay tick, a resize — to be announced
+            // as the reader's own move.
+            if (move === "forward") {
+              if (canScrollNext) noteUserMove();
+              scrollNext();
+            } else {
+              if (canScrollPrev) noteUserMove();
+              scrollPrev();
+            }
           }
         }}
         className={cn("relative font-sans", className)}
