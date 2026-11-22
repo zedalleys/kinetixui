@@ -121,6 +121,14 @@ const NEGATIVES = {
     breaks: "driver-invokes-its-controls",
     why: "a matrix step whose `--negative=` argument is a literal id runs that one control in every cell, so the matrix covers one name and claims to cover all of them",
   },
+  "invocation-sits-after-done": {
+    breaks: "driver-invokes-its-controls",
+    why: "an invocation one line past `done` consumes the loop variable but runs once, on the last name only, so it must not count as driving the loop",
+  },
+  "env-binding-collapses-the-matrix": {
+    breaks: "driver-invokes-its-controls",
+    why: "`${{ matrix.control && 'x' }}` mentions the matrix and delivers one fixed control to every cell, so presence of the words cannot stand in for identity",
+  },
   "registry-driven-nowhere": {
     breaks: "registry-has-a-driver",
     why: "a registry no workflow names is a set of controls that never execute, which is how pm-matrix's seven went unnoticed",
@@ -193,9 +201,56 @@ function discoverRegistries() {
 /** A quoted argument stripped to its payload: `"$CONTROL"` -> `$CONTROL`. */
 const unquote = (arg) => arg.replace(/^["']|["']$/g, "");
 
+/**
+ * The complete argument beginning at `from`. Reading to the next space is wrong: Codex's review of
+ * `c0afcffd` found that `--negative="${{ matrix.control }}"` — the inline form this gate's own
+ * message advertises — captured only `"${{`, so a correctly wired workflow FAILED the gate. A false
+ * failure is its own defect, so the argument is now read to its closing quote, to the closing `}}`
+ * of a GitHub expression, or to whitespace, in that order.
+ */
+function argumentAt(line, from) {
+  const rest = line.slice(from);
+  if (rest.startsWith('"') || rest.startsWith("'")) {
+    const q = rest[0];
+    const end = rest.indexOf(q, 1);
+    return end === -1 ? rest : rest.slice(0, end + 1);
+  }
+  if (rest.startsWith("${{")) {
+    const end = rest.indexOf("}}");
+    return end === -1 ? rest : rest.slice(0, end + 2);
+  }
+  return rest.match(/^\S*/)[0];
+}
+
 /** True when the argument is the loop's own variable, so each iteration runs a different control. */
 function consumesVariable(arg, name) {
   return new RegExp(`^\\$(?:\\{${name}\\}|${name})$`).test(unquote(arg));
+}
+
+/**
+ * The lines between a loop's `do` and its matching `done`, or null when the pair cannot be found.
+ * Codex's review of `c0afcffd` moved the invocation one line PAST `done`: it still consumed the
+ * variable, so the step read as a driver, while the loop body ran nothing and the single surviving
+ * call executed only the last control the loop had left in the variable. Collecting arguments from
+ * the whole step lost the one relationship that mattered — the call has to be in the body.
+ */
+function loopBody(run, variable) {
+  const lines = run.split("\n").map((l) => l.replace(/#.*$/, ""));
+  const start = lines.findIndex((l) => new RegExp(`for\\s+${variable}\\s+in\\s`).test(l));
+  if (start === -1) return null;
+  let depth = 0;
+  const body = [];
+  for (let i = start; i < lines.length; i += 1) {
+    const line = lines[i];
+    const opens = (line.match(/(?:^|[;\s])do(?:$|[;\s])/g) ?? []).length;
+    const closes = (line.match(/(?:^|[;\s])done(?:$|[;\s])/g) ?? []).length;
+    if (i > start || opens > 0) {
+      if (i > start) body.push(line);
+      depth += opens - closes;
+      if (depth <= 0 && (i > start || closes > 0)) return opens === 0 && closes === 0 && i === start ? null : body;
+    }
+  }
+  return null; // no matching `done`: an unrecognised shape, not a body
 }
 
 /**
@@ -215,17 +270,35 @@ function loopVariable(run, script) {
   return run.match(/for\s+(\w+)\s+in\s/)?.[1] ?? null;
 }
 
+/** `${{ matrix.control }}` and nothing else — no operators, no fallback, no second expression. */
+const IS_MATRIX_CONTROL = /^\$\{\{\s*matrix\.control\s*\}\}$/;
+
 /**
- * True when a matrix step's argument reaches `matrix.control` — written inline, or through an env
- * binding on the step, the job or the workflow. A literal control id traces to nothing: every cell
- * of the matrix would then run the same one.
+ * Why `matrix.control` is checked for IDENTITY and not for presence: Codex's review of `c0afcffd`
+ * showed that `CONTROL: ${{ matrix.control && 'missing-import' }}` contains `matrix.control`, passes
+ * a substring test, and makes every cell run `missing-import`. A substring says the expression
+ * MENTIONS the matrix; only identity says the cell RECEIVES it.
+ *
+ * So this is an allowlist. Two shapes are recognised — the expression written inline as the whole
+ * argument, and an env binding whose whole value is that expression — and every other shape is
+ * refused with its reason rather than guessed at. Refusing an unrecognised shape can only cost a
+ * workflow author one explicit line; accepting one costs the controls silently.
  */
 function tracesToMatrixControl(arg, bindings) {
   const payload = unquote(arg);
-  if (/^\$\{\{\s*matrix\.control\s*\}\}$/.test(payload)) return true;
+  if (IS_MATRIX_CONTROL.test(payload)) return { ok: true };
   const name = payload.match(/^\$\{?(\w+)\}?$/)?.[1];
-  if (!name) return false;
-  return /matrix\.control/.test(String(bindings[name] ?? ""));
+  if (!name) {
+    return { ok: false, why: `the argument ${arg} is neither \`\${{ matrix.control }}\` nor a single variable reference` };
+  }
+  if (!(name in bindings)) {
+    return { ok: false, why: `$${name} is not bound by the step, the job or the workflow, so what it holds cannot be established here` };
+  }
+  const value = String(bindings[name]);
+  if (!IS_MATRIX_CONTROL.test(value.trim())) {
+    return { ok: false, why: `$${name} is bound to \`${value}\`, which is not \`\${{ matrix.control }}\` itself` };
+  }
+  return { ok: true };
 }
 
 /** `--list-negatives`, run for real. Exit status and stdout are both part of the contract. */
@@ -263,15 +336,12 @@ function discoverDrivers() {
         const site = { workflow: file, job: jobId, step: step?.name ?? "(unnamed step)" };
         // Nearest binding wins, as it does on the runner.
         const bindings = { ...(doc?.env ?? {}), ...(job?.env ?? {}), ...(step?.env ?? {}) };
-        const calls = invocations(run, /(\S+\.mjs)\s+--negative=(\S*)/g);
+        // The pattern ends AT `--negative=` so `invocations()` reads the whole argument with
+        // `argumentAt()`. A `(\S*)` group here would stop at the first space and hand the rule
+        // `"${{` instead of `"${{ matrix.control }}"`, which is how a correct workflow came to fail.
+        const calls = invocations(run, /(\S+\.mjs)\s+--negative=/g);
         for (const found of invocations(run, /(\S+\.mjs)\s+--list-negatives/g)) {
-          loops.push({
-            ...site,
-            script: found.script,
-            run,
-            variable: loopVariable(run, found.script),
-            args: calls.filter((c) => c.script === found.script).map((c) => c.arg),
-          });
+          loops.push({ ...site, script: found.script, run });
         }
         for (const found of calls) {
           // Only a literal list is a second copy of the registry. A `fromJSON` matrix computed from a
@@ -349,7 +419,10 @@ function invocations(run, pattern) {
       const atCommandStart = /(?:^|[;&|(]|\b(?:then|do|else)\b)\s*(?:(?:node|pnpm\s+(?:exec|dlx)|npx)\s+)?$/.test(before);
       const insideQuotes = danglingQuote(before) !== null;
       const echoed = /\b(?:echo|printf)\b|(?:^|\s):\s/.test(before);
-      if (atCommandStart && !insideQuotes && !echoed) found.push({ script: m[1], arg: m[2] ?? "", line });
+      if (atCommandStart && !insideQuotes && !echoed) {
+        const arg = m[0].endsWith("=") ? argumentAt(line, m.index + m[0].length) : (m[2] ?? "");
+        found.push({ script: m[1], arg, line });
+      }
     }
     // State for the lines that follow. A real command can itself open a heredoc, so this runs after
     // the match above rather than instead of it.
@@ -433,8 +506,6 @@ function run({ control } = {}) {
         + 'count=$(printf \'%s\\n\' "$controls" | grep -c . || true)\n'
         + 'if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi\n'
         + 'for control in $controls; do\n  echo "--- $control"\ndone\n',
-      variable: "control",
-      args: [],
     });
   }
   if (control === "matrix-argument-ignores-the-matrix") {
@@ -444,6 +515,26 @@ function run({ control } = {}) {
       controls: [...(controlsByScript.get("scripts/check-taxonomy-namespaces.mjs") ?? [])],
       arg: "missing-import",
       bindings: { CONTROL: "${{ matrix.control }}" },
+    });
+  }
+  if (control === "invocation-sits-after-done") {
+    loops.push({
+      workflow: "a11y-browser.yml", job: "navigation-negative-controls", step: "A loop whose call sits after done",
+      script: "scripts/check-taxonomy-namespaces.mjs",
+      run: 'controls=$(node scripts/check-taxonomy-namespaces.mjs --list-negatives)\n'
+        + 'count=$(printf \'%s\\n\' "$controls" | grep -c . || true)\n'
+        + 'if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi\n'
+        + 'for control in $controls; do\n  echo "--- $control"\ndone\n'
+        + 'node scripts/check-taxonomy-namespaces.mjs --negative="$control"\n',
+    });
+  }
+  if (control === "env-binding-collapses-the-matrix") {
+    matrices.push({
+      workflow: "native-swiftui.yml", job: "consumer-negative-controls", step: "Negative control: a collapsing binding",
+      script: "scripts/check-taxonomy-namespaces.mjs",
+      controls: [...(controlsByScript.get("scripts/check-taxonomy-namespaces.mjs") ?? [])],
+      arg: '"$CONTROL"',
+      bindings: { CONTROL: "${{ matrix.control && 'missing-import' }}" },
     });
   }
   // driver-invokes-its-controls
@@ -456,16 +547,34 @@ function run({ control } = {}) {
   // execution does not.
   const executes = [];
   for (const loop of loops) {
-    const consuming = loop.args.filter((arg) => loop.variable && consumesVariable(arg, loop.variable));
-    if (consuming.length > 0) { executes.push(loop); continue; }
-    fail("driver-invokes-its-controls", `${loop.workflow} job ${loop.job} step "${loop.step}" lists ${loop.script}'s controls`
-      + `${loop.variable ? ` into $${loop.variable}` : ""} but never invokes ${loop.script} --negative= with`
-      + `${loop.variable ? ` $${loop.variable}` : " it"}; the loop iterates over names and runs nothing`);
+    const where = `${loop.workflow} job ${loop.job} step "${loop.step}"`;
+    // Derived HERE, from the site's own `run`, not carried in from discovery. Mutation showed why:
+    // while the control injected its own `args: []`, it passed with the body restriction deleted,
+    // because it was asserting its own input instead of exercising the rule.
+    const variable = loopVariable(loop.run, loop.script);
+    const body = variable ? loopBody(loop.run, variable) : null;
+    const args = body === null
+      ? []
+      // Only the loop BODY counts. A call after `done` runs once, on whatever the variable held
+      // last, and is not a driver for the registry.
+      : invocations(body.join("\n"), /(\S+\.mjs)\s+--negative=/g)
+        .filter((c) => c.script === loop.script)
+        .map((c) => c.arg);
+    if (!variable) {
+      fail("driver-invokes-its-controls", `${where} lists ${loop.script}'s controls but binds no loop variable this check can follow`);
+      continue;
+    }
+    if (body === null) {
+      fail("driver-invokes-its-controls", `${where} lists ${loop.script}'s controls into $${variable}, but its \`for\` and \`done\` cannot be paired, so what runs per control cannot be established`);
+      continue;
+    }
+    if (args.some((arg) => consumesVariable(arg, variable))) { executes.push(loop); continue; }
+    fail("driver-invokes-its-controls", `${where} lists ${loop.script}'s controls into $${variable}, but nothing INSIDE the loop invokes ${loop.script} --negative= with $${variable}; a call after \`done\` runs once, on the last name only`);
   }
   for (const m of matrices) {
-    if (tracesToMatrixControl(m.arg, m.bindings)) { executes.push(m); continue; }
-    fail("driver-invokes-its-controls", `${m.workflow} job ${m.job} step "${m.step}" invokes ${m.script} --negative=${m.arg}, `
-      + `which does not trace to matrix.control, so all ${m.controls.length} cells run the same control`);
+    const verdict = tracesToMatrixControl(m.arg, m.bindings);
+    if (verdict.ok) { executes.push(m); continue; }
+    fail("driver-invokes-its-controls", `${m.workflow} job ${m.job} step "${m.step}" invokes ${m.script} --negative=${m.arg}, and ${verdict.why}, so all ${m.controls.length} cells would run the same control`);
   }
 
   // registry-has-a-driver
