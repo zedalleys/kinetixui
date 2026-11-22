@@ -96,6 +96,12 @@ async function verdictText(studio) {
  * below as the one that fails, which is the behaviour actually at stake.
  */
 const verdictVisible = async (page) => {
+  // A verdict that never becomes readable is a behavioural failure, and must say so. Measured in
+  // M5.24: when the verdict was moved into the volatile announcement slot, the draft-storage notice
+  // sometimes overwrote it BEFORE this poll saw it, so the gate failed with a bare TimeoutError
+  // instead of naming the defect. Which of the two failures fired depended on a race — and the
+  // source control, which requires the intended reason, passed in some runs and not others. Both
+  // outcomes are the same defect; now both name it.
   const handle = await page.waitForFunction(() => {
     const text = [".studio-checked", ".studio-announcement", ".studio-error"]
       .map((selector) => document.querySelector(selector)?.textContent ?? "")
@@ -104,7 +110,10 @@ const verdictVisible = async (page) => {
     // could not be checked, and that one lives in the error region. All three regions are read so
     // that moving a verdict produces a behavioural failure rather than a locator timeout.
     return /Checked:|could not be checked/i.test(text) ? text : false;
-  }, { timeout: 30_000 });
+  }, { timeout: 30_000 }).catch((error) => {
+    if (error?.name !== "TimeoutError") throw error;
+    throw new assert.AssertionError({ message: "the reconciliation verdict never became readable: no \"Checked:\" answer appeared in the checked, announcement or error regions within 30s — the check did not answer, or its answer was removed by an unrelated notice before it could be read" });
+  });
   return String(await handle.jsonValue());
 };
 

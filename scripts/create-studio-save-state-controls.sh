@@ -69,6 +69,14 @@ PY
 # control <label> <old> <new> <expected substring of the failure>
 control() {
   local label="$1" old="$2" new="$3" expected="$4"
+  # DUMP_ANCHORS emits this control's mutation instead of running it, so that
+  # scripts/create-studio-anchor-manifest.mjs can derive every anchor mechanically rather than
+  # from a hand-kept list. It runs no gate and patches nothing.
+  if [ -n "${DUMP_ANCHORS:-}" ]; then
+    printf '%s\t%s\t%s\t%s\n' "$STUDIO" "$(printf '%s' "$old" | base64 -w0)" \
+      "$(printf '%s' "$new" | base64 -w0)" "$(printf '%s' "$label" | base64 -w0)"
+    return
+  fi
   # CONTROL_ONLY re-runs a single control in isolation, for when one of them failed on an
   # infrastructure timeout rather than on its own detection and needs a clean measurement. Skips
   # are counted and printed, and a filter that matches nothing is itself a failure, so a typo
@@ -163,10 +171,17 @@ control "a conflict on a retry loses the sentence that explains it" \
 # The verdict in the status bar's shared announcement slot, which is what it did first. Several
 # unrelated effects write there — the draft-storage one fires repeatedly when storage is refusing
 # writes — and the answer the user had just asked for removed itself within seconds.
+# The expected phrase is shared by BOTH ways this defect shows itself, because which one fires is a
+# race: if the gate reads the verdict before the draft-storage notice overwrites it, the later
+# persistence assertion fires ("must not be overwritten by an unrelated notice"); if the overwrite
+# wins, the verdict is never readable and the wait fails ("…removed by an unrelated notice…").
+# Requiring only the first made this control pass in some runs and report a wrong reason in others
+# (2 of 5 measured), while the gate itself failed every time — so the flake was in the control's
+# reading, not in the gate's detection.
 control "the reconciliation verdict shares the volatile announcement slot" \
   '        setChecked(`Checked: that save did not commit.' \
   '        setNotice(`Checked: that save did not commit.' \
-  "must not be overwritten by an unrelated notice"
+  "an unrelated notice"
 
 # Codex's P1 at `1e21261e`. Adopting a foreign writer's revision while keeping the local document on
 # screen leaves Save enabled against a revision this work was never based on, and the next save
@@ -225,6 +240,10 @@ control "a confirmed save leaves the truncation record behind" \
   '      pendingSaves.current = [];
       setRecovered(false); setNotice("Saved to this computer'"'"'s local server.");' \
   "with an exhaustive list the check must not plead ignorance"
+
+# DUMP_ANCHORS dumped every control's mutation above and ran nothing; there is no restored tree
+# to verify, so stop here rather than starting a gate.
+[ -n "${DUMP_ANCHORS:-}" ] && exit 0
 
 echo "== restored tree must pass =="
 restore_all

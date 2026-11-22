@@ -11,7 +11,12 @@ import { exportReact } from "./export";
 const require = createRequire(import.meta.url);
 it("typechecks and bundles exported source in a clean React consumer directory", async () => {
   const root = resolve(process.cwd(), "../..");
-  const directory = process.env.KINETIX_CREATE_EXPORT_FIXTURE ?? await mkdtemp(join(tmpdir(), "kinetix-export-consumer-"));
+  // `??` passed an EMPTY string straight through, so `KINETIX_CREATE_EXPORT_FIXTURE=""` made every
+  // join() below relative to the cwd: this test then wrote 14 files into apps/web and REPLACED the
+  // tracked apps/web/package.json and tsconfig.json with consumer stubs, while still exiting 0.
+  // `||` treats empty as unset, and the repo guard makes the whole class unreachable by hand too.
+  const directory = process.env.KINETIX_CREATE_EXPORT_FIXTURE || await mkdtemp(join(tmpdir(), "kinetix-export-consumer-"));
+  if (resolve(directory).startsWith(root + "/")) throw new Error(`KINETIX_CREATE_EXPORT_FIXTURE names ${directory}, which is inside the repository; this test writes a whole consumer project and would overwrite tracked files`);
   await mkdir(join(directory, "node_modules/@kinetixui"), { recursive: true });
   await mkdir(join(directory, "node_modules/@types"), { recursive: true });
   const link = async (target: string, name: string) => { try { await symlink(target, join(directory, "node_modules", name)); } catch (e) { if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e; } };

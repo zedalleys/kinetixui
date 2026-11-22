@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+# Reap what killed disposable-worktree batches leave behind (M5.24).
+#
+# A batch killed with SIGKILL cannot clean up after itself — that is inherent, and it is the same
+# property that makes the isolation trustworthy: nothing the batch does depends on it being allowed
+# to finish. But it means a killed batch can leave two things running or registered:
+#
+#   - its dev server, started under its own session so it can be killed as a group, which
+#     therefore SURVIVES a kill of the orchestrator's group. Measured: two survived, serving deleted
+#     worktrees, and with a stale server from an earlier session they held about 8.6 GB of a 15 GB
+#     machine. Three browser-gate steps then timed out in a way that read as flaky gates.
+#   - its worktree registration, and its directory.
+#
+# This script finds both and removes them, and it NAMES every one it removes. A leak that is
+# cleaned up silently is a leak nobody learns from; one that is reported at the start of the next
+# batch is a fact about the previous one.
+#
+# It only ever touches processes whose command line names a `/tmp/kinetix-dw.*` directory, and
+# worktrees under that prefix. Nothing else on the machine is in scope.
+#
+# OWNERSHIP AND LIVENESS. Codex's P2 on PR #661: this reaped by prefix alone, so a batch started
+# while another was running treated the running one as abandoned and destroyed its worktree and
+# dev server. Each orchestrator now writes `<worktree>.owner` holding its own PID before creating
+# the worktree, and a worktree whose owner process is still alive is SKIPPED and named. An
+# abandoned batch has no live owner, which is exactly the case this script exists for.
+
+set -uo pipefail
+
+CAND="$(git rev-parse --show-toplevel)" || exit 2
+reaped=0
+
+registered="$(git -C "$CAND" worktree list --porcelain | awk '/^worktree /{print $2}' | grep '^/tmp/kinetix-dw\.' || true)"
+keep="${REAP_KEEP:-}"   # a worktree the CALLER is about to use, never reaped
+skipped=0
+
+# A worktree is ACTIVE if its .owner file names a process that still exists. Anything else — no
+# owner file, an owner that has gone, or a PID that has been reused by an unrelated process, which
+# only ever makes this MORE conservative — is treated as abandoned.
+announced=" "
+# Liveness without announcing or counting, so the group-safety test below can ask freely.
+owner_alive() {
+  local base owner pid
+  base="${1%.store}"
+  owner="$base.owner"
+  [ -f "$owner" ] || return 1
+  pid="$(awk 'NR==1{print $1}' "$owner" 2>/dev/null)"
+  [ -n "$pid" ] || return 1
+  kill -0 "$pid" 2>/dev/null
+}
+
+active() {
+  local dw="$1" base owner pid
+  # A batch's saved-product directory is the SIBLING `<worktree>.store`, and it carries no owner
+  # marker of its own: asking about `<worktree>.store.owner` always said "abandoned", so the sweep
+  # below deleted a LIVE batch's stored products while correctly sparing its worktree. Liveness
+  # belongs to the owning worktree, so resolve the sibling back to it before testing.
+  base="${1%.store}"
+  [ -n "$keep" ] && { [ "$dw" = "$keep" ] || [ "$base" = "$keep" ]; } && return 0
+  owner="$base.owner"
+  [ -f "$owner" ] || return 1
+  pid="$(awk 'NR==1{print $1}' "$owner" 2>/dev/null)"
+  [ -n "$pid" ] || return 1
+  kill -0 "$pid" 2>/dev/null || return 1
+  # Announce each live batch once, however many of the sweeps below ask about it.
+  case "$announced" in
+    *" $base "*) : ;;
+    *)
+      printf 'SKIPPED  %s — still owned by a live batch (pid %s, started %s)\n' \
+        "$base" "$pid" "$(awk 'NR==1{print $2}' "$owner" 2>/dev/null)"
+      announced="$announced$base "
+      skipped=$((skipped + 1))
+      ;;
+  esac
+  return 0
+}
+
+# --- processes serving a disposable worktree that is not the caller's ----------------------------
+# FIELD PARSING IS LOAD-BEARING HERE, and getting it wrong is dangerous rather than merely wrong.
+# `ps -eo pid=,pgid=` right-pads its columns, so splitting on the FIRST space left the group id
+# EMPTY and the group kill expanded to `kill -TERM -- -`. That is how reaping one leaked process
+# from an earlier run killed the orchestrator that had invoked the reaper — found by running it,
+# 2026-11-22. Fields are now split with awk, and no group signal is sent unless the group id is
+# all digits, is not this process's own group, and is not 1.
+MY_PGID="$(ps -o pgid= -p $$ 2>/dev/null | tr -d ' ')"
+
+kill_group() {
+  local sig="$1" pgid="$2" pid="$3"
+  case "$pgid" in
+    "" | *[!0-9]*)
+      printf 'REFUSED  process %s has no readable process group — signalling that pid alone\n' "$pid"
+      kill "-$sig" "$pid" 2>/dev/null
+      return ;;
+  esac
+  if [ "$pgid" = "1" ] || [ "$pgid" = "$MY_PGID" ]; then
+    printf 'REFUSED  not signalling group %s (init, or this reaper own group) — signalling pid %s alone\n' \
+      "$pgid" "$pid"
+    kill "-$sig" "$pid" 2>/dev/null
+    return
+  fi
+  # A GROUP IS NOT A BATCH. Two orchestrators started from the same non-job-controlling shell
+  # share a process group, so a negative PID can reach a LIVE batch's processes even though its
+  # ownership marker is valid and the sweep above correctly spared its worktree. Measured: the
+  # reaper announced the live batch as skipped and then SIGTERMed its owner. The orchestrator now
+  # puts each batch in its own session, and this is the second lock: if any member of the group
+  # serves a live-owned worktree, the group is not wholly abandoned and only the single process is
+  # signalled.
+  if ! group_is_wholly_abandoned "$pgid"; then
+    printf 'REFUSED  group %s also holds a LIVE batch process — signalling pid %s alone\n' "$pgid" "$pid"
+    kill "-$sig" "$pid" 2>/dev/null
+    return
+  fi
+  kill "-$sig" -- "-$pgid" 2>/dev/null || kill "-$sig" "$pid" 2>/dev/null
+}
+
+group_is_wholly_abandoned() {
+  local pgid="$1" p g rest other
+  while IFS=' ' read -r p g rest; do
+    [ "$g" = "$pgid" ] || continue
+    other="$(printf '%s' "$rest" | grep -oE '/tmp/kinetix-dw\.[A-Za-z0-9]+' | head -1)"
+    [ -n "$other" ] || continue
+    if [ -n "$keep" ] && [ "${other%.store}" = "$keep" ]; then return 1; fi
+    owner_alive "$other" && return 1
+  done < <(dw_processes)
+  return 0
+}
+
+dw_processes() {
+  ps -eo pid=,pgid=,args= |
+    awk '{ pid = $1; pgid = $2; $1 = ""; $2 = ""; sub(/^ +/, ""); print pid, pgid, $0 }' |
+    grep -E '/tmp/kinetix-dw\.' | grep -v -- "$0" | grep -v 'grep' || true
+}
+
+while IFS=' ' read -r pid pgid args; do
+  [ -n "$pid" ] || continue
+  dw="$(printf '%s' "$args" | grep -oE '/tmp/kinetix-dw\.[A-Za-z0-9]+' | head -1)"
+  [ -n "$dw" ] || continue
+  active "$dw" && continue
+  printf 'REAPED   process %s (group %s) serving %s%s\n' "$pid" "${pgid:-unknown}" "$dw" \
+    "$([ -d "$dw" ] || printf ' — its worktree is already deleted')"
+  kill_group TERM "$pgid" "$pid"
+  reaped=$((reaped + 1))
+done < <(dw_processes)
+
+if [ "$reaped" -gt 0 ]; then
+  sleep 3
+  # The SIGKILL sweep must skip live batches, or it would undo the liveness check above, and it
+  # goes through the same guarded kill_group.
+  while IFS=' ' read -r pid pgid args; do
+    [ -n "$pid" ] || continue
+    dw="$(printf '%s' "$args" | grep -oE '/tmp/kinetix-dw\.[A-Za-z0-9]+' | head -1)"
+    [ -n "$dw" ] && active "$dw" > /dev/null && continue
+    kill_group 9 "$pgid" "$pid"
+  done < <(dw_processes)
+fi
+
+# --- worktrees left registered or on disk --------------------------------------------------------
+for wt in $registered; do
+  active "$wt" && continue
+  printf 'REAPED   worktree %s\n' "$wt"
+  git -C "$CAND" worktree remove --force "$wt" > /dev/null 2>&1 || rm -rf "$wt"
+  reaped=$((reaped + 1))
+done
+for d in /tmp/kinetix-dw.*; do
+  [ -d "$d" ] || continue
+  active "$d" && continue
+  printf 'REAPED   orphaned directory %s\n' "$d"
+  rm -rf "$d"
+  reaped=$((reaped + 1))
+done
+git -C "$CAND" worktree prune > /dev/null 2>&1
+
+# An owner file whose batch is gone is itself residue.
+for o in /tmp/kinetix-dw.*.owner; do
+  [ -f "$o" ] || continue
+  d="${o%.owner}"
+  [ -d "$d" ] && continue
+  pid="$(awk 'NR==1{print $1}' "$o" 2>/dev/null)"
+  [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && continue
+  printf 'REAPED   stale ownership marker %s\n' "$o"
+  rm -f "$o"
+  reaped=$((reaped + 1))
+done
+
+note=""
+[ "$skipped" -gt 0 ] && note=" ($skipped still-active batch(es) left alone)"
+if [ "$reaped" -eq 0 ]; then
+  echo "nothing left behind by earlier batches$note"
+else
+  echo "reaped $reaped item(s) left behind by earlier, interrupted batches$note"
+fi
+exit 0
