@@ -272,13 +272,30 @@ const p = r.resolve('react-is', { paths: [r.resolve('recharts')] });
 console.log(JSON.stringify({ version: r(p.replace(/index\\.js$/, 'package.json')).version, path: p }));
 `);
   const resolvedReactIs = JSON.parse(execFileSync(process.execPath, [probe], { cwd: fixture, encoding: 'utf8' }).trim());
-  const want = reactIsSpec.replace(/^[^\d]*/, '').split('.')[0];
-  const got = resolvedReactIs.version.split('.')[0];
-  assert.equal(
-    got, want,
-    `--react-is=${reactIsSpec} did not take effect: recharts still resolves react-is ${resolvedReactIs.version} from ${resolvedReactIs.path}. Under ${pm} the pin has to reach recharts' own resolution, not just the consumer's root, so this run would have measured the version it was asked to replace. Refusing to report a result.`,
+  /*
+   * The check has to be against the WHOLE spec, not its major. Comparing majors alone would certify a
+   * resolution that never satisfied the request — `--react-is=18.2.0` would pass on an unchanged nested
+   * 18.3.1, because both reduce to "18" — which is the same misleading measurement this guard exists to
+   * prevent (Codex P2, PR #665). Only two spec shapes are accepted, so each can be checked exactly:
+   * an exact version, which must match, and a caret major, which fixes only the major. Anything else is
+   * rejected rather than approximated, because a range this script cannot verify is a range it must not
+   * claim to have honoured. `semver` would generalise it and is NOT used: it is a transitive dependency
+   * of this workspace, not a declared one, and leaning on an undeclared transitive package is the exact
+   * defect this PR documents.
+   */
+  const exact = /^\d+\.\d+\.\d+$/.test(reactIsSpec);
+  const caretMajor = /^\^?\d+$/.test(reactIsSpec);
+  assert.ok(
+    exact || caretMajor,
+    `--react-is=${JSON.stringify(reactIsSpec)} is not a spec this script can verify was honoured. Pass an exact version (18.3.1) or a caret major (^18, 18). Refusing rather than reporting a result this guard cannot stand behind.`,
   );
-  console.log(`Pinned react-is took effect: recharts resolves ${resolvedReactIs.version} (asked for ${reactIsSpec}).`);
+  const got = resolvedReactIs.version;
+  const honoured = exact ? got === reactIsSpec : got.split('.')[0] === reactIsSpec.replace('^', '');
+  assert.ok(
+    honoured,
+    `--react-is=${reactIsSpec} did not take effect: recharts resolves react-is ${got} from ${resolvedReactIs.path}. Under ${pm} the pin has to reach recharts' own resolution, not just the consumer's root, so this run would have measured the version it was asked to replace. Refusing to report a result.`,
+  );
+  console.log(`Pinned react-is took effect: recharts resolves ${got}, which satisfies the whole requested spec ${reactIsSpec}.`);
 }
 run(resolve(fixture, 'node_modules/.bin/tsc'), []);
 run(resolve(fixture, 'node_modules/.bin/vite'), ['build']);

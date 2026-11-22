@@ -262,10 +262,20 @@ if (negative) {
      */
     const strict = consumer('--pm=pnpm', '--omit-recharts');
     const hoisted = consumer('--pm=npm', '--omit-recharts');
+    /*
+     * The npm half needs POSITIVE evidence, not the absence of a diagnostic. "No TS2307 in the output"
+     * is also true of an npm arm that died before typechecking — a registry error, a missing binary —
+     * and then this control would report that npm resolved the undeclared import without npm having
+     * tested it at all, while the pnpm half supplied the only diagnostic in sight. So the npm arm has
+     * to exit 0, build, and render the chart. (Codex P2, PR #665.)
+     */
     const checks = [
       ['pnpm must fail', strict.status !== 0],
       ['and fail on the unresolved import, not something else', /error TS2307: Cannot find module 'recharts'/.test(strict.out)],
-      ['npm must resolve it anyway, which is the accident the docs relied on', /error TS2307: Cannot find module 'recharts'/.test(hoisted.out) === false],
+      ['npm must get as far as a successful build, or it tested nothing', /built in/.test(hoisted.out)],
+      ['npm must render the chart from the undeclared import', /cell fills 1,1,1 \(array\)/.test(hoisted.out)],
+      ['npm must exit 0', hoisted.status === 0],
+      ['and never report the unresolved import, which is the accident the docs relied on', !/error TS2307: Cannot find module 'recharts'/.test(hoisted.out)],
     ];
     for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
     const ok = checks.every(([, held]) => held);
