@@ -81,7 +81,18 @@ export function CategoryExplorer({ categories, label }: { categories: readonly E
       const panel = root.current?.querySelector<HTMLElement>(`[data-category-panel="${id}"]`);
       const el = bar.current;
       if (!panel || !el) return 0;
-      const stuckBottom = (parseFloat(getComputedStyle(el).top) || 0) + el.getBoundingClientRect().height;
+      // What the panel has to clear is whatever stays pinned above it. The site header always does.
+      // The category bar does only while it is sticky: when the half-viewport budget turns
+      // stickiness off (use-sticky-under-header.ts) the bar scrolls away with the page, and adding
+      // its height would send the panel too far down.
+      //
+      // Both parts are measured here rather than read from the bar's `top`. That read was the
+      // defect: with the bar not sticky its computed `top` is `auto`, `parseFloat` gives `NaN`, and
+      // the `|| 0` fallback silently aligned the panel at the bar's own height — underneath a
+      // taller header, hiding the start of the category the reader had just chosen.
+      const headerHeight = document.querySelector<HTMLElement>("header.sticky")?.getBoundingClientRect().height ?? 0;
+      const pinned = getComputedStyle(el).position === "sticky";
+      const stuckBottom = headerHeight + (pinned ? el.getBoundingClientRect().height : 0);
       return panel.getBoundingClientRect().top - stuckBottom;
     };
     const offset = offsetOf();

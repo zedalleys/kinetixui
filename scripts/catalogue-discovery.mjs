@@ -164,6 +164,11 @@ async function checkStickySearch(browser, mutate) {
     await page.waitForSelector("#component-search", { timeout: 15000 }).catch(() => {});
     if (v.dir === "rtl") await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"));
     if (mutate?.css) await page.addStyleTag({ content: mutate.css });
+    // Applied after hydration on purpose: the filter bar and its field are client-rendered, so a
+    // mutation written into the served document never reaches them, and a MutationObserver racing
+    // React's commit is worse. This runs once the page has settled and nothing re-renders it before
+    // the measurement below.
+    if (mutate?.evaluate) await page.evaluate(mutate.evaluate);
     await page.waitForTimeout(500);
 
     const rootPx = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
@@ -173,7 +178,13 @@ async function checkStickySearch(browser, mutate) {
       continue;
     }
 
-    const m = await page.evaluate(async () => {
+    // Three stages, in this order deliberately. The keyboard stage has to run from the
+    // scrolled-past state, BEFORE anything centres the field: the accepted non-sticky behaviour
+    // depends on focus being what brings the field back into view, and a gate that centres it first
+    // never exercises that. The earlier shape of this check also called `input.focus()` directly,
+    // which a regression adding `tabIndex={-1}` would have satisfied while a keyboard reader could
+    // no longer reach the field at all.
+    const m0 = await page.evaluate(async () => {
       document.documentElement.style.scrollBehavior = "auto";
       const header = document.querySelector("header.sticky");
       const input = document.getElementById("component-search");
@@ -181,28 +192,82 @@ async function checkStickySearch(browser, mutate) {
       if (!header || !input || !bar) {
         return { population: { header: !!header, input: !!input, bar: !!bar } };
       }
-      const rect = (el) => {
-        const b = el.getBoundingClientRect();
-        return { top: +b.top.toFixed(1), bottom: +b.bottom.toFixed(1), left: +b.left.toFixed(1), right: +b.right.toFixed(1), height: +b.height.toFixed(1), width: +b.width.toFixed(1) };
-      };
       const stickyTop = parseFloat(getComputedStyle(bar).top) || 0;
       const position = getComputedStyle(bar).position;
       // Scroll past the point where a sticky bar pins, so page content is underneath it.
       window.scrollTo(0, bar.getBoundingClientRect().top + window.scrollY - stickyTop + 600);
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       await new Promise((r) => setTimeout(r, 250));
+      // Nothing focused, so Tab starts from the top of the document or from the scroll position's
+      // own focus starting point — either way it is the reader's real starting point here.
+      document.activeElement?.blur?.();
+      // Coverage is measured HERE, while the page is still scrolled past the pin point. Taking it
+      // after the keyboard stage was a defect in this gate: focusing the field scrolls it into
+      // view, which lifts it out from under the header, and a bar pinned at `top: 0` then measured
+      // 0px of coverage — the `w2-header-covers-field` control stopped firing on its own assertion.
+      const rect = (el) => {
+        const b = el.getBoundingClientRect();
+        return { top: +b.top.toFixed(1), bottom: +b.bottom.toFixed(1), left: +b.left.toFixed(1), right: +b.right.toFixed(1), height: +b.height.toFixed(1), width: +b.width.toFixed(1) };
+      };
+      const b = input.getBoundingClientRect();
+      return {
+        population: { header: true, input: true, bar: true },
+        position,
+        stickyTop,
+        offscreenBeforeKeyboard: b.bottom < 0 || b.top > window.innerHeight,
+        header: rect(header),
+        bar: rect(bar),
+        field: rect(input),
+      };
+    });
+
+    if (!m0.population.header || !m0.population.input || !m0.population.bar) {
+      failures.push(
+        `${tag}: nothing to measure — header:${m0.population.header} search field:${m0.population.input} filter bar:${m0.population.bar}. ` +
+          `A missing element is a failure, not a pass.`,
+      );
+      rows.push({ tag, ...v, ...m0 });
+      await ctx.close();
+      continue;
+    }
+
+    // Stage 2: real Tab presses. Bounded, and the bound is a failure, not a pass.
+    const TAB_LIMIT = 80;
+    let tabPresses = null;
+    for (let i = 1; i <= TAB_LIMIT; i++) {
+      await page.keyboard.press("Tab");
+      const onField = await page.evaluate(() => document.activeElement?.id === "component-search");
+      if (onField) {
+        tabPresses = i;
+        break;
+      }
+    }
+    await page.waitForTimeout(200);
+
+    const m = await page.evaluate(async (PRE) => {
+      const header = document.querySelector("header.sticky");
+      const input = document.getElementById("component-search");
+      const bar = input.closest("div[data-filter-bar]");
+      const rect = (el) => {
+        const b = el.getBoundingClientRect();
+        return { top: +b.top.toFixed(1), bottom: +b.bottom.toFixed(1), left: +b.left.toFixed(1), right: +b.right.toFixed(1), height: +b.height.toFixed(1), width: +b.width.toFixed(1) };
+      };
+      const keyboardFocused = document.activeElement === input;
+      // Measured where the keyboard left it: if focus brought the field back into view, this is the
+      // position a keyboard reader is actually looking at.
+      const ivb = rect(input);
+      const inViewOnKeyboardFocus = ivb.top >= 0 && ivb.bottom <= window.innerHeight + 1;
 
       const hb = rect(header);
-      let bb = rect(bar);
-      let ib = rect(input);
-      // A bar that is not sticky has scrolled away by now, and elementFromPoint off the viewport
-      // returns null — which reads exactly like "covered". For a non-sticky bar, reachable after
-      // scrolling back IS the contract, so scroll back and measure there.
+      let ib = ivb;
+      // A bar that is not sticky has scrolled away, and elementFromPoint off the viewport returns
+      // null — which reads exactly like "covered". For a non-sticky bar, reachable after scrolling
+      // back IS the contract, so scroll back and measure the POINTER there. The keyboard verdict
+      // above was already taken, so this cannot launder a field Tab could not reach.
       let scrolledBack = false;
       if (ib.bottom < 0 || ib.top > window.innerHeight) {
         input.scrollIntoView({ block: "center", behavior: "auto" });
         await new Promise((r) => setTimeout(r, 150));
-        bb = rect(bar);
         ib = rect(input);
         scrolledBack = true;
       }
@@ -213,52 +278,74 @@ async function checkStickySearch(browser, mutate) {
       const hit = document.elementFromPoint(cx, cy);
       const hitIsField = !!(hit && (hit === input || input.contains(hit) || hit.closest("#component-search")));
 
-      input.focus();
-      const fb = rect(input);
-      const focusedIsField = document.activeElement === input;
-
       return {
         population: { header: true, input: true, bar: true },
-        position,
-        stickyTop,
+        position: getComputedStyle(bar).position,
+        stickyTop: parseFloat(getComputedStyle(bar).top) || 0,
         headerHeight: hb.height,
         // where a sticky bar actually sits versus the header's measured bottom
-        offsetMatchesHeader: position === "sticky" ? Math.abs(stickyTop - hb.height) <= 1 : null,
-        barCoveredByHeader: over(bb, hb),
-        fieldCoveredByHeader: over(ib, hb),
+        offsetMatchesHeader:
+          getComputedStyle(bar).position === "sticky" ? Math.abs((parseFloat(getComputedStyle(bar).top) || 0) - hb.height) <= 1 : null,
+        // From the scrolled-past geometry, not from here — see the note in the first stage.
+        //
+        // Only meaningful while the bar is PINNED. A bar that is not sticky has scrolled off the
+        // top by this point, and `over()` on a rect with a negative top happily reports the
+        // header's full height as "coverage" — which reddened 768px/200% for a bar that was simply
+        // not on screen, exactly the behaviour the owner accepted. Nothing can be covered by the
+        // header when it is not there to be covered.
+        barCoveredByHeader: PRE.position === "sticky" ? over(PRE.bar, PRE.header) : null,
+        fieldCoveredByHeader: PRE.position === "sticky" ? over(PRE.field, PRE.header) : null,
         fieldWidth: ib.width,
         hitTag: hit ? hit.tagName + (hit.id ? "#" + hit.id : "") : null,
         pointerReachesField: hitIsField,
-        focusedIsField,
-        focusBoxUnderHeader: fb.top < hb.bottom - 1,
+        keyboardFocused,
+        inViewOnKeyboardFocus,
+        focusBoxUnderHeader: ivb.top < hb.bottom - 1,
         scrolledBack,
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       };
-    });
-
-    if (!m.population.header || !m.population.input || !m.population.bar) {
-      failures.push(
-        `${tag}: nothing to measure — header:${m.population.header} search field:${m.population.input} filter bar:${m.population.bar}. ` +
-          `A missing element is a failure, not a pass.`,
-      );
-      rows.push({ tag, ...v, ...m });
-      await ctx.close();
-      continue;
-    }
+    }, { header: m0.header, bar: m0.bar, field: m0.field, position: m0.position });
+    m.tabPresses = tabPresses;
+    m.keyboardReachesField = tabPresses !== null && m.keyboardFocused;
+    m.offscreenBeforeKeyboard = m0.offscreenBeforeKeyboard;
 
     if (m.offsetMatchesHeader === false) {
       failures.push(
         `${tag}: the filter bar pins at ${m.stickyTop}px under a header measuring ${m.headerHeight}px — the offset is not the header's height`,
       );
     }
-    if (m.barCoveredByHeader > 1) failures.push(`${tag}: the header covers ${m.barCoveredByHeader}px of the filter bar`);
-    if (m.fieldCoveredByHeader > 1) failures.push(`${tag}: the header covers ${m.fieldCoveredByHeader}px of the search field`);
+    // `null` means "not applicable because the bar is not pinned", and `> 1` is false for null —
+    // but spelling it out keeps a future reader from reading a skipped check as a passed one.
+    if (m.barCoveredByHeader !== null && m.barCoveredByHeader > 1) {
+      failures.push(`${tag}: the header covers ${m.barCoveredByHeader}px of the filter bar`);
+    }
+    if (m.fieldCoveredByHeader !== null && m.fieldCoveredByHeader > 1) {
+      failures.push(`${tag}: the header covers ${m.fieldCoveredByHeader}px of the search field`);
+    }
     if (!m.pointerReachesField) {
       failures.push(
         `${tag}: a pointer at the search field's own centre lands on ${m.hitTag} — the field cannot be clicked or tapped (field is ${m.fieldWidth}px wide)`,
       );
     }
-    if (!m.focusedIsField) failures.push(`${tag}: the search field did not take focus`);
+    // The population before the property: `tabPresses === null` must be a failure in its own right,
+    // because every later keyboard statement would otherwise be about a field nothing ever focused.
+    if (!m.keyboardReachesField) {
+      failures.push(
+        `${tag}: Tab did not reach the search field in ${80} presses — it is not in the tab order, ` +
+          `so a keyboard reader cannot get to it however visible it is`,
+      );
+      // NOT PROVEN DETECTABLE. Every control attempted for the branch below either changed the
+      // field's geometry (and so tripped the coverage assertions instead, proving those rather than
+      // this one) or did not reproduce the condition at all: `scroll-margin-block` was clamped, and
+      // the scroll a browser performs for sequential focus navigation does not go through
+      // `HTMLElement.focus`, so it cannot be patched out. The assertion is kept because it is cheap
+      // and correct, and it is recorded here as unproven rather than counted as covered.
+    } else if (!m.inViewOnKeyboardFocus) {
+      failures.push(
+        `${tag}: Tab reached the search field in ${m.tabPresses} presses but focusing it left it outside the viewport ` +
+          `(top ${m.focusBoxUnderHeader ? "under the header" : "off screen"}) — the reader cannot see what they are typing into`,
+      );
+    }
     if (m.focusBoxUnderHeader) failures.push(`${tag}: the focused search field sits under the header, so its focus ring is hidden`);
     if (m.overflow > 0) failures.push(`${tag}: the page overflows horizontally by ${m.overflow}px`);
 
@@ -348,6 +435,17 @@ const CONTROLS = {
     // actually shipped, at 64px, before the length floor was removed entirely.
     expect: /overflows horizontally by \d+px/,
     mutate: { css: "[data-filter-bar] div:has(> #component-search){min-width:20rem!important}" },
+  },
+  "w2-field-out-of-tab-order": {
+    why:
+      "the search field is taken out of the tab order while staying perfectly visible and clickable — " +
+      "the regression the old `input.focus()` assertion could not see",
+    part: "w2",
+    expect: /not in the tab order/,
+    // Everything else about the field is untouched, which is the point: the geometry, coverage and
+    // pointer assertions all still pass, and only the keyboard verdict falls. That is what makes
+    // this control proof that the keyboard verdict is load-bearing rather than decorative.
+    mutate: { evaluate: () => { document.getElementById("component-search").tabIndex = -1; } },
   },
 };
 

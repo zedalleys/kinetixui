@@ -1,42 +1,236 @@
 [
   {
     "case": "desktop-light",
-    "pass": false,
-    "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3123/iot#fleets\nCall log:\n  - navigating to \"http://127.0.0.1:3123/iot#fleets\", waiting until \"load\"\n"
+    "pass": true,
+    "focusGeometry": {
+      "left": 420.890625,
+      "right": -730.09375
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(82, 67, 219) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(22, 34, 59)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(22, 34, 59)",
+        "aligned": true
+      }
+    },
+    "alignment": {
+      "headerBottom": 89,
+      "panelTop": 151,
+      "panelId": "monitoring",
+      "barPinned": true
+    }
   },
   {
     "case": "desktop-dark-rtl",
-    "pass": false,
-    "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3123/iot#fleets\nCall log:\n  - navigating to \"http://127.0.0.1:3123/iot#fleets\", waiting until \"load\"\n"
+    "pass": true,
+    "focusGeometry": {
+      "left": 730.09375,
+      "right": -420.890625
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(82, 67, 219) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(22, 34, 59)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(22, 34, 59)",
+        "aligned": true
+      }
+    },
+    "alignment": {
+      "headerBottom": 89,
+      "panelTop": 151,
+      "panelId": "monitoring",
+      "barPinned": true
+    }
   },
   {
     "case": "phone",
-    "pass": false,
-    "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3123/iot#fleets\nCall log:\n  - navigating to \"http://127.0.0.1:3123/iot#fleets\", waiting until \"load\"\n"
+    "pass": true,
+    "focusGeometry": {
+      "left": 222.890625,
+      "right": -0.09375
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(82, 67, 219) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(22, 34, 59)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(22, 34, 59)",
+        "aligned": true
+      }
+    },
+    "alignment": {
+      "headerBottom": 87,
+      "panelTop": 149.1,
+      "panelId": "monitoring",
+      "barPinned": true
+    }
   },
   {
     "case": "phone-rtl",
-    "pass": false,
-    "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3123/iot#fleets\nCall log:\n  - navigating to \"http://127.0.0.1:3123/iot#fleets\", waiting until \"load\"\n"
+    "pass": true,
+    "focusGeometry": {
+      "left": 0.09375,
+      "right": -292.890625
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(82, 67, 219) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(22, 34, 59)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(22, 34, 59)",
+        "aligned": true
+      }
+    },
+    "alignment": {
+      "headerBottom": 49,
+      "panelTop": 110.9,
+      "panelId": "monitoring",
+      "barPinned": true
+    }
   },
   {
     "case": "phone-large",
-    "pass": false,
-    "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3123/iot#fleets\nCall log:\n  - navigating to \"http://127.0.0.1:3123/iot#fleets\", waiting until \"load\"\n"
+    "pass": true,
+    "focusGeometry": {
+      "left": 126.953125,
+      "right": 0.375
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(82, 67, 219) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(22, 34, 59)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(22, 34, 59)",
+        "aligned": true
+      }
+    },
+    "alignment": {
+      "headerBottom": 243,
+      "panelTop": 365.3,
+      "panelId": "monitoring",
+      "barPinned": true
+    }
   },
   {
     "case": "phone-large-rtl",
-    "pass": false,
-    "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3123/iot#fleets\nCall log:\n  - navigating to \"http://127.0.0.1:3123/iot#fleets\", waiting until \"load\"\n"
+    "pass": true,
+    "focusGeometry": {
+      "left": -0.375,
+      "right": -196.953125
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(82, 67, 219) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(22, 34, 59)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(22, 34, 59)",
+        "aligned": true
+      }
+    },
+    "alignment": {
+      "headerBottom": 243,
+      "panelTop": 365,
+      "panelId": "monitoring",
+      "barPinned": true
+    }
   },
   {
     "case": "tablet-large",
-    "pass": false,
-    "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3123/iot#fleets\nCall log:\n  - navigating to \"http://127.0.0.1:3123/iot#fleets\", waiting until \"load\"\n"
+    "pass": true,
+    "focusGeometry": {
+      "left": 542.953125,
+      "right": 0.375
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(82, 67, 219) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(22, 34, 59)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(22, 34, 59)",
+        "aligned": true
+      }
+    },
+    "alignment": {
+      "headerBottom": 290,
+      "panelTop": 411.8,
+      "panelId": "monitoring",
+      "barPinned": true
+    }
   },
   {
     "case": "forced-colors",
-    "pass": false,
-    "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3123/iot#fleets\nCall log:\n  - navigating to \"http://127.0.0.1:3123/iot#fleets\", waiting until \"load\"\n"
+    "pass": true,
+    "focusGeometry": {
+      "left": 730.09375,
+      "right": -420.890625
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(255, 255, 255, 0)",
+      "border": "2px",
+      "shadow": "none",
+      "color": "rgb(0, 0, 0)",
+      "borderColor": "rgba(5, 0, 73, 0.8)",
+      "mark": {
+        "color": "rgba(5, 0, 73, 0.8)",
+        "aligned": true
+      }
+    },
+    "alignment": {
+      "headerBottom": 89,
+      "panelTop": 151,
+      "panelId": "monitoring",
+      "barPinned": true
+    }
+  },
+  {
+    "case": "short-window-large-text",
+    "pass": true,
+    "focusGeometry": {
+      "left": 837.953125,
+      "right": -184.625
+    },
+    "styles": {
+      "duration": "1e-05s",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "2px",
+      "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px inset, rgb(82, 67, 219) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+      "color": "rgb(22, 34, 59)",
+      "borderColor": "rgba(0, 0, 0, 0)",
+      "mark": {
+        "color": "rgb(22, 34, 59)",
+        "aligned": true
+      }
+    },
+    "alignment": {
+      "headerBottom": 178,
+      "panelTop": 177.8,
+      "panelId": "monitoring",
+      "barPinned": false
+    }
   }
 ]
