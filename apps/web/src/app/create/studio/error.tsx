@@ -50,7 +50,13 @@ export default function StudioError({ error, reset }: { error: Error & { digest?
       </p>
       <div className="studio-recovery-actions">
         <Button onClick={reset}>Try the editor again</Button>
-        <Button variant="Outline" asChild><Link href="/create/studio">Reload Create Studio</Link></Button>
+        {/* A DOCUMENT navigation, not `next/link`. Measured in M5.21: a soft navigation to the
+            route the user is already on does not remount past this error boundary, so the
+            recovery surface stayed on screen and this control did nothing at all — a label that
+            promised a reload and delivered none. `scripts/create-studio-recovery-exit-controls.sh`
+            is the control that catches it; nothing else can, because the two forms render the
+            same DOM and differ only in outcome. */}
+        <Button variant="Outline" asChild><a href="/create/studio">Reload Create Studio</a></Button>
         <Button variant="Ghost" asChild><Link href="/create">Back to the theme creator</Link></Button>
       </div>
       {error.digest ? <p className="studio-muted">Reference for the server log: {error.digest}</p> : null}
