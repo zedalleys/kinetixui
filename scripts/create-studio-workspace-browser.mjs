@@ -389,8 +389,30 @@ try {
     });
     await studio.getByRole("button", { name: "Save", exact: true }).click();
     await studio.getByRole("alert").waitFor();
+    // This route ABORTS, so the service never rejected anything — it never answered. The editor
+    // cannot distinguish that from a connection lost after the route committed, so it reports the
+    // outcome as unknown (M5.22). Both false claims are checked. The previous pair of assertions
+    // here required the chip to say "Save failed · Unsaved changes", which is the false-failure
+    // claim this gate would otherwise enforce.
+    const unconfirmedText = await expectState(/unconfirmed/i, "after a save that could not be confirmed");
+    assert.doesNotMatch(unconfirmedText, /^Saved/, `an unconfirmed save must never read as saved: read "${unconfirmedText}"`);
+    assert.doesNotMatch(unconfirmedText, /Save failed/, `an unconfirmed save must not be reported as a definite failure: read "${unconfirmedText}"`);
+    await page.unroute("**/api/create-studio");
+
+    // And the vocabulary this gate exists to cover still includes a definite failure — now driven
+    // by a REAL rejection rather than by an abort mislabelled as one. The body is padded past the
+    // route's 1,050,000 byte ceiling, so the route answers 413 before `service().save` is called
+    // and therefore before anything can be written.
+    await page.route("**/api/create-studio", async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      const body = route.request().postData() ?? "{}";
+      await route.continue({ postData: body.slice(0, -1) + ',"pad":"' + "x".repeat(1_100_000) + '"}' });
+    });
+    await studio.getByRole("button", { name: "Save", exact: true }).click();
+    await page.waitForFunction(() => /Save failed/.test(document.querySelector(".studio-save-state")?.textContent ?? ""), { timeout: 30_000 });
     const failedText = await expectState(/Save failed/, "after a save the service rejected");
-    assert.match(failedText, /Unsaved/, `a failed save must still report unsaved work: read "${failedText}"`);
+    assert.match(failedText, /Unsaved/, `a rejected save must still report unsaved work: read "${failedText}"`);
+    assert.doesNotMatch(failedText, /unconfirmed/i, `a rejection raised before the write is not unconfirmed: read "${failedText}"`);
     await page.unroute("**/api/create-studio");
     await save(page, studio);
     await expectState(/^Saved locally$/, "after the service confirmed");
@@ -401,7 +423,7 @@ try {
       "save state after the service confirmed",
       () => page.evaluate(() => { document.querySelector(".studio-save-state").textContent = "Saved locally"; }),
     );
-    pass("save state distinguishes unsaved, saving, failed and confirmed, and never claims a save the service refused");
+    pass("save state distinguishes unsaved, saving, unconfirmed, rejected and confirmed, and never claims a save the service refused");
 
     // ---------- 8. Recovery lives in the document status surface, not among the view controls ----------
     const assertRecoveryPlaced = async () => {
