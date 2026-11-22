@@ -18,8 +18,10 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performSemanticsAction
@@ -274,8 +276,12 @@ class AppointmentBookingBlockTest {
         rule.onNodeWithText("Available times").assertExists()
         // The zone is stated, not converted.
         rule.onNodeWithText("Times in Riyadh (GMT+3)").assertExists()
-        // The unavailable slot carries the word, so it is not conveyed by dimming alone.
-        rule.onNodeWithText("Unavailable").assertExists()
+        // EVERY unavailable slot carries the word, so the state is never conveyed by dimming alone — and
+        // the expected count is derived from the fixture rather than typed, so it cannot drift from the
+        // data. A single `onNodeWithText` here asserted that exactly ONE node says "Unavailable", which is
+        // false: this fixture has two unavailable slots on purpose, and CI is what said so.
+        val unavailable = APPOINTMENT_PERIODS.sumOf { period -> period.slots.count { it.unavailable } }
+        rule.onAllNodesWithText("Unavailable").assertCountEquals(unavailable)
         // The disabled action and the sentence that explains it are both present.
         rule.onNodeWithText("Confirm appointment").assertIsNotEnabled()
         rule.onNodeWithText("Choose a time to continue.").assertExists()

@@ -12446,13 +12446,13 @@
           ],
           "interaction": [
             {
-              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AppointmentBookingBlockTest.kt:284-301",
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AppointmentBookingBlockTest.kt:290-307",
               "environment": "robolectric"
             }
           ],
           "accessibility": [
             {
-              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AppointmentBookingBlockTest.kt:268-283",
+              "ref": "packages/ui-compose/ui/src/test/kotlin/com/kinetixui/ui/blocks/AppointmentBookingBlockTest.kt:270-289",
               "environment": "robolectric"
             }
           ],
