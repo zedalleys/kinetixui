@@ -213,15 +213,33 @@ describe("truthfulness", () => {
     expect(panel).not.toHaveTextContent(/dlx/);
     // it does carry the measured peer-dependency note, which is a different fact about the same manager
     expect(panel).toHaveTextContent(/yarn add react-is/);
+    // and the reader is given a major: the bare form installs react-is 19 on a React 18 consumer
+    // and silently drops chart cell fills, so the rendered note must name both supported majors.
+    expect(panel).toHaveTextContent(/yarn add react-is@\^19/);
+    expect(panel).toHaveTextContent(/yarn add react-is@\^18/);
   });
 
   it("shows nothing under the command for a manager with no measured limitation", async () => {
+    // install-tokens is such a case: nothing our packaging leaves to the reader on these three. It used
+    // to be install-react, until a React 18 consumer was measured on npm, pnpm and Bun and all three
+    // turned out to install react-is 19 — see the next test.
     const user = userEvent.setup();
-    render(<CommandBlock op="install-react" />);
+    render(<CommandBlock op="install-tokens" />);
     for (const name of ["npm", "pnpm", "Bun"]) {
       await user.click(screen.getByRole("tab", { name }));
       const panel = screen.getByRole("tabpanel");
       expect(panel, name).not.toHaveTextContent(/react-is|dlx|angle brackets/);
+    }
+  });
+
+  it("gives a non-Yarn reader the React 18 instruction in their own manager's words, and no dlx", async () => {
+    const user = userEvent.setup();
+    render(<CommandBlock op="install-react" />);
+    for (const [name, command] of [["npm", "npm install react-is@^18"], ["pnpm", "pnpm add react-is@^18"], ["Bun", "bun add react-is@^18"]] as const) {
+      await user.click(screen.getByRole("tab", { name }));
+      const panel = screen.getByRole("tabpanel");
+      expect(panel, name).toHaveTextContent(command);
+      expect(panel, name).not.toHaveTextContent(/dlx/);
     }
   });
 

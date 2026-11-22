@@ -94,6 +94,8 @@ describe("stable command IDs", () => {
         "install-iot",
         "install-iot-react",
         "install-react",
+        "install-react-is-18",
+        "install-recharts",
         "install-tailwind",
         "install-tokens",
         "run-dev",
@@ -342,19 +344,51 @@ describe("an unsupported combination is explained, not faked", () => {
     }
   });
 
-  it("tells a Yarn reader about the peer dependency its build needs, and tells nobody else", () => {
-    // the consumer matrix measured this: both Yarn lines fail the build without react-is, the other three pass
+  it("tells every reader about the peer dependency, because every manager has something to get wrong", () => {
+    /*
+     * This test used to assert the opposite — that only Yarn carries a react-is note — on the strength of
+     * a matrix run in which every consumer was on React 19. Re-measured on 2026-11-22 against the recharts
+     * `packages/ui` depends on, with React 18 consumers too: npm, pnpm and Bun install the transitive peer
+     * at react-is 19 whatever React the consumer is on, so a React 18 consumer on any of the three gets a
+     * chart with 0 of 3 cell fills and a build that exits 0. Yarn's note is a different fact about the same
+     * dependency — it installs no peer at all, so the build fails outright.
+     */
     const peer = (pm: PackageManager) =>
       renderCommand("install-react", pm).caveats.filter((n) => /react-is/.test(n));
-    expect(peer("yarn")).toHaveLength(1);
+    for (const pm of ["npm", "pnpm", "yarn", "bun"] as const) expect(peer(pm), pm).toHaveLength(1);
     expect(peer("yarn")[0]).toMatch(/yarn add react-is/);
-    for (const pm of ["npm", "pnpm", "bun"] as const) expect(peer(pm), pm).toHaveLength(0);
+    // the other three name their own manager's command, and only for the major that needs it
+    expect(peer("npm")[0]).toMatch(/On React 18, add react-is yourself: npm install react-is@\^18\./);
+    expect(peer("pnpm")[0]).toMatch(/On React 18, add react-is yourself: pnpm add react-is@\^18\./);
+    expect(peer("bun")[0]).toMatch(/On React 18, add react-is yourself: bun add react-is@\^18\./);
+    for (const pm of ["npm", "pnpm", "bun"] as const) {
+      expect(peer(pm)[0], pm).toMatch(/On React 19 you need nothing extra\./);
+      // and none of them may claim the manager handles it, which is the sentence that was wrong before
+      expect(peer(pm)[0], pm).not.toMatch(/installs? the matching version for you/);
+    }
+  });
+
+  it("versions the Yarn react-is instruction, because the unversioned form is wrong on React 18", () => {
+    // measured 2026-11-22 on a clean Yarn Classic 1.22.22 fixture at react@18.3.1: a bare
+    // `yarn add react-is` installs react-is 19, which recognises only React 19's element brand, so
+    // recharts stops flattening fragments and a chart's <Cell> fills are dropped — 0 cells found
+    // where 3 are correct — while tsc and vite build both still exit 0. The instruction must carry
+    // a major, and must not impose react-is 18 on a React 19 consumer.
+    const note = renderCommand("install-react", "yarn").caveats.find((n) => /react-is/.test(n));
+    expect(note).toBeDefined();
+    expect(note).toMatch(/yarn add react-is@\^19/);
+    expect(note).toMatch(/yarn add react-is@\^18/);
+    // the only version-less form left in the note is the explicit prohibition, never an instruction
+    expect(note!.match(/yarn add react-is(?!@)/g) ?? []).toHaveLength(1);
+    expect(note).toMatch(/Do not run an unversioned yarn add react-is/);
   });
 
   it("carries no caveat at all where none was measured", () => {
+    // `cli-init` is the case that still has nothing to say on these three: the registry route installs
+    // what it delivers, so no peer of ours is left to the reader. install-react is no longer such a case.
     for (const pm of ["npm", "pnpm", "bun"] as const) {
-      expect(renderCommand("install-react", pm).caveats, pm).toEqual([]);
       expect(renderCommand("cli-init", pm).caveats, pm).toEqual([]);
+      expect(renderCommand("install-tokens", pm).caveats, pm).toEqual([]);
     }
   });
 });

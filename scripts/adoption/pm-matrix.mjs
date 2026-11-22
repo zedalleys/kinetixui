@@ -114,6 +114,10 @@ const NEGATIVES = {
   'stale-cli-version': 'an execute route resolving a CLI version this tree does not declare must fail',
   'berry-cli-version': 'ambient and supplied Berry ignore progress but strictly compare the final CLI version',
   'berry-unmeasured-pass': 'an unmeasured yarn-berry must not read as a pass, nor let the run claim every route was exercised',
+  'chart-react-is-mismatch': 'a react-is major that does not match the consumer\'s React must not certify the chart',
+  'chart-missing-recharts-pnpm': 'a consumer that does not declare recharts must fail under pnpm, which does not hoist',
+  'chart-renders-when-corrected': 'the corrected consumer setup must build AND render all three cell fills',
+  'chart-build-is-not-render': 'deleting the rendered-fill assertion must let a chart with no fills pass — so the assertion is what catches it',
 };
 
 if (has('list-negatives')) {
@@ -219,6 +223,141 @@ if (negative) {
     console.error(`Unknown negative control ${JSON.stringify(negative)}. --list-negatives shows them.`);
     process.exit(2);
   }
+
+  /* ---------------------------------------------------------------- the chart controls
+   *
+   * These four exist because two defects measured on 2026-11-22 were invisible to every gate in the
+   * repository, and both were invisible for the same reason: the consumer fixture built buttons and
+   * tokens, never a chart. They run the real fixture, so each one installs a clean consumer project and
+   * takes a minute or two. That is why they are opt-in rather than part of the matrix.
+   */
+  const consumer = (...args) => {
+    const run = spawnSync(process.execPath, [join(root, 'scripts/adoption/react-consumer.mjs'), ...args], { encoding: 'utf8' });
+    return { ...run, out: `${run.stdout || ''}${run.stderr || ''}` };
+  };
+
+  if (negative === 'chart-react-is-mismatch') {
+    // React 18 with react-is 19 is what an unversioned `yarn add react-is` produces, and what npm, pnpm
+    // and Bun produce on their own for a React 18 consumer. The chart must come back uncertified.
+    const run = consumer('--pm=pnpm', '--react=18', '--react-is=^19');
+    const checks = [
+      ['the pin must be proved to have reached recharts, or the arm measured nothing', /Pinned react-is took effect: recharts resolves 19\./.test(run.out)],
+      ['the fragment-wrapped cells must be reported NOT CERTIFIED', /NOT CERTIFIED {2}fragment-wrapped cells/.test(run.out)],
+      ['it must name the dropped fills rather than only the versions', /fills came back 0,0,0 of 1,1,1/.test(run.out)],
+      ['and must not claim a working chart in both shapes', !/in both the array and the fragment-wrapped shape/.test(run.out)],
+    ];
+    for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
+    const ok = checks.every(([, held]) => held);
+    console.log(ok ? 'PASS  negative chart-react-is-mismatch' : 'FAIL  negative chart-react-is-mismatch');
+    if (!ok) console.error(run.out);
+    process.exit(ok ? 0 : 1);
+  }
+
+  if (negative === 'chart-missing-recharts-pnpm') {
+    /*
+     * pnpm is "the relevant path" because it is the only one of the four where this fails: npm, Yarn and
+     * Bun hoist recharts to the fixture's node_modules root as a transitive dependency of @kinetixui/ui,
+     * so an undeclared import resolves by accident. The control asserts both halves — the failure under
+     * pnpm AND the accidental pass under npm — because the second is what made the defect undetectable.
+     */
+    const strict = consumer('--pm=pnpm', '--omit-recharts');
+    const hoisted = consumer('--pm=npm', '--omit-recharts');
+    /*
+     * The npm half needs POSITIVE evidence, not the absence of a diagnostic. "No TS2307 in the output"
+     * is also true of an npm arm that died before typechecking — a registry error, a missing binary —
+     * and then this control would report that npm resolved the undeclared import without npm having
+     * tested it at all, while the pnpm half supplied the only diagnostic in sight. So the npm arm has
+     * to exit 0, build, and render the chart. (Codex P2, PR #665.)
+     */
+    const checks = [
+      ['pnpm must fail', strict.status !== 0],
+      ['and fail on the unresolved import, not something else', /error TS2307: Cannot find module 'recharts'/.test(strict.out)],
+      ['npm must get as far as a successful build, or it tested nothing', /built in/.test(hoisted.out)],
+      ['npm must render the chart from the undeclared import', /cell fills 1,1,1 \(array\)/.test(hoisted.out)],
+      ['npm must exit 0', hoisted.status === 0],
+      ['and never report the unresolved import, which is the accident the docs relied on', !/error TS2307: Cannot find module 'recharts'/.test(hoisted.out)],
+    ];
+    for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
+    const ok = checks.every(([, held]) => held);
+    console.log(ok ? 'PASS  negative chart-missing-recharts-pnpm' : 'FAIL  negative chart-missing-recharts-pnpm');
+    if (!ok) console.error(`--- pnpm\n${strict.out}\n--- npm\n${hoisted.out}`);
+    process.exit(ok ? 0 : 1);
+  }
+
+  if (negative === 'chart-renders-when-corrected') {
+    // The acceptance arm. Without it the three above could all be satisfied by a fixture that never
+    // renders a correct chart at all, and a gate that only ever reddens is not evidence of a repair.
+    const run = consumer('--pm=pnpm', '--react=18', '--react-is=^18');
+    const checks = [
+      ['the corrected setup must exit 0', run.status === 0],
+      ['the pin must be proved to have reached recharts', /Pinned react-is took effect: recharts resolves 18\./.test(run.out)],
+      ['all three fills must render in both shapes', /cell fills 1,1,1 \(array\) 1,1,1 \(fragment-wrapped\)/.test(run.out)],
+      ['and nothing may be left uncertified', !/NOT CERTIFIED/.test(run.out)],
+    ];
+    for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
+    const ok = checks.every(([, held]) => held);
+    console.log(ok ? 'PASS  negative chart-renders-when-corrected' : 'FAIL  negative chart-renders-when-corrected');
+    if (!ok) console.error(run.out);
+    process.exit(ok ? 0 : 1);
+  }
+
+  if (negative === 'chart-build-is-not-render') {
+    /*
+     * The defect class is a FALSE PASS: on a react-is major that does not match the consumer's React,
+     * `tsc` and `vite build` both exit 0 and the chart renders with every cell fill dropped. So the
+     * question this control settles is not "does the fixture fail?" but "is the RENDERED OUTPUT what
+     * withholds the claim, or would a green build have been enough?"
+     *
+     * It cannot be settled by deleting the fill assertion and expecting a pass: on a mismatched arm that
+     * assertion is deliberately not reached (the run reports NOT CERTIFIED instead of asserting), so a
+     * mutant with it removed behaves identically and proves nothing — which is exactly what the first
+     * attempt at this control did. The mutation therefore forces the opposite error: it makes the script
+     * believe the majors agree, so the arm IS required to certify, and the rendered fills are the only
+     * thing left that can stop it.
+     */
+    const self = join(root, 'scripts/adoption/react-consumer.mjs');
+    const source = readFileSync(self, 'utf8');
+    const ANCHOR = 'const majorsAgree = reactIsMajor === reactMajorRun;';
+    const occurrences = source.split(ANCHOR).length - 1;
+    if (occurrences !== 1) {
+      console.error(`FAIL  negative chart-build-is-not-render: the anchor occurs ${occurrences} times, not once, so the mutation would not land on the statement under test. Refusing rather than reporting a result.`);
+      process.exit(1);
+    }
+    /*
+     * The copy has to live beside the original: react-consumer.mjs finds the repository from its own
+     * location (`../../` of import.meta.url), so a copy in /tmp resolves the workspace root to `/` and
+     * dies on apps/web/package.json before it reaches anything under test. It is removed in the finally
+     * below whether the control passes, fails or throws.
+     */
+    const copy = join(root, `scripts/adoption/.react-consumer-mutant-${process.pid}.mjs`);
+    writeFileSync(copy, source.replace(ANCHOR, 'const majorsAgree = true; // mutation: claim the majors agree'));
+    const ARM = ['--pm=pnpm', '--react=19', '--react-is=^18'];
+    let mutant;
+    try {
+      mutant = spawnSync(process.execPath, [copy, ...ARM], { encoding: 'utf8' });
+    } finally {
+      rmSync(copy, { force: true });
+    }
+    const mutantOut = `${mutant.stdout || ''}${mutant.stderr || ''}`;
+    const real = consumer(...ARM);
+    const checks = [
+      // the false-pass condition has to exist in the first place, or there is nothing to withhold
+      ['the arm must build clean: tsc and vite both succeed', /built in/.test(real.out)],
+      ['and render the chart with every fragment fill dropped', /cell fills 1,1,1 \(array\) 0,0,0 \(fragment-wrapped\)/.test(real.out)],
+      ['the honest run must not claim a working chart in both shapes', !/in both the array and the fragment-wrapped shape/.test(real.out) && /NOT CERTIFIED {2}fragment-wrapped cells/.test(real.out)],
+      // and the mutant, forced to certify it, must be stopped by the rendered output and nothing else
+      ['a run forced to certify that arm must fail', mutant.status !== 0],
+      ['and fail on the rendered fills, not on the build or the versions', /a fragment-wrapped map of <Cell> still lost its fills: counts 0,0,0/.test(mutantOut)],
+      ['the mutant must have got as far as a successful build, so the build is not what stopped it', /built in/.test(mutantOut)],
+    ];
+    for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
+    const ok = checks.every(([, held]) => held);
+    console.log(ok ? 'PASS  negative chart-build-is-not-render: a green build reaches the claim, and the rendered fills are what refuse it'
+                   : 'FAIL  negative chart-build-is-not-render');
+    if (!ok) console.error(`--- mutant (exit ${mutant.status})\n${mutantOut}`);
+    process.exit(ok ? 0 : 1);
+  }
+
   if (negative === 'bad-package') {
     const fixture = mkdtempSync(join(tmpdir(), 'kinetixui-neg-'));
     writeFileSync(join(fixture, 'package.json'), JSON.stringify({ private: true, name: 'n', version: '0.0.0' }));
