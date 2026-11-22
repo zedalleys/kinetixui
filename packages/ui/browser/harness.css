@@ -1,0 +1,7 @@
+/* The harness's only CSS: it gives the carousel a box to be laid out in and styles no component.
+   A vertical carousel needs a bounded height or every slide is in view and there is nothing to measure. */
+body { margin: 0; padding: 24px; font-family: system-ui, sans-serif; }
+#root { max-width: 320px; }
+[data-kx-axis="vertical"] #root { max-width: 320px; }
+[data-kx-axis="vertical"] .kx-harness-viewport { height: 240px; }
+.kx-harness-slide { display: flex; align-items: center; justify-content: center; aspect-ratio: 1; border: 1px solid #ccc; border-radius: 8px; }

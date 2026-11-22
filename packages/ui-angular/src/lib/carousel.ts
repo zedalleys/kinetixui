@@ -64,8 +64,12 @@ import { KxPointerDrag, clamp } from './pointer-drag';
  * "Next" is toward the left, ArrowLeft is Next, and a swipe toward the inline START shows the next slide — all
  * resolved against the carousel's own direction (the nearest `[dir]`, then the computed style). The buttons'
  * glyphs are the bidi-mirrored ‹ ›, so they point the right way with no code; in a vertical carousel they turn to
- * point up and down and do not mirror. React's keys and glyphs are physical; this is a deliberate fix. Vertical
- * carousels use ArrowUp and ArrowDown.
+ * point up and down and do not mirror. Vertical carousels use ArrowUp and ArrowDown.
+ *
+ * React matches all of this now: its glyphs mirror with the engine's direction, and its keys follow the axis.
+ * This docstring used to record that "React's keys and glyphs are physical" as a difference Angular had
+ * deliberately fixed — true when it was written, and no longer true, so it is not left standing as a claim
+ * about the other platform.
  *
  * ── The pointer ────────────────────────────────────────────────────────────
  *

@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* The token CSS is linked separately and byte for byte; this layer only references its custom
+   properties, exactly as `apps/docs/.storybook/tailwind.css` does. */
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+}
