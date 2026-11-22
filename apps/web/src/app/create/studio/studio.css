@@ -74,6 +74,22 @@
 }
 
 /* ---------- Welcome / empty states ---------- */
+/*
+ * Recovery surface (app/create/studio/error.tsx). It replaces the whole workspace, so it owns the
+ * application viewport the same way `.create-studio` does: no page scroll, no marketing chrome.
+ * Its heading takes focus on mount, which is why it carries a visible focus ring of its own.
+ */
+.studio-recovery-surface {
+  box-sizing: border-box; max-width: 42rem; margin: 0 auto; padding: 3rem 1.25rem;
+  color: hsl(var(--foreground)); background: hsl(var(--background));
+  font-family: var(--font-sans), sans-serif;
+}
+.studio-recovery-surface h1 { font-size: 1.75rem; font-weight: 600; letter-spacing: -.03em; line-height: 1.25; }
+.studio-recovery-surface h1:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 4px; border-radius: .25rem; }
+.studio-recovery-surface p { margin-block-start: 1rem; line-height: 1.7; max-width: 65ch; }
+.studio-recovery-surface p.studio-muted { font-size: .875rem; }
+.studio-recovery-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-block-start: 1.75rem; }
+
 .studio-welcome { max-width: 42rem; margin: 3rem auto; padding: 1rem; }
 .studio-welcome h2 { font-size: 1.75rem; font-weight: 600; letter-spacing: -.03em; line-height: 1.2; }
 .studio-welcome p { margin-block: 1rem; line-height: 1.7; max-width: 65ch; }
@@ -85,6 +101,16 @@
   min-height: 0;
   overflow: hidden;
 }
+/* Explicit column assignments, because `display: none` removes a panel from the grid rather than
+   leaving an empty track behind it. Without these, hiding the project panel let the canvas fall
+   into track 1 (`auto`) and handed the flexible `1fr` track to the inspector: measured at
+   1440x1000, hiding both panels shrank the canvas from 864px to 378px and left 1062px of the
+   workspace unused, so hiding a panel to gain room lost more than half of it. Found by Codex's
+   exact-head review of #653; repaired here because this PR already owns this file and #653's head
+   is frozen. */
+.studio-navigator { grid-column: 1; }
+.studio-center { grid-column: 2; }
+.studio-inspector { grid-column: 3; }
 .studio-navigator, .studio-inspector { background: hsl(var(--card)); min-width: 0; display: none; }
 .studio-navigator { border-inline-end: 1px solid hsl(var(--border)); }
 .studio-inspector { border-inline-start: 1px solid hsl(var(--border)); }
