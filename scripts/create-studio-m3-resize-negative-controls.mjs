@@ -1,0 +1,194 @@
+#!/usr/bin/env node
+/**
+ * create-studio-m3-resize-negative-controls.mjs — proof that the M3-C resize checks in
+ * `scripts/create-studio-canvas-browser.mjs` can actually fail.
+ *
+ * Four defects were repaired on this branch. Three of them were invisible to the 25 checks the
+ * gate already had, and the fourth was invisible to every gate in the repository, so each repair
+ * owes a control that reintroduces exactly that defect and shows the REAL gate going red for the
+ * reason the repair exists — not merely going red.
+ *
+ *   effective-props-reverted  the handle reads base `node.props` again, so every keyboard press at
+ *                             a breakpoint writes base + step and the frame never advances.
+ *   guide-on-the-wrapper      the guide measures the full-width `.studio-node` wrapper again, so on
+ *                             a narrow frame it is drawn hundreds of pixels from the edge it claims.
+ *   guide-does-not-follow     the overlay's measurement stops depending on the candidate width, so
+ *                             the guide stays at the edge the gesture started from.
+ *   rtl-logical-property      the guide is placed with `inset-inline-start` again, which resolves to
+ *                             `right` in a right-to-left document and mirrors a physical
+ *                             measurement twice.
+ *
+ * Each control is a source mutation, which cannot be injected through a seam the way a stylesheet
+ * can: these defects live in React's own reading of the document. So every mutation is applied in a
+ * DISPOSABLE git worktree at this exact HEAD, served by its own dev server, and the worktree is
+ * destroyed afterwards. The checkout you are sitting in is never modified, which also means an
+ * interrupted run cannot leave a mutation behind to be committed by accident.
+ *
+ * What each control must do to count:
+ *   - the gate must exit NONZERO (a grep over its whole output would match the gate's own
+ *     diagnostics, which quote these very messages), and
+ *   - the terminal failure — everything after the last `PASS ` line — must name the behaviour the
+ *     repair protects.
+ *
+ * Usage: node scripts/create-studio-m3-resize-negative-controls.mjs
+ * Env:   PLAYWRIGHT_CHROMIUM_PATH (as the gate itself takes), CONTROL_PORT (default 3171).
+ */
+import assert from "node:assert/strict";
+import { execFileSync, spawn } from "node:child_process";
+import { mkdtemp, readFile, writeFile, rm, mkdir } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+
+const repo = resolve(import.meta.dirname, "..");
+const git = (...args) => execFileSync("git", args, { cwd: repo, encoding: "utf8" }).trim();
+const head = git("rev-parse", "HEAD");
+const out = resolve(process.env.CREATE_ARTIFACTS ?? ".impeccable/review/create-studio-m3-controls");
+await mkdir(out, { recursive: true });
+const basePort = Number(process.env.CONTROL_PORT ?? 3171);
+
+/**
+ * Each control names the one file it touches, the exact replacement, and the failure(s) it owes.
+ * `owes` is a list because a defect can surface at more than one assertion, and which one the gate
+ * reaches first is an ordering detail of the gate rather than a property of the defect. Every
+ * fragment listed must name the behaviour the repair protects — never a generic word that any
+ * failure would contain.
+ */
+const CONTROLS = [
+  {
+    name: "effective-props-reverted",
+    file: "apps/web/src/components/create-studio/node-view.tsx",
+    from: [
+      'const resizable = !preview && !!resize && node.ref === "layout:section" && effective.widthMode !== "fill" && selection.includes(node.id);',
+      "const currentWidth = Number(resize?.active?.nodeId === node.id ? resize.active.width : effective.width);",
+    ],
+    to: [
+      'const resizable = !preview && !!resize && node.ref === "layout:section" && p.widthMode !== "fill" && selection.includes(node.id);',
+      "const currentWidth = Number(resize?.active?.nodeId === node.id ? resize.active.width : p.width);",
+    ],
+    // Either assertion names this defect, and which one the gate reaches first is an ordering
+    // detail of the gate, not a property of the defect: with base props the announcement is wrong
+    // BEFORE the second press can be wrong. Measured — it stops at the announcement.
+    owes: ["must be the effective width at the editing viewport", "must each advance from the RENDERED width"],
+  },
+  {
+    name: "guide-on-the-wrapper",
+    file: "apps/web/src/components/create-studio/create-studio.tsx",
+    from: ['const section = canvas.querySelector(`[data-studio-node="${nodeId}"]`)?.querySelector(":scope > div > section");'],
+    to: ['const section = canvas.querySelector(`[data-studio-node="${nodeId}"]`);'],
+    // Controls 2 and 3 trip the SAME assertion, so each needs a discriminator in the measured
+    // numbers or neither one's evidence is attributable. A guide drawn on the wrapper is exactly on
+    // the wrapper, so its failure reports `off the wrapper by 0px`.
+    owes: ["must be drawn on the frame's own rendered edge, not its wrapper's"],
+    // |off the wrapper| is ~0 and |off the frame| is huge: the guide IS the wrapper's edge.
+    discriminates: ({ frame, wrapper }) => frame !== null && Math.abs(wrapper) <= 3 && Math.abs(frame) > 100,
+  },
+  {
+    name: "guide-does-not-follow",
+    file: "apps/web/src/components/create-studio/create-studio.tsx",
+    from: ["}, [canvas, nodeId, width, guide, rtl]);"],
+    to: ["}, [canvas, nodeId, guide, rtl]);"],
+    owes: ["must be drawn on the frame's own rendered edge"],
+    // The mirror image: the guide lags the frame by a step, so |off the frame| is small but
+    // nonzero while |off the wrapper| stays huge. That is what separates it from control 2.
+    discriminates: ({ frame, wrapper }) => frame !== null && Math.abs(frame) > 3 && Math.abs(wrapper) > 100,
+  },
+  {
+    name: "rtl-logical-property",
+    file: "apps/web/src/components/create-studio/create-studio.tsx",
+    from: ['style={{ left: edge, top: 0, height }}'],
+    to: ['style={{ insetInlineStart: edge, top: 0, height }}'],
+    owes: ["the guide must be drawn on the frame's own left edge"],
+  },
+];
+
+/** The failure a run ended on: everything after the last line the gate reported as a pass. */
+const terminalFailure = output => {
+  const lines = output.split("\n");
+  let last = -1;
+  lines.forEach((line, index) => { if (line.startsWith("PASS ")) last = index; });
+  return lines.slice(last + 1).join("\n");
+};
+
+const workspace = await mkdtemp(join(tmpdir(), "m3-resize-controls-"));
+const tree = join(workspace, "tree");
+const findings = [];
+try {
+  // A worktree at the exact HEAD, with `node_modules` and the built package `dist` directories
+  // HARD-LINKED in: pnpm's links are relative, so they resolve inside the copy, and `dist` is
+  // gitignored but `apps/web`'s test setup rightly refuses an unbuilt one.
+  git("worktree", "add", "--detach", tree, head);
+  execFileSync("cp", ["-al", join(repo, "node_modules"), join(tree, "node_modules")]);
+  execFileSync("cp", ["-al", join(repo, "apps/web/node_modules"), join(tree, "apps/web/node_modules")]);
+  for (const name of ["ui", "tokens", "iot", "cli"]) {
+    const dist = join(repo, "packages", name, "dist");
+    if (existsSync(dist)) execFileSync("cp", ["-al", dist, join(tree, "packages", name, "dist")]);
+  }
+
+  for (const [index, control] of CONTROLS.entries()) {
+    const path = join(tree, control.file);
+    const original = await readFile(path, "utf8");
+    let mutated = original;
+    control.from.forEach((needle, i) => {
+      assert.equal(mutated.split(needle).length - 1, 1, `control "${control.name}" must match its target exactly once in ${control.file}`);
+      mutated = mutated.replace(needle, control.to[i]);
+    });
+    assert.notEqual(mutated, original, `control "${control.name}" changed nothing`);
+    await writeFile(path, mutated);
+
+    const port = basePort + index;
+    const base = `http://127.0.0.1:${port}`;
+    const server = spawn("pnpm", ["--filter", "@kinetixui/web", "exec", "next", "dev", "--hostname", "127.0.0.1", "--port", String(port)], {
+      cwd: tree, detached: true, stdio: "ignore",
+      env: { ...process.env, KINETIX_CREATE_DEV: "1", KINETIX_CREATE_DEV_DIR: join(workspace, `dev-${control.name}`) },
+    });
+    let result;
+    try {
+      // The server must come up and the editor must actually render; a control credited to a server
+      // that never started would prove nothing at all.
+      let ready = false;
+      for (let attempt = 0; attempt < 120 && !ready; attempt += 1) {
+        ready = await fetch(`${base}/create/studio`).then(response => response.ok).catch(() => false);
+        if (!ready) await new Promise(done => setTimeout(done, 1000));
+      }
+      assert.ok(ready, `the control server for "${control.name}" never became ready on ${base}`);
+      result = execFileSync("node", [join(repo, "scripts/create-studio-canvas-browser.mjs")], {
+        cwd: tree, encoding: "utf8", stdio: "pipe", timeout: 900_000,
+        env: { ...process.env, CREATE_BASE: base, CREATE_ARTIFACTS: join(workspace, `evidence-${control.name}`) },
+      });
+      result = { status: 0, output: result };
+    } catch (error) {
+      result = { status: error.status ?? 1, output: `${error.stdout ?? ""}\n${error.stderr ?? ""}` };
+    } finally {
+      // The dev server spawns `next` as a child, so it dies as a process GROUP or it keeps writing
+      // into a worktree that is about to be removed.
+      try { process.kill(-server.pid, "SIGKILL"); } catch { /* already gone */ }
+      await writeFile(path, original);
+    }
+
+    const failure = terminalFailure(result.output);
+    const matched = control.owes.filter(fragment => failure.includes(fragment));
+    // Controls 2 and 3 trip the same assertion, so naming it is not enough: the measured offsets
+    // have to say WHICH defect produced it, or one control could be credited for the other's cause.
+    const offsets = /off the frame by (-?\d+)px, off the wrapper by (-?\d+)px/.exec(failure);
+    const measured = { frame: offsets ? Number(offsets[1]) : null, wrapper: offsets ? Number(offsets[2]) : null };
+    const discriminated = control.discriminates ? control.discriminates(measured) : true;
+    const detected = result.status !== 0 && matched.length > 0 && discriminated;
+    findings.push({
+      control: control.name, file: control.file, exitStatus: result.status, owes: control.owes, matched,
+      measuredOffsets: measured, discriminated, detected,
+      passesBeforeFailure: (result.output.match(/^PASS /gm) ?? []).length,
+      failure: failure.split("\n").filter(Boolean).slice(0, 6).join("\n"),
+    });
+    console.log(`CONTROL ${control.name} → exit ${result.status}, ${detected ? "detected" : "NOT DETECTED"}`);
+    console.log(failure.split("\n").filter(Boolean).slice(0, 3).map(line => "  " + line).join("\n"));
+  }
+} finally {
+  git("worktree", "remove", "--force", tree);
+  await rm(workspace, { recursive: true, force: true });
+}
+
+await writeFile(resolve(out, "m3-resize-controls.json"), JSON.stringify({ head, findings }, null, 2) + "\n");
+const missed = findings.filter(finding => !finding.detected);
+assert.deepEqual(missed, [], `these controls did not make the gate fail for their own reason:\n${JSON.stringify(missed, null, 2)}`);
+console.log(JSON.stringify({ head, controls: findings.length, out }));

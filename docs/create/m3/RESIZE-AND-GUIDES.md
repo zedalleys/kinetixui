@@ -87,3 +87,93 @@ Negative controls, run against the shipped page and restored, none committed:
 - No guides for alignment between *sibling* edges mid-drag beyond their widths appearing as snap
   candidates; no distance badges between nodes.
 - Chromium only; mouse pointer only; no manual assistive-technology certification.
+
+---
+
+# M3-C: the effective width, and where the guide is drawn
+
+An independent exact-head review of the restacked M3 branch (PR #658) found two defects in the work
+above, and measuring them found two more. All four are the same kind of mistake: **the affordance
+read one thing while the frame rendered another**, and every one of the 25 checks above passes with
+them in place.
+
+## 1. The handle read base props, not the effective ones
+
+`presentation.ts` resolves a node's rendered style through `responsiveProps(node, editWidth)`, so at
+a 960 viewport a frame with a desktop width override **renders the override**. But `node-view.tsx`
+built its props from base `node.props` and read `width` and `widthMode` from that. Consequences,
+all measured:
+
+- `aria-valuenow` and `aria-valuetext` announced the base width while the frame showed the override.
+- Every keyboard press at a breakpoint wrote `base + step`, so the **second** press wrote the same
+  width again: from a base of 320 with an override of 420, three Shift+ArrowRight presses gave
+  `330, 330, 330` instead of `430, 440, 450`. The original check pressed exactly once, which is why
+  it could not see this.
+- A pointer drag was handed the handle's own width, so it restarted from the base: 40px of travel
+  from an override of 450 committed about 360 instead of about 490.
+- `resizable` tested the base `widthMode`, so a frame overridden to **fill** still offered a
+  fixed-width handle — a control writing a width the frame does not use.
+
+The repair is one resolved props object, used for exactly the two reads that concern the frame's
+geometry.
+
+## 2. The guide was drawn on the wrapper's edge
+
+`ResizeOverlay` measured `[data-studio-node]`, the full-width `.studio-node` wrapper, rather than
+the frame's own `<section>`. M3-A had already moved the **handle** onto the frame's rendered edge
+and measured a 0px offset there; that repair never reached this overlay. So on a 320px frame in a
+960px artboard the guide and its width label sat a measured **560px** from the edge they claimed to
+align, while the handle tracked the frame. The checks above assert the guide's presence and its
+snapped class, never its position, which is why they pass.
+
+## 3. The guide trailed the frame by one gesture step
+
+Found by measuring the repair for 2. Reading the rect in the render body reads the DOM **as it still
+is**, before the commit that applies the candidate width — a consistent 2px at a twelve-step drag,
+and proportionally more the faster the pointer moves. The measurement now happens in a layout
+effect, after the style lands and before paint.
+
+## 4. In a right-to-left document the guide was mirrored twice
+
+Also found by measuring. `edge` is a physical distance from the canvas's left, read off a rect, but
+it was applied with `inset-inline-start`, which resolves to `right` in an RTL document. Measured
+**127px** on the far side of the edge it was meant to mark. The line is now placed with `left`; the
+label, which genuinely belongs on the inline side, is mirrored explicitly.
+
+## Rendered verification
+
+`scripts/create-studio-canvas-browser.mjs` is now **35 checks, 0 axe violations** (from 25). The ten
+new ones measure:
+
+| check | measured |
+|---|---|
+| repeated keyboard resizing at a breakpoint | base 320, override 420 → `430, 440, 450` |
+| the announcement at a breakpoint | `aria-valuenow` and `aria-valuetext` both the override |
+| base width versus breakpoint width | 390 viewport announces 320, 960 announces 450, and the frame renders 450 |
+| pointer resize from an override | 450 + 40px travel → about 490, and not about 360 |
+| fixed versus fill mode | a frame overridden to fill offers **no** handle and renders at the artboard's content width |
+| a narrow frame in a wider container | wrapper 608px wider than the frame, so the two edges cannot be confused |
+| the guide on the rendered edge | guide centre within **2px** of the frame's own edge, 560px from the wrapper's |
+| a snapped guide | drawn at the rendered edge it announces, within 2px, label `768px · Tablet · 768px` |
+| the guide under the camera | within 2px at 120% zoom |
+| the guide in RTL | on the frame's own **left** edge within 2px, with the right edge 370px away, and the label on the leading side |
+| keyboard reachability | the handle focusable with slider semantics, one press advancing the effective width by one |
+| 200% text in reduced motion | root font size 32px, `prefers-reduced-motion` actually matching, the handle still on the frame's edge, 0 axe violations, no runtime error |
+
+Two measurement rules this slice earned, both of which first produced a false positive:
+
+- **Read the guide and the frame in one evaluation**, after the overlay has rendered the candidate
+  width the handle announces. Two separate reads straddle a render, and the few pixels of lag are
+  indistinguishable from a placement defect.
+- **A 390 viewport hides defect 2 entirely**, because there the frame fills the artboard and the two
+  edges coincide. Every earlier check runs at 390.
+
+## Negative controls
+
+`scripts/create-studio-m3-resize-negative-controls.mjs` reintroduces each defect as a source
+mutation — these live in React's own reading of the document, so there is no seam to inject through
+— in a **disposable git worktree** at the exact HEAD, served by its own dev server, and runs the
+real gate against it. The checkout is never modified, so an interrupted run cannot leave a mutation
+behind. A control counts only if the gate exits **nonzero** and the **terminal** failure, after the
+last `PASS` line, names the behaviour the repair protects: a grep over the whole output would match
+the gate's own diagnostics, which quote these very messages.
