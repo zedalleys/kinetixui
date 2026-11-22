@@ -299,6 +299,29 @@ jobs:
             node scripts/check-create-schema.mjs --negative="$control"
           done
 
+      # The gate over the gates above. Every negative control in this file is load-bearing — it is the
+      # only thing separating a check that passes from a check that cannot fail — and until now nothing
+      # checked the controls themselves. Three ways they rot, all measured on 6b1c990e: a `for` word
+      # list that goes empty leaves its step green having run nothing (#516, repaired by #542); a
+      # registry can be driven by no workflow at all, as scripts/adoption/pm-matrix.mjs's seven
+      # controls are today and scripts/seo-negative-controls.mjs's were until #625; and a literal
+      # `strategy.matrix.control` list is a second copy of a script's registry that the counting guard
+      # cannot keep in step, because `-lt 1` catches an emptied registry and not a deleted control.
+      # Reads source and workflow YAML only, mutates nothing, and carries its own negative controls.
+      - name: Negative-control registries are reachable, complete and guarded
+        run: pnpm check:negative-control-registries
+
+      - name: "Negative-control registries: negative controls"
+        run: |
+          controls=$(node scripts/check-negative-control-registries.mjs --list-negatives)
+          count=$(printf '%s\n' "$controls" | grep -c . || true)
+          if [ "$count" -lt 1 ]; then echo "no negative controls were listed"; exit 1; fi
+          echo "running $count negative control(s)"
+          for control in $controls; do
+            echo "--- $control"
+            node scripts/check-negative-control-registries.mjs --negative="$control"
+          done
+
       # Keyboard documentation is derived from the keyboard tests, so a behaviour that stops being tested
       # stops being documented. This fails if the two have drifted apart.
       - name: Keyboard documentation is current with the keyboard tests

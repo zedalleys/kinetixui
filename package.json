@@ -47,6 +47,7 @@
     "gen:manifest": "node scripts/gen-manifest.mjs",
     "check:manifest": "node scripts/gen-manifest.mjs --check",
     "check:manifest-controls": "node scripts/check-manifest-negative-controls.mjs",
+    "check:negative-control-registries": "node scripts/check-negative-control-registries.mjs",
     "gen:capabilities": "node scripts/gen-business-roadmap.mjs",
     "check:capabilities": "node scripts/gen-business-roadmap.mjs --check",
     "check:taxonomy-namespaces": "node scripts/check-taxonomy-namespaces.mjs",
