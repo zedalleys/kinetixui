@@ -239,7 +239,7 @@ final class MotionHostTests: XCTestCase {
         // Every trial is asserted. Correctness and timeliness are separate assertions with
         // separate messages, so a late-but-correct arrival is never reported as a wrong target.
         for trial in results {
-            let where_ = "target=\(target) trial=\(trial.index)"
+            let where_ = "target=\(target)"
 
             XCTAssertEqual(trial.receipt, "Request \(target) #1", "restoration was not requested once: \(where_)")
             XCTAssertTrue(trial.targetMounted, "the restore target was not mounted: \(where_)")
