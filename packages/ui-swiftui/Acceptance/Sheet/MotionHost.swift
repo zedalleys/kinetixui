@@ -31,6 +31,11 @@ struct VoiceOverHost: View {
     @State private var restorationCount = 0
     @State private var openerMounted = true
     @State private var receipts: [String] = []
+    // M5.36: the app's own restoration act, recorded separately from whatever the
+    // accessibility service later reports. `systemUptime` is seconds since boot, so the
+    // host and the test runner read the same clock and one origin covers both processes.
+    @State private var assignedTarget = "none"
+    @State private var assignmentUptime = "none"
 
     private var arguments: [String] { ProcessInfo.processInfo.arguments }
 
@@ -41,8 +46,15 @@ struct VoiceOverHost: View {
         let target: ReaderFocus = openerMounted ? .opener : .fallback
         restorationCount += 1
         restorationReceipt = "Request \(target.rawValue) #\(restorationCount)"
+        // Negative control A: request recorded, assignment never made.
         guard !arguments.contains("--suppress-restore") else { return }
-        backgroundFocus = target
+        // Negative control B: assign a control that IS mounted but is the wrong one, so
+        // focus moves promptly to the wrong target. This fails the identity assertion while
+        // leaving timeliness satisfied, which is what proves the two are independent.
+        let assigned: ReaderFocus = arguments.contains("--restore-to-timeline") ? .timeline : target
+        backgroundFocus = assigned
+        assignedTarget = assigned.rawValue
+        assignmentUptime = String(format: "%.6f", ProcessInfo.processInfo.systemUptime)
     }
 
     private var page: some View {
@@ -70,8 +82,17 @@ struct VoiceOverHost: View {
                 Button("Back to library") {}
                     .accessibilityFocused($backgroundFocus, equals: .fallback)
             }
+            // Unchanged, so #637's existing expectations still read what they always read.
             Text("Focus: \((readerFocus ?? backgroundFocus)?.rawValue ?? "none")")
                 .accessibilityIdentifier("focus-witness")
+            // The coalesced witness above prefers `readerFocus`, so a sheet-side value MASKS an
+            // already-assigned background target. These three separate the three facts it merged.
+            Text(readerFocus?.rawValue ?? "none")
+                .accessibilityIdentifier("reader-focus-witness")
+            Text(backgroundFocus?.rawValue ?? "none")
+                .accessibilityIdentifier("background-focus-witness")
+            Text(assignedTarget).accessibilityIdentifier("assigned-target-witness")
+            Text(assignmentUptime).accessibilityIdentifier("assignment-uptime-witness")
             Text(restorationReceipt).accessibilityIdentifier("restore-request-witness")
             Text(reducedMotion ? "Reduce Motion on" : "Reduce Motion off")
                 .accessibilityIdentifier("reduce-state")

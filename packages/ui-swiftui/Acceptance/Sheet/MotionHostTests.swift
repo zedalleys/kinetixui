@@ -3,7 +3,40 @@ import XCTest
 @available(iOS 27, *)
 @MainActor
 final class MotionHostTests: XCTestCase {
+    /// The acceptance budget. Fixed by owner decision 2026-11-22 and never widened here:
+    /// correct focus arriving after it is not acceptance.
+    private static let budget: TimeInterval = 4
+    /// Polling continues past the budget by this much so a breach is reported *with* its arrival
+    /// time rather than only as "never arrived". The tail never relaxes an assertion.
+    private static let diagnosticTail: TimeInterval = 3
+
     private var reader: XCUIVoiceOverService { XCUIDevice.shared.voiceOverService }
+
+    /// One trial's measurements. Every figure is seconds from the same origin: the instant the
+    /// dismissal gesture was synthesised. `systemUptime` is seconds since boot, so the host app
+    /// and this runner read one clock and no cross-process correction is needed.
+    private struct Trial {
+        let index: Int
+        let teardown: TimeInterval
+        let appAssigned: TimeInterval?
+        let speechMatched: TimeInterval?
+        let focusMatched: TimeInterval?
+        let receipt: String
+        let targetMounted: Bool
+        let lastUtterance: String
+        let lastBackgroundFocus: String
+        let lastReaderFocus: String
+
+        var line: String {
+            func f(_ v: TimeInterval?) -> String { v.map { String(format: "%.3f", $0) } ?? "never" }
+            return "trial=\(index) teardown=\(String(format: "%.3f", teardown)) "
+                + "appAssigned=\(f(appAssigned)) speechMatched=\(f(speechMatched)) "
+                + "focusMatched=\(f(focusMatched)) budget=\(String(format: "%.1f", MotionHostTests.budget)) "
+                + "receipt=\(receipt) targetMounted=\(targetMounted) "
+                + "readerFocus=\(lastReaderFocus) backgroundFocus=\(lastBackgroundFocus) "
+                + "utterance=\(lastUtterance)"
+        }
+    }
 
     private func withReader(_ block: () throws -> Void) throws {
         let initiallyEnabled = reader.isEnabled
@@ -39,70 +72,195 @@ final class MotionHostTests: XCTestCase {
         app.buttons[button].doubleTap()
     }
 
+    // MARK: - The four cases #637 already claims, names unchanged
+
     func testAudibleOpenerWithDismissalCallback() throws {
-        try verifyAudibleReturn(removeOpener: false, suppressRestore: false)
+        try verifyAudibleReturn(removeOpener: false)
     }
 
     func testAudibleFallbackWithDismissalCallback() throws {
-        try verifyAudibleReturn(removeOpener: true, suppressRestore: false)
+        try verifyAudibleReturn(removeOpener: true)
     }
 
     func testRapidReopenDoesNotRestoreUntilFinalDismissal() throws {
-        try verifyAudibleReturn(removeOpener: false, suppressRestore: false, reopen: true)
+        try verifyAudibleReturn(removeOpener: false, reopen: true)
     }
 
     func testReducedMotionRestoresDefinedFallback() throws {
-        try verifyAudibleReturn(removeOpener: true, suppressRestore: false, reduced: true)
+        try verifyAudibleReturn(removeOpener: true, reduced: true)
     }
+
+    // MARK: - Repeated trials
+
+    /// The defect is load-dependent, so one trial decides nothing about consistency. These report
+    /// every trial and fail if ANY trial breaches the budget — an average would hide a breach.
+    func testRepeatedOpenerRestorationStaysWithinBudget() throws {
+        try verifyAudibleReturn(removeOpener: false, trials: 5)
+    }
+
+    func testRepeatedFallbackRestorationStaysWithinBudget() throws {
+        try verifyAudibleReturn(removeOpener: true, trials: 5)
+    }
+
+    // MARK: - Committed negative controls
+
+    /// Control A — the request is recorded but the assignment is never made, so restoration cannot
+    /// happen. Proves the restoration assertions are live. Expected to FAIL; that failure is the
+    /// evidence. Run it with `-only-testing` and read the reason, never the exit code.
+    func testControlSuppressedRestorationFailsAcceptance() throws {
+        try verifyAudibleReturn(removeOpener: false, control: "--suppress-restore")
+    }
+
+    /// Control B — focus is assigned promptly to a control that IS mounted but is the WRONG one.
+    /// Timeliness is satisfied while identity is not, which is what proves the two assertions are
+    /// independent rather than one assertion wearing two messages. Expected to FAIL.
+    func testControlWrongTargetFailsIdentityNotTimeliness() throws {
+        try verifyAudibleReturn(removeOpener: false, control: "--restore-to-timeline")
+    }
+
+    // MARK: - Measurement
 
     private func verifyAudibleReturn(
-        removeOpener: Bool, suppressRestore: Bool, reopen: Bool = false, reduced: Bool = false
+        removeOpener: Bool,
+        reopen: Bool = false,
+        reduced: Bool = false,
+        trials: Int = 1,
+        control: String? = nil
     ) throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["--host-restores"] +
-            (removeOpener ? ["--remove-opener"] : []) +
-            (suppressRestore ? ["--suppress-restore"] : []) +
-            (reopen ? ["--reopen-once", "--rtl"] : []) +
-            (reduced ? ["--reduce"] : [])
-        app.launch()
+        let target = removeOpener ? "fallback" : "opener"
+        let label = removeOpener ? "Back to library" : "Open library sheet"
+        let button = removeOpener ? "Back to library" : "Open library sheet"
+        var results: [Trial] = []
+
         try withReader {
-            XCTAssertEqual(app.staticTexts["reduce-state"].label, reduced ? "Reduce Motion on" : "Reduce Motion off")
-            try seek("Open library sheet")
-            activate(app, "Open library sheet")
-            XCTAssertTrue(app.staticTexts["Library sheet heading"].waitForExistence(timeout: 5))
-            if removeOpener {
-                try seek("Remove opening control")
-                activate(app, "Remove opening control")
-                XCTAssertFalse(app.buttons["Open library sheet"].exists)
-            }
-            if reopen {
-                try seek("Dismiss library sheet")
+            for index in 1...trials {
+                let app = XCUIApplication()
+                app.launchArguments = ["--host-restores"] +
+                    (removeOpener ? ["--remove-opener"] : []) +
+                    (reopen ? ["--reopen-once", "--rtl"] : []) +
+                    (reduced ? ["--reduce"] : []) +
+                    (control.map { [$0] } ?? [])
+                app.launch()
+
+                XCTAssertEqual(
+                    app.staticTexts["reduce-state"].label,
+                    reduced ? "Reduce Motion on" : "Reduce Motion off"
+                )
+                try seek("Open library sheet")
+                activate(app, "Open library sheet")
+                XCTAssertTrue(app.staticTexts["Library sheet heading"].waitForExistence(timeout: 5))
+
+                if removeOpener {
+                    try seek("Remove opening control")
+                    activate(app, "Remove opening control")
+                    XCTAssertFalse(app.buttons["Open library sheet"].exists)
+                }
+
+                if reopen {
+                    try seek("Dismiss library sheet")
+                    activate(app, "Dismiss library sheet")
+                    Thread.sleep(forTimeInterval: 0.8)
+                    XCTAssertTrue(app.staticTexts["Library sheet heading"].exists)
+                    XCTAssertEqual(app.staticTexts["restore-request-witness"].label, "No request")
+                    let spokenInside = try reader.currentSpeech().utterance
+                    XCTAssertTrue(
+                        spokenInside.localizedCaseInsensitiveContains("library sheet")
+                            && !spokenInside.contains("Open library sheet"),
+                        spokenInside
+                    )
+                }
+
+                let dismissedControl = try seek("Dismiss library sheet")
+                XCTAssertTrue(dismissedControl.contains("Dismiss library sheet"))
+
+                // THE origin. Everything below is measured from here, and nothing re-bases it.
+                // #637 took its window after teardown instead, so its four seconds began at a
+                // point that moved with however long dismissal took.
+                let origin = ProcessInfo.processInfo.systemUptime
                 activate(app, "Dismiss library sheet")
-                Thread.sleep(forTimeInterval: 0.8)
-                XCTAssertTrue(app.staticTexts["Library sheet heading"].exists)
-                XCTAssertEqual(app.staticTexts["restore-request-witness"].label, "No request")
-                let spokenInside = try reader.currentSpeech().utterance
-                XCTAssertTrue(spokenInside.localizedCaseInsensitiveContains("library sheet")
-                              && !spokenInside.contains("Open library sheet"), spokenInside)
+
+                XCTAssertTrue(app.staticTexts["Library sheet heading"].waitForNonExistence(timeout: 6))
+                let teardown = ProcessInfo.processInfo.systemUptime - origin
+                XCTAssertFalse(app.buttons["Dismiss library sheet"].exists)
+
+                // Speech and focus are sampled as two independent observations, each stamped
+                // immediately after its own read. Reading them as one sample charges the second
+                // read's cost to the first and cannot say which of the two was late.
+                var speechMatched: TimeInterval?
+                var focusMatched: TimeInterval?
+                var lastUtterance = ""
+                var lastBackground = ""
+                var lastReader = ""
+                let tailEnd = origin + Self.budget + Self.diagnosticTail
+
+                repeat {
+                    let utterance = try reader.currentSpeech().utterance
+                    let afterSpeech = ProcessInfo.processInfo.systemUptime
+                    lastUtterance = utterance
+                    if speechMatched == nil, utterance.contains(label) {
+                        speechMatched = afterSpeech - origin
+                    }
+
+                    let background = app.staticTexts["background-focus-witness"].label
+                    let afterFocus = ProcessInfo.processInfo.systemUptime
+                    lastBackground = background
+                    if focusMatched == nil, background == target {
+                        focusMatched = afterFocus - origin
+                    }
+                    lastReader = app.staticTexts["reader-focus-witness"].label
+
+                    if speechMatched != nil, focusMatched != nil { break }
+                    Thread.sleep(forTimeInterval: 0.1)
+                } while ProcessInfo.processInfo.systemUptime < tailEnd
+
+                let assignment = Double(app.staticTexts["assignment-uptime-witness"].label)
+                let trial = Trial(
+                    index: index,
+                    teardown: teardown,
+                    appAssigned: assignment.map { $0 - origin },
+                    speechMatched: speechMatched,
+                    focusMatched: focusMatched,
+                    receipt: app.staticTexts["restore-request-witness"].label,
+                    targetMounted: app.buttons[button].exists,
+                    lastUtterance: lastUtterance,
+                    lastBackgroundFocus: lastBackground,
+                    lastReaderFocus: lastReader
+                )
+                results.append(trial)
+                print("M536_TRIAL target=\(target) control=\(control ?? "none") \(trial.line)")
+                app.terminate()
             }
-            let dismissedControl = try seek("Dismiss library sheet")
-            XCTAssertTrue(dismissedControl.contains("Dismiss library sheet"))
-            activate(app, "Dismiss library sheet")
-            XCTAssertTrue(app.staticTexts["Library sheet heading"].waitForNonExistence(timeout: 6))
-            XCTAssertFalse(app.buttons["Dismiss library sheet"].exists)
-            let label = removeOpener ? "Back to library" : "Open library sheet"
-            let deadline = Date().addingTimeInterval(4)
-            var last = try reader.currentSpeech().utterance
-            while !last.contains(label), Date() < deadline {
-                Thread.sleep(forTimeInterval: 0.2)
-                last = try reader.currentSpeech().utterance
+        }
+
+        // Every trial is asserted. Correctness and timeliness are separate assertions with
+        // separate messages, so a late-but-correct arrival is never reported as a wrong target.
+        for trial in results {
+            let where_ = "target=\(target) trial=\(trial.index)"
+
+            XCTAssertEqual(trial.receipt, "Request \(target) #1", "restoration was not requested once: \(where_)")
+            XCTAssertTrue(trial.targetMounted, "the restore target was not mounted: \(where_)")
+
+            XCTAssertNotNil(
+                trial.speechMatched,
+                "IDENTITY (speech): the exact target was never spoken: \(where_) \(trial.line)"
+            )
+            XCTAssertNotNil(
+                trial.focusMatched,
+                "IDENTITY (focus): focus never reached the restored target: \(where_) \(trial.line)"
+            )
+
+            if let spoken = trial.speechMatched {
+                XCTAssertLessThanOrEqual(
+                    spoken, Self.budget,
+                    "TIMELINESS (speech): the exact target was spoken late: \(where_) \(trial.line)"
+                )
             }
-            print("M682_CALLBACK control=\(label) suppress=\(suppressRestore) actual=\(last)")
-            let receipt = app.staticTexts["restore-request-witness"].label
-            print("M682_CALLBACK receipt \(receipt)")
-            XCTAssertEqual(receipt, "Request \(removeOpener ? "fallback" : "opener") #1")
-            XCTAssertTrue(last.contains(label), "Exact target must be spoken without a navigation move: \(last)")
+            if let focused = trial.focusMatched {
+                XCTAssertLessThanOrEqual(
+                    focused, Self.budget,
+                    "TIMELINESS (focus): focus reached the target late: \(where_) \(trial.line)"
+                )
+            }
         }
     }
-
 }
