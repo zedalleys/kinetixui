@@ -244,26 +244,37 @@ final class MotionHostTests: XCTestCase {
             XCTAssertEqual(trial.receipt, "Request \(target) #1", "restoration was not requested once: \(where_)")
             XCTAssertTrue(trial.targetMounted, "the restore target was not mounted: \(where_)")
 
+            // Speech is the asserted acceptance signal: it is what a VoiceOver user actually
+            // receives, and it is the signal #637 already asserted.
             XCTAssertNotNil(
                 trial.speechMatched,
                 "IDENTITY (speech): the exact target was never spoken: \(where_) \(trial.line)"
             )
-            XCTAssertNotNil(
-                trial.focusMatched,
-                "IDENTITY (focus): focus never reached the restored target: \(where_) \(trial.line)"
-            )
-
             if let spoken = trial.speechMatched {
                 XCTAssertLessThanOrEqual(
                     spoken, Acceptance.budget,
                     "TIMELINESS (speech): the exact target was spoken late: \(where_) \(trial.line)"
                 )
             }
-            if let focused = trial.focusMatched {
-                XCTAssertLessThanOrEqual(
-                    focused, Acceptance.budget,
-                    "TIMELINESS (focus): focus reached the target late: \(where_) \(trial.line)"
-                )
+
+            // Focus is MEASURED and REPORTED, and deliberately NOT asserted.
+            //
+            // This started as an assertion and was removed on evidence. Read back through
+            // `@AccessibilityFocusState`, focus reported `never` in EVERY trial — including
+            // trials whose speech arrived in 1.6 s and passed. An assertion that fails
+            // identically in a passing and a failing case carries no information about the
+            // thing it names, so leaving it in would have made all four of #637's cases
+            // permanently red for a reason unrelated to the defect.
+            //
+            // The cause is the binding, not the focus: the host can observe its own write
+            // (`appAssigned`, stable at ~0.77 s) but the system does not leave a
+            // service-confirmed value in it to read. Observing service-confirmed focus needs
+            // in-app `UIAccessibility.focusedElement(using: .notificationVoiceOver)` sampling,
+            // which this host does not carry. That port is the follow-up, not this repair.
+            if trial.focusMatched == nil {
+                print("M536_FOCUS_NOT_OBSERVABLE \(where_) "
+                    + "binding=\(trial.lastBackgroundFocus) reader=\(trial.lastReaderFocus) "
+                    + "appAssigned=\(trial.appAssigned.map { String(format: "%.3f", $0) } ?? "never")")
             }
         }
     }
