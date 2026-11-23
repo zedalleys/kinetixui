@@ -29,6 +29,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { serveStatic } from "./visual-harness.mjs";
+import { SOURCE_DEFECTS } from "../packages/ui/browser/source-defects.mjs";
+
+export { SOURCE_DEFECTS };
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -166,6 +169,12 @@ export const DEFECTS = {
 
 };
 
+const SOURCE_DEFECT = process.env.KX_CAROUSEL_SOURCE_DEFECT;
+if (SOURCE_DEFECT && !(SOURCE_DEFECT in SOURCE_DEFECTS)) {
+  console.error(`react-carousel-slide-exposure: KX_CAROUSEL_SOURCE_DEFECT=${SOURCE_DEFECT} is not one of ${Object.keys(SOURCE_DEFECTS).join(", ")}`);
+  process.exit(2);
+}
+if (SOURCE_DEFECT) console.log(`CONTROL  the SOURCE defect "${SOURCE_DEFECT}" is compiled into the harness — this run MUST fail.`);
 const DEFECT = process.env.KX_CAROUSEL_DEFECT;
 if (DEFECT && !(DEFECT in DEFECTS)) {
   console.error(`react-carousel-slide-exposure: KX_CAROUSEL_DEFECT=${DEFECT} is not one of ${Object.keys(DEFECTS).join(", ")}`);
@@ -652,9 +661,15 @@ async function touch(browser, base) {
  * Exactly the failure mode `an-assertion-over-nothing-passes` is about, in the control rather than the gate.
  */
 async function main() {
-  const dist = join(root, "packages/ui/browser/dist");
-  if (!existsSync(join(dist, "vertical.html")) || process.env.KX_REACT_HARNESS_REBUILD) {
-    execFileSync("node", [join(root, "packages/ui/browser/build.mjs")], { cwd: root, stdio: ["ignore", "ignore", "inherit"] });
+  // A source defect gets its OWN output directory and is ALWAYS rebuilt. Sharing `dist` would leave a
+  // mutated bundle behind for the next clean run to measure, which is the contamination the whole
+  // in-memory approach exists to avoid.
+  const dist = join(root, SOURCE_DEFECT ? `packages/ui/browser/dist-defect-${SOURCE_DEFECT}` : "packages/ui/browser/dist");
+  if (SOURCE_DEFECT || !existsSync(join(dist, "vertical.html")) || process.env.KX_REACT_HARNESS_REBUILD) {
+    execFileSync("node", [join(root, "packages/ui/browser/build.mjs"), dist], {
+      cwd: root,
+      stdio: ["ignore", SOURCE_DEFECT ? "inherit" : "ignore", "inherit"],
+    });
   }
   if (!existsSync(join(dist, "vertical.html"))) {
     console.error("react-carousel-slide-exposure: the harness did not build.");

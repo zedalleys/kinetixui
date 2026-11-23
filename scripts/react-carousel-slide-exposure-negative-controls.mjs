@@ -19,7 +19,7 @@
 import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DEFECTS } from "./react-carousel-slide-exposure.mjs";
+import { DEFECTS, SOURCE_DEFECTS } from "./react-carousel-slide-exposure.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const GATE = join(root, "scripts/react-carousel-slide-exposure.mjs");
@@ -70,10 +70,30 @@ const EXPECTED = {
   "announce-per-position": { pattern: /speaks once, naming the landing|begun mid-phrase/, minimum: 4 },
 };
 
-function run(defect) {
+/**
+ * The SOURCE defects, driven through `KX_CAROUSEL_SOURCE_DEFECT` instead. Same three assertions; the only
+ * difference is where the mutation lives.
+ *
+ * This one is the owner's rapid-input requirement, and it is exactly 2 rows wide — the mid-phrase row in
+ * each of the two intent sections, and nothing else. That narrowness is the point: `announce-per-position`
+ * reddens that row too, among three others, so the two controls are distinguishable by WHICH rows they
+ * break, and the race cannot be mistaken for a timer-length defect. Measured output of the failing rows,
+ * which is the original defect in one line:
+ *
+ *   ["Slide 2 of 5"], the engine landed on "Slide 3 of 5"
+ *
+ * — the control's position announced, the drag's own landing silent.
+ */
+const EXPECTED_SOURCE = {
+  "stale-intent-wins": { pattern: /begun mid-phrase/, minimum: 2 },
+};
+
+function run(defect, source) {
   const env = { ...process.env };
-  if (defect) env.KX_CAROUSEL_DEFECT = defect;
-  else delete env.KX_CAROUSEL_DEFECT;
+  delete env.KX_CAROUSEL_DEFECT;
+  delete env.KX_CAROUSEL_SOURCE_DEFECT;
+  if (source) env.KX_CAROUSEL_SOURCE_DEFECT = defect;
+  else if (defect) env.KX_CAROUSEL_DEFECT = defect;
   try {
     return { code: 0, out: execFileSync("node", [GATE], { cwd: root, env, encoding: "utf8" }) };
   } catch (e) {
@@ -133,15 +153,26 @@ if (!unparsed.length) ok("every row of a clean run parses into a stable identity
 else bad("every row of a clean run parses into a stable identity", `${unparsed.length} rows did not parse: ${JSON.stringify(unparsed.slice(0, 3))}`);
 
 /* ── one negative control per defect ──────────────────────────────────────── */
-for (const defect of Object.keys(DEFECTS)) {
-  const { pattern, minimum } = EXPECTED[defect] ?? {};
+/**
+ * @param defects   the defect names to drive
+ * @param expected  the per-defect pattern and measured minimum
+ * @param source    true to drive them as SOURCE defects (`KX_CAROUSEL_SOURCE_DEFECT`)
+ */
+function drive(defects, expected, source) {
+for (const defect of defects) {
+  const { pattern, minimum } = expected[defect] ?? {};
   if (!pattern) {
     bad(`negative: ${defect}`, "no expectation is recorded for this defect — add one to EXPECTED");
     continue;
   }
-  const r = run(defect);
+  const r = run(defect, source);
 
-  if (!/^CONTROL {2}the defect/m.test(r.out)) {
+  // The banner is the only proof the mutation was carried at all. For a source defect the harness ALSO
+  // prints the line naming what it compiled in, and both are required: the gate's banner says the run
+  // knew it was a control, the harness's says the rewrite reached the bundle. A control whose mutation
+  // silently did nothing would otherwise report a clean pass as evidence.
+  const banner = source ? /^CONTROL {2}the SOURCE defect/m : /^CONTROL {2}the defect/m;
+  if (!banner.test(r.out) || (source && !new RegExp(`SOURCE DEFECT "${defect}" is compiled`).test(r.out))) {
     bad(`negative: ${defect} — the mutation was applied`, "the gate printed no CONTROL banner, so the run may not have carried the defect at all");
     continue;
   }
@@ -169,7 +200,22 @@ for (const defect of Object.keys(DEFECTS)) {
   const vanished = [...cleanPassing].filter((id) => !ran.has(id));
   if (!vanished.length) ok(`negative: ${defect} — and every other assertion still RAN`, `${ran.size} of ${cleanPassing.size} identities present`);
   else bad(`negative: ${defect} — and every other assertion still RAN`, `${vanished.length} assertions disappeared: ${JSON.stringify(vanished.slice(0, 6))}`);
+
+  // A SOURCE defect rewrites the component, so this is asserted PER RUN rather than only once at the end:
+  // the mutation is supposed to live in memory, and the way to show it did is that the tracked file has
+  // not changed by the time the control finishes. `git status --porcelain` on that one path is the
+  // cheapest statement of it that a gitignored build output cannot hide.
+  if (source) {
+    const file = SOURCE_DEFECTS[defect].file;
+    const dirty = execFileSync("git", ["status", "--porcelain", "--", file], { cwd: root, encoding: "utf8" }).trim();
+    if (!dirty) ok(`negative: ${defect} — and the file it rewrites is UNTOUCHED on disk`, `${file} clean`);
+    else bad(`negative: ${defect} — and the file it rewrites is UNTOUCHED on disk`, `the control contaminated the working tree: ${JSON.stringify(dirty)}`);
+  }
 }
+}
+
+drive(Object.keys(DEFECTS), EXPECTED, false);
+drive(Object.keys(SOURCE_DEFECTS), EXPECTED_SOURCE, true);
 
 /* ── the component on disk is untouched ───────────────────────────────────── */
 const after = run(null);

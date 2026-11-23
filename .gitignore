@@ -37,3 +37,4 @@ marketing/content/drafts/release-*.md
 
 # The React browser harness is built on demand by scripts/react-carousel-slide-exposure.mjs.
 packages/ui/browser/dist/
+packages/ui/browser/dist-defect-*/

@@ -24,6 +24,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { SOURCE_DEFECTS } from "./source-defects.mjs";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const repo = resolve(here, "../../..");
@@ -60,12 +61,48 @@ const tailwind = (await import(pathToFileURL(require.resolve("tailwindcss")).hre
 // `basis-full` or `overflow-hidden` lays every slide in the view, which is the one state in which every
 // off-screen assertion passes over nothing. Entering the harness directory is what makes those globs mean
 // what they read as.
+
+/**
+ * A defect restored in the component's SOURCE, named by `KX_CAROUSEL_SOURCE_DEFECT` and applied in memory
+ * by this transform. See `source-defects.mjs` for why some behaviour cannot be reached from the page.
+ *
+ * Three things make this safe to drive from a control: the rewrite never touches disk, so an interrupted
+ * build leaves the tracked component byte-identical; it runs `enforce: "pre"`, so it sees the source a
+ * reader sees rather than JSX the React plugin has already lowered; and it REQUIRES exactly one match,
+ * failing the build otherwise, so a control cannot pass while mutating nothing because the line moved.
+ */
+const sourceDefect = process.env.KX_CAROUSEL_SOURCE_DEFECT;
+if (sourceDefect && !(sourceDefect in SOURCE_DEFECTS)) {
+  console.error(`react harness: KX_CAROUSEL_SOURCE_DEFECT=${sourceDefect} is not one of ${Object.keys(SOURCE_DEFECTS).join(", ")}`);
+  process.exit(2);
+}
+let applied = 0;
+const defectPlugin = sourceDefect
+  ? {
+      name: "kx-source-defect",
+      enforce: "pre",
+      transform(code, id) {
+        const d = SOURCE_DEFECTS[sourceDefect];
+        if (!id.replace(/\\/g, "/").split("?")[0].endsWith(d.file)) return null;
+        const hits = code.split(d.find).length - 1;
+        if (hits !== 1) {
+          this.error(
+            `kx-source-defect "${sourceDefect}": expected exactly one occurrence of its target in ${d.file}, found ${hits}. ` +
+              "The source has moved; the control would otherwise have measured the component as shipped.",
+          );
+        }
+        applied += 1;
+        return { code: code.split(d.find).join(d.replace), map: null };
+      },
+    }
+  : null;
+
 process.chdir(here);
 
 await vite.build({
   configFile: false,
   root: here,
-  plugins: [react()],
+  plugins: defectPlugin ? [defectPlugin, react()] : [react()],
   logLevel: "warn",
   css: {
     postcss: {
@@ -78,6 +115,14 @@ await vite.build({
   base: "./",
   build: { outDir, emptyOutDir: true, rollupOptions: { input: join(here, "index.html") } },
 });
+
+if (sourceDefect) {
+  if (applied !== 1) {
+    console.error(`react harness: the source defect "${sourceDefect}" was never applied — the file it names was not compiled.`);
+    process.exit(2);
+  }
+  console.log(`react harness: SOURCE DEFECT "${sourceDefect}" is compiled into this build — ${SOURCE_DEFECTS[sourceDefect].why}.`);
+}
 
 for (const [to, from] of Object.entries(STYLES)) copyFileSync(join(repo, from), join(outDir, to));
 copyFileSync(join(here, "harness.css"), join(outDir, "harness.css"));
