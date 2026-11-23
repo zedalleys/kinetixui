@@ -24,7 +24,21 @@ export function SiteHeader() {
         A fixed height would clip them instead, which is worse.
       */}
       <div className="mx-auto flex min-h-12 max-w-screen-2xl flex-wrap items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:px-8">
-        <Link href="/" className="group flex items-center gap-2.5">
+        {/*
+          The focus ring is the same one the three tools to the right of it already draw
+          (`github-button.tsx`, and `mobile-nav.tsx` on the small-screen menu): `--ring`, 2px, with
+          the UA outline turned off. Before this, the wordmark and the eight nav links below set no
+          ring of their own, so Chromium drew its `outline: auto 1px` instead — visible, and
+          adequately contrasting in both themes, which is why no axe rule ever objected, but it is
+          the only keyboard affordance on the site that does not come from the token. It therefore
+          ignores a custom theme's `--ring`, and it differs between browsers.
+
+          `rounded-sm` only so the ring has a shape; the link's own geometry is unchanged.
+        */}
+        <Link
+          href="/"
+          className="group flex items-center gap-2.5 rounded-sm kx-header-focus focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
           <BrandMark className="size-8 shrink-0 transition-transform duration-300 group-hover:-translate-y-0.5" />
           <span className="font-display text-wordmark font-bold tracking-[-0.035em]">
             Kinetix<span className="text-brand">UI</span>
@@ -83,6 +97,12 @@ export function SiteHeader() {
                 // on every page, since this header is shared. Tightening the gutter one step at md buys 64px
                 // across the bar and leaves the roomier lg spacing untouched.
                 "group relative flex items-center gap-2 px-2 font-medium transition-colors lg:px-4",
+                // The same `--ring` the tools in row 1 draw, but INSET. These items are
+                // `items-stretch`, so they are the full height of the bar and sit flush against the
+                // `border-t` above and the kinetic hairline below; a ring drawn outside the box
+                // overlaps both and reads as a misalignment rather than a focus indicator. Inset
+                // keeps the whole ring inside the item, where there is room for it.
+                "kx-header-focus focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                 active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
