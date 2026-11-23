@@ -66,8 +66,14 @@ const EXPECTED = {
     minimum: 8,
   },
   // Collapsing the settle window also makes a gesture begun mid-phrase speak twice, so that row is this
-  // defect's too rather than collateral.
-  "announce-per-position": { pattern: /speaks once, naming the landing|begun mid-phrase/, minimum: 4 },
+  // defect's too rather than collateral. The `interrupted gesture` section's announcement row joined it
+  // for the same reason and was reported as an unexplained failure until it was claimed here: the
+  // specificity check is what found it, which is the behaviour that check exists for. 5 is the measured
+  // count at 106 rows.
+  "announce-per-position": {
+    pattern: /speaks once, naming the landing|begun mid-phrase|the interrupted burst is announced once/,
+    minimum: 5,
+  },
 };
 
 /**
@@ -86,6 +92,26 @@ const EXPECTED = {
  */
 const EXPECTED_SOURCE = {
   "stale-intent-wins": { pattern: /begun mid-phrase/, minimum: 2 },
+
+  /**
+   * `focus-follows-once` makes the transfer fire once and then stand down. Its pattern is anchored to the
+   * three rows of the `interrupted gesture` section by their full identity rather than by a word, because
+   * the section's own announcement row ends "...at the slide it settled on" and a pattern of
+   * `/settled on/` would have claimed a row that still PASSES — which would have let a future mutation
+   * breaking that row be counted as expected.
+   *
+   * MEASURED, not a floor: 3 of 106 rows fail, and the reader's place is gone in the detail —
+   *
+   *   1 sample(s) outside the carousel: … → DIV(slide 2)@[1] → DIV(slide 2)@[1] → BODY@[4]
+   *
+   * The deliberate narrowness is the point. One transfer still happens, so `focus is not dropped when its
+   * slide leaves the view` stays green in all four axis sections and in `reduced motion`: this control
+   * therefore proves the INTERRUPTION case specifically, not focus-following in general.
+   */
+  "focus-follows-once": {
+    pattern: /^interrupted gesture ▸ (focus is never dropped|when the track settles|and it is the slide the engine settled on)/,
+    minimum: 3,
+  },
 };
 
 function run(defect, source) {
