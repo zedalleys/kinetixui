@@ -75,9 +75,9 @@
     "check:tabs-dogfood": "node scripts/tabs-dogfood-browser.mjs",
     "check:tabs-indicator": "node scripts/tabs-indicator.mjs",
     "check:react-overlays": "node scripts/react-overlays.mjs",
-  "check:react-carousel-focus": "node scripts/react-carousel-focus.mjs",
-  "check:react-carousel-direction": "node scripts/react-carousel-direction.mjs",
-  "check:react-carousel-focus-negative-controls": "node scripts/react-carousel-focus-negative-controls.mjs",
+    "check:react-carousel-focus": "node scripts/react-carousel-focus.mjs",
+    "check:react-carousel-direction": "node scripts/react-carousel-direction.mjs",
+    "check:react-carousel-focus-negative-controls": "node scripts/react-carousel-focus-negative-controls.mjs",
     "check:a11y-site": "node scripts/a11y-site.mjs --base http://127.0.0.1:3000",
     "check:docs-image-local": "node scripts/docs-image-local-assets.mjs --base http://127.0.0.1:3000",
     "check:theme-isolation": "node scripts/theme-isolation.mjs --base http://127.0.0.1:3000",
@@ -167,7 +167,10 @@
     "gen:visuals": "node scripts/gen-marketing-visuals.mjs",
     "render:visuals": "node scripts/render-marketing-visuals.mjs",
     "check:web-dogfooding": "node --test scripts/check-web-dogfooding.test.mjs && node scripts/check-web-dogfooding.mjs",
-    "check:blocks-runtime": "node scripts/blocks-runtime-browser.mjs --base http://127.0.0.1:3000"
+    "check:blocks-runtime": "node scripts/blocks-runtime-browser.mjs --base http://127.0.0.1:3000",
+    "build:react-harness": "node packages/ui/browser/build.mjs",
+    "check:react-carousel-slide-exposure": "node scripts/react-carousel-slide-exposure.mjs",
+    "check:react-carousel-slide-exposure-negative-controls": "node scripts/react-carousel-slide-exposure-negative-controls.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",
