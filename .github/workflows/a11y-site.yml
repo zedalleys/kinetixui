@@ -193,6 +193,15 @@ jobs:
       # focus ring follows a custom theme's --focus (docs/audits/COLOR-THEMING-MATURITY-AUDIT.md).
       - name: Theme isolation + themed focus ring (light + dark site)
         run: pnpm check:theme-isolation
+      # `check:theme-isolation`'s focus-ring assertions are about the navigation-menu COMPONENT, so
+      # the plain anchors in the site header were covered by nothing: they drew the browser's ring
+      # rather than `--ring`, and no axe, contrast or overflow rule can object to a ring that is
+      # perfectly visible and merely foreign. This walks the header's real tab order instead and
+      # asserts the ring's provenance, plus that an outline survives forced colours.
+      - name: Site header focus ring (real Tab order, --ring provenance, forced colours)
+        run: pnpm check:header-focus-ring
+      - name: Site header focus ring negative controls
+        run: pnpm check:header-focus-ring-controls
       # The /iot demos' state fidelity and control clearance: relations between rendered things (a stepper and
       # the arc it sits under, a lock's word and its drawing, two plan markers) that axe and overflow cannot see.
       - name: IoT state and spatial pass (ring clearance, lock/light fidelity, plan markers)

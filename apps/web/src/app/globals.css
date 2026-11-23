@@ -1194,6 +1194,23 @@
   .kx-trace[data-active] {
     stroke: CanvasText;
   }
+  /*
+   * The header's focus ring is a `box-shadow`, which is exactly what forced colours throws away —
+   * and the Tailwind pattern it follows also sets `outline: none`, so the two together would leave
+   * these stops with NO focus indicator at all in High Contrast. That is the one way this repair
+   * could make things worse than the browser ring it replaces, so the outline comes back here.
+   *
+   * `Highlight` rather than `CanvasText`: this is a selection-like state, and it is the keyword the
+   * UA's own focus ring uses, so it keeps following whichever High Contrast theme the reader chose.
+   *
+   * Note this is scoped to `.kx-header-focus`. The same gap exists wherever else the site uses
+   * `focus-visible:outline-none` with a ring — the footer and the mobile menu among them — and
+   * fixing those is a separate, wider change than this one was authorized to be.
+   */
+  .kx-header-focus:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
 }
 
 /* rehype-pretty-code */

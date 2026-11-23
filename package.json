@@ -74,6 +74,8 @@
     "check:layout-visual": "node scripts/layout-visual.mjs",
     "check:native-motion": "node scripts/check-native-motion.mjs",
     "check:tabs-dogfood": "node scripts/tabs-dogfood-browser.mjs",
+    "check:header-focus-ring": "node scripts/header-focus-ring.mjs --base http://127.0.0.1:3000",
+    "check:header-focus-ring-controls": "node scripts/header-focus-ring.mjs --base http://127.0.0.1:3000 --controls",
     "check:tabs-indicator": "node scripts/tabs-indicator.mjs",
     "check:react-overlays": "node scripts/react-overlays.mjs",
     "check:a11y-site": "node scripts/a11y-site.mjs --base http://127.0.0.1:3000",
