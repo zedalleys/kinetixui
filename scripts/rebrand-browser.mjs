@@ -348,6 +348,120 @@ try {
           transform: getComputedStyle(document.querySelector('.kx-mesh-body')).transform,
           opacity: getComputedStyle(document.querySelector('.kx-mesh-facets path')).opacity,
         }));
+      /**
+       * The hero's continuous animations, as the animations themselves report
+       * them: the ones the motion lifecycle has to suspend, and nothing else.
+       *
+       * `iterations === Infinity` rather than a list of names, for the same
+       * reason the stylesheet's pause rule is a blanket one — a continuous layer
+       * added later must not escape by not being named here. The one-shot
+       * entrance (`kx-mesh-facet-in`, `kx-mesh-wake`, `kx-mesh-draw`) is finite
+       * and deliberately exempt: suspending it would strand the artwork at its
+       * from-state. Chromium reports those as `running` for as long as their
+       * `both` fill holds, which is why reading `playState` alone over every
+       * animation would be wrong.
+       */
+      const infiniteMotion = () =>
+        page.evaluate(() =>
+          document
+            .getAnimations()
+            .filter((a) => {
+              const el = a.effect?.target;
+              return Boolean(
+                el && el.closest?.('.kx-hero-polygon') && a.effect.getComputedTiming().iterations === Infinity,
+              );
+            })
+            .map((a) => ({
+              name: a.animationName,
+              state: a.playState,
+              time: Number(a.currentTime),
+            })),
+        );
+      /**
+       * Wait until the suspension the component claims is actually committed,
+       * then say what was still moving if it never is.
+       *
+       * WHY THIS WAIT EXISTS, and why it is not a blind retry. `opacity` and
+       * `transform` are composited, so the breath and the shimmer run off the
+       * main thread and the pause has to reach the compositor before the main
+       * thread's computed style settles on the hold value. On #664's head
+       * `cc2ca8e1` — a Carousel branch that changes no hero code — the old
+       * assertion sampled once immediately after `data-running` flipped and
+       * again 700ms later, and the two differed:
+       *
+       *   opacity   0.227339 → 0.227301
+       *   transform matrix(1.01016, …, 2.19762, -3.64328)
+       *          →  matrix(1.01018, …, 2.20286, -3.65197)
+       *
+       * Those matrices are not noise. Inverting the keyframes
+       * (`translate3d(0.35%, -0.5%) scale(1.012)` over the 741.71 × 860.74
+       * view-box) gives the animation's progress three independent times — from
+       * the scale, from the x translate and from the y translate — and all three
+       * agree to four decimals: 0.84659 then 0.84849. Through `ease-in-out` over
+       * the 9.5s half-cycle that is an advance of **15.7ms of animation time**,
+       * which is one frame at 60Hz. Had the breath genuinely kept running across
+       * the sampling window it would have advanced ~700ms — 44× further. So the
+       * pause was honoured; the first sample was simply taken one frame early.
+       *
+       * The repair is therefore not a tolerance. A tolerance would have to be
+       * wide enough to swallow a frame and narrow enough to catch real motion,
+       * and it would still be comparing a value whose meaning depends on where in
+       * the cycle the sample fell — near a turning point of an ease-in-out curve,
+       * 700ms of real motion produces almost no change at all, so an epsilon
+       * generous enough to be stable would also be generous enough to miss a
+       * genuinely running animation. Instead this waits for the state the
+       * contract is about — `playState === 'paused'`, with the clock confirmed
+       * stopped — and then compares exactly, with no epsilon anywhere.
+       *
+       * It cannot mask the defect it exists to catch: an animation that escapes
+       * the lifecycle never reports `paused`, so the wait times out and this
+       * fails with the message the negative controls match on.
+       */
+      const waitForSuspension = async (where) => {
+        try {
+          await page.waitForFunction(
+            () => {
+              const live = document.getAnimations().filter((a) => {
+                const el = a.effect?.target;
+                return Boolean(
+                  el && el.closest?.('.kx-hero-polygon') && a.effect.getComputedTiming().iterations === Infinity,
+                );
+              });
+              // Under reduced motion the stronger rule removes the animations
+              // outright, so an empty set is a correct answer there — but only
+              // once the hero has actually rendered, which `data-running` has
+              // already told the caller.
+              if (live.some((a) => a.playState !== 'paused')) return false;
+              // Paused is not sufficient on its own: the hold value has to be
+              // committed. Require two consecutive reads to agree on the clock.
+              const now = live.map((a) => `${a.animationName}@${Number(a.currentTime)}`).join('|');
+              const prev = window.__kxSuspendProbe;
+              window.__kxSuspendProbe = now;
+              return prev === now;
+            },
+            null,
+            { polling: 50, timeout: 8000 },
+          );
+        } catch {
+          const live = await infiniteMotion();
+          const moving = live.filter((a) => a.state !== 'paused');
+          // The facets are 44 paths carrying the same shimmer, so naming every one
+          // of them buries the finding in its own evidence. The distinct animation
+          // names are what identifies which layer escaped; the count carries the rest.
+          const names = [...new Set(moving.map((a) => a.name))].join(', ');
+          assert.fail(
+            `the breath or the facet shimmer kept animating ${where}, where the component reports no motion — ` +
+              `${moving.length} of ${live.length} continuous hero animation(s) never reported paused ` +
+              `(${names || 'none named'}); first clock ${moving[0]?.time}ms`,
+          );
+        }
+        // Clear the two-read scratch value, so the next call to this helper starts
+        // from no history rather than from the previous suspension's clocks.
+        await page.evaluate(() => {
+          delete window.__kxSuspendProbe;
+        });
+        return infiniteMotion();
+      };
       const pulsesA = await pulseAt();
       const glowsA = await glowAt();
       await page.waitForTimeout(600);
@@ -535,10 +649,20 @@ try {
 
       await page.locator('footer').scrollIntoViewIfNeeded();
       await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'false');
+      const offscreenClocks = await waitForSuspension('offscreen');
       const offscreenPulses = await pulseAt();
       const offscreenCss = await cssMotionAt();
       await page.waitForTimeout(700);
       assert.deepEqual(await pulseAt(), offscreenPulses, 'the light kept travelling offscreen');
+      // The contract, asserted on the animations rather than inferred from a
+      // rendered value: a suspended animation's clock does not move. Exact, with
+      // no tolerance — this is the number the old comparison was reading at one
+      // remove, through an ease-in-out curve that made one frame look like 1e-5.
+      assert.deepEqual(
+        await infiniteMotion(),
+        offscreenClocks,
+        'a continuous hero animation advanced its own clock while the component reported no motion',
+      );
       assert.deepEqual(
         await cssMotionAt(),
         offscreenCss,
@@ -549,10 +673,22 @@ try {
       await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'true');
       await page.emulateMedia({ reducedMotion: 'reduce' });
       await page.waitForFunction(() => document.querySelector('.kx-hero-polygon').dataset.running === 'false');
+      // Same shape of brittleness, same repair. Reduced motion is the stronger
+      // contract — it removes the animations rather than pausing them — so the
+      // set this waits on is usually empty here, and an empty set is a correct
+      // answer. What it still catches is a layer that survives the removal: it
+      // reports `running`, the wait times out, and the message below is the one
+      // `reduced-*-animates` and `ignores-data-running` match on.
+      const stilledClocks = await waitForSuspension('after the preference changed');
       const stilledPulses = await pulseAt();
       const stilledCss = await cssMotionAt();
       await page.waitForTimeout(500);
       assert.deepEqual(await pulseAt(), stilledPulses, 'the light kept travelling after the preference changed');
+      assert.deepEqual(
+        await infiniteMotion(),
+        stilledClocks,
+        'a CSS layer kept animating after the preference changed: its own clock advanced',
+      );
       assert.deepEqual(await cssMotionAt(), stilledCss, 'a CSS layer kept animating after the preference changed');
       await page.emulateMedia({ reducedMotion: 'no-preference' });
     } else {
