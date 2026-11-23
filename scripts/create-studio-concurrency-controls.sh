@@ -576,7 +576,13 @@ arm_marker() {
 
 requested=("$@")
 [ "${#requested[@]}" -eq 0 ] && requested=(signal ownership index linkage marker teardown contamination)
+# AN ARM THAT PRODUCED NO ASSERTION DID NOT RUN. The summary below reports
+# ${#requested[@]} groups — what was ASKED FOR, not what happened — so an arm that died before
+# saying anything (an undefined helper, a `return` down an untested path) would leave the group
+# count untouched, the assertion count quietly lower, and the exit status 0. The sibling prover had
+# exactly that defect, and it was only visible on CI; this is the same check on this side.
 for a in "${requested[@]}"; do
+  before="$arms"
   case "$a" in
     signal) arm_signal ;;
     ownership) arm_ownership ;;
@@ -587,6 +593,7 @@ for a in "${requested[@]}"; do
     contamination) arm_contamination ;;
     *) say "unknown arm: $a"; exit 2 ;;
   esac
+  [ "$arms" -eq "$before" ] && bad "the '$a' arm produced no assertion at all — it did not run, and an arm that did not run has measured nothing"
   say ""
 done
 
