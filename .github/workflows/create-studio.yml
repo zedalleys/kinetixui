@@ -29,6 +29,10 @@ on:
       - "scripts/create-studio-isolated-controls.sh"
       - "scripts/create-studio-reap-disposable.sh"
       - "scripts/create-studio-interruption-safety.sh"
+      - "scripts/create-studio-fixture-provenance.mjs"
+      - "scripts/create-studio-fixture-provenance-controls.mjs"
+      - "scripts/create-studio-concurrency-controls.sh"
+      - "scripts/create-studio-concurrency-regressions.sh"
       - ".github/workflows/create-studio.yml"
   # After main receives the code. Unfiltered on purpose: the pull-request path list cannot see a
   # change to packages/ui or the tokens that breaks the editor, so the only place such a break can
@@ -75,6 +79,16 @@ jobs:
         run: pnpm --filter @kinetixui/web exec vitest run src/lib/create-studio src/components/create-studio src/app/create/studio
         env:
           KINETIX_CREATE_EXPORT_FIXTURE: /tmp/kinetix-create-export-m1
+      - name: The export fixture names this commit, and the old presence check would not have noticed
+        # The fixture the step above wrote carries a provenance record: the commit it was generated
+        # at, a hash per artifact, every link target, and a signature over each built package the
+        # bundle embeds. This runs the control for that record — for each way a fixture can be
+        # wrong, it requires the old presence-only predicate to ACCEPT it and the new one to
+        # REJECT it with a reason. A verifier that rejected everything would pass a one-sided
+        # check, so the arms include the positive case.
+        run: node scripts/create-studio-fixture-provenance-controls.mjs
+        env:
+          CREATE_PROVENANCE_FIXTURE: /tmp/kinetix-create-export-m1
       - run: pnpm --filter @kinetixui/web typecheck
       - name: Production build
         run: pnpm --filter @kinetixui/web build
@@ -156,4 +170,54 @@ jobs:
           path: |
             /tmp/create-evidence
             /tmp/create-server.log
+          if-no-files-found: ignore
+
+  concurrency-controls:
+    # NOT on pull requests. These arms deliver SIGINT and SIGTERM to a real batch at a sweep of
+    # delays, run the reaper sixty times against a live one, and start two batches at once; about
+    # a quarter of an hour, and the information they carry changes only when the harness changes.
+    # They are the durable form of experiments that otherwise lived in a terminal, so what matters
+    # is that anyone can re-run them here on request — including the regression cases, which revert
+    # each repair inside a disposable worktree and require the matching arm to redden.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      # THE LINKAGE ARM NEEDS SOMETHING TO WRITE THROUGH, and `packages/ui/dist` is not committed.
+      # Without these steps that arm says CANNOT MEASURE, the suite exits 2, and this job could
+      # never succeed or reach the regression prover — it would have failed on its first dispatch.
+      # Found in review, before anyone dispatched it.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:tokens
+      - run: pnpm --filter @kinetixui/ui build && pnpm --filter @kinetixui/iot build
+      - name: Interruption, ownership and index controls
+        # NO_DEV_SERVER is set by the arms themselves: what is under test is the harness's signal
+        # handling, ownership and index snapshot, not the editor, and starting a dev server per
+        # batch would multiply the runtime for nothing.
+        run: bash scripts/create-studio-concurrency-controls.sh
+      # THE MANIFEST CASE NEEDS A GENERATED FIXTURE. It reverts the artifact-manifest fixed point
+      # and requires the provenance arm to redden, and that arm reads a real fixture. Without this
+      # step the case cannot run here at all — on its first dispatch it died silently and the suite
+      # still exited 0, which is why the prover now refuses to summarise fewer verdicts than cases.
+      - name: Generate the consumer export fixture for the manifest case
+        run: pnpm --filter @kinetixui/web --fail-if-no-match exec vitest run src/lib/create-studio/consumer-fixture.test.ts
+        env:
+          KINETIX_CREATE_EXPORT_FIXTURE: /tmp/kinetix-create-export-m1
+      - name: Each control detects a deliberate regression of its repair
+        run: bash scripts/create-studio-concurrency-regressions.sh
+        env:
+          CREATE_PROVENANCE_FIXTURE: /tmp/kinetix-create-export-m1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: create-studio-concurrency-evidence
+          path: |
+            /tmp/kinetix-m524/concurrency-controls
+            /tmp/kinetix-m524/regressions
           if-no-files-found: ignore

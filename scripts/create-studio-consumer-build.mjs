@@ -30,15 +30,32 @@ import { execFileSync } from "node:child_process";
 import { createServer } from "node:http";
 import { mkdir, readFile, writeFile, copyFile, rm, readdir } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { verifyFixture, headCommit } from "./create-studio-fixture-provenance.mjs";
 import { extname, join, resolve } from "node:path";
 
 const require = createRequire(import.meta.url);
 const root = resolve(import.meta.dirname, "..");
-const fixture = resolve(process.env.CREATE_EXPORT_FIXTURE ?? "/tmp/kinetix-create-export-m1");
+// `??` does not treat an empty string as absent, so CREATE_EXPORT_FIXTURE="" resolved to the
+// current working directory rather than to the default. `||` is the correct operator wherever an
+// empty value would be meaningful, and this is the same mechanism that once let a passing vitest
+// run write a generated consumer project over tracked files.
+const fixture = resolve(process.env.CREATE_EXPORT_FIXTURE || "/tmp/kinetix-create-export-m1");
 const consumer = resolve(process.env.CREATE_CONSUMER_DIR ?? "/tmp/kinetix-create-consumer-build");
 const out = resolve(process.env.CREATE_ARTIFACTS ?? ".impeccable/review/create-studio");
 const results = [];
 const pass = name => { results.push(name); console.log("PASS " + name); };
+
+// This gate PACKS the workspace packages and runs a real consumer build against the fixture's
+// generated source, so a fixture from another commit would have it building one commit's source
+// against another commit's library and reporting the result as acceptance of this one.
+{
+  const problems = verifyFixture(fixture, { root, expectedCommit: headCommit(root) });
+  if (problems.length) {
+    console.error(`the export fixture at ${fixture} is not evidence about this commit:\n  - ${problems.join("\n  - ")}`);
+    process.exit(1);
+  }
+  pass("the export fixture names this commit, and every artifact, link and package signature matches");
+}
 
 // The breakpoint cascade is re-stated here on purpose: a gate that imports the module under test
 // cannot detect that module getting the cascade wrong.

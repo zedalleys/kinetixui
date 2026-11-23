@@ -7,6 +7,7 @@ import { resolve } from "node:path";
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
 import { verifyResponsiveBrowser } from "./create-studio-responsive-browser.mjs";
+import { verifyFixture, headCommit } from "./create-studio-fixture-provenance.mjs";
 const require = createRequire(import.meta.url);
 const base = process.env.CREATE_BASE ?? "http://127.0.0.1:3137";
 assert.ok(["127.0.0.1", "localhost"].includes(new URL(base).hostname), "Local verification only");
@@ -24,6 +25,20 @@ if (process.env.CREATE_REQUIRE_FIXTURE === "1" && !process.env.CREATE_EXPORT_FIX
 }
 if (process.env.CREATE_EXPORT_FIXTURE && !existsSync(resolve(process.env.CREATE_EXPORT_FIXTURE, "index.html"))) {
   throw new Error(`CREATE_EXPORT_FIXTURE names ${process.env.CREATE_EXPORT_FIXTURE}, which holds no index.html — the fixture was never written (the vitest step writes it when KINETIX_CREATE_EXPORT_FIXTURE is set)`);
+}
+// PRESENCE IS NOT CURRENCY. The two checks above answer "is a fixture there?"; measured on
+// 2026-11-22, a fixture that was there and STALE produced `{"passed":21,"skipped":0}` and
+// `PASS clean consumer bundle renders` about a bundle built from an earlier commit. The provenance
+// check answers the different question — is this fixture the whole output of THIS commit — and it
+// refuses before a browser is launched, naming every reason at once rather than the first.
+if (process.env.CREATE_EXPORT_FIXTURE) {
+  const problems = verifyFixture(process.env.CREATE_EXPORT_FIXTURE, {
+    root: resolve(import.meta.dirname, ".."),
+    expectedCommit: headCommit(resolve(import.meta.dirname, "..")),
+  });
+  if (problems.length) {
+    throw new Error(`the export fixture at ${process.env.CREATE_EXPORT_FIXTURE} is not evidence about this commit:\n  - ${problems.join("\n  - ")}`);
+  }
 }
 page.on("pageerror", error => errors.push(error.message));
 const pass = name => { results.push(name); console.log("PASS " + name); };
