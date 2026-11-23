@@ -67,7 +67,7 @@ android {
 }
 
 dependencies {
-    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
+    implementation(platform("androidx.compose:compose-bom:2026.11.01"))
     implementation("androidx.compose.ui:ui")
     // `animateColorAsState` lives in androidx.compose.animation, not animation-core (which is where
     // `animateDpAsState` and `tween` come from, and which arrives transitively). MX1d needs it for the
@@ -79,7 +79,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     // Interaction / semantics / adaptivity tests (src/test) — Compose UI test on Robolectric.
-    testImplementation(platform("androidx.compose:compose-bom:2026.09.00"))
+    testImplementation(platform("androidx.compose:compose-bom:2026.11.01"))
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.17")
     testImplementation("androidx.compose.ui:ui-test-junit4")
