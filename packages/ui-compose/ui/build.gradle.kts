@@ -81,7 +81,7 @@ dependencies {
     // Interaction / semantics / adaptivity tests (src/test) — Compose UI test on Robolectric.
     testImplementation(platform("androidx.compose:compose-bom:2026.09.00"))
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.robolectric:robolectric:4.17")
+    testImplementation("org.robolectric:robolectric:4.18.1")
     testImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
