@@ -759,6 +759,109 @@ try {
   await studio.getByRole("button", { name: "RTL", exact: true }).click();
   pass("in an RTL document the guide is drawn on the frame's own leading edge");
 
+  // ------------------------------------------------- the RTL keyboard-resize contract
+  // Approved by the owner on 2026-11-23 (M5.35 item 2C) after the contract was MEASURED against the
+  // real handle geometry: in a right-to-left document the frame is right-anchored and the handle it
+  // is dragged by sits on the frame's own LEFT edge, so the key that moves that handle outward —
+  // ArrowLeft — is the key that grows the frame. The behaviour was already implemented; what was
+  // missing was any check that presses an arrow key in RTL at all, so deleting the direction factor
+  // passed every check in this gate.
+  //
+  // The contract diverges from the common reading of the ARIA slider pattern, under which
+  // ArrowRight raises the value in either direction. That divergence is deliberate and recorded in
+  // `docs/create/m3/RESIZE-AND-GUIDES.md`; it is asserted here so it cannot be lost silently.
+  await studio.getByLabel("Viewport width").selectOption("960");
+  await studio.getByRole("button", { name: "Reset view", exact: true }).click();
+  // The desktop override is what a 960 viewport renders, so that is the width these checks move.
+  await inspector.getByLabel("Edit at breakpoint").selectOption("desktop");
+  await setEditedWidth(400);
+  await studio.getByRole("button", { name: "RTL", exact: true }).click();
+  /**
+   * Everything the contract is about, read in ONE evaluation: the direction that is actually in
+   * force, the handle's own box, the frame's edges and what the handle announces. Separate reads
+   * straddle a render, and a stale edge is indistinguishable from an anchor defect.
+   */
+  const directedGeometry = () => page.evaluate(id => {
+    const wrapper = document.querySelector(`[data-studio-node="${id}"]`);
+    const section = wrapper.querySelector(":scope > div > section");
+    const handleEl = document.querySelector("[data-studio-resize]");
+    const box = handleEl?.getBoundingClientRect() ?? null;
+    const rect = section.getBoundingClientRect();
+    return {
+      dir: getComputedStyle(section).direction,
+      left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(rect.width),
+      handleCentre: box ? Math.round(box.left + box.width / 2) : null,
+      valuenow: handleEl?.getAttribute("aria-valuenow") ?? null,
+      valuetext: handleEl?.getAttribute("aria-valuetext") ?? null,
+      focused: document.activeElement === handleEl,
+    };
+  }, frameId);
+
+  const rtlStart = await directedGeometry();
+  // Preconditions, each measured rather than assumed. Without the first, every reading below is an
+  // LTR reading; without the second, the two edges are too close to tell apart.
+  assert.equal(rtlStart.dir, "rtl", "the frame must actually compute `direction: rtl`, or this whole block is an LTR measurement");
+  assert.ok(rtlStart.width > 100, `the frame must be wide enough for its two edges to be distinguishable (${rtlStart.width}px)`);
+  assert.equal(rtlStart.valuenow, "400", `the handle must announce the effective width before the contract is measured (announced ${rtlStart.valuenow})`);
+  // The ACTIVE HANDLE: on the frame's left edge in RTL, and demonstrably not on its right.
+  assert.ok(Math.abs(rtlStart.handleCentre - rtlStart.left) <= 4, `in an RTL document the resize handle must sit on the frame's own left edge (handle ${rtlStart.handleCentre}, left ${rtlStart.left}, right ${rtlStart.right})`);
+  assert.ok(Math.abs(rtlStart.handleCentre - rtlStart.right) > 100, `and must not be mistakable for the trailing edge (handle ${rtlStart.handleCentre}, right ${rtlStart.right})`);
+  pass("in an RTL document the resize handle is the frame's own leading edge");
+
+  // The ANCHOR, measured by growing the frame and seeing which edge stayed put. This is the premise
+  // the arrow-key contract rests on, so it is asserted rather than assumed.
+  await setEditedWidth(440);
+  const rtlGrown = await directedGeometry();
+  measurements.rtlAnchor = {
+    from: rtlStart.width, to: rtlGrown.width,
+    leftMoved: rtlGrown.left - rtlStart.left, rightMoved: rtlGrown.right - rtlStart.right,
+    handleCentre: rtlGrown.handleCentre,
+  };
+  assert.ok(Math.abs(rtlGrown.width - rtlStart.width - 40) <= 2, `the frame must actually have grown by 40px for the anchor to be readable (${rtlStart.width}px → ${rtlGrown.width}px)`);
+  assert.ok(Math.abs(rtlGrown.right - rtlStart.right) <= 2, `an RTL frame must be anchored at its right edge (the right edge moved ${rtlGrown.right - rtlStart.right}px)`);
+  assert.ok(rtlGrown.left - rtlStart.left < -30, `and must grow towards the left (the left edge moved ${rtlGrown.left - rtlStart.left}px)`);
+  await setEditedWidth(400);
+  pass("an RTL frame is anchored at its trailing edge and grows towards its leading one");
+
+  /** Press a key ON the handle, after asserting the handle actually holds focus. */
+  const pressOnHandle = async key => {
+    await handle.focus();
+    const before = await directedGeometry();
+    assert.ok(before.focused, `the handle must hold focus before "${key}" is pressed, or the press proves nothing`);
+    await handle.press(key);
+    await page.waitForTimeout(120);
+    const after = await directedGeometry();
+    return { before, after, widthDelta: Number(after.valuenow) - Number(before.valuenow), leftMoved: after.left - before.left, rightMoved: after.right - before.right };
+  };
+
+  // The contract itself. Both the announced value AND the edge that moved are asserted: a direction
+  // factor applied to the model but not reflected in the geometry, or the reverse, would pass one.
+  const rtlArrowLeft = await pressOnHandle("ArrowLeft");
+  const rtlArrowRight = await pressOnHandle("ArrowRight");
+  measurements.rtlArrowKeys = {
+    arrowLeft: { widthDelta: rtlArrowLeft.widthDelta, leftMoved: rtlArrowLeft.leftMoved, rightMoved: rtlArrowLeft.rightMoved, announced: rtlArrowLeft.after.valuetext },
+    arrowRight: { widthDelta: rtlArrowRight.widthDelta, leftMoved: rtlArrowRight.leftMoved, rightMoved: rtlArrowRight.rightMoved, announced: rtlArrowRight.after.valuetext },
+  };
+  assert.equal(rtlArrowLeft.widthDelta, 1, `in an RTL document ArrowLeft must GROW the frame, because it moves the handle outward from a right-anchored frame (it changed the width by ${rtlArrowLeft.widthDelta}px)`);
+  assert.equal(rtlArrowLeft.after.valuetext, `${Number(rtlArrowLeft.before.valuenow) + 1} pixels`, `and must announce the grown width (announced ${rtlArrowLeft.after.valuetext})`);
+  assert.ok(rtlArrowLeft.leftMoved < 0 && Math.abs(rtlArrowLeft.rightMoved) <= 1, `and the growth must appear on the leading edge (left moved ${rtlArrowLeft.leftMoved}px, right moved ${rtlArrowLeft.rightMoved}px)`);
+  assert.equal(rtlArrowRight.widthDelta, -1, `in an RTL document ArrowRight must SHRINK the frame (it changed the width by ${rtlArrowRight.widthDelta}px)`);
+  assert.equal(rtlArrowRight.after.valuetext, `${Number(rtlArrowRight.before.valuenow) - 1} pixels`, `and must announce the shrunk width (announced ${rtlArrowRight.after.valuetext})`);
+  pass("in an RTL document ArrowLeft grows the frame and ArrowRight shrinks it");
+
+  // Home and End are NOT direction-aware: a minimum is not a direction. The registry's own limits
+  // are what they must reach, in either document direction.
+  const rtlHome = await pressOnHandle("Home");
+  const rtlEnd = await pressOnHandle("End");
+  measurements.rtlHomeEnd = { home: rtlHome.after.valuenow, end: rtlEnd.after.valuenow, min: await handle.getAttribute("aria-valuemin"), max: await handle.getAttribute("aria-valuemax") };
+  assert.equal(rtlHome.after.valuenow, "240", `Home must reach the registry minimum in an RTL document too, unflipped (reached ${rtlHome.after.valuenow})`);
+  assert.equal(rtlEnd.after.valuenow, "1920", `End must reach the registry maximum in an RTL document too, unflipped (reached ${rtlEnd.after.valuenow})`);
+  pass("Home and End are not direction-flipped in an RTL document");
+
+  await setEditedWidth(400);
+  await studio.getByRole("button", { name: "RTL", exact: true }).click();
+  await inspector.getByLabel("Edit at breakpoint").selectOption("base");
+
   // ------------------------------------------------- geometry that moves with no commit at all
   // The window resizing is the case neither a dependency list nor a commit can catch: nothing in
   // the editor's state changes, so no render is scheduled at all. This is what the ResizeObserver

@@ -33,6 +33,11 @@
  *   rtl-logical-property      the guide is placed with `inset-inline-start` again, which resolves to
  *                             `right` in a right-to-left document and mirrors a physical
  *                             measurement twice.
+ *   rtl-arrow-direction-flipped
+ *                             the direction factor on the keyboard handler becomes a constant, so
+ *                             ArrowLeft shrinks a right-anchored RTL frame instead of growing it.
+ *                             Before the four RTL arrow checks this control answers, that mutation
+ *                             passed all 39 of the gate's checks.
  *
  * Each control is a source mutation, which cannot be injected through a seam the way a stylesheet
  * can: these defects live in React's own reading of the document. So every mutation is applied in a
@@ -168,6 +173,23 @@ const CONTROLS = [
     from: ['style={{ left: edge, top: 0, height }}'],
     to: ['style={{ insetInlineStart: edge, top: 0, height }}'],
     owes: ["the guide must be drawn on the frame's own left edge"],
+  },
+  {
+    name: "rtl-arrow-direction-flipped",
+    file: "apps/web/src/components/create-studio/node-view.tsx",
+    // The owner's adopted contract, reduced to a constant: arrows would then move the MODEL the way
+    // the key is named while the handle they drag moves the opposite way on a right-anchored frame.
+    // Before the checks this control answers, this mutation passed all 39 of the gate's checks,
+    // because none of them pressed an arrow key in a right-to-left document.
+    from: ['const towardsEnd = dir === "rtl" ? -1 : 1;'],
+    to: ["const towardsEnd = 1;"],
+    // ArrowLeft is what the contract says grows the frame; the assertion that names it is the one
+    // this defect must reach. ArrowRight is listed too because which of the two the gate reaches
+    // first is its own ordering, not a property of the defect.
+    owes: [
+      "in an RTL document ArrowLeft must GROW the frame",
+      "in an RTL document ArrowRight must SHRINK the frame",
+    ],
   },
 ];
 

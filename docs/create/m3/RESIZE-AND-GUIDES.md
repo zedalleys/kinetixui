@@ -161,6 +161,10 @@ new ones measure:
 | the measurement settles | the guide's style rewritten **0** times in 600ms with the pointer perfectly still |
 | the canvas resizing with no render at all | the canvas changed width by more than 50px and the RTL label stayed beside the guide |
 | the guide in RTL | on the frame's own **left** edge within 2px, with the right edge 370px away, and the label on the leading side |
+| the resize handle in RTL | on the frame's own **left** edge within 4px, and more than 100px from its right edge |
+| the RTL anchor | growing 400 → 440 moved the right edge **0px** and the left edge **−40px** |
+| the RTL arrow contract | ArrowLeft **+1** with the left edge moving outward, ArrowRight **−1**, both announced through `aria-valuetext` |
+| Home and End in RTL | **240** and **1920**, the registry's own limits, unflipped |
 | keyboard reachability | the handle focusable with slider semantics, one press advancing the effective width by one |
 | 200% text in reduced motion | root font size 32px, `prefers-reduced-motion` actually matching, the handle still on the frame's edge, 0 axe violations, no runtime error |
 
@@ -233,3 +237,23 @@ real gate against it. The checkout is never modified, so an interrupted run cann
 behind. A control counts only if the gate exits **nonzero** and the **terminal** failure, after the
 last `PASS` line, names the behaviour the repair protects: a grep over the whole output would match
 the gate's own diagnostics, which quote these very messages.
+
+## The RTL keyboard-resize contract
+
+A right-to-left frame is **anchored at its right edge**, so the handle it is dragged by sits on the
+frame's own **left** edge. The adopted contract follows that physical geometry: in an RTL document
+**ArrowLeft grows the frame and ArrowRight shrinks it**, because ArrowLeft is the key that moves the
+active handle outward. `Home` and `End` are *not* direction-aware — they reach the registry's
+`layout:section` minimum of 240 and maximum of 1920 in either direction, because a limit is not a
+direction.
+
+This diverges from the common reading of the ARIA slider pattern, under which ArrowRight raises the
+value regardless of direction, so a screen reader in an RTL document will announce the width
+*increasing* on ArrowLeft. The divergence is deliberate: the handle is a physical edge the user is
+dragging, and the owner chose the frame's geometry over the slider reading on 2026-11-23. It is
+recorded here so a future audit reads it as a decision rather than a defect.
+
+The behaviour was implemented from the start (`const towardsEnd = dir === "rtl" ? -1 : 1;` in
+`node-view.tsx`), but until 2026-11-23 **nothing tested it**: no check in the canvas gate pressed an
+arrow key in a right-to-left document, so replacing that line with a constant passed all 39 checks.
+Four checks and the `rtl-arrow-direction-flipped` control now defend it.
