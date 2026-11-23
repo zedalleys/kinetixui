@@ -1,14 +1,18 @@
 import XCTest
 
+/// Nonisolated so the trial record can read them without crossing an actor boundary.
+private enum Acceptance {
+    /// The acceptance budget. Fixed by owner decision 2026-11-22 and never widened here:
+    /// correct focus arriving after it is not acceptance.
+    static let budget: TimeInterval = 4
+    /// Polling continues past the budget by this much so a breach is reported *with* its arrival
+    /// time rather than only as "never arrived". The tail never relaxes an assertion.
+    static let diagnosticTail: TimeInterval = 3
+}
+
 @available(iOS 27, *)
 @MainActor
 final class MotionHostTests: XCTestCase {
-    /// The acceptance budget. Fixed by owner decision 2026-11-22 and never widened here:
-    /// correct focus arriving after it is not acceptance.
-    private static let budget: TimeInterval = 4
-    /// Polling continues past the budget by this much so a breach is reported *with* its arrival
-    /// time rather than only as "never arrived". The tail never relaxes an assertion.
-    private static let diagnosticTail: TimeInterval = 3
 
     private var reader: XCUIVoiceOverService { XCUIDevice.shared.voiceOverService }
 
@@ -31,7 +35,7 @@ final class MotionHostTests: XCTestCase {
             func f(_ v: TimeInterval?) -> String { v.map { String(format: "%.3f", $0) } ?? "never" }
             return "trial=\(index) teardown=\(String(format: "%.3f", teardown)) "
                 + "appAssigned=\(f(appAssigned)) speechMatched=\(f(speechMatched)) "
-                + "focusMatched=\(f(focusMatched)) budget=\(String(format: "%.1f", MotionHostTests.budget)) "
+                + "focusMatched=\(f(focusMatched)) budget=\(String(format: "%.1f", Acceptance.budget)) "
                 + "receipt=\(receipt) targetMounted=\(targetMounted) "
                 + "readerFocus=\(lastReaderFocus) backgroundFocus=\(lastBackgroundFocus) "
                 + "utterance=\(lastUtterance)"
@@ -191,7 +195,7 @@ final class MotionHostTests: XCTestCase {
                 var lastUtterance = ""
                 var lastBackground = ""
                 var lastReader = ""
-                let tailEnd = origin + Self.budget + Self.diagnosticTail
+                let tailEnd = origin + Acceptance.budget + Acceptance.diagnosticTail
 
                 repeat {
                     let utterance = try reader.currentSpeech().utterance
@@ -251,13 +255,13 @@ final class MotionHostTests: XCTestCase {
 
             if let spoken = trial.speechMatched {
                 XCTAssertLessThanOrEqual(
-                    spoken, Self.budget,
+                    spoken, Acceptance.budget,
                     "TIMELINESS (speech): the exact target was spoken late: \(where_) \(trial.line)"
                 )
             }
             if let focused = trial.focusMatched {
                 XCTAssertLessThanOrEqual(
-                    focused, Self.budget,
+                    focused, Acceptance.budget,
                     "TIMELINESS (focus): focus reached the target late: \(where_) \(trial.line)"
                 )
             }
