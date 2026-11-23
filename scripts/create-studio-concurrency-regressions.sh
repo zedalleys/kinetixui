@@ -154,6 +154,95 @@ open(p, "w").write(s)
 EDIT
 }
 
+# The explicit teardown call before the result is computed, removed: cleanup then runs only from the
+# EXIT trap, by which time `exit $((problems > 0))` has already been evaluated. This is the measured
+# defect exactly — a batch that announces success while leaving a worktree it could not remove.
+revert_teardown_order() {
+  python3 - "$1" <<'EDIT'
+import sys
+p = sys.argv[1] + "/scripts/create-studio-isolated-controls.sh"
+s = open(p).read()
+want = 'rule "teardown"\nteardown\n\nrule "summary"'
+assert want in s, "anchor missing, cannot revert the teardown ordering"
+s = s.replace(want, 'rule "summary"')
+open(p, "w").write(s)
+EDIT
+}
+
+# The per-batch evidence directory, removed: every batch writes into the root it was given, so two
+# runs sharing a root share a directory — the condition under which one receipt can present another
+# run's output as its own.
+revert_evidence_isolation() {
+  python3 - "$1" <<'EDIT'
+import sys
+p = sys.argv[1] + "/scripts/create-studio-isolated-controls.sh"
+s = open(p).read()
+want = 'EVIDENCE="$EVIDENCE_BASE/batch-$(date -u +%Y%m%dT%H%M%SZ)-$$"'
+assert want in s, "anchor missing, cannot revert the per-batch evidence directory"
+s = s.replace(want, 'EVIDENCE="$EVIDENCE_BASE"')
+open(p, "w").write(s)
+EDIT
+}
+
+# The manifest fixed point is enforced in a different script, with a different output vocabulary, so
+# it gets its own runner rather than a special case inside run_case. The arm it drives lives in the
+# fixture provenance controls; what is reverted is the enforcement, not the arm.
+revert_manifest_fixed_point() {
+  python3 - "$1" <<'EDIT'
+import sys
+p = sys.argv[1] + "/scripts/create-studio-fixture-provenance.mjs"
+s = open(p).read()
+want = "  problems.push(...manifestGaps(fixtureDir));"
+assert want in s, "anchor missing, cannot revert the manifest fixed point"
+# Back to a hand-maintained list that is never compared with the generator's output.
+s = s.replace(want + "\n", "")
+open(p, "w").write(s)
+EDIT
+}
+
+run_provenance_case() {
+  local label="$1" revert="$2"
+  local dw="$WORK/wt-$label" log="$WORK/$label.log"
+  say "-- $label ---------------------------------------------------------------------"
+  if [ -z "${CREATE_PROVENANCE_FIXTURE:-}" ] || [ ! -f "${CREATE_PROVENANCE_FIXTURE:-}/index.html" ]; then
+    cannot "$label: CREATE_PROVENANCE_FIXTURE is not a generated fixture, so the provenance controls cannot run and nothing was measured"
+    return
+  fi
+  if ! git worktree add --detach "$dw" "$HEAD_SHA" > "$WORK/$label.worktree.log" 2>&1; then
+    bad "$label: could not create the disposable worktree, so nothing was measured"; return
+  fi
+  if ! "$revert" "$dw" > "$WORK/$label.revert.log" 2>&1; then
+    bad "$label: the revert did not apply — the anchor it edits has moved, so this case is stale"
+    sed 's/^/      /' "$WORK/$label.revert.log"
+    git worktree remove --force "$dw" > /dev/null 2>&1; return
+  fi
+  local changed; changed="$(git -C "$dw" status --porcelain | wc -l)"
+  printf '      disposable worktree %s — %s file(s) changed by the revert:\n' "$dw" "$changed"
+  git -C "$dw" diff --stat | sed 's/^/        /'
+  if [ "$changed" -ne 1 ]; then
+    bad "$label: the revert changed $changed files, expected exactly 1"
+    git worktree remove --force "$dw" > /dev/null 2>&1; return
+  fi
+  # The fixture is bound to the CANDIDATE workspace, so the instrument is pointed back at it while
+  # the module under test is read from the worktree. See the note in the controls file.
+  ( cd "$dw" && CREATE_PROVENANCE_FIXTURE="$CREATE_PROVENANCE_FIXTURE" \
+      CREATE_PROVENANCE_ROOT="$CAND" \
+      timeout 600 node scripts/create-studio-fixture-provenance-controls.mjs ) > "$log" 2>&1
+  local rc=$? ran failed
+  ran="$(grep -cE '^CONTROL (PASS|FAILED)' "$log" || true)"
+  failed="$(grep -c '^CONTROL FAILED' "$log" || true)"
+  grep -E '^CONTROL FAILED|^provenance controls' "$log" | sed 's/^/      /' | head -6
+  if [ "$ran" -eq 0 ]; then
+    bad "$label: the provenance controls printed no arm at all (exit $rc); nothing was measured — $(tail -2 "$log" | tr '\n' ' ')"
+  elif [ "$failed" -ge 1 ]; then
+    ok "$label: $failed of $ran arm(s) FAILED with the enforcement reverted (exit $rc)"
+    grep '^CONTROL FAILED' "$log" | sed 's/^/        /' | head -3
+  else
+    bad "$label: all $ran arm(s) still passed with the enforcement reverted — no arm tests this defect"
+  fi
+  git worktree remove --force "$dw" > /dev/null 2>&1
+}
+
 run_case() {
   local label="$1" arm="$2" revert="$3" extra="${4:-}"
   local dw="$WORK/wt-$label" log="$WORK/$label.log"
@@ -233,7 +322,7 @@ run_case() {
 }
 
 requested=("$@")
-[ "${#requested[@]}" -eq 0 ] && requested=(signal ownership-sweep ownership-group index linkage marker)
+[ "${#requested[@]}" -eq 0 ] && requested=(signal ownership-sweep ownership-group index linkage marker teardown-order contamination manifest)
 for a in "${requested[@]}"; do
   case "$a" in
     signal)    run_case signal    signal    revert_signal    'SIGNAL_DELAYS="0.15 0.50"' ;;
@@ -242,6 +331,9 @@ for a in "${requested[@]}"; do
     index)     run_case index     index     revert_index ;;
     linkage)   run_case linkage   linkage   revert_linkage ;;
     marker)    run_case marker    marker    revert_marker ;;
+    teardown-order) run_case teardown-order teardown revert_teardown_order ;;
+    contamination)  run_case contamination  contamination revert_evidence_isolation ;;
+    manifest)  run_provenance_case manifest revert_manifest_fixed_point ;;
     *) say "unknown case: $a"; exit 2 ;;
   esac
 done

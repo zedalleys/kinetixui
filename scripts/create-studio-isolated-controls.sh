@@ -109,12 +109,22 @@ teardown() {
       say "  remove it with: git -C $CAND worktree remove --force $DW"
       return
     fi
-    if git -C "$CAND" worktree remove --force "$DW" 2>"$EVIDENCE/cleanup-stderr.log"; then
+    # DENY_CLEANUP names a path inside the worktree that is not itself a working tree, so the REAL
+    # `git worktree remove` fails with git's own error on the REAL code path — the same spirit as
+    # DENY_MARKER, and never a product setting. It is the committed control for the rule that a
+    # cleanup failure is part of the verdict. The privileged variant (an immutable file planted in
+    # the worktree with `chattr +i`, so removal fails with EPERM) was executed on 2026-11-23 and
+    # gave the same verdict; this form needs no capabilities, so it also runs on a CI runner.
+    local remove_target="$DW"
+    [ -n "${DENY_CLEANUP:-}" ] && remove_target="$DW/denied-by-control"
+    if git -C "$CAND" worktree remove --force "$remove_target" 2>"$EVIDENCE/cleanup-stderr.log"; then
       say "disposable worktree destroyed"
     else
-      say "CLEANUP FAILED  could not remove the disposable worktree at $DW"
+      say "CLEANUP FAILED  could not remove the disposable worktree at $remove_target"
       sed 's/^/                /' "$EVIDENCE/cleanup-stderr.log" 2>/dev/null
-      say "                it hard-links the candidate's node_modules; remove it by hand."
+      # It holds private copies of the candidate's built output and node_modules (a real copy, not
+      # hard links — see the input-copy section above), so it is disk, not a link to the candidate.
+      say "                remove it by hand: git -C $CAND worktree remove --force $DW"
       problems=$((problems + 1))
     fi
   fi

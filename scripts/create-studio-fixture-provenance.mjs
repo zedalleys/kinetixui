@@ -97,6 +97,41 @@ export const headCommit = (root, explicit = process.env.KINETIX_CREATE_FIXTURE_C
   }
 };
 
+// EVERY EMITTED FILE MUST BE ACCOUNTED FOR, and this is the half the list alone cannot give.
+// `REQUIRED_ARTIFACTS` says what must be PRESENT; it cannot say whether something the generator
+// emits is missing FROM IT. `bundle.css` was exactly that: emitted, loaded by `index.html`, in no
+// manifest, so neither generation nor verification hashed it and a stale copy verified as intact.
+// The repair for that finding was to add one name to the list, which leaves the next unlisted asset
+// in the same position. So the list is now a FIXED POINT over the generator's own output: every
+// file in the fixture is either required, or excluded here by name with a reason. Adding an emitted
+// asset without listing it is a failure, not a smaller manifest that still matches itself.
+export const NOT_ARTIFACTS = {
+  "provenance.json": "the record itself — it cannot contain its own hash",
+};
+
+// Relative paths of every file the fixture holds, except `node_modules`, which is links to packages
+// the `links` and `packages` fields cover by identity rather than by content.
+const emittedFiles = (fixtureDir, prefix = "") => {
+  const out = [];
+  let entries;
+  try { entries = readdirSync(join(fixtureDir, prefix), { withFileTypes: true }); } catch { return out; }
+  for (const entry of entries) {
+    const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.name === "node_modules") continue;
+    if (entry.isDirectory()) out.push(...emittedFiles(fixtureDir, relative));
+    else out.push(relative);
+  }
+  return out;
+};
+
+// The gaps, as prose problems. Empty means the manifest covers the output exactly.
+export const manifestGaps = fixtureDir => {
+  const known = new Set([...REQUIRED_ARTIFACTS, ...Object.keys(NOT_ARTIFACTS)]);
+  return emittedFiles(fixtureDir)
+    .filter(name => !known.has(name))
+    .map(name => `${name} is emitted into the fixture but is in neither REQUIRED_ARTIFACTS nor NOT_ARTIFACTS: nothing hashes it, so a stale or altered copy of it would verify as intact (add it to the manifest, or exclude it there by name with a reason)`);
+};
+
 export const buildProvenance = (fixtureDir, root, commit) => ({
   schema: SCHEMA,
   commit,
@@ -140,6 +175,9 @@ export const verifyFixture = (fixtureDir, { root, expectedCommit }) => {
   }
   if (!expectedCommit) problems.push("the head under test could not be determined, so the fixture's commit cannot be checked; set KINETIX_CREATE_FIXTURE_COMMIT");
 
+  // An unlisted emitted file is a hole in the manifest, so it is reported against the fixture
+  // rather than left for whoever next edits the generator.
+  problems.push(...manifestGaps(fixtureDir));
   for (const name of REQUIRED_ARTIFACTS) {
     const path = join(dir, name);
     if (!existsSync(path)) { problems.push(`missing artifact ${name}`); continue; }

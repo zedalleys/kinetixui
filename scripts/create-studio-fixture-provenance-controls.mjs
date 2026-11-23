@@ -25,7 +25,27 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { verifyFixture, presenceOnlyAccepts, headCommit, PROVENANCE_FILE } from "./create-studio-fixture-provenance.mjs";
 
-const root = resolve(import.meta.dirname, "..");
+// WHICH WORKSPACE THE FIXTURE BELONGS TO. Normally this file's own repository, and that is what
+// every gate uses. The exception is the regression prover, which reverts a check inside a
+// disposable worktree and runs THIS file from there: the code under test is then the worktree's,
+// but the fixture it reads was generated in — and is bound by realpath to — the candidate
+// workspace, exactly as invariant 6 requires. Without a way to say so, the controls refuse at
+// setup ("outside the workspace this fixture is signed against") and measure nothing, which is
+// what happened on the manifest case's first run.
+//
+// This is an override in the INSTRUMENT, not in the verifier: verifyFixture takes `root` from its
+// caller, and the gates (create-studio-browser.mjs, create-studio-consumer-build.mjs) pass their
+// own. Nothing here can loosen what a gate checks.
+//
+// Set-but-empty is refused rather than ignored: `|| default` treats "" as absent, so a caller whose
+// variable expanded to nothing would have silently measured the wrong workspace. (It did: the first
+// wiring of this override passed an undefined shell variable.)
+const rootOverride = process.env.CREATE_PROVENANCE_ROOT;
+if (rootOverride !== undefined && rootOverride.trim() === "") {
+  console.error("CREATE_PROVENANCE_ROOT is set but empty — refusing to guess which workspace the fixture belongs to");
+  process.exit(2);
+}
+const root = resolve(rootOverride || resolve(import.meta.dirname, ".."));
 const commit = headCommit(root);
 if (!commit) { console.error("could not determine the head commit"); process.exit(2); }
 
@@ -110,6 +130,15 @@ await arm("a dangling symlink into a destroyed worktree", "reproduction", async 
 await arm("a missing artifact", "reproduction", async dir => {
   await unlink(join(dir, "utilities.css"));
 }, "missing artifact utilities.css");
+
+// 4a · AN EMITTED FILE THAT THE MANIFEST DOES NOT MENTION. This is the gap the `bundle.css`
+//      finding left behind: its repair added one name to the list, so the NEXT unlisted asset sat
+//      in exactly the same position — emitted, loaded, hashed by nothing. The manifest is now a
+//      fixed point over the generator's output, and this arm is what holds it there. An asset
+//      planted here is indistinguishable, to a presence check, from one the generator emits.
+await arm("an emitted file the manifest does not mention", "construction", async dir => {
+  await writeFile(join(dir, "sprite.svg"), "<svg xmlns='http://www.w3.org/2000/svg'/>\n");
+}, "is emitted into the fixture but is in neither REQUIRED_ARTIFACTS nor NOT_ARTIFACTS");
 
 // 4b · The emitted stylesheet. index.html loads bundle.css, and it was in no manifest: neither
 //      generation nor verification hashed it, so a stale stylesheet could be certified as intact.

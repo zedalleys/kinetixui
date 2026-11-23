@@ -243,6 +243,121 @@ arm_ownership() {
 }
 
 # =================================================================================================
+# CROSS-RUN CONTAMINATION, tested the way it actually happens: two batches handed ONE evidence root.
+# The index arm gives its two batches separate roots, so it cannot exercise the mechanism that keeps
+# them apart — the per-batch `batch-<utc>-<pid>` directory. The measured defect was a shared
+# directory in which one run's receipt could present another run's output as its own.
+arm_contamination() {
+  say "-- contamination: two batches, one evidence root -------------------------------"
+  local out="$WORK/contamination"; mkdir -p "$out"
+  # NOT pre-created. If this arm creates the root itself, the runner's "evidence directory already
+  # exists" refusal fires on the root even with the repair in place, and the arm would then be
+  # measuring a directory this arm made rather than the per-batch subdirectory under test.
+  local shared="$out/shared-root"
+  rm -rf "$shared"
+
+  ISOLATED_EVIDENCE="$shared" NO_DEV_SERVER=1 NO_WORKSPACE_INPUTS=1 \
+    bash "$ISO" "CMD:printf 'batch-one\n'" > "$out/b1.log" 2>&1 & local p1=$!
+  ISOLATED_EVIDENCE="$shared" NO_DEV_SERVER=1 NO_WORKSPACE_INPUTS=1 \
+    bash "$ISO" "CMD:printf 'batch-two\n'" > "$out/b2.log" 2>&1 & local p2=$!
+  wait "$p1"; local r1=$?
+  wait "$p2"; local r2=$?
+  local dirs; dirs="$(ls -1d "$shared"/batch-* 2> /dev/null | wc -l)"
+  printf '      exits: b1=%s b2=%s ; batch directories under the shared root: %s\n' "$r1" "$r2" "$dirs"
+
+  # Both must complete. A batch that REFUSED because the directory already existed is a protection
+  # working, but it is not isolation: two concurrent runs must both be able to produce evidence.
+  if [ "$r1" -eq 0 ] && [ "$r2" -eq 0 ] && [ "$dirs" -eq 2 ]; then
+    ok "contamination: two batches sharing one evidence root both completed, in 2 distinct per-batch directories"
+  else
+    bad "contamination: b1=$r1 b2=$r2 with $dirs per-batch directory(ies) — $(grep -m1 -h 'REFUSED' "$out/b1.log" "$out/b2.log" 2> /dev/null || echo 'one run could not keep its evidence apart from the other')"
+    # ONE ROOT CAUSE, ONE VERDICT. The receipt checks below depend on both runs having produced a
+    # receipt; with that already reported as a failure, running them adds a CANNOT MEASURE for the
+    # same cause — and an unmeasurable reading outranks a failing one, so the regression prover
+    # discarded a real detection. Measured on this arm's first regression run.
+    rm -rf "$shared"
+    stray
+    return
+  fi
+
+  # Each receipt must describe only its own run: its own directory, and the commit under test.
+  local checked=0 foreign=0 wrong=0
+  for d in "$shared"/batch-*; do
+    [ -d "$d" ] || continue
+    local mx; mx="$(ls -1 "$d"/matrix-*.tsv 2> /dev/null | head -1)"
+    [ -n "$mx" ] || continue
+    checked=$((checked + 1))
+    while IFS=$'\t' read -r c _s _cmd _e ev; do
+      [ -z "${c:-}" ] && continue
+      [ "$c" = "$HEAD_SHA" ] || wrong=$((wrong + 1))
+      [ -z "${ev:-}" ] && continue
+      [ "$(dirname "$ev")" = "$d" ] || foreign=$((foreign + 1))
+    done < <(tail -n +2 "$mx")
+  done
+  if [ "$checked" -lt 2 ]; then
+    cannot "contamination: only $checked receipt(s) could be read under the shared root, so provenance was not examined"
+  elif [ "$foreign" -eq 0 ] && [ "$wrong" -eq 0 ]; then
+    ok "contamination: both receipts cite only their own directory and both record $HEAD_SHA"
+  else
+    bad "contamination: $foreign row(s) cite another run's directory and $wrong row(s) record another commit"
+  fi
+  rm -rf "$shared"
+  stray
+}
+
+# =================================================================================================
+# A cleanup failure must be part of the verdict. The measured defect: `teardown` ran from the EXIT
+# trap, by which time `exit $((problems > 0))` had already been evaluated, so the `problems`
+# increment a failed cleanup makes was written to a variable nothing would read again — the batch
+# announced success while leaving a worktree it could not remove. Until 2026-11-23 this invariant
+# had an implementation and no control, which is how it could have regressed unnoticed.
+arm_teardown() {
+  say "-- teardown: a cleanup that fails is a failing batch ---------------------------"
+  local out="$WORK/teardown"; mkdir -p "$out"
+  local before_reg; before_reg="$(git -C "$CAND" worktree list | grep -c 'kinetix-dw' || true)"
+
+  DENY_CLEANUP=1 NO_DEV_SERVER=1 NO_WORKSPACE_INPUTS=1 ISOLATED_EVIDENCE="$out/w" \
+    bash "$ISO" "CMD:true" > "$out/batch.log" 2>&1
+  local rc=$?
+  local said; said="$(count_in 'CLEANUP FAILED' "$out/batch.log")"
+  local clean_receipt; clean_receipt="$(count_in 'candidate unchanged' "$out/batch.log")"
+  printf '      exit=%-3s said_cleanup_failed=%s candidate_receipt=%s\n' "$rc" "$said" "$clean_receipt"
+
+  # The denial has to have actually fired, or this arm is measuring an ordinary successful batch.
+  if [ "$said" -eq 0 ]; then
+    cannot "teardown: the batch never reported a cleanup failure, so the denial did not fire and this arm exercised nothing"
+  elif [ "$rc" -eq 0 ]; then
+    bad "teardown: the batch reported CLEANUP FAILED and still exited 0 — a cleanup failure is being swallowed"
+  else
+    ok "teardown: a batch whose worktree removal failed exited $rc and said so, instead of reporting success"
+  fi
+
+  # And the candidate verdict must survive it: a cleanup failure is not a licence to stop checking.
+  if [ "$said" -ge 1 ] && [ "$clean_receipt" -ge 1 ]; then
+    ok "teardown: the batch still reported on the candidate while failing its own cleanup"
+  elif [ "$said" -ge 1 ]; then
+    bad "teardown: a batch that failed cleanup printed no candidate verdict at all"
+  fi
+
+  # This arm deliberately leaves a worktree behind, so it removes it itself and proves it did.
+  local leaked=0
+  for d in /tmp/kinetix-dw.*; do
+    [ -d "$d" ] || continue
+    leaked=$((leaked + 1))
+    git -C "$CAND" worktree remove --force "$d" > /dev/null 2>&1 || rm -rf "$d"
+    rm -rf "$d.owner" "$d.store"
+  done
+  git -C "$CAND" worktree prune
+  local after_reg; after_reg="$(git -C "$CAND" worktree list | grep -c 'kinetix-dw' || true)"
+  if [ "$after_reg" -eq "$before_reg" ] && [ -z "$(ls -d /tmp/kinetix-dw.* 2> /dev/null)" ]; then
+    ok "teardown: the $leaked worktree(s) this arm deliberately leaked were removed by the arm itself ($before_reg registered before and after)"
+  else
+    bad "teardown: this arm leaked a worktree it did not clean up (registered $before_reg -> $after_reg)"
+  fi
+  stray
+}
+
+# =================================================================================================
 arm_index() {
   say "-- index: the snapshot takes no lock, and two batches can run at once -----------"
   local out="$WORK/index"; mkdir -p "$out"
@@ -317,6 +432,65 @@ arm_index() {
     bad "index: one batch's log names the other's evidence directory"
   else
     ok "index: neither batch read or wrote the other's evidence directory"
+  fi
+
+  # CITATION IS NOT ISOLATION. The check above asks whether a log MENTIONS the other run, which is
+  # the shape the measured defect took. It would not notice two batches writing into one directory
+  # without naming each other, and it says nothing about whether a receipt describes the commit it
+  # claims. These three assertions are about the artifacts themselves.
+  local m1 m2 d1 d2
+  m1="$(ls -1 "$out"/b1/batch-*/matrix-*.tsv 2> /dev/null | head -1)"
+  m2="$(ls -1 "$out"/b2/batch-*/matrix-*.tsv 2> /dev/null | head -1)"
+  if [ -z "$m1" ] || [ -z "$m2" ]; then
+    # ONE ROOT CAUSE, ONE VERDICT. A batch that did not complete writes no receipt, so the absent
+    # receipt is a CONSEQUENCE of the failure already reported above, not an independent
+    # unmeasurable reading — and an unmeasurable reading outranks a failing one in the regression
+    # prover, so calling cannot() here made the prover discard four real detections of the index
+    # defect. Measured on the first full run of this arm under the prover.
+    if [ "$r1" -eq 0 ] && [ "$r2" -eq 0 ]; then
+      cannot "index: both batches completed yet one or both wrote no matrix receipt ($out/b1: ${m1:-none}, $out/b2: ${m2:-none}), so artifact isolation was not examined"
+    else
+      printf '      index: artifact isolation not examined — a batch did not complete (b1=%s b2=%s), which is the failure reported above\n' "$r1" "$r2"
+    fi
+  else
+    d1="$(dirname "$m1")"; d2="$(dirname "$m2")"
+    # 1 · Distinct per-batch directories. A shared evidence root makes these equal, which is the
+    #     condition under which one run's output can be read as another's.
+    if [ "$d1" != "$d2" ]; then
+      ok "index: the two batches wrote their receipts into distinct directories ($(basename "$d1"), $(basename "$d2"))"
+    else
+      bad "index: both batches wrote into ONE directory ($d1): their artifacts are not isolated"
+    fi
+    # 2 · Every evidence path a receipt cites lies under the directory that receipt lives in, so no
+    #     receipt can present a file produced by another run as its own.
+    local foreign=0 row_dir
+    for pair in "$m1:$d1" "$m2:$d2"; do
+      local mx="${pair%:*}" own="${pair##*:}"
+      while IFS=$'\t' read -r _c _s _cmd _e ev; do
+        [ -z "${ev:-}" ] && continue
+        row_dir="$(dirname "$ev")"
+        [ "$row_dir" = "$own" ] || foreign=$((foreign + 1))
+      done < <(tail -n +2 "$mx")
+    done
+    if [ "$foreign" -eq 0 ]; then
+      ok "index: every evidence path in both receipts lies inside the batch's own directory"
+    else
+      bad "index: $foreign receipt row(s) cite an evidence file outside the batch's own directory"
+    fi
+    # 3 · And each receipt names the commit under test. A receipt that records another commit is
+    #     evidence about something the reader cannot identify.
+    local wrong_commit=0
+    for mx in "$m1" "$m2"; do
+      while IFS=$'\t' read -r c _rest; do
+        [ -z "${c:-}" ] && continue
+        [ "$c" = "$HEAD_SHA" ] || wrong_commit=$((wrong_commit + 1))
+      done < <(tail -n +2 "$mx")
+    done
+    if [ "$wrong_commit" -eq 0 ]; then
+      ok "index: both receipts record the commit under test, $HEAD_SHA"
+    else
+      bad "index: $wrong_commit receipt row(s) record a commit other than $HEAD_SHA"
+    fi
   fi
   stray
 }
@@ -401,7 +575,7 @@ arm_marker() {
 }
 
 requested=("$@")
-[ "${#requested[@]}" -eq 0 ] && requested=(signal ownership index linkage marker)
+[ "${#requested[@]}" -eq 0 ] && requested=(signal ownership index linkage marker teardown contamination)
 for a in "${requested[@]}"; do
   case "$a" in
     signal) arm_signal ;;
@@ -409,6 +583,8 @@ for a in "${requested[@]}"; do
     index) arm_index ;;
     linkage) arm_linkage ;;
     marker) arm_marker ;;
+    teardown) arm_teardown ;;
+    contamination) arm_contamination ;;
     *) say "unknown arm: $a"; exit 2 ;;
   esac
   say ""
