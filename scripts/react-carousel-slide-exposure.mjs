@@ -12,7 +12,8 @@
  *      `slide 1 → 2 → 3 → 4 → 5 → Previous`, so a reader passed through four slides they could not see.
  *   2. A slide out of view is `inert`, and one in view is not.
  *   3. Focus follows the view: focus inside a slide that leaves the view lands on the first slide now in
- *      view, rather than falling to `BODY`.
+ *      view, rather than falling to `BODY` — through a completed move, and through a burst of presses
+ *      that interrupt one another, where the reader leaves a slide behind on every press.
  *   4. The reader's own move is announced once, politely, and nothing is announced at initialization.
  *
  * On BOTH axes, in LTR and RTL — the vertical axis had no browser coverage at all before this gate,
@@ -454,6 +455,123 @@ async function intent(browser, base, file) {
 }
 
 /**
+ * Focus through an INTERRUPTED gesture, which is the one thing the sections above do not measure.
+ *
+ * They measure focus through a COMPLETED move — one key, then settle — and announcements through an
+ * interruption. The gap is the combination: a reader arrowing faster than the track settles leaves a
+ * slide behind on every press, and each slide they leave goes `inert` under them. The browser blurs an
+ * element that becomes inert, so focus is lost unless the transfer runs again for every change of the
+ * view. One press cannot show that, because one press needs only one transfer.
+ *
+ * Keys, not clicks: clicking `Next` would move focus to the button and there would be no focus inside a
+ * slide left to lose. 40 ms between presses, which is inside `QUIET_MS` and well inside the scroll, so
+ * each press lands while the previous one is still running — the same interval the race arm above uses.
+ *
+ * `activeElement` is sampled between presses rather than only at the end. A reader whose focus falls to
+ * `BODY` mid-burst and is then picked up again by a later transfer has still lost their place, and a
+ * single reading at settlement cannot see it. Sampling is a read: `page.evaluate` of `activeElement.id`
+ * moves no focus and scrolls nothing.
+ */
+async function interrupted(browser, base) {
+  const name = "interrupted gesture";
+  const { ctx, page } = await open(browser, `${base}/horizontal.html`);
+
+  await page.evaluate(() => document.getElementById("slide-link-1")?.focus());
+  const before = await read(page);
+  if (before.activeSlide === 1) ok(name, "control: focus began inside slide 1", `activeSlide=${before.activeSlide}`);
+  else {
+    bad(name, "control: focus began inside slide 1", `activeSlide=${before.activeSlide} — nothing below is measuring focus inside a slide`);
+    await ctx.close();
+    return;
+  }
+
+  await page.evaluate(() => void (window.__kxSpoken.length = 0));
+
+  const trace = [];
+  const sample = async () =>
+    trace.push(
+      await page.evaluate(() => {
+        const active = document.activeElement;
+        const slides = [...document.querySelectorAll('[role="group"][aria-roledescription="slide"]')];
+        const n = slides.findIndex((s) => s.contains(active)) + 1;
+        const id = active?.id || active?.tagName || "none";
+        return `${id}${n ? `(slide ${n})` : ""}@[${document.documentElement.dataset.kxInView ?? ""}]`;
+      }),
+    );
+
+  await sample();
+  for (let i = 0; i < 4; i++) {
+    await page.keyboard.press("ArrowRight");
+    await page.waitForTimeout(40);
+    await sample();
+  }
+  await settle(page);
+  await page.waitForTimeout(900); // past QUIET_MS and past the engine's own trailing `scroll` traffic
+  await sample();
+  const after = await read(page);
+
+  // ── controls for the measurement itself ──────────────────────────────────
+  if (after.engineSelected >= 2)
+    ok(name, "control: the burst really moved the track several positions", `selected ${after.engineSelected} of 0..4`);
+  else
+    bad(
+      name,
+      "control: the burst really moved the track several positions",
+      `selected ${after.engineSelected} — the rows below describe a burst that did not happen`,
+    );
+
+  const views = new Set(trace.map((t) => t.slice(t.indexOf("@"))));
+  if (views.size >= 3) ok(name, "control: the view really changed under the burst", `${views.size} distinct in-view sets: ${trace.join(" → ")}`);
+  else
+    bad(
+      name,
+      "control: the view really changed under the burst",
+      `${views.size} distinct in-view set(s) across ${trace.length} samples — the presses did not interrupt anything: ${trace.join(" → ")}`,
+    );
+
+  // ── focus continuity, sampled THROUGHOUT ─────────────────────────────────
+  const dropped = trace.filter((t) => t.startsWith("BODY") || t.startsWith("none"));
+  if (!dropped.length) ok(name, "focus is never dropped while one gesture interrupts another", trace.join(" → "));
+  else bad(name, "focus is never dropped while one gesture interrupts another", `${dropped.length} sample(s) outside the carousel: ${trace.join(" → ")}`);
+
+  // ── the settled state ────────────────────────────────────────────────────
+  const landed = after.slides.find((x) => x.n === after.activeSlide);
+  if (landed && landed.inView) ok(name, "when the track settles, focus is inside a slide that is in view", `slide ${landed.n}, in view ${after.engineInView}`);
+  else
+    bad(
+      name,
+      "when the track settles, focus is inside a slide that is in view",
+      `activeSlide=${after.activeSlide}, active=${after.active}, engineInView=${after.engineInView}`,
+    );
+
+  // Not merely "a slide in view" — the slide the engine CAME TO REST ON. With one slide scrolling at a
+  // time the first in-view slide and the selected slide are the same, and a transfer that chased the view
+  // without keeping up would land on neither.
+  if (after.activeSlide - 1 === after.engineSelectedSlide)
+    ok(name, "and it is the slide the engine settled on", `slide ${after.activeSlide} = selected ${after.engineSelectedSlide}`);
+  else
+    bad(
+      name,
+      "and it is the slide the engine settled on",
+      `focus is in slide ${after.activeSlide} (index ${after.activeSlide - 1}), the engine settled on index ${after.engineSelectedSlide}`,
+    );
+
+  // The announcement behaviour the sections above establish must survive the burst unchanged: one phrase,
+  // naming the landing — not one per press, and not the position of a press that was overtaken.
+  const expected = `Slide ${after.engineSelectedSlide + 1} of 5`;
+  if (after.spoken.length === 1 && after.spoken[0] === expected)
+    ok(name, "the interrupted burst is announced once, at the slide it settled on", JSON.stringify(after.spoken));
+  else
+    bad(
+      name,
+      "the interrupted burst is announced once, at the slide it settled on",
+      `${JSON.stringify(after.spoken)}, the engine settled on ${JSON.stringify(expected)}`,
+    );
+
+  await ctx.close();
+}
+
+/**
  * `slidesToScroll: 2`. A scroll SNAP is not a slide under it, and the two diverge further with every move:
  * one press of Next leaves the engine on snap 1, which is slide index 2. Everything else the reader is
  * told — each slide's own name, and the total — counts individual slides, so an announcement that reported
@@ -671,6 +789,7 @@ async function main() {
     await axis(browser, server.base, { file: "vertical-rtl.html", name: "vertical rtl", forward: "ArrowLeft" });
     await intent(browser, server.base, "horizontal.html");
     await intent(browser, server.base, "horizontal-engine-threshold.html");
+    await interrupted(browser, server.base);
     await grouped(browser, server.base);
     await statics(browser, server.base);
     await naming(browser, server.base);
