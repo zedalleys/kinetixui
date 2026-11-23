@@ -205,7 +205,7 @@ run_provenance_case() {
   local dw="$WORK/wt-$label" log="$WORK/$label.log"
   say "-- $label ---------------------------------------------------------------------"
   if [ -z "${CREATE_PROVENANCE_FIXTURE:-}" ] || [ ! -f "${CREATE_PROVENANCE_FIXTURE:-}/index.html" ]; then
-    cannot "$label: CREATE_PROVENANCE_FIXTURE is not a generated fixture, so the provenance controls cannot run and nothing was measured"
+    bad "$label: CREATE_PROVENANCE_FIXTURE is not a generated fixture, so the provenance controls could not run and nothing was measured"
     return
   fi
   if ! git worktree add --detach "$dw" "$HEAD_SHA" > "$WORK/$label.worktree.log" 2>&1; then
@@ -347,7 +347,18 @@ else
   fails=$((fails + 1))
 fi
 
+# A CASE THAT VANISHED IS NOT A CASE THAT PASSED. The summary counts the verdicts that were
+# PRINTED, so a dispatch branch that dies before printing one — an undefined function, a syntax
+# error, a `return` down an untested path — silently shrinks the suite and leaves exit 0 behind.
+# That happened: `cannot` is the controls script's verdict, not this one's, so on CI (where
+# CREATE_PROVENANCE_FIXTURE is unset) the manifest case died at `command not found` and the suite
+# reported "8 case(s), 0 not detected" for nine requested cases, and passed.
+if [ "$checked" -ne "${#requested[@]}" ]; then
+  say "FAIL  ${#requested[@]} case(s) were requested but only $checked produced a verdict — the missing one(s) did not run, and a case that did not run has shown nothing"
+  fails=$((fails + 1))
+fi
+
 say ""
-say "regression detection — $checked case(s), $fails not detected"
+say "regression detection — $checked of ${#requested[@]} requested case(s), $fails not detected"
 say "evidence: $WORK"
 exit $((fails > 0))

@@ -201,8 +201,18 @@ jobs:
         # handling, ownership and index snapshot, not the editor, and starting a dev server per
         # batch would multiply the runtime for nothing.
         run: bash scripts/create-studio-concurrency-controls.sh
+      # THE MANIFEST CASE NEEDS A GENERATED FIXTURE. It reverts the artifact-manifest fixed point
+      # and requires the provenance arm to redden, and that arm reads a real fixture. Without this
+      # step the case cannot run here at all — on its first dispatch it died silently and the suite
+      # still exited 0, which is why the prover now refuses to summarise fewer verdicts than cases.
+      - name: Generate the consumer export fixture for the manifest case
+        run: pnpm --filter @kinetixui/web --fail-if-no-match exec vitest run src/lib/create-studio/consumer-fixture.test.ts
+        env:
+          KINETIX_CREATE_EXPORT_FIXTURE: /tmp/kinetix-create-export-m1
       - name: Each control detects a deliberate regression of its repair
         run: bash scripts/create-studio-concurrency-regressions.sh
+        env:
+          CREATE_PROVENANCE_FIXTURE: /tmp/kinetix-create-export-m1
       - uses: actions/upload-artifact@v4
         if: always()
         with:
