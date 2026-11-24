@@ -23,6 +23,8 @@
     "gen:specs": "node scripts/gen-component-specs.mjs",
     "check:contrast-negative-controls": "node scripts/contrast-negative-controls.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
+    "check:deploy-isolation": "node scripts/check-deploy-isolation.mjs",
+    "check:deploy-isolation-controls": "node scripts/check-deploy-isolation.mjs --list-negatives | while read c; do node scripts/check-deploy-isolation.mjs --negative=\"$c\" || exit 1; done",
     "check:a11y-coverage": "node scripts/check-a11y-coverage.mjs",
     "check:label-association": "node scripts/check-label-association.mjs",
     "check:role-coherence": "node scripts/check-role-coherence.mjs",
