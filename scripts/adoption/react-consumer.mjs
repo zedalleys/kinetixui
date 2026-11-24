@@ -27,13 +27,26 @@
  *                         root-level install then changes nothing recharts can see — three readings were
  *                         taken that way before this was noticed, and all three measured the same nested
  *                         18.3.1 while appearing to vary the version.
+ *   --yarn-linker=<node-modules|pnp>
+ *                         which Yarn Berry linker to install with. Default node-modules, so every existing
+ *                         arm and the CI step that passes no arguments are unchanged. `pnp` is Berry's own
+ *                         default and a different consumer experience entirely: no node_modules, packages
+ *                         read from cache zips through `.pnp.cjs`, so the tools run via `yarn exec` and the
+ *                         probes via `yarn node`. The run asserts there is no node_modules before it
+ *                         measures anything, because a fallback to one would report PnP having measured
+ *                         node-modules. Only meaningful with a Berry --pm-bin; refused otherwise.
+ *   --pnp-legacy-tailwind PnP only: follow the SUPERSEDED Tailwind guidance — the node-modules content
+ *                         entry with no unplug step — which fails the component-utility assertions under
+ *                         Plug'n'Play. Without it the arm follows the documentation's own "Yarn
+ *                         Plug'n'Play" section: `yarn unplug @kinetixui/ui` and a config that resolves the
+ *                         package instead of naming a path.
  *   --omit-recharts       do NOT declare recharts, which is what the documentation used to tell a reader
  *
  * The chart is RENDERED, not merely built, and the three cell fills are counted in the markup. Build
  * success is not evidence of a working chart: with a react-is major that does not match the consumer's
  * React, `tsc` and `vite build` both exit 0 and the fills are silently dropped.
  */
-import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -69,7 +82,51 @@ assert.ok(
   `--react-is-field must be overrides, resolutions, pnpm or dependency-only, got ${JSON.stringify(reactIsField)}`,
 );
 const flattenReactIs = process.argv.includes('--flatten-react-is');
+/*
+ * Yarn Berry's two linkers are two different consumer experiences, and only one of them was ever measured.
+ * node-modules is the default here precisely so every existing arm, and the CI step that runs this file with
+ * no arguments, behaves exactly as before: nothing below changes unless --yarn-linker=pnp is passed.
+ *
+ * Plug'n'Play is not a variation on node-modules. There is no node_modules directory at all, so there is no
+ * `.bin` for the typecheck and build steps to call and no package directory for a bare `node` process to
+ * resolve from — packages live in the Berry cache as zips, reached through `.pnp.cjs`. Every step that
+ * assumed a real directory therefore has a PnP spelling, and the run says which one it took.
+ */
+const yarnLinker = flag('yarn-linker') ?? 'node-modules';
+assert.ok(
+  ['node-modules', 'pnp'].includes(yarnLinker),
+  `--yarn-linker must be node-modules or pnp, got ${JSON.stringify(yarnLinker)}`,
+);
+const wantPnp = yarnLinker === 'pnp';
+/*
+ * MEASURED DEFECT, 2026-11-24: the documented Tailwind `content` entry is
+ * `./node_modules/@kinetixui/ui/src/**` (apps/web/src/app/docs/installation/page.mdx), and under
+ * Plug'n'Play there is no node_modules — the package is read from a cache ZIP, which Tailwind's globber
+ * cannot traverse. So a PnP consumer following the documentation exactly gets the token variables and
+ * NONE of the component utilities: `.bg-action` and `.text-action-foreground` are absent from the built
+ * CSS while `tsc` and `vite build` both exit 0.
+ *
+ * That is reported as the defect it is: the PnP arm follows the documentation by default and FAILS. This
+ * flag applies the remedy measured to work — `yarn unplug @kinetixui/ui`, which extracts the package to
+ * `.yarn/unplugged/` on disk and resolving the package rather than naming a path. That procedure is now
+ * DOCUMENTED (the installation page's "Yarn Plug'n'Play" section), so a PnP arm follows the documentation
+ * like every other arm: it reads that section's own Tailwind config out of the page and runs its unplug
+ * step. `--pnp-legacy-tailwind` reproduces the superseded guidance instead — the node-modules content
+ * entry with no unplug — which is how the arm demonstrates that the old path fails the CSS assertions.
+ */
+const pnpLegacyTailwind = process.argv.includes('--pnp-legacy-tailwind');
 const run = (cmd, args, cwd = fixture) => execFileSync(cmd, args, { cwd, stdio: 'inherit' });
+/*
+ * Both probes below are ESM scripts run from inside the fixture. A bare `node` cannot resolve anything
+ * under Plug'n'Play — measured 2026-11-23: `node -e "require.resolve('recharts')"` throws, because the
+ * PnP runtime is never loaded. `yarn node` loads it and resolves recharts out of its cache zip, ESM
+ * included (with Yarn's own YN0092 experimental-loader notice). Declared here, beside `run`, so the two
+ * call sites cannot drift apart.
+ */
+const nodeScript = script =>
+  pnp
+    ? execFileSync(pmBin, ['node', script], { cwd: fixture, encoding: 'utf8' })
+    : execFileSync(process.execPath, [script], { cwd: fixture, encoding: 'utf8' });
 const json = path => JSON.parse(readFileSync(join(root, path), 'utf8'));
 const web = json('apps/web/package.json');
 // The recharts the LIBRARY depends on, never a version chosen here: a fixture pinned to recharts 2 was
@@ -143,7 +200,20 @@ writeFileSync(join(fixture, 'package.json'), JSON.stringify({
 mkdirSync(join(fixture, 'src'));
 writeFileSync(join(fixture, 'src/App.tsx'), fence(docs.split('## First working React component')[1], 'tsx'));
 writeFileSync(join(fixture, 'src/style.css'), fence(docs.split('## First working React component')[1], 'css'));
-writeFileSync(join(fixture, 'tailwind.config.ts'), fence(docs.slice(docs.indexOf('```ts\n// tailwind.config.ts')), 'ts'));
+/*
+ * The fixture never writes a Tailwind config of its own: it uses the documentation's, so that a broken
+ * instruction cannot be papered over here. Under Plug'n'Play that means the PnP section's config, which
+ * is a different fenced block on the same page; `--pnp-legacy-tailwind` deliberately takes the
+ * node-modules one instead, to measure the superseded instruction.
+ */
+const TAILWIND_DOC_BLOCK = wantPnp && !pnpLegacyTailwind
+  ? "```ts\n// tailwind.config.ts — Yarn Plug'n'Play"
+  : '```ts\n// tailwind.config.ts';
+assert.ok(
+  docs.includes(TAILWIND_DOC_BLOCK),
+  `the installation page has no ${JSON.stringify(TAILWIND_DOC_BLOCK)} block, so there is no documented Tailwind configuration for this arm to follow. Refusing to report.`,
+);
+writeFileSync(join(fixture, 'tailwind.config.ts'), fence(docs.slice(docs.indexOf(TAILWIND_DOC_BLOCK)), 'ts'));
 writeFileSync(join(fixture, 'postcss.config.cjs'), fence(docs.split('## First working React component')[1], 'js'));
 writeFileSync(join(fixture, 'src/main.tsx'), 'import { createRoot } from "react-dom/client";\nimport App from "./App";\nimport Chart from "./Chart";\nimport "./style.css";\ncreateRoot(document.getElementById("root")!).render(<><App /><Chart /></>);\n');
 writeFileSync(join(fixture, 'index.html'), '<html lang="en"><head><title>Consumer fixture</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>');
@@ -171,8 +241,22 @@ export default function Chart() {
 `);
 // The same chart as plain ESM, rendered by node from inside the fixture so it uses the fixture's own
 // resolved react, react-dom, recharts and react-is. No JSX and no TypeScript, so it needs no build.
-writeFileSync(join(fixture, 'chart-render.mjs'), `import { JSDOM } from 'jsdom';
-import { createRequire } from 'node:module';
+/*
+ * MEASURED, 2026-11-24: under Plug'n'Play an ESM `import { JSDOM } from 'jsdom'` dies with
+ * ERR_VM_MODULE_LINK_FAILURE — "request for './fallback/encoding.js' is from a module not been linked" —
+ * from html-encoding-sniffer, a transitive dependency of jsdom that requires a file dynamically. PnP's ESM
+ * support is the experimental loader API and announces itself as such (YN0092). The same `require('jsdom')`
+ * from CommonJS works. That is a limitation of the PnP ESM loader and this harness's own renderer, NOT a
+ * KinetixUI defect and NOT something a consumer meets by using our package.
+ *
+ * So the renderer is emitted as CommonJS under PnP and as ESM otherwise. The body between the preamble and
+ * the tail is one shared string either way, so the two spellings cannot drift apart and measure different
+ * things.
+ */
+const renderScript = `chart-render.${wantPnp ? 'cjs' : 'mjs'}`;
+writeFileSync(join(fixture, renderScript), `${wantPnp ? `const { JSDOM } = require('jsdom');
+const { createRequire } = require('node:module');` : `import { JSDOM } from 'jsdom';
+import { createRequire } from 'node:module';`}
 /*
  * recharts 3 renders in effects: it measures its container and lays the chart out after mount, so
  * renderToStaticMarkup returns a 127-byte shell with no <svg> in it. A server render would therefore
@@ -186,17 +270,27 @@ for (const k of ['window', 'document', 'navigator', 'HTMLElement', 'Element', 'N
   try { globalThis[k] = dom.window[k]; }
   catch { Object.defineProperty(globalThis, k, { value: dom.window[k], configurable: true }); }
 }
-const { createElement: h, Fragment } = await import('react');
+${wantPnp ? `const { createElement: h, Fragment } = require('react');
+const { createRoot } = require('react-dom/client');
+const { PieChart, Pie, Cell } = require('recharts');
+const require_ = require;` : `const { createElement: h, Fragment } = await import('react');
 const { createRoot } = await import('react-dom/client');
 const { PieChart, Pie, Cell } = await import('recharts');
-const require_ = createRequire(import.meta.url);
+const require_ = createRequire(import.meta.url);`}
 const version = spec => require_(require_.resolve(spec + '/package.json')).version;
 // The react-is recharts itself resolves, which is not always the one the consumer declared: npm and Bun
 // may nest a satisfying copy under recharts, and pnpm links the peer copy from its store, so a root
 // declaration can leave recharts seeing a different version entirely.
 const resolvedReactIs = (() => {
-  const p = require_.resolve('react-is', { paths: [require_.resolve('recharts')] });
-  return { version: require_(p.replace(/index\\.js$/, 'package.json')).version, path: p };
+${wantPnp ? `  /* Under Plug'n'Play the resolution has to be issued BY recharts: \`paths\` describes directories to
+   * walk, and there are none — recharts is loaded out of a zip through the PnP virtual filesystem. A
+   * require created from recharts' own resolved path asks PnP the question it can answer: which react-is
+   * does THIS package get. Measured 2026-11-23: a declared react-is@^18 resolves 18.3.1 from the Berry
+   * cache, so recharts under PnP sees exactly what the consumer declared. */
+  const rechartsRequire = createRequire(require_.resolve('recharts'));
+  const p = rechartsRequire.resolve('react-is');
+  return { version: rechartsRequire('react-is/package.json').version, path: p };` : `  const p = require_.resolve('react-is', { paths: [require_.resolve('recharts')] });
+  return { version: require_(p.replace(/index\\.js$/, 'package.json')).version, path: p };`}
 })();
 const data = [{ name: 'a', value: 1 }, { name: 'b', value: 2 }, { name: 'c', value: 3 }];
 const fills = ${JSON.stringify(FILLS)};
@@ -216,6 +310,7 @@ const count = markup => fills.map(f => (markup.match(new RegExp(f, 'g')) || []).
 // Two shapes, because the defect is shape-dependent and only one of them is affected. The array is what
 // this repository's own charts render (apps/web/src/app/charts/charts-content.tsx); the fragment is what
 // a consumer writes the moment the map is wrapped in anything, and it is the shape that loses its fills.
+${wantPnp ? 'const main = async () => {' : ''}
 const asArray = await render(data.map((d, i) => h(Cell, { key: d.name, fill: fills[i] })));
 const asFragment = await render(h(Fragment, null, data.map((d, i) => h(Cell, { key: d.name, fill: fills[i] }))));
 console.log(JSON.stringify({
@@ -228,6 +323,7 @@ console.log(JSON.stringify({
   fillsFragment: count(asFragment),
   length: asArray.length,
 }));
+${wantPnp ? '};\nmain().catch(error => { console.error(error); process.exit(1); });' : ''}
 `);
 writeFileSync(join(fixture, 'tsconfig.json'), JSON.stringify({ compilerOptions: {
   target: 'ES2022', module: 'ESNext', moduleResolution: 'Bundler', jsx: 'react-jsx', strict: true,
@@ -236,10 +332,15 @@ writeFileSync(join(fixture, 'tsconfig.json'), JSON.stringify({ compilerOptions: 
 console.log(`Clean ${published ? 'published' : 'packed'} consumer (${pm}): ${fixture}`);
 const pmVersion = execFileSync(pmBin, ['--version'], { cwd: fixture, encoding: 'utf8' }).trim();
 console.log(`${pm} ${pmVersion}${pmBin === pm ? '' : ` (${pmBin})`}`);
-// Yarn Berry defaults to Plug'n'Play, which has no node_modules/.bin for the typecheck and build steps
-// below to call. node-modules is the linker this fixture compares like-for-like with the other three; PnP
-// is a different question and is recorded as not measured rather than quietly treated as covered.
+// Yarn Berry has two linkers. node-modules is what the other three managers are compared like-for-like
+// against, and stays the default. Plug'n'Play is Berry's own default and a genuinely different consumer
+// experience; it is measured only when asked for, and every step it changes says so.
 const berry = pm === 'yarn' && Number(pmVersion.split('.')[0]) >= 2;
+assert.ok(
+  !wantPnp || berry,
+  `--yarn-linker=pnp needs Yarn Berry: ${pm} ${pmVersion} has no Plug'n'Play linker, so this run would have measured node_modules while reporting PnP. Pass --pm=yarn with a Berry --pm-bin.`,
+);
+const pnp = berry && wantPnp;
 if (berry) {
   // npmMinimalAgeGate is Yarn 4's supply-chain guard: by default it refuses a version published inside the
   // last week. KinetixUI publishes more often than that, so a Berry consumer really is blocked from a fresh
@@ -247,16 +348,84 @@ if (berry) {
   // than hidden. It is disabled here because this fixture is testing KinetixUI's packaging, not Yarn's gate.
   writeFileSync(
     join(fixture, '.yarnrc.yml'),
-    'nodeLinker: node-modules\nenableTelemetry: false\nnpmMinimalAgeGate: 0\n',
+    // Omitting nodeLinker is what selects PnP: it is Berry's own default, so the PnP arm is Berry as a
+    // consumer actually meets it rather than a mode this fixture switched on by hand.
+    `${pnp ? '' : 'nodeLinker: node-modules\n'}enableTelemetry: false\nnpmMinimalAgeGate: 0\n`,
   );
+  console.log(`Yarn Berry linker: ${pnp ? "Plug'n'Play (no node_modules)" : 'node-modules'}.`);
 }
 // A brand-new fixture has no lockfile, and Berry treats a CI environment as immutable by default, so the
 // install it is asked to perform is the one it refuses (YN0028). This is a first install, not a CI replay.
 run(pmBin, berry ? [...MANAGERS[pm], '--no-immutable'] : MANAGERS[pm]);
-if (flattenReactIs) {
+if (flattenReactIs && pnp) {
+  /*
+   * Not applicable, and saying so matters more than it sounds. The flag exists because npm and Bun nest a
+   * satisfying react-is under recharts, so a root-level install leaves recharts seeing a different copy.
+   * Plug'n'Play has no nested directory to delete — packages are zips in the Berry cache and recharts gets
+   * exactly the consumer's declaration. A silent no-op here would read as "flattened", which is a claim
+   * about a tree this arm does not have.
+   */
+  console.log('--flatten-react-is: NOT APPLICABLE under Plug\'n\'Play — there is no nested recharts/node_modules/react-is to remove, and recharts resolves the declared copy directly. Nothing was done, and nothing is claimed.');
+} else if (flattenReactIs) {
   const nested = join(fixture, 'node_modules/recharts/node_modules/react-is');
   rmSync(nested, { recursive: true, force: true });
   console.log(`Removed any nested react-is under recharts, so the declared version is the resolved one.`);
+}
+/*
+ * The arm's own precondition: PnP means NO node_modules. If one exists, every step below could resolve
+ * from a real directory and the run would report a PnP result it never measured — the exact false-pass
+ * shape this fixture was built to catch. Checked after the install, because the install is what would
+ * have created it.
+ */
+if (pnp) {
+  const nm = join(fixture, 'node_modules');
+  assert.ok(
+    !existsSync(nm),
+    `--yarn-linker=pnp installed a node_modules directory at ${nm}, so this run could resolve from it instead of through .pnp.cjs and would be reporting Plug'n'Play while measuring node-modules. Refusing to report.`,
+  );
+  for (const required of ['.pnp.cjs', '.pnp.loader.mjs']) {
+    assert.ok(
+      existsSync(join(fixture, required)),
+      `--yarn-linker=pnp produced no ${required}, so there is no Plug'n'Play runtime for the steps below to resolve through. Refusing to report.`,
+    );
+  }
+  console.log('Plug\'n\'Play confirmed: no node_modules, and .pnp.cjs plus .pnp.loader.mjs are present.');
+  const config = join(fixture, 'tailwind.config.ts');
+  const written = readFileSync(config, 'utf8');
+  const NODE_MODULES_ENTRY = './node_modules/@kinetixui/ui/src/**/*.{ts,tsx}';
+  if (pnpLegacyTailwind) {
+    /*
+     * The superseded instruction, reproduced exactly: the node-modules content entry and no unplug. The
+     * arm has to be shown to be USING it, or a failure further down would be credited to the wrong cause.
+     */
+    assert.ok(
+      written.includes(NODE_MODULES_ENTRY),
+      `--pnp-legacy-tailwind found no ${NODE_MODULES_ENTRY} entry in the documented node-modules Tailwind config, so this arm is not measuring the superseded instruction it claims to. Refusing to report.`,
+    );
+    console.log(`--pnp-legacy-tailwind: following the SUPERSEDED guidance — ${NODE_MODULES_ENTRY} with no unplug step. The CSS assertions below are expected to fail; that failure is the point of this arm.`);
+  } else {
+    /*
+     * The documented procedure. Both halves are asserted: the unplug step ran and produced exactly one
+     * directory, and the config is the resolution-based one rather than a hard-coded path — a config that
+     * still named .yarn/unplugged/<hash> would pass today and break on Yarn's next cache change.
+     */
+    assert.ok(
+      written.includes('require.resolve("@kinetixui/ui/package.json")') || written.includes("resolve.resolve(\"@kinetixui/ui/package.json\")"),
+      'the documented Plug\'n\'Play Tailwind config does not resolve @kinetixui/ui, so this arm is measuring some other configuration. Refusing to report.',
+    );
+    assert.ok(
+      !written.includes(NODE_MODULES_ENTRY) && !/\.yarn\/unplugged\/@kinetixui-ui-[0-9a-f]/.test(written),
+      'the documented Plug\'n\'Play Tailwind config names a node_modules path or a hard-coded unplugged directory, which is exactly what it exists to avoid. Refusing to report.',
+    );
+    run(pmBin, ['unplug', '@kinetixui/ui']);
+    const unplugged = readdirSync(join(fixture, '.yarn/unplugged')).filter(name => name.startsWith('@kinetixui-ui-'));
+    assert.ok(
+      unplugged.length === 1,
+      `the documented \`yarn unplug @kinetixui/ui\` produced ${unplugged.length} unplugged directories, not one, so the package under test cannot be identified. Refusing to report.`,
+    );
+    console.log(`Documented Plug'n'Play procedure followed: \`yarn unplug @kinetixui/ui\` produced .yarn/unplugged/${unplugged[0]}, and the documentation's own Tailwind config resolves the package rather than naming that path.`);
+  }
+
 }
 /*
  * A pinned react-is that did not reach recharts is the worst possible arm: it runs, it passes, and it
@@ -268,10 +437,13 @@ if (reactIsSpec) {
   const probe = join(fixture, 'resolved-react-is.mjs');
   writeFileSync(probe, `import { createRequire } from 'node:module';
 const r = createRequire(import.meta.url);
-const p = r.resolve('react-is', { paths: [r.resolve('recharts')] });
-console.log(JSON.stringify({ version: r(p.replace(/index\\.js$/, 'package.json')).version, path: p }));
+${pnp ? `// Plug'n'Play: ask recharts' own require, because there are no directories for \`paths\` to walk.
+const rechartsRequire = createRequire(r.resolve('recharts'));
+const p = rechartsRequire.resolve('react-is');
+console.log(JSON.stringify({ version: rechartsRequire('react-is/package.json').version, path: p }));` : `const p = r.resolve('react-is', { paths: [r.resolve('recharts')] });
+console.log(JSON.stringify({ version: r(p.replace(/index\\.js$/, 'package.json')).version, path: p }));`}
 `);
-  const resolvedReactIs = JSON.parse(execFileSync(process.execPath, [probe], { cwd: fixture, encoding: 'utf8' }).trim());
+  const resolvedReactIs = JSON.parse(nodeScript(probe).trim());
   /*
    * The check has to be against the WHOLE spec, not its major. Comparing majors alone would certify a
    * resolution that never satisfied the request — `--react-is=18.2.0` would pass on an unchanged nested
@@ -297,11 +469,22 @@ console.log(JSON.stringify({ version: r(p.replace(/index\\.js$/, 'package.json')
   );
   console.log(`Pinned react-is took effect: recharts resolves ${got}, which satisfies the whole requested spec ${reactIsSpec}.`);
 }
-run(resolve(fixture, 'node_modules/.bin/tsc'), []);
-run(resolve(fixture, 'node_modules/.bin/vite'), ['build']);
+/*
+ * Two spellings of the same two steps. Under node-modules the binaries are called directly, exactly as
+ * before. Under Plug'n'Play there is no node_modules/.bin, so they are called through Yarn, which loads
+ * the PnP runtime first — measured 2026-11-23: `yarn exec tsc --version` reports 5.9.3 and
+ * `yarn exec vite --version` reports vite/8.3.8 in a fixture with no node_modules at all.
+ */
+const tool = (name, args) =>
+  pnp ? run(pmBin, ['exec', name, ...args]) : run(resolve(fixture, `node_modules/.bin/${name}`), args);
+tool('tsc', []);
+tool('vite', ['build']);
 const css = readdirSync(join(fixture, 'dist/assets')).filter(name => name.endsWith('.css')).map(name => readFileSync(join(fixture, 'dist/assets', name), 'utf8')).join('\n');
-assert.match(css, /\.bg-action\b/, 'Button background utility missing: package source must be scanned');
-assert.match(css, /\.text-action-foreground\b/, 'Button foreground utility missing');
+const utilityMissing = suffix => pnp && pnpLegacyTailwind
+  ? `${suffix} — EXPECTED under --pnp-legacy-tailwind: the superseded instruction's content entry is ./node_modules/@kinetixui/ui/src/**, and Plug'n'Play has no node_modules; @kinetixui/ui is read from a cache zip, which Tailwind's globber cannot traverse, so none of the package's utilities are emitted. tsc and vite build both exited 0, which is why this failed silently in the first place. The documented procedure is the installation page's "Yarn Plug'n'Play" section.`
+  : suffix;
+assert.match(css, /\.bg-action\b/, utilityMissing('Button background utility missing: package source must be scanned'));
+assert.match(css, /\.text-action-foreground\b/, utilityMissing('Button foreground utility missing'));
 assert.match(css, /--action:/, 'Token contract missing');
 assert.doesNotMatch(css, /@import\s+["']@kinetixui/, 'Unresolved package CSS import');
 /*
@@ -310,7 +493,7 @@ assert.doesNotMatch(css, /@import\s+["']@kinetixui/, 'Unresolved package CSS imp
  * fills. So the chart is rendered and its fills are counted, and the run is only allowed to claim a
  * working chart on the strength of the rendered markup.
  */
-const render = JSON.parse(execFileSync(process.execPath, [join(fixture, 'chart-render.mjs')], { cwd: fixture, encoding: 'utf8' }).trim());
+const render = JSON.parse(nodeScript(join(fixture, renderScript)).trim());
 const reactMajorRun = render.react.split('.')[0];
 const reactIsMajor = render.reactIs.version.split('.')[0];
 const majorsAgree = reactIsMajor === reactMajorRun;

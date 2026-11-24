@@ -184,6 +184,62 @@ export default {
   See [Foundations](/docs/foundations#motion).
 </Callout>
 
+### Yarn Plug'n'Play
+
+**Yarn Berry's default linker is Plug'n'Play, and under it there is no `node_modules` directory at all** —
+your dependencies stay in Yarn's cache as zip archives, reached through `.pnp.cjs`. The
+`./node_modules/@kinetixui/ui/src/**` entry above therefore matches nothing, and an empty match is not an
+error to Tailwind: the install succeeds, `tsc` exits 0, `vite build` exits 0, and **every KinetixUI
+component utility is missing from your CSS**, so a `<Button>` renders unstyled with nothing reported
+anywhere. We measured that against the published package. Two steps fix it.
+
+First unpack `@kinetixui/ui` onto disk, so that a file glob can reach the source it ships:
+
+```bash
+yarn unplug @kinetixui/ui
+```
+
+Then let Node resolve the package rather than naming a path yourself — the unplugged directory carries a
+content hash that is Yarn's to change, and nothing in your repository should hard-code it:
+
+```ts
+// tailwind.config.ts — Yarn Plug'n'Play
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+
+import preset from "@kinetixui/ui/tailwind.config";
+
+const resolve = createRequire(join(process.cwd(), "package.json"));
+const kinetixuiSource = join(dirname(resolve.resolve("@kinetixui/ui/package.json")), "src/**/*.{ts,tsx}");
+
+export default {
+  presets: [preset],
+  darkMode: ["class"],
+  content: [
+    "./src/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    // Plug'n'Play has no node_modules; ask Node where the package actually is.
+    kinetixuiSource,
+  ],
+};
+```
+
+Everything else on this page is unchanged: the preset, the token imports, the PostCSS configuration and
+the React 18 `react-is` rule all apply exactly as they do on npm, pnpm and Bun. Two details are worth
+knowing before you reach for the unplug step:
+
+- **The resolution above is not Yarn-specific.** It works on every manager, so the same config keeps
+  working if you later switch linkers. What is specific to Plug'n'Play is `yarn unplug`: without it the
+  resolved path points inside a zip archive, which no globber can traverse.
+- **Plug'n'Play enforces peer dependencies strictly.** On React 18 a missing `react-is` does not resolve
+  to the wrong major, as it does on npm and pnpm — your build stops with
+  `doesn't provide react-is …, requested by recharts`. Declare it at your own major, as the callout above
+  says, and the build proceeds.
+
+If your `.yarnrc.yml` sets `nodeLinker: node-modules`, you are not on Plug'n'Play: follow the npm route
+above and skip this section.
+
 ## First working React component
 
 For the **npm route**, load the token CSS and Tailwind layers in the global stylesheet that your app imports:

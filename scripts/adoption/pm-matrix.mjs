@@ -118,6 +118,11 @@ const NEGATIVES = {
   'chart-missing-recharts-pnpm': 'a consumer that does not declare recharts must fail under pnpm, which does not hoist',
   'chart-renders-when-corrected': 'the corrected consumer setup must build AND render all three cell fills',
   'chart-build-is-not-render': 'deleting the rendered-fill assertion must let a chart with no fills pass — so the assertion is what catches it',
+  'pnp-react-is-unversioned-fails-fragment': 'under Plug\'n\'Play an undeclared react-is must fail the build and the wrong major must fail the fragment contract (needs --yarn-berry)',
+  'pnp-broken-invocation-fails': 'a Plug\'n\'Play arm invoked through node_modules/.bin instead of `yarn exec` must fail, never skip (needs --yarn-berry)',
+  'pnp-undeclared-dependency-rejected': 'an undeclared recharts must fail under Plug\'n\'Play, which has no hoisting to resolve it by accident (needs --yarn-berry)',
+  'pnp-no-node-modules-fallback': 'a node-modules install must not be reportable as a Plug\'n\'Play pass (needs --yarn-berry)',
+  'pnp-legacy-tailwind-fails-css': 'the superseded node-modules Tailwind entry must fail the component-utility assertions under Plug\'n\'Play while the documented procedure passes (needs --yarn-berry)',
 };
 
 if (has('list-negatives')) {
@@ -355,6 +360,177 @@ if (negative) {
     console.log(ok ? 'PASS  negative chart-build-is-not-render: a green build reaches the claim, and the rendered fills are what refuse it'
                    : 'FAIL  negative chart-build-is-not-render');
     if (!ok) console.error(`--- mutant (exit ${mutant.status})\n${mutantOut}`);
+    process.exit(ok ? 0 : 1);
+  }
+
+  /* ---------------------------------------------------------------- the Plug'n'Play controls
+   *
+   * Yarn Berry's own default linker is Plug'n'Play, and until 2026-11-24 the fixture wrote
+   * `nodeLinker: node-modules` into every Berry fixture, so the Berry row measured a linker Berry does
+   * not use by default. `--yarn-linker=pnp` measures the real one. These four controls exist because a
+   * PnP run has four ways to look like a pass without being one: the react-is contract can be met by a
+   * build that never rendered, the PnP invocation path can be broken while the arm still reports, an
+   * undeclared dependency can resolve by accident, and the run can quietly install a node_modules tree
+   * and report Plug'n'Play over it. Each needs a Berry binary, which this container gets from npm:
+   *
+   *   npm install --prefix /tmp/berry-tool @yarnpkg/cli-dist@4
+   *   node scripts/adoption/pm-matrix.mjs --negative=<id> --yarn-berry=/tmp/berry-tool/node_modules/@yarnpkg/cli-dist/bin/yarn.js
+   */
+  const PNP_CONTROLS = ['pnp-react-is-unversioned-fails-fragment', 'pnp-broken-invocation-fails', 'pnp-undeclared-dependency-rejected', 'pnp-no-node-modules-fallback', 'pnp-legacy-tailwind-fails-css'];
+  if (PNP_CONTROLS.includes(negative) && !berryBin) {
+    console.error(`NOT MEASURED  negative ${negative}: Plug'n'Play is Berry's own linker, so this control needs --yarn-berry=<path to a Berry yarn>. Refusing rather than reporting a result.`);
+    process.exit(2);
+  }
+  const pnpArm = (...args) => consumer('--pm=yarn', `--pm-bin=${berryBin}`, '--yarn-linker=pnp', ...args);
+
+  /*
+   * A mutation helper for the two controls below. The copy has to live beside the original for the same
+   * reason `chart-build-is-not-render`'s does — react-consumer.mjs resolves the repository from its own
+   * location — and the anchor has to be unique, or the mutation lands somewhere other than the statement
+   * under test and the control reports on something it did not change.
+   */
+  const mutate = (anchor, replacement, args) => {
+    const self = join(root, 'scripts/adoption/react-consumer.mjs');
+    const source = readFileSync(self, 'utf8');
+    const occurrences = source.split(anchor).length - 1;
+    if (occurrences !== 1) {
+      console.error(`FAIL  negative ${negative}: the anchor occurs ${occurrences} times, not once, so the mutation would not land on the statement under test. Refusing rather than reporting a result.`);
+      process.exit(1);
+    }
+    const copy = join(root, `scripts/adoption/.react-consumer-mutant-${process.pid}.mjs`);
+    writeFileSync(copy, source.replace(anchor, replacement));
+    try {
+      const run = spawnSync(process.execPath, [copy, ...args], { encoding: 'utf8' });
+      return { ...run, out: `${run.stdout || ''}${run.stderr || ''}` };
+    } finally {
+      rmSync(copy, { force: true });
+    }
+  };
+  const PNP_ARM = ['--pm=yarn', `--pm-bin=${berryBin}`, '--yarn-linker=pnp', '--react=18', '--react-is=^18'];
+
+  if (negative === 'pnp-react-is-unversioned-fails-fragment') {
+    /*
+     * The react-is defect under Plug'n'Play, both of its shapes. recharts declares react-is as a PEER
+     * dependency, and PnP enforces peers strictly, so a consumer that declares nothing does not get the
+     * silent React 19 copy npm and pnpm hand it — the BUILD fails outright. Declaring the wrong major
+     * reproduces the silent defect exactly: green build, chart rendered, fragment fills gone.
+     */
+    const undeclared = pnpArm('--react=18');
+    const wrongMajor = pnpArm('--react=18', '--react-is=^19');
+    const checks = [
+      ['declaring no react-is must fail under PnP, not resolve one silently', undeclared.status !== 0],
+      ['and fail naming the unprovided peer', /doesn't provide react-is \(\w+\), requested by recharts/.test(undeclared.out)],
+      ['and never render a chart to be read as evidence', !/Rendered chart:/.test(undeclared.out)],
+      ['the wrong major must install and build, or the defect is not the one under test', /built in/.test(wrongMajor.out)],
+      ['the pin must be proved to have reached recharts', /Pinned react-is took effect: recharts resolves 19\./.test(wrongMajor.out)],
+      ['the fragment-wrapped cells must be reported NOT CERTIFIED', /NOT CERTIFIED {2}fragment-wrapped cells/.test(wrongMajor.out)],
+      ['naming the dropped fills, not only the versions', /fills came back 0,0,0 of 1,1,1/.test(wrongMajor.out)],
+      ['and the run must not claim a working chart in both shapes', !/in both the array and the fragment-wrapped shape/.test(wrongMajor.out)],
+    ];
+    for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
+    const ok = checks.every(([, held]) => held);
+    console.log(ok ? 'PASS  negative pnp-react-is-unversioned-fails-fragment: under PnP an undeclared react-is fails the build and the wrong major fails the fragment contract'
+                   : 'FAIL  negative pnp-react-is-unversioned-fails-fragment');
+    if (!ok) console.error(`--- undeclared (exit ${undeclared.status})\n${undeclared.out}\n--- wrong major (exit ${wrongMajor.status})\n${wrongMajor.out}`);
+    process.exit(ok ? 0 : 1);
+  }
+
+  if (negative === 'pnp-broken-invocation-fails') {
+    /*
+     * Under PnP the tools have to be invoked through `yarn exec`, because there is no node_modules/.bin
+     * to call. The mutation restores the node-modules invocation under PnP — the exact defect the repair
+     * fixes — and the arm must fail rather than skip the step and report on the rest.
+     */
+    const mutant = mutate(
+      "pnp ? run(pmBin, ['exec', name, ...args]) :",
+      "false ? run(pmBin, ['exec', name, ...args]) :",
+      PNP_ARM,
+    );
+    const honest = pnpArm('--react=18', '--react-is=^18');
+    const checks = [
+      ['the honest PnP arm must pass, or the mutation is not what failed', honest.status === 0],
+      ['and must have rendered the chart in both shapes', /cell fills 1,1,1 \(array\) 1,1,1 \(fragment-wrapped\)/.test(honest.out)],
+      ['a broken PnP invocation path must fail', mutant.status !== 0],
+      ['and fail on the invocation it could not make, inside the fixture', /node_modules\/\.bin\/tsc/.test(mutant.out)],
+      ['and must never print a PASS line', !/^PASS \(yarn/m.test(mutant.out)],
+    ];
+    for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
+    const ok = checks.every(([, held]) => held);
+    console.log(ok ? 'PASS  negative pnp-broken-invocation-fails: yarn exec is what makes the PnP arm executable, and the arm dies without it'
+                   : 'FAIL  negative pnp-broken-invocation-fails');
+    if (!ok) console.error(`--- mutant (exit ${mutant.status})\n${mutant.out}\n--- honest (exit ${honest.status})\n${honest.out}`);
+    process.exit(ok ? 0 : 1);
+  }
+
+  if (negative === 'pnp-undeclared-dependency-rejected') {
+    // The companion to chart-missing-recharts-pnpm on Berry's own linker: PnP has no hoisting to resolve
+    // an undeclared import by accident, so the documented consumer must declare recharts there too.
+    const run = pnpArm('--omit-recharts');
+    const checks = [
+      ['an undeclared recharts must fail under PnP', run.status !== 0],
+      ['and fail on the unresolved import, not something else', /error TS2307: Cannot find module 'recharts'/.test(run.out)],
+      ['the arm must have reached Plug\'n\'Play, or it measured another linker', /Plug'n'Play confirmed: no node_modules/.test(run.out)],
+      ['and no chart may be rendered to be read as evidence', !/Rendered chart:/.test(run.out)],
+    ];
+    for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
+    const ok = checks.every(([, held]) => held);
+    console.log(ok ? 'PASS  negative pnp-undeclared-dependency-rejected: PnP refuses the undeclared import rather than hoisting it'
+                   : 'FAIL  negative pnp-undeclared-dependency-rejected');
+    if (!ok) console.error(run.out);
+    process.exit(ok ? 0 : 1);
+  }
+
+  if (negative === 'pnp-legacy-tailwind-fails-css') {
+    /*
+     * The documentation control. The Plug'n'Play section exists because the node-modules content entry
+     * emits NO component utilities under PnP while `tsc` and `vite build` both exit 0 — a green build with
+     * an unstyled button and nothing reported. So the superseded instruction must fail the CSS assertions
+     * and the documented one must pass, and the failure has to arrive AFTER a successful build or it is
+     * some other fault being read as this one.
+     */
+    const legacy = pnpArm('--pnp-legacy-tailwind', '--react=18', '--react-is=^18');
+    const documented = pnpArm('--react=18', '--react-is=^18');
+    const checks = [
+      ['the superseded guidance must fail', legacy.status !== 0],
+      ['after a successful build, which is what made it silent', /built in/.test(legacy.out)],
+      ['and fail on the missing component utility, not on something else', /Button background utility missing/.test(legacy.out)],
+      ['naming Plug\'n\'Play\'s absent node_modules as the cause', /Plug'n'Play has no node_modules/.test(legacy.out)],
+      ['the documented procedure must run the documented unplug step', /Documented Plug'n'Play procedure followed: `yarn unplug @kinetixui\/ui`/.test(documented.out)],
+      ['and pass with the utilities present', documented.status === 0],
+      ['and still render the chart in both shapes', /cell fills 1,1,1 \(array\) 1,1,1 \(fragment-wrapped\)/.test(documented.out)],
+    ];
+    for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
+    const ok = checks.every(([, held]) => held);
+    console.log(ok ? 'PASS  negative pnp-legacy-tailwind-fails-css: the superseded content entry emits no utilities under PnP, and the documented procedure fixes it'
+                   : 'FAIL  negative pnp-legacy-tailwind-fails-css');
+    if (!ok) console.error(`--- legacy (exit ${legacy.status})\n${legacy.out}\n--- documented (exit ${documented.status})\n${documented.out}`);
+    process.exit(ok ? 0 : 1);
+  }
+
+  if (negative === 'pnp-no-node-modules-fallback') {
+    /*
+     * The silent-fallback control. `--yarn-linker=pnp` only asks Berry for PnP; what makes the arm
+     * EVIDENCE about PnP is the precondition that no node_modules exists and the .pnp runtime does. The
+     * mutation puts `nodeLinker: node-modules` back into the fixture while the run still calls itself
+     * Plug'n'Play — a node-modules install reported as a PnP pass — and the precondition must refuse it.
+     */
+    const mutant = mutate(
+      "${pnp ? '' : 'nodeLinker: node-modules",
+      "${false ? '' : 'nodeLinker: node-modules",
+      PNP_ARM,
+    );
+    const checks = [
+      ['a node-modules install reported as Plug\'n\'Play must fail', mutant.status !== 0],
+      ['and refuse explicitly rather than measuring it', /Refusing to report/.test(mutant.out)],
+      ['naming the node_modules directory it found', /installed a node_modules directory at /.test(mutant.out)],
+      ['the refusal must come before any tool is run', !/built in/.test(mutant.out)],
+      ['and no PASS line may be printed', !/^PASS \(yarn/m.test(mutant.out)],
+    ];
+    for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
+    const ok = checks.every(([, held]) => held);
+    console.log(ok ? 'PASS  negative pnp-no-node-modules-fallback: the precondition is what makes the arm evidence about Plug\'n\'Play'
+                   : 'FAIL  negative pnp-no-node-modules-fallback');
+    if (!ok) console.error(`--- mutant (exit ${mutant.status})\n${mutant.out}`);
     process.exit(ok ? 0 : 1);
   }
 
