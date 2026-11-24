@@ -21,26 +21,54 @@ final class MotionHostTests: XCTestCase {
     /// and this runner read one clock and no cross-process correction is needed.
     private struct Trial {
         let index: Int
+        /// Launch ordinal within this `xcodebuild` invocation. 1 is the first launch after the
+        /// device booted for this run, i.e. the COLD trial. Recorded, never used to excuse a
+        /// failure: a cold breach is a breach.
+        let launchOrdinal: Int
+        /// PHASE 1 — simulator initialization overhead. Test start until `launch()` returned.
+        /// On ordinal 1 this carries the device's own boot and automation-session setup.
+        let simInit: TimeInterval
+        /// PHASE 2 — application readiness. `launch()` returned until the host's own state is
+        /// queryable (`reduce-state`). Separates "the process is up" from "the view is usable".
+        let appReady: TimeInterval
+        /// PHASE 3 — user-observable dismissal. Gesture until the sheet left the tree.
         let teardown: TimeInterval
+        /// The app's own share: gesture until the host recorded its focus assignment.
         let appAssigned: TimeInterval?
+        /// PHASE 4 — VoiceOver speech cessation. Gesture until VoiceOver STOPPED speaking the
+        /// dismissed control. Distinct from phase 5: between the two the user may hear nothing,
+        /// which is a different experience from hearing the wrong thing.
+        let speechCeased: TimeInterval?
+        /// PHASE 5 — focus restoration, as the user receives it: the exact target spoken.
         let speechMatched: TimeInterval?
+        /// PHASE 5b — focus restoration as the binding reports it. See the note at the assertions.
         let focusMatched: TimeInterval?
         let receipt: String
         let targetMounted: Bool
+        /// PHASE 6 — fallback focus behaviour: was the restore target newly mounted at dismissal?
+        let fallbackTarget: Bool
         let lastUtterance: String
         let lastBackgroundFocus: String
         let lastReaderFocus: String
 
         var line: String {
             func f(_ v: TimeInterval?) -> String { v.map { String(format: "%.3f", $0) } ?? "never" }
-            return "trial=\(index) teardown=\(String(format: "%.3f", teardown)) "
-                + "appAssigned=\(f(appAssigned)) speechMatched=\(f(speechMatched)) "
-                + "focusMatched=\(f(focusMatched)) budget=\(String(format: "%.1f", Acceptance.budget)) "
-                + "receipt=\(receipt) targetMounted=\(targetMounted) "
+            func g(_ v: TimeInterval) -> String { String(format: "%.3f", v) }
+            return "trial=\(index) launchOrdinal=\(launchOrdinal) "
+                + "thermal=\(launchOrdinal == 1 ? "cold" : "warm") "
+                + "simInit=\(g(simInit)) appReady=\(g(appReady)) teardown=\(g(teardown)) "
+                + "appAssigned=\(f(appAssigned)) speechCeased=\(f(speechCeased)) "
+                + "speechMatched=\(f(speechMatched)) focusMatched=\(f(focusMatched)) "
+                + "budget=\(String(format: "%.1f", Acceptance.budget)) "
+                + "receipt=\(receipt) targetMounted=\(targetMounted) fallbackTarget=\(fallbackTarget) "
                 + "readerFocus=\(lastReaderFocus) backgroundFocus=\(lastBackgroundFocus) "
                 + "utterance=\(lastUtterance)"
         }
     }
+
+    /// Counts launches across every test in one `xcodebuild` invocation, so the cold trial is
+    /// identifiable rather than inferred from execution order.
+    private static var launchOrdinal = 0
 
     private func withReader(_ block: () throws -> Void) throws {
         let initiallyEnabled = reader.isEnabled
@@ -144,12 +172,23 @@ final class MotionHostTests: XCTestCase {
                     (reopen ? ["--reopen-once", "--rtl"] : []) +
                     (reduced ? ["--reduce"] : []) +
                     (control.map { [$0] } ?? [])
+                // PHASE 1 — simulator initialization overhead.
+                let beforeLaunch = ProcessInfo.processInfo.systemUptime
                 app.launch()
+                let afterLaunch = ProcessInfo.processInfo.systemUptime
+                Self.launchOrdinal += 1
+                let launchOrdinal = Self.launchOrdinal
 
-                XCTAssertEqual(
-                    app.staticTexts["reduce-state"].label,
-                    reduced ? "Reduce Motion on" : "Reduce Motion off"
-                )
+                // PHASE 2 — application readiness: the host's own state becomes queryable.
+                let reduceLabel = app.staticTexts["reduce-state"].label
+                let appReady = ProcessInfo.processInfo.systemUptime - afterLaunch
+                let simInit = afterLaunch - beforeLaunch
+                print("M537_PHASE1_2 ordinal=\(launchOrdinal) "
+                    + "thermal=\(launchOrdinal == 1 ? "cold" : "warm") "
+                    + "simInit=\(String(format: "%.3f", simInit)) "
+                    + "appReady=\(String(format: "%.3f", appReady))")
+
+                XCTAssertEqual(reduceLabel, reduced ? "Reduce Motion on" : "Reduce Motion off")
                 try seek("Open library sheet")
                 activate(app, "Open library sheet")
                 XCTAssertTrue(app.staticTexts["Library sheet heading"].waitForExistence(timeout: 5))
@@ -191,6 +230,7 @@ final class MotionHostTests: XCTestCase {
                 // immediately after its own read. Reading them as one sample charges the second
                 // read's cost to the first and cannot say which of the two was late.
                 var speechMatched: TimeInterval?
+                var speechCeased: TimeInterval?
                 var focusMatched: TimeInterval?
                 var lastUtterance = ""
                 var lastBackground = ""
@@ -201,6 +241,11 @@ final class MotionHostTests: XCTestCase {
                     let utterance = try reader.currentSpeech().utterance
                     let afterSpeech = ProcessInfo.processInfo.systemUptime
                     lastUtterance = utterance
+                    // PHASE 4 — cessation: the service stops reporting the DISMISSED control.
+                    // Measured before the match so a sample that is neither counts as cessation.
+                    if speechCeased == nil, !utterance.contains("Dismiss library sheet") {
+                        speechCeased = afterSpeech - origin
+                    }
                     if speechMatched == nil, utterance.contains(label) {
                         speechMatched = afterSpeech - origin
                     }
@@ -220,12 +265,17 @@ final class MotionHostTests: XCTestCase {
                 let assignment = Double(app.staticTexts["assignment-uptime-witness"].label)
                 let trial = Trial(
                     index: index,
+                    launchOrdinal: launchOrdinal,
+                    simInit: simInit,
+                    appReady: appReady,
                     teardown: teardown,
                     appAssigned: assignment.map { $0 - origin },
+                    speechCeased: speechCeased,
                     speechMatched: speechMatched,
                     focusMatched: focusMatched,
                     receipt: app.staticTexts["restore-request-witness"].label,
                     targetMounted: app.buttons[button].exists,
+                    fallbackTarget: removeOpener,
                     lastUtterance: lastUtterance,
                     lastBackgroundFocus: lastBackground,
                     lastReaderFocus: lastReader
@@ -235,6 +285,16 @@ final class MotionHostTests: XCTestCase {
                 app.terminate()
             }
         }
+
+        // A cold trial is asserted exactly like a warm one. `launchOrdinal` and `thermal` are
+        // recorded so a reader can SEE which trials were cold; they never gate an assertion, and
+        // no cold breach is excused, downgraded or retried.
+        let cold = results.filter { $0.launchOrdinal == 1 }
+        let warm = results.filter { $0.launchOrdinal != 1 }
+        print("M537_THERMAL_SUMMARY target=\(target) control=\(control ?? "none") "
+            + "cold=\(cold.count) warm=\(warm.count) "
+            + "coldBreaches=\(cold.filter { ($0.speechMatched ?? .infinity) > Acceptance.budget }.count) "
+            + "warmBreaches=\(warm.filter { ($0.speechMatched ?? .infinity) > Acceptance.budget }.count)")
 
         // Every trial is asserted. Correctness and timeliness are separate assertions with
         // separate messages, so a late-but-correct arrival is never reported as a wrong target.
