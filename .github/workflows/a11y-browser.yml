@@ -475,7 +475,14 @@ jobs:
       # being able to notice it breaking". Each is a single `run:` so the exit status propagates
       # directly; deliberately NOT a loop over a listing, which is the shape #516 and #542 exist to
       # repair.
+      # TEMPORARY, REVERTED IN THE NEXT COMMIT — propagation proof for PR #674.
+      # `KX_CAROUSEL_DEFECT` is the gate's own injection switch, the one its control driver uses:
+      # `no-inert` restores the defect where a slide out of view is not `inert`. The gate must exit 1,
+      # this step must fail, and the job and the check suite must go red with it. Nothing but this
+      # workflow file is touched — no product source, no frozen candidate.
       - name: React Carousel slide exposure (Tab reach, inert, focus follows the view, announcements)
+        env:
+          KX_CAROUSEL_DEFECT: no-inert
         run: pnpm check:react-carousel-slide-exposure
 
       - name: React Carousel slide exposure — negative controls (each defect restored, in the page and in source)
