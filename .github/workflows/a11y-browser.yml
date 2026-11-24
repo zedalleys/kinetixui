@@ -35,6 +35,8 @@ on:
       - "scripts/react-carousel-focus.mjs"
       - "scripts/react-carousel-direction.mjs"
       - "scripts/react-carousel-focus-negative-controls.mjs"
+      - "scripts/react-carousel-slide-exposure.mjs"
+      - "scripts/react-carousel-slide-exposure-negative-controls.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
       - "scripts/iot-monitoring.mjs"
@@ -86,6 +88,8 @@ on:
       - "scripts/react-carousel-focus.mjs"
       - "scripts/react-carousel-direction.mjs"
       - "scripts/react-carousel-focus-negative-controls.mjs"
+      - "scripts/react-carousel-slide-exposure.mjs"
+      - "scripts/react-carousel-slide-exposure-negative-controls.mjs"
       - "scripts/loop-motion.mjs"
       - "scripts/iot-control-strategies.mjs"
       - "scripts/iot-monitoring.mjs"
@@ -450,3 +454,29 @@ jobs:
       # browser launch, so splitting it would pay for the launch twice to assert the same thing.
       - name: Reduced motion caps delays as well as durations (with negative controls)
         run: pnpm check:reduced-motion-delay
+
+      # What a keyboard reader and a screen reader can reach in a Carousel, on both axes: Tab never
+      # landing in a slide that is out of view, an out-of-view slide being `inert`, focus following the
+      # view through a completed move AND through a burst of presses that interrupt one another, and the
+      # reader's move announced once. None of it is decidable in jsdom, because all of it depends on
+      # slides being laid out — and until this step the gate ran nowhere hosted: it was a `package.json`
+      # script no workflow invoked, so its assertions held only on whatever machine last ran them.
+      #
+      # Here rather than in `axe` for the same reason as the step above: `axe` runs within about six
+      # minutes of its 45-minute cap, and this pair costs real time. Measured at `f3a238ba` on this
+      # container: the gate 35s for 106 assertions, the controls 376s for 41 arms. This job spent
+      # 6m51s on CI at `cc2ca8e1` against a 25-minute cap, so the pair fits with room even if a hosted
+      # runner is twice as slow — and it is the job whose check already carries the other negative
+      # controls, so the gate inherits whatever enforcement that check has rather than arriving as a
+      # new, unenforced one.
+      #
+      # Two steps, not one: the gate and its controls are separate scripts with separate exit statuses,
+      # and a reader of a red run should be able to tell "the contract broke" from "the gate stopped
+      # being able to notice it breaking". Each is a single `run:` so the exit status propagates
+      # directly; deliberately NOT a loop over a listing, which is the shape #516 and #542 exist to
+      # repair.
+      - name: React Carousel slide exposure (Tab reach, inert, focus follows the view, announcements)
+        run: pnpm check:react-carousel-slide-exposure
+
+      - name: React Carousel slide exposure — negative controls (each defect restored, in the page and in source)
+        run: pnpm check:react-carousel-slide-exposure-negative-controls
