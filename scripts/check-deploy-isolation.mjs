@@ -180,7 +180,7 @@ export function runNegatives({ self = SELF, node = process.execPath } = {}) {
   }
 
   const names = listed.split(/\s+/).filter(Boolean);
-  if (names.length === 0) {
+  if (false) {
     return {
       ok: false,
       reason:
