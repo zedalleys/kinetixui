@@ -21,10 +21,10 @@ const run = (...args: string[]) =>
   execFileSync(process.execPath, [join(repo, script), ...args], { encoding: "utf8" });
 
 describe("deployment isolation", () => {
-  // Vercel reads vercel.json from the project's Root Directory. apps/web/vercel.json's
-  // "cd ../.." build command only works with a Root Directory of apps/web, so that is almost
-  // certainly the file it reads — but the repository already duplicates the four codex/*
-  // exclusions into the root file too, so the line is required in both rather than guessed at.
+  // Vercel reads vercel.json from the project's Root Directory, which for this project is
+  // apps/web — measured from the Vercel GitHub integration's own payload on PR #673. So
+  // apps/web/vercel.json is load-bearing and the root file is inert today; the line is required
+  // in both anyway, so that changing the Root Directory cannot silently retire the invariant.
   const configs = ["vercel.json", "apps/web/vercel.json"];
 
   it.each(configs)("%s excludes main from automatic deployment", (rel) => {

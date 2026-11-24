@@ -12,13 +12,13 @@
  * `git.deploymentEnabled`, which is a tracked file — so it is the half that can be defended, and this
  * gate is what makes removing it fail instead of passing quietly.
  *
- * Why two files. Vercel reads `vercel.json` from the project's Root Directory. `apps/web/vercel.json`
- * carries `"buildCommand": "cd ../.. && …"` and `"outputDirectory": ".next"`, which only work with a
- * Root Directory of `apps/web`, so that is the file this project almost certainly reads. But the
- * repository already keeps the same four `codex/*` exclusions in BOTH that file and the root
- * `vercel.json`, so whoever added them did not rely on the answer either. Requiring the line in both
- * costs nothing and is correct under either Root Directory. Which one Vercel actually reads is still
- * a dashboard fact, and the migration confirms it there; this gate does not guess.
+ * Why two files. Vercel reads `vercel.json` from the project's Root Directory, and for this project
+ * that is `apps/web` — measured, from the Vercel GitHub integration's own payload on PR #673
+ * (`"rootDirectory": "apps/web"`, project prj_4wL0DZo2xUDDZYxccGsXVRZPflJC). So
+ * `apps/web/vercel.json` is the load-bearing file and the root `vercel.json` is inert for this
+ * project, including its four `codex/*` exclusions, which have never done anything. The line is
+ * required in both anyway, as defence in depth should the Root Directory ever change: a settings
+ * change in the dashboard would otherwise silently retire the invariant.
  */
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";

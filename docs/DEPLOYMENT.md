@@ -71,11 +71,13 @@ Two halves, and only one of them is in this repository:
    It can be changed back in a place no diff records and no test can read, which is exactly why the
    first half is written down and defended.
 
-Vercel reads `vercel.json` from the project's Root Directory. `apps/web/vercel.json`'s
-`"buildCommand": "cd ../.. && …"` only works with a Root Directory of `apps/web`, so that is almost
-certainly the authoritative file — but the repository already kept the four `codex/*` exclusions in
-both files, so the line is required in both rather than guessed at. The migration confirms the Root
-Directory in the dashboard.
+Vercel reads `vercel.json` from the project's Root Directory, and that is **measured, not
+inferred**: the Vercel GitHub integration's own payload on PR #673 reports
+`"rootDirectory": "apps/web"` for project `prj_4wL0DZo2xUDDZYxccGsXVRZPflJC`. So
+`apps/web/vercel.json` is the load-bearing file, and the root `vercel.json` is **inert for this
+project** — including its four `codex/*` exclusions, which have never done anything. The line is
+kept in both anyway, as defence in depth should the Root Directory ever change; the gate requires
+both for the same reason.
 
 ## Preventing unintended pushes to `release`
 
