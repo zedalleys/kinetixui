@@ -68,6 +68,8 @@ const ROOT_ARG = process.argv.find((a) => a.startsWith("--root="));
 const root = ROOT_ARG ? ROOT_ARG.slice("--root=".length).replace(/\/?$/, "/") : fileURLToPath(new URL("..", import.meta.url));
 const read = (p) => readFileSync(`${root}/${p}`, "utf8");
 const CHECK = process.argv.includes("--check");
+
+import { unreadableCitations } from "./verification/citations.mjs";
 const OUT = "verification.json";
 
 const manifest = JSON.parse(read("components.manifest.json"));
@@ -286,6 +288,13 @@ function walk(dir, match, acc = []) {
  */
 export function passages(text) {
   const lines = text.split("\n");
+  /* A file ending in a newline splits to a final empty element that is not a line. Closing the last
+   * passage at `lines.length` therefore cited one line past the end of the file, for every file in
+   * the tree that ends the way nearly all of them do — 52 of 125 ranged citations in
+   * verification.json were out by exactly one, and nothing validated them. Mid-file closes are
+   * unaffected: they use the 0-based index of the next marker, which is the 1-based number of the
+   * line before it. */
+  const lastLine = text.endsWith("\n") ? lines.length - 1 : lines.length;
   const out = [];
   let current = null;
   const close = (endLine) => {
@@ -313,7 +322,7 @@ export function passages(text) {
     }
     if (current) current.body.push(line);
   });
-  close(lines.length);
+  close(lastLine);
   return out;
 }
 
@@ -955,6 +964,14 @@ const data = {
   blockTotals,
   blocks: byBlock,
 };
+
+errors.push(...unreadableCitations(data, read));
+
+if (errors.length) {
+  console.error(errors.map((e) => `  x ${e}`).join("\n"));
+  console.error(`\n${CHECK ? "check:verification" : "gen:verification"} failed — ${errors.length} unreadable citation(s).`);
+  process.exit(1);
+}
 
 const body = JSON.stringify(data, null, 2) + "\n";
 if (CHECK) {
