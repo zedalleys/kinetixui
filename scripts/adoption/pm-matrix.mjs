@@ -122,6 +122,7 @@ const NEGATIVES = {
   'pnp-broken-invocation-fails': 'a Plug\'n\'Play arm invoked through node_modules/.bin instead of `yarn exec` must fail, never skip (needs --yarn-berry)',
   'pnp-undeclared-dependency-rejected': 'an undeclared recharts must fail under Plug\'n\'Play, which has no hoisting to resolve it by accident (needs --yarn-berry)',
   'pnp-no-node-modules-fallback': 'a node-modules install must not be reportable as a Plug\'n\'Play pass (needs --yarn-berry)',
+  'pnp-legacy-tailwind-fails-css': 'the superseded node-modules Tailwind entry must fail the component-utility assertions under Plug\'n\'Play while the documented procedure passes (needs --yarn-berry)',
 };
 
 if (has('list-negatives')) {
@@ -375,7 +376,7 @@ if (negative) {
    *   npm install --prefix /tmp/berry-tool @yarnpkg/cli-dist@4
    *   node scripts/adoption/pm-matrix.mjs --negative=<id> --yarn-berry=/tmp/berry-tool/node_modules/@yarnpkg/cli-dist/bin/yarn.js
    */
-  const PNP_CONTROLS = ['pnp-react-is-unversioned-fails-fragment', 'pnp-broken-invocation-fails', 'pnp-undeclared-dependency-rejected', 'pnp-no-node-modules-fallback'];
+  const PNP_CONTROLS = ['pnp-react-is-unversioned-fails-fragment', 'pnp-broken-invocation-fails', 'pnp-undeclared-dependency-rejected', 'pnp-no-node-modules-fallback', 'pnp-legacy-tailwind-fails-css'];
   if (PNP_CONTROLS.includes(negative) && !berryBin) {
     console.error(`NOT MEASURED  negative ${negative}: Plug'n'Play is Berry's own linker, so this control needs --yarn-berry=<path to a Berry yarn>. Refusing rather than reporting a result.`);
     process.exit(2);
@@ -405,7 +406,7 @@ if (negative) {
       rmSync(copy, { force: true });
     }
   };
-  const PNP_ARM = ['--pm=yarn', `--pm-bin=${berryBin}`, '--yarn-linker=pnp', '--pnp-unplug-ui', '--react=18', '--react-is=^18'];
+  const PNP_ARM = ['--pm=yarn', `--pm-bin=${berryBin}`, '--yarn-linker=pnp', '--react=18', '--react-is=^18'];
 
   if (negative === 'pnp-react-is-unversioned-fails-fragment') {
     /*
@@ -414,8 +415,8 @@ if (negative) {
      * silent React 19 copy npm and pnpm hand it — the BUILD fails outright. Declaring the wrong major
      * reproduces the silent defect exactly: green build, chart rendered, fragment fills gone.
      */
-    const undeclared = pnpArm('--pnp-unplug-ui', '--react=18');
-    const wrongMajor = pnpArm('--pnp-unplug-ui', '--react=18', '--react-is=^19');
+    const undeclared = pnpArm('--react=18');
+    const wrongMajor = pnpArm('--react=18', '--react-is=^19');
     const checks = [
       ['declaring no react-is must fail under PnP, not resolve one silently', undeclared.status !== 0],
       ['and fail naming the unprovided peer', /doesn't provide react-is \(\w+\), requested by recharts/.test(undeclared.out)],
@@ -445,7 +446,7 @@ if (negative) {
       "false ? run(pmBin, ['exec', name, ...args]) :",
       PNP_ARM,
     );
-    const honest = pnpArm('--pnp-unplug-ui', '--react=18', '--react-is=^18');
+    const honest = pnpArm('--react=18', '--react-is=^18');
     const checks = [
       ['the honest PnP arm must pass, or the mutation is not what failed', honest.status === 0],
       ['and must have rendered the chart in both shapes', /cell fills 1,1,1 \(array\) 1,1,1 \(fragment-wrapped\)/.test(honest.out)],
@@ -476,6 +477,33 @@ if (negative) {
     console.log(ok ? 'PASS  negative pnp-undeclared-dependency-rejected: PnP refuses the undeclared import rather than hoisting it'
                    : 'FAIL  negative pnp-undeclared-dependency-rejected');
     if (!ok) console.error(run.out);
+    process.exit(ok ? 0 : 1);
+  }
+
+  if (negative === 'pnp-legacy-tailwind-fails-css') {
+    /*
+     * The documentation control. The Plug'n'Play section exists because the node-modules content entry
+     * emits NO component utilities under PnP while `tsc` and `vite build` both exit 0 — a green build with
+     * an unstyled button and nothing reported. So the superseded instruction must fail the CSS assertions
+     * and the documented one must pass, and the failure has to arrive AFTER a successful build or it is
+     * some other fault being read as this one.
+     */
+    const legacy = pnpArm('--pnp-legacy-tailwind', '--react=18', '--react-is=^18');
+    const documented = pnpArm('--react=18', '--react-is=^18');
+    const checks = [
+      ['the superseded guidance must fail', legacy.status !== 0],
+      ['after a successful build, which is what made it silent', /built in/.test(legacy.out)],
+      ['and fail on the missing component utility, not on something else', /Button background utility missing/.test(legacy.out)],
+      ['naming Plug\'n\'Play\'s absent node_modules as the cause', /Plug'n'Play has no node_modules/.test(legacy.out)],
+      ['the documented procedure must run the documented unplug step', /Documented Plug'n'Play procedure followed: `yarn unplug @kinetixui\/ui`/.test(documented.out)],
+      ['and pass with the utilities present', documented.status === 0],
+      ['and still render the chart in both shapes', /cell fills 1,1,1 \(array\) 1,1,1 \(fragment-wrapped\)/.test(documented.out)],
+    ];
+    for (const [what, held] of checks) console.log(`  ${held ? 'ok  ' : 'FAIL'}  ${what}`);
+    const ok = checks.every(([, held]) => held);
+    console.log(ok ? 'PASS  negative pnp-legacy-tailwind-fails-css: the superseded content entry emits no utilities under PnP, and the documented procedure fixes it'
+                   : 'FAIL  negative pnp-legacy-tailwind-fails-css');
+    if (!ok) console.error(`--- legacy (exit ${legacy.status})\n${legacy.out}\n--- documented (exit ${documented.status})\n${documented.out}`);
     process.exit(ok ? 0 : 1);
   }
 

@@ -35,10 +35,11 @@
  *                         probes via `yarn node`. The run asserts there is no node_modules before it
  *                         measures anything, because a fallback to one would report PnP having measured
  *                         node-modules. Only meaningful with a Berry --pm-bin; refused otherwise.
- *   --pnp-unplug-ui       PnP only: apply the measured remedy for the Tailwind defect below — unplug
- *                         @kinetixui/ui and scan it from .yarn/unplugged instead of node_modules. Without
- *                         it the PnP arm follows today's documentation and fails on the missing component
- *                         utilities, which is the defect, not an infrastructure error.
+ *   --pnp-legacy-tailwind PnP only: follow the SUPERSEDED Tailwind guidance — the node-modules content
+ *                         entry with no unplug step — which fails the component-utility assertions under
+ *                         Plug'n'Play. Without it the arm follows the documentation's own "Yarn
+ *                         Plug'n'Play" section: `yarn unplug @kinetixui/ui` and a config that resolves the
+ *                         package instead of naming a path.
  *   --omit-recharts       do NOT declare recharts, which is what the documentation used to tell a reader
  *
  * The chart is RENDERED, not merely built, and the three cell fills are counted in the markup. Build
@@ -107,11 +108,13 @@ const wantPnp = yarnLinker === 'pnp';
  *
  * That is reported as the defect it is: the PnP arm follows the documentation by default and FAILS. This
  * flag applies the remedy measured to work — `yarn unplug @kinetixui/ui`, which extracts the package to
- * `.yarn/unplugged/` on disk, plus a content entry pointing there — so the rest of the PnP contract
- * (exports, dist, typecheck, build, utilities, chart render) can be verified. Results obtained with it
- * are results for the PROPOSED documentation, never for the documentation as it stands today.
+ * `.yarn/unplugged/` on disk and resolving the package rather than naming a path. That procedure is now
+ * DOCUMENTED (the installation page's "Yarn Plug'n'Play" section), so a PnP arm follows the documentation
+ * like every other arm: it reads that section's own Tailwind config out of the page and runs its unplug
+ * step. `--pnp-legacy-tailwind` reproduces the superseded guidance instead — the node-modules content
+ * entry with no unplug — which is how the arm demonstrates that the old path fails the CSS assertions.
  */
-const pnpUnplugUi = process.argv.includes('--pnp-unplug-ui');
+const pnpLegacyTailwind = process.argv.includes('--pnp-legacy-tailwind');
 const run = (cmd, args, cwd = fixture) => execFileSync(cmd, args, { cwd, stdio: 'inherit' });
 /*
  * Both probes below are ESM scripts run from inside the fixture. A bare `node` cannot resolve anything
@@ -197,7 +200,20 @@ writeFileSync(join(fixture, 'package.json'), JSON.stringify({
 mkdirSync(join(fixture, 'src'));
 writeFileSync(join(fixture, 'src/App.tsx'), fence(docs.split('## First working React component')[1], 'tsx'));
 writeFileSync(join(fixture, 'src/style.css'), fence(docs.split('## First working React component')[1], 'css'));
-writeFileSync(join(fixture, 'tailwind.config.ts'), fence(docs.slice(docs.indexOf('```ts\n// tailwind.config.ts')), 'ts'));
+/*
+ * The fixture never writes a Tailwind config of its own: it uses the documentation's, so that a broken
+ * instruction cannot be papered over here. Under Plug'n'Play that means the PnP section's config, which
+ * is a different fenced block on the same page; `--pnp-legacy-tailwind` deliberately takes the
+ * node-modules one instead, to measure the superseded instruction.
+ */
+const TAILWIND_DOC_BLOCK = wantPnp && !pnpLegacyTailwind
+  ? "```ts\n// tailwind.config.ts — Yarn Plug'n'Play"
+  : '```ts\n// tailwind.config.ts';
+assert.ok(
+  docs.includes(TAILWIND_DOC_BLOCK),
+  `the installation page has no ${JSON.stringify(TAILWIND_DOC_BLOCK)} block, so there is no documented Tailwind configuration for this arm to follow. Refusing to report.`,
+);
+writeFileSync(join(fixture, 'tailwind.config.ts'), fence(docs.slice(docs.indexOf(TAILWIND_DOC_BLOCK)), 'ts'));
 writeFileSync(join(fixture, 'postcss.config.cjs'), fence(docs.split('## First working React component')[1], 'js'));
 writeFileSync(join(fixture, 'src/main.tsx'), 'import { createRoot } from "react-dom/client";\nimport App from "./App";\nimport Chart from "./Chart";\nimport "./style.css";\ncreateRoot(document.getElementById("root")!).render(<><App /><Chart /></>);\n');
 writeFileSync(join(fixture, 'index.html'), '<html lang="en"><head><title>Consumer fixture</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>');
@@ -374,23 +390,42 @@ if (pnp) {
     );
   }
   console.log('Plug\'n\'Play confirmed: no node_modules, and .pnp.cjs plus .pnp.loader.mjs are present.');
-  if (pnpUnplugUi) {
-    run(pmBin, ['unplug', '@kinetixui/ui']);
-    const config = join(fixture, 'tailwind.config.ts');
-    const before = readFileSync(config, 'utf8');
-    const DOCUMENTED = './node_modules/@kinetixui/ui/src/**/*.{ts,tsx}';
+  const config = join(fixture, 'tailwind.config.ts');
+  const written = readFileSync(config, 'utf8');
+  const NODE_MODULES_ENTRY = './node_modules/@kinetixui/ui/src/**/*.{ts,tsx}';
+  if (pnpLegacyTailwind) {
+    /*
+     * The superseded instruction, reproduced exactly: the node-modules content entry and no unplug. The
+     * arm has to be shown to be USING it, or a failure further down would be credited to the wrong cause.
+     */
     assert.ok(
-      before.includes(DOCUMENTED),
-      `--pnp-unplug-ui found no ${DOCUMENTED} entry in the documented Tailwind config, so the remedy would have changed nothing and the arm would be measuring the documented path while reporting the remedy. Refusing to report.`,
+      written.includes(NODE_MODULES_ENTRY),
+      `--pnp-legacy-tailwind found no ${NODE_MODULES_ENTRY} entry in the documented node-modules Tailwind config, so this arm is not measuring the superseded instruction it claims to. Refusing to report.`,
     );
-    writeFileSync(config, before.replace(DOCUMENTED, './.yarn/unplugged/@kinetixui-ui-*/node_modules/@kinetixui/ui/src/**/*.{ts,tsx}'));
+    console.log(`--pnp-legacy-tailwind: following the SUPERSEDED guidance — ${NODE_MODULES_ENTRY} with no unplug step. The CSS assertions below are expected to fail; that failure is the point of this arm.`);
+  } else {
+    /*
+     * The documented procedure. Both halves are asserted: the unplug step ran and produced exactly one
+     * directory, and the config is the resolution-based one rather than a hard-coded path — a config that
+     * still named .yarn/unplugged/<hash> would pass today and break on Yarn's next cache change.
+     */
+    assert.ok(
+      written.includes('require.resolve("@kinetixui/ui/package.json")') || written.includes("resolve.resolve(\"@kinetixui/ui/package.json\")"),
+      'the documented Plug\'n\'Play Tailwind config does not resolve @kinetixui/ui, so this arm is measuring some other configuration. Refusing to report.',
+    );
+    assert.ok(
+      !written.includes(NODE_MODULES_ENTRY) && !/\.yarn\/unplugged\/@kinetixui-ui-[0-9a-f]/.test(written),
+      'the documented Plug\'n\'Play Tailwind config names a node_modules path or a hard-coded unplugged directory, which is exactly what it exists to avoid. Refusing to report.',
+    );
+    run(pmBin, ['unplug', '@kinetixui/ui']);
     const unplugged = readdirSync(join(fixture, '.yarn/unplugged')).filter(name => name.startsWith('@kinetixui-ui-'));
     assert.ok(
       unplugged.length === 1,
-      `--pnp-unplug-ui expected exactly one unplugged @kinetixui/ui directory and found ${unplugged.length}, so the rewritten glob cannot be trusted to name the package under test. Refusing to report.`,
+      `the documented \`yarn unplug @kinetixui/ui\` produced ${unplugged.length} unplugged directories, not one, so the package under test cannot be identified. Refusing to report.`,
     );
-    console.log(`--pnp-unplug-ui: PROPOSED remedy applied — @kinetixui/ui unplugged to .yarn/unplugged/${unplugged[0]} and the Tailwind content entry points there. Everything below is evidence for the proposed documentation, NOT for the documentation as it stands.`);
+    console.log(`Documented Plug'n'Play procedure followed: \`yarn unplug @kinetixui/ui\` produced .yarn/unplugged/${unplugged[0]}, and the documentation's own Tailwind config resolves the package rather than naming that path.`);
   }
+
 }
 /*
  * A pinned react-is that did not reach recharts is the worst possible arm: it runs, it passes, and it
@@ -445,8 +480,8 @@ const tool = (name, args) =>
 tool('tsc', []);
 tool('vite', ['build']);
 const css = readdirSync(join(fixture, 'dist/assets')).filter(name => name.endsWith('.css')).map(name => readFileSync(join(fixture, 'dist/assets', name), 'utf8')).join('\n');
-const utilityMissing = suffix => pnp && !pnpUnplugUi
-  ? `${suffix} — MEASURED DEFECT under Plug'n'Play: the documented Tailwind content entry is ./node_modules/@kinetixui/ui/src/**, and PnP has no node_modules; @kinetixui/ui is read from a cache zip, which Tailwind's globber cannot traverse, so none of the package's utilities are emitted. tsc and vite build both exited 0. The remedy measured to work is \`yarn unplug @kinetixui/ui\` plus a content entry under .yarn/unplugged — see --pnp-unplug-ui.`
+const utilityMissing = suffix => pnp && pnpLegacyTailwind
+  ? `${suffix} — EXPECTED under --pnp-legacy-tailwind: the superseded instruction's content entry is ./node_modules/@kinetixui/ui/src/**, and Plug'n'Play has no node_modules; @kinetixui/ui is read from a cache zip, which Tailwind's globber cannot traverse, so none of the package's utilities are emitted. tsc and vite build both exited 0, which is why this failed silently in the first place. The documented procedure is the installation page's "Yarn Plug'n'Play" section.`
   : suffix;
 assert.match(css, /\.bg-action\b/, utilityMissing('Button background utility missing: package source must be scanned'));
 assert.match(css, /\.text-action-foreground\b/, utilityMissing('Button foreground utility missing'));
