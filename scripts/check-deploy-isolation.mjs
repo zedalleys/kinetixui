@@ -22,7 +22,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 
@@ -152,11 +152,156 @@ function runNegative(name) {
   }
 }
 
+/**
+ * The control RUNNER, in-process and fail-closed.
+ *
+ * It replaces `… --list-negatives | while read c; do … || exit 1; done`, which was a #516-family
+ * fail-open: under `bash -e` all three of an empty listing, a lister that fails, and a lister that
+ * prints one name and then fails exited 0, the last two having verified almost nothing. A pipe hides
+ * the producer's exit status and `while read` over no input runs no iterations, so the loop's own
+ * success said nothing about whether any control had run.
+ *
+ * The lister stays a separate process on purpose. Collapsing it into this function would make two of
+ * those three failures unrepresentable rather than handled, and the controls below could not inject
+ * them. So the producer's exit status is checked, its output is counted, and zero is a failure.
+ */
+export function runNegatives({ self = SELF, node = process.execPath } = {}) {
+  let listed;
+  try {
+    listed = execFileSync(node, [self, "--list-negatives"], { encoding: "utf8" });
+  } catch (error) {
+    // Partial output is NOT partial credit: anything already printed is discarded with the failure.
+    return {
+      ok: false,
+      reason:
+        `the control lister failed (exit ${error.status ?? "unknown"}), so the control set is ` +
+        `unknown. Refusing to report success on a listing that was never completed.`,
+    };
+  }
+
+  const names = listed.split(/\s+/).filter(Boolean);
+  if (names.length === 0) {
+    return {
+      ok: false,
+      reason:
+        "the control listing is empty, so no control ran. An empty control set is a defect in the " +
+        "gate, not a clean run — this is the arm that used to exit 0 having verified nothing.",
+    };
+  }
+
+  for (const name of names) {
+    try {
+      execFileSync(node, [self, `--negative=${name}`], { encoding: "utf8", stdio: "pipe" });
+    } catch (error) {
+      const output = `${error.stdout ?? ""}${error.stderr ?? ""}`.trim();
+      return { ok: false, reason: `control ${name} did not pass (exit ${error.status ?? "unknown"}). ${output}` };
+    }
+  }
+  return { ok: true, count: names.length };
+}
+
+/**
+ * One mutation per failure mode the runner must reject, applied to a throwaway copy of THIS file.
+ * Each targets the lister branch only, leaving the runner under test untouched, and each is checked
+ * to have actually applied — a mutation that changes nothing reads exactly like a working gate.
+ */
+const LISTER_CALL = 'console.log(NEGATIVE_CONTROLS.join("\\n"));';
+
+export const RUNNER_MUTATIONS = {
+  "runner-empty-listing": 'console.log("");',
+  "runner-lister-fails": "process.exit(3);",
+  "runner-lister-fails-after-partial": "console.log(NEGATIVE_CONTROLS[0]);\n  process.exit(3);",
+};
+
+export const RUNNER_CONTROLS = Object.keys(RUNNER_MUTATIONS);
+
+/** Copies this script and both configs into a temp tree so a mutated copy resolves its own REPO. */
+function stageTree(dir) {
+  mkdirSync(join(dir, "scripts"), { recursive: true });
+  cpSync(SELF, join(dir, "scripts", basename(SELF)));
+  for (const rel of CONFIGS) {
+    mkdirSync(join(dir, dirname(rel)), { recursive: true });
+    cpSync(join(REPO, rel), join(dir, rel));
+  }
+  return join(dir, "scripts", basename(SELF));
+}
+
+function runRunnerControl(name) {
+  const mutation = RUNNER_MUTATIONS[name];
+  if (mutation === undefined) {
+    console.error(`unknown runner control: ${name}`);
+    process.exit(2);
+  }
+
+  const dir = mkdtempSync(join(tmpdir(), "deploy-isolation-runner-"));
+  try {
+    const copy = stageTree(dir);
+
+    // Precondition, measured rather than assumed: the UNMUTATED copy must pass. Without this a
+    // mutated copy could fail for an unrelated reason and the control would credit the repair.
+    const before = runNegatives({ self: copy });
+    if (!before.ok) {
+      console.error(`control ${name}: precondition unmet — the unmutated copy already fails (${before.reason}), so this control proves nothing.`);
+      process.exit(1);
+    }
+
+    const source = readFileSync(copy, "utf8");
+    if (!source.includes(LISTER_CALL)) {
+      console.error(`control ${name}: the lister call could not be found, so the mutation would be a no-op.`);
+      process.exit(1);
+    }
+    const mutated = source.replace(LISTER_CALL, mutation);
+    if (mutated === source) {
+      console.error(`control ${name}: the mutation changed nothing.`);
+      process.exit(1);
+    }
+    writeFileSync(copy, mutated);
+
+    const after = runNegatives({ self: copy });
+    if (after.ok) {
+      console.error(
+        `control ${name}: the runner ACCEPTED the mutated lister and reported ${after.count} ` +
+          `control(s). It is fail-open for this mode.`,
+      );
+      process.exit(1);
+    }
+    console.log(`control ${name}: rejected, as required — ${after.reason}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 const arg = process.argv[2] ?? "";
 if (arg === "--list-negatives") {
   console.log(NEGATIVE_CONTROLS.join("\n"));
 } else if (arg.startsWith("--negative=")) {
   runNegative(arg.slice("--negative=".length));
+} else if (arg === "--run-negatives") {
+  const result = runNegatives();
+  if (!result.ok) {
+    console.error(`check:deploy-isolation-controls FAILED — ${result.reason}`);
+    process.exit(1);
+  }
+  console.log(`check:deploy-isolation-controls ok — ${result.count} negative controls ran and all rejected their injected defect.`);
+} else if (arg === "--run-runner-controls") {
+  // In-process on purpose: a shell loop here would be the very shape this repair removed.
+  if (RUNNER_CONTROLS.length === 0) {
+    console.error("check:deploy-isolation-runner-controls FAILED — the runner-control registry is empty.");
+    process.exit(1);
+  }
+  for (const name of RUNNER_CONTROLS) {
+    try {
+      console.log(execFileSync(process.execPath, [SELF, `--runner-control=${name}`], { encoding: "utf8" }).trim());
+    } catch (error) {
+      console.error(`check:deploy-isolation-runner-controls FAILED — ${name}: ${`${error.stdout ?? ""}${error.stderr ?? ""}`.trim()}`);
+      process.exit(1);
+    }
+  }
+  console.log(`check:deploy-isolation-runner-controls ok — ${RUNNER_CONTROLS.length} runner controls ran and all rejected their injected failure mode.`);
+} else if (arg === "--list-runner-controls") {
+  console.log(RUNNER_CONTROLS.join("\n"));
+} else if (arg.startsWith("--runner-control=")) {
+  runRunnerControl(arg.slice("--runner-control=".length));
 } else {
   const found = violations(REPO);
   if (found.length > 0) {

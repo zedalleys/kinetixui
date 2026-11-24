@@ -76,4 +76,44 @@ describe("deployment isolation", () => {
     );
     expect(controls).toHaveLength(10);
   });
+  // ---- The control RUNNER (M5.37 repair). ----------------------------------------------------
+  // The alias used to be `… --list-negatives | while read c; do … || exit 1; done`, which exited 0
+  // on an empty listing, on a lister that failed, and on a lister that printed one name and then
+  // failed. These tests are how hosted CI executes the repaired runner and propagates its failures:
+  // `pnpm --filter @kinetixui/web test` is already a step in ci.yml.
+
+  it("the repaired runner runs every control and reports the count", () => {
+    const out = run("--run-negatives");
+    expect(out).toContain("check:deploy-isolation-controls ok");
+    // The count is asserted, not just the word ok: "ran 0 controls" must never read as a pass.
+    expect(out).toContain(`${controls.length} negative controls ran`);
+  });
+
+  const runnerControls = run("--list-runner-controls").trim().split("\n").filter(Boolean);
+
+  it("all three required failure modes have a committed control", () => {
+    expect(runnerControls).toEqual([
+      "runner-empty-listing",
+      "runner-lister-fails",
+      "runner-lister-fails-after-partial",
+    ]);
+  });
+
+  it.each(runnerControls)("runner control %s: the runner rejects the failure mode", (control) => {
+    // Each control stages a throwaway copy of the script and both configs, asserts the UNMUTATED
+    // copy passes, then mutates the lister branch only — leaving the runner under test intact — and
+    // fails if the runner reports success. Measured against the shipped pipe, all three report
+    // ACCEPTED (0, 0 and 1 controls run), so these controls can fail.
+    expect(() => run(`--runner-control=${control}`)).not.toThrow();
+  });
+
+  it("the package.json alias drives the runner instead of piping into a shell loop", () => {
+    // The defect was the shape, not the words. A reintroduced pipe fails here.
+    const scripts = JSON.parse(readFileSync(join(repo, "package.json"), "utf8")).scripts;
+    expect(scripts["check:deploy-isolation-controls"]).toBe(
+      "node scripts/check-deploy-isolation.mjs --run-negatives",
+    );
+    expect(scripts["check:deploy-isolation-controls"]).not.toContain("|");
+    expect(scripts["check:deploy-isolation-runner-controls"]).not.toContain("|");
+  });
 });
