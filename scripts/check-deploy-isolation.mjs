@@ -271,6 +271,143 @@ function runRunnerControl(name) {
   }
 }
 
+/**
+ * ---- The ALIAS itself (M5.38 §8). ------------------------------------------------------------
+ *
+ * Everything above exercises the control runner as a FUNCTION. What actually runs in CI and by hand
+ * is the package.json alias, and nothing above executes it. The gap that leaves is narrow but real:
+ * the suite asserted the alias's TEXT and separately ran the script, so an alias that no longer
+ * reached the runner — a renamed script, a package-manager quirk, a command replaced by `true` —
+ * would be caught only by a string compare, and a string compare is not an execution.
+ *
+ * So two things are measured here. The real alias is RUN, in this repository, through the package
+ * manager, and its success line and count are read back. And its FAILURE contract is injected: a
+ * staged tree carrying the alias exactly as written is made to fail underneath, and the alias must
+ * carry that failure out as a non-zero exit rather than swallowing it.
+ */
+export const ALIAS = "check:deploy-isolation-controls";
+export const ALIAS_UNDER_TEST = "check:deploy-isolation";
+
+/** Runs a package.json script through the package manager, as CI and a human both do. */
+export function runAlias({ root = REPO, alias = ALIAS, pm = "pnpm" } = {}) {
+  try {
+    const stdout = execFileSync(pm, ["run", alias], { cwd: root, encoding: "utf8", stdio: "pipe" });
+    return { ok: true, output: stdout };
+  } catch (error) {
+    const output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
+    return { ok: false, status: error.status ?? "unknown", output };
+  }
+}
+
+/**
+ * Staged tree for the alias arms: the two alias strings are copied VERBATIM out of the real
+ * package.json, so what runs is the shipped command and not a paraphrase of it. The rest of the
+ * manifest is deliberately NOT copied — `packageManager` would send corepack looking for a pinned
+ * pnpm, and the workspace fields would make the copy a workspace member. The alias is the subject;
+ * the manifest around it is not.
+ */
+function stageAliasTree(dir) {
+  const script = stageTree(dir);
+  const real = JSON.parse(readFileSync(join(REPO, "package.json"), "utf8")).scripts;
+  for (const name of [ALIAS, ALIAS_UNDER_TEST]) {
+    if (typeof real[name] !== "string") {
+      console.error(`alias staging: package.json has no string script "${name}".`);
+      process.exit(1);
+    }
+  }
+  writeFileSync(
+    join(dir, "package.json"),
+    `${JSON.stringify(
+      { name: "deploy-isolation-alias-fixture", private: true, scripts: { [ALIAS]: real[ALIAS], [ALIAS_UNDER_TEST]: real[ALIAS_UNDER_TEST] } },
+      null,
+      2,
+    )}\n`,
+  );
+  return script;
+}
+
+export const ALIAS_MUTATIONS = {
+  // The runner fails underneath. The alias must exit non-zero rather than reporting success.
+  "alias-propagates-failure": { apply: (src) => src.replace(LISTER_CALL, 'console.log("");') },
+  // The alias is replaced by a command that does nothing and succeeds — the shape a careless edit
+  // leaves behind. Detected by the ABSENCE of the runner's own success line, not by the exit code,
+  // because `true` exits 0 and an exit code alone cannot tell "ran and passed" from "never ran".
+  "alias-neutered": {
+    manifest: (scripts) => ({ ...scripts, [ALIAS]: "true" }),
+    expect: "silent-success",
+  },
+};
+
+export const ALIAS_CONTROLS = Object.keys(ALIAS_MUTATIONS);
+
+function runAliasControl(name) {
+  const spec = ALIAS_MUTATIONS[name];
+  if (spec === undefined) {
+    console.error(`unknown alias control: ${name}`);
+    process.exit(2);
+  }
+
+  const dir = mkdtempSync(join(tmpdir(), "deploy-isolation-alias-"));
+  try {
+    const copy = stageAliasTree(dir);
+
+    // Precondition, measured: the UNMUTATED staged alias must pass, or the control proves nothing.
+    const before = runAlias({ root: dir });
+    if (!before.ok) {
+      console.error(
+        `control ${name}: precondition unmet — the unmutated staged alias already fails ` +
+          `(exit ${before.status}). ${before.output.trim()}`,
+      );
+      process.exit(1);
+    }
+    if (!before.output.includes("negative controls ran")) {
+      console.error(`control ${name}: precondition unmet — the staged alias succeeded without the runner's success line, so this control could not tell silence from success.`);
+      process.exit(1);
+    }
+
+    if (spec.apply) {
+      const source = readFileSync(copy, "utf8");
+      const mutated = spec.apply(source);
+      if (mutated === source) {
+        console.error(`control ${name}: the mutation changed nothing.`);
+        process.exit(1);
+      }
+      writeFileSync(copy, mutated);
+    }
+    if (spec.manifest) {
+      const manifest = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
+      const scripts = spec.manifest(manifest.scripts);
+      if (scripts[ALIAS] === manifest.scripts[ALIAS]) {
+        console.error(`control ${name}: the manifest mutation changed nothing.`);
+        process.exit(1);
+      }
+      manifest.scripts = scripts;
+      writeFileSync(join(dir, "package.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+    }
+
+    const after = runAlias({ root: dir });
+    if (spec.expect === "silent-success") {
+      // A neutered alias still exits 0. What must not survive is the CLAIM of having run controls.
+      if (after.output.includes("negative controls ran")) {
+        console.error(`control ${name}: the neutered alias still printed the runner's success line, so the mutation did not apply.`);
+        process.exit(1);
+      }
+      console.log(`control ${name}: detected, as required — the alias exited ${after.ok ? 0 : after.status} with NO control-run line, which is why the suite asserts the line and the count and not merely the exit code.`);
+      return;
+    }
+    if (after.ok) {
+      console.error(
+        `control ${name}: the alias reported SUCCESS while the runner underneath it failed. ` +
+          `It does not propagate failure.`,
+      );
+      process.exit(1);
+    }
+    console.log(`control ${name}: rejected, as required — the alias exited ${after.status} and carried the failure out.`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 const arg = process.argv[2] ?? "";
 if (arg === "--list-negatives") {
   console.log(NEGATIVE_CONTROLS.join("\n"));
@@ -283,6 +420,37 @@ if (arg === "--list-negatives") {
     process.exit(1);
   }
   console.log(`check:deploy-isolation-controls ok — ${result.count} negative controls ran and all rejected their injected defect.`);
+} else if (arg === "--list-alias-controls") {
+  console.log(ALIAS_CONTROLS.join("\n"));
+} else if (arg.startsWith("--alias-control=")) {
+  runAliasControl(arg.slice("--alias-control=".length));
+} else if (arg === "--run-alias") {
+  // Runs the REAL alias in THIS repository, through the package manager. The success line and the
+  // count are read back, because "exit 0" alone cannot distinguish running from not running.
+  const result = runAlias();
+  if (!result.ok) {
+    console.error(`${ALIAS} did not succeed when run as an alias (exit ${result.status}).\n${result.output.trim()}`);
+    process.exit(1);
+  }
+  if (!/\d+ negative controls ran/.test(result.output)) {
+    console.error(`${ALIAS} exited 0 but printed no control-run line, so it cannot be said to have run the controls.\n${result.output.trim()}`);
+    process.exit(1);
+  }
+  console.log(`alias ${ALIAS} ran for real: ${result.output.trim().split("\n").pop()}`);
+} else if (arg === "--run-alias-controls") {
+  if (ALIAS_CONTROLS.length === 0) {
+    console.error("check:deploy-isolation-alias-controls FAILED — the alias-control registry is empty.");
+    process.exit(1);
+  }
+  for (const name of ALIAS_CONTROLS) {
+    try {
+      console.log(execFileSync(process.execPath, [SELF, `--alias-control=${name}`], { encoding: "utf8" }).trim());
+    } catch (error) {
+      console.error(`check:deploy-isolation-alias-controls FAILED — ${name} did not hold.\n${`${error.stdout ?? ""}${error.stderr ?? ""}`.trim()}`);
+      process.exit(1);
+    }
+  }
+  console.log(`check:deploy-isolation-alias-controls ok — ${ALIAS_CONTROLS.length} alias controls ran and all held.`);
 } else if (arg === "--run-runner-controls") {
   // In-process on purpose: a shell loop here would be the very shape this repair removed.
   if (RUNNER_CONTROLS.length === 0) {

@@ -26,6 +26,8 @@
     "check:deploy-isolation": "node scripts/check-deploy-isolation.mjs",
     "check:deploy-isolation-controls": "node scripts/check-deploy-isolation.mjs --run-negatives",
     "check:deploy-isolation-runner-controls": "node scripts/check-deploy-isolation.mjs --run-runner-controls",
+    "check:deploy-isolation-alias": "node scripts/check-deploy-isolation.mjs --run-alias",
+    "check:deploy-isolation-alias-controls": "node scripts/check-deploy-isolation.mjs --run-alias-controls",
     "check:a11y-coverage": "node scripts/check-a11y-coverage.mjs",
     "check:label-association": "node scripts/check-label-association.mjs",
     "check:role-coherence": "node scripts/check-role-coherence.mjs",

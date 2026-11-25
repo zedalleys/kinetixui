@@ -107,6 +107,36 @@ describe("deployment isolation", () => {
     expect(() => run(`--runner-control=${control}`)).not.toThrow();
   });
 
+  // ---- The ALIAS, executed rather than described (M5.38 §8). ---------------------------------
+  // Everything above runs the script directly. What CI and a human actually invoke is the
+  // package.json alias, and a string compare of it is not an execution: a renamed script, a
+  // package-manager quirk or a command replaced by `true` would pass the compare below and run
+  // nothing. These run the real alias through the package manager, then inject its failure modes.
+
+  it("the real alias runs, through the package manager, and says how many controls ran", () => {
+    const out = run("--run-alias");
+    expect(out).toContain(`alias ${"check:deploy-isolation-controls"} ran for real`);
+    expect(out).toMatch(/\d+ negative controls ran/);
+  });
+
+  const aliasControls = run("--list-alias-controls").trim().split("\n").filter(Boolean);
+
+  it("both alias failure modes have a committed control", () => {
+    expect(aliasControls).toEqual(["alias-propagates-failure", "alias-neutered"]);
+  });
+
+  it.each(aliasControls)("alias control %s: the alias's failure contract holds", (control) => {
+    // Each stages a tree carrying the alias string copied VERBATIM out of package.json, proves the
+    // unmutated staged alias passes AND prints the runner's success line, then breaks it one way:
+    // the runner fails underneath (the alias must exit non-zero), or the alias itself is replaced
+    // by `true` (detected by the MISSING success line, since `true` also exits 0).
+    //
+    // Measured non-vacuity: with the real alias temporarily changed to `… --run-negatives || true`,
+    // alias-propagates-failure exits 1. Worth knowing — the positive test above still PASSES against
+    // that swallowing alias, because it still prints the line. Only the injected control catches it.
+    expect(() => run(`--alias-control=${control}`)).not.toThrow();
+  });
+
   it("the package.json alias drives the runner instead of piping into a shell loop", () => {
     // The defect was the shape, not the words. A reintroduced pipe fails here.
     const scripts = JSON.parse(readFileSync(join(repo, "package.json"), "utf8")).scripts;
@@ -115,5 +145,16 @@ describe("deployment isolation", () => {
     );
     expect(scripts["check:deploy-isolation-controls"]).not.toContain("|");
     expect(scripts["check:deploy-isolation-runner-controls"]).not.toContain("|");
+    // The alias arms are only meaningful while the alias they measure is the one CI runs.
+    expect(scripts["check:deploy-isolation-alias"]).toBe(
+      "node scripts/check-deploy-isolation.mjs --run-alias",
+    );
+    expect(scripts["check:deploy-isolation-alias-controls"]).toBe(
+      "node scripts/check-deploy-isolation.mjs --run-alias-controls",
+    );
+    // `|| true` is the exact shape alias-propagates-failure injects; it must never ship.
+    for (const name of Object.keys(scripts).filter((n) => n.startsWith("check:deploy-isolation"))) {
+      expect(scripts[name]).not.toContain("||");
+    }
   });
 });
